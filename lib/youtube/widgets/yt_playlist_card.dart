@@ -34,6 +34,7 @@ class YoutubePlaylistCard extends StatelessWidget {
     return YoutubeCard(
       thumbnailHeight: thumbnailHeight,
       thumbnailWidth: thumbnailWidth,
+      isPlaylist: true,
       isImageImportantInCache: false,
       extractColor: true,
       borderRadius: 12.0,

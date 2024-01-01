@@ -333,8 +333,10 @@ extension TrackExtUtils on TrackExtended {
 
   String get youtubeLink {
     final match = comment.isEmpty ? null : kYoutubeRegex.firstMatch(comment)?[0];
+    if (match != null) return match;
     final match2 = filename.isEmpty ? null : kYoutubeRegex.firstMatch(filename)?[0];
-    return match ?? match2 ?? '';
+    if (match2 != null) return match2;
+    return '';
   }
 
   String get youtubeID => youtubeLink.getYoutubeID;

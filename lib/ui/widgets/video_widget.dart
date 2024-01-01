@@ -7,13 +7,13 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -21,15 +21,16 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/tap_detector.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaVideoControls extends StatefulWidget {
   final Widget? child;
   final bool showControls;
   final VoidCallback? onMinimizeTap;
-  final Widget? fallbackChild;
   final bool isFullScreen;
-  final List<NamidaPopupItem> qualityItems;
   final GlobalKey<NamidaVideoControlsState> widgetKey;
+  final bool isLocal;
 
   const NamidaVideoControls({
     super.key,
@@ -37,9 +38,8 @@ class NamidaVideoControls extends StatefulWidget {
     required this.child,
     required this.showControls,
     required this.onMinimizeTap,
-    required this.fallbackChild,
     required this.isFullScreen,
-    this.qualityItems = const [],
+    required this.isLocal,
   });
 
   @override
@@ -527,11 +527,30 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   bool _pointerDownedOnRight = true;
   @override
   Widget build(BuildContext context) {
-    final dummyWidget = widget.fallbackChild ??
-        Container(
-          key: const Key('dummy_container'),
-          color: Colors.transparent,
-        );
+    final fallbackChild = widget.isLocal && !widget.isFullScreen
+        ? Container(
+            key: const Key('dummy_container'),
+            color: Colors.transparent,
+          )
+        : Obx(
+            () {
+              final vidId = widget.isLocal
+                  ? Player.inst.nowPlayingTrack.youtubeID
+                  : (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo)?.id ?? Player.inst.nowPlayingVideoID?.id;
+              return YoutubeThumbnail(
+                key: Key(vidId ?? ''),
+                isImportantInCache: true,
+                width: context.width,
+                height: context.width * 9 / 16,
+                borderRadius: 0,
+                blur: 0,
+                videoId: vidId,
+                displayFallbackIcon: false,
+                compressed: false,
+                preferLowerRes: false,
+              );
+            },
+          );
     final inLandscape = NamidaNavigator.inst.isInLanscape;
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
@@ -615,13 +634,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           child: AnimatedScale(
                             duration: const Duration(milliseconds: 200),
                             scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
-                            child: widget.child ?? dummyWidget,
+                            child: widget.child ?? fallbackChild,
                           ),
                         )
                       : SizedBox(
                           height: context.height,
                           width: context.height * 16 / 9,
-                          child: dummyWidget,
+                          child: fallbackChild,
                         ),
                 ),
               ],
@@ -782,7 +801,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   _resetTimer();
                                   setControlsVisibily(true);
                                 },
-                                childrenDefault: widget.qualityItems,
                                 children: [
                                   ...streamsMap.values.map(
                                     (element) => Obx(
@@ -845,8 +863,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             // ===== Quality Chip =====
                             Obx(
                               () {
-                                final ytQualities = YoutubeController.inst.currentYTQualities.where((s) => s.formatSuffix != 'webm');
-                                final cachedQualitiesAll = YoutubeController.inst.currentCachedQualities;
+                                final ytQualities =
+                                    (widget.isLocal ? VideoController.inst.currentYTQualities : YoutubeController.inst.currentYTQualities).where((s) => s.formatSuffix != 'webm');
+                                final cachedQualitiesAll = widget.isLocal ? VideoController.inst.currentPossibleVideos : YoutubeController.inst.currentCachedQualities;
                                 final cachedQualities = List<NamidaVideo>.from(cachedQualitiesAll);
                                 cachedQualities.removeWhere(
                                   (cq) {
@@ -865,7 +884,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     _resetTimer();
                                     setControlsVisibily(true);
                                   },
-                                  childrenDefault: widget.qualityItems,
                                   children: [
                                     _getQualityChip(
                                       title: lang.AUDIO_ONLY,
@@ -1136,7 +1154,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         iconColor: itemsColor,
                                         onPressed: () {
                                           _startTimer();
-                                          VideoController.inst.toggleFullScreenVideoView(fallbackChild: widget.fallbackChild);
+                                          VideoController.inst.toggleFullScreenVideoView(isLocal: widget.isLocal);
                                         },
                                       ),
                                     ],

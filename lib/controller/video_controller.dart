@@ -29,38 +29,32 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class NamidaVideoWidget extends StatelessWidget {
   final bool enableControls;
   final VoidCallback? onMinimizeTap;
-  final Widget? fallbackChild;
   final bool fullscreen;
   final bool isPip;
-  final List<NamidaPopupItem> qualityItems;
   final bool zoomInToFullscreen;
   final bool swipeUpToFullscreen;
+  final bool isLocal;
 
   const NamidaVideoWidget({
     super.key,
     required this.enableControls,
     this.onMinimizeTap,
-    this.fallbackChild,
     this.fullscreen = false,
-    this.qualityItems = const [],
     this.isPip = false,
     this.zoomInToFullscreen = true,
     this.swipeUpToFullscreen = false,
+    required this.isLocal,
   });
 
   Future<void> _verifyAndEnterFullScreen() async {
     if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
-      await VideoController.inst.toggleFullScreenVideoView(
-        fallbackChild: fallbackChild,
-        qualityItems: qualityItems,
-      );
+      await VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal);
     }
 
     // else if (videoZoomAdditionalScale.value < 0.7) {
@@ -105,6 +99,7 @@ class NamidaVideoWidget extends StatelessWidget {
         child: Obx(
           () => NamidaVideoControls(
             widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
+            isLocal: isLocal,
             onMinimizeTap: () {
               if (fullscreen) {
                 NamidaNavigator.inst.exitFullScreen();
@@ -118,9 +113,7 @@ class NamidaVideoWidget extends StatelessWidget {
                 : fullscreen
                     ? true
                     : enableControls,
-            fallbackChild: fallbackChild,
             isFullScreen: fullscreen,
-            qualityItems: qualityItems,
             child: VideoController.vcontroller.videoWidget?.value,
           ),
         ),
@@ -152,21 +145,19 @@ class VideoController {
   }
 
   Future<void> toggleFullScreenVideoView({
-    Widget? fallbackChild,
-    List<NamidaPopupItem> qualityItems = const [],
+    required bool isLocal,
   }) async {
     final aspect = VideoController.vcontroller.aspectRatio;
     VideoController.inst.fullScreenVideoWidget ??= Obx(
       () => NamidaVideoControls(
         widgetKey: VideoController.inst.fullScreenControlskey,
+        isLocal: isLocal,
         onMinimizeTap: () {
           VideoController.inst.fullScreenVideoWidget = null;
           NamidaNavigator.inst.exitFullScreen();
         },
         showControls: true,
-        fallbackChild: fallbackChild,
         isFullScreen: true,
-        qualityItems: qualityItems,
         child: VideoController.vcontroller.videoWidget?.value,
       ),
     );

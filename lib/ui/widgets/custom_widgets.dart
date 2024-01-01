@@ -2980,7 +2980,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
 
   @override
   void initState() {
-    widget.onIndexChanged(widget.initialIndex);
+    Future.delayed(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
     controller = TabController(
       length: widget.children.length,
       vsync: this,

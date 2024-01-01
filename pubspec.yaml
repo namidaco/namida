@@ -90,7 +90,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 1b415486d5b34cc094fe8e0ecf5cb19c0ab28981
+      ref: 167aa4c082958f93e45c55a01b521aef1455c68c
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
@@ -128,7 +128,7 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
 
   # ---- UI Widgets ----
-  wheel_slider: ^1.0.1
+  wheel_slider: "1.1.1"
   sleek_circular_slider: ^2.0.1
   checkmark: ^0.0.2+1
   like_button: ^2.0.5

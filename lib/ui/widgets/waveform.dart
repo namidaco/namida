@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/lifecycle_controller.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
+
+bool themeCanRebuildWaveform = false;
 
 class WaveformComponent extends StatefulWidget {
   final int durationInMilliseconds;
@@ -49,26 +50,20 @@ class _WaveformComponentState extends State<WaveformComponent> {
   @override
   void initState() {
     super.initState();
-    _fillWidget();
 
     // -- to refresh after coming resuming app
     LifeCycleController.inst.addOnResume('waveform', WaveformController.inst.calculateUIWaveform);
-
-    // -- to refresh after coming back from landscape
-    NamidaNavigator.inst.addOnLandScapeEvent('waveform', () {
-      if (NamidaNavigator.inst.isInLanscape) WaveformController.inst.calculateUIWaveform();
-    });
   }
 
   @override
   void dispose() {
     LifeCycleController.inst.removeOnResume('waveform');
-    NamidaNavigator.inst.removeOnLandScapeEvent('waveform');
     super.dispose();
   }
 
-  void _fillWidget() {
+  void _fillWidget(BuildContext context) {
     _lastKey = widget.key;
+    final view = View.of(context);
     _stockWidget = Container(
       width: widget.boxMaxWidth,
       height: widget.boxMaxHeight,
@@ -78,7 +73,7 @@ class _WaveformComponentState extends State<WaveformComponent> {
       child: Obx(
         () {
           final downscaled = WaveformController.inst.currentWaveformUI;
-          final barWidth = View.of(context).physicalSize.shortestSide / 2 / downscaled.length * 0.36;
+          final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
           return Center(
             child: Stack(
               children: [
@@ -115,8 +110,8 @@ class _WaveformComponentState extends State<WaveformComponent> {
 
   @override
   Widget build(BuildContext context) {
-    if (_lastKey == null || widget.key != _lastKey) {
-      _fillWidget();
+    if (_lastKey == null || widget.key != _lastKey || themeCanRebuildWaveform) {
+      _fillWidget(context);
     }
     return _stockWidget;
   }

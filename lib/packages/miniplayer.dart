@@ -13,7 +13,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/lifecycle_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -44,7 +43,6 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
-import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class MiniPlayerParent extends StatefulWidget {
@@ -104,71 +102,30 @@ class MiniPlayerSwitchers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        // to refresh after toggling [enableBottomNavBar]
-        settings.enableBottomNavBar.value;
-        Widget pipChild() {
-          return Container(
-            color: Colors.black,
-            alignment: Alignment.topLeft,
-            child: NamidaVideoWidget(
-              key: const Key('pip_widget_child'),
-              enableControls: false,
-              fullscreen: true,
-              isPip: true,
-              fallbackChild: Obx(
-                () => Player.inst.nowPlayingVideoID?.id == null
-                    ? const SizedBox()
-                    : YoutubeThumbnail(
-                        key: Key(Player.inst.nowPlayingVideoID?.id ?? ''),
-                        isImportantInCache: true,
-                        width: 64.0,
-                        height: 64.0 * 9 / 16,
-                        borderRadius: 0,
-                        blur: 0,
-                        videoId: Player.inst.nowPlayingVideoID!.id,
-                        displayFallbackIcon: false,
-                        compressed: false,
-                        preferLowerRes: false,
-                      ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      child: Obx(
+        () => VideoController.vcontroller.isInPip
+            ? Container(
+                color: Colors.black,
+                alignment: Alignment.topLeft,
+                child: const NamidaVideoWidget(
+                  key: Key('pip_widget_child'),
+                  enableControls: false,
+                  fullscreen: true,
+                  isPip: true,
+                  isLocal: true,
+                ),
+              )
+            : AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: Player.inst.nowPlayingTrack == kDummyTrack || Player.inst.currentQueue.isEmpty
+                    ? Player.inst.currentQueueYoutube.isNotEmpty
+                        ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                        : const SizedBox(key: Key('empty_miniplayer'))
+                    : const NamidaMiniPlayer(key: Key('actualminiplayer')),
               ),
-            ),
-          );
-        }
-
-        LifeCycleController.inst.addOnSuspending('pip', () async {
-          if (settings.enablePip.value && Player.inst.isPlaying && VideoController.vcontroller.isInitialized) {
-            await VideoController.vcontroller.enablePictureInPicture();
-            await NamidaNavigator.inst.enterFullScreen(
-              pipChild(),
-              setOrientations: false,
-            );
-            VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
-          } else {
-            VideoController.inst.isCurrentlyInBackground = true;
-            if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
-              Player.inst.play();
-            }
-          }
-        });
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          child: Obx(
-            () => VideoController.vcontroller.isInPip
-                ? pipChild()
-                : AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    child: Player.inst.nowPlayingTrack == kDummyTrack || Player.inst.currentQueue.isEmpty
-                        ? Player.inst.currentQueueYoutube.isNotEmpty
-                            ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
-                            : const SizedBox(key: Key('empty_miniplayer'))
-                        : const NamidaMiniPlayer(key: Key('actualminiplayer')),
-                  ),
-          ),
-        );
-      },
+      ),
     );
   }
 }
@@ -2226,33 +2183,78 @@ class _AnimatingTrackImage extends StatelessWidget {
               return AnimatedScale(
                 duration: const Duration(milliseconds: 100),
                 scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: VideoController.inst.shouldShowVideo
-                      ? LyricsWrapper(
-                          key: Key(track.path),
-                          enableChildBorderRadius: true,
-                          track: track,
-                          cp: cp,
-                          child: GestureDetector(
-                            onTap: () => Player.inst.refreshVideoSeekPosition(),
-                            onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(),
-                            child: const NamidaVideoWidget(
-                              key: Key('video_widget'),
-                              enableControls: false,
-                            ),
-                          ),
-                        )
-                      : LyricsWrapper(
-                          key: Key(track.path),
-                          enableChildBorderRadius: false,
-                          track: track,
-                          cp: cp,
-                          child: _TrackImage(
-                            track: track,
-                            cp: cp,
-                          ),
-                        ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Obx(
+                      () => AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: VideoController.inst.shouldShowVideo
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                                child: GestureDetector(
+                                  onTap: () => Player.inst.refreshVideoSeekPosition(),
+                                  onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
+                                  child: const NamidaVideoWidget(
+                                    key: Key('video_widget'),
+                                    enableControls: false,
+                                    isLocal: true,
+                                  ),
+                                ),
+                              )
+                            : _TrackImage(
+                                track: track,
+                                cp: cp,
+                              ),
+                      ),
+                    ),
+                    Obx(
+                      () => AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: !settings.enableLyrics.value
+                            ? const IgnorePointer(key: Key('empty_lrc'), child: SizedBox())
+                            : Lyrics.inst.currentLyricsLRC.value != null
+                                ? LyricsLRCParsedView(
+                                    key: Lyrics.inst.lrcViewKey,
+                                    cp: cp,
+                                    lrc: Lyrics.inst.currentLyricsLRC.value,
+                                    videoOrImage: const SizedBox(),
+                                    totalDuration: track.duration.seconds,
+                                  )
+                                : Lyrics.inst.currentLyricsText.value != ''
+                                    ? Opacity(
+                                        opacity: cp,
+                                        child: Container(
+                                          clipBehavior: Clip.antiAlias,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                                            color: context.theme.scaffoldBackgroundColor.withAlpha(110),
+                                          ),
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          alignment: Alignment.center,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                          child: NamidaBgBlur(
+                                            blur: 12.0,
+                                            enabled: true,
+                                            child: ShaderFadingWidget(
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  children: [
+                                                    const SizedBox(height: 48.0),
+                                                    Text(Lyrics.inst.currentLyricsText.value, style: context.textTheme.displayMedium),
+                                                    const SizedBox(height: 48.0),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : const IgnorePointer(key: Key('empty_lrc_2'), child: SizedBox()),
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -2334,89 +2336,6 @@ class _RawImageContainer extends StatelessWidget {
   }
 }
 
-class LyricsWrapper extends StatelessWidget {
-  final Widget child;
-  final double cp;
-  final Track track;
-  final bool enableChildBorderRadius;
-
-  const LyricsWrapper({
-    super.key,
-    required this.child,
-    required this.cp,
-    required this.track,
-    required this.enableChildBorderRadius,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final childFinal = enableChildBorderRadius
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-            child: child,
-          )
-        : child;
-
-    if (cp == 0.0) return childFinal;
-
-    return Obx(
-      () => AnimatedSwitcher(
-        key: Key(track.path),
-        duration: const Duration(milliseconds: 300),
-        child: !settings.enableLyrics.value
-            ? childFinal
-            : Lyrics.inst.currentLyricsLRC.value != null
-                ? LyricsLRCParsedView(
-                    key: Lyrics.inst.lrcViewKey,
-                    cp: cp,
-                    lrc: Lyrics.inst.currentLyricsLRC.value,
-                    videoOrImage: childFinal,
-                    totalDuration: track.duration.seconds,
-                  )
-                : Lyrics.inst.currentLyricsText.value != ''
-                    ? Stack(
-                        key: const Key('child_2'),
-                        alignment: Alignment.center,
-                        children: [
-                          childFinal,
-                          Opacity(
-                            key: Key(cp.toString()),
-                            opacity: cp,
-                            child: Container(
-                              clipBehavior: Clip.antiAlias,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                                color: context.theme.scaffoldBackgroundColor.withAlpha(110),
-                              ),
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              child: NamidaBgBlur(
-                                blur: 12.0,
-                                enabled: true,
-                                child: ShaderFadingWidget(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        const SizedBox(height: 48.0),
-                                        Text(Lyrics.inst.currentLyricsText.value, style: context.textTheme.displayMedium),
-                                        const SizedBox(height: 48.0),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : childFinal,
-      ),
-    );
-  }
-}
-
 class Wallpaper extends StatefulWidget {
   const Wallpaper({Key? key, this.child, this.particleOpacity = .1, this.gradient = true}) : super(key: key);
 
@@ -2451,7 +2370,8 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
           if (settings.enableMiniplayerParticles.value && Player.inst.nowPlayingTrack != kDummyTrack)
             Obx(
               () {
-                final bpm = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+                final bpmb = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+                final bpm = bpmb.withMinimum(0);
                 return AnimatedOpacity(
                   duration: const Duration(seconds: 1),
                   opacity: Player.inst.isPlaying ? 1 : 0,

@@ -38,6 +38,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool preferLowerRes;
   final String channelIDForHQImage;
   final bool hqChannelImage;
+  final bool isPlaylist;
 
   const YoutubeThumbnail({
     required super.key,
@@ -62,6 +63,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.preferLowerRes = true,
     this.channelIDForHQImage = '',
     this.hqChannelImage = false,
+    this.isPlaylist = false,
   });
 
   @override
@@ -165,19 +167,22 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
         key: thumbKey,
-        ignoreLoadingDelay: true,
         isCircle: widget.isCircle,
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
-        fadeMilliSeconds: 600,
+        fadeMilliSeconds: 300,
         bytes: imageBytes,
         path: imagePath,
         height: widget.height,
         width: widget.width,
         thumbnailSize: widget.width,
-        icon: widget.channelUrl != null ? Broken.user : Broken.video,
+        icon: widget.isPlaylist
+            ? Broken.music_library_2
+            : widget.channelUrl != null
+                ? Broken.user
+                : Broken.video,
         iconSize: widget.channelUrl != null ? null : widget.width * 0.3,
         forceSquared: true,
         cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,

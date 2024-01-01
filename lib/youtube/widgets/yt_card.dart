@@ -33,6 +33,7 @@ class YoutubeCard extends StatelessWidget {
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final double fontMultiplier;
+  final bool isPlaylist;
 
   const YoutubeCard({
     super.key,
@@ -62,6 +63,7 @@ class YoutubeCard extends StatelessWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.fontMultiplier = 1.0,
+    this.isPlaylist = false,
   });
 
   @override
@@ -102,6 +104,7 @@ class YoutubeCard extends StatelessWidget {
                     smallBoxIcon: smallBoxIcon,
                     extractColor: extractColor,
                     isCircle: isCircle,
+                    isPlaylist: isPlaylist,
                   ),
                 ),
                 const SizedBox(width: 8.0),

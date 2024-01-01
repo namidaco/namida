@@ -79,6 +79,8 @@ class Indexer {
     return alltracks;
   }
 
+  Map<String, (TrackExtended, int)> get backupMediaStoreIDS => _backupMediaStoreIDS;
+
   /// {imagePath: (TrackExtended, id)};
   final _backupMediaStoreIDS = <String, (TrackExtended, int)>{};
   final artworksMap = <String, Uint8List?>{};

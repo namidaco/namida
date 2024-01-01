@@ -180,12 +180,12 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomWidget = getChipsRow(context);
+    const bottomPadding = 0.0;
     return BackgroundWrapper(
       child: Obx(
         () {
           final finalListenMap = historyController.currentTopTracksMapListens;
-          final bottomWidget = getChipsRow(context);
-          const bottomPadding = 0.0;
           return NamidaListView(
             itemExtents: itemExtents,
             header: header(bottomWidget, bottomPadding),

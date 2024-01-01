@@ -50,7 +50,7 @@ class YoutubePlaylistsView extends StatelessWidget {
     bool displayTimeAgo = false,
     bool displayShimmer = false,
   }) {
-    final finalVideos = videos.toList();
+    final finalVideos = videos is List<YoutubeID> ? videos : videos.toList();
     final remainingVideosCount = totalVideosCountInMainList - finalVideos.length;
 
     void onTap() => NamidaNavigator.inst.navigateTo(viewAllPage);
@@ -148,7 +148,7 @@ class YoutubePlaylistsView extends StatelessWidget {
     return videos.values;
   }
 
-  Iterable<YoutubeID> get getFavouriteVideos {
+  List<YoutubeID> get getFavouriteVideos {
     final videos = <YoutubeID>[];
     final all = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks;
     for (int i = all.length - 1; i >= 0; i--) {

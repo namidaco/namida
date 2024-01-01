@@ -41,6 +41,8 @@ class YTUtils {
         () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(true),
       );
     }
+
+    YoutubeController.inst.resetGlowUnderVideo();
   }
 
   static List<Widget> getVideoCacheStatusIcons({

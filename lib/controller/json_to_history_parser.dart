@@ -899,6 +899,7 @@ class JsonToHistoryParser {
     });
     await _updateYoutubeStatsDirectoryIsolate.thready({
       "affectedIds": affectedIds,
+      "dirPath": AppDirs.YT_STATS,
       "progressPort": progressPort.sendPort,
     });
     progressPort.close();
@@ -907,6 +908,7 @@ class JsonToHistoryParser {
   static void _updateYoutubeStatsDirectoryIsolate(Map params) {
     final affectedIds = params['affectedIds'] as Map<String, YoutubeVideoHistory>;
     final progressPort = params['progressPort'] as SendPort;
+    final dirPath = params['dirPath'] as String;
 
     // ===== Getting affected files (which are arranged by id[0])
     final fileIdentifierMap = <String, Map<String, YoutubeVideoHistory>>{}; // {id[0]: {id: YoutubeVideoHistory}}
@@ -929,7 +931,7 @@ class JsonToHistoryParser {
       final filename = entry.key; // id[0]
       final videos = entry.value; // {id: YoutubeVideoHistory}
 
-      final file = File('${AppDirs.YT_STATS}$filename.json');
+      final file = File('$dirPath$filename.json');
       final res = file.readAsJsonSync();
       final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
       final videosMapInStorage = <String, YoutubeVideoHistory>{};

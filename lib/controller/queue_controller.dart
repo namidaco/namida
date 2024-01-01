@@ -187,7 +187,7 @@ class QueueController {
   }
 
   Future<void> emptyLatestQueue() async {
-    await File(AppPaths.LATEST_QUEUE).delete();
+    await File(AppPaths.LATEST_QUEUE).tryDeleting();
   }
 
   /// Assigns the last queue to the [Player]

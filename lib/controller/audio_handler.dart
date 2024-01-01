@@ -84,7 +84,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool _isCurrentAudioFromCache = false;
 
   /// Milliseconds should be awaited before playing video.
-  // int get _videoPositionSeekDelayMS => 500;
+  int get _videoPositionSeekDelayMS => 500;
 
   // Completer<void>? _audioShouldBeLoading;
 
@@ -151,16 +151,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> refreshVideoPosition(bool delayed) async {
-    // if (delayed) await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
+    if (delayed) await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
     await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
   }
 
   Future<void> _playAudioThenVideo() async {
     onPlayRaw();
     // await _audioShouldBeLoading?.future;
-    // await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
-
-    await VideoController.vcontroller.play();
+    await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
+    if (isPlaying) await VideoController.vcontroller.play();
   }
   // =================================================================================
   //
@@ -234,13 +233,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     super.onQueueChanged();
     if (currentQueue.isEmpty) {
       CurrentColor.inst.resetCurrentPlayingTrack();
-      MiniPlayerController.inst.animation.reset();
-      MiniPlayerController.inst.verticalSnapping();
-      await pause();
+      if (MiniPlayerController.inst.isInQueue) MiniPlayerController.inst.snapToMini();
+      // await pause();
       await [
-        onDispose(),
+        super.onDispose(),
+        VideoController.vcontroller.dispose(),
         QueueController.inst.emptyLatestQueue(),
       ].execute();
+      Future.delayed(const Duration(seconds: 5), () {
+        if (currentItem == null) {
+          AudioService.forceStop();
+        }
+      });
     } else {
       refreshNotification(currentItem);
       await currentQueue._execute(
@@ -297,7 +301,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       selectable: (finalItems) async {
         if (currentQueue.firstOrNull is! Selectable) {
           await clearQueue();
-          await super.onDispose();
         }
       },
       youtubeID: (finalItem) async {
@@ -305,8 +308,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           YoutubeController.inst.currentYTQualities.clear();
           YoutubeController.inst.currentYTAudioStreams.clear();
           await clearQueue();
-          await super.onDispose();
-          CurrentColor.inst.resetCurrentPlayingTrack();
         }
       },
     );
@@ -1310,13 +1311,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onRealPlay() async {
-    // await VideoController.vcontroller.pause(); // pausing for cases like: seeking to 0, which will trigger play fast
-    // final del = _videoPositionSeekDelayMS.abs();
-    // final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
-    // final diff = (vcp - currentPositionMS).abs();
-    // if (diff <= del) {
-    //   await Future.delayed(Duration(milliseconds: diff.withMaximum(_videoPositionSeekDelayMS)));
-    // }
+    await VideoController.vcontroller.pause(); // pausing for cases like: seeking to 0, which will trigger play fast
+    final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
+    final diff = vcp - currentPositionMS;
+    if (diff > 0) await Future.delayed(Duration(milliseconds: diff));
     await VideoController.vcontroller.play();
   }
 }

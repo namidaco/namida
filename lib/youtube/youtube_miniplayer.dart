@@ -482,7 +482,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                   () {
                                                     final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
                                                     final disabled = channelID == null;
-                                                    final subscribed = disabled ? false : YoutubeSubscriptionsController.inst.subscribedChannels[channelID]?.subscribed ?? false;
+                                                    final subscribed = YoutubeSubscriptionsController.inst.subscribedChannels[channelID ?? '']?.subscribed ?? false;
                                                     return AnimatedOpacity(
                                                       opacity: disabled ? 0.5 : 1.0,
                                                       duration: const Duration(milliseconds: 300),
@@ -756,13 +756,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
                                             final isLoadingComments = YoutubeController.inst.isLoadingComments.value;
                                             return isLoadingComments
-                                                ? SliverPadding(
-                                                    padding: const EdgeInsets.all(12.0),
-                                                    sliver: const Center(
-                                                      child: LoadingIndicator(),
-                                                    ).toSliver(),
+                                                ? const SliverToBoxAdapter(
+                                                    child: Padding(
+                                                      padding: EdgeInsets.all(12.0),
+                                                      child: Center(
+                                                        child: LoadingIndicator(),
+                                                      ),
+                                                    ),
                                                   )
-                                                : const SizedBox().toSliver();
+                                                : const SliverToBoxAdapter(child: SizedBox());
                                           },
                                         ),
                                       ],
@@ -964,30 +966,13 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               ),
                               width: finalthumbnailWidth,
                               height: finalthumbnailHeight,
-                              child: Obx(
-                                () {
-                                  final shouldShowVideo = VideoController.vcontroller.isInitialized;
-                                  return NamidaVideoWidget(
-                                    key: Key("${currentId}_$shouldShowVideo"),
-                                    enableControls: percentage > 0.5,
-                                    onMinimizeTap: () {
-                                      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
-                                    },
-                                    swipeUpToFullscreen: true,
-                                    fallbackChild: YoutubeThumbnail(
-                                      key: Key(currentId),
-                                      isImportantInCache: true,
-                                      width: finalthumbnailWidth,
-                                      height: finalthumbnailHeight,
-                                      borderRadius: 0,
-                                      blur: 0,
-                                      videoId: currentId,
-                                      displayFallbackIcon: false,
-                                      compressed: false,
-                                      preferLowerRes: false,
-                                    ),
-                                  );
+                              child: NamidaVideoWidget(
+                                isLocal: false,
+                                enableControls: percentage > 0.5,
+                                onMinimizeTap: () {
+                                  MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
                                 },
+                                swipeUpToFullscreen: true,
                               ),
                             ),
                             if (reverseOpacity > 0) ...[

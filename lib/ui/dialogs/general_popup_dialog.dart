@@ -636,6 +636,7 @@ Future<void> showGeneralPopupDialog(
                             index: index,
                             colorScheme: colorDelightened.value,
                             queueSource: source,
+                            additionalHero: additionalHero,
                           )
                         : null,
                     child: Padding(

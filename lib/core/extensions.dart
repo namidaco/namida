@@ -25,7 +25,17 @@ export 'package:dart_extensions/dart_extensions.dart';
 extension TracksSelectableUtils on List<Selectable> {
   String get displayTrackKeyword => length.displayTrackKeyword;
 
-  List<String> toImagePaths([int? limit = 4]) => withLimit(limit).map((e) => e.track.pathToImage).toList();
+  List<String> toImagePaths([int? limit = 4]) {
+    final l = <String>[];
+    for (final p in withLimit(limit)) {
+      l.add(p.track.pathToImage);
+    }
+    if (l.length == limit) {
+      // -- return 1 image if all were the same.
+      if (l.toSet().length == 1) return [l.first];
+    }
+    return l;
+  }
 }
 
 extension TracksWithDatesUtils on List<TrackWithDate> {
@@ -497,6 +507,17 @@ extension ExecuteDelayedUtils<T> on T Function() {
 
   Future<T> executeAfterDelay({int durationMS = 2000}) async {
     return await executeDelayed(Duration(milliseconds: durationMS));
+  }
+}
+
+extension ExecuteDelayedMinUtils<T> on Future<T> {
+  Future<T> executeWithMinDelay({int delayMS = 200}) async {
+    late final T v;
+    await Future.wait([
+      then((c) => v = c),
+      Future.delayed(Duration(milliseconds: delayMS)),
+    ]);
+    return v;
   }
 }
 

@@ -898,7 +898,7 @@ extension RouteUtils on NamidaRoute {
     Color? color;
     final trackToExtractFrom = trackOfColor;
     if (trackToExtractFrom != null) {
-      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom);
+      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom, useIsolate: true);
     }
     CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
   }

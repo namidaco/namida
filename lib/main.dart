@@ -172,11 +172,38 @@ void _initLifeCycle() {
       await Player.inst.dispose();
     }
   });
+
   LifeCycleController.inst.addOnResume('main', () async {
     CurrentColor.inst.refreshColorsAfterResumeApp();
 
     VideoController.inst.isCurrentlyInBackground = false;
     await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
+  });
+
+  LifeCycleController.inst.addOnSuspending('pip', () async {
+    if (settings.enablePip.value && Player.inst.isPlaying && VideoController.vcontroller.isInitialized) {
+      await VideoController.vcontroller.enablePictureInPicture();
+      await NamidaNavigator.inst.enterFullScreen(
+        Container(
+          color: Colors.black,
+          alignment: Alignment.topLeft,
+          child: const NamidaVideoWidget(
+            key: Key('pip_widget_child'),
+            enableControls: false,
+            fullscreen: true,
+            isPip: true,
+            isLocal: true,
+          ),
+        ),
+        setOrientations: false,
+      );
+      VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
+    } else {
+      VideoController.inst.isCurrentlyInBackground = true;
+      if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
+        Player.inst.play();
+      }
+    }
   });
 }
 
@@ -380,26 +407,50 @@ class Namida extends StatelessWidget {
       children: [
         Obx(
           () {
-            final locale = settings.selectedLanguage.value;
-            _setJiffyLocale(locale.code);
-            return GetMaterialApp(
-              key: Key(locale.code),
-              themeAnimationDuration: const Duration(milliseconds: kThemeAnimationDurationMS),
-              debugShowCheckedModeBanner: false,
-              title: 'Namida',
-              // restorationScopeId: 'Namida',
-              theme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, true),
-              darkTheme: AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, false),
-              themeMode: settings.themeMode.value,
-              builder: (context, widget) {
-                return ScrollConfiguration(behavior: const ScrollBehaviorModified(), child: widget!);
-              },
-              home: MainPageWrapper(
-                shouldShowOnBoarding: shouldShowOnBoarding,
-                onContextAvailable: (ctx) {
-                  _initialContext = ctx;
-                  _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+            final codes = settings.selectedLanguage.value.code.split('_');
+            return Localizations(
+              locale: Locale(codes.first, codes.last),
+              delegates: const [
+                DefaultWidgetsLocalizations.delegate,
+                DefaultMaterialLocalizations.delegate,
+              ],
+              child: GetMaterialApp(
+                key: const Key('namida_app'),
+                debugShowCheckedModeBanner: false,
+                title: 'Namida',
+                // restorationScopeId: 'Namida',
+                builder: (context, widget) {
+                  return ScrollConfiguration(
+                    behavior: const ScrollBehaviorModified(),
+                    child: Obx(
+                      () {
+                        final isLight = settings.themeMode.value == ThemeMode.light;
+                        final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                        SystemChrome.setSystemUIOverlayStyle(
+                          SystemUiOverlayStyle(
+                            systemNavigationBarContrastEnforced: false,
+                            systemNavigationBarColor: const Color(0x00000000),
+                            systemNavigationBarDividerColor: const Color(0x00000000),
+                            systemNavigationBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
+                          ),
+                        );
+                        // SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+                        return AnimatedTheme(
+                          duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                          data: theme,
+                          child: widget!,
+                        );
+                      },
+                    ),
+                  );
                 },
+                home: MainPageWrapper(
+                  shouldShowOnBoarding: shouldShowOnBoarding,
+                  onContextAvailable: (ctx) {
+                    _initialContext = ctx;
+                    _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+                  },
+                ),
               ),
             );
           },

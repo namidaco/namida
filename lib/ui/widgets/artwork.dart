@@ -41,7 +41,6 @@ class ArtworkWidget extends StatefulWidget {
   final bool displayIcon;
   final IconData icon;
   final bool isCircle;
-  final bool ignoreLoadingDelay;
 
   const ArtworkWidget({
     required super.key,
@@ -68,7 +67,6 @@ class ArtworkWidget extends StatefulWidget {
     this.displayIcon = true,
     this.icon = Broken.musicnote,
     this.isCircle = false,
-    this.ignoreLoadingDelay = false,
   });
 
   @override
@@ -81,45 +79,42 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
   @override
   void initState() {
-    super.initState();
-    if (widget.compressed && !widget.ignoreLoadingDelay) {
-      Future.delayed(Duration.zero, _extractArtwork);
-    } else if (widget.path != null && File(widget.path!).existsSync()) {
+    if (widget.path != null && File(widget.path!).existsSync()) {
       _imagePath = widget.path;
+    } else {
+      Future.delayed(Duration.zero, _extractArtwork);
     }
+    super.initState();
   }
 
   void _extractArtwork() async {
     final wPath = widget.path;
     if (wPath != null && _imagePath == null) {
       if (!await canStartLoadingItems()) return;
-      if (await File(wPath).exists()) {
-        if (mounted) setState(() => _imagePath = wPath);
-      } else {
-        if (widget.compressed == false) {
-          final resPath = await Indexer.inst
-              .getArtwork(
-                imagePath: wPath,
-                compressed: false,
-                checkFileFirst: false,
-                size: widget.useTrackTileCacheHeight ? 240 : null,
-              )
-              .then((value) => value.$1?.path);
-          if (resPath != null) {
-            if (mounted) setState(() => _imagePath = resPath);
-          }
-        } else if (bytes == null) {
-          final resBytes = await Indexer.inst
-              .getArtwork(
-                imagePath: wPath,
-                compressed: widget.compressed,
-                checkFileFirst: false,
-                size: widget.useTrackTileCacheHeight ? 240 : null,
-              )
-              .then((value) => value.$2);
-          if (resBytes != null) {
-            if (mounted) setState(() => bytes = resBytes);
-          }
+
+      if (widget.compressed == false) {
+        final resPath = await Indexer.inst
+            .getArtwork(
+              imagePath: wPath,
+              compressed: false,
+              checkFileFirst: false,
+              size: widget.useTrackTileCacheHeight ? 240 : null,
+            )
+            .then((value) => value.$1?.path);
+        if (resPath != null) {
+          if (mounted) setState(() => _imagePath = resPath);
+        }
+      } else if (bytes == null) {
+        final resBytes = await Indexer.inst
+            .getArtwork(
+              imagePath: wPath,
+              compressed: widget.compressed,
+              checkFileFirst: false,
+              size: widget.useTrackTileCacheHeight ? 240 : null,
+            )
+            .then((value) => value.$2);
+        if (resBytes != null) {
+          if (mounted) setState(() => bytes = resBytes);
         }
       }
     }
@@ -130,6 +125,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final bytes = this.bytes;
     final key = Key("${widget.path}_${bytes?.length}");
     final isValidBytes = bytes != null && bytes.isNotEmpty;
+    final canDisplayImage = _imagePath != null || isValidBytes;
+    final thereMightBeImageSoon =
+        !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && Indexer.inst.artworksMap[widget.path ?? '']?.isEmpty == true;
 
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
@@ -146,6 +144,14 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final boxWidth = widget.width ?? widget.thumbnailSize;
     final boxHeight = widget.height ?? widget.thumbnailSize;
 
+    // -- dont display stock widget if image can be obtained.
+    if (thereMightBeImageSoon) {
+      return SizedBox(
+        key: key,
+        width: widget.staggered ? null : boxWidth,
+        height: widget.staggered ? null : boxHeight,
+      );
+    }
     Widget getStockWidget({
       final Color? bgc,
       required final bool stackWithOnTopWidgets,
@@ -177,7 +183,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       );
     }
 
-    return (_imagePath == null && !isValidBytes) || widget.forceDummyArtwork
+    return !canDisplayImage || widget.forceDummyArtwork
         ? getStockWidget(
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
@@ -201,7 +207,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (_imagePath != null || isValidBytes)
+                      if (canDisplayImage)
                         Image(
                           image: ResizeImage.resizeIfNeeded(
                             null,
@@ -215,7 +221,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded) return child;
-                            if (bytes != null && bytes.isNotEmpty) return child;
+                            if (_imagePath != null && bytes != null && bytes.isNotEmpty) return child;
                             if (frame == null) return child;
 
                             return TweenAnimationBuilder(

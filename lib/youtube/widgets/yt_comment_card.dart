@@ -165,17 +165,19 @@ class YTCommentCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Broken.like_1, size: 16.0),
-                      const SizedBox(width: 4.0),
-                      NamidaDummyContainer(
-                        width: 18.0,
-                        height: 8.0,
-                        borderRadius: 4.0,
-                        shimmerEnabled: likeCount == null,
-                        child: Text(
-                          likeCount?.formatDecimalShort() ?? '?',
-                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
+                      if (likeCount == null || likeCount > 0) ...[
+                        const SizedBox(width: 4.0),
+                        NamidaDummyContainer(
+                          width: 18.0,
+                          height: 8.0,
+                          borderRadius: 4.0,
+                          shimmerEnabled: likeCount == null,
+                          child: Text(
+                            likeCount?.formatDecimalShort() ?? '?',
+                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
+                          ),
                         ),
-                      ),
+                      ],
                       const SizedBox(width: 12.0),
                       const Icon(Broken.dislike, size: 16.0),
                       const SizedBox(width: 16.0),
@@ -333,20 +335,22 @@ class YTCommentCardCompact extends StatelessWidget {
                 children: [
                   const SizedBox(width: 4.0),
                   const Icon(Broken.like_1, size: 12.0),
-                  const SizedBox(width: 4.0),
-                  NamidaDummyContainer(
-                    width: 18.0,
-                    height: 6.0,
-                    borderRadius: 4.0,
-                    shimmerEnabled: likeCount == null,
-                    child: Text(
-                      likeCount?.formatDecimalShort() ?? '?',
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontSize: 11.5.multipliedFontScale,
-                        fontWeight: FontWeight.w400,
+                  if (likeCount == null || likeCount > 0) ...[
+                    const SizedBox(width: 4.0),
+                    NamidaDummyContainer(
+                      width: 18.0,
+                      height: 6.0,
+                      borderRadius: 4.0,
+                      shimmerEnabled: likeCount == null,
+                      child: Text(
+                        likeCount?.formatDecimalShort() ?? '?',
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontSize: 11.5.multipliedFontScale,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                   if (repliesCount != null && repliesCount > 0) ...[
                     Text(
                       ' | ',
