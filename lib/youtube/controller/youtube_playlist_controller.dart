@@ -7,7 +7,9 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -85,6 +87,42 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
       ),
       identifyBy: (ytid) => ytid.id == id,
     );
+  }
+
+  void sortYTPlaylists({GroupSortType? sortBy, bool? reverse}) {
+    sortBy ??= settings.ytPlaylistSort.value;
+    reverse ??= settings.ytPlaylistSortReversed.value;
+
+    final playlistList = playlistsMap.entries.toList();
+    void sortThis(Comparable Function(MapEntry<String, GeneralPlaylist<YoutubeID>> p) comparable) =>
+        reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+
+    switch (sortBy) {
+      case GroupSortType.title:
+        sortThis((p) => p.key.toLowerCase());
+        break;
+      case GroupSortType.creationDate:
+        sortThis((p) => p.value.creationDate);
+        break;
+      case GroupSortType.modifiedDate:
+        sortThis((p) => p.value.modifiedDate);
+        break;
+      case GroupSortType.numberOfTracks:
+        sortThis((p) => p.value.tracks.length);
+        break;
+      case GroupSortType.shuffle:
+        playlistList.shuffle();
+        break;
+
+      default:
+        null;
+    }
+
+    playlistsMap
+      ..clear()
+      ..addEntries(playlistList);
+
+    settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
   }
 
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
@@ -167,5 +205,5 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
   }
 
   @override
-  void sortPlaylists() {}
+  void sortPlaylists() => sortYTPlaylists();
 }

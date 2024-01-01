@@ -36,6 +36,10 @@ class YoutubeImportController {
   Future<int> importPlaylists(String playlistsDirectoryPath) async {
     isImportingPlaylists.value = true;
     final res = await _parsePlaylistsFiles.thready(playlistsDirectoryPath);
+    if (res.isEmpty) {
+      isImportingPlaylists.value = false;
+      return 0;
+    }
 
     final completer = Completer<void>();
     res.loop((playlist, index) {
@@ -138,9 +142,12 @@ class YoutubeImportController {
 
     final playlistsMetadata = <String, _YTPlaylistDetails>{};
 
-    final plMetaFile = File("$dirPath/playlists.csv");
-    if (plMetaFile.existsSync()) {
-      files.remove(plMetaFile);
+    // final plMetaFile = File("$dirPath/playlists.csv");
+    final plMetaFileIndex = files.indexWhere((element) => element.path.endsWith('/playlists.csv'));
+    final plMetaFile = plMetaFileIndex == -1 ? null : files[plMetaFileIndex];
+
+    if (plMetaFile != null && plMetaFile is File) {
+      files.removeAt(plMetaFileIndex);
       try {
         final plLines = plMetaFile.readAsLinesSync();
         plLines.removeAt(0);

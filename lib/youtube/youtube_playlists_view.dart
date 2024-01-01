@@ -1,6 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
@@ -240,6 +243,65 @@ class YoutubePlaylistsView extends StatelessWidget {
                         title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
                         icon: Broken.music_library_2,
                         trailing: const SizedBox(),
+                        subtitleWidget: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            NamidaPopupWrapper(
+                              useRootNavigator: false,
+                              children: [
+                                Obx(
+                                  () {
+                                    final playlistSort = settings.ytPlaylistSort.value;
+                                    return Column(
+                                      children: [
+                                        ListTileWithCheckMark(
+                                          active: settings.ytPlaylistSortReversed.value,
+                                          onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
+                                        ),
+                                        ...[
+                                          GroupSortType.title,
+                                          GroupSortType.creationDate,
+                                          GroupSortType.modifiedDate,
+                                          GroupSortType.numberOfTracks,
+                                          GroupSortType.shuffle,
+                                        ].map(
+                                          (e) => SmallListTile(
+                                            title: e.toText(),
+                                            active: playlistSort == e,
+                                            onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                              child: NamidaInkWell(
+                                child: Obx(
+                                  () => Text(
+                                    settings.ytPlaylistSort.value.toText(),
+                                    style: context.textTheme.displaySmall?.copyWith(
+                                      color: context.theme.colorScheme.secondary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4.0),
+                            NamidaInkWell(
+                              onTap: () {
+                                YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value);
+                              },
+                              child: Obx(
+                                () => Icon(
+                                  settings.ytPlaylistSortReversed.value ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                  size: 16.0,
+                                  color: context.theme.colorScheme.secondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

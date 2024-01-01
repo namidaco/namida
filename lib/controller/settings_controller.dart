@@ -77,6 +77,8 @@ class SettingsController {
   final RxBool genreSortReversed = false.obs;
   final Rx<GroupSortType> playlistSort = GroupSortType.dateModified.obs;
   final RxBool playlistSortReversed = false.obs;
+  final Rx<GroupSortType> ytPlaylistSort = GroupSortType.dateModified.obs;
+  final RxBool ytPlaylistSortReversed = true.obs;
   final RxInt indexMinDurationInSec = 5.obs;
   final RxInt indexMinFileSizeInB = (100 * 1024).obs;
   final RxList<TrackSearchFilter> trackSearchFilter = [
@@ -367,6 +369,8 @@ class SettingsController {
       genreSortReversed.value = json['genreSortReversed'] ?? genreSortReversed.value;
       playlistSort.value = GroupSortType.values.getEnum(json['playlistSort']) ?? playlistSort.value;
       playlistSortReversed.value = json['playlistSortReversed'] ?? playlistSortReversed.value;
+      ytPlaylistSort.value = GroupSortType.values.getEnum(json['ytPlaylistSort']) ?? ytPlaylistSort.value;
+      ytPlaylistSortReversed.value = json['ytPlaylistSortReversed'] ?? ytPlaylistSortReversed.value;
       indexMinDurationInSec.value = json['indexMinDurationInSec'] ?? indexMinDurationInSec.value;
       indexMinFileSizeInB.value = json['indexMinFileSizeInB'] ?? indexMinFileSizeInB.value;
 
@@ -597,6 +601,8 @@ class SettingsController {
       'genreSortReversed': genreSortReversed.value,
       'playlistSort': playlistSort.value.convertToString,
       'playlistSortReversed': playlistSortReversed.value,
+      'ytPlaylistSort': ytPlaylistSort.value.convertToString,
+      'ytPlaylistSortReversed': ytPlaylistSortReversed.value,
       'indexMinDurationInSec': indexMinDurationInSec.value,
       'indexMinFileSizeInB': indexMinFileSizeInB.value,
       'trackSearchFilter': trackSearchFilter.mapped((e) => e.convertToString),
@@ -776,6 +782,8 @@ class SettingsController {
     bool? genreSortReversed,
     GroupSortType? playlistSort,
     bool? playlistSortReversed,
+    GroupSortType? ytPlaylistSort,
+    bool? ytPlaylistSortReversed,
     bool? displayThirdRow,
     bool? displayThirdItemInEachRow,
     String? trackTileSeparator,
@@ -1062,6 +1070,12 @@ class SettingsController {
     }
     if (playlistSortReversed != null) {
       this.playlistSortReversed.value = playlistSortReversed;
+    }
+    if (ytPlaylistSort != null) {
+      this.ytPlaylistSort.value = ytPlaylistSort;
+    }
+    if (ytPlaylistSortReversed != null) {
+      this.ytPlaylistSortReversed.value = ytPlaylistSortReversed;
     }
     if (displayThirdRow != null) {
       this.displayThirdRow.value = displayThirdRow;
