@@ -22,6 +22,8 @@ enum SortType {
   size,
   rating,
   shuffle,
+  mostPlayed,
+  latestPlayed,
 }
 
 enum GroupSortType {

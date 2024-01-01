@@ -8,6 +8,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -106,31 +107,33 @@ class SearchSortController {
     }
   }
 
-  late final _mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
-    SortType.title: (e) => e.title.toLowerCase(),
-    SortType.album: (e) => e.album.toLowerCase(),
-    SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
-    SortType.year: (e) => e.yearPreferyyyyMMdd,
-    SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
-    SortType.genresList: (e) => e.genresList.join().toLowerCase(),
-    SortType.dateAdded: (e) => e.dateAdded,
-    SortType.dateModified: (e) => e.dateModified,
-    SortType.bitrate: (e) => e.bitrate,
-    SortType.composer: (e) => e.composer.toLowerCase(),
-    SortType.trackNo: (e) => e.trackNo,
-    SortType.discNo: (e) => e.discNo,
-    SortType.filename: (e) => e.filename.toLowerCase(),
-    SortType.duration: (e) => e.duration,
-    SortType.sampleRate: (e) => e.sampleRate,
-    SortType.size: (e) => e.size,
-    SortType.rating: (e) => e.stats.rating,
-  };
-
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
+    final mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
+      SortType.title: (e) => e.title.toLowerCase(),
+      SortType.album: (e) => e.album.toLowerCase(),
+      SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
+      SortType.year: (e) => e.yearPreferyyyyMMdd,
+      SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
+      SortType.genresList: (e) => e.genresList.join().toLowerCase(),
+      SortType.dateAdded: (e) => e.dateAdded,
+      SortType.dateModified: (e) => e.dateModified,
+      SortType.bitrate: (e) => e.bitrate,
+      SortType.composer: (e) => e.composer.toLowerCase(),
+      SortType.trackNo: (e) => e.trackNo,
+      SortType.discNo: (e) => e.discNo,
+      SortType.filename: (e) => e.filename.toLowerCase(),
+      SortType.duration: (e) => e.duration,
+      SortType.sampleRate: (e) => e.sampleRate,
+      SortType.size: (e) => e.size,
+      SortType.rating: (e) => e.stats.rating,
+      SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0,
+      SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0,
+    };
+
     final sorts = settings.mediaItemsTrackSorting[media] ?? <SortType>[SortType.title];
     final l = <Comparable Function(Track e)>[];
     sorts.loop((e, index) {
-      if (_mediaTracksSortingComparables[e] != null) l.add(_mediaTracksSortingComparables[e]!);
+      if (mediaTracksSortingComparables[e] != null) l.add(mediaTracksSortingComparables[e]!);
     });
     return l;
   }
@@ -602,6 +605,12 @@ class SearchSortController {
         break;
       case SortType.shuffle:
         list.shuffle();
+        break;
+      case SortType.mostPlayed:
+        sortThis((e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0);
+        break;
+      case SortType.latestPlayed:
+        sortThis((e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0);
         break;
 
       default:

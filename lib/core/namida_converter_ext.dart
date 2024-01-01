@@ -1255,6 +1255,8 @@ class _NamidaConverters {
         SortType.year: lang.YEAR,
         SortType.rating: lang.RATING,
         SortType.shuffle: lang.SHUFFLE,
+        SortType.mostPlayed: lang.MOST_PLAYED,
+        SortType.latestPlayed: lang.RECENT_LISTENS,
       },
       GroupSortType: {
         GroupSortType.title: lang.TITLE,

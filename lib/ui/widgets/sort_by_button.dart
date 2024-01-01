@@ -43,6 +43,8 @@ class SortByMenuTracks extends StatelessWidget {
               SortType.sampleRate,
               SortType.size,
               SortType.rating,
+              SortType.latestPlayed,
+              SortType.mostPlayed,
               SortType.shuffle,
             ].map(
               (e) => SmallListTile(
@@ -124,6 +126,8 @@ class SortByMenuTracksSearch extends StatelessWidget {
                               SortType.sampleRate,
                               SortType.size,
                               SortType.rating,
+                              SortType.latestPlayed,
+                              SortType.mostPlayed,
                               SortType.shuffle,
                             ].map(
                               (e) => SmallListTile(
