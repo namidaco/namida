@@ -2171,7 +2171,6 @@ class NamidaListView extends StatelessWidget {
   final List<double>? itemExtents;
   final ScrollController? scrollController;
   final int itemCount;
-  final List<Widget>? moreWidgets;
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
   final Map<String, int> scrollConfig;
@@ -2185,7 +2184,6 @@ class NamidaListView extends StatelessWidget {
     required this.itemBuilder,
     required this.itemCount,
     required this.itemExtents,
-    this.moreWidgets,
     this.scrollController,
     this.buildDefaultDragHandles = true,
     this.onReorderStart,
@@ -2196,45 +2194,96 @@ class NamidaListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return NamidaListViewRaw(
+      scrollController: scrollController,
+      scrollConfig: scrollConfig,
+      header: header,
+      listBuilder: (list) => Column(
+        children: [
+          if (widgetsInColumn != null) ...widgetsInColumn!,
+          Expanded(child: list),
+        ],
+      ),
+      itemBuilder: itemBuilder,
+      itemCount: itemCount,
+      buildDefaultDragHandles: buildDefaultDragHandles,
+      itemExtents: itemExtents,
+      onReorder: onReorder,
+      onReorderStart: onReorderStart,
+      onReorderEnd: onReorderEnd,
+      padding: padding,
+      physics: physics,
+    );
+  }
+}
+
+class NamidaListViewRaw extends StatelessWidget {
+  final Widget Function(Widget list) listBuilder;
+  final Widget Function(BuildContext context, int i) itemBuilder;
+  final void Function(int oldIndex, int newIndex)? onReorder;
+  final void Function(int index)? onReorderStart;
+  final void Function(int index)? onReorderEnd;
+  final Widget? header;
+  final EdgeInsets? padding;
+  final List<double>? itemExtents;
+  final ScrollController? scrollController;
+  final int itemCount;
+  final bool buildDefaultDragHandles;
+  final ScrollPhysics? physics;
+  final Map<String, int> scrollConfig;
+
+  const NamidaListViewRaw({
+    super.key,
+    required this.listBuilder,
+    required this.itemBuilder,
+    this.onReorder,
+    this.onReorderStart,
+    this.onReorderEnd,
+    this.header,
+    this.padding,
+    this.itemExtents,
+    this.scrollController,
+    required this.itemCount,
+    this.buildDefaultDragHandles = true,
+    this.physics,
+    this.scrollConfig = const {},
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final listW = itemExtents != null
+        ? KnownExtentsReorderableListView.builder(
+            itemExtents: itemExtents!,
+            scrollController: scrollController,
+            padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+            onReorder: onReorder ?? (oldIndex, newIndex) {},
+            proxyDecorator: (child, index, animation) => child,
+            header: header,
+            buildDefaultDragHandles: buildDefaultDragHandles,
+            physics: physics,
+            onReorderStart: onReorderStart,
+            onReorderEnd: onReorderEnd,
+          )
+        : ReorderableListView.builder(
+            itemExtent: itemExtents?.firstOrNull,
+            scrollController: scrollController,
+            padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+            onReorder: onReorder ?? (oldIndex, newIndex) {},
+            proxyDecorator: (child, index, animation) => child,
+            onReorderStart: onReorderStart,
+            onReorderEnd: onReorderEnd,
+            header: header,
+            buildDefaultDragHandles: onReorder != null,
+            physics: physics,
+          );
     return AnimationLimiter(
       child: NamidaScrollbar(
         controller: scrollController,
-        child: Column(
-          children: [
-            if (widgetsInColumn != null) ...widgetsInColumn!,
-            Expanded(
-              child: itemExtents != null
-                  ? KnownExtentsReorderableListView.builder(
-                      itemExtents: itemExtents!,
-                      scrollController: scrollController,
-                      padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
-                      itemBuilder: itemBuilder,
-                      itemCount: itemCount,
-                      onReorder: onReorder ?? (oldIndex, newIndex) {},
-                      proxyDecorator: (child, index, animation) => child,
-                      header: header,
-                      buildDefaultDragHandles: buildDefaultDragHandles,
-                      physics: physics,
-                      onReorderStart: onReorderStart,
-                      onReorderEnd: onReorderEnd,
-                    )
-                  : ReorderableListView.builder(
-                      itemExtent: itemExtents?.firstOrNull,
-                      scrollController: scrollController,
-                      padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
-                      itemBuilder: itemBuilder,
-                      itemCount: itemCount,
-                      onReorder: onReorder ?? (oldIndex, newIndex) {},
-                      proxyDecorator: (child, index, animation) => child,
-                      onReorderStart: onReorderStart,
-                      onReorderEnd: onReorderEnd,
-                      header: header,
-                      buildDefaultDragHandles: onReorder != null,
-                      physics: physics,
-                    ),
-            ),
-          ],
-        ),
+        child: listBuilder(listW),
       ),
     );
   }

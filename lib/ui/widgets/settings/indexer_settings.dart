@@ -62,46 +62,6 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.foldersToExclude: [lang.EXCLUDED_FODLERS],
       };
 
-  Future<void> _showRefreshPromptDialog(bool didModifyFolder) async {
-    _RefreshLibraryIconController.repeat();
-    final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);
-    final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
-    final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
-    if (newPathsLength == 0 && deletedPathLength == 0) {
-      snackyy(title: lang.NOTE, message: lang.NO_CHANGES_FOUND);
-    } else {
-      NamidaNavigator.inst.navigateDialog(
-        dialog: CustomBlurryDialog(
-          title: lang.NOTE,
-          bodyText: lang.PROMPT_INDEXING_REFRESH
-              .replaceFirst(
-                '_NEW_FILES_',
-                newPathsLength.toString(),
-              )
-              .replaceFirst(
-                '_DELETED_FILES_',
-                deletedPathLength.toString(),
-              ),
-          actions: [
-            const CancelButton(),
-            NamidaButton(
-              text: lang.REFRESH,
-              onPressed: () async {
-                NamidaNavigator.inst.closeDialog();
-                await Future.delayed(const Duration(milliseconds: 300));
-                VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
-                await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    await _RefreshLibraryIconController.fling();
-    _RefreshLibraryIconController.stop();
-  }
-
   Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
     return NamidaButton(
       icon: Broken.folder_add,
@@ -114,7 +74,7 @@ class IndexerSettings extends SettingSubpageProvider {
         }
 
         onSuccessChoose(path);
-        _showRefreshPromptDialog(true);
+        showRefreshPromptDialog(true);
       },
     );
   }
@@ -131,7 +91,7 @@ class IndexerSettings extends SettingSubpageProvider {
           value: settings.useMediaStore.value,
           onChanged: (isTrue) {
             settings.save(useMediaStore: !isTrue);
-            _showRefreshPromptDialog(false);
+            showRefreshPromptDialog(false);
           },
         ),
       ),
@@ -215,7 +175,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                   onPressed: () {
                                     settings.removeFromList(directoriesToScan1: e);
                                     NamidaNavigator.inst.closeDialog();
-                                    _showRefreshPromptDialog(true);
+                                    showRefreshPromptDialog(true);
                                   },
                                 ),
                               ],
@@ -278,7 +238,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       trailing: TextButton(
                         onPressed: () {
                           settings.removeFromList(directoriesToExclude1: e);
-                          _showRefreshPromptDialog(true);
+                          showRefreshPromptDialog(true);
                         },
                         child: Text(lang.REMOVE.toUpperCase()),
                       ),
@@ -328,7 +288,7 @@ class IndexerSettings extends SettingSubpageProvider {
           NamidaIconButton(
             icon: Broken.refresh_2,
             tooltip: lang.REFRESH_LIBRARY,
-            onPressed: () => _showRefreshPromptDialog(false),
+            onPressed: () => showRefreshPromptDialog(false),
             child: const _RefreshLibraryIcon(widgetKey: refreshIconKey2),
           ),
           const SizedBox(
@@ -659,7 +619,7 @@ class IndexerSettings extends SettingSubpageProvider {
               leading: const _RefreshLibraryIcon(widgetKey: refreshIconKey1),
               title: lang.REFRESH_LIBRARY,
               subtitle: lang.REFRESH_LIBRARY_SUBTITLE,
-              onTap: () => _showRefreshPromptDialog(false),
+              onTap: () => showRefreshPromptDialog(false),
             ),
           ),
           getFoldersToScanWidget(context: context),
@@ -836,7 +796,47 @@ class IndexerSettings extends SettingSubpageProvider {
   }
 }
 
-class _RefreshLibraryIconController {
+Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
+  RefreshLibraryIconController.repeat();
+  final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);
+  final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
+  final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
+  if (newPathsLength == 0 && deletedPathLength == 0) {
+    snackyy(title: lang.NOTE, message: lang.NO_CHANGES_FOUND);
+  } else {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.NOTE,
+        bodyText: lang.PROMPT_INDEXING_REFRESH
+            .replaceFirst(
+              '_NEW_FILES_',
+              newPathsLength.toString(),
+            )
+            .replaceFirst(
+              '_DELETED_FILES_',
+              deletedPathLength.toString(),
+            ),
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.REFRESH,
+            onPressed: () async {
+              NamidaNavigator.inst.closeDialog();
+              await Future.delayed(const Duration(milliseconds: 300));
+              VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
+              await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  await RefreshLibraryIconController.fling();
+  RefreshLibraryIconController.stop();
+}
+
+class RefreshLibraryIconController {
   static final _controllers = <String, AnimationController>{};
 
   static AnimationController getController(String key) => _controllers[key]!;
@@ -894,19 +894,19 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
   @override
   void initState() {
     super.initState();
-    _RefreshLibraryIconController.init(widget.widgetKey, this);
+    RefreshLibraryIconController.init(widget.widgetKey, this);
   }
 
   @override
   void dispose() {
-    _RefreshLibraryIconController.dispose(widget.widgetKey);
+    RefreshLibraryIconController.dispose(widget.widgetKey);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RotationTransition(
-      turns: turnsTween.animate(_RefreshLibraryIconController.getController(widget.widgetKey)),
+      turns: turnsTween.animate(RefreshLibraryIconController.getController(widget.widgetKey)),
       child: Icon(
         Broken.refresh_2,
         color: context.defaultIconColor(),

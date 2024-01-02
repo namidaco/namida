@@ -534,6 +534,7 @@ mixin LoadingItemsDelayMixin<T extends StatefulWidget> on State<T> {
   Completer<bool>? _loadingDelayCompleter;
 
   Future<bool> canStartLoadingItems({int? delayMS}) async {
+    if (!mounted) return false;
     final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
     if (shouldDelayLoading) {
       _loadingDelayCompleter = Completer<bool>();
