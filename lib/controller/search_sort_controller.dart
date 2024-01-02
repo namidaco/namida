@@ -107,33 +107,33 @@ class SearchSortController {
     }
   }
 
-  List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
-    final mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
-      SortType.title: (e) => e.title.toLowerCase(),
-      SortType.album: (e) => e.album.toLowerCase(),
-      SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
-      SortType.year: (e) => e.yearPreferyyyyMMdd,
-      SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
-      SortType.genresList: (e) => e.genresList.join().toLowerCase(),
-      SortType.dateAdded: (e) => e.dateAdded,
-      SortType.dateModified: (e) => e.dateModified,
-      SortType.bitrate: (e) => e.bitrate,
-      SortType.composer: (e) => e.composer.toLowerCase(),
-      SortType.trackNo: (e) => e.trackNo,
-      SortType.discNo: (e) => e.discNo,
-      SortType.filename: (e) => e.filename.toLowerCase(),
-      SortType.duration: (e) => e.duration,
-      SortType.sampleRate: (e) => e.sampleRate,
-      SortType.size: (e) => e.size,
-      SortType.rating: (e) => e.stats.rating,
-      SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0,
-      SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0,
-    };
+  late final _mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
+    SortType.title: (e) => e.title.toLowerCase(),
+    SortType.album: (e) => e.album.toLowerCase(),
+    SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
+    SortType.year: (e) => e.yearPreferyyyyMMdd,
+    SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
+    SortType.genresList: (e) => e.genresList.join().toLowerCase(),
+    SortType.dateAdded: (e) => e.dateAdded,
+    SortType.dateModified: (e) => e.dateModified,
+    SortType.bitrate: (e) => e.bitrate,
+    SortType.composer: (e) => e.composer.toLowerCase(),
+    SortType.trackNo: (e) => e.trackNo,
+    SortType.discNo: (e) => e.discNo,
+    SortType.filename: (e) => e.filename.toLowerCase(),
+    SortType.duration: (e) => e.duration,
+    SortType.sampleRate: (e) => e.sampleRate,
+    SortType.size: (e) => e.size,
+    SortType.rating: (e) => e.stats.rating,
+    SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0,
+    SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0,
+  };
 
+  List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
     final sorts = settings.mediaItemsTrackSorting[media] ?? <SortType>[SortType.title];
     final l = <Comparable Function(Track e)>[];
     sorts.loop((e, index) {
-      if (mediaTracksSortingComparables[e] != null) l.add(mediaTracksSortingComparables[e]!);
+      if (_mediaTracksSortingComparables[e] != null) l.add(_mediaTracksSortingComparables[e]!);
     });
     return l;
   }
@@ -271,7 +271,6 @@ class SearchSortController {
     });
   }
 
-  // TODO: comment search filter
   static void _searchTracksIsolate(Map params) {
     final tracks = params['tracks'] as List<Map>;
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
@@ -294,6 +293,7 @@ class SearchSortController {
     final sartist = tsfMap[TrackSearchFilter.artist] ?? true;
     final sgenre = tsfMap[TrackSearchFilter.genre] ?? false;
     final scomposer = tsfMap[TrackSearchFilter.composer] ?? false;
+    final scomment = tsfMap[TrackSearchFilter.comment] ?? false;
     final syear = tsfMap[TrackSearchFilter.year] ?? false;
 
     final function = _functionOfCleanup(cleanup);
@@ -310,6 +310,7 @@ class SearchSortController {
       List<String> splitArtist,
       List<String> splitGenre,
       Iterable<String> splitComposer,
+      Iterable<String> splitComment,
       String year,
     })>[];
     for (final trMap in tracks) {
@@ -335,6 +336,7 @@ class SearchSortController {
                 )
               : [],
           splitComposer: splitThis(trMap['composer'], scomposer),
+          splitComment: splitThis(trMap['comment'], scomment),
           year: textCleanedForSearch(trMap['year'].toString()),
         ),
       );
@@ -365,6 +367,7 @@ class SearchSortController {
             (sartist && isMatch(trExt.splitArtist)) ||
             (sgenre && isMatch(trExt.splitGenre)) ||
             (scomposer && isMatch(trExt.splitComposer)) ||
+            (scomment && isMatch(trExt.splitComment)) ||
             (syear && trExt.year.contains(lctext))) {
           result.add(Track(trExt.path));
         }

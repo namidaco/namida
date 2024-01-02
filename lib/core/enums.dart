@@ -98,6 +98,7 @@ enum TrackSearchFilter {
   albumartist,
   genre,
   composer,
+  comment,
   year,
 }
 

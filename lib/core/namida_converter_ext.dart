@@ -1428,6 +1428,7 @@ class _NamidaConverters {
         TrackSearchFilter.albumartist: lang.ALBUM_ARTIST,
         TrackSearchFilter.genre: lang.GENRE,
         TrackSearchFilter.composer: lang.COMPOSER,
+        TrackSearchFilter.comment: lang.COMMENT,
         TrackSearchFilter.year: lang.YEAR,
       },
     };
