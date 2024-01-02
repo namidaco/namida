@@ -1,16 +1,17 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -369,8 +370,8 @@ class YoutubePlaylistsView extends StatelessWidget {
                           shimmerEnabled: false,
                           title: playlist.name,
                           subtitle: playlist.creationDate.dateFormattedOriginal,
-                          displaythirdLineText: false,
-                          thirdLineText: '',
+                          displaythirdLineText: true,
+                          thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(playlist.modifiedDate).fromNow(),
                           displayChannelThumbnail: false,
                           channelThumbnailUrl: '',
                           onTap: () {

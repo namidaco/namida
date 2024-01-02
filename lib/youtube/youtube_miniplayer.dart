@@ -594,7 +594,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             );
                                           },
                                         ),
-                                        const SliverPadding(padding: EdgeInsets.only(top: 4.0)),
+                                        const SliverPadding(padding: EdgeInsets.only(top: 8.0)),
 
                                         Obx(
                                           () {

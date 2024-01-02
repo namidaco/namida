@@ -148,7 +148,7 @@ void main() async {
 
   await Future.wait([
     SystemChrome.setPreferredOrientations(kDefaultOrientations),
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+    NamidaNavigator.inst.setDefaultSystemUI(),
   ]);
 
   NamidaNavigator.inst.setDefaultsetSystemUIOverlayStyle();

@@ -76,6 +76,7 @@ class ArtworkWidget extends StatefulWidget {
 class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMixin {
   String? _imagePath;
   late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
+  late bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
   @override
   void initState() {
@@ -101,8 +102,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               size: widget.useTrackTileCacheHeight ? 240 : null,
             )
             .then((value) => value.$1?.path);
-        if (resPath != null) {
-          if (mounted) setState(() => _imagePath = resPath);
+        if (mounted) {
+          if (resPath != null || !_imageObtainedBefore) {
+            setState(() {
+              if (resPath != null) _imagePath = resPath;
+              if (!_imageObtainedBefore) _imageObtainedBefore = true;
+            });
+          }
         }
       } else if (bytes == null) {
         final resBytes = await Indexer.inst
@@ -113,8 +119,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               size: widget.useTrackTileCacheHeight ? 240 : null,
             )
             .then((value) => value.$2);
-        if (resBytes != null) {
-          if (mounted) setState(() => bytes = resBytes);
+        if (mounted) {
+          if (resBytes != null || !_imageObtainedBefore) {
+            setState(() {
+              if (resBytes != null) bytes = resBytes;
+              if (!_imageObtainedBefore) _imageObtainedBefore = true;
+            });
+          }
         }
       }
     }
@@ -126,8 +137,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final key = Key("${widget.path}_${bytes?.length}");
     final isValidBytes = bytes != null && bytes.isNotEmpty;
     final canDisplayImage = _imagePath != null || isValidBytes;
-    final thereMightBeImageSoon =
-        !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && Indexer.inst.artworksMap[widget.path ?? '']?.isEmpty == true;
+    final thereMightBeImageSoon = !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && !_imageObtainedBefore;
 
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 

@@ -209,6 +209,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onIndexChanged(int newIndex, Q newItem) async {
+    settings.save(lastPlayedTrackIndex: newIndex);
     refreshNotification(newItem);
     await newItem._execute(
       selectable: (finalItem) async {
@@ -237,15 +238,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (MiniPlayerController.inst.isInQueue) MiniPlayerController.inst.snapToMini();
       // await pause();
       await [
-        super.onDispose(),
+        onDispose(),
         VideoController.vcontroller.dispose(),
         QueueController.inst.emptyLatestQueue(),
       ].execute();
-      Future.delayed(const Duration(seconds: 5), () {
-        if (currentItem == null) {
-          AudioService.forceStop();
-        }
-      });
     } else {
       refreshNotification(currentItem);
       await currentQueue._execute(
@@ -575,7 +571,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     startSleepAfterMinCount();
     startCounterToAListen(pi);
     increaseListenTime();
-    settings.save(lastPlayedTrackIndex: index);
     Lyrics.inst.updateLyrics(tr);
   }
 
@@ -1278,8 +1273,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await [
       super.onDispose(),
       VideoController.vcontroller.dispose(),
+      AudioService.forceStop(),
     ].execute();
-    AudioService.forceStop();
   }
 
   @override

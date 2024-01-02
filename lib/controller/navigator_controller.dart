@@ -133,6 +133,10 @@ class NamidaNavigator {
     }
   }
 
+  Future<void> setDefaultSystemUI() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
+  }
+
   void setDefaultsetSystemUIOverlayStyle() {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -185,7 +189,7 @@ class NamidaNavigator {
 
     await Future.wait([
       if (setOrientations) _setOrientations(false),
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+      setDefaultSystemUI(),
     ]);
 
     _isInFullScreen = false;

@@ -2917,7 +2917,7 @@ class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> {
         case 'onResume':
           await Future.wait([
             SystemChrome.setPreferredOrientations(kDefaultOrientations),
-            SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
+            NamidaNavigator.inst.setDefaultSystemUI(),
             if (widget.onResume != null) widget.onResume!(),
           ]);
         case 'onUserLeaveHint':

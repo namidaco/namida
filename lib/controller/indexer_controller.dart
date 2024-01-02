@@ -81,6 +81,8 @@ class Indexer {
 
   Map<String, (TrackExtended, int)> get backupMediaStoreIDS => _backupMediaStoreIDS;
 
+  bool imageObtainedBefore(String imagePath) => _artworksMap[imagePath] != null || _artworksMapFullRes[imagePath] != null;
+
   /// {imagePath: (TrackExtended, id)};
   final _backupMediaStoreIDS = <String, (TrackExtended, int)>{};
   final artworksMap = <String, Uint8List?>{};
