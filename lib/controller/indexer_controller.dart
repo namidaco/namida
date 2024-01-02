@@ -1279,8 +1279,9 @@ class Indexer {
 
   Future<List<(TrackExtended, int)>> _fetchMediaStoreTracks() async {
     final allMusic = await _audioQuery.querySongs();
+    // -- folders selected will be ignored when [settings.useMediaStore.value] is enabled.
     allMusic.retainWhere(
-        (element) => settings.directoriesToExclude.every((dir) => !element.data.startsWith(dir)) && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)));
+        (element) => settings.directoriesToExclude.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
     final tracks = <(TrackExtended, int)>[];
     allMusic.loop((e, _) {
       final map = e.getMap;
