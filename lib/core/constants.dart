@@ -135,6 +135,12 @@ class AppSocial {
   static const TRANSLATION_REPO = 'https://github.com/namidaco/namida-translations';
 }
 
+class ListenTimeKeys {
+  static const localTracks = 'tr';
+  static const localVideos = 'vid';
+  static const youtube = 'yt';
+}
+
 /// Default Playlists IDs
 const k_PLAYLIST_NAME_FAV = '_FAVOURITES_';
 const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';

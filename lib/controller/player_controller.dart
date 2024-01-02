@@ -75,7 +75,7 @@ class Player {
   bool get canJumpToNext => !isLastItem || settings.playerInfiniyQueueOnNextPrevious.value;
   bool get canJumpToPrevious => currentIndex != 0 || settings.playerInfiniyQueueOnNextPrevious.value;
 
-  int get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
+  RxMap<String, int>? get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 
   int get sleepingTrackIndex => sleepAfterTracks + currentIndex - 1;
 

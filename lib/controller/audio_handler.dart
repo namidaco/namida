@@ -106,11 +106,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await bufferingCompleter?.future;
   }
 
-  Future<void> prepareTotalListenTime() async {
-    final file = await File(AppPaths.TOTAL_LISTEN_TIME).create();
-    final text = await file.readAsString();
-    final listenTime = int.tryParse(text);
-    super.initializeTotalListenTime(listenTime);
+  @override
+  Future<Map<String, int>> prepareTotalListenTime() async {
+    try {
+      final file = await File(AppPaths.TOTAL_LISTEN_TIME).create();
+      final map = await file.readAsJson();
+      return (map as Map<String, dynamic>).cast();
+    } catch (_) {
+      return {};
+    }
   }
 
   Future<void> _updateTrackLastPosition(Track track, int lastPositionMS) async {
@@ -570,7 +574,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     startSleepAfterMinCount();
     startCounterToAListen(pi);
-    increaseListenTime();
+    increaseListenTime(ListenTimeKeys.localTracks);
     Lyrics.inst.updateLyrics(tr);
   }
 
@@ -766,7 +770,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (!wasPlayingFromCache) {
         startSleepAfterMinCount();
         startCounterToAListen(pi);
-        increaseListenTime();
+        increaseListenTime(ListenTimeKeys.youtube);
       }
     }
 
@@ -1099,13 +1103,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     settings.save(playerRepeatMode: RepeatMode.none);
   }
 
-  /// TODO: separate yt total listens
   @override
-  FutureOr<void> onTotalListenTimeIncrease(int totalTimeInSeconds) async {
+  FutureOr<void> onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) async {
+    final newSeconds = totalTimeInSeconds[key] ?? 0;
+
     // saves the file each 20 seconds.
-    if (totalTimeInSeconds % 20 == 0) {
+    if (newSeconds % 20 == 0) {
       _updateTrackLastPosition(currentTrack.track, currentPositionMS);
-      await File(AppPaths.TOTAL_LISTEN_TIME).writeAsString(totalTimeInSeconds.toString());
+      await File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds);
     }
   }
 

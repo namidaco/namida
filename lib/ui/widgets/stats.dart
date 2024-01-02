@@ -51,11 +51,15 @@ class StatsSection extends StatelessWidget {
                 value: allTracksInLibrary.totalDurationFormatted,
               ),
               Obx(
-                () => StatsContainer(
-                  icon: Broken.timer_1,
-                  title: '${lang.TOTAL_LISTEN_TIME} :',
-                  value: Player.inst.totalListenedTimeInSec.formattedTime,
-                ),
+                () {
+                  final map = Player.inst.totalListenedTimeInSec;
+                  final trSec = map?[ListenTimeKeys.localTracks] ?? 0;
+                  return StatsContainer(
+                    icon: Broken.timer_1,
+                    title: '${lang.TOTAL_LISTEN_TIME} :',
+                    value: trSec.formattedTime,
+                  );
+                },
               ),
             ],
           ),
