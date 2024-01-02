@@ -83,185 +83,187 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
         duration: const Duration(milliseconds: 400),
         tapScaffoldEnabled: false,
         velocity: 0.01,
-        leftChild: Container(
-          color: context.theme.scaffoldBackgroundColor,
-          child: Column(
-            children: [
-              Expanded(
-                child: Obx(
-                  () => ListView(
-                    children: [
-                      const NamidaLogoContainer(),
-                      const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                      ...LibraryTab.values.map(
-                        (e) => NamidaDrawerListTile(
-                          enabled: settings.selectedLibraryTab.value == e,
-                          title: e.toText(),
-                          icon: e.toIcon(),
-                          onTap: () async {
-                            ScrollSearchController.inst.animatePageController(e);
-                            await Future.delayed(const Duration(milliseconds: 100));
+        leftChild: SafeArea(
+          child: Container(
+            color: context.theme.scaffoldBackgroundColor,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Obx(
+                    () => ListView(
+                      children: [
+                        const NamidaLogoContainer(),
+                        const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
+                        ...LibraryTab.values.map(
+                          (e) => NamidaDrawerListTile(
+                            enabled: settings.selectedLibraryTab.value == e,
+                            title: e.toText(),
+                            icon: e.toIcon(),
+                            onTap: () async {
+                              ScrollSearchController.inst.animatePageController(e);
+                              await Future.delayed(const Duration(milliseconds: 100));
+                              toggleDrawer();
+                            },
+                          ),
+                        ),
+                        NamidaDrawerListTile(
+                          enabled: false,
+                          title: lang.QUEUES,
+                          icon: Broken.driver,
+                          onTap: () {
+                            NamidaNavigator.inst.navigateTo(const QueuesPage());
                             toggleDrawer();
                           },
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                Material(
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                  child: ToggleThemeModeContainer(
+                    width: Get.width / 2.3,
+                    blurRadius: 3.0,
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+                NamidaDrawerListTile(
+                  margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
+                  enabled: false,
+                  title: lang.SLEEP_TIMER,
+                  icon: Broken.timer_1,
+                  onTap: () {
+                    toggleDrawer();
+                    final minutes = Player.inst.sleepAfterMin.obs;
+                    final tracks = Player.inst.sleepAfterTracks.obs;
+                    NamidaNavigator.inst.navigateDialog(
+                      onDisposing: () {
+                        minutes.close();
+                        tracks.close();
+                      },
+                      dialog: CustomBlurryDialog(
+                        title: lang.SLEEP_AFTER,
+                        icon: Broken.timer_1,
+                        normalTitleStyle: true,
+                        actions: [
+                          const CancelButton(),
+                          Obx(
+                            () => Player.inst.enableSleepAfterMins || Player.inst.enableSleepAfterTracks
+                                ? NamidaButton(
+                                    icon: Broken.timer_pause,
+                                    text: lang.STOP,
+                                    onPressed: () {
+                                      Player.inst.resetSleepAfterTimer();
+                                      NamidaNavigator.inst.closeDialog();
+                                    },
+                                  )
+                                : NamidaButton(
+                                    icon: Broken.timer_start,
+                                    text: lang.START,
+                                    onPressed: () {
+                                      if (minutes.value > 0 || tracks.value > 0) {
+                                        Player.inst.updateSleepTimerValues(
+                                          enableSleepAfterMins: minutes.value > 0,
+                                          enableSleepAfterTracks: tracks.value > 0,
+                                          sleepAfterMin: minutes.value,
+                                          sleepAfterTracks: tracks.value,
+                                        );
+                                      }
+                                      NamidaNavigator.inst.closeDialog();
+                                    },
+                                  ),
+                          ),
+                        ],
+                        child: Column(
+                          children: [
+                            const SizedBox(
+                              height: 32.0,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                // minutes
+                                Obx(
+                                  () => NamidaWheelSlider<int>(
+                                    totalCount: 180,
+                                    initValue: minutes.value,
+                                    itemSize: 6,
+                                    onValueChanged: (val) => minutes.value = val,
+                                    text: "${minutes.value}m",
+                                    topText: lang.MINUTES.capitalizeFirst,
+                                    textPadding: 8.0,
+                                  ),
+                                ),
+                                Text(
+                                  lang.OR,
+                                  style: context.textTheme.displayMedium,
+                                ),
+                                // tracks
+                                Obx(
+                                  () => NamidaWheelSlider<int>(
+                                    totalCount: kMaximumSleepTimerTracks,
+                                    initValue: tracks.value,
+                                    itemSize: 6,
+                                    onValueChanged: (val) => tracks.value = val,
+                                    text: "${tracks.value} ${lang.TRACK}",
+                                    topText: lang.TRACKS,
+                                    textPadding: 8.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      NamidaDrawerListTile(
+                    );
+                  },
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: NamidaDrawerListTile(
+                        margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
+                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
                         enabled: false,
-                        title: lang.QUEUES,
-                        icon: Broken.driver,
+                        isCentered: true,
+                        iconSize: 24.0,
+                        title: '',
+                        icon: Broken.brush_1,
                         onTap: () {
-                          NamidaNavigator.inst.navigateTo(const QueuesPage());
+                          NamidaNavigator.inst.navigateTo(
+                            SettingsSubPage(
+                              title: lang.CUSTOMIZATIONS,
+                              child: const CustomizationSettings(),
+                            ),
+                          );
+
                           toggleDrawer();
                         },
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12.0),
-              Material(
-                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                child: ToggleThemeModeContainer(
-                  width: Get.width / 2.3,
-                  blurRadius: 3.0,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              NamidaDrawerListTile(
-                margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
-                enabled: false,
-                title: lang.SLEEP_TIMER,
-                icon: Broken.timer_1,
-                onTap: () {
-                  toggleDrawer();
-                  final minutes = Player.inst.sleepAfterMin.obs;
-                  final tracks = Player.inst.sleepAfterTracks.obs;
-                  NamidaNavigator.inst.navigateDialog(
-                    onDisposing: () {
-                      minutes.close();
-                      tracks.close();
-                    },
-                    dialog: CustomBlurryDialog(
-                      title: lang.SLEEP_AFTER,
-                      icon: Broken.timer_1,
-                      normalTitleStyle: true,
-                      actions: [
-                        const CancelButton(),
-                        Obx(
-                          () => Player.inst.enableSleepAfterMins || Player.inst.enableSleepAfterTracks
-                              ? NamidaButton(
-                                  icon: Broken.timer_pause,
-                                  text: lang.STOP,
-                                  onPressed: () {
-                                    Player.inst.resetSleepAfterTimer();
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                )
-                              : NamidaButton(
-                                  icon: Broken.timer_start,
-                                  text: lang.START,
-                                  onPressed: () {
-                                    if (minutes.value > 0 || tracks.value > 0) {
-                                      Player.inst.updateSleepTimerValues(
-                                        enableSleepAfterMins: minutes.value > 0,
-                                        enableSleepAfterTracks: tracks.value > 0,
-                                        sleepAfterMin: minutes.value,
-                                        sleepAfterTracks: tracks.value,
-                                      );
-                                    }
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                ),
-                        ),
-                      ],
-                      child: Column(
-                        children: [
-                          const SizedBox(
-                            height: 32.0,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              // minutes
-                              Obx(
-                                () => NamidaWheelSlider<int>(
-                                  totalCount: 180,
-                                  initValue: minutes.value,
-                                  itemSize: 6,
-                                  onValueChanged: (val) => minutes.value = val,
-                                  text: "${minutes.value}m",
-                                  topText: lang.MINUTES.capitalizeFirst,
-                                  textPadding: 8.0,
-                                ),
-                              ),
-                              Text(
-                                lang.OR,
-                                style: context.textTheme.displayMedium,
-                              ),
-                              // tracks
-                              Obx(
-                                () => NamidaWheelSlider<int>(
-                                  totalCount: kMaximumSleepTimerTracks,
-                                  initValue: tracks.value,
-                                  itemSize: 6,
-                                  onValueChanged: (val) => tracks.value = val,
-                                  text: "${tracks.value} ${lang.TRACK}",
-                                  topText: lang.TRACKS,
-                                  textPadding: 8.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                    ),
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: NamidaDrawerListTile(
+                        margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
+                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+                        enabled: false,
+                        isCentered: true,
+                        iconSize: 24.0,
+                        title: '',
+                        icon: Broken.setting,
+                        onTap: () {
+                          NamidaNavigator.inst.navigateTo(const SettingsPage());
+                          toggleDrawer();
+                        },
                       ),
                     ),
-                  );
-                },
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    child: NamidaDrawerListTile(
-                      margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
-                      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                      enabled: false,
-                      isCentered: true,
-                      iconSize: 24.0,
-                      title: '',
-                      icon: Broken.brush_1,
-                      onTap: () {
-                        NamidaNavigator.inst.navigateTo(
-                          SettingsSubPage(
-                            title: lang.CUSTOMIZATIONS,
-                            child: const CustomizationSettings(),
-                          ),
-                        );
-
-                        toggleDrawer();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: NamidaDrawerListTile(
-                      margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
-                      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                      enabled: false,
-                      isCentered: true,
-                      iconSize: 24.0,
-                      title: '',
-                      icon: Broken.setting,
-                      onTap: () {
-                        NamidaNavigator.inst.navigateTo(const SettingsPage());
-                        toggleDrawer();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+              ],
+            ),
           ),
         ),
         scaffold: const MainScreenStack(),

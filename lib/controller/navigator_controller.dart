@@ -133,6 +133,15 @@ class NamidaNavigator {
     }
   }
 
+  void setDefaultsetSystemUIOverlayStyle() {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+      ),
+    );
+  }
+
   Future<void> _setOrientations(bool lanscape) async {
     isInLanscape = lanscape;
     final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;

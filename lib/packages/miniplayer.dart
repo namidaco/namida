@@ -162,11 +162,15 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
   @override
   Widget build(BuildContext context) {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
+
+    final panelH = (MiniPlayerController.inst.maxOffset / 1.6 - 100.0);
+    final maxPanelHeight = velpy(a: 82.0, b: panelH, c: 2);
+    final topPadding = MiniPlayerController.inst.maxOffset - maxPanelHeight;
     return MiniplayerRaw(
       constantChild: SafeArea(
         bottom: false,
         child: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 70),
+          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + topPadding + MediaQuery.paddingOf(context).bottom + 16.0),
           child: ClipRRect(
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(32.0.multipliedRadius),
@@ -230,7 +234,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                 ),
                 Container(
                   width: context.width,
-                  height: kQueueBottomRowHeight,
+                  height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
                   decoration: BoxDecoration(
                     color: context.theme.scaffoldBackgroundColor,
                     borderRadius: BorderRadius.vertical(
@@ -238,7 +242,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(4.0),
+                    padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
                     child: FittedBox(
                       child: _queueUtilsRow(context),
                     ),
@@ -277,6 +281,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
         panelHeight,
         miniplayerbottomnavheight,
         bottomOffset,
+        navBarHeight,
         constantChild,
       ) {
         return Obx(
@@ -303,7 +308,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 6 * (1 - cp * 10 + 9).clamp(0, 1), vertical: 12 * icp),
                           child: Container(
-                            height: velpy(a: 82.0, b: panelHeight, c: p.clamp(0, 3)),
+                            height: velpy(a: 82.0, b: panelHeight - 4.0, c: p.clamp(0, 3)) - (navBarHeight * qcp),
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: context.theme.scaffoldBackgroundColor,
@@ -470,14 +475,15 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                   child: Transform.translate(
                     offset: Offset(
                         0,
-                        bottomOffset +
-                            (-maxOffset / 8.8 * bp) +
-                            ((-maxOffset + topInset + 80.0) *
-                                (!bounceUp
-                                    ? !bounceDown
-                                        ? qp
-                                        : (1 - bp)
-                                    : 0.0))),
+                        (bottomOffset +
+                                (-maxOffset / 8.8 * bp) +
+                                ((-maxOffset + topInset + 80.0) *
+                                    (!bounceUp
+                                        ? !bounceDown
+                                            ? qp
+                                            : (1 - bp)
+                                        : 0.0))) -
+                            (navBarHeight * cp)),
                     child: Padding(
                       padding: EdgeInsets.all(12.0 * icp),
                       child: Align(
@@ -1078,9 +1084,82 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                 /// Track Info
                 Material(
                   type: MaterialType.transparency,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                    child: AnimatedBuilder(
+                      animation: sAnim,
+                      builder: (context, child) {
+                        final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                        final rightOpacity = sAnim.value.clamp(0.0, 1.0);
+                        return Stack(
+                          children: [
+                            if (prevTrack != null && leftOpacity > 0)
+                              NamidaOpacity(
+                                opacity: leftOpacity,
+                                child: Transform.translate(
+                                  offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                  child: _TrackInfo(
+                                    trackPre: prevTrack.track,
+                                    p: bp,
+                                    cp: bcp,
+                                    bottomOffset: bottomOffset,
+                                    maxOffset: maxOffset,
+                                    screenSize: screenSize,
+                                  ),
+                                ),
+                              ),
+                            NamidaOpacity(
+                              opacity: 1 - sAnim.value.abs(),
+                              child: Transform.translate(
+                                offset: Offset(
+                                    -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
+                                    (-maxOffset + topInset + 102.0) *
+                                        (!bounceUp
+                                            ? !bounceDown
+                                                ? qp
+                                                : (1 - bp)
+                                            : 0.0)),
+                                child: _TrackInfo(
+                                  trackPre: currentTrack,
+                                  p: bp,
+                                  cp: bcp,
+                                  bottomOffset: bottomOffset,
+                                  maxOffset: maxOffset,
+                                  screenSize: screenSize,
+                                ),
+                              ),
+                            ),
+                            if (nextTrack != null && rightOpacity > 0)
+                              NamidaOpacity(
+                                opacity: rightOpacity,
+                                child: Transform.translate(
+                                  offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                                  child: _TrackInfo(
+                                    trackPre: nextTrack.track,
+                                    p: bp,
+                                    cp: bcp,
+                                    bottomOffset: bottomOffset,
+                                    maxOffset: maxOffset,
+                                    screenSize: screenSize,
+                                  ),
+                                ),
+                              )
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                /// Track Image
+                Padding(
+                  padding: EdgeInsets.only(bottom: navBarHeight * cp),
                   child: AnimatedBuilder(
                     animation: sAnim,
                     builder: (context, child) {
+                      final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
+                      final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
+                      final width = velpy(a: 82.0, b: 92.0, c: qp);
                       final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
                       final rightOpacity = sAnim.value.clamp(0.0, 1.0);
                       return Stack(
@@ -1090,34 +1169,36 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                               opacity: leftOpacity,
                               child: Transform.translate(
                                 offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
-                                child: _TrackInfo(
-                                  trackPre: prevTrack.track,
-                                  p: bp,
+                                child: _RawImageContainer(
                                   cp: bcp,
+                                  p: bp,
+                                  width: width,
+                                  screenSize: screenSize,
                                   bottomOffset: bottomOffset,
                                   maxOffset: maxOffset,
-                                  screenSize: screenSize,
+                                  child: _TrackImage(
+                                    track: prevTrack.track,
+                                    cp: cp,
+                                  ),
                                 ),
                               ),
                             ),
                           NamidaOpacity(
                             opacity: 1 - sAnim.value.abs(),
                             child: Transform.translate(
-                              offset: Offset(
-                                  -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
-                                  (-maxOffset + topInset + 102.0) *
-                                      (!bounceUp
-                                          ? !bounceDown
-                                              ? qp
-                                              : (1 - bp)
-                                          : 0.0)),
-                              child: _TrackInfo(
-                                trackPre: currentTrack,
-                                p: bp,
+                              offset: Offset(horizontalOffset, verticalOffset),
+                              child: _RawImageContainer(
                                 cp: bcp,
+                                p: bp,
+                                width: width,
+                                screenSize: screenSize,
                                 bottomOffset: bottomOffset,
                                 maxOffset: maxOffset,
-                                screenSize: screenSize,
+                                child: _AnimatingTrackImage(
+                                  key: ValueKey(currentTrack),
+                                  track: currentTrack,
+                                  cp: bcp,
+                                ),
                               ),
                             ),
                           ),
@@ -1126,93 +1207,24 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                               opacity: rightOpacity,
                               child: Transform.translate(
                                 offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                                child: _TrackInfo(
-                                  trackPre: nextTrack.track,
-                                  p: bp,
+                                child: _RawImageContainer(
                                   cp: bcp,
+                                  p: bp,
+                                  width: width,
+                                  screenSize: screenSize,
                                   bottomOffset: bottomOffset,
                                   maxOffset: maxOffset,
-                                  screenSize: screenSize,
+                                  child: _TrackImage(
+                                    track: nextTrack.track,
+                                    cp: cp,
+                                  ),
                                 ),
                               ),
-                            )
+                            ),
                         ],
                       );
                     },
                   ),
-                ),
-
-                /// Track Image
-                AnimatedBuilder(
-                  animation: sAnim,
-                  builder: (context, child) {
-                    final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
-                    final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
-                    final width = velpy(a: 82.0, b: 92.0, c: qp);
-                    final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
-                    final rightOpacity = sAnim.value.clamp(0.0, 1.0);
-                    return Stack(
-                      children: [
-                        if (prevTrack != null && leftOpacity > 0)
-                          NamidaOpacity(
-                            opacity: leftOpacity,
-                            child: Transform.translate(
-                              offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
-                              child: _RawImageContainer(
-                                cp: bcp,
-                                p: bp,
-                                width: width,
-                                screenSize: screenSize,
-                                bottomOffset: bottomOffset,
-                                maxOffset: maxOffset,
-                                child: _TrackImage(
-                                  track: prevTrack.track,
-                                  cp: cp,
-                                ),
-                              ),
-                            ),
-                          ),
-                        NamidaOpacity(
-                          opacity: 1 - sAnim.value.abs(),
-                          child: Transform.translate(
-                            offset: Offset(horizontalOffset, verticalOffset),
-                            child: _RawImageContainer(
-                              cp: bcp,
-                              p: bp,
-                              width: width,
-                              screenSize: screenSize,
-                              bottomOffset: bottomOffset,
-                              maxOffset: maxOffset,
-                              child: _AnimatingTrackImage(
-                                key: ValueKey(currentTrack),
-                                track: currentTrack,
-                                cp: bcp,
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (nextTrack != null && rightOpacity > 0)
-                          NamidaOpacity(
-                            opacity: rightOpacity,
-                            child: Transform.translate(
-                              offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                              child: _RawImageContainer(
-                                cp: bcp,
-                                p: bp,
-                                width: width,
-                                screenSize: screenSize,
-                                bottomOffset: bottomOffset,
-                                maxOffset: maxOffset,
-                                child: _TrackImage(
-                                  track: nextTrack.track,
-                                  cp: cp,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
                 ),
 
                 /// Slider
@@ -1222,15 +1234,16 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                     child: Transform.translate(
                       offset: Offset(
                           0,
-                          bottomOffset +
-                              (-maxOffset / 4.4 * p) +
-                              ((-maxOffset + topInset) *
-                                  ((!bounceUp
-                                      ? !bounceDown
-                                          ? qp
-                                          : (1 - bp)
-                                      : 0.0)) *
-                                  0.4)),
+                          (bottomOffset +
+                                  (-maxOffset / 4.4 * p) +
+                                  ((-maxOffset + topInset) *
+                                      ((!bounceUp
+                                          ? !bounceDown
+                                              ? qp
+                                              : (1 - bp)
+                                          : 0.0)) *
+                                      0.4)) -
+                              (navBarHeight * cp)),
                       child: const Align(
                         alignment: Alignment.bottomLeft,
                         child: Padding(

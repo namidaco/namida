@@ -151,6 +151,8 @@ void main() async {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values),
   ]);
 
+  NamidaNavigator.inst.setDefaultsetSystemUIOverlayStyle();
+
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
   FlutterVolumeController.updateShowSystemUI(false);
@@ -434,7 +436,6 @@ class Namida extends StatelessWidget {
                             systemNavigationBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
                           ),
                         );
-                        // SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
                         return AnimatedTheme(
                           duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                           data: theme,

@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -80,10 +81,10 @@ class MiniPlayerController {
 
   void updateScreenValues(BuildContext context) {
     final media = MediaQuery.of(context);
-    topInset = media.padding.top;
+    final navBarPadding = MediaQuery.paddingOf(context).bottom;
+    topInset = media.padding.top - navBarPadding;
     bottomInset = media.padding.bottom;
-    screenSize = media.size;
-    // screenSize = Size(media.size.width, media.size.height - MediaQuery.viewPaddingOf(context).bottom);
+    screenSize = Size(media.size.width, media.size.height - navBarPadding);
     maxOffset = screenSize.height;
     sMaxOffset = screenSize.width;
   }
@@ -339,7 +340,7 @@ class MiniPlayerController {
     _offset = 0;
     bounceDown = false;
     _snap(haptic: haptic);
-    if (_maintainStatusBarShowing) SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    if (_maintainStatusBarShowing) NamidaNavigator.inst.setDefaultSystemUI();
   }
 
   void _updateScrollPositionInQueue() {

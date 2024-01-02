@@ -35,6 +35,7 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double panelHeight,
   double miniplayerbottomnavheight,
   double bottomOffset,
+  double navBarHeight,
   Widget? constantChild,
 );
 
@@ -56,10 +57,11 @@ class MiniplayerRaw extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navBarHeight = MediaQuery.paddingOf(context).bottom;
     final child = AnimatedBuilder(
       animation: MiniPlayerController.inst.animation,
       builder: (context, child) {
-        final maxOffset = MiniPlayerController.inst.maxOffset;
+        final maxOffset = MiniPlayerController.inst.maxOffset - navBarHeight;
         final bounceUp = MiniPlayerController.inst.bounceUp;
         final bounceDown = MiniPlayerController.inst.bounceDown;
         final topInset = MiniPlayerController.inst.topInset;
@@ -133,6 +135,7 @@ class MiniplayerRaw extends StatelessWidget {
           panelHeight,
           miniplayerbottomnavheight,
           bottomOffset,
+          navBarHeight,
           child,
         );
       },
