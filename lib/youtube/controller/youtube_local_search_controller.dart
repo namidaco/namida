@@ -151,7 +151,7 @@ class YTLocalSearchController {
       final textCleaned = textPre.cleanUpForComparison;
 
       bool isMatch(String? title, String? channel) {
-        return enableFuzzySearch ? _isMatchFuzzy(textPre, title, channel) : _isMatchStrict(textCleaned, title, channel);
+        return enableFuzzySearch ? _isMatchFuzzy(textPre.split(' ').map((e) => e.cleanUpForComparison), title, channel) : _isMatchStrict(textCleaned, title, channel);
       }
 
       bool shouldBreak() => maxResults != null && searchResults.length >= maxResults;
@@ -280,19 +280,12 @@ class YTLocalSearchController {
     return (title?.cleanUpForComparison.contains(textCleaned) ?? false) || (channel?.cleanUpForComparison.contains(textCleaned) ?? false);
   }
 
-  static bool _isMatchFuzzy(String textPre, String? title, String? channel) {
-    final splittedText = textPre.split(' ').map((e) => e.cleanUpForComparison);
-    final titleC = title?.cleanUpForComparison;
-    final channelC = channel?.cleanUpForComparison;
-    if (titleC != null) {
-      final titleMatch = splittedText.every((element) => titleC.contains(element));
-      if (titleMatch) return true;
-    }
-    if (channelC != null) {
-      final channelMatch = splittedText.every((element) => channelC.contains(element));
-      if (channelMatch) return true;
-    }
-    return false;
+  static bool _isMatchFuzzy(Iterable<String> splittedText, String? title, String? channel) {
+    final titleAndChannel = [
+      if (title != null) title.cleanUpForComparison,
+      if (channel != null) channel.cleanUpForComparison,
+    ];
+    return splittedText.every((element) => titleAndChannel.any((p) => p.contains(element)));
   }
 
   void cleanResources() {
