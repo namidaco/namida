@@ -137,6 +137,7 @@ void main() async {
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
 
+  YoutubeController.inst.loadInfoToMemory();
   YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
   await [
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),

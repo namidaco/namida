@@ -140,6 +140,37 @@ class YoutubeController {
   /// This comes mainly after a youtube history import
   var tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
 
+  late var tempVideoInfo = <String, VideoInfo?>{};
+  late var tempChannelInfo = <String, YoutubeChannel?>{};
+
+  Future<void> loadInfoToMemory() async {
+    final res = await _loadInfoToMemoryIsolate.thready((AppDirs.YT_METADATA, AppDirs.YT_METADATA_CHANNELS));
+    if (res.$1.isNotEmpty) tempVideoInfo = res.$1;
+    if (res.$2.isNotEmpty) tempChannelInfo = res.$2;
+  }
+
+  static (Map<String, VideoInfo?> mv, Map<String, YoutubeChannel?> mc) _loadInfoToMemoryIsolate((String pv, String pc) paths) {
+    final mv = <String, VideoInfo?>{};
+    final mc = <String, YoutubeChannel?>{};
+    Directory(paths.$1).listSyncSafe().loop((e, index) {
+      if (e is File) {
+        try {
+          final map = e.readAsJsonSync();
+          mv[e.path.getFilenameWOExt] = VideoInfo.fromMap(map);
+        } catch (_) {}
+      }
+    });
+    Directory(paths.$2).listSyncSafe().loop((e, index) {
+      if (e is File) {
+        try {
+          final map = e.readAsJsonSync();
+          mc[e.path.getFilenameWOExt] = YoutubeChannel.fromMap(map);
+        } catch (_) {}
+      }
+    });
+    return (mv, mc);
+  }
+
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
     required YoutubeItemDownloadConfig config,
@@ -232,17 +263,8 @@ class YoutubeController {
   String getYoutubeLink(String id) => id.toYTUrl();
 
   VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = true}) {
-    final si = tempVideoInfosFromStreams[id];
-    if (si != null) return VideoInfo.fromStreamInfoItem(si);
-    if (checkFromStorage) {
-      final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
-      final res = file.readAsJsonSync();
-      try {
-        final strInfo = StreamInfoItem.fromMap(res);
-        return strInfo.toVideoInfo();
-      } catch (_) {}
-    }
-    return null;
+    final r = getTemporarelyStreamInfo(id, checkFromStorage: checkFromStorage);
+    return r == null ? null : VideoInfo.fromStreamInfoItem(r);
   }
 
   StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = true}) {
@@ -499,7 +521,7 @@ class YoutubeController {
             currentYoutubeMetadataVideo.value = info;
           });
         }),
-        _fetchChannelDetails(channelUrl).then((channel) {
+        fetchChannelDetails(channelUrl).then((channel) {
           updateForCurrentID(() {
             currentYoutubeMetadataChannel.value = channel;
           });
@@ -507,7 +529,7 @@ class YoutubeController {
       ]);
     } else {
       final info = await fetchVideoDetails(id, forceRequest: forceRequest);
-      final channel = await _fetchChannelDetails(info?.uploaderUrl, forceRequest: forceRequest);
+      final channel = await fetchChannelDetails(info?.uploaderUrl, forceRequest: forceRequest);
       updateForCurrentID(() {
         currentYoutubeMetadataVideo.value = info;
         currentYoutubeMetadataChannel.value = channel;
@@ -530,44 +552,61 @@ class YoutubeController {
   }
 
   Future<void> _cacheVideoInfo(String id, VideoInfo? info) async {
-    if (info != null) await File("${AppDirs.YT_METADATA}$id.txt").writeAsJson(info.toMap());
+    if (info != null) {
+      tempVideoInfo[id] = info;
+      await File("${AppDirs.YT_METADATA}$id.txt").writeAsJson(info.toMap());
+    }
   }
 
   /// fetches cache version only.
-  VideoInfo? fetchVideoDetailsFromCacheSync(String id) {
-    final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
-    if (cachedFile.existsSync()) {
-      final res = cachedFile.readAsJsonSync();
-      if (res != null) {
+  VideoInfo? fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = true}) {
+    if (tempVideoInfo[id] != null) return tempVideoInfo[id]!;
+    if (checkFromStorage) {
+      final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
+      if (cachedFile.existsSync()) {
+        final res = cachedFile.readAsJsonSync();
+        if (res != null) {
+          try {
+            return VideoInfo.fromMap(res);
+          } catch (_) {}
+        }
+      }
+    }
+    return null;
+  }
+
+  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl, {bool checkFromStorage = true}) {
+    final channelId = channelUrl?.split('/').last;
+    if (tempChannelInfo[channelId] != null) return tempChannelInfo[channelId]!;
+    if (checkFromStorage) {
+      final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
+      if (cachedFile.existsSync()) {
         try {
-          return VideoInfo.fromMap(res);
+          final res = cachedFile.readAsJsonSync();
+          return YoutubeChannel.fromMap(res);
         } catch (_) {}
       }
     }
     return null;
   }
 
-  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl) {
+  Future<YoutubeChannel?> fetchChannelDetails(String? channelUrl, {bool forceRequest = false}) async {
     final channelId = channelUrl?.split('/').last;
-    final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
-    if (cachedFile.existsSync()) {
-      final res = cachedFile.readAsJsonSync();
-      return YoutubeChannel.fromMap(res);
-    }
-    return null;
-  }
-
-  Future<YoutubeChannel> _fetchChannelDetails(String? channelUrl, {bool forceRequest = false}) async {
-    final channelId = channelUrl?.split('/').last;
+    if (channelId == null) return null;
     final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
     YoutubeChannel? vi;
     if (!forceRequest && await cachedFile.exists()) {
       final res = await cachedFile.readAsJson();
       vi = YoutubeChannel.fromMap(res);
     } else {
-      final info = await NewPipeExtractorDart.channels.channelInfo(channelUrl);
-      vi = info;
-      cachedFile.writeAsJson(info.toMap());
+      try {
+        final info = await NewPipeExtractorDart.channels.channelInfo(channelUrl);
+        vi = info;
+        tempChannelInfo[channelId] = info; // saves in memory
+        cachedFile.writeAsJson(info.toMap());
+      } catch (e) {
+        printy(e, isError: true);
+      }
     }
     return vi;
   }
