@@ -82,7 +82,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id) {
-    final videoTitle = widget.infoLookup[id]?.name ?? YoutubeController.inst.getTemporarelyVideoInfo(id)?.name ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
+    final videoTitle = widget.infoLookup[id]?.name ?? YoutubeController.inst.getVideoName(id);
     final filename = videoTitle ?? id;
     return YoutubeItemDownloadConfig(
       id: id,
@@ -333,9 +333,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         itemCount: widget.ids.length,
                         itemBuilder: (context, index) {
                           final id = widget.ids[index].id;
-                          final info = widget.infoLookup[id]?.toVideoInfo() ??
-                              YoutubeController.inst.getTemporarelyVideoInfo(id) ??
-                              YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
+                          final info = widget.infoLookup[id]?.toVideoInfo() ?? YoutubeController.inst.getVideoInfo(id);
                           final duration = info?.duration?.inSeconds.secondsLabel;
 
                           return Obx(

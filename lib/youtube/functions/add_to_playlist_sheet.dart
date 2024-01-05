@@ -29,7 +29,7 @@ void showAddToPlaylistSheet({
   final context = ctx ?? rootContext;
 
   final videoNamesSubtitle = ids
-          .map((id) => idsNamesLookup[id] ?? YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name ?? id)
+          .map((id) => idsNamesLookup[id] ?? YoutubeController.inst.getVideoName(id) ?? id) //
           .take(3)
           .join(', ') +
       (ids.length > 3 ? '... + ${ids.length - 3}' : '');

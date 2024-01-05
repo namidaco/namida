@@ -193,7 +193,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
       },
       youtubeID: (finalItem) async {
-        final info = videoInfo ?? finalItem.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(finalItem.id);
+        final info = videoInfo ?? YoutubeController.inst.getVideoInfo(finalItem.id);
         final thumbnail = finalItem.getThumbnailSync();
         mediaItem.add(finalItem.toMediaItem(info, thumbnail, currentIndex, currentQueue.length));
         playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
@@ -744,8 +744,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeController.inst.currentCachedQualities.clear();
     YoutubeController.inst.updateVideoDetails(item.id);
 
-    currentVideoInfo.value = item.toVideoInfoSync() ?? YoutubeController.inst.getTemporarelyVideoInfo(item.id);
-    currentChannelInfo.value = YoutubeController.inst.fetchChannelDetailsFromCacheSync(currentVideoInfo.value?.uploaderUrl);
+    currentVideoInfo.value = YoutubeController.inst.getVideoInfo(item.id);
+    currentChannelInfo.value = YoutubeController.inst.fetchChannelDetailsFromCacheSync(currentVideoInfo.value?.uploaderUrl, checkFromStorage: true);
     currentVideoStream.value = null;
     currentAudioStream.value = null;
     currentVideoThumbnail.value = null;

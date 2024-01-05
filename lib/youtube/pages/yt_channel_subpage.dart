@@ -52,7 +52,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with YoutubeChannel
 
     final channelUrl = 'https://www.youtube.com/channel/${ch.channelID}';
 
-    _channelInfo = widget.channel ?? YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID);
+    _channelInfo = widget.channel ?? YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID, checkFromStorage: true);
     // -- always get new info.
     YoutubeController.inst.fetchChannelDetails(channelUrl, forceRequest: true).then(
       (value) {

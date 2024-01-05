@@ -66,10 +66,6 @@ extension YoutubeIDUtils on YoutubeID {
     return await YoutubeController.inst.fetchVideoDetails(id);
   }
 
-  VideoInfo? toVideoInfoSync() {
-    return YoutubeController.inst.fetchVideoDetailsFromCacheSync(id);
-  }
-
   Future<File?> getThumbnail() async {
     return await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
   }
@@ -80,7 +76,7 @@ extension YoutubeIDUtils on YoutubeID {
 
   Future<Duration?> getDuration() async {
     Duration? dur;
-    final a = YoutubeController.inst.getTemporarelyVideoInfo(id);
+    final a = YoutubeController.inst.getVideoInfo(id, checkFromStorage: true);
     dur = a?.duration;
 
     if (dur == null) {

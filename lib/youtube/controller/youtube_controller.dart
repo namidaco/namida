@@ -262,12 +262,32 @@ class YoutubeController {
 
   String getYoutubeLink(String id) => id.toYTUrl();
 
-  VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = true}) {
+  VideoInfo? getVideoInfo(String id, {bool checkFromStorage = false}) {
+    final info = getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage) ?? fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage);
+    if (info != null) return info;
+    final bk = getBackupVideoInfo(id);
+    if (bk != null) return VideoInfo(id: id, name: bk.title, uploaderName: bk.channel, uploaderUrl: bk.channelUrl);
+    return null;
+  }
+
+  String? getVideoName(String id, {bool checkFromStorage = false}) {
+    return getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.name ??
+        getBackupVideoInfo(id)?.title ??
+        fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.name;
+  }
+
+  String? getVideoChannelName(String id, {bool checkFromStorage = false}) {
+    return getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.uploaderName ??
+        getBackupVideoInfo(id)?.channel ??
+        fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.uploaderName;
+  }
+
+  VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = false}) {
     final r = getTemporarelyStreamInfo(id, checkFromStorage: checkFromStorage);
     return r == null ? null : VideoInfo.fromStreamInfoItem(r);
   }
 
-  StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = true}) {
+  StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = false}) {
     final si = tempVideoInfosFromStreams[id];
     if (si != null) si;
     if (checkFromStorage) {
@@ -561,7 +581,7 @@ class YoutubeController {
   }
 
   /// fetches cache version only.
-  VideoInfo? fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = true}) {
+  VideoInfo? fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = false}) {
     if (tempVideoInfo[id] != null) return tempVideoInfo[id]!;
     if (checkFromStorage) {
       final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
@@ -577,7 +597,7 @@ class YoutubeController {
     return null;
   }
 
-  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl, {bool checkFromStorage = true}) {
+  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl, {bool checkFromStorage = false}) {
     final channelId = channelUrl?.split('/').last;
     if (tempChannelInfo[channelId] != null) return tempChannelInfo[channelId]!;
     if (checkFromStorage) {
@@ -664,7 +684,7 @@ class YoutubeController {
       for (final entry in map.entries.toList()) {
         final p = entry.value.progress;
         final tp = entry.value.totalProgress;
-        final title = getTemporarelyVideoInfo(videoId)?.name ?? fetchVideoDetailsFromCacheSync(videoId)?.name ?? videoId;
+        final title = getVideoName(videoId) ?? videoId;
         final speedB = speedInBytes(videoId, entry.value.progress);
         currentSpeedsInByte[videoId] ??= <String, int>{}.obs;
         currentSpeedsInByte[videoId]![entry.key] = speedB;

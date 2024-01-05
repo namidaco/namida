@@ -52,7 +52,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     final thumbHeight = thumbnailHeight ?? (minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
     final thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
 
-    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(video.id) ?? YoutubeController.inst.getTemporarelyVideoInfo(video.id);
+    final info = YoutubeController.inst.getVideoInfo(video.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: video.id,

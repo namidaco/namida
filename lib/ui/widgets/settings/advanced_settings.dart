@@ -592,7 +592,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                       itemBuilder: (context, index) {
                         final video = videoFiles[index];
                         final id = video.ytID;
-                        final title = id == null ? null : YoutubeController.inst.getBackupVideoInfo(id)?.title ?? YoutubeController.inst.fetchVideoDetailsFromCacheSync(id)?.name;
+                        final title = id == null ? null : YoutubeController.inst.getVideoName(id);
                         final listens = getTotalListensForID(id).length;
                         return NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
