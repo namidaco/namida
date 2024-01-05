@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_page.dart';
 import 'package:namida/youtube/pages/yt_channels_page.dart';
@@ -13,14 +15,14 @@ class YouTubeHomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [lang.HOME, lang.CHANNELS, lang.PLAYLISTS, lang.DOWNLOADS];
-    const initialIndex = 2;
     return BackgroundWrapper(
       child: NamidaTabView(
         isScrollable: true,
-        initialIndex: initialIndex,
-        tabs: tabs,
-        onIndexChanged: (index) {},
+        initialIndex: settings.ytInitialHomePage.value.index,
+        tabs: YTHomePages.values.map((e) => e.toText()).toList(),
+        onIndexChanged: (index) {
+          settings.save(ytInitialHomePage: YTHomePages.values[index]);
+        },
         children: [
           const YoutubePage(),
           const YoutubeChannelsPage(),

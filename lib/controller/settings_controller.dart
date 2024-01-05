@@ -222,6 +222,7 @@ class SettingsController {
   final performanceMode = PerformanceMode.balanced.obs;
   final killPlayerAfterDismissingAppMode = KillAppMode.ifNotPlaying.obs;
   final floatingActionButton = FABType.none.obs;
+  final ytInitialHomePage = YTHomePages.playlists.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -491,6 +492,7 @@ class SettingsController {
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
       killPlayerAfterDismissingAppMode.value = KillAppMode.values.getEnum(json['killPlayerAfterDismissingAppMode']) ?? killPlayerAfterDismissingAppMode.value;
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
+      ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -688,6 +690,7 @@ class SettingsController {
       'performanceMode': performanceMode.value.convertToString,
       'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
       'floatingActionButton': floatingActionButton.value.convertToString,
+      'ytInitialHomePage': ytInitialHomePage.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
@@ -880,6 +883,7 @@ class SettingsController {
     PerformanceMode? performanceMode,
     KillAppMode? killPlayerAfterDismissingAppMode,
     FABType? floatingActionButton,
+    YTHomePages? ytInitialHomePage,
     MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
@@ -1393,6 +1397,9 @@ class SettingsController {
     }
     if (floatingActionButton != null) {
       this.floatingActionButton.value = floatingActionButton;
+    }
+    if (ytInitialHomePage != null) {
+      this.ytInitialHomePage.value = ytInitialHomePage;
     }
     if (mostPlayedTimeRange != null) {
       this.mostPlayedTimeRange.value = mostPlayedTimeRange;

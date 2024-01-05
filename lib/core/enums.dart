@@ -337,3 +337,10 @@ enum FABType {
   shuffle,
   search,
 }
+
+enum YTHomePages {
+  home,
+  channels,
+  playlists,
+  downloads,
+}

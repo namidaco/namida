@@ -710,6 +710,10 @@ extension InsertionSortingTypeTextIcon on InsertionSortingType {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension YTHomePagesUils on YTHomePages {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension WidgetsPagess on Widget {
   NamidaRoute toNamidaRoute() {
     String name = '';
@@ -1419,6 +1423,12 @@ class _NamidaConverters {
         FABType.none: lang.NONE,
         FABType.search: lang.SEARCH,
         FABType.shuffle: lang.SHUFFLE,
+      },
+      YTHomePages: {
+        YTHomePages.home: lang.HOME,
+        YTHomePages.channels: lang.CHANNELS,
+        YTHomePages.playlists: lang.PLAYLISTS,
+        YTHomePages.downloads: lang.DOWNLOADS,
       },
       TrackSearchFilter: {
         TrackSearchFilter.filename: lang.FILE_NAME,
