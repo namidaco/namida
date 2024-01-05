@@ -35,7 +35,7 @@ class YTChannelSubpage extends StatefulWidget {
   State<YTChannelSubpage> createState() => _YTChannelSubpageState();
 }
 
-class _YTChannelSubpageState extends State<YTChannelSubpage> with YoutubeChannelController {
+class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> {
   late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.subscribedChannels[widget.channelID] ??
       YoutubeSubscription(
         channelID: widget.channelID.split('/').last,

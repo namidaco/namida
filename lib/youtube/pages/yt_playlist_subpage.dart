@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:get/get.dart';
+import 'package:newpipeextractor_dart/models/stream_info_item.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
 
@@ -21,6 +23,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_streams_manager.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -315,9 +318,23 @@ class YTHostedPlaylistSubpage extends StatefulWidget {
   State<YTHostedPlaylistSubpage> createState() => _YTHostedPlaylistSubpageState();
 }
 
-class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
+class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with YoutubeStreamsManager {
+  @override
+  List<StreamInfoItem> get streamsList => widget.playlist.streams;
+
+  @override
+  ScrollController get scrollController => controller;
+
+  @override
+  Color? get sortChipBGColor => bgColor?.withOpacity(0.6);
+
+  @override
+  void onSortChanged(void Function() fn) => setState(fn);
+
   late final ScrollController controller;
   final _isLoadingMoreItems = false.obs;
+
+  bool _canKeepFetching = false;
 
   void _scrollListener() async {
     if (_isLoadingMoreItems.value) return;
@@ -346,6 +363,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
     controller.removeListener(_scrollListener);
     controller.dispose();
     _isLoadingMoreItems.close();
+    disposeResources();
     super.dispose();
   }
 
@@ -363,6 +381,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
   Future<void> _fetch100Video() async {
     _isLoadingMoreItems.value = true;
     await YoutubeController.inst.getPlaylistStreams(widget.playlist, forceInitial: widget.playlist.streams.isEmpty);
+    trySortStreams();
     _isLoadingMoreItems.value = false;
     setState(() {});
   }
@@ -379,6 +398,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
     final itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
 
     final firstID = playlist.streams.firstOrNull?.id;
+    final hasMoreStreamsLeft = playlist.streams.length < playlist.streamCount;
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
@@ -520,22 +540,58 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> {
                   ],
                 ),
               ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
-              SliverFixedExtentList.builder(
-                itemExtent: itemsThumbnailItemExtent,
-                itemCount: playlist.streams.length,
-                itemBuilder: (context, index) {
-                  final item = playlist.streams[index];
-                  return YoutubeVideoCard(
-                    thumbnailHeight: itemsThumbnailHeight,
-                    thumbnailWidth: itemsThumbnailWidth,
-                    isImageImportantInCache: false,
-                    video: item,
-                    playlistID: _getPlaylistID,
-                    playlist: playlist,
-                    index: index,
-                  );
-                },
+              const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
+              SliverStickyHeader.builder(
+                builder: (context, state) => ColoredBox(
+                  color: context.theme.scaffoldBackgroundColor,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: sortWidget,
+                        ),
+                        Obx(
+                          () => NamidaInkWellButton(
+                            animationDurationMS: 100,
+                            sizeMultiplier: 0.95,
+                            borderRadius: 8.0,
+                            icon: Broken.task_square,
+                            text: lang.LOAD_ALL,
+                            enabled: !_isLoadingMoreItems.value && hasMoreStreamsLeft,
+                            disableWhenLoading: false,
+                            showLoadingWhenDisabled: hasMoreStreamsLeft,
+                            onTap: () async {
+                              _canKeepFetching = !_canKeepFetching;
+                              widget.playlist.fetchAllPlaylistStreams(
+                                context: null,
+                                onStart: () => _isLoadingMoreItems.value = true,
+                                onEnd: () => _isLoadingMoreItems.value = false,
+                                canKeepFetching: () => _canKeepFetching,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                sliver: SliverFixedExtentList.builder(
+                  itemExtent: itemsThumbnailItemExtent,
+                  itemCount: playlist.streams.length,
+                  itemBuilder: (context, index) {
+                    final item = playlist.streams[index];
+                    return YoutubeVideoCard(
+                      thumbnailHeight: itemsThumbnailHeight,
+                      thumbnailWidth: itemsThumbnailWidth,
+                      isImageImportantInCache: false,
+                      video: item,
+                      playlistID: _getPlaylistID,
+                      playlist: playlist,
+                      index: index,
+                    );
+                  },
+                ),
               ),
               SliverToBoxAdapter(
                 child: Obx(

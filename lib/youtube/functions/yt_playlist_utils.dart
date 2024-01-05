@@ -76,9 +76,14 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
   /// Sending a [context] means showing a bottom sheet with progress.
   ///
   /// Returns wether the fetching process ended successfully, videos are accessible through [streams] getter.
-  Future<bool> fetchAllPlaylistStreams({required BuildContext? context}) async {
+  Future<bool> fetchAllPlaylistStreams({
+    required BuildContext? context,
+    VoidCallback? onStart,
+    VoidCallback? onEnd,
+    bool Function()? canKeepFetching,
+  }) async {
     final playlist = this;
-    if (playlist.streams.length == playlist.streamCount) return true;
+    if (playlist.streams.length >= playlist.streamCount) return true;
 
     final currentCount = playlist.streams.length.obs;
     final totalCount = playlist.streamCount.obs;
@@ -141,6 +146,8 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       );
     }
 
+    onStart?.call();
+
     if (isTotalCountNull() || currentCount.value == 0) {
       await YoutubeController.inst.getPlaylistStreams(playlist, forceInitial: currentCount.value == 0);
       currentCount.value = playlist.streams.length;
@@ -152,6 +159,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
     }
 
     void closeRxStreams() {
+      onEnd?.call();
       () {
         currentCount.close();
         totalCount.close();
@@ -165,9 +173,12 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       return false;
     }
 
+    bool keepFetching() => canKeepFetching == null ? false : canKeepFetching();
+
     while (currentCount.value < totalCount.value) {
+      if (!keepFetching()) break;
       final res = await YoutubeController.inst.getPlaylistStreams(playlist);
-      if (res.isEmpty) break;
+      if (!keepFetching() || res.isEmpty) break;
       currentCount.value = playlist.streams.length;
     }
 

@@ -26,7 +26,7 @@ class YoutubeChannelsPage extends StatefulWidget {
   State<YoutubeChannelsPage> createState() => _YoutubeChannelsPageState();
 }
 
-class _YoutubeChannelsPageState extends State<YoutubeChannelsPage> with YoutubeChannelController {
+class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> {
   late final ScrollController _horizontalListController;
 
   final _allChannelsStreamsProgress = 0.0.obs;

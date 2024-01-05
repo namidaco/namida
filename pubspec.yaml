@@ -137,6 +137,7 @@ dependencies:
       url: https://github.com/MSOB7YY/flutter_scrollbar_modified
       ref: 3877cc37f184ba7f5caeeb64227e344925756791
   sticky_headers: ^0.3.0+2
+  flutter_sticky_header: ^0.6.5
   focused_menu: ^1.0.5
   paged_vertical_calendar: ^1.1.6
 
