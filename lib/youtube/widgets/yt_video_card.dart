@@ -23,6 +23,7 @@ class YoutubeVideoCard extends StatelessWidget {
   final int? index;
   final double fontMultiplier;
   final double thumbnailWidthPercentage;
+  final bool displayThirdLine;
 
   const YoutubeVideoCard({
     super.key,
@@ -36,6 +37,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.index,
     this.fontMultiplier = 1.0,
     this.thumbnailWidthPercentage = 1.0,
+    this.displayThirdLine = true,
   });
 
   @override
@@ -67,7 +69,10 @@ class YoutubeVideoCard extends StatelessWidget {
           if (videoViewCount != null && videoViewCount >= 0) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
+        displaythirdLineText: displayThirdLine,
         thirdLineText: video?.uploaderName ?? '',
+        displayChannelThumbnail: displayThirdLine,
+        channelThumbnailUrl: video?.uploaderAvatarUrl,
         onTap: onTap ??
             () async {
               if (idNull != null) {
@@ -99,8 +104,6 @@ class YoutubeVideoCard extends StatelessWidget {
                 YTUtils.expandMiniplayer();
               }
             },
-        channelThumbnailUrl: video?.uploaderAvatarUrl,
-        displayChannelThumbnail: true,
         smallBoxText: video?.duration?.inSeconds.secondsLabel,
         bottomRightWidgets: idNull == null ? [] : YTUtils.getVideoCacheStatusIcons(videoId: idNull, context: context),
         menuChildrenDefault: menuItems,

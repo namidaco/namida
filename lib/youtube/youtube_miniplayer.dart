@@ -19,22 +19,23 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/mp.dart';
-import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' hide YoutubePlaylist;
-import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_action_button.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
+import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/yt_miniplayer_comments_subpage.dart';
@@ -401,115 +402,95 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             shimmerDurationMS: 550,
                                             shimmerDelayMS: 250,
                                             shimmerEnabled: channelName == null || channelThumbnail == null || channelSubs == null,
-                                            child: Row(
-                                              children: [
-                                                const SizedBox(width: 18.0),
-                                                NamidaDummyContainer(
-                                                  width: 42.0,
-                                                  height: 42.0,
-                                                  borderRadius: 100.0,
-                                                  shimmerEnabled: channelThumbnail == null,
-                                                  child: YoutubeThumbnail(
-                                                    key: Key(channelThumbnail ?? ''),
-                                                    isImportantInCache: true,
-                                                    channelUrl: channelThumbnail ?? '',
-                                                    channelIDForHQImage: channelIDOrURL ?? '',
-                                                    width: 42.0,
-                                                    height: 42.0,
-                                                    isCircle: true,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8.0),
-                                                Expanded(
-                                                  // key: Key(currentId),
-                                                  child: Column(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      FittedBox(
-                                                        child: Row(
-                                                          children: [
-                                                            NamidaDummyContainer(
-                                                              width: 114.0,
-                                                              height: 12.0,
+                                            child: Material(
+                                              child: InkWell(
+                                                onTap: () {
+                                                  final channel = videoChannel ?? Player.inst.currentChannelInfo;
+                                                  final chid = channel?.id;
+                                                  if (chid != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid, channel: channel));
+                                                },
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 18.0),
+                                                    NamidaDummyContainer(
+                                                      width: 42.0,
+                                                      height: 42.0,
+                                                      borderRadius: 100.0,
+                                                      shimmerEnabled: channelThumbnail == null && (channelIDOrURL == null || channelIDOrURL == ''),
+                                                      child: YoutubeThumbnail(
+                                                        key: Key("${channelThumbnail}_$channelIDOrURL"),
+                                                        isImportantInCache: true,
+                                                        channelUrl: channelThumbnail ?? '',
+                                                        channelIDForHQImage: channelIDOrURL ?? '',
+                                                        width: 42.0,
+                                                        height: 42.0,
+                                                        isCircle: true,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                    Expanded(
+                                                      // key: Key(currentId),
+                                                      child: Column(
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          FittedBox(
+                                                            child: Row(
+                                                              children: [
+                                                                NamidaDummyContainer(
+                                                                  width: 114.0,
+                                                                  height: 12.0,
+                                                                  borderRadius: 4.0,
+                                                                  shimmerEnabled: channelName == null,
+                                                                  child: Text(
+                                                                    channelName ?? '',
+                                                                    style: context.textTheme.displayMedium?.copyWith(
+                                                                      fontSize: 13.5.multipliedFontScale,
+                                                                    ),
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    textAlign: TextAlign.start,
+                                                                  ),
+                                                                ),
+                                                                if (channelIsVerified) ...[
+                                                                  const SizedBox(width: 4.0),
+                                                                  const Icon(
+                                                                    Broken.shield_tick,
+                                                                    size: 12.0,
+                                                                  ),
+                                                                ]
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          const SizedBox(height: 2.0),
+                                                          FittedBox(
+                                                            child: NamidaDummyContainer(
+                                                              width: 92.0,
+                                                              height: 10.0,
                                                               borderRadius: 4.0,
-                                                              shimmerEnabled: channelName == null,
+                                                              shimmerEnabled: channelSubs == null,
                                                               child: Text(
-                                                                channelName ?? '',
-                                                                style: context.textTheme.displayMedium?.copyWith(
-                                                                  fontSize: 13.5.multipliedFontScale,
+                                                                [
+                                                                  channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
+                                                                  (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
+                                                                ].join(' '),
+                                                                style: context.textTheme.displaySmall?.copyWith(
+                                                                  fontSize: 12.0.multipliedFontScale,
                                                                 ),
                                                                 maxLines: 1,
                                                                 overflow: TextOverflow.ellipsis,
-                                                                textAlign: TextAlign.start,
                                                               ),
                                                             ),
-                                                            if (channelIsVerified) ...[
-                                                              const SizedBox(width: 4.0),
-                                                              const Icon(
-                                                                Broken.shield_tick,
-                                                                size: 12.0,
-                                                              ),
-                                                            ]
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2.0),
-                                                      FittedBox(
-                                                        child: NamidaDummyContainer(
-                                                          width: 92.0,
-                                                          height: 10.0,
-                                                          borderRadius: 4.0,
-                                                          shimmerEnabled: channelSubs == null,
-                                                          child: Text(
-                                                            [
-                                                              channelSubs?.formatDecimalShort(isTitleExpanded.value) ?? '?',
-                                                              (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
-                                                            ].join(' '),
-                                                            style: context.textTheme.displaySmall?.copyWith(
-                                                              fontSize: 12.0.multipliedFontScale,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
                                                           ),
-                                                        ),
+                                                        ],
                                                       ),
-                                                    ],
-                                                  ),
+                                                    ),
+                                                    const SizedBox(width: 12.0),
+                                                    YTSubscribeButton(channelIDOrURL: channelIDOrURL),
+                                                    const SizedBox(width: 20.0),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 12.0),
-                                                Obx(
-                                                  () {
-                                                    final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
-                                                    final disabled = channelID == null;
-                                                    final subscribed = YoutubeSubscriptionsController.inst.subscribedChannels[channelID ?? '']?.subscribed ?? false;
-                                                    return AnimatedOpacity(
-                                                      opacity: disabled ? 0.5 : 1.0,
-                                                      duration: const Duration(milliseconds: 300),
-                                                      child: TextButton(
-                                                        style: TextButton.styleFrom(
-                                                          foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(subscribed ? Broken.tick_square : Broken.video, size: 20.0),
-                                                            const SizedBox(width: 8.0),
-                                                            Text(
-                                                              subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        onPressed: () async {
-                                                          if (channelIDOrURL != null) {
-                                                            await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL, null);
-                                                          }
-                                                        },
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                                const SizedBox(width: 20.0),
-                                              ],
+                                              ),
                                             ),
                                           ),
                                         ),

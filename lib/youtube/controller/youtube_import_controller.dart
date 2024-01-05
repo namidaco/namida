@@ -80,7 +80,7 @@ class YoutubeImportController {
     res.loop((e, index) {
       final valInMap = YoutubeSubscriptionsController.inst.subscribedChannels[e.id];
       YoutubeSubscriptionsController.inst.subscribedChannels[e.id] = YoutubeSubscription(
-        title: valInMap != null && valInMap.title == '' ? e.title : valInMap?.title,
+        title: valInMap != null && valInMap.title == '' ? e.title : valInMap?.title ?? e.title,
         channelID: e.id,
         subscribed: true,
         lastFetched: valInMap?.lastFetched,

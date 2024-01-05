@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -26,12 +28,16 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     final thumbnailSize = widget.thumbnailSize ?? context.width * 0.2;
     const verticalPadding = 8.0;
     final shimmerEnabled = channel == null;
+    final avatarUrl = channel?.avatarUrl ?? channel?.thumbnailUrl;
     return NamidaInkWell(
       margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       bgColor: bgColor?.withAlpha(100) ?? context.theme.cardColor,
       animationDurationMS: 300,
       borderRadius: 24.0,
-      onTap: () {},
+      onTap: () {
+        final chid = channel?.id;
+        if (chid != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid, channel: channel));
+      },
       height: thumbnailSize + verticalPadding,
       child: Row(
         children: [
@@ -41,10 +47,10 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
             height: thumbnailSize,
             shimmerEnabled: shimmerEnabled,
             child: YoutubeThumbnail(
-              key: Key("${channel?.avatarUrl}_${channel?.id}"),
+              key: Key("${avatarUrl}_${channel?.id}"),
               compressed: false,
               isImportantInCache: true,
-              channelUrl: channel?.avatarUrl,
+              channelUrl: avatarUrl,
               channelIDForHQImage: channel?.id ?? '',
               width: thumbnailSize,
               height: thumbnailSize,

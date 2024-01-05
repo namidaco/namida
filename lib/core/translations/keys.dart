@@ -308,6 +308,7 @@ abstract class LanguageKeys {
   String get LINK => _getKey('LINK');
   String get LIST_OF_FOLDERS => _getKey('LIST_OF_FOLDERS');
   String get LOADING_FILE => _getKey('LOADING_FILE');
+  String get LOAD_ALL => _getKey('LOAD_ALL');
   String get LOCAL => _getKey('LOCAL');
   String get LOCAL_VIDEO_MATCHING => _getKey('LOCAL_VIDEO_MATCHING');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');

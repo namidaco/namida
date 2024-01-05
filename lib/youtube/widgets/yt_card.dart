@@ -166,11 +166,11 @@ class YoutubeCard extends StatelessWidget {
                               const SizedBox(width: 6.0),
                             ],
                             if (displaythirdLineText)
-                              Expanded(
-                                child: NamidaDummyContainer(
-                                  width: context.width * 0.35,
-                                  height: 8.0,
-                                  shimmerEnabled: shimmerEnabled && (thirdLineText == '' || !displaythirdLineText),
+                              NamidaDummyContainer(
+                                width: context.width * 0.2,
+                                height: 8.0,
+                                shimmerEnabled: shimmerEnabled && (thirdLineText == '' || !displaythirdLineText),
+                                child: Expanded(
                                   child: Container(
                                     alignment: Alignment.centerLeft,
                                     width: double.infinity,

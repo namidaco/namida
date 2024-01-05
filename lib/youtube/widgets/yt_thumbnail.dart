@@ -159,7 +159,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     }
   }
 
-  Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${imageBytes?.length}$imagePath${widget.smallBoxText}");
+  Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${widget.channelIDForHQImage}${imageBytes?.length}$imagePath${widget.smallBoxText}");
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +167,12 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
         key: thumbKey,
+        onError: () {
+          imagePath = null;
+          imageColors = null;
+          smallBoxDynamicColor = null;
+          _getThumbnail();
+        },
         isCircle: widget.isCircle,
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,

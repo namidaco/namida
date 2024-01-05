@@ -273,10 +273,12 @@ class YoutubeController {
     if (checkFromStorage) {
       final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
       final res = file.readAsJsonSync();
-      try {
-        final strInfo = StreamInfoItem.fromMap(res);
-        return strInfo;
-      } catch (_) {}
+      if (res != null) {
+        try {
+          final strInfo = StreamInfoItem.fromMap(res);
+          return strInfo;
+        } catch (_) {}
+      }
     }
     return null;
   }

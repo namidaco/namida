@@ -54,7 +54,7 @@ class EditDeleteController {
     if (!await requestManageStoragePermission()) {
       return null;
     }
-    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create();
+    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
     final saveDirPath = saveDir.path;
     final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
     final imgFiles = await Indexer.inst.extractTracksArtworks(
@@ -65,6 +65,23 @@ class EditDeleteController {
     try {
       // try copying
       await imgFile?.copy(newPath);
+      return saveDirPath;
+    } catch (e) {
+      printy(e, isError: true);
+      return null;
+    }
+  }
+
+  /// returns save directory path if saved successfully
+  Future<String?> saveImageToStorage(File imageFile) async {
+    if (!await requestManageStoragePermission()) {
+      return null;
+    }
+    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
+    final saveDirPath = saveDir.path;
+    final newPath = "$saveDirPath${Platform.pathSeparator}${imageFile.path.getFilenameWOExt}.png";
+    try {
+      await imageFile.copy(newPath);
       return saveDirPath;
     } catch (e) {
       printy(e, isError: true);

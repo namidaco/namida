@@ -41,6 +41,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool displayIcon;
   final IconData icon;
   final bool isCircle;
+  final VoidCallback? onError;
 
   const ArtworkWidget({
     required super.key,
@@ -67,6 +68,7 @@ class ArtworkWidget extends StatefulWidget {
     this.displayIcon = true,
     this.icon = Broken.musicnote,
     this.isCircle = false,
+    this.onError,
   });
 
   @override
@@ -253,6 +255,14 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             );
                           }),
                           errorBuilder: (context, error, stackTrace) {
+                            if (error.toString().contains('Invalid image data')) {
+                              final fp = widget.path;
+                              if (fp != null) {
+                                File(fp).tryDeleting();
+                                FileImage(File(fp)).evict();
+                              }
+                            }
+                            widget.onError?.call();
                             return getStockWidget(
                               stackWithOnTopWidgets: false,
                             );
