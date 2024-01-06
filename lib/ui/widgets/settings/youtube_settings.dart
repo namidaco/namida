@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +20,7 @@ enum _YoutubeSettingKeys {
   dimMiniplayerAfter,
   dimIntensity,
   downloadsMetadataTags,
+  downloadLocation,
   onOpeningYTLink,
 }
 
@@ -36,6 +38,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
         _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
+        _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
       };
 
@@ -206,6 +209,21 @@ class YoutubeSettings extends SettingSubpageProvider {
                 subtitle: lang.DOWNLOADS_METADATA_TAGS_SUBTITLE,
                 value: settings.ytAutoExtractVideoTagsFromInfo.value,
                 onChanged: (isTrue) => settings.save(ytAutoExtractVideoTagsFromInfo: !isTrue),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.downloadLocation,
+            child: Obx(
+              () => CustomListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.downloadLocation),
+                title: lang.DEFAULT_DOWNLOAD_LOCATION,
+                icon: Broken.folder_favorite,
+                subtitle: settings.ytDownloadLocation.value,
+                onTap: () async {
+                  final path = await FilePicker.platform.getDirectoryPath();
+                  if (path != null) settings.save(ytDownloadLocation: path);
+                },
               ),
             ),
           ),

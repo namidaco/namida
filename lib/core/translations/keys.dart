@@ -129,6 +129,7 @@ abstract class LanguageKeys {
   String get DEFAULT_COLOR => _getKey('DEFAULT_COLOR');
   String get DEFAULT_LIBRARY_TAB => _getKey('DEFAULT_LIBRARY_TAB');
   String get DEFAULT => _getKey('DEFAULT');
+  String get DEFAULT_DOWNLOAD_LOCATION => _getKey('DEFAULT_DOWNLOAD_LOCATION');
   String get DELETE_PLAYLIST => _getKey('DELETE_PLAYLIST');
   String get DELETE => _getKey('DELETE');
   String get DESCRIPTION => _getKey('DESCRIPTION');

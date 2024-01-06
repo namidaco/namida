@@ -76,7 +76,8 @@ class AppDirs {
   static final BACKUPS = '$INTERNAL_STORAGE/Backups'; // only one without ending slash.
   static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
   static final M3UPlaylists = '$INTERNAL_STORAGE/M3U Playlists/';
-  static final YOUTUBE_DOWNLOADS = '$INTERNAL_STORAGE/Downloads/';
+  static final YOUTUBE_DOWNLOADS_DEFAULT = '$INTERNAL_STORAGE/Downloads/';
+  static String get YOUTUBE_DOWNLOADS => settings.ytDownloadLocation.value;
 
   // ================= Youtube =================
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';

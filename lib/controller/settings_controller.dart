@@ -94,6 +94,7 @@ class SettingsController {
   final RxBool respectNoMedia = false.obs;
   final RxString defaultBackupLocation = AppDirs.BACKUPS.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
+  final RxString ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final RxBool enableFoldersHierarchy = true.obs;
   final RxBool displayArtistBeforeTitle = true.obs;
   final RxBool heatmapListensView = false.obs;
@@ -390,6 +391,7 @@ class SettingsController {
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
+      ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
@@ -615,6 +617,7 @@ class SettingsController {
       'respectNoMedia': respectNoMedia.value,
       'defaultBackupLocation': defaultBackupLocation.value,
       'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
+      'ytDownloadLocation': ytDownloadLocation.value,
       'enableFoldersHierarchy': enableFoldersHierarchy.value,
       'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
       'heatmapListensView': heatmapListensView.value,
@@ -800,6 +803,7 @@ class SettingsController {
     bool? respectNoMedia,
     String? defaultBackupLocation,
     String? defaultFolderStartupLocation,
+    String? ytDownloadLocation,
     bool? enableFoldersHierarchy,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
@@ -1135,6 +1139,9 @@ class SettingsController {
     }
     if (defaultFolderStartupLocation != null) {
       this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
+    }
+    if (ytDownloadLocation != null) {
+      this.ytDownloadLocation.value = ytDownloadLocation;
     }
     if (enableFoldersHierarchy != null) {
       this.enableFoldersHierarchy.value = enableFoldersHierarchy;
