@@ -47,6 +47,7 @@ class YoutubeVideoCard extends StatelessWidget {
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: videoId,
       url: video?.url,
+      channelUrl: video?.uploaderUrl,
       playlistID: playlistID,
       idsNamesLookup: {videoId: video?.name},
     );

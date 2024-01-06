@@ -26,6 +26,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
 
 class YTUtils {
@@ -133,6 +134,7 @@ class YTUtils {
   static List<NamidaPopupItem> getVideoCardMenuItems({
     required String videoId,
     required String? url,
+    required String? channelUrl,
     required PlaylistID? playlistID,
     required Map<String, String?> idsNamesLookup,
     String playlistName = '',
@@ -160,8 +162,16 @@ class YTUtils {
         title: lang.SHARE,
         onTap: () {
           if (url != null) Share.share(url);
-        },
-      ),
+      if (channelUrl != '')
+        NamidaPopupItem(
+          icon: Broken.user,
+          title: lang.GO_TO_CHANNEL,
+          onTap: () {
+            final chid = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelUrl);
+            if (chid == null) return;
+            NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid));
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.next,
         title: lang.PLAY_NEXT,

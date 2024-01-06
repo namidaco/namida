@@ -57,6 +57,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: video.id,
       url: info?.url,
+      channelUrl: info?.uploaderUrl,
       playlistID: playlistID,
       idsNamesLookup: {video.id: info?.name},
       playlistName: playlistName,
