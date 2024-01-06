@@ -352,6 +352,19 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  Future<void> removePlaylistDuplicates() async {
+    if (!shoulShowPlaylistUtils()) return;
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+    final removed = pl.tracks.removeDuplicates((element) => element.track);
+    await PlaylistController.inst.updatePropertyInPlaylist(pl.name, modifiedDate: currentTimeMS);
+    await PlaylistController.inst.onPlaylistTracksChanged(pl); // to write m3u
+    snackyy(
+      icon: Broken.filter_remove,
+      message: "${lang.REMOVED} ${removed.displayTrackKeyword}",
+    );
+  }
+
   Future<void> exportPlaylist() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
@@ -572,6 +585,18 @@ Future<void> showGeneralPopupDialog(
               Expanded(child: bigIcon(Broken.smileys, lang.SET_MOODS, setPlaylistMoods)),
               const SizedBox(width: 8.0),
               Expanded(child: bigIcon(Broken.edit_2, lang.RENAME_PLAYLIST, renamePlaylist)),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: bigIcon(
+                  Broken.edit_2,
+                  lang.REMOVE_DUPLICATES,
+                  removePlaylistDuplicates,
+                  iconWidget: const StackedIcon(
+                    baseIcon: Broken.copy,
+                    secondaryIcon: Broken.broom,
+                  ),
+                ),
+              ),
               const SizedBox(width: 8.0),
               Expanded(child: bigIcon(Broken.pen_remove, lang.DELETE_PLAYLIST, deletePlaylist)),
               if (PlaylistController.inst.getPlaylist(playlistName ?? '')?.m3uPath == null) ...[
