@@ -243,13 +243,13 @@ class VideoController {
 
   bool _isInitializing = true;
 
-  Future<void> updateCurrentVideo(Track track) async {
+  Future<void> updateCurrentVideo(Track track, {bool bypassInitializedCheck = false}) async {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = null;
     currentVideo.value = null;
     currentYTQualities.clear();
     await vcontroller.dispose();
-    if (_isInitializing) return;
+    if (_isInitializing && bypassInitializedCheck == false) return;
     if (track == kDummyTrack) return;
     if (!settings.enableVideoPlayback.value) return;
 
@@ -575,6 +575,10 @@ class VideoController {
     _videoCacheIDMap.clear();
     vl?.loop((e, index) => _videoCacheIDMap.addForce(e.ytID ?? '', e));
 
+    final initialTrack = Player.inst.nowPlayingTrack;
+
+    updateCurrentVideo(initialTrack, bypassInitializedCheck: true);
+
     Future<void> fetchCachedVideos() async {
       final cachedVideos = await _checkIfVideosInMapValid(_videoCacheIDMap);
       printy('videos cached: ${cachedVideos.length}');
@@ -602,7 +606,9 @@ class VideoController {
       scanLocalVideos(fillPathsOnly: true, extractIfFileNotFound: false), // this will get paths only and disables extracting whole local videos on startup
     ]);
     _isInitializing = false;
-    await updateCurrentVideo(Player.inst.nowPlayingTrack);
+    if (initialTrack != Player.inst.nowPlayingTrack || !vcontroller.isInitialized) {
+      await updateCurrentVideo(Player.inst.nowPlayingTrack);
+    }
   }
 
   Future<void> scanLocalVideos({
