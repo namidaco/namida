@@ -132,9 +132,9 @@ class VideoController {
   void updateShouldShowControls(double animationValue) {
     final isExpanded = animationValue == 1.0;
     if (isExpanded) {
-      YoutubeController.inst.startDimTimer();
+      // YoutubeController.inst.startDimTimer(); // bad experience honestly
     } else {
-      YoutubeController.inst.cancelDimTimer();
+      // YoutubeController.inst.cancelDimTimer();
       normalControlskey.currentState?.setControlsVisibily(false);
     }
   }
@@ -1017,10 +1017,8 @@ class _NamidaVideoPlayer {
     });
 
     try {
-      File(path).setLastAccessedSync(DateTime.now());
-    } catch (e) {
-      printy(e, isError: true);
-    }
+      File(path).setLastAccessed(DateTime.now());
+    } catch (_) {}
   }
 
   Future<void> _execute(FutureOr<void> Function() fun) async {

@@ -136,15 +136,16 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                             // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
                             NamidaNavigator.inst.isytLocalSearchInFullPage = true;
                             NamidaNavigator.inst.ytLocalSearchNavigatorKey?.currentState?.push(
-                              MaterialPageRoute(builder: (context) {
-                                return YTLocalSearchResults(
+                              GetPageRoute(
+                                transition: Transition.cupertino,
+                                page: () => YTLocalSearchResults(
                                   initialSearch: currentSearchText,
                                   onVideoTap: widget.onVideoTap,
                                   onPopping: (didChangeSort) {
                                     if (didChangeSort) setState(() {});
                                   },
-                                );
-                              }),
+                                ),
+                              ),
                             );
                           },
                           child: Row(

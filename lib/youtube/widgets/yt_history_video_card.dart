@@ -63,9 +63,8 @@ class YTHistoryVideoCard extends StatelessWidget {
       playlistName: playlistName,
       videoYTID: video,
     );
-    final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(video.id);
-    final videoTitle = info?.name ?? backupVideoInfo?.title ?? video.id;
-    final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel;
+    final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(video.id) ?? video.id;
+    final videoSubtitle = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(video.id);
     final watchMS = video.dateTimeAdded.millisecondsSinceEpoch;
     final dateText = !displayTimeAgo
         ? ''

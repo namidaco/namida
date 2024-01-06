@@ -117,7 +117,8 @@ class NotificationService {
     required String subtitle,
     required bool failed,
     String? imagePath,
-  }) {
+  }) async {
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID);
     _createNotification(
       id: _youtubeDownloadID,
       title: videoTitle,

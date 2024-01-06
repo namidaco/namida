@@ -101,15 +101,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   void setControlsVisibily(bool visible, {bool maintainStatusBar = true}) {
     if (visible && VideoController.vcontroller.isInPip) return; // dont show if in pip
-    _isVisible = visible;
-    if (mounted) setState(() {});
+    if (visible == _isVisible) return;
+    if (mounted) setState(() => _isVisible = visible);
+
     if (maintainStatusBar) {
       if (visible) {
         // -- show status bar
         NamidaNavigator.inst.setDefaultSystemUI();
       } else {
         // -- hide status bar
-        if (widget.isFullScreen) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        if (widget.isFullScreen && mounted) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       }
     }
   }

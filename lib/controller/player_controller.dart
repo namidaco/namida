@@ -146,15 +146,15 @@ class Player {
   }
 
   Future<void> setPlayerPitch(double value) async {
-    await _audioHandler.setPlayerPitch(value);
+    await _audioHandler.setPlayerPitch(value, null);
   }
 
   Future<void> setPlayerSpeed(double value) async {
-    await _audioHandler.setPlayerSpeed(value);
+    await _audioHandler.setPlayerSpeed(value, null);
   }
 
   Future<void> setPlayerVolume(double value) async {
-    await _audioHandler.setPlayerVolume(value);
+    await _audioHandler.setPlayerVolume(value, null);
   }
 
   void refreshRxVariables() {

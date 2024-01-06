@@ -222,8 +222,8 @@ extension FavouriteTrack on Track {
 }
 
 extension PLNAME on String {
-  String translatePlaylistName() => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED)
-      .replaceFirst(k_PLAYLIST_NAME_FAV, lang.FAVOURITES)
+  String translatePlaylistName({bool liked = false}) => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED)
+      .replaceFirst(k_PLAYLIST_NAME_FAV, liked ? lang.LIKED : lang.FAVOURITES)
       .replaceFirst(k_PLAYLIST_NAME_HISTORY, lang.HISTORY)
       .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, lang.MOST_PLAYED);
 }

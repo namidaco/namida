@@ -59,7 +59,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
     final relatedThumbnailHeight = relatedThumbnailWidth * 9 / 16;
     final relatedThumbnailItemExtent = relatedThumbnailHeight + 8.0 * 2;
 
-    final miniplayerBGColor = context.theme.scaffoldBackgroundColor;
+    final miniplayerBGColor = Color.alphaBlend(context.theme.shadowColor.withOpacity(0.3), context.theme.scaffoldBackgroundColor);
 
     return SafeArea(
       child: DefaultTextStyle(
@@ -136,12 +136,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               decoration: BoxDecoration(
                 color: miniplayerBGColor,
               ),
-              onDismiss: settings.dismissibleMiniplayer.value
-                  ? () async {
-                      await Player.inst.clearQueue();
-                      Player.inst.setPlayerVolume(settings.playerVolume.value);
-                    }
-                  : null,
+              onDismiss: settings.dismissibleMiniplayer.value ? () async => await Player.inst.clearQueue() : null,
               onDismissing: (dismissPercentage) {
                 Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.playerVolume.value));
               },
@@ -403,6 +398,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             shimmerDelayMS: 250,
                                             shimmerEnabled: channelName == null || channelThumbnail == null || channelSubs == null,
                                             child: Material(
+                                              type: MaterialType.transparency,
                                               child: InkWell(
                                                 onTap: () {
                                                   final channel = videoChannel ?? Player.inst.currentChannelInfo;

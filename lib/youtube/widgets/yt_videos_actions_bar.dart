@@ -37,7 +37,6 @@ class YTVideosActionBar extends StatelessWidget {
   final String url;
   final List<YoutubeID> Function() videosCallback;
   final Map<String, StreamInfoItem> Function()? infoLookupCallback;
-  final Color? colorScheme;
   final YTVideosActionBarOptions barOptions;
   final YTVideosActionBarOptions menuOptions;
 
@@ -47,7 +46,6 @@ class YTVideosActionBar extends StatelessWidget {
     required this.url,
     required this.videosCallback,
     this.infoLookupCallback,
-    this.colorScheme,
     this.barOptions = const YTVideosActionBarOptions(),
     this.menuOptions = const YTVideosActionBarOptions(
       shuffle: false,
@@ -154,72 +152,79 @@ class YTVideosActionBar extends StatelessWidget {
     return Row(
       children: [
         if (barOptions.addToPlaylist)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.music_playlist,
             tooltip: lang.ADD_TO_PLAYLIST,
-            onPressed: _onAddToPlaylist,
+            onTap: _onAddToPlaylist,
           ),
         if (barOptions.download)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.import,
             tooltip: lang.DOWNLOAD,
-            onPressed: _onDownloadTap,
+            onTap: _onDownloadTap,
           ),
         if (barOptions.shuffle)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.shuffle,
             tooltip: lang.SHUFFLE,
-            onPressed: _onShuffle,
+            onTap: _onShuffle,
           ),
         if (barOptions.play)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.play,
             tooltip: lang.PLAY,
-            onPressed: _onPlay,
+            onTap: _onPlay,
           ),
         if (barOptions.playNext)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.next,
             tooltip: lang.PLAY_NEXT,
-            onPressed: _onPlayNext,
+            onTap: _onPlayNext,
           ),
         if (barOptions.playLast)
-          NamidaIconButton(
-            iconSize: 22.0,
-            horizontalPadding: 6.0,
-            iconColor: context.defaultIconColor(colorScheme),
+          _ActionItem(
             icon: Broken.play_cricle,
             tooltip: lang.PLAY_LAST,
-            onPressed: _onPlayLast,
+            onTap: _onPlayLast,
           ),
         if (menuItems.isNotEmpty)
           NamidaPopupWrapper(
             openOnLongPress: false,
             childrenDefault: menuItems,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: 3.0),
               child: Icon(
                 Broken.more_2,
-                color: context.defaultIconColor(colorScheme),
+                size: 24.0,
+                color: context.defaultIconColor(),
               ),
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ActionItem extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback? onTap;
+  final IconData icon;
+
+  const _ActionItem({
+    required this.tooltip,
+    required this.icon,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      iconSize: 22.0,
+      horizontalPadding: 6.0,
+      iconColor: context.defaultIconColor(),
+      icon: icon,
+      tooltip: tooltip,
+      onPressed: onTap,
     );
   }
 }

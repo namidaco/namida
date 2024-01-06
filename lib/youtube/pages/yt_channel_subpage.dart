@@ -215,8 +215,9 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                   borderRadius: 8.0,
                   icon: Broken.task_square,
                   text: lang.LOAD_ALL,
-                  enabled: !isLoadingMoreUploads.value,
+                  enabled: !isLoadingMoreUploads.value && !lastLoadingMoreWasEmpty.value,
                   disableWhenLoading: false,
+                  showLoadingWhenDisabled: !lastLoadingMoreWasEmpty.value,
                   onTap: () async {
                     _canKeepLoadingMore = !_canKeepLoadingMore;
                     while (_canKeepLoadingMore && !lastLoadingMoreWasEmpty.value && ConnectivityController.inst.hasConnection) {

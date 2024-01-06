@@ -8,6 +8,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -65,13 +66,13 @@ class YoutubeVideoCard extends StatelessWidget {
         videoId: idNull,
         thumbnailUrl: null,
         shimmerEnabled: video == null,
-        title: video?.name ?? '',
+        title: video?.name ?? YoutubeController.inst.getVideoName(videoId) ?? '',
         subtitle: [
           if (videoViewCount != null && videoViewCount >= 0) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
         displaythirdLineText: displayThirdLine,
-        thirdLineText: video?.uploaderName ?? '',
+        thirdLineText: video?.uploaderName ?? YoutubeController.inst.getVideoChannelName(videoId) ?? '',
         displayChannelThumbnail: displayThirdLine,
         channelThumbnailUrl: video?.uploaderAvatarUrl,
         onTap: onTap ??

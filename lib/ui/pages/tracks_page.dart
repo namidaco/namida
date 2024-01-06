@@ -61,7 +61,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
           onNotification: (notification) {
             final pixels = notification.metrics.pixels;
             if (pixels < -_minTrigger) {
-              animation.animateTo(((pixels + _minTrigger).abs() / 40).clamp(0, 1));
+              animation.animateTo(((pixels + _minTrigger).abs() / 20).clamp(0, 1));
             } else if (animation.value > 0) {
               animation.animateTo(0);
             }

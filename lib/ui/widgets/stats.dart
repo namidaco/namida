@@ -61,6 +61,22 @@ class StatsSection extends StatelessWidget {
                   );
                 },
               ),
+              Obx(
+                () {
+                  final map = Player.inst.totalListenedTimeInSec;
+                  final sec = map?[ListenTimeKeys.youtube] ?? 0;
+                  return StatsContainer(
+                    leading: const StackedIcon(
+                      baseIcon: Broken.timer_1,
+                      secondaryIcon: Broken.video_square,
+                      secondaryIconSize: 12.0,
+                    ),
+                    icon: Broken.timer_1,
+                    title: '${lang.TOTAL_LISTEN_TIME} (${lang.YOUTUBE}) :',
+                    value: sec.formattedTime,
+                  );
+                },
+              ),
             ],
           ),
         ),

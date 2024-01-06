@@ -248,101 +248,99 @@ class NamidaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => SearchBarAnimation(
-        key: searchBarKey,
-        isSearchBoxOnRightSide: true,
-        textAlignToRight: false,
-        durationInMilliSeconds: 300,
-        enableKeyboardFocus: true,
-        isOriginalAnimation: false,
-        textEditingController: ScrollSearchController.inst.searchTextEditingController,
-        hintText: ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.SEARCH_YOUTUBE : lang.SEARCH,
-        searchBoxWidth: context.width / 1.2,
-        buttonColour: Colors.transparent,
-        enableBoxShadow: false,
-        buttonShadowColour: Colors.transparent,
-        hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
-          fontSize: 17.0.multipliedFontScale,
-          height: height * 1.1,
-        ),
-        searchBoxColour: context.theme.cardColor.withAlpha(200),
-        enteredTextStyle: context.theme.textTheme.displayMedium,
-        cursorColour: context.theme.colorScheme.onBackground,
-        buttonBorderColour: Colors.black45,
-        cursorRadius: const Radius.circular(12.0),
-        buttonWidget: const IgnorePointer(
-          child: NamidaIconButton(
-            icon: Broken.search_normal,
-          ),
-        ),
-        secondaryButtonWidget: const IgnorePointer(
-          child: NamidaIconButton(
-            icon: Broken.search_status_1,
-          ),
-        ),
-        buttonWidgetSmallPadding: 24.0 + 8.0,
-        buttonWidgetSmall: Obx(
-          () {
-            final clipboard = ClipboardController.inst.clipboardText;
-            final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed;
-            final empty = ClipboardController.inst.textInControllerEmpty;
-
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: clipboard != '' && (empty || !alreadyPasted)
-                  ? NamidaIconButton(
-                      horizontalPadding: 0,
-                      icon: Broken.clipboard_tick,
-                      iconSize: 20.0,
-                      onPressed: () {
-                        ClipboardController.inst.setLastPasted(clipboard);
-                        final c = ScrollSearchController.inst.searchTextEditingController;
-                        c.text = "${c.text} $clipboard";
-                        c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
-                        _onSubmitted(clipboard);
-                        ClipboardController.inst.updateTextInControllerEmpty(false);
-                      },
-                    )
-                  : const SizedBox(),
-            );
-          },
-        ),
-        trailingWidget: NamidaIconButton(
-          icon: Broken.close_circle,
-          padding: EdgeInsets.zero,
-          iconSize: 22,
-          onPressed: ScrollSearchController.inst.resetSearch,
-        ),
-        onTap: () {
-          ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
-          ScrollSearchController.inst.showSearchMenu();
-        },
-        onPressButton: (isOpen) {
-          ScrollSearchController.inst.showSearchMenu(isOpen);
-          ScrollSearchController.inst.resetSearch();
-          ClipboardController.inst.updateTextInControllerEmpty(true);
-          if (isOpen) {
-            SearchSortController.inst.prepareResources();
-          } else {
-            SearchSortController.inst.disposeResources();
-          }
-        },
-        onFieldSubmitted: _onSubmitted,
-        onChanged: (value) {
-          if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
-            _searchFieldTimer?.cancel();
-            _searchFieldTimer = Timer(const Duration(milliseconds: 100), () {
-              ClipboardController.inst.updateTextInControllerEmpty(value == '');
-              SearchSortController.inst.searchAll(value);
-            });
-          }
-        },
-        // -- unfocusing produces weird bug while swiping for drawer
-        // -- leaving it will leave the pointer while entering miniplayer
-        // -- bruh
-        // onTapOutside: (event) => FocusScope.of(context).unfocus(),
+    return SearchBarAnimation(
+      key: searchBarKey,
+      isSearchBoxOnRightSide: true,
+      textAlignToRight: false,
+      durationInMilliSeconds: 300,
+      enableKeyboardFocus: true,
+      isOriginalAnimation: false,
+      textEditingController: ScrollSearchController.inst.searchTextEditingController,
+      hintText: /*  ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.SEARCH_YOUTUBE : */ lang.SEARCH,
+      searchBoxWidth: context.width / 1.2,
+      buttonColour: Colors.transparent,
+      enableBoxShadow: false,
+      buttonShadowColour: Colors.transparent,
+      hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
+        fontSize: 17.0.multipliedFontScale,
+        height: height * 1.1,
       ),
+      searchBoxColour: context.theme.cardColor.withAlpha(200),
+      enteredTextStyle: context.theme.textTheme.displayMedium,
+      cursorColour: context.theme.colorScheme.onBackground,
+      buttonBorderColour: Colors.black45,
+      cursorRadius: const Radius.circular(12.0),
+      buttonWidget: const IgnorePointer(
+        child: NamidaIconButton(
+          icon: Broken.search_normal,
+        ),
+      ),
+      secondaryButtonWidget: const IgnorePointer(
+        child: NamidaIconButton(
+          icon: Broken.search_status_1,
+        ),
+      ),
+      buttonWidgetSmallPadding: 24.0 + 8.0,
+      buttonWidgetSmall: Obx(
+        () {
+          final clipboard = ClipboardController.inst.clipboardText;
+          final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed;
+          final empty = ClipboardController.inst.textInControllerEmpty;
+
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: clipboard != '' && (empty || !alreadyPasted)
+                ? NamidaIconButton(
+                    horizontalPadding: 0,
+                    icon: Broken.clipboard_tick,
+                    iconSize: 20.0,
+                    onPressed: () {
+                      ClipboardController.inst.setLastPasted(clipboard);
+                      final c = ScrollSearchController.inst.searchTextEditingController;
+                      c.text = "${c.text} $clipboard";
+                      c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+                      _onSubmitted(clipboard);
+                      ClipboardController.inst.updateTextInControllerEmpty(false);
+                    },
+                  )
+                : const SizedBox(),
+          );
+        },
+      ),
+      trailingWidget: NamidaIconButton(
+        icon: Broken.close_circle,
+        padding: EdgeInsets.zero,
+        iconSize: 22,
+        onPressed: ScrollSearchController.inst.resetSearch,
+      ),
+      onTap: () {
+        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+        ScrollSearchController.inst.showSearchMenu();
+      },
+      onPressButton: (isOpen) {
+        ScrollSearchController.inst.showSearchMenu(isOpen);
+        ScrollSearchController.inst.resetSearch();
+        ClipboardController.inst.updateTextInControllerEmpty(true);
+        if (isOpen) {
+          SearchSortController.inst.prepareResources();
+        } else {
+          SearchSortController.inst.disposeResources();
+        }
+      },
+      onFieldSubmitted: _onSubmitted,
+      onChanged: (value) {
+        if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
+          _searchFieldTimer?.cancel();
+          _searchFieldTimer = Timer(const Duration(milliseconds: 100), () {
+            ClipboardController.inst.updateTextInControllerEmpty(value == '');
+            SearchSortController.inst.searchAll(value);
+          });
+        }
+      },
+      // -- unfocusing produces weird bug while swiping for drawer
+      // -- leaving it will leave the pointer while entering miniplayer
+      // -- bruh
+      // onTapOutside: (event) => FocusScope.of(context).unfocus(),
     );
   }
 }

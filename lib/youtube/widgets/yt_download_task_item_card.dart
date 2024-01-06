@@ -120,9 +120,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     final VideoInfo? info,
     final String groupName,
   ) {
-    final backupVideoInfo = YoutubeController.inst.getBackupVideoInfo(item.id);
-    final videoTitle = info?.name ?? backupVideoInfo?.title ?? item.id;
-    final videoSubtitle = info?.uploaderName ?? backupVideoInfo?.channel ?? '?';
+    final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(item.id) ?? item.id;
+    final videoSubtitle = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(item.id) ?? '?';
     final dateMS = info?.date?.millisecondsSinceEpoch;
     final dateText = dateMS?.dateAndClockFormattedOriginal ?? '?';
     final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow()})";
@@ -474,11 +473,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
-    final info = YoutubeController.inst.fetchVideoDetailsFromCacheSync(item.id);
+    final info = YoutubeController.inst.getVideoInfo(item.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
     final menuItems = YTUtils.getVideoCardMenuItems(
       videoId: item.id,
       url: info?.url,
+      channelUrl: info?.uploaderUrl,
       playlistID: null,
       idsNamesLookup: {item.id: info?.name},
       playlistName: '',

@@ -18,9 +18,6 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   ScrollController get scrollController => uploadsScrollController;
 
   @override
-  BuildContext get context => this.context;
-
-  @override
   Color? get sortChipBGColor => CurrentColor.inst.color;
 
   @override

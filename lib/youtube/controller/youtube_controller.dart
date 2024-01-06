@@ -232,7 +232,7 @@ class YoutubeController {
     await _writeTaskGroupToStorage(groupName: groupName);
   }
 
-  YoutubeVideoHistory? getBackupVideoInfo(String id) => tempBackupVideoInfo[id];
+  YoutubeVideoHistory? _getBackupVideoInfo(String id) => tempBackupVideoInfo[id];
 
   Future<void> fillBackupInfoMap() async {
     final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
@@ -263,33 +263,33 @@ class YoutubeController {
   String getYoutubeLink(String id) => id.toYTUrl();
 
   VideoInfo? getVideoInfo(String id, {bool checkFromStorage = false}) {
-    final info = getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage) ?? fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage);
+    final info = _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage) ?? _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage);
     if (info != null) return info;
-    final bk = getBackupVideoInfo(id);
+    final bk = _getBackupVideoInfo(id);
     if (bk != null) return VideoInfo(id: id, name: bk.title, uploaderName: bk.channel, uploaderUrl: bk.channelUrl);
     return null;
   }
 
   String? getVideoName(String id, {bool checkFromStorage = false}) {
-    return getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.name ??
-        getBackupVideoInfo(id)?.title ??
-        fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.name;
+    return _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.name ??
+        _getBackupVideoInfo(id)?.title ??
+        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.name;
   }
 
   String? getVideoChannelName(String id, {bool checkFromStorage = false}) {
-    return getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.uploaderName ??
-        getBackupVideoInfo(id)?.channel ??
-        fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.uploaderName;
+    return _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.uploaderName ??
+        _getBackupVideoInfo(id)?.channel ??
+        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.uploaderName;
   }
 
-  VideoInfo? getTemporarelyVideoInfo(String id, {bool checkFromStorage = false}) {
+  VideoInfo? _getTemporarelyVideoInfo(String id, {bool checkFromStorage = false}) {
     final r = getTemporarelyStreamInfo(id, checkFromStorage: checkFromStorage);
     return r == null ? null : VideoInfo.fromStreamInfoItem(r);
   }
 
   StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = false}) {
     final si = tempVideoInfosFromStreams[id];
-    if (si != null) si;
+    if (si != null) return si;
     if (checkFromStorage) {
       final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
       final res = file.readAsJsonSync();
@@ -581,7 +581,7 @@ class YoutubeController {
   }
 
   /// fetches cache version only.
-  VideoInfo? fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = false}) {
+  VideoInfo? _fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = false}) {
     if (tempVideoInfo[id] != null) return tempVideoInfo[id]!;
     if (checkFromStorage) {
       final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");

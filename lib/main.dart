@@ -385,7 +385,7 @@ Future<bool> requestManageStoragePermission() async {
   return true;
 }
 
-Future<void> _setJiffyLocale(String code) async {
+Future<void> setJiffyLocale(String code) async {
   try {
     await Jiffy.setLocale(code);
   } catch (e) {

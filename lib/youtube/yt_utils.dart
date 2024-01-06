@@ -15,6 +15,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -23,6 +24,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
@@ -162,6 +164,15 @@ class YTUtils {
         title: lang.SHARE,
         onTap: () {
           if (url != null) Share.share(url);
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.play,
+        title: lang.PLAY,
+        onTap: () {
+          Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
+        },
+      ),
       if (channelUrl != '')
         NamidaPopupItem(
           icon: Broken.user,
@@ -190,7 +201,7 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.box_remove,
           title: lang.REMOVE_FROM_PLAYLIST,
-          subtitle: playlistName.translatePlaylistName(),
+          subtitle: playlistName.translatePlaylistName(liked: true),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
         ),
     ];

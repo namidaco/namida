@@ -196,6 +196,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   void dispose() {
     _animationController.dispose();
     // widget.textEditingController.dispose();
+    focusNode.dispose();
     super.dispose();
   }
 
@@ -369,30 +370,26 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
       () {
         if (forceOpen || !switcher) {
           switcher = true;
-          setState(() {
-            if (widget.enableKeyboardFocus) {
-              FocusScope.of(context).requestFocus(focusNode);
-            }
-          });
+          if (widget.enableKeyboardFocus) {
+            FocusScope.of(context).requestFocus(focusNode);
+          }
+
           _animationController.forward().then((value) {
-            setState(() {
-              _isAnimationOn = true;
-            });
+            _isAnimationOn = true;
+
             widget.onExpansionComplete?.call();
           });
         } else {
           switcher = false;
-          setState(() {
-            if (widget.enableKeyboardFocus) {
-              unFocusKeyboard();
-            }
-          });
+
+          if (widget.enableKeyboardFocus) {
+            unFocusKeyboard();
+          }
+
           _animationController.reverse().then((value) {
-            setState(() {
-              _isAnimationOn = false;
-            });
-            widget.onCollapseComplete?.call();
+            _isAnimationOn = false;
           });
+          widget.onCollapseComplete?.call();
         }
       },
     );
@@ -405,25 +402,21 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
       () {
         if (forceOpen || !switcher) {
           switcher = true;
-          setState(() {
-            if (widget.enableKeyboardFocus) {
-              FocusScope.of(context).requestFocus(focusNode);
-            }
-          });
+          if (widget.enableKeyboardFocus) {
+            FocusScope.of(context).requestFocus(focusNode);
+          }
+
           _animationController.forward().then((value) {
             widget.onExpansionComplete?.call();
           });
         } else {
           switcher = false;
-          setState(() {
-            if (widget.enableKeyboardFocus) {
-              unFocusKeyboard();
-            }
-          });
+          if (widget.enableKeyboardFocus) {
+            unFocusKeyboard();
+          }
+
           _animationController.reverse().then((value) {
-            setState(() {
-              _isAnimationOn = false;
-            });
+            _isAnimationOn = false;
             widget.onCollapseComplete?.call();
           });
         }

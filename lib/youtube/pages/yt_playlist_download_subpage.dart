@@ -412,7 +412,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                   ),
                                                   const SizedBox(width: 2.0),
                                                   Text(
-                                                    info?.uploaderName ?? '',
+                                                    info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(id) ?? '',
                                                     style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale * _hmultiplier),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,

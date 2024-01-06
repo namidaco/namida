@@ -612,12 +612,21 @@ class NamidaButton extends StatelessWidget {
 
 class StatsContainer extends StatelessWidget {
   final Widget? child;
+  final Widget? leading;
   final IconData? icon;
   final String? title;
   final String? value;
   final String? total;
 
-  const StatsContainer({super.key, this.child, this.icon, this.title, this.value, this.total});
+  const StatsContainer({
+    super.key,
+    this.child,
+    this.leading,
+    this.icon,
+    this.title,
+    this.value,
+    this.total,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -632,16 +641,16 @@ class StatsContainer extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon),
-              const SizedBox(
-                width: 8.0,
-              ),
+              leading ??
+                  Icon(
+                    icon,
+                    color: context.defaultIconColor(),
+                  ),
+              const SizedBox(width: 8.0),
               Text(title ?? ''),
-              const SizedBox(
-                width: 8.0,
-              ),
+              const SizedBox(width: 8.0),
               Text(value ?? ''),
-              if (total != null) Text(" ${lang.OF} $total")
+              if (total != null) Text(" ${lang.OF} $total"),
             ],
           ),
     );
@@ -2472,6 +2481,8 @@ class NamidaInkWellButton extends StatelessWidget {
   final String text;
   final bool enabled;
   final bool showLoadingWhenDisabled;
+  final bool disableWhenLoading;
+  final double sizeMultiplier;
 
   const NamidaInkWellButton({
     super.key,
@@ -2484,20 +2495,22 @@ class NamidaInkWellButton extends StatelessWidget {
     required this.text,
     this.enabled = true,
     this.showLoadingWhenDisabled = true,
+    this.disableWhenLoading = true,
+    this.sizeMultiplier = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     final itemsColor = context.theme.colorScheme.onBackground.withOpacity(0.8);
     return IgnorePointer(
-      ignoring: !enabled,
+      ignoring: !enabled && disableWhenLoading,
       child: AnimatedOpacity(
         opacity: enabled ? 1.0 : 0.6,
         duration: Duration(milliseconds: animationDurationMS),
         child: NamidaInkWell(
           animationDurationMS: animationDurationMS,
-          borderRadius: borderRadius,
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          borderRadius: borderRadius * sizeMultiplier,
+          padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier, vertical: 6.0 * sizeMultiplier),
           bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withOpacity(0.5),
           onTap: onTap,
           onLongPress: onLongPress,
@@ -2509,15 +2522,16 @@ class NamidaInkWellButton extends StatelessWidget {
                     ? const LoadingIndicator(boxHeight: 18.0)
                     : Icon(
                         icon,
-                        size: 18.0,
+                        size: 18.0 * sizeMultiplier,
                         color: itemsColor,
                       ),
-                const SizedBox(width: 6.0),
+                SizedBox(width: 6.0 * sizeMultiplier),
               ],
               Text(
                 text,
                 style: context.textTheme.displayMedium?.copyWith(
                   color: itemsColor,
+                  fontSize: (15.0 * sizeMultiplier).multipliedFontScale,
                 ),
               ),
               const SizedBox(width: 4.0),
@@ -2930,55 +2944,6 @@ class NamidaPopupWrapper extends StatelessWidget {
       child: child,
     );
   }
-}
-
-class NamidaLifeCycleWrapper extends StatefulWidget {
-  final Widget child;
-  final Future<void> Function()? onResume;
-  final Future<void> Function()? onSuspending;
-  final Future<void> Function()? onDetach;
-
-  const NamidaLifeCycleWrapper({
-    super.key,
-    required this.child,
-    this.onResume,
-    this.onSuspending,
-    this.onDetach,
-  });
-
-  @override
-  State<NamidaLifeCycleWrapper> createState() => _NamidaLifeCycleWrapperState();
-}
-
-class _NamidaLifeCycleWrapperState extends State<NamidaLifeCycleWrapper> {
-  late final MethodChannel namidaChannel;
-
-  @override
-  void initState() {
-    super.initState();
-    // -- the new flutter update, calls AppLifecycleState.inactive whenever the app
-    // -- loses focus, like swiping notification center, not ideal for what we need
-    // -- so we use a method channel whenever `onUserLeaveHint` is called from FlutterActivity
-    namidaChannel = const MethodChannel('namida');
-
-    namidaChannel.setMethodCallHandler((call) async {
-      switch (call.method) {
-        case 'onResume':
-          await Future.wait([
-            SystemChrome.setPreferredOrientations(kDefaultOrientations),
-            NamidaNavigator.inst.setDefaultSystemUI(),
-            if (widget.onResume != null) widget.onResume!(),
-          ]);
-        case 'onUserLeaveHint':
-          await widget.onSuspending?.call();
-        case 'onStop':
-          await widget.onDetach?.call();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class NamidaAspectRatio extends StatelessWidget {

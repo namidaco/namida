@@ -301,6 +301,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await items._execute(
       selectable: (finalItems) async {
         if (currentQueue.firstOrNull is! Selectable) {
+          VideoController.inst.currentYTQualities.clear();
+          VideoController.inst.currentPossibleVideos.clear();
           await clearQueue();
         }
       },
@@ -308,6 +310,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (currentQueue.firstOrNull is! YoutubeID) {
           YoutubeController.inst.currentYTQualities.clear();
           YoutubeController.inst.currentYTAudioStreams.clear();
+          YoutubeController.inst.currentCachedQualities.clear();
+          YoutubeController.inst.currentComments.clear();
+          YoutubeController.inst.currentRelatedVideos.clear();
           await clearQueue();
         }
       },
@@ -413,19 +418,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ==============================================================================================
   // ================================== NamidaBasicAudioHandler Overriden ====================================
   @override
-  Future<void> setPlayerSpeed(double value) async {
+  Future<void> setPlayerSpeed(double value, AudioPlayer? ap) async {
     await Future.wait([
       VideoController.vcontroller.setSpeed(value),
-      super.setPlayerSpeed(value),
+      super.setPlayerSpeed(value, ap),
     ]);
   }
 
   @override
-  Future<void> setPlayerVolume(double value) async {
+  Future<void> setPlayerVolume(double value, AudioPlayer? ap) async {
     await Future.wait([
       VideoController.vcontroller.setVolume(value),
-      super.setVolume(value),
+      super.setPlayerVolume(value, ap),
     ]);
+  }
+
+  @override
+  Future<void> setPlayerPitch(double value, AudioPlayer? ap) async {
+    await super.setPlayerPitch(value, ap);
   }
 
   @override
