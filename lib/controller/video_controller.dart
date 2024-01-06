@@ -241,15 +241,12 @@ class VideoController {
   static _NamidaVideoPlayer get vcontroller => inst._videoController;
   _NamidaVideoPlayer _videoController = _NamidaVideoPlayer.inst;
 
-  bool _isInitializing = true;
-
-  Future<void> updateCurrentVideo(Track track, {bool bypassInitializedCheck = false}) async {
+  Future<void> updateCurrentVideo(Track track) async {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = null;
     currentVideo.value = null;
     currentYTQualities.clear();
     await vcontroller.dispose();
-    if (_isInitializing && bypassInitializedCheck == false) return;
     if (track == kDummyTrack) return;
     if (!settings.enableVideoPlayback.value) return;
 
@@ -575,10 +572,6 @@ class VideoController {
     _videoCacheIDMap.clear();
     vl?.loop((e, index) => _videoCacheIDMap.addForce(e.ytID ?? '', e));
 
-    final initialTrack = Player.inst.nowPlayingTrack;
-
-    updateCurrentVideo(initialTrack, bypassInitializedCheck: true);
-
     Future<void> fetchCachedVideos() async {
       final cachedVideos = await _checkIfVideosInMapValid(_videoCacheIDMap);
       printy('videos cached: ${cachedVideos.length}');
@@ -605,10 +598,8 @@ class VideoController {
       fetchCachedVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
       scanLocalVideos(fillPathsOnly: true, extractIfFileNotFound: false), // this will get paths only and disables extracting whole local videos on startup
     ]);
-    _isInitializing = false;
-    if (initialTrack != Player.inst.nowPlayingTrack || !vcontroller.isInitialized) {
-      await updateCurrentVideo(Player.inst.nowPlayingTrack);
-    }
+
+    if (!vcontroller.isInitialized) await updateCurrentVideo(Player.inst.nowPlayingTrack);
   }
 
   Future<void> scanLocalVideos({
