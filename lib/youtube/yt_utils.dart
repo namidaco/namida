@@ -159,13 +159,12 @@ class YTUtils {
           );
         },
       ),
-      NamidaPopupItem(
-        icon: Broken.share,
-        title: lang.SHARE,
-        onTap: () {
-          if (url != null) Share.share(url);
-        },
-      ),
+      if (url != null && url != '')
+        NamidaPopupItem(
+          icon: Broken.share,
+          title: lang.SHARE,
+          onTap: () => Share.share(url),
+        ),
       NamidaPopupItem(
         icon: Broken.play,
         title: lang.PLAY,

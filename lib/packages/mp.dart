@@ -123,7 +123,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           alignment: Alignment.bottomCenter,
           children: [
             Padding(
-              padding: EdgeInsets.only(bottom: (widget.bottomMargin * (1.0 - percentage)).withMinimum(0)),
+              padding: EdgeInsets.only(bottom: (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin)),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: GestureDetector(

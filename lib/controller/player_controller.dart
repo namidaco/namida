@@ -14,6 +14,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -146,15 +147,15 @@ class Player {
   }
 
   Future<void> setPlayerPitch(double value) async {
-    await _audioHandler.setPlayerPitch(value, null);
+    await _audioHandler.setPlayerPitch(value);
   }
 
   Future<void> setPlayerSpeed(double value) async {
-    await _audioHandler.setPlayerSpeed(value, null);
+    await _audioHandler.setPlayerSpeed(value);
   }
 
   Future<void> setPlayerVolume(double value) async {
-    await _audioHandler.setPlayerVolume(value, null);
+    await _audioHandler.setPlayerVolume(value);
   }
 
   void refreshRxVariables() {
@@ -343,6 +344,7 @@ class Player {
 
   Future<void> play() async {
     await _audioHandler.play();
+    settings.wakelockMode.value.toggleOn(VideoController.vcontroller.isInitialized);
   }
 
   Future<void> playRaw() async {
@@ -351,6 +353,7 @@ class Player {
 
   Future<void> pause() async {
     await _audioHandler.pause();
+    settings.wakelockMode.value.toggleOff();
   }
 
   Future<void> dispose() async {

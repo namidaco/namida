@@ -92,7 +92,7 @@ class NamidaReordererableListener extends StatelessWidget {
         MiniPlayerController.inst.invokeDoneReordering();
       },
       index: index,
-      delay: const Duration(milliseconds: 80),
+      delay: Duration(milliseconds: durationMs),
       child: child,
     );
   }

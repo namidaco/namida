@@ -34,6 +34,14 @@ class YTMostPlayedVideosPage extends StatelessWidget {
   const YTMostPlayedVideosPage({super.key});
 
   MostPlayedItemsPage getMainWidget(List<String> videos) {
+    final ytIds = videos
+        .map(
+          (e) => YoutubeID(
+            id: e,
+            playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+          ),
+        )
+        .toList();
     return MostPlayedItemsPage(
       itemExtents: List.filled(videos.length, Dimensions.youtubeCardItemExtent),
       historyController: YoutubeHistoryController.inst,
@@ -58,14 +66,7 @@ class YTMostPlayedVideosPage extends StatelessWidget {
 
         return YTHistoryVideoCard(
           key: Key("${videoID}_$i"),
-          videos: videos
-              .map(
-                (e) => YoutubeID(
-                  id: e,
-                  playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-                ),
-              )
-              .toList(),
+          videos: ytIds,
           index: i,
           day: null,
           overrideListens: listens,

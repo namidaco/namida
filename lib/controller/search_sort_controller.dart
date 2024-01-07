@@ -355,7 +355,11 @@ class SearchSortController {
       final lctextSplit = text.split(' ').map((e) => textCleanedForSearch(e));
 
       bool isMatch(Iterable<String> propertySplit) {
-        return lctextSplit.every((element) => propertySplit.any((p) => p.contains(element)));
+        final match1 = lctextSplit.every((element) => propertySplit.any((p) => p.contains(element)));
+        if (match1) return true;
+        if (!cleanup) return false;
+        final match2 = propertySplit.join().contains(lctext);
+        return match2;
       }
 
       final result = <Track>[];

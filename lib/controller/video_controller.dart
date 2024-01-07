@@ -1066,6 +1066,7 @@ class _NamidaVideoPlayer {
     _videoController?.removeListener(_updateBufferingStatus);
     _videoController = c;
     await _videoController!.initialize();
+    _videoController!.setPlaybackSpeed(settings.playerSpeed.value);
     _aspectRatio.value = _videoController?.value.aspectRatio;
     _videoController?.addListener(_updateBufferingStatus);
     if (isInPip) enablePictureInPicture(updateRatioOnly: true); // rebuild aspect ratio

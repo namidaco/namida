@@ -59,6 +59,7 @@ class AppThemes {
           color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
         ),
       ),
+      secondaryHeaderColor: light ? const Color.fromARGB(200, 240, 240, 240) : const Color.fromARGB(222, 10, 10, 10),
       navigationBarTheme: pitchBlack == null
           ? null
           : NavigationBarThemeData(

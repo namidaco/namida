@@ -90,6 +90,7 @@ class YoutubeController {
   final commentToParsedHtml = <String, String?>{};
   final currentTotalCommentsCount = Rxn<int>();
   final isLoadingComments = false.obs;
+  final isTitleExpanded = false.obs;
   final currentYTQualities = <VideoOnlyStream>[].obs;
   final currentYTAudioStreams = <AudioOnlyStream>[].obs;
 
@@ -518,6 +519,7 @@ class YoutubeController {
   Future<void> updateVideoDetails(String id, {bool forceRequest = false}) async {
     if (scrollController.hasClients) scrollController.jumpTo(0);
     startDimTimer();
+    isTitleExpanded.value = false;
 
     updateCurrentVideoMetadata(id, forceRequest: forceRequest);
     updateCurrentComments(id);

@@ -475,7 +475,7 @@ extension WAKELOCKMODETEXT on WakelockMode {
   }
 
   void toggleOff() {
-    WakelockPlus.enable();
+    WakelockPlus.disable();
   }
 }
 

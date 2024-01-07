@@ -418,24 +418,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ==============================================================================================
   // ================================== NamidaBasicAudioHandler Overriden ====================================
   @override
-  Future<void> setPlayerSpeed(double value, AudioPlayer? ap) async {
+  Future<void> setPlayerSpeed(double value) async {
     await Future.wait([
       VideoController.vcontroller.setSpeed(value),
-      super.setPlayerSpeed(value, ap),
+      super.setPlayerSpeed(value),
     ]);
   }
 
   @override
-  Future<void> setPlayerVolume(double value, AudioPlayer? ap) async {
+  Future<void> setPlayerVolume(double value) async {
     await Future.wait([
       VideoController.vcontroller.setVolume(value),
-      super.setPlayerVolume(value, ap),
+      super.setPlayerVolume(value),
     ]);
   }
 
   @override
-  Future<void> setPlayerPitch(double value, AudioPlayer? ap) async {
-    await super.setPlayerPitch(value, ap);
+  Future<void> setPlayerPitch(double value) async {
+    await super.setPlayerPitch(value);
   }
 
   @override
