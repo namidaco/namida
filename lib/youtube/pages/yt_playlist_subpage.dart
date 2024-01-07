@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:get/get.dart';
+import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:newpipeextractor_dart/models/stream_info_item.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -17,6 +18,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -282,17 +284,32 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     ),
                   ),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
-                  SliverFixedExtentList.builder(
-                    itemExtent: Dimensions.youtubeCardItemExtent,
+                  SliverKnownExtentsReorderableList(
+                    overlayOffset: Offset.zero,
+                    onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                    itemExtents: List.filled(playlist.tracks.length, Dimensions.youtubeCardItemExtent),
                     itemCount: playlist.tracks.length,
                     itemBuilder: (context, index) {
                       return YTHistoryVideoCard(
+                        key: Key("$index"),
                         videos: playlist.tracks,
                         index: index,
                         reversedList: widget.reversedList,
                         day: null,
                         playlistID: playlist.playlistID,
                         playlistName: playlistCurrentName,
+                        fromPlayerQueue: true,
+                        draggingEnabled: YoutubePlaylistController.inst.canReorderVideos.value,
+                        draggableThumbnail: true,
+                        showMoreIcon: true,
+                        draggingBarsBuilder: (color) {
+                          return Obx(
+                            () => ThreeLineSmallContainers(enabled: YoutubePlaylistController.inst.canReorderVideos.value, color: color),
+                          );
+                        },
+                        draggingThumbnailBuilder: (draggingTrigger) {
+                          return Obx(() => YoutubePlaylistController.inst.canReorderVideos.value ? draggingTrigger : const SizedBox());
+                        },
                       );
                     },
                   ),

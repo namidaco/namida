@@ -1084,6 +1084,19 @@ extension RouteUtils on NamidaRoute {
         shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
       ),
 
+      getAnimatedCrossFade(
+        child: Obx(
+          () {
+            final reorderable = ytplc.YoutubePlaylistController.inst.canReorderVideos.value;
+            return NamidaAppBarIcon(
+              tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+              icon: reorderable ? Broken.forward_item : Broken.lock_1,
+              onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,
+            );
+          },
+        ),
+        shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
+      ),
       const SizedBox(width: 8.0),
     ];
   }

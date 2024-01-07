@@ -30,6 +30,11 @@ class YTHistoryVideoCard extends StatelessWidget {
   final String playlistName;
   final bool openMenuOnLongPress;
   final bool fromPlayerQueue;
+  final bool draggableThumbnail;
+  final bool draggingEnabled;
+  final bool showMoreIcon;
+  final Widget Function(Color? color)? draggingBarsBuilder;
+  final Widget Function(Widget draggingTrigger)? draggingThumbnailBuilder;
 
   const YTHistoryVideoCard({
     super.key,
@@ -46,6 +51,11 @@ class YTHistoryVideoCard extends StatelessWidget {
     required this.playlistName,
     this.openMenuOnLongPress = true,
     this.fromPlayerQueue = false,
+    this.draggableThumbnail = false,
+    this.draggingEnabled = false,
+    this.showMoreIcon = false,
+    this.draggingBarsBuilder,
+    this.draggingThumbnailBuilder,
   });
 
   @override
@@ -75,6 +85,24 @@ class YTHistoryVideoCard extends StatelessWidget {
             ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow()
             : watchMS.dateAndClockFormattedOriginal;
 
+    final draggingThumbWidget = draggableThumbnail && draggingEnabled
+        ? Positioned(
+            left: 0,
+            bottom: 0,
+            top: 0,
+            child: NamidaReordererableListener(
+              durationMs: 80,
+              isInQueue: true,
+              index: index,
+              child: Container(
+                color: Colors.transparent,
+                height: thumbHeight,
+                width: thumbWidth, // not fully but better, to avoid accidents
+              ),
+            ),
+          )
+        : null;
+
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: openMenuOnLongPress,
@@ -90,8 +118,9 @@ class YTHistoryVideoCard extends StatelessWidget {
               final itemsColor7 = isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null;
               final itemsColor6 = isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null;
               final itemsColor5 = isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null;
+              final threeLines = draggableThumbnail ? ThreeLineSmallContainers(enabled: draggingEnabled, color: itemsColor5) : null;
               final children = [
-                if (fromPlayerQueue) ThreeLineSmallContainers(enabled: true, color: itemsColor5),
+                if (threeLines != null) draggingBarsBuilder?.call(itemsColor5) ?? threeLines,
                 SizedBox(
                   width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
                   height: minimalCard ? 1.0 : null,
@@ -195,7 +224,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (fromPlayerQueue)
+                    if (showMoreIcon)
                       Positioned(
                         top: 0.0,
                         right: 0.0,
@@ -221,22 +250,7 @@ class YTHistoryVideoCard extends StatelessWidget {
               );
             },
           ),
-          if (fromPlayerQueue && !minimalCard)
-            Positioned(
-              left: 0,
-              bottom: 0,
-              top: 0,
-              child: NamidaReordererableListener(
-                durationMs: 80,
-                isInQueue: true,
-                index: index,
-                child: Container(
-                  color: Colors.transparent,
-                  height: thumbHeight,
-                  width: thumbWidth, // not fully but better, to avoid accidents
-                ),
-              ),
-            ),
+          if (draggingThumbWidget != null) draggingThumbnailBuilder?.call(draggingThumbWidget) ?? draggingThumbWidget
         ],
       ),
     );

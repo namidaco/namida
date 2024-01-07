@@ -41,7 +41,7 @@ class YTCommentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor.withAlpha(60),
+            color: context.theme.secondaryHeaderColor.withAlpha(60),
             blurRadius: 4.0,
             spreadRadius: 1.5,
             offset: const Offset(0.0, 1.0),

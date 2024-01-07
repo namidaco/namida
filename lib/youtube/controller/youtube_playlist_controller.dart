@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:get/get.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -21,6 +22,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
   static YoutubePlaylistController get inst => _instance;
   static final YoutubePlaylistController _instance = YoutubePlaylistController._internal();
   YoutubePlaylistController._internal();
+
+  final canReorderVideos = false.obs;
 
   void addNewPlaylist(
     String name, {

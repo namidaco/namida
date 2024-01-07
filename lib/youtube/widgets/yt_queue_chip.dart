@@ -390,6 +390,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       displayTimeAgo: false,
                                       thumbnailHeight: itemThumbnailHeight,
                                       fromPlayerQueue: true,
+                                      draggingEnabled: true,
+                                      draggableThumbnail: true,
+                                      showMoreIcon: true,
                                     ),
                                   );
                                 },

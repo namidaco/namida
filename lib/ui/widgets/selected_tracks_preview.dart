@@ -24,6 +24,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sysNavBar = MediaQuery.paddingOf(context).bottom;
     return AnimatedBuilder(
       animation: animation,
       child: Obx(
@@ -139,7 +140,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 
         return AnimatedPositioned(
           duration: const Duration(milliseconds: 100),
-          bottom: initH + (navHeight * (1 - queueHeight)),
+          bottom: sysNavBar + initH + (navHeight * (1 - queueHeight)),
           child: NamidaOpacity(
             opacity: (isInQueue ? percentage : 1 - percentage).clamp(0, 1),
             child: child!,
