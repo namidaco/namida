@@ -1242,17 +1242,27 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         final wasPlaying = isPlaying;
-        await plsPause();
         if (_nextSeekCanSetAudioCache) {
+          await plsPause();
           // -- try putting cache version if it was cached
           _nextSeekCanSetAudioCache = false;
           final cached = currentAudioStream.value?.getCachedFile(finalItem.id);
           if (cached != null) await setAudioSource(AudioSource.file(cached.path, tag: mediaItem));
           _isCurrentAudioFromCache = true;
+          await plsSeek();
+          await _waitForAllBuffers();
+          if (wasPlaying) await _playAudioThenVideo();
+        } else {
+          if (isCurrentAudioFromCache) {
+            await plsSeek();
+            refreshVideoPosition(false);
+          } else {
+            await plsPause();
+            await plsSeek();
+            await _waitForAllBuffers();
+            if (wasPlaying) await _playAudioThenVideo();
+          }
         }
-        await plsSeek();
-        await _waitForAllBuffers();
-        if (wasPlaying) await _playAudioThenVideo();
       },
     );
   }
@@ -1316,7 +1326,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await VideoController.vcontroller.pause(); // pausing for cases like: seeking to 0, which will trigger play fast
     final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
     final diff = vcp - currentPositionMS;
-    if (diff > 0) await Future.delayed(Duration(milliseconds: diff));
+    if (diff > 0) await Future.delayed(Duration(milliseconds: diff.withMaximum(_videoPositionSeekDelayMS)));
     await VideoController.vcontroller.play();
   }
 }

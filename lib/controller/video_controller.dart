@@ -1035,13 +1035,7 @@ class _NamidaVideoPlayer {
 
   Future<void> pause() async => await _execute(() async => await _videoController?.pause());
 
-  Future<void> seek(Duration duration) async => await _execute(() async {
-        final wasPlaying = _videoController?.value.isPlaying ?? false;
-        await _videoController?.seekTo(duration);
-        if (!wasPlaying) {
-          await _videoController?.pause();
-        }
-      });
+  Future<void> seek(Duration duration) async => await _execute(() async => await _videoController?.seekTo(duration));
 
   Future<void> setVolume(double volume) async => await _execute(() async => await _videoController?.setVolume(volume));
 
@@ -1077,20 +1071,22 @@ class _NamidaVideoPlayer {
     _buffered.value = _videoController?.value.buffered.lastOrNull?.end;
     _isBuffering.value = _videoController?.value.isBuffering ?? false;
 
-    if (_isBuffering.value) {
-      _bufferingCompleter?.completeIfWasnt(false);
-      _bufferingCompleter = null;
-      _bufferingCompleter = Completer<bool>();
-      if (!VideoController.inst.isCurrentlyInBackground && Player.inst.isPlaying && Player.inst.shouldCareAboutAVSync) {
-        _didPauseInternally = true;
-        await Player.inst.pauseRaw();
+    if (Player.inst.shouldCareAboutAVSync && !isCurrentVideoFromCache) {
+      if (_isBuffering.value) {
+        // _bufferingCompleter?.completeIfWasnt(false);
+        _bufferingCompleter = null;
+        _bufferingCompleter = Completer<bool>();
+        if (!VideoController.inst.isCurrentlyInBackground && Player.inst.isPlaying) {
+          _didPauseInternally = true;
+          await Player.inst.pauseRaw();
+        }
+      } else {
+        if (_didPauseInternally) {
+          _didPauseInternally = false;
+          await Player.inst.playRaw();
+        }
+        _bufferingCompleter?.completeIfWasnt(false);
       }
-    } else {
-      if (_didPauseInternally && Player.inst.shouldCareAboutAVSync) {
-        _didPauseInternally = false;
-        await Player.inst.playRaw();
-      }
-      _bufferingCompleter?.completeIfWasnt(false);
     }
   }
 
