@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -28,6 +29,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   final bool reversedList;
   final String playlistName;
   final bool openMenuOnLongPress;
+  final bool fromPlayerQueue;
 
   const YTHistoryVideoCard({
     super.key,
@@ -43,6 +45,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.reversedList = false,
     required this.playlistName,
     this.openMenuOnLongPress = true,
+    this.fromPlayerQueue = false,
   });
 
   @override
@@ -64,7 +67,7 @@ class YTHistoryVideoCard extends StatelessWidget {
       videoYTID: video,
     );
     final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(video.id) ?? video.id;
-    final videoSubtitle = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(video.id);
+    final videoChannel = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(video.id);
     final watchMS = video.dateTimeAdded.millisecondsSinceEpoch;
     final dateText = !displayTimeAgo
         ? ''
@@ -76,112 +79,165 @@ class YTHistoryVideoCard extends StatelessWidget {
       openOnTap: false,
       openOnLongPress: openMenuOnLongPress,
       childrenDefault: menuItems,
-      child: Obx(
-        () {
-          final isCurrentlyPlaying = Player.inst.nowPlayingVideoID == video;
-          final sameDay = day == YoutubeHistoryController.inst.dayOfHighLight.value;
-          final sameIndex = index == YoutubeHistoryController.inst.indexToHighlight.value;
-          final hightlightedColor = sameDay && sameIndex ? context.theme.colorScheme.onBackground.withAlpha(40) : null;
-          final children = [
-            SizedBox(
-              width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
-              height: minimalCard ? 1.0 : null,
-            ),
-            Center(
-              child: YoutubeThumbnail(
-                key: Key(video.id),
-                borderRadius: 8.0,
-                isImportantInCache: true,
-                width: thumbWidth - 3.0,
-                height: thumbHeight - 3.0,
-                videoId: video.id,
-                smallBoxText: duration,
-              ),
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Padding(
-                  padding: minimalCard ? const EdgeInsets.all(4.0) : EdgeInsets.zero,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        videoTitle,
-                        maxLines: minimalCard ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.displayMedium?.copyWith(
-                          fontSize: minimalCard ? 12.0.multipliedFontScale : null,
-                          color: isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null,
-                        ),
-                      ),
-                      if (videoSubtitle != null)
-                        Text(
-                          videoSubtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontSize: minimalCard ? 11.5.multipliedFontScale : null,
-                            color: isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null,
-                          ),
-                        ),
-                      if (dateText != '')
-                        Text(
-                          dateText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontSize: minimalCard ? 11.0.multipliedFontScale : null,
-                            color: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
-                          ),
-                        ),
-                    ],
-                  )),
-            ),
-            const SizedBox(width: 12.0),
-          ];
-          return NamidaInkWell(
-            borderRadius: minimalCard ? 8.0 : 10.0,
-            width: minimalCard ? thumbWidth : null,
-            onTap: () {
-              YTUtils.expandMiniplayer();
-              Player.inst.playOrPause(
-                  this.index, (reversedList ? videos.reversed : videos).map((e) => YoutubeID(id: e.id, watchNull: e.watchNull, playlistID: playlistID)), QueueSource.others);
-            },
-            height: minimalCard ? 100 : Dimensions.youtubeCardItemExtent,
-            margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
-            bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            ),
-            child: Stack(
-              children: [
-                minimalCard
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: children,
-                      )
-                    : Row(
-                        children: children,
-                      ),
-                Positioned(
-                  bottom: 6.0,
-                  right: minimalCard ? 6.0 : 12.0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: YTUtils.getVideoCacheStatusIcons(
-                      context: context,
-                      videoId: video.id,
-                      iconsColor: isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null,
-                      overrideListens: overrideListens,
-                      displayCacheIcons: !minimalCard,
-                    ),
+      child: Stack(
+        children: [
+          Obx(
+            () {
+              final isCurrentlyPlaying = Player.inst.nowPlayingVideoID == video;
+              final sameDay = day == YoutubeHistoryController.inst.dayOfHighLight.value;
+              final sameIndex = index == YoutubeHistoryController.inst.indexToHighlight.value;
+              final hightlightedColor = sameDay && sameIndex ? context.theme.colorScheme.onBackground.withAlpha(40) : null;
+              final itemsColor7 = isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null;
+              final itemsColor6 = isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null;
+              final itemsColor5 = isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null;
+              final children = [
+                if (fromPlayerQueue) ThreeLineSmallContainers(enabled: true, color: itemsColor5),
+                SizedBox(
+                  width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
+                  height: minimalCard ? 1.0 : null,
+                ),
+                Center(
+                  child: YoutubeThumbnail(
+                    key: Key(video.id),
+                    borderRadius: 8.0,
+                    isImportantInCache: true,
+                    width: thumbWidth - 3.0,
+                    height: thumbHeight - 3.0,
+                    videoId: video.id,
+                    smallBoxText: duration,
                   ),
                 ),
-              ],
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Padding(
+                      padding: minimalCard ? const EdgeInsets.all(4.0) : EdgeInsets.zero,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            videoTitle,
+                            maxLines: minimalCard ? 1 : 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.displayMedium?.copyWith(
+                              fontSize: minimalCard ? 12.0.multipliedFontScale : null,
+                              color: itemsColor7,
+                            ),
+                          ),
+                          if (videoChannel != null)
+                            Text(
+                              videoChannel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.displaySmall?.copyWith(
+                                fontSize: minimalCard ? 11.5.multipliedFontScale : null,
+                                color: itemsColor6,
+                              ),
+                            ),
+                          if (dateText != '')
+                            Text(
+                              dateText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.displaySmall?.copyWith(
+                                fontSize: minimalCard ? 11.0.multipliedFontScale : null,
+                                color: itemsColor5,
+                              ),
+                            ),
+                        ],
+                      )),
+                ),
+                const SizedBox(width: 12.0),
+              ];
+              return NamidaInkWell(
+                borderRadius: minimalCard ? 8.0 : 10.0,
+                width: minimalCard ? thumbWidth : null,
+                onTap: () {
+                  YTUtils.expandMiniplayer();
+                  if (fromPlayerQueue) {
+                    final i = this.index;
+                    if (i == Player.inst.currentIndex) {
+                      Player.inst.togglePlayPause();
+                    } else {
+                      Player.inst.skipToQueueItem(this.index);
+                    }
+                  }
+                  Player.inst.playOrPause(
+                      this.index, (reversedList ? videos.reversed : videos).map((e) => YoutubeID(id: e.id, watchNull: e.watchNull, playlistID: playlistID)), QueueSource.others);
+                },
+                height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
+                margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
+                bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                ),
+                child: Stack(
+                  children: [
+                    minimalCard
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: children,
+                          )
+                        : Row(
+                            children: children,
+                          ),
+                    Positioned(
+                      bottom: 6.0,
+                      right: minimalCard ? 6.0 : 12.0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: YTUtils.getVideoCacheStatusIcons(
+                          context: context,
+                          videoId: video.id,
+                          iconsColor: itemsColor5,
+                          overrideListens: overrideListens,
+                          displayCacheIcons: !minimalCard,
+                        ),
+                      ),
+                    ),
+                    if (fromPlayerQueue)
+                      Positioned(
+                        top: 0.0,
+                        right: 0.0,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: NamidaPopupWrapper(
+                            childrenDefault: YTUtils.getVideoCardMenuItems(
+                              videoId: video.id,
+                              url: info?.url,
+                              channelUrl: info?.uploaderUrl,
+                              playlistID: playlistID,
+                              idsNamesLookup: {video.id: videoTitle},
+                            ),
+                            child: MoreIcon(
+                              iconSize: 16.0,
+                              iconColor: itemsColor6,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+          if (fromPlayerQueue && !minimalCard)
+            Positioned(
+              left: 0,
+              bottom: 0,
+              top: 0,
+              child: NamidaReordererableListener(
+                durationMs: 80,
+                isInQueue: true,
+                index: index,
+                child: Container(
+                  color: Colors.transparent,
+                  height: thumbHeight,
+                  width: thumbWidth, // not fully but better, to avoid accidents
+                ),
+              ),
             ),
-          );
-        },
+        ],
       ),
     );
   }

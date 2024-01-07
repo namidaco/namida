@@ -22,6 +22,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class NamidaNavigator {
   static NamidaNavigator get inst => _instance;
@@ -36,13 +37,15 @@ class NamidaNavigator {
 
   bool isytLocalSearchInFullPage = false;
   bool isInYTCommentsSubpage = false;
+  bool isQueueSheetOpen = false;
 
   final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
   NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
   int _currentDialogNumber = 0;
   int _currentMenusNumber = 0;
 
-  final GlobalKey<InnerDrawerState> innerDrawerKey = GlobalKey<InnerDrawerState>();
+  final innerDrawerKey = GlobalKey<InnerDrawerState>();
+  final ytQueueSheetKey = GlobalKey<YTMiniplayerQueueChipState>();
   final heroController = HeroController();
 
   bool _isInLanscape = false;
@@ -349,6 +352,11 @@ class NamidaNavigator {
       return;
     }
 
+    if (isQueueSheetOpen) {
+      ytQueueSheetKey.currentState?.dismissSheet();
+      isQueueSheetOpen = false;
+      return;
+    }
     if (isInYTCommentsSubpage) {
       ytMiniplayerCommentsPageKey?.currentState?.pop();
       isInYTCommentsSubpage = false;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -34,6 +35,7 @@ import 'package:namida/youtube/widgets/yt_action_button.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
+import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -764,6 +766,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                               : const SliverToBoxAdapter(child: SizedBox());
                                         },
                                       ),
+
+                                      const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight))
                                     ],
                                   ),
                                   Obx(
@@ -806,6 +810,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    YTMiniplayerQueueChip(key: NamidaNavigator.inst.ytQueueSheetKey),
 
                     // -- dimming
                     Positioned.fill(

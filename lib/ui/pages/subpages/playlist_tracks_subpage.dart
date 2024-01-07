@@ -447,7 +447,8 @@ class NormalPlaylistTracksPage extends StatelessWidget {
 
 class ThreeLineSmallContainers extends StatelessWidget {
   final bool enabled;
-  const ThreeLineSmallContainers({Key? key, required this.enabled}) : super(key: key);
+  final Color? color;
+  const ThreeLineSmallContainers({Key? key, required this.enabled, this.color}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -461,7 +462,7 @@ class ThreeLineSmallContainers extends StatelessWidget {
           width: enabled ? 9.0 : 2.0,
           height: 1.2,
           margin: const EdgeInsets.symmetric(vertical: 1),
-          color: context.theme.listTileTheme.iconColor?.withAlpha(120),
+          color: color ?? context.theme.listTileTheme.iconColor?.withAlpha(120),
         ),
       ),
     );

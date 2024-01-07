@@ -156,3 +156,5 @@ const kYoutubeHistoryDayListTopPadding = 6.0;
 const kYoutubeHistoryDayListBottomPadding = 12.0;
 
 const kYoutubeHistoryDayHeaderHeightWithPadding = kYoutubeHistoryDayHeaderHeight + kYoutubeHistoryDayListTopPadding + kYoutubeHistoryDayListBottomPadding;
+
+const kYTQueueSheetMinHeight = 60.0;
