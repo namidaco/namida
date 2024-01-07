@@ -142,6 +142,27 @@ void showAddToPlaylistSheet({
                     },
                   ),
                 ),
+                const SizedBox(width: 12.0),
+                Obx(
+                  () {
+                    const watchLater = 'Watch Later';
+                    final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
+                    final idExist = pl?.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) != null;
+                    return NamidaIconButton(
+                      tooltip: watchLater,
+                      icon: Broken.clock,
+                      child: idExist ? const StackedIcon(baseIcon: Broken.clock, secondaryIcon: Broken.tick_circle) : null,
+                      onPressed: () {
+                        final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
+                        if (pl == null) {
+                          pc.YoutubePlaylistController.inst.addNewPlaylist(watchLater, videoIds: ids);
+                        } else if (pl.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) == null) {
+                          pc.YoutubePlaylistController.inst.addTracksToPlaylist(pl, ids);
+                        }
+                      },
+                    );
+                  },
+                ),
                 const SizedBox(width: 18.0),
               ],
             ),
