@@ -75,6 +75,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _shimmerList.clear();
+    _recentlyAddedFull.clear();
+    _recentlyAdded.clear();
+    _randomTracks.clear();
+    _recentListened.clear();
+    _topRecentListened.clear();
+    _sameTimeYearAgo.clear();
+    _recentAlbums.clear();
+    _recentArtists.clear();
+    _topRecentAlbums.clear();
+    _topRecentArtists.clear();
+    _mixes.clear();
+    super.dispose();
+  }
+
   void _fillLists() async {
     if (HistoryController.inst.isHistoryLoaded) {
       _isLoading = false;
@@ -163,136 +180,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   List<E?> _listOrShimmer<E>(List<E> listy) {
     return _isLoading ? _shimmerList : listy;
-  }
-
-  Widget _getTracksList({
-    required String title,
-    required HomePageItems homepageItem,
-    String? subtitle,
-    Widget? thirdWidget,
-    required IconData icon,
-    required List<Selectable> listy,
-    List<MapEntry<Track, List<int>>>? listWithListens,
-    void Function()? onTap,
-    Widget? leading,
-    String? Function(Selectable? track)? topRightText,
-    QueueSource queueSource = QueueSource.homePageItem,
-  }) {
-    final finalList = _listOrShimmer(listy);
-    final finalListWithListens = listWithListens == null ? null : _listOrShimmer(listWithListens);
-    final tracksWithListensQueue = listWithListens?.map((e) => e.key);
-    return SliverToBoxAdapter(
-      child: _HorizontalList(
-        title: title,
-        icon: icon,
-        leading: leading,
-        height: 150.0 + 12.0,
-        itemCount: finalListWithListens?.length ?? finalList.length,
-        itemExtent: 98.0 + 8.0,
-        onTap: onTap,
-        subtitle: subtitle,
-        thirdWidget: thirdWidget,
-        itemBuilder: (context, index) {
-          if (finalListWithListens != null) {
-            final twl = finalListWithListens[index];
-            return _TrackCard(
-              homepageItem: homepageItem,
-              title: title,
-              index: index,
-              queue: tracksWithListensQueue ?? <Track>[],
-              width: 98.0,
-              track: twl?.key,
-              listens: twl?.value,
-              topRightText: topRightText == null ? null : topRightText(twl?.key),
-            );
-          } else {
-            final tr = finalList[index];
-            return _TrackCard(
-              homepageItem: homepageItem,
-              title: title,
-              index: index,
-              queue: finalList.whereType<Selectable>(),
-              width: 98.0,
-              track: tr?.track,
-              topRightText: topRightText == null ? null : topRightText(tr),
-            );
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _getAlbumsList({
-    required String title,
-    required IconData mainIcon,
-    required int itemCount,
-    required String? Function(int index) album,
-    required int Function(String? album)? listens,
-    required HomePageItems homepageItem,
-  }) {
-    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(4);
-    return SliverToBoxAdapter(
-      child: _HorizontalList(
-        title: title,
-        leading: StackedIcon(
-          baseIcon: mainIcon,
-          secondaryIcon: Broken.music_dashboard,
-        ),
-        height: 150.0 + 12.0,
-        itemCount: itemCount,
-        itemExtent: 98.0,
-        itemBuilder: (context, index) {
-          final albumId = album(index);
-          return AlbumCard(
-            dummyCard: _isLoading,
-            homepageItem: homepageItem,
-            displayIcon: !_isLoading,
-            compact: true,
-            identifier: albumId ?? '',
-            album: albumId?.getAlbumTracks() ?? [],
-            staggered: false,
-            dimensions: albumDimensions,
-            topRightText: listens == null ? null : "${listens(albumId)}",
-            additionalHeroTag: "$title$index",
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _getArtistList({
-    required String title,
-    required IconData mainIcon,
-    required int itemCount,
-    required String? Function(int index) artist,
-    required int Function(String? artist)? listens,
-    required HomePageItems homepageItem,
-  }) {
-    final artistDimensions = Dimensions.inst.getArtistCardDimensions(5);
-    return SliverToBoxAdapter(
-      child: _HorizontalList(
-        title: title,
-        leading: StackedIcon(
-          baseIcon: mainIcon,
-          secondaryIcon: Broken.user,
-        ),
-        height: 124.0,
-        itemCount: itemCount,
-        itemExtent: 86.0,
-        itemBuilder: (context, index) {
-          final a = artist(index);
-          return ArtistCard(
-            homepageItem: homepageItem,
-            displayIcon: !_isLoading,
-            name: a ?? '',
-            artist: a?.getArtistTracks() ?? [],
-            dimensions: artistDimensions,
-            bottomCenterText: _isLoading || listens == null ? null : "${listens(a)}",
-            additionalHeroTag: "$title$index",
-          );
-        },
-      ),
-    );
   }
 
   void showReorderHomeItemsDialog() async {
@@ -425,8 +312,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           shimmerDelayMS: 250,
           shimmerEnabled: _isLoading,
           child: AnimationLimiter(
-            child: Obx(
-              () => CustomScrollView(
+            child: StreamBuilder<List<HomePageItems>>(
+              initialData: settings.homePageItems,
+              stream: settings.homePageItems.stream,
+              builder: (context, homePageItems) => CustomScrollView(
                 slivers: [
                   const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
                   SliverPadding(
@@ -447,7 +336,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       ),
                     ),
                   ),
-                  ...settings.homePageItems.map(
+                  ...homePageItems.data!.map(
                     (element) {
                       switch (element) {
                         case HomePageItems.mixes:
@@ -473,7 +362,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           );
 
                         case HomePageItems.recentListens:
-                          return _getTracksList(
+                          return _TracksList(
                             homepageItem: element,
                             title: lang.RECENT_LISTENS,
                             icon: Broken.command_square,
@@ -488,17 +377,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           );
 
                         case HomePageItems.topRecentListens:
-                          return _getTracksList(
+                          return _TracksList(
                             homepageItem: element,
                             title: lang.TOP_RECENTS,
                             icon: Broken.crown_1,
-                            listy: [],
+                            listy: const [],
                             listWithListens: _topRecentListened,
                             onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
                           );
 
                         case HomePageItems.lostMemories:
-                          return _getTracksList(
+                          return _TracksList(
                             homepageItem: element,
                             title: lang.LOST_MEMORIES,
                             subtitle: () {
@@ -506,7 +395,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               return lang.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
                             }(),
                             icon: Broken.link_21,
-                            listy: [],
+                            listy: const [],
                             listWithListens: _sameTimeYearAgo,
                             onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
                             thirdWidget: SizedBox(
@@ -562,7 +451,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           );
 
                         case HomePageItems.recentlyAdded:
-                          return _getTracksList(
+                          return _TracksList(
                             queueSource: QueueSource.recentlyAdded,
                             homepageItem: element,
                             title: lang.RECENTLY_ADDED,
@@ -578,44 +467,44 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           );
 
                         case HomePageItems.recentAlbums:
-                          return _getAlbumsList(
+                          return _AlbumsList(
+                            isLoading: _isLoading,
                             homepageItem: element,
                             title: lang.RECENT_ALBUMS,
                             mainIcon: Broken.undo,
-                            itemCount: _listOrShimmer(_recentAlbums).length,
-                            album: (index) => _listOrShimmer(_recentAlbums)[index],
+                            albums: _listOrShimmer(_recentAlbums),
                             listens: null,
                           );
 
                         case HomePageItems.topRecentAlbums:
                           final keys = _topRecentAlbums.keys.toList();
-                          return _getAlbumsList(
+                          return _AlbumsList(
+                            isLoading: _isLoading,
                             homepageItem: element,
                             title: lang.TOP_RECENT_ALBUMS,
                             mainIcon: Broken.crown_1,
-                            itemCount: _listOrShimmer(keys).length,
-                            album: (index) => _listOrShimmer(keys)[index],
+                            albums: _listOrShimmer(keys),
                             listens: (album) => _topRecentAlbums[album] ?? 0,
                           );
 
                         case HomePageItems.recentArtists:
-                          return _getArtistList(
+                          return _ArtistsList(
+                            isLoading: _isLoading,
                             homepageItem: element,
                             title: lang.RECENT_ARTISTS,
                             mainIcon: Broken.undo,
-                            itemCount: _listOrShimmer(_recentArtists).length,
-                            artist: (index) => _listOrShimmer(_recentArtists)[index],
+                            artists: _listOrShimmer(_recentArtists),
                             listens: null,
                           );
 
                         case HomePageItems.topRecentArtists:
                           final keys = _topRecentArtists.keys.toList();
-                          return _getArtistList(
+                          return _ArtistsList(
+                            isLoading: _isLoading,
                             homepageItem: element,
                             title: lang.TOP_RECENT_ARTISTS,
                             mainIcon: Broken.crown_1,
-                            itemCount: _listOrShimmer(keys).length,
-                            artist: (index) => _listOrShimmer(keys)[index],
+                            artists: _listOrShimmer(keys),
                             listens: (artist) => _topRecentArtists[artist] ?? 0,
                           );
 
@@ -633,6 +522,198 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TracksList extends StatelessWidget {
+  final String title;
+  final HomePageItems homepageItem;
+  final String? subtitle;
+  final Widget? thirdWidget;
+  final IconData icon;
+  final List<Selectable?> listy;
+  final List<MapEntry<Track, List<int>>?>? listWithListens;
+  final void Function()? onTap;
+  final Widget? leading;
+  final String? Function(Selectable? track)? topRightText;
+  final QueueSource queueSource;
+
+  const _TracksList({
+    super.key,
+    required this.title,
+    required this.homepageItem,
+    this.subtitle,
+    this.thirdWidget,
+    required this.icon,
+    required this.listy,
+    this.listWithListens,
+    this.onTap,
+    this.leading,
+    this.topRightText,
+    this.queueSource = QueueSource.homePageItem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final finalListWithListens = listWithListens;
+
+    if (finalListWithListens != null) {
+      final queue = listWithListens?.firstOrNull == null ? <Track>[] : listWithListens!.map((e) => e!.key);
+      return SliverToBoxAdapter(
+        child: _HorizontalList(
+          title: title,
+          icon: icon,
+          leading: leading,
+          height: 150.0 + 12.0,
+          itemCount: finalListWithListens.length,
+          itemExtent: 98.0 + 8.0,
+          onTap: onTap,
+          subtitle: subtitle,
+          thirdWidget: thirdWidget,
+          itemBuilder: (context, index) {
+            final twl = finalListWithListens[index];
+            return _TrackCard(
+              homepageItem: homepageItem,
+              title: title,
+              index: index,
+              queue: queue,
+              width: 98.0,
+              track: twl?.key,
+              listens: twl?.value,
+              topRightText: topRightText == null ? null : topRightText!(twl?.key),
+            );
+          },
+        ),
+      );
+    } else {
+      final finalList = listy;
+      final queue = listWithListens?.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
+      return SliverToBoxAdapter(
+        child: _HorizontalList(
+            title: title,
+            icon: icon,
+            leading: leading,
+            height: 150.0 + 12.0,
+            itemCount: finalList.length,
+            itemExtent: 98.0 + 8.0,
+            onTap: onTap,
+            subtitle: subtitle,
+            thirdWidget: thirdWidget,
+            itemBuilder: (context, index) {
+              final tr = finalList[index];
+              return _TrackCard(
+                homepageItem: homepageItem,
+                title: title,
+                index: index,
+                queue: queue,
+                width: 98.0,
+                track: tr?.track,
+                topRightText: topRightText == null ? null : topRightText!(tr),
+              );
+            }),
+      );
+    }
+  }
+}
+
+class _AlbumsList extends StatelessWidget {
+  final bool isLoading;
+  final String title;
+  final IconData mainIcon;
+  final List<String?> albums;
+  final int Function(String? album)? listens;
+  final HomePageItems homepageItem;
+
+  const _AlbumsList({
+    super.key,
+    required this.isLoading,
+    required this.title,
+    required this.mainIcon,
+    required this.albums,
+    required this.listens,
+    required this.homepageItem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(4);
+    final itemCount = albums.length;
+    return SliverToBoxAdapter(
+      child: _HorizontalList(
+        title: title,
+        leading: StackedIcon(
+          baseIcon: mainIcon,
+          secondaryIcon: Broken.music_dashboard,
+        ),
+        height: 150.0 + 12.0,
+        itemCount: itemCount,
+        itemExtent: 98.0,
+        itemBuilder: (context, index) {
+          final albumId = albums[index];
+          return AlbumCard(
+            dummyCard: isLoading,
+            homepageItem: homepageItem,
+            displayIcon: !isLoading,
+            compact: true,
+            identifier: albumId ?? '',
+            album: albumId?.getAlbumTracks() ?? [],
+            staggered: false,
+            dimensions: albumDimensions,
+            topRightText: listens == null ? null : "${listens!(albumId)}",
+            additionalHeroTag: "$title$index",
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ArtistsList extends StatelessWidget {
+  final bool isLoading;
+  final String title;
+  final IconData mainIcon;
+  final List<String?> artists;
+  final int Function(String? artist)? listens;
+  final HomePageItems homepageItem;
+
+  const _ArtistsList({
+    super.key,
+    required this.isLoading,
+    required this.title,
+    required this.mainIcon,
+    required this.artists,
+    required this.listens,
+    required this.homepageItem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final artistDimensions = Dimensions.inst.getArtistCardDimensions(5);
+    final itemCount = artists.length;
+    return SliverToBoxAdapter(
+      child: _HorizontalList(
+        title: title,
+        leading: StackedIcon(
+          baseIcon: mainIcon,
+          secondaryIcon: Broken.user,
+        ),
+        height: 124.0,
+        itemCount: itemCount,
+        itemExtent: 86.0,
+        itemBuilder: (context, index) {
+          final a = artists[index];
+          return ArtistCard(
+            homepageItem: homepageItem,
+            displayIcon: !isLoading,
+            name: a ?? '',
+            artist: a?.getArtistTracks() ?? [],
+            dimensions: artistDimensions,
+            bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
+            additionalHeroTag: "$title$index",
+          );
+        },
       ),
     );
   }
@@ -784,6 +865,7 @@ class _MixesCardState extends State<_MixesCard> {
                       borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                     ),
                     child: ListView.builder(
+                      itemExtent: Dimensions.inst.trackTileItemExtent,
                       itemCount: widget.tracks.length,
                       itemBuilder: (context, index) {
                         final tr = widget.tracks[index];
@@ -809,7 +891,6 @@ class _MixesCardState extends State<_MixesCard> {
                           ),
                         );
                       },
-                      itemExtent: Dimensions.inst.trackTileItemExtent,
                     ),
                   ),
                 ),

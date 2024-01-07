@@ -41,106 +41,6 @@ class YoutubePlaylistsView extends StatelessWidget {
     this.minimalView,
   });
 
-  Widget _getHorizontalSliverList({
-    required String title,
-    required IconData icon,
-    required Widget viewAllPage,
-    required Iterable<YoutubeID> videos,
-    required String playlistName,
-    required String playlistID,
-    required int totalVideosCountInMainList,
-    Widget? subHeader,
-    EdgeInsets padding = const EdgeInsets.symmetric(vertical: 8.0),
-    bool displayTimeAgo = false,
-    bool displayShimmer = false,
-  }) {
-    final finalVideos = videos is List<YoutubeID> ? videos : videos.toList();
-    final remainingVideosCount = totalVideosCountInMainList - finalVideos.length;
-
-    void onTap() => NamidaNavigator.inst.navigateTo(viewAllPage);
-
-    const thumbHeight = 24.0 * 3.2;
-    const thumbWidth = thumbHeight * 16 / 9;
-
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          NamidaInkWell(
-            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-            padding: padding,
-            onTap: () => NamidaNavigator.inst.navigateTo(viewAllPage),
-            child: Column(
-              children: [
-                SearchPageTitleRow(
-                  title: title,
-                  subtitle: totalVideosCountInMainList.displayVideoKeyword,
-                  icon: icon,
-                  trailing: const Icon(Broken.arrow_right_3),
-                  onPressed: onTap,
-                ),
-                if (subHeader != null) subHeader,
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 130.0,
-            child: displayShimmer
-                ? ShimmerWrapper(
-                    shimmerEnabled: true,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 10,
-                      itemBuilder: (context, index) {
-                        return NamidaInkWell(
-                          animationDurationMS: 200,
-                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                          width: thumbWidth,
-                          bgColor: context.theme.cardColor,
-                        );
-                      },
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: finalVideos.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == finalVideos.length + 1 - 1) {
-                        return remainingVideosCount <= 0
-                            ? const SizedBox()
-                            : NamidaInkWell(
-                                onTap: onTap,
-                                margin: const EdgeInsets.all(12.0),
-                                padding: const EdgeInsets.all(12.0),
-                                child: Center(
-                                  child: Text(
-                                    "+${remainingVideosCount.formatDecimalShort()}",
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                ),
-                              );
-                      }
-                      return YTHistoryVideoCard(
-                        minimalCard: true,
-                        videos: finalVideos,
-                        index: index,
-                        day: null,
-                        playlistName: playlistName,
-                        playlistID: PlaylistID(id: playlistID),
-                        displayTimeAgo: displayTimeAgo,
-                        minimalCardWidth: thumbWidth,
-                        thumbnailHeight: thumbHeight,
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Iterable<YoutubeID> get getHistoryVideos {
     final videos = <String, YoutubeID>{};
     for (final trs in YoutubeHistoryController.inst.historyMap.value.values) {
@@ -175,7 +75,7 @@ class YoutubePlaylistsView extends StatelessWidget {
             Obx(
               () {
                 YoutubeHistoryController.inst.historyMap.value;
-                return _getHorizontalSliverList(
+                return _HorizontalSliverList(
                   title: lang.HISTORY,
                   icon: Broken.refresh,
                   viewAllPage: const YoutubeHistoryPage(),
@@ -194,7 +94,7 @@ class YoutubePlaylistsView extends StatelessWidget {
               return Obx(
                 () {
                   YoutubeHistoryController.inst.historyMap.value;
-                  return _getHorizontalSliverList(
+                  return _HorizontalSliverList(
                     title: lang.MOST_PLAYED,
                     icon: Broken.crown_1,
                     viewAllPage: page,
@@ -218,7 +118,7 @@ class YoutubePlaylistsView extends StatelessWidget {
             Obx(
               () {
                 YoutubePlaylistController.inst.favouritesPlaylist.value;
-                return _getHorizontalSliverList(
+                return _HorizontalSliverList(
                   title: lang.LIKED,
                   icon: Broken.like_1,
                   viewAllPage: const YTLikedVideosPage(),
@@ -404,6 +304,123 @@ class YoutubePlaylistsView extends StatelessWidget {
             },
           ),
           if (!isMinimalView) kBottomPaddingWidgetSliver,
+        ],
+      ),
+    );
+  }
+}
+
+class _HorizontalSliverList extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget viewAllPage;
+  final Iterable<YoutubeID> videos;
+  final String playlistName;
+  final String playlistID;
+  final int totalVideosCountInMainList;
+  final Widget? subHeader;
+  final EdgeInsets padding;
+  final bool displayTimeAgo;
+  final bool displayShimmer;
+
+  const _HorizontalSliverList({
+    required this.title,
+    required this.icon,
+    required this.viewAllPage,
+    required this.videos,
+    required this.playlistName,
+    required this.playlistID,
+    required this.totalVideosCountInMainList,
+    this.subHeader,
+    this.padding = const EdgeInsets.symmetric(vertical: 8.0),
+    this.displayTimeAgo = false,
+    this.displayShimmer = false,
+  });
+
+  void onTap() => NamidaNavigator.inst.navigateTo(viewAllPage);
+
+  @override
+  Widget build(BuildContext context) {
+    final finalVideos = videos is List<YoutubeID> ? videos as List<YoutubeID> : videos.toList();
+    final remainingVideosCount = totalVideosCountInMainList - finalVideos.length;
+
+    const thumbHeight = 24.0 * 3.2;
+    const thumbWidth = thumbHeight * 16 / 9;
+
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          NamidaInkWell(
+            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+            padding: padding,
+            onTap: () => NamidaNavigator.inst.navigateTo(viewAllPage),
+            child: Column(
+              children: [
+                SearchPageTitleRow(
+                  title: title,
+                  subtitle: totalVideosCountInMainList.displayVideoKeyword,
+                  icon: icon,
+                  trailing: const Icon(Broken.arrow_right_3),
+                  onPressed: onTap,
+                ),
+                if (subHeader != null) subHeader!,
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 130.0,
+            child: displayShimmer
+                ? ShimmerWrapper(
+                    shimmerEnabled: true,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return NamidaInkWell(
+                          animationDurationMS: 200,
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          width: thumbWidth,
+                          bgColor: context.theme.cardColor,
+                        );
+                      },
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: finalVideos.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == finalVideos.length + 1 - 1) {
+                        return remainingVideosCount <= 0
+                            ? const SizedBox()
+                            : NamidaInkWell(
+                                onTap: onTap,
+                                margin: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.all(12.0),
+                                child: Center(
+                                  child: Text(
+                                    "+${remainingVideosCount.formatDecimalShort()}",
+                                    style: context.textTheme.displayMedium,
+                                  ),
+                                ),
+                              );
+                      }
+                      return YTHistoryVideoCard(
+                        minimalCard: true,
+                        videos: finalVideos,
+                        index: index,
+                        day: null,
+                        playlistName: playlistName,
+                        playlistID: PlaylistID(id: playlistID),
+                        displayTimeAgo: displayTimeAgo,
+                        minimalCardWidth: thumbWidth,
+                        thumbnailHeight: thumbHeight,
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
     );
