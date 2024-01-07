@@ -102,6 +102,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     _animate(1, 0);
     YoutubeController.inst.startDimTimer();
     NamidaNavigator.inst.isQueueSheetOpen = true;
+    _updateCanScrollQueue(true);
   }
 
   void _animateBigToSmall() {
@@ -245,6 +246,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
               color: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor),
               child: Listener(
                 onPointerMove: (event) {
+                  if (MiniPlayerController.inst.isReorderingQueue) return;
                   if (event.delta.dy > 0) {
                     if (_queueScrollController.hasClients) {
                       if (_queueScrollController.position.pixels <= 0) {
@@ -258,6 +260,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onVerticalDragUpdate: (event) {
+                    if (MiniPlayerController.inst.isReorderingQueue) return;
                     _updateCanScrollQueue(false);
                     _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clamp(0, 1);
                     if (_bigBoxDrag > 0.0 && _bigBoxDrag < 1.0) {
