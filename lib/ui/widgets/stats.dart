@@ -53,7 +53,7 @@ class StatsSection extends StatelessWidget {
               Obx(
                 () {
                   final map = Player.inst.totalListenedTimeInSec;
-                  final trSec = map?[ListenTimeKeys.localTracks] ?? 0;
+                  final trSec = map?[LibraryCategory.localTracks] ?? 0;
                   return StatsContainer(
                     icon: Broken.timer_1,
                     title: '${lang.TOTAL_LISTEN_TIME} :',
@@ -64,7 +64,7 @@ class StatsSection extends StatelessWidget {
               Obx(
                 () {
                   final map = Player.inst.totalListenedTimeInSec;
-                  final sec = map?[ListenTimeKeys.youtube] ?? 0;
+                  final sec = map?[LibraryCategory.youtube] ?? 0;
                   return StatsContainer(
                     leading: const StackedIcon(
                       baseIcon: Broken.timer_1,

@@ -435,9 +435,9 @@ class Player {
           if (addAsNewQueue) {
             final trs = finalizedQueue.cast<Selectable>().tracks.toList();
             QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
-            QueueController.inst.updateLatestQueue(trs);
           }
         }
+        QueueController.inst.updateLatestQueue(finalizedQueue);
       },
       onQueueEmpty: _audioHandler.togglePlayPause,
       startPlaying: startPlaying,

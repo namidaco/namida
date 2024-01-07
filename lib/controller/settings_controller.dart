@@ -146,7 +146,6 @@ class SettingsController {
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
   final RxBool enableCrossFade = true.obs;
-  final RxInt lastPlayedTrackIndex = 0.obs;
   final RxInt crossFadeDurationMS = 500.obs;
   final RxInt crossFadeAutoTriggerSeconds = 5.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
@@ -291,6 +290,12 @@ class SettingsController {
     MediaType.folder: false,
   }.obs;
 
+  final lastPlayedIndices = {
+    LibraryCategory.localTracks: 0,
+    LibraryCategory.localVideos: 0,
+    LibraryCategory.youtube: 0,
+  };
+
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -427,7 +432,6 @@ class SettingsController {
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
       enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
-      lastPlayedTrackIndex.value = json['lastPlayedTrackIndex'] ?? lastPlayedTrackIndex.value;
       crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
       crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
@@ -526,6 +530,12 @@ class SettingsController {
       };
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
+
+      final lpi = json['lastPlayedIndices'];
+      if (lpi is Map) {
+        lastPlayedIndices.clear();
+        lastPlayedIndices.addAll(lpi.cast());
+      }
     } catch (e) {
       printy(e, isError: true);
       await file.delete();
@@ -652,7 +662,6 @@ class SettingsController {
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
       'enableCrossFade': enableCrossFade.value,
-      'lastPlayedTrackIndex': lastPlayedTrackIndex.value,
       'crossFadeDurationMS': crossFadeDurationMS.value,
       'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
       'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
@@ -718,6 +727,7 @@ class SettingsController {
       'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
       'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
       'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
+      'lastPlayedIndices': lastPlayedIndices,
     };
     await file.writeAsJson(res);
 
@@ -846,7 +856,6 @@ class SettingsController {
     int? playerPauseFadeDurInMilli,
     int? minTrackDurationToRestoreLastPosInMinutes,
     bool? enableCrossFade,
-    int? lastPlayedTrackIndex,
     int? crossFadeDurationMS,
     int? crossFadeAutoTriggerSeconds,
     bool? displayFavouriteButtonInNotification,
@@ -894,6 +903,7 @@ class SettingsController {
     MostPlayedTimeRange? ytMostPlayedTimeRange,
     DateRange? ytMostPlayedCustomDateRange,
     bool? ytMostPlayedCustomisStartOfDay,
+    Map<String, int>? lastPlayedIndices,
     bool? didSupportNamida,
   }) {
     if (selectedLanguage != null) {
@@ -1277,9 +1287,6 @@ class SettingsController {
     if (enableCrossFade != null) {
       this.enableCrossFade.value = enableCrossFade;
     }
-    if (lastPlayedTrackIndex != null) {
-      this.lastPlayedTrackIndex.value = lastPlayedTrackIndex;
-    }
     if (crossFadeDurationMS != null) {
       this.crossFadeDurationMS.value = crossFadeDurationMS;
     }
@@ -1425,6 +1432,11 @@ class SettingsController {
     }
     if (ytMostPlayedCustomisStartOfDay != null) {
       this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
+    }
+    if (lastPlayedIndices != null) {
+      for (final e in lastPlayedIndices.entries) {
+        this.lastPlayedIndices[e.key] = e.value;
+      }
     }
 
     if (didSupportNamida != null) {

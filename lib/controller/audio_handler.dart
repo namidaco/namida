@@ -213,13 +213,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onIndexChanged(int newIndex, Q newItem) async {
-    settings.save(lastPlayedTrackIndex: newIndex);
     refreshNotification(newItem);
     await newItem._execute(
       selectable: (finalItem) async {
+        settings.save(lastPlayedIndices: {LibraryCategory.localTracks: newIndex});
         await CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
       youtubeID: (finalItem) async {
+        settings.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
         final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
         if (image != null && finalItem == currentItem) {
           // -- only extract if same item is still playing, i.e. user didn't skip.
@@ -248,12 +249,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       ].execute();
     } else {
       refreshNotification(currentItem);
-      await currentQueue._execute(
-        selectable: (finalItems) async {
-          await QueueController.inst.updateLatestQueue(finalItems.tracks.toList());
-        },
-        youtubeID: (finalItems) {},
-      );
+      await QueueController.inst.updateLatestQueue(currentQueue);
     }
   }
 
@@ -274,12 +270,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       youtubeID: (finalItem) {},
     );
 
-    await currentQueue._execute(
-      selectable: (finalItems) {
-        QueueController.inst.updateLatestQueue(finalItems.tracks.toList());
-      },
-      youtubeID: (finalItems) {},
-    );
+    await QueueController.inst.updateLatestQueue(currentQueue);
   }
 
   @override
@@ -584,7 +575,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     startSleepAfterMinCount();
     startCounterToAListen(pi);
-    increaseListenTime(ListenTimeKeys.localTracks);
+    increaseListenTime(LibraryCategory.localTracks);
     Lyrics.inst.updateLyrics(tr);
   }
 
@@ -780,7 +771,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (!wasPlayingFromCache) {
         startSleepAfterMinCount();
         startCounterToAListen(pi);
-        increaseListenTime(ListenTimeKeys.youtube);
+        increaseListenTime(LibraryCategory.youtube);
       }
     }
 

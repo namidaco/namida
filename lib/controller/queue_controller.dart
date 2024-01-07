@@ -10,16 +10,17 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 class QueueController {
   static QueueController get inst => _instance;
   static final QueueController _instance = QueueController._internal();
   QueueController._internal();
 
-  /// holds all queues mapped & sorted by [date] chronologically.
-  final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2)).obs;
+  /// holds all queues mapped & sorted by [date] chronologically & reversly.
+  final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
 
-  Queue? get latestQueueInMap => queuesMap.value[queuesMap.value.keys.lastOrNull];
+  Queue? get _latestQueueInMap => queuesMap.value[queuesMap.value.keys.lastOrNull];
 
   /// doesnt save queues with more than 2000 tracks.
   Future<void> addNewQueue({
@@ -44,7 +45,7 @@ class QueueController {
     }
 
     // -- Prevents saving [allTracks] source over and over.
-    final latestQueue = latestQueueInMap;
+    final latestQueue = _latestQueueInMap;
     if (latestQueue != null) {
       if (source == QueueSource.allTracks && latestQueue.source == QueueSource.allTracks) {
         await removeQueue(latestQueue);
@@ -90,13 +91,15 @@ class QueueController {
     await _saveQueueToStorage(newQueue);
   }
 
-  Future<void> updateLatestQueue(List<Track> tracks) async {
-    await _saveLatestQueueToStorage(tracks);
+  Future<void> updateLatestQueue(List<Playable> items) async {
+    await _saveLatestQueueToStorage(items);
 
     // updating last queue inside queuesMap.
-    final latestQueueInsideMap = latestQueueInMap;
-    if (latestQueueInsideMap != null) {
-      updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
+    if (items.firstOrNull is Track) {
+      final latestQueueInsideMap = _latestQueueInMap;
+      if (latestQueueInsideMap != null) {
+        updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: items.cast<Track>()));
+      }
     }
   }
 
@@ -192,18 +195,32 @@ class QueueController {
 
   /// Assigns the last queue to the [Player]
   Future<void> prepareLatestQueue() async {
-    final latestQueue = <Track>[];
+    int index = 0;
+    final latestQueue = <Playable>[];
 
     // -- Reading file.
-    await File(AppPaths.LATEST_QUEUE).readAsJsonAndLoop((item, index) async {
-      latestQueue.add(Track(item));
-    });
+    final res = await File(AppPaths.LATEST_QUEUE).readAsJson() as Map?;
+    if (res != null) {
+      try {
+        final t = res['type'] as String? ?? LibraryCategory.localTracks;
+        final items = res['items'] as List;
+        index = settings.lastPlayedIndices[t] ?? 0;
+        switch (t) {
+          case LibraryCategory.localTracks:
+            items.loop((e, _) => latestQueue.add(Track(e)));
+            break;
+          case LibraryCategory.youtube:
+            items.loop((e, _) => latestQueue.add(YoutubeID.fromJson(e)));
+            break;
+          // case LibraryCategory.localVideos:
+          // break;
+        }
+      } catch (_) {}
+    }
 
     if (latestQueue.isEmpty) return;
 
-    final index = settings.lastPlayedTrackIndex.value;
-
-    await Player.inst.playOrPause(
+    Player.inst.playOrPause(
       index > latestQueue.length - 1 ? 0 : index,
       latestQueue,
       QueueSource.playerQueue,
@@ -216,8 +233,28 @@ class QueueController {
     await File('${AppDirs.QUEUES}${queue.date}.json').writeAsJson(queue.toJson());
   }
 
-  Future<void> _saveLatestQueueToStorage(List<Track> tracks) async {
-    await File(AppPaths.LATEST_QUEUE).writeAsJson(tracks.mapped((e) => e.path));
+  Future<void> _saveLatestQueueToStorage(List<Playable> items) async {
+    String type = '';
+    final queue = <Object>[];
+    switch (items.firstOrNull.runtimeType) {
+      case Track:
+        type = LibraryCategory.localTracks;
+        (items.cast<Track>()).loop((e, _) => queue.add(e.path));
+        break;
+      case TrackWithDate:
+        type = LibraryCategory.localTracks;
+        (items.cast<TrackWithDate>()).loop((e, _) => queue.add(e.track.path));
+        break;
+      case YoutubeID:
+        type = LibraryCategory.youtube;
+        (items.cast<YoutubeID>()).loop((e, _) => queue.add(e.toJson()));
+        break;
+    }
+    final map = {
+      'type': type,
+      'items': queue,
+    };
+    await File(AppPaths.LATEST_QUEUE).writeAsJson(map);
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {

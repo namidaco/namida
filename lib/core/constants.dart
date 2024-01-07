@@ -136,7 +136,7 @@ class AppSocial {
   static const TRANSLATION_REPO = 'https://github.com/namidaco/namida-translations';
 }
 
-class ListenTimeKeys {
+class LibraryCategory {
   static const localTracks = 'tr';
   static const localVideos = 'vid';
   static const youtube = 'yt';
