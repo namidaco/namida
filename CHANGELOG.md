@@ -1,5 +1,120 @@
 # Namida Changelog
 
+## 07/01/2024
+# v1.9.2
+### 🎉 New Features:
+   - 447469fc94cbb487edd28fb3e6a0e0354cfbdfe7: offline search for youtube
+   - a9a873913c2a50a71d49cc95dd3815315f887a65: youtube top comments
+   - d60024b995a995ca1a7c3b9f4569b79bcd6b2e5a: channel subscriptions
+   - 969339616d4a8ad956a85bfab7bd051180c4e381: import yt subscriptions from a takeout csv
+   - 867f8038d304680c448e4b35fb6025ea502eb925: import youtube playlists #1
+   - cc682302ac497173aa1a1515663a3e26c2b2dcf5: seamless transitioning when playing same item in another queue
+   - 1528947573bf497f2fd8802eff0df9a7f90b3448: color palette for albums when groupArtworksByAlbum enabled
+   - 7a4f21e743fb7ca1f56ec321d44d3a66b074ac43: sort yt playlists and smol fix while importing
+   - 30fb059071717d0d21c44259862bdeaab80f5cfe: sort by most played and recently played closes #90
+   - ec57c1738b8e53a026b6d4824e50b9fc7d24512a: swipe down to refresh library #78
+   - db22eaa70fbcb87e221ce1aa0e5b95479634f3e3: channel subpage view #1
+   - 386c83126b197c5a285d737d9402beb86ccbeda0: sort hosted yt playlist videos + button to load all
+   - 45c16d5976e1a41a80483aa9596467c24783b117: remove playlist duplicates closes #87
+   - 8b4c39524129bde1e2c6249e4d5e5701091285f7: restore latest yt queue on startup
+   - 31486500a3c06d04f95543d1db88205528e7fe5e: yt queue chip ref #1
+   - ef7ab43ee1384519ae021e21a8b76927f3f841e4: reorderable youtube playlist videos, closes #97
+   - 5bcf95525da32b9fe31a3c5d4afe17e720631d57: watch later yt playlist #1
+
+### 🛠️ Bug fixes & Improvements:
+- perf:
+   - f02525f9cf4ef7e8d9ee01dd48d9d93f8f9226a1: skipping new queues process when playing from player queue (now will just skip to the item, no normal heavy checks of assignNewQueue())
+   - 5220e7e09e4c9aff4c611ca3bad9e31f99e8b50b: search local tracks only when tab is active
+   - 3362ba80f08da556fc01ea6325fc1cd188042e09: calculate history items extents only when needed
+   - 2af3054ff2b05e4e61b2b485d0f97195aadc6139: close some streams manually and some other improvements
+   - c0ed85076a577da875d65b13e1d453e038781328: dispose some TextEditingController manually
+   - e9ba9c1176dd6145da00d4ca4264ba37edada66a: waveform improvements
+   - a33dff060e3b41048f0038cfbaeed3ffa4426db5: assigning instead of ..clear()..addAll() and color extraction delay in home page
+   - ba70591add4445dc69faec96bcde8e58d8df2cfc: significant ui performance improvement, achieved by - using child in AnimatedBuilder, smooth yt miniplayer & queue in normal miniplayer - keys for ArtworkWidget & YoutubeThumbnail, loading now only done in initState - using Container instead of ClipRRect - some refactor
+   - ebd8d2247eb45c737aeaa8ef48e30feb5888574a: refactor to allow multiple children for AnimatedBuilder
+   - ff7e78cc1820d082b7ac7617ace93613425583c2: artwork loading optimizations and overall steadier scrolling experience
+   - dfb04bb3facb06fa636f1b3bbfdaa7c7c1b7be52: youtube thumbnail optimizations
+   - 071d810873af2ff6abaa53a94625e6ee73831c56: artwork fading effect improvement
+   - 63d3dc590fa0b481aeb0bf3fce89f8c8e6e1f5cc: run import lastfm history on isolate not so many benchmarks but at least 80% improvement + ui load is decreased
+   - 260197991bb4cb35284c63855ccd56dfc677e422: run import yt history on isolate 60k entry in 10 seconds lmao
+   - e67c281949b31f5f4f5b28dc2d8e9cb501b987d7: faster dialog opening comes by not waiting color extraction, instead extracts synchronously then rebuilds
+   - 2c67645729806098325dd40571a8da4e6f2f501c: run all searches on isolate #61
+   - 0aaba54c2b69664510819d1195894e6ac8b42837: save yt videos & channel videos in memory
+   - e10ee0fa66d942bddc1bf3a8f73bc8b53b7cd0f3: faster video assigning at startup by attempting to assign one before checking for deleted/new videos in cache
+   - a71db57b6f279dd44b4f47a123c0871ea2f9f7c5: home page & ytplaylistview improvements closes #56
+
+- chore:
+   - f19e123f97b1179906699a057d743adca15ea9d7: always ask when opening external yt playlist
+   - ad97bf20ebcfa8463aff5e411997220623bf6a58: option to open playlist videos page for external intents
+   - 8a189412749372df111176e9602b661aff16fcf5: add as a new playlist button when opening external yt playlists
+   - f937c5a5326d032363f6ef3adf2d46601a919cdf: auto detecting playlist link while searching
+   - d182e77868d1e1fcb540de049bd853c936818c49: some goodies && tweaks
+   - 628ba9b806004d145c6590bd53aeca995008d979: performance improvements and fixes
+   - 5dea8b186031c378aa806c2820afef22c9717bed: refresh library icon in indexer card
+   - a2f357ebda63847bd93fb3571d6e7fd99c7ecfef: new stratergy to mark field as changed
+   - 01f0223e19983815dd88105bacbc8d51d59fa512: compact channel info in yt miniplayer
+   - f30cff33d0b585daf27c2a27367600e0cc56a730: delete icon for queue when its empty
+   - 8bdeec7dc30b5a774a3976a4acff322f31942992: sussy tweaks
+   - 19f6b11d42fbfa944c93ad676f7c6cb638530dc0: minor fixed/tweaks + isInYTCommentsSubpage check when popping in yt miniplayer + longer doubleTapSeekReset (900ms) + image delay bug introduced in a33dff0 + unsorted yt history bug introduced in a33dff0
+   - 6818a61b6e8441cbef13e3e36222270c3d3f3540: ui tweaks
+   - 709febf252ff3ea14792cd582fe6fd7583400b23: toast when importing subs/playlists
+   - d7797cc40fcbe721974510dcd6faf1046f46546a: display description/comment in yt playlist pages
+   - 0dbf34198c33a749b4a8e7bf09f4f74988e8e62a: top comments true by default and smol fix
+   - aa4391262b6bd821c4ea9974174120c7b05a0b8d: some tweaks
+   - 8acfc81dc6bb1103d8d187db11c3417ef202c28b: temp workaround for playlists with hidden videos to stop fetching more items
+   - db989eb39bbfa93f0c9c4917ac59eff053077073: history import refinements logic changes, should be a lot faster
+   - 40fa46796b3daef69674d9b2e1f1893e328ed19c: shuffling all items will put current item at first #88
+   - 0e02c15a8d7bf5c45e6422d0d74159fd38790dd4: improvements & fixes
+   - db5642db691e33b8e6ebc32e6e651aedfb439aec: transparent system navbar
+   - f5cdc2d5efb245fff2b33bf7ba39ce1b39bdfdec: some tweaks
+   - 1266500f513650c315cc86aee79a9b367b56405c: add comment as track search filter
+   - b1c9287163d3e28d3779496d324518090ecc0b73: allow separate listen time local tracks, youtube, local videos
+   - 68a13953ff44506d1eae3265f4857f784ffaf726: restore yt active tab on startup
+   - 12a6106b7f61cd0681613948985f4b26ccf44f73: go to channel button for video cards
+   - 53d8d03efd2a6ca2bb44d4ef47096f2f86077fdc: expose yt download location closes #93
+   - 3731eeedc1d1feb161390e0af529f412b33518d3: stuff & stuff
+   - 1431c81af7cef89baaa3bc438589159b2ef52b85: more stuff
+   - 68fdade6f8e9246b427b221b7c7de783f57b25f7: av sync improvements
+
+- fix:
+   - 5939e3ab0050bddc128bcc52eeddec055a4c2444: not entering pip with yt videos
+   - d9c1a30847e738e12dd7709ada646f83c91bae75: folder changing not being synced in playlist download page (top widget and the one in config dialog)
+   - 5d2f877e4f258577bd22575107ba56263486a61e: listing non-existing directories
+   - f7aadaed6bbee409d227030405fccdcfddd1c253: late initialization for miniplayer dimensions
+   - cc8b3f04e4548bb2ca0a77cf77737711b9e02710: tapping the current item in queue will play/pause
+   - e14ecac34ae31d05e655d9a05e11025b6a4bce11: possible fix for waveform being out of sync #34
+   - 28035ebd954eb28e44213c6d5ee579cd1d977932: not pausing when jumping to first item when crossfade is disabled + stopping methods fix
+   - 00387df0130846a1daa33f298b93da3b9e149161: yt comments not loading properly
+   - bd1e40b8460e62c4718592fcb5a6c63823795ded: yt downloads will prefer not using webm format
+   - 4703c96a6855df8cfc024e000134bee3510d0d5c: disable skipSilence for youtube causes desync and just not worth
+   - 8b27462b114fd8636ca1591b8d9513838c060a83: gigantic artwork scale & waveform bars when bitrate is high
+   - 3c703d424484d7dbd51bae4df238e265a59c0472: opening external youtube links
+   - 9d6e4a043069ab569b80c8274e6b269ce724fac4: mis-aligned popup menu
+   - 109a6d0ddcc3c91f2ad725765f7fa654c0a8bfe8: waveform bar width after coming back from landscape
+   - 291df2030f9667aa40b80d9ca449f25623a26adb: video still downloads even after disabling video playback
+   - 715405494027e4b4ae839acd580b98e93e91fdea: track tile items not being updated properly
+   - 34c8a95da0bfaa9c97858714dc9e892ec2005191: removing notification after sleep timer this allows system to kill namida if needed, since no ongoing notification is attached
+   - 17d917d7da881002dc07fe64427134eece7bc950: properly stop after sleep timer stops playback and kill notification, allows android to kill namida if needed
+   - 5dd1b5d3dc804ab17994b4ac22cf924aff366c12: save track info file after updating duration
+   - de3ee38f938bd318e5397b857d2af0063c132005: hero animation for history tracks while opening dialog
+   - cc61d731fb781c1d6d85ee165441944ba5e9d4cf: possible fix for fake error message, closes #86
+   - 9247543c6e455b039792738d6a410fcade102703: playback issues especially when failed to play files + properly kill service when stopping closes #71 ref #92
+   - 9c9136191aae2c6dcb8e468600d038006ead8ebc: stopping player on queue emptied
+   - 717de50aab1e2150d7f629db4643f6f2e586123c: minSdk 21 (Android 5.0) & fix desguaring issues desugaring disabled was causing crash in retrieving channel videos methods
+
+- core:
+   - 5472b9ba070f9b94618131327f9b20f8e6ec2d5d: change yt images cache name logic
+   - 439a8da692ac67121e3ecc7d46d99de7499a54f9: better search matching - order of words wont matter - u can use artist + title and still get a match
+   - 97f5f69266cead3da218fc2e4d0d34bab936ad0b: enabling media store will disable respect .nomedia & folders to scan
+   - a0a1c1397803d1720704199e5166260e939f6cc5: better yt local search matching
+   - f7f20db5d3b24bd0e3ba41f38b60f93bdbd3d7e3: revert e10ee0f hehe, the updateCurrentVideo is already called inside player, calling it at first step wont matter, mostly the track wont be even ready also updateCurrentVideo will not return if still initializing
+
+- code:
+   - 0071a4cc80dcbc43deabd3e2cfffb56a6e0d3d2f: revert miniplayer to use single constant child multi children felt laggier in ebd8d22
+   - bc50e85a55b6f3bc5dd86f4f4850d48556e03ebb: refactor thumbnail methods to ThumbnailManager
+   - b2facdda7d2e76ac4b9e9834cf53249a1a65c8ea: refactor video info methods
+
+
 ## 03/12/2023
 # v1.8.5
 ### 🎉 New Features:
