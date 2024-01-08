@@ -1,5 +1,20 @@
 # Namida Changelog
 
+## 08/01/2024
+# v1.9.3
+### 🛠️ Bug fixes & Improvements:
+- fix:
+   - 962a1d8dda5829950f2b50e64f2acb826901407c: doubled tracks after refresh, closes #98
+   - 0fbb759bb6cbf0a23d47637f035947be3dac52c8: stuck on startup due to latest queue casted as Map
+
+- chore:
+   - 5e1883bcc56292a6e358140df1863d54849eb050: go to channel button for comment cards
+   - 8461fb13f33157937d3589062a237d0a316f3a5d: ui fixes
+
+- build:
+   - bd993d9fc5a8f755022cca4fd1a65237d832d920: change apk output filename
+
+
 ## 07/01/2024
 # v1.9.2
 ### 🎉 New Features:
