@@ -77,7 +77,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    _shimmerList.clear();
     _recentlyAddedFull.clear();
     _recentlyAdded.clear();
     _randomTracks.clear();

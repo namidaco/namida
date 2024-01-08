@@ -839,18 +839,21 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
 class RefreshLibraryIconController {
   static final _controllers = <String, AnimationController>{};
 
-  static AnimationController getController(String key) => _controllers[key]!;
+  static AnimationController getController(String key, TickerProvider vsync) => _controllers[key] ?? init(key, vsync);
 
-  static void init(String key, TickerProvider vsync) {
-    _controllers[key] ??= AnimationController(
+  static AnimationController init(String key, TickerProvider vsync) {
+    _controllers[key]?.dispose();
+    final c = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: vsync,
     );
+    _controllers[key] = c;
+    return c;
   }
 
   static void dispose(String key) {
-    _controllers[key]?.dispose();
-    _controllers.remove(key);
+    final c = _controllers.remove(key);
+    c?.dispose();
   }
 
   static void repeat() {
@@ -906,7 +909,7 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
   @override
   Widget build(BuildContext context) {
     return RotationTransition(
-      turns: turnsTween.animate(RefreshLibraryIconController.getController(widget.widgetKey)),
+      turns: turnsTween.animate(RefreshLibraryIconController.getController(widget.widgetKey, this)),
       child: Icon(
         Broken.refresh_2,
         color: context.defaultIconColor(),

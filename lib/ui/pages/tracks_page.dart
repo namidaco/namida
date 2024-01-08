@@ -31,7 +31,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
   final _animationKey = 'tracks_page';
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   late final animation = AnimationController(vsync: this, duration: Duration.zero);
-  AnimationController get animation2 => RefreshLibraryIconController.getController(_animationKey);
+  AnimationController get animation2 => RefreshLibraryIconController.getController(_animationKey, this);
 
   final _minTrigger = 20;
 
@@ -43,9 +43,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    super.dispose();
     animation.dispose();
     RefreshLibraryIconController.dispose(_animationKey);
-    super.dispose();
   }
 
   @override
