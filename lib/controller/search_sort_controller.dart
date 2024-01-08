@@ -259,7 +259,9 @@ class SearchSortController {
         trackSearchTemp.clear();
       } else {
         LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList.value = tracksInfoList;
+        trackSearchList
+          ..clear()
+          ..addAll(tracksInfoList);
       }
       return;
     }

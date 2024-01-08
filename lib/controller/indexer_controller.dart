@@ -947,6 +947,9 @@ class Indexer {
     final prevDuplicated = settings.preventDuplicatedTracks.value;
     if (useMediaStore) {
       final trs = await _fetchMediaStoreTracks();
+      tracksInfoList.clear();
+      allTracksMappedByPath.clear();
+      _currentFileNamesMap.clear();
       _addTracksToLists(trs.map((e) => e.$1), false);
     } else {
       currentTrackPathBeingExtracted.value = '';

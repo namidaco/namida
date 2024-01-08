@@ -528,7 +528,9 @@ void showLibraryTracksChooseDialog({
                   NamidaIconButton(
                     icon: Broken.close_circle,
                     onPressed: () {
-                      allTracksList.value = allTracksInLibrary;
+                      allTracksList
+                        ..clear()
+                        ..addAll(allTracksInLibrary);
                       searchController.clear();
                     },
                   )
