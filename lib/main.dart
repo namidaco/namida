@@ -427,7 +427,9 @@ class Namida extends StatelessWidget {
                     behavior: const ScrollBehaviorModified(),
                     child: Obx(
                       () {
-                        final isLight = settings.themeMode.value == ThemeMode.light;
+                        final mode = settings.themeMode.value;
+                        final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+                        final isLight = !useDarkTheme;
                         final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
                         SystemChrome.setSystemUIOverlayStyle(
                           SystemUiOverlayStyle(

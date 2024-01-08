@@ -287,9 +287,11 @@ class ThemeSetting extends SettingSubpageProvider {
                             : null,
                         title: "${lang.DEFAULT_COLOR}$darkText",
                         subtitle: lang.DEFAULT_COLOR_SUBTITLE,
-                        trailing: CircleAvatar(
-                          minRadius: 12,
-                          backgroundColor: color,
+                        trailingRaw: FittedBox(
+                          child: CircleAvatar(
+                            minRadius: 12,
+                            backgroundColor: color,
+                          ),
                         ),
                         onTap: () {
                           NamidaNavigator.inst.navigateDialog(
