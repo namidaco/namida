@@ -169,7 +169,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
                 icon: Broken.receipt_1,
                 title: lang.DEFAULT_LIBRARY_TAB,
-                trailingText: settings.autoLibraryTab.value ? lang.AUTO : settings.selectedLibraryTab.value.toText(),
+                trailingText: settings.autoLibraryTab.value ? lang.AUTO : settings.staticLibraryTab.value.toText(),
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.DEFAULT_LIBRARY_TAB,
