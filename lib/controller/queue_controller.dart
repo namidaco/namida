@@ -199,9 +199,9 @@ class QueueController {
     final latestQueue = <Playable>[];
 
     // -- Reading file.
-    final res = await File(AppPaths.LATEST_QUEUE).readAsJson() as Map?;
-    if (res != null) {
-      try {
+    try {
+      final res = await File(AppPaths.LATEST_QUEUE).readAsJson() as Map?;
+      if (res != null) {
         final t = res['type'] as String? ?? LibraryCategory.localTracks;
         final items = res['items'] as List;
         index = settings.lastPlayedIndices[t] ?? 0;
@@ -215,8 +215,8 @@ class QueueController {
           // case LibraryCategory.localVideos:
           // break;
         }
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
 
     if (latestQueue.isEmpty) return;
 
