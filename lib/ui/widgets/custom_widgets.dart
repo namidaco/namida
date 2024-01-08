@@ -4,7 +4,6 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableDragStartListener;
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -313,12 +312,19 @@ class CustomListTile extends StatelessWidget {
               )
             : null,
         trailing: trailingRaw ??
-            (trailingText != null
-                ? Text(
-                    trailingText!,
-                    style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
-                  )
-                : FittedBox(child: trailing)),
+            (trailing == null && trailingText == null
+                ? null
+                : FittedBox(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.3),
+                      child: trailingText != null
+                          ? Text(
+                              trailingText!,
+                              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+                            )
+                          : trailing,
+                    ),
+                  )),
       ),
     );
   }

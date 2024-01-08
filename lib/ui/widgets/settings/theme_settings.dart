@@ -68,7 +68,7 @@ class ThemeSetting extends SettingSubpageProvider {
         bgColor: getBgColor(_ThemeSettingsKeys.themeMode),
         icon: Broken.brush_4,
         title: lang.THEME_MODE,
-        trailing: const ToggleThemeModeContainer(),
+        trailingRaw: const ToggleThemeModeContainer(),
       ),
     );
   }
@@ -119,57 +119,61 @@ class ThemeSetting extends SettingSubpageProvider {
                     text: lang.CONFIRM,
                   )
                 ],
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ...Language.availableLanguages.map(
-                        (e) => Padding(
-                          key: Key(e.code),
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Obx(
-                            () => ListTileWithCheckMark(
-                              leading: Container(
-                                padding: const EdgeInsets.all(4.0),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    width: 1.5,
-                                    color: context.theme.colorScheme.onBackground.withAlpha(100),
+                child: SizedBox(
+                  height: Get.height * 0.5,
+                  width: Get.width,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ...Language.availableLanguages.map(
+                          (e) => Padding(
+                            key: Key(e.code),
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Obx(
+                              () => ListTileWithCheckMark(
+                                leading: Container(
+                                  padding: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      width: 1.5,
+                                      color: context.theme.colorScheme.onBackground.withAlpha(100),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    e.name[0],
+                                    style: const TextStyle(fontSize: 13.0),
                                   ),
                                 ),
-                                child: Text(
-                                  e.name[0],
-                                  style: const TextStyle(fontSize: 13.0),
+                                titleWidget: RichText(
+                                  text: TextSpan(
+                                    text: e.name,
+                                    style: context.textTheme.displayMedium,
+                                    children: [
+                                      TextSpan(
+                                        text: " (${e.country})",
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                active: e == selectedLang.value,
+                                onTap: () => selectedLang.value = e,
                               ),
-                              titleWidget: RichText(
-                                text: TextSpan(
-                                  text: e.name,
-                                  style: context.textTheme.displayMedium,
-                                  children: [
-                                    TextSpan(
-                                      text: " (${e.country})",
-                                      style: context.textTheme.displaySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              active: e == selectedLang.value,
-                              onTap: () => selectedLang.value = e,
                             ),
                           ),
                         ),
-                      ),
-                      CustomListTile(
-                        visualDensity: VisualDensity.compact,
-                        icon: Broken.add_circle,
-                        title: lang.ADD_LANGUAGE,
-                        subtitle: lang.ADD_LANGUAGE_SUBTITLE,
-                        onTap: () {
-                          launchUrl(Uri.parse(AppSocial.TRANSLATION_REPO));
-                        },
-                      ),
-                    ],
+                        CustomListTile(
+                          visualDensity: VisualDensity.compact,
+                          icon: Broken.add_circle,
+                          title: lang.ADD_LANGUAGE,
+                          subtitle: lang.ADD_LANGUAGE_SUBTITLE,
+                          onTap: () {
+                            launchUrl(Uri.parse(AppSocial.TRANSLATION_REPO));
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

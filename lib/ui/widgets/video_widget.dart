@@ -47,35 +47,6 @@ class NamidaVideoControls extends StatefulWidget {
 }
 
 class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerProviderStateMixin {
-  Widget _getSliderContainer(
-    Color colorScheme,
-    BoxConstraints constraints,
-    double percentage,
-    int alpha, {
-    bool displayIndicator = false,
-  }) {
-    return Container(
-      alignment: Alignment.centerRight,
-      height: 5.0,
-      width: constraints.maxWidth * percentage,
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(Colors.white.withOpacity(0.3), colorScheme).withAlpha(alpha),
-        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-      ),
-      child: displayIndicator
-          ? Container(
-              width: 4.0,
-              height: 4.0,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-            )
-          : null,
-    );
-  }
-
   bool _isVisible = false;
   final hideDuration = const Duration(seconds: 3);
   final volumeHideDuration = const Duration(milliseconds: 500);
@@ -1024,16 +995,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   final currentPositionMS = Player.inst.nowPlayingPosition;
                                   // this for audio only mode
                                   // final currentVideoAudioFromCache = !VideoController.vcontroller.isInitialized || Player.inst.isCurrentAudioFromCache;
-                                  final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
-                                  final currentPercentage = durMS == 0.0 ? 0.0 : positionToDisplay / durMS;
                                   return Row(
                                     children: [
-                                      Text(
-                                        positionToDisplay.milliSecondsLabel,
-                                        style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: 14.0.multipliedFontScale,
-                                          color: itemsColor,
-                                        ),
+                                      Obx(
+                                        () {
+                                          final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
+                                          return Text(
+                                            positionToDisplay.milliSecondsLabel,
+                                            style: context.textTheme.displayMedium?.copyWith(
+                                              fontSize: 14.0.multipliedFontScale,
+                                              color: itemsColor,
+                                            ),
+                                          );
+                                        },
                                       ),
                                       const SizedBox(width: 8.0),
                                       Expanded(
@@ -1070,57 +1044,75 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               child: () {
                                                 const circleSize = 18.0;
                                                 final colorScheme = Color.alphaBlend(Colors.white.withAlpha(80), CurrentColor.inst.color.withOpacity(1));
+                                                final sliderKey = colorScheme.value.toString();
                                                 return Stack(
                                                   alignment: Alignment.centerLeft,
                                                   children: [
-                                                    _getSliderContainer(
-                                                      colorScheme,
-                                                      constraints,
-                                                      currentPercentage,
-                                                      160,
+                                                    Obx(
+                                                      () {
+                                                        final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
+                                                        final currentPercentage = durMS == 0.0 ? 0.0 : positionToDisplay / durMS;
+                                                        return _SliderContainer(
+                                                          key: Key("${sliderKey}_1"),
+                                                          colorScheme: colorScheme,
+                                                          constraints: constraints,
+                                                          percentage: currentPercentage,
+                                                          alpha: 160,
+                                                        );
+                                                      },
                                                     ),
                                                     // -- video buffer
                                                     if (videoCached || (videoBuffered > Duration.zero && durMS > 0))
-                                                      _getSliderContainer(
-                                                        colorScheme,
-                                                        constraints,
-                                                        videoCached ? 1.0 : videoBuffered.inMilliseconds / durMS,
-                                                        80,
+                                                      _SliderContainer(
+                                                        key: Key("${sliderKey}_2"),
+                                                        colorScheme: colorScheme,
+                                                        constraints: constraints,
+                                                        percentage: videoCached ? 1.0 : videoBuffered.inMilliseconds / durMS,
+                                                        alpha: 80,
                                                         displayIndicator: true,
                                                       ),
                                                     // -- audio buffer
                                                     if (audioCached || (audioBuffered > Duration.zero && durMS > 0))
-                                                      _getSliderContainer(
-                                                        colorScheme,
-                                                        constraints,
-                                                        audioCached ? 1.0 : audioBuffered.inMilliseconds / durMS,
-                                                        60,
+                                                      _SliderContainer(
+                                                        key: Key("${sliderKey}_3"),
+                                                        colorScheme: colorScheme,
+                                                        constraints: constraints,
+                                                        percentage: audioCached ? 1.0 : audioBuffered.inMilliseconds / durMS,
+                                                        alpha: 60,
                                                         displayIndicator: true,
                                                       ),
-                                                    _getSliderContainer(
-                                                      colorScheme,
-                                                      constraints,
-                                                      1.0,
-                                                      40,
+                                                    _SliderContainer(
+                                                      key: Key("${sliderKey}_4"),
+                                                      colorScheme: colorScheme,
+                                                      constraints: constraints,
+                                                      percentage: 1.0,
+                                                      alpha: 40,
                                                     ),
-                                                    Container(
-                                                      alignment: Alignment.center,
-                                                      margin: EdgeInsets.only(left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
-                                                      decoration: BoxDecoration(
-                                                        color: colorScheme,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      width: circleSize,
-                                                      height: circleSize,
-                                                      child: Container(
-                                                        alignment: Alignment.center,
-                                                        decoration: const BoxDecoration(
-                                                          color: Color.fromARGB(220, 40, 40, 40),
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                        width: circleSize / 2,
-                                                        height: circleSize / 2,
-                                                      ),
+                                                    Obx(
+                                                      () {
+                                                        final positionToDisplay = userSeekMS.value == 0 ? currentPositionMS : userSeekMS.value;
+                                                        final currentPercentage = durMS == 0.0 ? 0.0 : positionToDisplay / durMS;
+                                                        return Container(
+                                                          alignment: Alignment.center,
+                                                          margin:
+                                                              EdgeInsets.only(left: ((constraints.maxWidth * currentPercentage) - circleSize * 0.5).clamp(0, constraints.maxWidth)),
+                                                          decoration: BoxDecoration(
+                                                            color: colorScheme,
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                          width: circleSize,
+                                                          height: circleSize,
+                                                          child: Container(
+                                                            alignment: Alignment.center,
+                                                            decoration: const BoxDecoration(
+                                                              color: Color.fromARGB(220, 40, 40, 40),
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            width: circleSize / 2,
+                                                            height: circleSize / 2,
+                                                          ),
+                                                        );
+                                                      },
                                                     )
                                                   ],
                                                 );
@@ -1397,6 +1389,47 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SliderContainer extends StatelessWidget {
+  final Color colorScheme;
+  final BoxConstraints constraints;
+  final double percentage;
+  final int alpha;
+  final bool displayIndicator;
+
+  const _SliderContainer({
+    required super.key,
+    required this.colorScheme,
+    required this.constraints,
+    required this.percentage,
+    required this.alpha,
+    this.displayIndicator = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerRight,
+      height: 5.0,
+      width: constraints.maxWidth * percentage,
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(Colors.white.withOpacity(0.3), colorScheme).withAlpha(alpha),
+        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+      ),
+      child: displayIndicator
+          ? Container(
+              width: 4.0,
+              height: 4.0,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            )
+          : null,
     );
   }
 }

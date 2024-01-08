@@ -1428,36 +1428,41 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
               CustomListTile(
                 icon: Broken.sort,
                 title: lang.SORT_BY,
-                trailingRaw: PopupMenuButton<InsertionSortingType>(
-                  child: Obx(
-                    () => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(sortBy.value.toIcon(), size: 18.0),
-                        const SizedBox(width: 8.0),
-                        Text(sortBy.value.toText()),
-                      ],
+                trailingRaw: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
+                  child: FittedBox(
+                    child: PopupMenuButton<InsertionSortingType>(
+                      child: Obx(
+                        () => Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(sortBy.value.toIcon(), size: 18.0),
+                            const SizedBox(width: 8.0),
+                            Text(sortBy.value.toText()),
+                          ],
+                        ),
+                      ),
+                      itemBuilder: (context) {
+                        return <PopupMenuEntry<InsertionSortingType>>[
+                          ...InsertionSortingType.values
+                              .map(
+                                (e) => PopupMenuItem(
+                                  value: e,
+                                  child: Row(
+                                    children: [
+                                      Icon(e.toIcon(), size: 20.0),
+                                      const SizedBox(width: 8.0),
+                                      Text(e.toText()),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList()
+                        ];
+                      },
+                      onSelected: (value) => sortBy.value = value,
                     ),
                   ),
-                  itemBuilder: (context) {
-                    return <PopupMenuEntry<InsertionSortingType>>[
-                      ...InsertionSortingType.values
-                          .map(
-                            (e) => PopupMenuItem(
-                              value: e,
-                              child: Row(
-                                children: [
-                                  Icon(e.toIcon(), size: 20.0),
-                                  const SizedBox(width: 8.0),
-                                  Text(e.toText()),
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList()
-                    ];
-                  },
-                  onSelected: (value) => sortBy.value = value,
                 ),
               ),
             ],
@@ -1476,12 +1481,15 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
       return Stack(
         alignment: Alignment.centerRight,
         children: [
-          CustomListTile(
-            title: title,
-            subtitle: subtitle,
-            icon: icon,
-            maxSubtitleLines: 22,
-            onTap: () => onTap(insertionType),
+          Padding(
+            padding: const EdgeInsets.only(right: 24.0),
+            child: CustomListTile(
+              title: title,
+              subtitle: subtitle,
+              icon: icon,
+              maxSubtitleLines: 22,
+              onTap: () => onTap(insertionType),
+            ),
           ),
           Obx(
             () => NamidaIconButton(

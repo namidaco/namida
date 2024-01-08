@@ -555,7 +555,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   icon: type.toIcon(),
                   title: type.toText(),
                   subtitle: type.toSubtitle(),
-                  trailingRaw: PopupMenuButton<InterruptionAction>(
+                  trailing: PopupMenuButton<InterruptionAction>(
                     child: Obx(() {
                       final actionInSetting = settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
                       return Text(actionInSetting.toText());

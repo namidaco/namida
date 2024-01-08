@@ -196,6 +196,7 @@ class YoutubeCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 6.0 + 12.0), // right + iconWidth
                 const SizedBox(width: 8.0),
               ],
             ),

@@ -198,8 +198,10 @@ class CustomCollapsedListTile extends StatelessWidget {
       subtitle: subtitle,
       icon: icon,
       visualDensity: const VisualDensity(horizontal: -1.5, vertical: -1.5),
-      trailing: Row(
+      trailingRaw: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(width: 8.0),
           if (trailing != null) ...[trailing!, const SizedBox(width: 8.0)],
           const Icon(
             Broken.arrow_right_3,
