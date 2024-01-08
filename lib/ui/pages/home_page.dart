@@ -589,7 +589,7 @@ class _TracksList extends StatelessWidget {
       );
     } else {
       final finalList = listy;
-      final queue = listWithListens?.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
+      final queue = listy.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
       return SliverToBoxAdapter(
         child: _HorizontalList(
             title: title,
