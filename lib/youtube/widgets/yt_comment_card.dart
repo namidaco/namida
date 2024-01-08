@@ -4,11 +4,14 @@ import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:read_more_text/read_more_text.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -204,14 +207,23 @@ class YTCommentCard extends StatelessWidget {
                 ],
               ),
             ),
-            // TODO: view channel details.
             NamidaPopupWrapper(
               childrenDefault: [
                 NamidaPopupItem(
                   icon: Broken.copy,
                   title: lang.COPY,
                   onTap: () => comment?.commentText != null ? Clipboard.setData(ClipboardData(text: comment!.commentText!)) : null,
-                )
+                ),
+                NamidaPopupItem(
+                  icon: Broken.user,
+                  title: lang.GO_TO_CHANNEL,
+                  onTap: () {
+                    final url = comment?.uploaderUrl;
+                    final chid = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(url);
+                    if (chid == null) return;
+                    NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid));
+                  },
+                ),
               ],
             ),
           ],
