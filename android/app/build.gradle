@@ -57,8 +57,15 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def abi = output.getFilter(com.android.build.OutputFile.ABI)
+            def abiText = abi == null ? "" : "-$abi"
+            outputFileName = "namida-v${versionName}${abiText}-${variant.name}.apk"
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.msob7y.namida"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration.
