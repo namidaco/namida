@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -52,12 +52,12 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           vsync: this,
           duration: Duration.zero,
           lowerBound: 0,
-          upperBound: widget.maxHeight,
+          upperBound: 1,
         );
     controller.addListener(() {
       widget.onHeightChange?.call(percentage);
       if (widget.onDismissing != null) {
-        if (controller.value <= widget.minHeight) {
+        if (controllerHeight <= widget.minHeight) {
           widget.onDismissing!(dismissPercentage);
         }
       }
@@ -76,13 +76,14 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   double _dragheight = 0;
 
-  double get percentage => (controller.value - widget.minHeight) / (widget.maxHeight - widget.minHeight);
-  double get dismissPercentage => (controller.value / widget.minHeight).clamp(0.0, 1.0);
+  double get controllerHeight => controller.value * widget.maxHeight;
+  double get percentage => (controllerHeight - widget.minHeight) / (widget.maxHeight - widget.minHeight);
+  double get dismissPercentage => (controllerHeight / widget.minHeight).clamp(0.0, 1.0);
 
   void _updateHeight(double heightPre, {Duration? duration}) {
     final height = _dismissible ? heightPre : heightPre.withMinimum(widget.minHeight);
     controller.animateTo(
-      height,
+      height / widget.maxHeight,
       duration: duration,
       curve: widget.curve,
     );
@@ -106,7 +107,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   }
 
   void _toggleWakelockOn() {
-    settings.wakelockMode.value.toggleOn(VideoController.vcontroller.isInitialized);
+    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
   }
 
   void _toggleWakelockOff() {
@@ -166,12 +167,12 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                     clipBehavior: Clip.hardEdge,
                     type: MaterialType.transparency,
                     child: NamidaOpacity(
-                      enabled: controller.value < widget.minHeight,
+                      enabled: controllerHeight < widget.minHeight,
                       opacity: dismissPercentage,
                       child: Container(
-                        height: controller.value,
+                        height: controllerHeight,
                         decoration: widget.decoration,
-                        child: widget.builder(controller.value, percentage, children),
+                        child: widget.builder(controllerHeight, percentage, children),
                       ),
                     ),
                   ),
