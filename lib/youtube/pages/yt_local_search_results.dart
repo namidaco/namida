@@ -6,7 +6,9 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
@@ -50,7 +52,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       onTap: () {
-        YTLocalSearchController.inst.sortType = sort;
+        setState(() => YTLocalSearchController.inst.sortType = sort);
         _didChangeSort = true;
       },
       child: Row(
@@ -87,14 +89,39 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () {
-                          NamidaNavigator.inst.popPage();
-                          widget.onPopping(_didChangeSort);
-                        },
-                        icon: const Icon(Broken.arrow_left_2),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            height: 32.0,
+                            width: 32.0,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                NamidaNavigator.inst.popPage();
+                                widget.onPopping(_didChangeSort);
+                              },
+                              icon: Obx(
+                                () => Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    if (YTLocalSearchController.inst.isLoadingLookupLists.value)
+                                      IgnorePointer(
+                                        child: NamidaOpacity(
+                                          opacity: 0.3,
+                                          child: ThreeArchedCircle(
+                                            color: context.defaultIconColor(),
+                                            size: 36.0,
+                                          ),
+                                        ),
+                                      ),
+                                    const Icon(Broken.arrow_left_2),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 8.0),
                       getChipButton(

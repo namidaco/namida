@@ -39,7 +39,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   final _isFetchingMoreResults = false.obs;
   bool? _loadingFirstResults;
 
-  final _isLoadingLocalLookupList = true.obs;
   List<StreamInfoItem> get _searchResultsLocal => YTLocalSearchController.inst.searchResults;
 
   int get _maxSearchResultsMini => 100;
@@ -49,7 +48,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     super.initState();
     fetchSearch();
     YTLocalSearchController.inst.initializeLookupMap(onSearchDone: () => setState(() {})).then((value) {
-      _isLoadingLocalLookupList.value = false;
       if (currentSearchText != '') {
         YTLocalSearchController.inst.search(currentSearchText, maxResults: _maxSearchResultsMini);
         if (NamidaNavigator.inst.isytLocalSearchInFullPage) {
@@ -62,7 +60,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   void dispose() {
     _isFetchingMoreResults.close();
-    _isLoadingLocalLookupList.close();
     YTLocalSearchController.inst.cleanResources();
     super.dispose();
   }
@@ -159,7 +156,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               const Spacer(),
                               const SizedBox(width: 6.0),
                               Obx(
-                                () => _isLoadingLocalLookupList.value ? const LoadingIndicator() : const SizedBox(),
+                                () => YTLocalSearchController.inst.isLoadingLookupLists.value ? const LoadingIndicator() : const SizedBox(),
                               ),
                               const SizedBox(width: 6.0),
                               const Icon(Broken.arrow_right_3),

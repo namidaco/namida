@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -20,6 +21,8 @@ enum YTLocalSearchSortType {
 class YTLocalSearchController {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
   YTLocalSearchController._internal();
+
+  final isLoadingLookupLists = false.obs;
 
   bool enableFuzzySearch = true;
 
@@ -47,6 +50,7 @@ class YTLocalSearchController {
   }
 
   Future<void> initializeLookupMap({required final void Function() onSearchDone}) async {
+    isLoadingLookupLists.value = true;
     final fillingCompleter = Completer<void>();
     await _YTLocalSearchPortsProvider.inst.preparePorts(
       onResult: (result) {
@@ -79,6 +83,7 @@ class YTLocalSearchController {
       },
     );
     await fillingCompleter.future;
+    isLoadingLookupLists.value = false;
   }
 
   static void _prepareResourcesAndSearch(Map params) {
