@@ -108,12 +108,13 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   Track mainItemToSubItem(TrackWithDate item) => item.track;
 
   @override
-  Future<SplayTreeMap<int, List<TrackWithDate>>> prepareAllHistoryFilesFunction(String directoryPath) async {
+  Future<({SplayTreeMap<int, List<TrackWithDate>> historyMap, Map<Track, List<int>> topItems})> prepareAllHistoryFilesFunction(String directoryPath) async {
     return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<SplayTreeMap<int, List<TrackWithDate>>> _readHistoryFilesCompute(String path) async {
+  static Future<({SplayTreeMap<int, List<TrackWithDate>> historyMap, Map<Track, List<int>> topItems})> _readHistoryFilesCompute(String path) async {
     final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
+    final tempMapTopItems = <Track, List<int>>{};
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
@@ -121,12 +122,34 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
           final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
           map[dayOfTrack] = listTracks;
+
+          listTracks.loop((e, index) {
+            tempMapTopItems.addForce(e.track, e.dateTimeAdded.millisecondsSinceEpoch);
+          });
         } catch (e) {
           continue;
         }
       }
     }
-    return map;
+
+    // -- Sorting dates
+    for (final entry in tempMapTopItems.values) {
+      entry.sort();
+    }
+
+    final sortedEntries = tempMapTopItems.entries.toList()
+      ..sort((a, b) {
+        final compare = b.value.length.compareTo(a.value.length);
+        if (compare == 0) {
+          final lastListenB = b.value.lastOrNull ?? 0;
+          final lastListenA = a.value.lastOrNull ?? 0;
+          return lastListenB.compareTo(lastListenA);
+        }
+        return compare;
+      });
+    final topItems = Map.fromEntries(sortedEntries);
+
+    return (historyMap: map, topItems: topItems);
   }
 
   @override

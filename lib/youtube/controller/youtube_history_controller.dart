@@ -40,12 +40,13 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   String mainItemToSubItem(YoutubeID item) => item.id;
 
   @override
-  Future<SplayTreeMap<int, List<YoutubeID>>> prepareAllHistoryFilesFunction(String directoryPath) async {
+  Future<({SplayTreeMap<int, List<YoutubeID>> historyMap, Map<String, List<int>> topItems})> prepareAllHistoryFilesFunction(String directoryPath) async {
     return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<SplayTreeMap<int, List<YoutubeID>>> _readHistoryFilesCompute(String path) async {
+  static Future<({SplayTreeMap<int, List<YoutubeID>> historyMap, Map<String, List<int>> topItems})> _readHistoryFilesCompute(String path) async {
     final map = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
+    final tempMapTopItems = <String, List<int>>{};
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
@@ -53,12 +54,34 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
           final dayOfVideo = int.parse(f.path.getFilenameWOExt);
           final listVideos = (response as List?)?.mapped((e) => YoutubeID.fromJson(e)) ?? <YoutubeID>[];
           map[dayOfVideo] = listVideos;
+
+          listVideos.loop((e, index) {
+            tempMapTopItems.addForce(e.id, e.dateTimeAdded.millisecondsSinceEpoch);
+          });
         } catch (e) {
           continue;
         }
       }
     }
-    return map;
+
+    // -- Sorting dates
+    for (final entry in tempMapTopItems.values) {
+      entry.sort();
+    }
+
+    final sortedEntries = tempMapTopItems.entries.toList()
+      ..sort((a, b) {
+        final compare = b.value.length.compareTo(a.value.length);
+        if (compare == 0) {
+          final lastListenB = b.value.lastOrNull ?? 0;
+          final lastListenA = a.value.lastOrNull ?? 0;
+          return lastListenB.compareTo(lastListenA);
+        }
+        return compare;
+      });
+    final topItems = Map.fromEntries(sortedEntries);
+
+    return (historyMap: map, topItems: topItems);
   }
 
   @override
