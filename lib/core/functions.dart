@@ -550,10 +550,15 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
       for (final systemEntity in d.listSyncSafe()) {
         if (systemEntity is File) {
           final path = systemEntity.path;
+
+          // -- skip if hidden
+          if (path.startsWith('.')) continue;
+
           // -- skip if not in extensions
           if (!extensions.any((ext) => path.endsWith(ext))) {
             continue;
           }
+
           // -- skip if in nomedia folder & specified to exclude
           if (respectNoMedia && hasNoMedia) {
             excludedByNoMedia.add(path);
