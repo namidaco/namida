@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -339,7 +338,6 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableClipboardMonitoring.value,
                 onChanged: (isTrue) {
                   settings.save(enableClipboardMonitoring: !isTrue);
-                  ClipboardController.inst.setClipboardMonitoringStatus(!isTrue);
                 },
               ),
             ),
