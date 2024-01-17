@@ -247,9 +247,8 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                           final ms = newOffset.value.remainder(1000).abs().toString();
                           final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
                           final off = newOffset.value;
-                          final prefix = off.isNegative ? '-' : '';
                           return Text(
-                            "$prefix${off.abs().milliSecondsLabel}.$msText",
+                            "${off.milliSecondsLabel}.$msText",
                             style: Get.textTheme.displaySmall,
                           );
                         },

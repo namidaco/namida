@@ -321,7 +321,7 @@ class MiniPlayerController {
   }
 
   void _toggleWakelockOn() {
-    settings.wakelockMode.value.toggleOn(VideoController.inst.shouldShowVideo);
+    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
   }
 
   void _toggleWakelockOff() {

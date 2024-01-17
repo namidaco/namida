@@ -16,13 +16,12 @@ import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:picture_in_picture/picture_in_picture.dart';
 
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/lifecycle_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -51,7 +50,7 @@ void main() async {
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
 
   /// Getting Device info
-  kSdkVersion = await PictureInPicture.getPlatformSdk();
+  kSdkVersion = await NamidaChannel.inst.getPlatformSdk();
 
   /// if `true`:
   /// 1. onboarding screen will show
@@ -116,7 +115,7 @@ void main() async {
     Language.initialize(),
   ]);
   ConnectivityController.inst.initialize();
-  LifeCycleController.inst.setCanEnterPip(settings.enablePip.value);
+  NamidaChannel.inst.setCanEnterPip(settings.enablePip.value);
 
   /// updates values on startup
   Indexer.inst.updateImageSizeInStorage();
@@ -167,7 +166,7 @@ void main() async {
 }
 
 void _initLifeCycle() {
-  LifeCycleController.inst.addOnDestroy('main', () async {
+  NamidaChannel.inst.addOnDestroy('main', () async {
     final mode = settings.killPlayerAfterDismissingAppMode.value;
     if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.isPlaying)) {
       await Player.inst.pause();
@@ -175,16 +174,13 @@ void _initLifeCycle() {
     }
   });
 
-  LifeCycleController.inst.addOnResume('main', () async {
+  NamidaChannel.inst.addOnResume('main', () async {
     CurrentColor.inst.refreshColorsAfterResumeApp();
-
-    VideoController.inst.isCurrentlyInBackground = false;
     await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
   });
 
-  LifeCycleController.inst.addOnSuspending('pip', () async {
-    if (settings.enablePip.value && Player.inst.isPlaying && VideoController.vcontroller.isInitialized) {
-      await VideoController.vcontroller.enablePictureInPicture();
+  NamidaChannel.inst.addOnSuspending('pip', () async {
+    if (settings.enablePip.value && Player.inst.isPlaying && Player.inst.videoInitialized) {
       await NamidaNavigator.inst.enterFullScreen(
         Container(
           color: Colors.black,
@@ -199,12 +195,6 @@ void _initLifeCycle() {
         ),
         setOrientations: false,
       );
-      VideoController.inst.isCurrentlyInBackground = false; // since the pip needs the video
-    } else {
-      VideoController.inst.isCurrentlyInBackground = true;
-      if (VideoController.vcontroller.isInitialized && VideoController.vcontroller.isBuffering) {
-        Player.inst.play();
-      }
     }
   });
 }

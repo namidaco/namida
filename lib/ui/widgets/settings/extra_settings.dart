@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -45,7 +46,7 @@ class ExtrasSettings extends SettingSubpageProvider {
   Map<Enum, List<String>> get lookupMap => {
         _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
         _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
-        _ExtraSettingsKeys.pip: ["${lang.ENABLE_PICTURE_IN_PICTURE} (${lang.BETA})"],
+        _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
         _ExtraSettingsKeys.foldersHierarchy: [lang.ENABLE_FOLDERS_HIERARCHY],
         _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
         _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
@@ -95,9 +96,12 @@ class ExtrasSettings extends SettingSubpageProvider {
               () => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.pip),
                 icon: Broken.screenmirroring,
-                title: "${lang.ENABLE_PICTURE_IN_PICTURE} (${lang.BETA})",
+                title: lang.ENABLE_PICTURE_IN_PICTURE,
                 value: settings.enablePip.value,
-                onChanged: (isTrue) => settings.save(enablePip: !isTrue),
+                onChanged: (isTrue) {
+                  settings.save(enablePip: !isTrue);
+                  NamidaChannel.inst.setCanEnterPip(!isTrue);
+                },
               ),
             ),
           ),

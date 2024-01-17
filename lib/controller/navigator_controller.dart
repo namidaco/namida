@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/lifecycle_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -435,12 +435,9 @@ Future<void> showSystemToast({
   required String message,
   int seconds = 5,
 }) async {
-  LifeCycleController.inst.namidaChannel.invokeMethod(
-    'showToast',
-    {
-      "text": message,
-      "seconds": seconds,
-    },
+  await NamidaChannel.inst.showToast(
+    message: message,
+    seconds: seconds,
   );
 }
 

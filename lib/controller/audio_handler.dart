@@ -84,9 +84,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get isCurrentAudioFromCache => _isCurrentAudioFromCache;
   bool _isCurrentAudioFromCache = false;
 
-  /// Milliseconds should be awaited before playing video.
-  int get _videoPositionSeekDelayMS => 500;
-
   // Completer<void>? _audioShouldBeLoading;
 
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
@@ -95,15 +92,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       currentVideoStream.value = null;
       currentAudioStream.value = null;
       currentCachedVideo.value = null;
-      await VideoController.vcontroller.dispose();
+      await super.setVideo(null);
     }
-  }
-
-  Future<void> _waitForAllBuffers() async {
-    await waitTillAudioLoaded;
-    // await _audioShouldBeLoading?.future;
-    await VideoController.vcontroller.waitTillBufferingComplete;
-    await bufferingCompleter?.future;
   }
 
   @override
@@ -139,33 +129,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
-  //
-  // =================================================================================
-  // ================================ Video Methods ==================================
-  // =================================================================================
-
-  Future<void> toggleVideoPlay() async {
-    await _waitForAllBuffers();
-    // await _audioShouldBeLoading?.future;
-    await VideoController.vcontroller.seek(currentPositionMS.milliseconds);
-    if (isPlaying) {
-      await VideoController.vcontroller.play();
-    } else {
-      await VideoController.vcontroller.pause();
-    }
-  }
-
-  Future<void> refreshVideoPosition(bool delayed) async {
-    if (delayed) await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
-    await VideoController.vcontroller.seek(Duration(milliseconds: currentPositionMS));
-  }
-
-  Future<void> _playAudioThenVideo() async {
-    onPlayRaw();
-    // await _audioShouldBeLoading?.future;
-    await Future.delayed(Duration(milliseconds: _videoPositionSeekDelayMS.abs()));
-    if (isPlaying) await VideoController.vcontroller.play();
-  }
   // =================================================================================
   //
 
@@ -244,7 +207,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // await pause();
       await [
         onDispose(),
-        VideoController.vcontroller.dispose(),
         QueueController.inst.emptyLatestQueue(),
       ].execute();
     } else {
@@ -408,26 +370,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ==============================================================================================
   // ==============================================================================================
   // ================================== NamidaBasicAudioHandler Overriden ====================================
-  @override
-  Future<void> setPlayerSpeed(double value) async {
-    await Future.wait([
-      VideoController.vcontroller.setSpeed(value),
-      super.setPlayerSpeed(value),
-    ]);
-  }
-
-  @override
-  Future<void> setPlayerVolume(double value) async {
-    await Future.wait([
-      VideoController.vcontroller.setVolume(value),
-      super.setPlayerVolume(value),
-    ]);
-  }
-
-  @override
-  Future<void> setPlayerPitch(double value) async {
-    await super.setPlayerPitch(value);
-  }
 
   @override
   InterruptionAction defaultOnInterruption(InterruptionType type) => settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
@@ -501,8 +443,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool startPlaying) async {
     final tr = item.track;
-    VideoController.inst.updateCurrentVideo(tr);
     WaveformController.inst.generateWaveform(tr);
+    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
 
     // -- generating artwork in case it wasnt, to be displayed in notification
     Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false).then((value) => refreshNotification());
@@ -511,6 +453,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final dur = await setAudioSource(
         tr.toAudioSource(currentIndex, currentQueue.length),
         startPlaying: startPlaying,
+        videoOptions: initialVideo == null
+            ? null
+            : VideoOptions(
+                source: initialVideo.path,
+                enableCaching: true,
+                cacheKey: '',
+                cacheDirectory: _defaultCacheDirectory,
+                maxTotalCacheSize: _defaultMaxCache,
+              ),
       );
       Indexer.inst.updateTrackDuration(tr, dur);
 
@@ -560,6 +511,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return;
     }
 
+    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
+
     // -- The whole idea of pausing and playing is due to the bug where [headset buttons/android next gesture]
     // -- sometimes don't get detected.
     await Future.wait([
@@ -569,8 +522,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (startPlaying) {
       setVolume(_userPlayerVolume);
-      await _waitForAllBuffers();
-      await _playAudioThenVideo();
+      await onPlayRaw();
     }
 
     startSleepAfterMinCount();
@@ -593,16 +545,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (cachedFile != null && useCache) {
       currentCachedVideo.value = videoItem;
-      await VideoController.vcontroller.setFile(cachedFile.path, (videoDuration) => false);
-      await refreshVideoPosition(true);
-      if (wasPlaying) VideoController.vcontroller.play();
+      await setVideoSource(source: cachedFile.path);
     } else if (stream != null && stream.url != null) {
-      final position = currentPositionMS;
       if (wasPlaying) await onPauseRaw();
       try {
-        await VideoController.vcontroller.setNetworkSource(
-          url: stream.url!,
-          looping: (videoDuration) => false,
+        await setVideoSource(
+          source: stream.url!,
           cacheKey: stream.cacheKey(videoId),
         );
       } catch (e) {
@@ -618,16 +566,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         YoutubeController.inst.currentYTQualities.value = newStreams;
 
         if (sameStreamUrl != null) {
-          await VideoController.vcontroller.setNetworkSource(
-            url: sameStreamUrl,
-            looping: (videoDuration) => false,
+          await setVideoSource(
+            source: sameStreamUrl,
             cacheKey: stream.cacheKey(videoId),
           );
         }
       }
-      await VideoController.vcontroller.seek(position.milliseconds);
-      await _waitForAllBuffers();
-      if (wasPlaying) await _playAudioThenVideo();
+      if (wasPlaying) await onPlayRaw();
     }
   }
 
@@ -644,15 +589,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final cachedAudio = stream?.getCachedFile(videoId);
     if (cachedAudio != null && useCache) {
-      await setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem), startPlaying: wasPlaying);
+      await setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem), startPlaying: wasPlaying, keepOldVideoSource: true);
       refreshNotification();
     } else if (stream != null && stream.url != null) {
-      if (wasPlaying) {
-        await Future.wait([
-          super.onPauseRaw(),
-          VideoController.vcontroller.pause(),
-        ]);
-      }
+      if (wasPlaying) await super.onPauseRaw();
 
       Future<void> setAudioLockCache() async {
         await setAudioSource(
@@ -665,6 +605,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             },
           ),
           startPlaying: wasPlaying,
+          keepOldVideoSource: true,
         );
         refreshNotification();
       }
@@ -687,10 +628,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           await setAudioLockCache();
         }
       }
-      await _waitForAllBuffers();
       await seek(position.milliseconds);
       if (wasPlaying) {
-        await _playAudioThenVideo();
+        await onPlayRaw();
       }
     }
   }
@@ -758,11 +698,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     refreshNotification(pi, currentVideoInfo.value);
 
-    Future<void> plsplsplsPlay(bool waitForBuffer, bool wasPlayingFromCache, bool sourceChanged) async {
+    Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
       if (startPlaying) {
         setVolume(_userPlayerVolume);
-        if (waitForBuffer) await _waitForAllBuffers();
-        await _playAudioThenVideo();
+        await onPlayRaw();
         settings.wakelockMode.value.toggleOn(currentVideoStream.value != null || currentCachedVideo.value != null);
       }
       if (sourceChanged) {
@@ -791,7 +730,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    await VideoController.vcontroller.dispose();
+    // await setVideo(null);
 
     ({AudioCacheDetails? audio, NamidaVideo? video}) playedFromCacheDetails = (audio: null, video: null);
     bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.video != null);
@@ -806,14 +745,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       whatToAwait: () async => await playerStoppingSeikoo.future,
       startPlaying: startPlaying,
     );
-
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
 
     bool heyIhandledAudioPlaying = false;
     if (okaySetFromCache()) {
       heyIhandledAudioPlaying = true;
-      await plsplsplsPlay(false, false, false);
+      await plsplsplsPlay(false, false);
     } else {
       heyIhandledAudioPlaying = false;
     }
@@ -876,33 +814,40 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           }
 
           await playerStoppingSeikoo.future;
-          await Future.wait([
-            if (shouldResetVideoSource && isStreamRequiredBetterThanCachedSet)
-              cachedVideo != null
-                  ? VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false)
-                  : VideoController.vcontroller.setNetworkSource(
-                      url: prefferedVideoStream!.url!,
-                      looping: (videoDuration) => false,
-                      cacheKey: prefferedVideoStream.cacheKey(item.id),
+
+          VideoOptions? videoOptions;
+          if (shouldResetVideoSource && isStreamRequiredBetterThanCachedSet) {
+            videoOptions = VideoOptions(
+              source: cachedVideo?.path ?? prefferedVideoStream?.url ?? '',
+              enableCaching: true,
+              cacheKey: prefferedVideoStream?.cacheKey(item.id) ?? '',
+              cacheDirectory: _defaultCacheDirectory,
+              maxTotalCacheSize: _defaultMaxCache,
+            );
+          }
+          if (shouldResetAudioSource) {
+            cachedAudio != null
+                ? await setAudioSource(
+                    AudioSource.file(cachedAudio.path, tag: mediaItem),
+                    startPlaying: startPlaying,
+                    videoOptions: videoOptions,
+                  )
+                : await setAudioSource(
+                    LockCachingAudioSource(
+                      Uri.parse(prefferedAudioStream!.url!),
+                      cacheFile: File(prefferedAudioStream.cachePath(item.id)),
+                      tag: mediaItem,
+                      onCacheDone: (cacheFile) async {
+                        await _onAudioCacheDone(item.id, cacheFile);
+                      },
                     ),
-            if (shouldResetAudioSource)
-              cachedAudio != null
-                  ? setAudioSource(
-                      AudioSource.file(cachedAudio.path, tag: mediaItem),
-                      startPlaying: startPlaying,
-                    )
-                  : setAudioSource(
-                      LockCachingAudioSource(
-                        Uri.parse(prefferedAudioStream!.url!),
-                        cacheFile: File(prefferedAudioStream.cachePath(item.id)),
-                        tag: mediaItem,
-                        onCacheDone: (cacheFile) async {
-                          await _onAudioCacheDone(item.id, cacheFile);
-                        },
-                      ),
-                      startPlaying: startPlaying,
-                    ),
-          ]);
+                    startPlaying: startPlaying,
+                    videoOptions: videoOptions,
+                  );
+          } else if (videoOptions != null) {
+            await setVideo(videoOptions);
+          }
+
           refreshNotification();
         }
       } catch (e) {
@@ -952,7 +897,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (!heyIhandledAudioPlaying) {
       final didplayfromcache = okaySetFromCache();
-      await plsplsplsPlay(!didplayfromcache, didplayfromcache, !didplayfromcache);
+      await plsplsplsPlay(didplayfromcache, !didplayfromcache);
     }
   }
 
@@ -993,13 +938,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (cachedVideo != null && cachedAudio != null && !disableVideo) {
       // -- play audio & video
       await whatToAwait();
-      await Future.wait([
-        setAudioSource(
-          AudioSource.file(cachedAudio.file.path, tag: mediaItem),
-          startPlaying: startPlaying,
+      setAudioSource(
+        AudioSource.file(cachedAudio.file.path, tag: mediaItem),
+        startPlaying: startPlaying,
+        videoOptions: VideoOptions(
+          source: cachedVideo.path,
+          enableCaching: true,
+          cacheKey: '',
+          cacheDirectory: _defaultCacheDirectory,
+          maxTotalCacheSize: _defaultMaxCache,
         ),
-        VideoController.vcontroller.setFile(cachedVideo.path, (videoDuration) => false),
-      ]);
+      );
       final audioDetails = AudioCacheDetails(
         youtubeId: item.id,
         bitrate: cachedAudio.bitrate,
@@ -1220,48 +1169,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> seek(Duration position) async {
-    Future<void> plsSeek() async {
-      await Future.wait([
-        super.seek(position),
-        VideoController.vcontroller.seek(position),
-      ]);
-    }
-
-    Future<void> plsPause() async {
-      await Future.wait([
-        super.onPauseRaw(),
-        VideoController.vcontroller.pause(),
-      ]);
-    }
+    Future<void> plsSeek() async => await super.seek(position);
 
     await currentItem?._execute(
       selectable: (finalItem) async {
-        // await plsPause();
         await plsSeek();
-        refreshVideoPosition(false);
       },
       youtubeID: (finalItem) async {
         final wasPlaying = isPlaying;
         if (_nextSeekCanSetAudioCache) {
-          await plsPause();
+          await onPauseRaw();
           // -- try putting cache version if it was cached
           _nextSeekCanSetAudioCache = false;
           final cached = currentAudioStream.value?.getCachedFile(finalItem.id);
-          if (cached != null) await setAudioSource(AudioSource.file(cached.path, tag: mediaItem));
+          if (cached != null && await cached.exists()) await setAudioSource(AudioSource.file(cached.path, tag: mediaItem), keepOldVideoSource: true);
           _isCurrentAudioFromCache = true;
           await plsSeek();
-          await _waitForAllBuffers();
-          if (wasPlaying) await _playAudioThenVideo();
+          if (wasPlaying) await onPlayRaw();
         } else {
-          if (isCurrentAudioFromCache) {
-            await plsSeek();
-            refreshVideoPosition(false);
-          } else {
-            await plsPause();
-            await plsSeek();
-            await _waitForAllBuffers();
-            if (wasPlaying) await _playAudioThenVideo();
-          }
+          await plsSeek();
         }
       },
     );
@@ -1277,18 +1203,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
 
   @override
-  Future<void> stop() async {
-    await [
-      super.stop(),
-      VideoController.vcontroller.pause(),
-    ].execute();
-  }
-
-  @override
   Future<void> onDispose() async {
     await [
       super.onDispose(),
-      VideoController.vcontroller.dispose(),
       AudioService.forceStop(),
     ].execute();
   }
@@ -1299,35 +1216,22 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> rewind() async => await onRewind();
 
-  @override
-  void onBufferOrLoadStart() {
-    // _audioShouldBeLoading ??= Completer<void>();
-    if (isPlaying) {
-      VideoController.vcontroller.pause();
-    }
-  }
+  // ------- video -------
 
-  @override
-  void onBufferOrLoadEnd() async {
-    await waitTillAudioLoaded;
-    // _audioShouldBeLoading?.completeIfWasnt();
-    if (isPlaying) {
-      VideoController.vcontroller.play();
-    }
-  }
+  ByteSize get _defaultMaxCache => ByteSize(mb: settings.videosMaxCacheInMB.value);
+  Directory get _defaultCacheDirectory => Directory(AppDirs.VIDEOS_CACHE);
 
-  @override
-  Future<void> onRealPause() async {
-    await VideoController.vcontroller.pause();
-  }
-
-  @override
-  Future<void> onRealPlay() async {
-    await VideoController.vcontroller.pause(); // pausing for cases like: seeking to 0, which will trigger play fast
-    final vcp = VideoController.vcontroller.videoController?.value.position.inMilliseconds ?? 0;
-    final diff = vcp - currentPositionMS;
-    if (diff > 0) await Future.delayed(Duration(milliseconds: diff.withMaximum(_videoPositionSeekDelayMS)));
-    await VideoController.vcontroller.play();
+  Future<void> setVideoSource({required String source, String cacheKey = '', bool loopingAnimation = false}) async {
+    await super.setVideo(
+      VideoOptions(
+        source: source,
+        loopingAnimation: loopingAnimation,
+        enableCaching: true,
+        cacheKey: cacheKey,
+        cacheDirectory: _defaultCacheDirectory,
+        maxTotalCacheSize: _defaultMaxCache,
+      ),
+    );
   }
 }
 

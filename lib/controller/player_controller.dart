@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_handler.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -43,6 +45,9 @@ class Player {
   /// As for audio side, the [NamidaAudioVideoHandler] internally handles pauses/resumes.
   bool get shouldCareAboutAVSync => currentQueueYoutube.isNotEmpty;
 
+  VideoInfoData? get videoPlayerInfo => _audioHandler.videoPlayerInfo.value;
+  bool get videoInitialized => videoPlayerInfo?.isInitialized ?? false;
+
   VideoInfo? get currentVideoInfo => _audioHandler.currentVideoInfo.value;
   YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;
   VideoOnlyStream? get currentVideoStream => _audioHandler.currentVideoStream.value;
@@ -60,8 +65,8 @@ class Player {
   double get currentSpeed => _audioHandler.currentSpeed;
   Duration? get currentItemDuration => _audioHandler.currentItemDuration;
   bool get isPlaying => _audioHandler.isPlaying;
-  bool get isBuffering => _audioHandler.isBuffering;
-  bool get isLoading => _audioHandler.isLoading;
+  bool get isBuffering => _audioHandler.currentState == ProcessingState.buffering;
+  bool get isLoading => _audioHandler.currentState == ProcessingState.loading;
   bool get isFetchingInfo => _audioHandler.isFetchingInfo;
   bool get shouldShowLoadingIndicator => (isFetchingInfo && _audioHandler.currentCachedVideo.value == null) || isBuffering || isLoading;
   Duration get buffered => _audioHandler.buffered;
@@ -102,6 +107,11 @@ class Player {
         return imagePath != null ? File(imagePath).statSync().toString() : '';
       },
     );
+    _audioHandler.videoPlayerInfo.listen((info) {
+      if (info == null) return;
+      if (info.width == -1 || info.height == -1) return;
+      NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
+    });
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
     AudioService.notificationClicked.listen((clicked) {
@@ -182,14 +192,6 @@ class Player {
 
   void resetSleepAfterTimer() {
     _audioHandler.resetSleepAfterTimer();
-  }
-
-  Future<void> toggleVideoPlay() async {
-    await _audioHandler.toggleVideoPlay();
-  }
-
-  Future<void> refreshVideoSeekPosition({bool delayed = false}) async {
-    await _audioHandler.refreshVideoPosition(delayed);
   }
 
   Future<void> setVolume(double volume) async {
@@ -344,7 +346,7 @@ class Player {
 
   Future<void> play() async {
     await _audioHandler.play();
-    settings.wakelockMode.value.toggleOn(VideoController.vcontroller.isInitialized);
+    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
   }
 
   Future<void> playRaw() async {
@@ -444,5 +446,15 @@ class Player {
       shuffle: shuffle,
       onAssigningCurrentItem: onAssigningCurrentItem,
     );
+  }
+
+  // ------- video -------
+
+  Future<void> setVideo({required String source, String cacheKey = '', bool loopingAnimation = false}) async {
+    await _audioHandler.setVideoSource(source: source, cacheKey: cacheKey, loopingAnimation: loopingAnimation);
+  }
+
+  Future<void> disposeVideo() async {
+    await _audioHandler.setVideo(null);
   }
 }

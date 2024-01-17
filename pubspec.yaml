@@ -12,7 +12,12 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: 1de0a3d597a20f9464fa36740a76e8c534d2200f
+      ref: fa35f7764425e9c25d577a6912457a2cc6d6d516
+  just_audio_platform_interface:
+    git:
+      url: https://github.com/MSOB7YY/just_audio
+      path: just_audio_platform_interface/
+      ref: 25c12dfec430ba740743789275cf5d415ae63d2f
   archive: ^3.3.8
   intl: ^0.18.0
 
@@ -56,10 +61,6 @@ dependencies:
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
-  picture_in_picture:
-    git:
-      url: https://github.com/MSOB7YY/picture_in_picture
-      ref: 8b1927af4781cb4a3b5e828053d42f404c79b947
   flutter_volume_controller: ^1.3.0
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1
@@ -76,7 +77,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: d507797ff4ebd37b05784cb962842b0e86f9170c
+      ref: 25c12dfec430ba740743789275cf5d415ae63d2f
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -90,7 +91,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: f87612f9a6cfec48ee9f6b19b85da995b17274ee
+      ref: ced2c09202bf858a0ca9f2d79d699653b9327219
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
@@ -98,11 +99,6 @@ dependencies:
       ref: 69c7653e4b04ff24e657bee7b8706838e93303d7
 
   # ---- Video Indexing & Playback ----
-  video_player:
-    git:
-      url: https://github.com/MSOB7YY/video_player_cache
-      path: video_player/
-      ref: ebd92a98f08f92ffa9daa080dcd6796785e12ad7
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
   newpipeextractor_dart:
     git:

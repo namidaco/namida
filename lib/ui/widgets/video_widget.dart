@@ -10,6 +10,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -25,7 +26,6 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaVideoControls extends StatefulWidget {
-  final Widget? child;
   final bool showControls;
   final VoidCallback? onMinimizeTap;
   final bool isFullScreen;
@@ -35,7 +35,6 @@ class NamidaVideoControls extends StatefulWidget {
   const NamidaVideoControls({
     super.key,
     required this.widgetKey,
-    required this.child,
     required this.showControls,
     required this.onMinimizeTap,
     required this.isFullScreen,
@@ -71,7 +70,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   void setControlsVisibily(bool visible, {bool maintainStatusBar = true}) {
-    if (visible && VideoController.vcontroller.isInPip) return; // dont show if in pip
+    if (visible && NamidaChannel.inst.isInPip.value) return; // dont show if in pip
     if (visible == _isVisible) return;
     if (mounted) setState(() => _isVisible = visible);
 
@@ -434,7 +433,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   bool _isPointerDown = false;
 
   bool get _showLoadingIndicator {
-    final isLoading = Player.inst.isBuffering || Player.inst.isLoading || VideoController.vcontroller.isBuffering;
+    final isLoading = Player.inst.isBuffering || Player.inst.isLoading;
     return isLoading && !Player.inst.isPlaying;
   }
 
@@ -599,22 +598,25 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             Stack(
               alignment: Alignment.center,
               children: [
-                Obx(
-                  () => VideoController.vcontroller.isInitialized
+                Obx(() {
+                  final info = Player.inst.videoPlayerInfo;
+                  return info != null && info.isInitialized
                       ? NamidaAspectRatio(
-                          aspectRatio: VideoController.vcontroller.aspectRatio,
-                          child: AnimatedScale(
-                            duration: const Duration(milliseconds: 200),
-                            scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
-                            child: widget.child ?? fallbackChild,
+                          aspectRatio: info.aspectRatio,
+                          child: Obx(
+                            () => AnimatedScale(
+                              duration: const Duration(milliseconds: 200),
+                              scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
+                              child: Texture(textureId: info.textureId),
+                            ),
                           ),
                         )
                       : SizedBox(
                           height: context.height,
                           width: context.height * 16 / 9,
                           child: fallbackChild,
-                        ),
-                ),
+                        );
+                })
               ],
             ),
             // ---- Brightness Mask -----
@@ -873,7 +875,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                           onPlay: (isSelected) {
                                             // sometimes video is not initialized so we need the second check
-                                            if (!isSelected || !VideoController.vcontroller.isInitialized) {
+                                            if (!isSelected || !Player.inst.videoInitialized) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(
                                                 stream: null,
                                                 cachedFile: File(element.path),
@@ -891,7 +893,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ...ytQualities.map((element) {
                                       return Obx(
                                         () {
-                                          final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution;
+                                          final isSelected = element.height == Player.inst.currentVideoStream?.height;
                                           final id = Player.inst.nowPlayingVideoID?.id;
                                           final cachedFile = id == null ? null : element.getCachedFile(id);
                                           return _getQualityChip(
@@ -988,8 +990,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 () {
                                   final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
                                   final durMS = playerDuration.inMilliseconds;
-                                  final videoBuffered = VideoController.vcontroller.buffered ?? Duration.zero;
-                                  final audioBuffered = Player.inst.buffered;
+                                  final buffered = Player.inst.buffered;
                                   final videoCached = Player.inst.currentCachedVideo != null;
                                   final audioCached = Player.inst.currentCachedAudio != null;
                                   final currentPositionMS = Player.inst.nowPlayingPosition;
@@ -1061,28 +1062,37 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                         );
                                                       },
                                                     ),
-                                                    // -- video buffer
-                                                    if (videoCached || (videoBuffered > Duration.zero && durMS > 0))
+                                                    // -- buffer, display full only if (both video & audio cached) or (audio cached & audioOnlyPlayback)
+                                                    if ((videoCached && audioCached) || (audioCached && Player.inst.isAudioOnlyPlayback))
                                                       _SliderContainer(
                                                         key: Key("${sliderKey}_2"),
                                                         colorScheme: colorScheme,
                                                         constraints: constraints,
-                                                        percentage: videoCached ? 1.0 : videoBuffered.inMilliseconds / durMS,
-                                                        alpha: 80,
+                                                        percentage: 1.0,
+                                                        alpha: 60,
                                                         displayIndicator: true,
-                                                      ),
-                                                    // -- audio buffer
-                                                    if (audioCached || (audioBuffered > Duration.zero && durMS > 0))
+                                                      )
+                                                    else if (buffered > Duration.zero && durMS > 0)
                                                       _SliderContainer(
                                                         key: Key("${sliderKey}_3"),
                                                         colorScheme: colorScheme,
                                                         constraints: constraints,
-                                                        percentage: audioCached ? 1.0 : audioBuffered.inMilliseconds / durMS,
+                                                        percentage: buffered.inMilliseconds / durMS,
                                                         alpha: 60,
                                                         displayIndicator: true,
                                                       ),
+                                                    // -- cached full slider
+                                                    if (videoCached || audioCached)
+                                                      _SliderContainer(
+                                                        key: Key("${sliderKey}_4"),
+                                                        colorScheme: colorScheme,
+                                                        constraints: constraints,
+                                                        percentage: 1.0,
+                                                        alpha: 50,
+                                                        displayIndicator: true,
+                                                      ),
                                                     _SliderContainer(
-                                                      key: Key("${sliderKey}_4"),
+                                                      key: Key("${sliderKey}_5"),
                                                       colorScheme: colorScheme,
                                                       constraints: constraints,
                                                       percentage: 1.0,
@@ -1414,7 +1424,7 @@ class _SliderContainer extends StatelessWidget {
     return Container(
       alignment: Alignment.centerRight,
       height: 5.0,
-      width: constraints.maxWidth * percentage,
+      width: constraints.maxWidth * percentage.clamp(0, 1),
       decoration: BoxDecoration(
         color: Color.alphaBlend(Colors.white.withOpacity(0.3), colorScheme).withAlpha(alpha),
         borderRadius: BorderRadius.circular(6.0.multipliedRadius),

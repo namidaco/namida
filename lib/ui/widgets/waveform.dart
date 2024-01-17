@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/controller/lifecycle_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -52,12 +52,12 @@ class _WaveformComponentState extends State<WaveformComponent> {
     super.initState();
 
     // -- to refresh after coming resuming app
-    LifeCycleController.inst.addOnResume('waveform', WaveformController.inst.calculateUIWaveform);
+    NamidaChannel.inst.addOnResume('waveform', WaveformController.inst.calculateUIWaveform);
   }
 
   @override
   void dispose() {
-    LifeCycleController.inst.removeOnResume('waveform');
+    NamidaChannel.inst.removeOnResume('waveform');
     super.dispose();
   }
 

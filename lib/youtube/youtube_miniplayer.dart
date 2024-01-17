@@ -883,7 +883,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                 // constant [2]
                 Obx(
                   () {
-                    final isLoading = Player.inst.shouldShowLoadingIndicator || VideoController.vcontroller.isBuffering;
+                    final isLoading = Player.inst.shouldShowLoadingIndicator;
                     return Stack(
                       alignment: Alignment.center,
                       children: [
