@@ -9,6 +9,12 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
 
+/// this exists as a workaround for using pip widget height instead of device real height.
+/// using split screen might make this buggy.
+///
+/// another possible workaround is to wait until activity gets resized, but we dont know exact numbers.
+double _maxHeight = 0;
+
 class NamidaYTMiniplayer extends StatefulWidget {
   final double minHeight, maxHeight, bottomMargin;
   final Widget Function(double height, double percentage, List<Widget> constantChildren) builder;
@@ -47,27 +53,48 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   @override
   void initState() {
     super.initState();
+    if (_maxHeight < widget.maxHeight) _maxHeight = widget.maxHeight;
+
     controller = widget.animationController ??
         AnimationController(
           vsync: this,
           duration: Duration.zero,
           lowerBound: 0,
           upperBound: 1,
+          value: _wasExpanded ? 1.0 : widget.minHeight / _maxHeight,
         );
-    controller.addListener(() {
-      widget.onHeightChange?.call(percentage);
-      if (widget.onDismissing != null) {
-        if (controllerHeight <= widget.minHeight) {
-          widget.onDismissing!(dismissPercentage);
-        }
-      }
-    });
-    animateToState(_wasExpanded, dur: Duration.zero);
+
+    if (widget.onHeightChange != null) {
+      controller.addListener(_listenerHeightChange);
+    }
+    if (widget.onDismissing != null) {
+      controller.addListener(_listenerDismissing);
+    }
+
+    _dragheight = _wasExpanded ? _maxHeight : widget.minHeight;
+
+    if (_wasExpanded) {
+      _toggleWakelockOn();
+    } else {
+      _toggleWakelockOff();
+    }
+  }
+
+  void _listenerHeightChange() {
+    widget.onHeightChange!(percentage);
+  }
+
+  void _listenerDismissing() {
+    if (controllerHeight <= widget.minHeight) {
+      widget.onDismissing!(dismissPercentage);
+    }
   }
 
   @override
   void dispose() {
     controller.dispose();
+    controller.removeListener(_listenerHeightChange);
+    controller.removeListener(_listenerDismissing);
     super.dispose();
   }
 
