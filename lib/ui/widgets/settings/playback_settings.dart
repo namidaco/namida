@@ -530,12 +530,37 @@ class PlaybackSettings extends SettingSubpageProvider {
               ),
             ),
             Obx(
-              () => CustomSwitchListTile(
-                icon: Broken.play_circle,
-                title: lang.RESUME_IF_WAS_PAUSED_BY_VOLUME,
-                onChanged: (value) => settings.save(playerResumeAfterOnVolume0Pause: !value),
-                value: settings.playerResumeAfterOnVolume0Pause.value,
-              ),
+              () {
+                final valInSet = settings.volume0ResumeThresholdMin.value;
+                final disabled = !settings.playerResumeAfterOnVolume0Pause.value;
+                const max = 61;
+                return CustomListTile(
+                  icon: Broken.play_circle,
+                  title: disabled
+                      ? lang.DONT_RESUME
+                      : valInSet == 0
+                          ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
+                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.volume0ResumeThresholdMin.value}"),
+                  trailing: NamidaWheelSlider<int>(
+                    totalCount: max,
+                    initValue: valInSet,
+                    itemSize: 2,
+                    squeeze: 0.4,
+                    onValueChanged: (val) {
+                      if (val == max) {
+                        settings.save(playerResumeAfterOnVolume0Pause: false);
+                      } else {
+                        settings.save(playerResumeAfterOnVolume0Pause: true, volume0ResumeThresholdMin: val);
+                      }
+                    },
+                    text: disabled
+                        ? lang.NEVER
+                        : valInSet == 0
+                            ? lang.ALWAYS
+                            : "${valInSet}m",
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -593,12 +618,37 @@ class PlaybackSettings extends SettingSubpageProvider {
             ),
             const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
             Obx(
-              () => CustomSwitchListTile(
-                icon: Broken.play_circle,
-                value: settings.playerResumeAfterWasInterrupted.value,
-                onChanged: (isTrue) => settings.save(playerResumeAfterWasInterrupted: !isTrue),
-                title: lang.RESUME_IF_WAS_INTERRUPTED,
-              ),
+              () {
+                final valInSet = settings.interruptionResumeThresholdMin.value;
+                final disabled = !settings.playerResumeAfterWasInterrupted.value;
+                const max = 61;
+                return CustomListTile(
+                  icon: Broken.play_circle,
+                  title: disabled
+                      ? lang.DONT_RESUME
+                      : valInSet == 0
+                          ? lang.RESUME_IF_WAS_INTERRUPTED
+                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.interruptionResumeThresholdMin.value}"),
+                  trailing: NamidaWheelSlider<int>(
+                    totalCount: max,
+                    initValue: valInSet,
+                    itemSize: 2,
+                    squeeze: 0.4,
+                    onValueChanged: (val) {
+                      if (val == max) {
+                        settings.save(playerResumeAfterWasInterrupted: false);
+                      } else {
+                        settings.save(playerResumeAfterWasInterrupted: true, interruptionResumeThresholdMin: val);
+                      }
+                    },
+                    text: disabled
+                        ? lang.NEVER
+                        : valInSet == 0
+                            ? lang.ALWAYS
+                            : "${valInSet}m",
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 6.0),
           ],

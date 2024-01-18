@@ -145,6 +145,8 @@ class SettingsController {
   final RxInt playerPlayFadeDurInMilli = 300.obs;
   final RxInt playerPauseFadeDurInMilli = 300.obs;
   final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
+  final RxInt interruptionResumeThresholdMin = 2.obs;
+  final RxInt volume0ResumeThresholdMin = 5.obs;
   final RxBool enableCrossFade = true.obs;
   final RxInt crossFadeDurationMS = 500.obs;
   final RxInt crossFadeAutoTriggerSeconds = 5.obs;
@@ -431,6 +433,8 @@ class SettingsController {
       playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
       playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
+      interruptionResumeThresholdMin.value = json['interruptionResumeThresholdMin'] ?? interruptionResumeThresholdMin.value;
+      volume0ResumeThresholdMin.value = json['volume0ResumeThresholdMin'] ?? volume0ResumeThresholdMin.value;
       enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
       crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
       crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
@@ -661,6 +665,8 @@ class SettingsController {
       'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
       'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
       'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
+      'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
+      'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
       'enableCrossFade': enableCrossFade.value,
       'crossFadeDurationMS': crossFadeDurationMS.value,
       'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
@@ -855,6 +861,8 @@ class SettingsController {
     int? playerPlayFadeDurInMilli,
     int? playerPauseFadeDurInMilli,
     int? minTrackDurationToRestoreLastPosInMinutes,
+    int? interruptionResumeThresholdMin,
+    int? volume0ResumeThresholdMin,
     bool? enableCrossFade,
     int? crossFadeDurationMS,
     int? crossFadeAutoTriggerSeconds,
@@ -1283,6 +1291,12 @@ class SettingsController {
     }
     if (minTrackDurationToRestoreLastPosInMinutes != null) {
       this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
+    }
+    if (interruptionResumeThresholdMin != null) {
+      this.interruptionResumeThresholdMin.value = interruptionResumeThresholdMin;
+    }
+    if (volume0ResumeThresholdMin != null) {
+      this.volume0ResumeThresholdMin.value = volume0ResumeThresholdMin;
     }
     if (enableCrossFade != null) {
       this.enableCrossFade.value = enableCrossFade;

@@ -1157,6 +1157,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   InterruptionAction get onBecomingNoisyEventStream => InterruptionAction.pause;
 
+  @override
+  Duration get defaultInterruptionResumeThreshold => Duration(minutes: settings.interruptionResumeThresholdMin.value);
+
+  @override
+  Duration get defaultVolume0ResumeThreshold => Duration(minutes: settings.volume0ResumeThresholdMin.value);
+
   // ------------------------------------------------------------
 
   Future<void> togglePlayPause() async {

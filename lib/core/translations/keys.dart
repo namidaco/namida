@@ -157,6 +157,7 @@ abstract class LanguageKeys {
   String get DONE => _getKey('DONE');
   String get DONT_ASK_AGAIN => _getKey('DONT_ASK_AGAIN');
   String get DONT_RESTORE_POSITION => _getKey('DONT_RESTORE_POSITION');
+  String get DONT_RESUME => _getKey('DONT_RESUME');
   String get DOUBLE_TAP_TO_TOGGLE_LYRICS => _getKey('DOUBLE_TAP_TO_TOGGLE_LYRICS');
   String get DOWNLOAD => _getKey('DOWNLOAD');
   String get DOWNLOADING_WILL_OVERRIDE_IT => _getKey('DOWNLOADING_WILL_OVERRIDE_IT');
@@ -489,6 +490,7 @@ abstract class LanguageKeys {
   String get RESUME => _getKey('RESUME');
   String get RESUME_IF_WAS_INTERRUPTED => _getKey('RESUME_IF_WAS_INTERRUPTED');
   String get RESUME_IF_WAS_PAUSED_BY_VOLUME => _getKey('RESUME_IF_WAS_PAUSED_BY_VOLUME');
+  String get RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN => _getKey('RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN');
   String get REVERSE_ORDER => _getKey('REVERSE_ORDER');
   String get SAME_DIRECTORY_ONLY => _getKey('SAME_DIRECTORY_ONLY');
   String get SAMPLE_RATE => _getKey('SAMPLE_RATE');
