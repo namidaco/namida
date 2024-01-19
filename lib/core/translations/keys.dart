@@ -24,6 +24,7 @@ abstract class LanguageKeys {
   String get ADVANCED_SETTINGS_SUBTITLE => _getKey('ADVANCED_SETTINGS_SUBTITLE');
   String get ADVANCED_SETTINGS => _getKey('ADVANCED_SETTINGS');
   String get ADVANCED => _getKey('ADVANCED');
+  String get ALARM => _getKey('ALARM');
   String get ALBUM_ARTIST => _getKey('ALBUM_ARTIST');
   String get ALBUM_ARTISTS => _getKey('ALBUM_ARTISTS');
   String get ALBUM_IDENTIFIERS => _getKey('ALBUM_IDENTIFIERS');
@@ -367,6 +368,7 @@ abstract class LanguageKeys {
   String get NEW_TRACKS_SIMILARR_RELEASE_DATE => _getKey('NEW_TRACKS_SIMILARR_RELEASE_DATE');
   String get NEW_TRACKS_UNKNOWN_YEAR => _getKey('NEW_TRACKS_UNKNOWN_YEAR');
   String get NEXT => _getKey('NEXT');
+  String get NOTIFICATION => _getKey('NOTIFICATION');
   String get NO_CHANGES_FOUND => _getKey('NO_CHANGES_FOUND');
   String get NO_ENOUGH_TRACKS => _getKey('NO_ENOUGH_TRACKS');
   String get NO_EXCLUDED_FOLDERS => _getKey('NO_EXCLUDED_FOLDERS');
@@ -492,6 +494,7 @@ abstract class LanguageKeys {
   String get RESUME_IF_WAS_PAUSED_BY_VOLUME => _getKey('RESUME_IF_WAS_PAUSED_BY_VOLUME');
   String get RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN => _getKey('RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN');
   String get REVERSE_ORDER => _getKey('REVERSE_ORDER');
+  String get RINGTONE => _getKey('RINGTONE');
   String get SAME_DIRECTORY_ONLY => _getKey('SAME_DIRECTORY_ONLY');
   String get SAMPLE_RATE => _getKey('SAMPLE_RATE');
   String get SAVE => _getKey('SAVE');
@@ -507,6 +510,7 @@ abstract class LanguageKeys {
   String get SEPARATORS_BLACKLIST_SUBTITLE => _getKey('SEPARATORS_BLACKLIST_SUBTITLE');
   String get SEPARATORS_MESSAGE => _getKey('SEPARATORS_MESSAGE');
   String get SETUP_FIRST_STARTUP => _getKey('SETUP_FIRST_STARTUP');
+  String get SET_AS => _getKey('SET_AS');
   String get SET_AS_DEFAULT => _getKey('SET_AS_DEFAULT');
   String get SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE => _getKey('SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE');
   String get SET_MOODS_SUBTITLE => _getKey('SET_MOODS_SUBTITLE');

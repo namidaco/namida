@@ -344,3 +344,9 @@ enum YTHomePages {
   playlists,
   downloads,
 }
+
+enum SetMusicAsAction {
+  ringtone,
+  notification,
+  alarm,
+}

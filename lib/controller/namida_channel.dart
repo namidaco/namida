@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
+
 /// The new flutter update, calls AppLifecycleState.inactive whenever the app
 /// loses focus, like swiping notification center, not ideal for what we need.
 /// so we use a method channel whenever `onUserLeaveHint`, etc is called from FlutterActivity
@@ -44,6 +47,16 @@ class NamidaChannel {
   Future<int> getPlatformSdk() async {
     final version = await _channel.invokeMethod<int?>('sdk');
     return version ?? 0;
+  }
+
+  Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
+    final t = <int>[];
+    types.loop((e, index) {
+      final n = _setMusicAsActionConverter[e];
+      if (n != null) t.add(n);
+    });
+    final res = await _channel.invokeMethod<bool?>('setMusicAs', {'path': path, 'types': t});
+    return res ?? false;
   }
 
   late final MethodChannel _channel;
@@ -96,4 +109,10 @@ class NamidaChannel {
   void removeOnSuspending(String key) {
     _onSuspending.remove(key);
   }
+
+  late final _setMusicAsActionConverter = {
+    SetMusicAsAction.alarm: 4,
+    SetMusicAsAction.notification: 2,
+    SetMusicAsAction.ringtone: 1,
+  };
 }

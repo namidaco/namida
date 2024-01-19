@@ -4,7 +4,10 @@ import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.Rational
 import android.widget.Toast
 import androidx.annotation.NonNull
@@ -13,6 +16,7 @@ import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 class NamidaMainActivity : FlutterActivity() {
   private val CHANNELNAME = "namida"
@@ -39,8 +43,7 @@ class NamidaMainActivity : FlutterActivity() {
             val durInSeconds = call.argument<Number?>("seconds")
             val duration = durInSeconds?.toInt() ?: 1
             val text = call.argument<String?>("text")
-            toast = Toast.makeText(context, text, duration)
-            toast?.show()
+            showToast(text, duration)
             result.success(true)
           } catch (e: Exception) {
             result.error("NAMIDA TOAST", "Error showing toast", e)
@@ -48,22 +51,54 @@ class NamidaMainActivity : FlutterActivity() {
           }
         }
         "cancelToast" -> {
-          toast?.cancel()
-          toast = null
+          cancelToast()
           result.success(true)
         }
         "setCanEnterPip" -> {
           val canEnter = call.argument<Boolean?>("canEnter")
           if (canEnter != null) canEnterPip = canEnter
+          result.success(null)
         }
         "updatePipRatio" -> {
-          if (isInPip()) updatePipRatio(call.argument<Int?>("width"), call.argument<Int?>("height"))
+          if (isInPip()) {
+            updatePipRatio(call.argument<Int?>("width"), call.argument<Int?>("height"))
+            result.success(true)
+          } else {
+            result.success(false)
+          }
+        }
+        "setMusicAs" -> {
+          val path = call.argument<String?>("path")
+          val types = call.argument<List<Int>?>("types")
+          if (path != null && types != null) {
+            result.success(setMusicAs(path, types, true))
+          } else {
+            result.success(false)
+          }
+        }
+        "getCurrentlySet" -> {
+          val type = call.argument<Int?>("type")
+          if (type != null) {
+            result.success(RingtoneController().getCurrentlySet(context, type))
+          } else {
+            result.success(null)
+          }
         }
         else -> result.notImplemented()
       }
     }
 
     pipEventChannel = BetterEventChannel(messenger, EVENTCHANNELNAME)
+  }
+
+  private fun showToast(text: String?, duration: Int) {
+    cancelToast()
+    toast = Toast.makeText(context, text, duration)
+    toast?.show()
+  }
+  private fun cancelToast() {
+    toast?.cancel()
+    toast = null
   }
 
   override fun provideFlutterEngine(@NonNull context: Context): FlutterEngine {
@@ -148,5 +183,85 @@ class NamidaMainActivity : FlutterActivity() {
     if (pipB == null) return
     pipB.setAspectRatio(Rational(width, height))
     activity.setPictureInPictureParams(pipB.build())
+  }
+
+  // ------- RINGTONE -------
+
+  private val REQUEST_CODE_WRITE_SETTINGS = 9696
+  private var SET_AS_LATEST_FILE_PATH: String? = null
+  private var SET_AS_LATEST_TYPES: List<Int>? = null
+
+  private fun setMusicAs(path: String, types: List<Int>, requestPermission: Boolean): Boolean {
+    val hasPermission = checkSystemWritePermission(path, types, requestPermission)
+    if (!hasPermission) return false
+
+    val successNames = ArrayList<String>()
+    for (type in types) {
+      val res = RingtoneController().setAsRingtoneOrNotification(context, File(path), type)
+      if (res != null) {
+        showToast("error setting: ${res.message}", 3)
+      } else {
+
+        val typeName =
+            when (type) {
+              RingtoneManager.TYPE_RINGTONE -> "ringtone"
+              RingtoneManager.TYPE_NOTIFICATION -> "notification"
+              RingtoneManager.TYPE_ALARM -> "alarm"
+              else -> ""
+            }
+        successNames.add(typeName)
+      }
+    }
+
+    if (successNames.size == types.size) {
+      val names = successNames.joinToString(separator = ", ")
+      showToast("successfully set as: ${names}", 3)
+      return true
+    } else {
+      return false
+    }
+  }
+
+  private fun checkSystemWritePermission(
+      path: String,
+      types: List<Int>,
+      requestPermission: Boolean
+  ): Boolean {
+    var hasPermission: Boolean = true
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      hasPermission = Settings.System.canWrite(this)
+      if (hasPermission) {
+        SET_AS_LATEST_FILE_PATH = null
+        SET_AS_LATEST_TYPES = null
+      } else if (requestPermission) {
+        SET_AS_LATEST_FILE_PATH = path
+        SET_AS_LATEST_TYPES = types
+        showToast("please allow modifying system settings permission", 3)
+        openAndroidPermissionsMenu()
+      }
+    }
+    return hasPermission
+  }
+
+  private fun openAndroidPermissionsMenu() {
+    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+    intent.data = Uri.parse("package:" + packageName)
+    startActivityForResult(intent, REQUEST_CODE_WRITE_SETTINGS)
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+
+    if (requestCode == REQUEST_CODE_WRITE_SETTINGS) {
+      if (Settings.System.canWrite(this)) {
+        if (SET_AS_LATEST_FILE_PATH != null && SET_AS_LATEST_TYPES != null) {
+          setMusicAs(SET_AS_LATEST_FILE_PATH!!, SET_AS_LATEST_TYPES!!, false)
+        }
+      } else {
+        showToast("Couldn't set, permission wasn't granted", 3)
+      }
+      SET_AS_LATEST_FILE_PATH = null
+      SET_AS_LATEST_TYPES = null
+    }
   }
 }

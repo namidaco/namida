@@ -515,6 +515,10 @@ extension FABTypeUtils on FABType {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension SetMusicAsActionUtils on SetMusicAsAction {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension TrackSearchFilterUtils on TrackSearchFilter {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -1453,6 +1457,11 @@ class _NamidaConverters {
         TrackSearchFilter.composer: lang.COMPOSER,
         TrackSearchFilter.comment: lang.COMMENT,
         TrackSearchFilter.year: lang.YEAR,
+      },
+      SetMusicAsAction: {
+        SetMusicAsAction.ringtone: lang.RINGTONE,
+        SetMusicAsAction.notification: lang.NOTIFICATION,
+        SetMusicAsAction.alarm: lang.ALARM,
       },
     };
 
