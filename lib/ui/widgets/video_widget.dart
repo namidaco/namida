@@ -78,9 +78,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       if (visible) {
         // -- show status bar
         NamidaNavigator.inst.setDefaultSystemUI();
+        NamidaNavigator.inst.setDefaultSystemUIOverlayStyle(semiTransparent: true);
       } else {
         // -- hide status bar
         if (widget.isFullScreen && mounted) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        NamidaNavigator.inst.setDefaultSystemUIOverlayStyle(semiTransparent: false);
       }
     }
   }

@@ -140,12 +140,19 @@ class NamidaNavigator {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
   }
 
-  void setDefaultsetSystemUIOverlayStyle() {
+  void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-      ),
+      semiTransparent
+          ? const SystemUiOverlayStyle(
+              statusBarColor: Colors.black45,
+              statusBarIconBrightness: Brightness.light,
+              systemNavigationBarColor: Colors.black45,
+              systemNavigationBarIconBrightness: Brightness.light,
+            )
+          : const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: Colors.transparent,
+            ),
     );
   }
 

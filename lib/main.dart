@@ -150,7 +150,7 @@ void main() async {
     NamidaNavigator.inst.setDefaultSystemUI(),
   ]);
 
-  NamidaNavigator.inst.setDefaultsetSystemUIOverlayStyle();
+  NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
   FlutterLocalNotificationsPlugin().cancelAll();
