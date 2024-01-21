@@ -98,6 +98,7 @@ abstract class LanguageKeys {
   String get CONFIGURE => _getKey('CONFIGURE');
   String get CONFIRM => _getKey('CONFIRM');
   String get COPIED_ARTWORK => _getKey('COPIED_ARTWORK');
+  String get COPIED_TO_CLIPBOARD => _getKey('COPIED_TO_CLIPBOARD');
   String get COPY => _getKey('COPY');
   String get CORRUPTED_FILE => _getKey('CORRUPTED_FILE');
   String get COULDNT_OPEN_YT_LINK => _getKey('COULDNT_OPEN_YT_LINK');

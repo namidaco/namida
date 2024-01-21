@@ -462,6 +462,7 @@ void snackyy({
   Color? leftBarIndicatorColor,
   Widget? button,
   bool? isError,
+  int? maxLinesMessage,
 }) {
   isError ??= title == lang.ERROR;
   Get.showSnackbar(
@@ -481,6 +482,8 @@ void snackyy({
       messageText: Text(
         message,
         style: title != '' ? Get.textTheme.displaySmall : Get.textTheme.displayMedium,
+        maxLines: maxLinesMessage,
+        overflow: TextOverflow.ellipsis,
       ),
       mainButton: button,
       margin: margin,

@@ -4,12 +4,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -315,6 +317,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 38.0, vertical: 32.0),
       title: lang.LYRICS,
       actions: [
         NamidaButton(
@@ -394,12 +397,33 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                                 children: [
                                   Icon(l.file == null ? Broken.document_download : Broken.document, size: 18.0),
                                   const SizedBox(width: 8.0),
-                                  Text(
-                                    cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
-                                    style: Get.textTheme.displayMedium,
+                                  Expanded(
+                                    child: Text(
+                                      cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
+                                      style: Get.textTheme.displayMedium,
+                                    ),
                                   ),
+                                  NamidaIconButton(
+                                    horizontalPadding: 0.0,
+                                    tooltip: lang.COPY,
+                                    icon: Broken.copy,
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      final text = l.lyrics;
+                                      Clipboard.setData(ClipboardData(text: text));
+                                      snackyy(
+                                        title: lang.COPIED_TO_CLIPBOARD,
+                                        message: text.replaceAll('\n', ' '),
+                                        maxLinesMessage: 2,
+                                        leftBarIndicatorColor: CurrentColor.inst.color,
+                                        margin: EdgeInsets.zero,
+                                        top: false,
+                                        borderRadius: 0,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: 6.0),
                                   if (l.file != null) ...[
-                                    const Spacer(),
                                     if (l.synced && !l.fromInternet)
                                       NamidaIconButton(
                                         horizontalPadding: 0.0,
@@ -409,7 +433,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                                           showEditCachedSyncedTimeOffsetDialog(l);
                                         },
                                       ),
-                                    const SizedBox(width: 8.0),
+                                    const SizedBox(width: 6.0),
                                     NamidaIconButton(
                                       horizontalPadding: 0.0,
                                       icon: Broken.trash,
