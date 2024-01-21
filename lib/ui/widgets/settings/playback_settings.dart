@@ -711,14 +711,13 @@ class PlaybackSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
               icon: Broken.refresh_left_square,
               title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
-              trailing: NamidaWheelSlider(
+              trailing: NamidaWheelSlider<int>(
                 totalCount: max,
-                initValue: valInSet,
+                initValue: valInSet >= -1 ? max : valInSet,
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {
-                  final v = (val) as int;
-                  settings.save(minTrackDurationToRestoreLastPosInMinutes: v >= max ? -1 : v);
+                  settings.save(minTrackDurationToRestoreLastPosInMinutes: val >= max ? -1 : val);
                 },
                 text: valInSet == 0
                     ? lang.ALWAYS_RESTORE
