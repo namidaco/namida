@@ -33,30 +33,16 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
   final localLRCFiles = Lyrics.inst.lyricsFilesDevice(track);
 
   if (embedded != '') {
-    try {
-      embedded.toLrc();
-      availableLyrics.add(
-        LyricsModel(
-          lyrics: embedded,
-          synced: true,
-          fromInternet: false,
-          isInCache: false,
-          file: null,
-          isEmbedded: true,
-        ),
-      );
-    } catch (_) {
-      availableLyrics.add(
-        LyricsModel(
-          lyrics: embedded,
-          synced: false,
-          fromInternet: false,
-          isInCache: false,
-          file: null,
-          isEmbedded: true,
-        ),
-      );
-    }
+    availableLyrics.add(
+      LyricsModel(
+        lyrics: embedded,
+        synced: embedded.parseLRC() != null,
+        fromInternet: false,
+        isInCache: false,
+        file: null,
+        isEmbedded: true,
+      ),
+    );
   }
   if (cachedTxt.existsSync()) {
     availableLyrics.add(
@@ -130,10 +116,10 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
   void showEditCachedSyncedTimeOffsetDialog(LyricsModel l) async {
     Lrc? lrc;
     int offsetMS = 0;
-    try {
-      lrc = l.lyrics.toLrc();
-      offsetMS = lrc.offset ?? 0;
-    } catch (_) {}
+
+    lrc = l.lyrics.parseLRC();
+    offsetMS = lrc?.offset ?? 0;
+
     final newOffset = offsetMS.obs;
     Timer? timer;
     void updatey(bool increase) {

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_extensions/dart_extensions.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -18,6 +19,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/packages/lyrics_parser/parser_smart.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 export 'package:dart_extensions/dart_extensions.dart';
@@ -337,6 +339,29 @@ extension TitleAndArtistUtils on String {
       res = res.substring(0, res.length - 2);
     }
     return res.trim();
+  }
+}
+
+extension LRCParsingUtils on String {
+  Lrc? parseLRC() {
+    try {
+      return toLrc();
+    } catch (_) {
+      try {
+        final res = LRCParserSmart(this).parseLines();
+        final lines = res
+            .map(
+              (e) => LrcLine(
+                timestamp: e.timeStamp ?? Duration.zero,
+                lyrics: e.mainText ?? '',
+                type: LrcTypes.simple,
+              ),
+            )
+            .toList();
+        return Lrc(lyrics: lines);
+      } catch (_) {}
+    }
+    return null;
   }
 }
 

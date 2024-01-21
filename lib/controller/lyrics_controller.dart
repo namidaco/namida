@@ -50,11 +50,11 @@ class Lyrics {
     final embedded = track.lyrics;
 
     if (settings.prioritizeEmbeddedLyrics.value && embedded != '') {
-      try {
-        final lrc = embedded.toLrc();
+      final lrc = embedded.parseLRC();
+      if (lrc != null) {
         currentLyricsLRC.value = lrc;
         _updateWidgets(lrc);
-      } catch (e) {
+      } else {
         currentLyricsText.value = embedded;
       }
       return;
@@ -111,11 +111,7 @@ class Lyrics {
 
     Future<Lrc?> parseLRCFile(File file) async {
       final content = await file.readAsString();
-      try {
-        return content.toLrc();
-      } catch (_) {
-        return null;
-      }
+      return content.parseLRC();
     }
 
     Lrc? lrc;
@@ -133,9 +129,7 @@ class Lyrics {
       if (await fc.existsAndValid()) {
         lrc = await parseLRCFile(fc);
       } else if (trackLyrics != '') {
-        try {
-          lrc = trackLyrics.toLrc();
-        } catch (_) {}
+        lrc = trackLyrics.parseLRC();
       }
     }
 
@@ -164,7 +158,7 @@ class Lyrics {
 
       final text = lyrics.firstOrNull?.lyrics;
       if (text != null) await fc.writeAsString(text);
-      return text?.toLrc();
+      return text?.parseLRC();
     }
     return lrc;
   }
