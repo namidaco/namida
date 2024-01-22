@@ -90,7 +90,7 @@ class YTLocalSearchController {
     isLoadingLookupLists.value = false;
   }
 
-  static void _prepareResourcesAndSearch(Map params) {
+  static void _prepareResourcesAndSearch(Map params) async {
     final tempStreamInfo = params['tempStreamInfo'] as Map<String, StreamInfoItem>;
     final dirStreamInfo = params['dirStreamInfo'] as String;
     final dirVideoInfo = params['dirVideoInfo'] as String;
@@ -230,30 +230,41 @@ class YTLocalSearchController {
       lookupItemAvailable[id] = (list: 1, index: lookupListStreamInfo.length - 1);
     }
 
-    Directory(dirStreamInfo).listSyncSafe().loop((file, _) {
-      try {
-        final res = (file as File).readAsJsonSync();
-        if (res != null) {
-          final id = res['id'];
-          if (id != null && lookupItemAvailable[id] == null) {
-            lookupListStreamInfoMap.add(res);
-            lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
+    final completer1 = Completer<void>();
+    final completer2 = Completer<void>();
+
+    Directory(dirStreamInfo).listAllIsolate().then((value) {
+      value.loop((file, _) {
+        try {
+          final res = (file as File).readAsJsonSync();
+          if (res != null) {
+            final id = res['id'];
+            if (id != null && lookupItemAvailable[id] == null) {
+              lookupListStreamInfoMap.add(res);
+              lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      });
+      completer1.complete();
     });
-    Directory(dirVideoInfo).listSyncSafe().loop((file, _) {
-      try {
-        final res = (file as File).readAsJsonSync();
-        if (res != null) {
-          final id = res['id'];
-          if (id != null && lookupItemAvailable[id] == null) {
-            lookupListVideoInfoMap.add(res.cast());
-            lookupItemAvailable[id] = (list: 3, index: lookupListVideoInfoMap.length - 1);
+    Directory(dirVideoInfo).listAllIsolate().then((value) {
+      value.loop((file, _) {
+        try {
+          final res = (file as File).readAsJsonSync();
+          if (res != null) {
+            final id = res['id'];
+            if (id != null && lookupItemAvailable[id] == null) {
+              lookupListVideoInfoMap.add(res.cast());
+              lookupItemAvailable[id] = (list: 3, index: lookupListVideoInfoMap.length - 1);
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      });
+      completer2.complete();
     });
+    await completer1.future;
+    await completer2.future;
     for (final id in tempBackupYTVH.keys) {
       if (lookupItemAvailable[id] == null) {
         final val = tempBackupYTVH[id]!;

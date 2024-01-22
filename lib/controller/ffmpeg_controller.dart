@@ -206,7 +206,7 @@ class NamidaFFMPEG {
     final dirFiles = <FileSystemEntity>[];
 
     for (final d in dirs) {
-      dirFiles.addAll(Directory(d).listSyncSafe(recursive: recursive));
+      dirFiles.addAll(await Directory(d).listAllIsolate(recursive: recursive));
     }
 
     dirFiles.retainWhere((element) => element is File);
@@ -238,7 +238,7 @@ class NamidaFFMPEG {
     if (!await requestManageStoragePermission()) return;
 
     final dio = Dio();
-    final allFiles = Directory(directoryPath).listSyncSafe(recursive: recursive);
+    final allFiles = await Directory(directoryPath).listAllIsolate(recursive: recursive);
     final totalFilesLength = allFiles.length;
     int currentProgress = 0;
     int currentFailed = 0;

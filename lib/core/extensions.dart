@@ -429,6 +429,28 @@ extension DirectoryUtils on Directory {
       return [];
     }
   }
+
+  Future<List<FileSystemEntity>> listAllIsolate({bool recursive = false, bool followLinks = true}) async {
+    try {
+      final params = {
+        'dirPath': path,
+        'recursive': recursive,
+        'followLinks': followLinks,
+      };
+      final res = await compute(_listAllIsolate, params);
+      return res;
+    } catch (e) {
+      printy(e, isError: true);
+      return [];
+    }
+  }
+}
+
+List<FileSystemEntity> _listAllIsolate(Map params) {
+  final dirPath = params['dirPath'] as String;
+  final recursive = params['recursive'] as bool;
+  final followLinks = params['followLinks'] as bool;
+  return Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks);
 }
 
 extension FileUtils on File {

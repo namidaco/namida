@@ -150,25 +150,37 @@ class YoutubeController {
     if (res.$2.isNotEmpty) tempChannelInfo = res.$2;
   }
 
-  static (Map<String, VideoInfo?> mv, Map<String, YoutubeChannel?> mc) _loadInfoToMemoryIsolate((String pv, String pc) paths) {
+  static Future<(Map<String, VideoInfo?>, Map<String, YoutubeChannel?>)> _loadInfoToMemoryIsolate((String pv, String pc) paths) async {
     final mv = <String, VideoInfo?>{};
     final mc = <String, YoutubeChannel?>{};
-    Directory(paths.$1).listSyncSafe().loop((e, index) {
-      if (e is File) {
-        try {
-          final map = e.readAsJsonSync();
-          mv[e.path.getFilenameWOExt] = VideoInfo.fromMap(map);
-        } catch (_) {}
-      }
+
+    final completer1 = Completer<void>();
+    final completer2 = Completer<void>();
+
+    Directory(paths.$1).listAllIsolate().then((value) {
+      value.loop((e, index) {
+        if (e is File) {
+          try {
+            final map = e.readAsJsonSync();
+            mv[e.path.getFilenameWOExt] = VideoInfo.fromMap(map);
+          } catch (_) {}
+        }
+      });
+      completer1.complete();
     });
-    Directory(paths.$2).listSyncSafe().loop((e, index) {
-      if (e is File) {
-        try {
-          final map = e.readAsJsonSync();
-          mc[e.path.getFilenameWOExt] = YoutubeChannel.fromMap(map);
-        } catch (_) {}
-      }
+    Directory(paths.$2).listAllIsolate().then((value) {
+      value.loop((e, index) {
+        if (e is File) {
+          try {
+            final map = e.readAsJsonSync();
+            mc[e.path.getFilenameWOExt] = YoutubeChannel.fromMap(map);
+          } catch (_) {}
+        }
+      });
+      completer2.complete();
     });
+    await completer1.future;
+    await completer2.future;
     return (mv, mc);
   }
 
