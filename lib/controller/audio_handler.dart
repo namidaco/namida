@@ -635,11 +635,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
-  bool _nextSeekCanSetAudioCache = false;
+  File? _nextSeekSetAudioCache;
 
   /// Adds Cached File to [audioCacheMap] & writes metadata.
   Future<void> _onAudioCacheDone(String videoId, File? audioCacheFile) async {
-    _nextSeekCanSetAudioCache = true;
+    _nextSeekSetAudioCache = audioCacheFile;
     // -- Audio handling
     final prevAudioStream = currentAudioStream.value;
     final prevAudioBitrate = prevAudioStream?.bitrate ?? currentCachedAudio.value?.bitrate;
@@ -694,7 +694,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentCachedAudio.value = null;
     _isCurrentAudioFromCache = false;
     _isFetchingInfo.value = false;
-    _nextSeekCanSetAudioCache = false;
+    _nextSeekSetAudioCache = null;
 
     refreshNotification(pi, currentVideoInfo.value);
 
@@ -938,26 +938,32 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (cachedVideo != null && cachedAudio != null && !disableVideo) {
       // -- play audio & video
       await whatToAwait();
-      setAudioSource(
-        AudioSource.file(cachedAudio.file.path, tag: mediaItem),
-        startPlaying: startPlaying,
-        videoOptions: VideoOptions(
-          source: cachedVideo.path,
-          enableCaching: true,
-          cacheKey: '',
-          cacheDirectory: _defaultCacheDirectory,
-          maxTotalCacheSize: _defaultMaxCache,
-        ),
-      );
-      final audioDetails = AudioCacheDetails(
-        youtubeId: item.id,
-        bitrate: cachedAudio.bitrate,
-        langaugeCode: cachedAudio.langaugeCode,
-        langaugeName: cachedAudio.langaugeName,
-        file: cachedAudio.file,
-      );
-      refreshNotification();
-      return (audio: audioDetails, video: cachedVideo);
+      try {
+        await setAudioSource(
+          AudioSource.file(cachedAudio.file.path, tag: mediaItem),
+          startPlaying: startPlaying,
+          videoOptions: VideoOptions(
+            source: cachedVideo.path,
+            enableCaching: true,
+            cacheKey: '',
+            cacheDirectory: _defaultCacheDirectory,
+            maxTotalCacheSize: _defaultMaxCache,
+          ),
+        );
+        final audioDetails = AudioCacheDetails(
+          youtubeId: item.id,
+          bitrate: cachedAudio.bitrate,
+          langaugeCode: cachedAudio.langaugeCode,
+          langaugeName: cachedAudio.langaugeName,
+          file: cachedAudio.file,
+        );
+        refreshNotification();
+        return (audio: audioDetails, video: cachedVideo);
+      } catch (_) {
+        // error in video is handled internally
+        // while error in audio means the cached file is probably faulty.
+        return (audio: null, video: cachedVideo);
+      }
     } else if (cachedAudio != null && canPlayAudioOnly) {
       // -- play audio only
       await whatToAwait();
@@ -1183,12 +1189,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         final wasPlaying = isPlaying;
-        if (_nextSeekCanSetAudioCache) {
+        final cachedAudioFile = _nextSeekSetAudioCache;
+        if (cachedAudioFile != null) {
           await onPauseRaw();
           // -- try putting cache version if it was cached
-          _nextSeekCanSetAudioCache = false;
-          final cached = currentAudioStream.value?.getCachedFile(finalItem.id);
-          if (cached != null && await cached.exists()) await setAudioSource(AudioSource.file(cached.path, tag: mediaItem), keepOldVideoSource: true);
+          _nextSeekSetAudioCache = null;
+          if (await cachedAudioFile.exists()) await setAudioSource(AudioSource.file(cachedAudioFile.path, tag: mediaItem), keepOldVideoSource: true);
           _isCurrentAudioFromCache = true;
           await plsSeek();
           if (wasPlaying) await onPlayRaw();

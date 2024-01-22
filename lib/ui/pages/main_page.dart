@@ -333,7 +333,7 @@ class NamidaSearchBar extends StatelessWidget {
       onChanged: (value) {
         if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
           _searchFieldTimer?.cancel();
-          _searchFieldTimer = Timer(const Duration(milliseconds: 100), () {
+          _searchFieldTimer = Timer(const Duration(milliseconds: 150), () {
             ClipboardController.inst.updateTextInControllerEmpty(value == '');
             SearchSortController.inst.searchAll(value);
           });

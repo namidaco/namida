@@ -1017,10 +1017,10 @@ class Indexer {
 
   Future<void> updateTrackDuration(Track track, Duration? dur) async {
     final durInSeconds = dur?.inSeconds ?? 0;
-    if (track.duration == 0 && durInSeconds > 0) {
+    if (durInSeconds > 0 && track.duration != durInSeconds) {
       track.duration = durInSeconds;
+      await _saveTrackFileToStorage();
     }
-    await _saveTrackFileToStorage();
   }
 
   /// Returns new [TrackStats].

@@ -500,6 +500,8 @@ class AdvancedSettings extends SettingSubpageProvider {
       );
     }
 
+    sortBy(currentSort.value);
+
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         videosToDelete.close();

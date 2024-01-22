@@ -608,7 +608,6 @@ class IndexerSettings extends SettingSubpageProvider {
                     ),
                   ),
                 );
-                clearArtworks.closeAfterDelay();
               },
             ),
           ),

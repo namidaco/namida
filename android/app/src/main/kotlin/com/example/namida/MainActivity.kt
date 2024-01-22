@@ -168,7 +168,8 @@ class NamidaMainActivity : FlutterActivity() {
 
   @RequiresApi(api = Build.VERSION_CODES.O)
   private fun enterPip() {
-    val rational = com.ryanheise.just_audio.MainMethodCallHandler.getVideoRational()
+    val rational =
+        com.ryanheise.just_audio.MainMethodCallHandler.getVideoRational() ?: Rational(1, 1)
     val pipB = pipBuilder
     if (pipB != null) {
       pipB.setAspectRatio(rational)

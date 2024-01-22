@@ -296,15 +296,13 @@ class VideoController {
     await _executeForCurrentTrackOnly(track, () async {
       final v = cacheIdAndPath != null ? _videoCacheIDMap[cacheIdAndPath.$1]?.firstWhereEff((e) => e.path == cacheIdAndPath.$2) : video;
       if (v != null) {
+        currentVideo.value = v;
         await Player.inst.setVideo(
           source: v.path,
           loopingAnimation: canLoopVideo(v, track.duration),
         );
+        settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
       }
-
-      currentVideo.value = v;
-
-      settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
     });
   }
 

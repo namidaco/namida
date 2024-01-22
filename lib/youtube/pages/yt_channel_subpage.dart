@@ -181,10 +181,12 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                           ),
                           const SizedBox(height: 4.0),
                           Text(
-                            [
-                              subsCount?.formatDecimalShort() ?? '?',
-                              (subsCount ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                            ].join(' '),
+                            subsCount == null
+                                ? '? ${lang.SUBSCRIBERS}'
+                                : [
+                                    subsCount.formatDecimalShort(),
+                                    subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
+                                  ].join(' '),
                             style: context.textTheme.displayMedium?.copyWith(
                               fontSize: 12.0.multipliedFontScale,
                             ),

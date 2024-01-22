@@ -28,19 +28,30 @@ class YTLocalSearchController {
 
   ScrollController? scrollController;
 
-  String _latestSearch = '';
+  // String _latestSearch = '';
 
   YTLocalSearchSortType _sortType = YTLocalSearchSortType.mostPlayed;
   YTLocalSearchSortType get sortType => _sortType;
   set sortType(YTLocalSearchSortType t) {
     _sortType = t;
-    search(_latestSearch);
+    _sortStreams(searchResults);
+  }
+
+  void _sortStreams(List<StreamInfoItem> streams) {
+    switch (_sortType) {
+      case YTLocalSearchSortType.mostPlayed:
+        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
+      case YTLocalSearchSortType.latestPlayed:
+        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.lastOrNull ?? 0);
+      default:
+        null;
+    }
   }
 
   var searchResults = <StreamInfoItem>[];
 
   void search(String text, {int? maxResults}) async {
-    _latestSearch = text;
+    // _latestSearch = text;
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
     if (text == '') return;
 
@@ -59,14 +70,7 @@ class YTLocalSearchController {
           return;
         }
         result as List<StreamInfoItem>;
-        switch (_sortType) {
-          case YTLocalSearchSortType.mostPlayed:
-            result.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
-          case YTLocalSearchSortType.latestPlayed:
-            result.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.lastOrNull ?? 0);
-          default:
-            null;
-        }
+        _sortStreams(result);
         searchResults = result;
         onSearchDone();
       },

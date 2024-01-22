@@ -102,10 +102,10 @@ class ThumbnailManager {
   }) async {
     if (id == null && channelUrlOrID == null) return null;
 
-    void trySavingLastAccessed(File? file) {
+    void trySavingLastAccessed(File? file) async {
       final time = isImportantInCache ? DateTime.now() : DateTime(1970);
       try {
-        file?.setLastAccessed(time);
+        if (file != null && await file.exists()) await file.setLastAccessed(time);
       } catch (_) {}
     }
 

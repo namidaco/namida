@@ -96,43 +96,6 @@ void showTrackAdvancedDialog({
               oldPath: firstTracksDirectoryPath,
               tracksPaths: tracksUniqued.map((e) => e.track.path),
             ),
-          Obx(
-            () {
-              final shouldShow = shouldShowReIndexProgress.value;
-              final errors = reIndexedTracksFailed.value;
-              final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
-              return CustomListTile(
-                enabled: shouldReIndexEnabled.value,
-                passedColor: colorScheme,
-                title: lang.RE_INDEX,
-                icon: Broken.direct_inbox,
-                subtitle: shouldShow ? "${reIndexedTracksSuccessful.value}/${tracksUniqued.length}$secondLine" : null,
-                trailingRaw: NamidaInkWell(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-                  bgColor: theme.cardColor,
-                  onTap: () => willUpdateArtwork.value = !willUpdateArtwork.value,
-                  child: Obx(() => Text('${lang.ARTWORK}  ${willUpdateArtwork.value ? '✓' : 'x'}')),
-                ),
-                onTap: () async {
-                  await Indexer.inst.reindexTracks(
-                    tracks: tracks.tracks.toList(),
-                    updateArtwork: willUpdateArtwork.value,
-                    tryExtractingFromFilename: false,
-                    onProgress: (didExtract) {
-                      shouldReIndexEnabled.value = false;
-                      shouldShowReIndexProgress.value = true;
-                      if (didExtract) {
-                        reIndexedTracksSuccessful.value++;
-                      } else {
-                        reIndexedTracksFailed.value++;
-                      }
-                    },
-                    onFinish: (tracksLength) {},
-                  );
-                },
-              );
-            },
-          ),
           if (isSingle)
             CustomListTile(
               visualDensity: VisualDensity.compact,
@@ -181,6 +144,43 @@ void showTrackAdvancedDialog({
                 );
               },
             ),
+          Obx(
+            () {
+              final shouldShow = shouldShowReIndexProgress.value;
+              final errors = reIndexedTracksFailed.value;
+              final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
+              return CustomListTile(
+                enabled: shouldReIndexEnabled.value,
+                passedColor: colorScheme,
+                title: lang.RE_INDEX,
+                icon: Broken.direct_inbox,
+                subtitle: shouldShow ? "${reIndexedTracksSuccessful.value}/${tracksUniqued.length}$secondLine" : null,
+                trailingRaw: NamidaInkWell(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+                  bgColor: theme.cardColor,
+                  onTap: () => willUpdateArtwork.value = !willUpdateArtwork.value,
+                  child: Obx(() => Text('${lang.ARTWORK}  ${willUpdateArtwork.value ? '✓' : 'x'}')),
+                ),
+                onTap: () async {
+                  await Indexer.inst.reindexTracks(
+                    tracks: tracks.tracks.toList(),
+                    updateArtwork: willUpdateArtwork.value,
+                    tryExtractingFromFilename: false,
+                    onProgress: (didExtract) {
+                      shouldReIndexEnabled.value = false;
+                      shouldShowReIndexProgress.value = true;
+                      if (didExtract) {
+                        reIndexedTracksSuccessful.value++;
+                      } else {
+                        reIndexedTracksFailed.value++;
+                      }
+                    },
+                    onFinish: (tracksLength) {},
+                  );
+                },
+              );
+            },
+          ),
 
           if (source == QueueSource.history && isSingle)
             CustomListTile(

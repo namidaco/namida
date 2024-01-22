@@ -486,10 +486,12 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                               () {
                                                                 final isTitleExpanded = YoutubeController.inst.isTitleExpanded.value;
                                                                 return Text(
-                                                                  [
-                                                                    channelSubs?.formatDecimalShort(isTitleExpanded) ?? '?',
-                                                                    (channelSubs ?? 0) < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS
-                                                                  ].join(' '),
+                                                                  channelSubs == null
+                                                                      ? '? ${lang.SUBSCRIBERS}'
+                                                                      : [
+                                                                          channelSubs.formatDecimalShort(isTitleExpanded),
+                                                                          channelSubs < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
+                                                                        ].join(' '),
                                                                   style: context.textTheme.displaySmall?.copyWith(
                                                                     fontSize: 12.0.multipliedFontScale,
                                                                   ),

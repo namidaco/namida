@@ -1129,10 +1129,13 @@ class _TrackCard extends StatefulWidget {
   State<_TrackCard> createState() => _TrackCardState();
 }
 
-class _TrackCardState extends State<_TrackCard> {
+class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
   Color? _cardColor;
 
-  void _extractColor() {
+  void _extractColor() async {
+    if (!mounted) return;
+    if (!await canStartLoadingItems()) return;
+
     if (widget.track != null && _cardColor == null) {
       CurrentColor.inst.getTrackColors(widget.track!, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
@@ -1225,21 +1228,18 @@ class _TrackCardState extends State<_TrackCard> {
                   ),
                 if (widget.listens != null)
                   Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 2.0),
-                      padding: const EdgeInsets.all(6.0),
-                      decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        widget.listens!.length.formatDecimal(),
-                        style: context.textTheme.displaySmall,
-                      ),
-                    ),
-                  )
+                      bottom: 2.0,
+                      right: 2.0,
+                      child: CircleAvatar(
+                        radius: 10.0,
+                        backgroundColor: context.theme.cardColor,
+                        child: FittedBox(
+                          child: Text(
+                            widget.listens!.length.formatDecimal(),
+                            style: context.textTheme.displaySmall,
+                          ),
+                        ),
+                      ))
               ],
             ),
             const Spacer(),

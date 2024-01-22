@@ -22,6 +22,8 @@ import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+import 'package:namida/main.dart';
+
 class YTPlaylistDownloadPage extends StatefulWidget {
   final List<YoutubeID> ids;
   final String playlistName;
@@ -501,8 +503,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             color: Colors.white.withOpacity(0.7),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_selectedList.isEmpty) return;
+                          if (!await requestManageStoragePermission()) return;
                           NamidaNavigator.inst.popPage();
                           YoutubeController.inst.downloadYoutubeVideos(
                             groupName: widget.playlistName,

@@ -1116,8 +1116,8 @@ Future<void> showGeneralPopupDialog(
                               SmallListTile(
                                 color: colorDelightened.value,
                                 compact: true,
-                                title: '${lang.PLAY_AFTER} "${Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title}"',
-                                subtitle: (Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword,
+                                title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword}',
+                                subtitle: Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title,
                                 icon: Broken.hierarchy_square,
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();

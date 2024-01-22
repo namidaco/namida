@@ -13,11 +13,16 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
       ref: fa35f7764425e9c25d577a6912457a2cc6d6d516
+  just_audio:
+    git:
+      url: https://github.com/MSOB7YY/just_audio
+      path: just_audio/
+      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
-      ref: 25c12dfec430ba740743789275cf5d415ae63d2f
+      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
   archive: ^3.3.8
   intl: ^0.18.0
 
@@ -73,11 +78,6 @@ dependencies:
   file_picker: "6.1.1"
 
   # ---- Audio Indexing & Playback ----
-  just_audio:
-    git:
-      url: https://github.com/MSOB7YY/just_audio
-      path: just_audio/
-      ref: 25c12dfec430ba740743789275cf5d415ae63d2f
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -91,7 +91,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 3f5a5d8cfbd2281635dadd3f11def37082a68217
+      ref: d8300a57cc7b44c4b7ccbbcb9e94c9a72510300b
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query

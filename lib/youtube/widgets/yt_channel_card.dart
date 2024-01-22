@@ -89,7 +89,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                   borderRadius: 4.0,
                   shimmerEnabled: shimmerEnabled,
                   child: Text(
-                    subscribers == null ? '' : "$subscribers ${subscribers.length < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS}",
+                    subscribers == null ? '' : "${subscribers.toIf('?', '-1')} ${subscribers.length < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS}",
                     style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

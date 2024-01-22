@@ -80,6 +80,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
   late bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
+  bool _triedDeleting = false;
+
   @override
   void initState() {
     if (widget.path != null && File(widget.path!).existsSync()) {
@@ -137,7 +139,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   Widget build(BuildContext context) {
     final bytes = this.bytes;
     final key = Key("${widget.path}_${bytes?.length}");
-    final isValidBytes = bytes != null && bytes.isNotEmpty;
+    final isValidBytes = bytes?.isNotEmpty == true;
     final canDisplayImage = _imagePath != null || isValidBytes;
     final thereMightBeImageSoon = !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && !_imageObtainedBefore;
 
@@ -255,14 +257,17 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             );
                           }),
                           errorBuilder: (context, error, stackTrace) {
-                            if (error.toString().contains('Invalid image data')) {
-                              final fp = widget.path;
-                              if (fp != null) {
-                                File(fp).tryDeleting();
-                                FileImage(File(fp)).evict();
+                            if (!_triedDeleting) {
+                              _triedDeleting = true;
+                              if (error.toString().contains('Invalid image data')) {
+                                final fp = widget.path;
+                                if (fp != null) {
+                                  File(fp).tryDeleting();
+                                  FileImage(File(fp)).evict();
+                                }
                               }
+                              widget.onError?.call();
                             }
-                            widget.onError?.call();
                             return getStockWidget(
                               stackWithOnTopWidgets: false,
                             );

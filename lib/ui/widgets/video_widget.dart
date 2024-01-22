@@ -78,11 +78,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       if (visible) {
         // -- show status bar
         NamidaNavigator.inst.setDefaultSystemUI();
-        NamidaNavigator.inst.setDefaultSystemUIOverlayStyle(semiTransparent: true);
       } else {
         // -- hide status bar
         if (widget.isFullScreen && mounted) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-        NamidaNavigator.inst.setDefaultSystemUIOverlayStyle(semiTransparent: false);
       }
     }
   }
@@ -990,7 +988,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               ),
                               child: Obx(
                                 () {
-                                  final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
+                                  Duration playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
+                                  if (playerDuration == Duration.zero) {
+                                    playerDuration = Player.inst.currentAudioStream?.durationMS?.milliseconds ??
+                                        Player.inst.currentVideoStream?.durationMS?.milliseconds ??
+                                        (widget.isLocal
+                                            ? VideoController.inst.currentVideo.value?.durationMS.milliseconds
+                                            : YoutubeController.inst.currentYoutubeMetadataVideo.value?.duration) ??
+                                        Duration.zero;
+                                  }
                                   final durMS = playerDuration.inMilliseconds;
                                   final buffered = Player.inst.buffered;
                                   final videoCached = Player.inst.currentCachedVideo != null;
@@ -1018,7 +1024,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           builder: (context, constraints) {
                                             void onSeekDragUpdate(double deltax) {
                                               final percentageSwiped = (deltax / constraints.maxWidth).withMinimum(0.0);
-                                              final newSeek = percentageSwiped * (playerDuration.inMilliseconds);
+                                              final newSeek = percentageSwiped * (durMS);
                                               userSeekMS.value = newSeek.round();
                                             }
 
@@ -1138,7 +1144,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         () {
                                           final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
                                           final toSubtract = displayRemaining ? currentPositionMS : 0;
-                                          final msToDisplay = playerDuration.inMilliseconds - toSubtract;
+                                          final msToDisplay = durMS - toSubtract;
                                           final prefix = displayRemaining ? '-' : '';
 
                                           return Text(
@@ -1227,6 +1233,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 200; // 200ms allowance
                               if (reachedLastPosition) {
                                 WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                  if (!_isVisible) _startTimer(); // should execute once, the next line will set `_isVisible` to true.
                                   setControlsVisibily(true);
                                 });
                               }

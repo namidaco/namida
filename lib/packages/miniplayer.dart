@@ -1872,22 +1872,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
   }
 }
 
-class _MPTextWidget extends StatelessWidget {
-  final String text;
-  final Color? color;
-  final Color? textColor;
-  final double? fontSize;
-  const _MPTextWidget(this.text, {required this.color, this.textColor, this.fontSize});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(color: textColor ?? color, fontSize: fontSize?.multipliedFontScale),
-    );
-  }
-}
-
 class _MPQualityButton extends StatelessWidget {
   final String title;
   final String subtitle;

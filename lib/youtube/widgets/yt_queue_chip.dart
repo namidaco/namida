@@ -359,6 +359,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             return IgnorePointer(
                               ignoring: !canScroll,
                               child: NamidaListView(
+                                padding: EdgeInsets.zero,
                                 scrollController: _queueScrollController,
                                 itemCount: queue.length,
                                 itemExtents: List.filled(queue.length, Dimensions.youtubeCardItemExtent),

@@ -176,7 +176,7 @@ void _initLifeCycle() {
 
   NamidaChannel.inst.addOnResume('main', () async {
     CurrentColor.inst.refreshColorsAfterResumeApp();
-    await NamidaNavigator.inst.exitFullScreen(setOrientations: false);
+    await NamidaNavigator.inst.exitFullScreen();
   });
 
   NamidaChannel.inst.addOnSuspending('pip', () async {
