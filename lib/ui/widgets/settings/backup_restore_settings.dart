@@ -176,20 +176,67 @@ class BackupAndRestore extends SettingSubpageProvider {
                   }
                 }
 
-                int doIt(List<String> forWhat) {
-                  int totalSize = 0;
-                  forWhat.loop((e, _) {
-                    if (FileSystemEntity.typeSync(e) == FileSystemEntityType.file) {
-                      totalSize += File(e).fileSizeSync() ?? 0;
-                    } else if (FileSystemEntity.typeSync(e) == FileSystemEntityType.directory) {
-                      int size = 0;
-                      Directory(e).listSyncSafe().loop((e, index) {
-                        size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
-                      });
-                      totalSize += size;
+                final totalFiles = [
+                  AppPaths.TRACKS,
+                  AppPaths.TRACKS_STATS,
+                  AppPaths.TOTAL_LISTEN_TIME,
+                  AppPaths.VIDEOS_CACHE,
+                  AppPaths.VIDEOS_LOCAL,
+                  AppPaths.FAVOURITES_PLAYLIST,
+                  AppPaths.SETTINGS,
+                  AppPaths.LATEST_QUEUE,
+                  AppPaths.YT_LIKES_PLAYLIST,
+                ];
+
+                final totalDirs = [
+                  AppDirs.PLAYLISTS,
+                  AppDirs.HISTORY_PLAYLIST,
+                  AppDirs.LYRICS,
+                  AppDirs.QUEUES,
+                  AppDirs.PALETTES,
+                  AppDirs.VIDEOS_CACHE,
+                  AppDirs.AUDIOS_CACHE,
+                  AppDirs.ARTWORKS,
+                  AppDirs.THUMBNAILS,
+                  AppDirs.YT_DOWNLOAD_TASKS,
+                  AppDirs.YT_STATS,
+                  AppDirs.YT_PLAYLISTS,
+                  AppDirs.YT_HISTORY_PLAYLIST,
+                  AppDirs.YT_PALETTES,
+                  AppDirs.YT_THUMBNAILS,
+                  AppDirs.YT_THUMBNAILS_CHANNELS,
+                  AppDirs.YT_METADATA,
+                  AppDirs.YT_METADATA_CHANNELS,
+                  AppDirs.YT_METADATA_COMMENTS,
+                ];
+
+                final sizesMap = <String, int>{}.obs;
+                void fillFilesSize() async {
+                  for (final item in totalFiles) {
+                    sizesMap[item] = await File(item).fileSize() ?? 0;
+                  }
+                }
+
+                void fillDirsSize() async {
+                  for (final item in totalDirs) {
+                    sizesMap[item] = await Directory(item).getTotalSize() ?? 0;
+                  }
+                }
+
+                fillFilesSize();
+                fillDirsSize();
+
+                (int, bool) getItemsSize(List<String> items, Map<String, int> map) {
+                  int s = 0;
+                  bool hasUnknown = false;
+                  items.loop((e, _) {
+                    if (map[e] == null) {
+                      hasUnknown = true;
+                    } else {
+                      s += map[e]!;
                     }
                   });
-                  return totalSize;
+                  return (s, hasUnknown);
                 }
 
                 Widget getItemWidget({
@@ -200,83 +247,90 @@ class BackupAndRestore extends SettingSubpageProvider {
                   bool youtubeForceFollowItems = false,
                   required List<String> youtubeItems,
                 }) {
-                  final totalSizeLocal = doIt(items);
-                  final totalSizeYoutube = doIt(youtubeItems);
-
                   return Obx(
                     () {
-                      final isLocalIconChecked = isActive(items);
-                      final isYoutubeIconChecked = youtubeForceFollowItems
-                          ? isActive(items)
-                          : !youtubeAvailable
-                              ? false
-                              : youtubeItems.isEmpty
+                      final localRes = getItemsSize(items, sizesMap);
+                      final ytRes = getItemsSize(youtubeItems, sizesMap);
+                      final localSize = localRes.$1;
+                      final ytSize = ytRes.$1;
+                      final localUnknown = localRes.$2;
+                      final ytUnknown = ytRes.$2;
+                      return Obx(
+                        () {
+                          final isLocalIconChecked = isActive(items);
+                          final isYoutubeIconChecked = youtubeForceFollowItems
+                              ? isActive(items)
+                              : !youtubeAvailable
                                   ? false
-                                  : isActive(youtubeItems);
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: ListTileWithCheckMark(
-                              active: isLocalIconChecked,
-                              titleWidget: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                  Row(
+                                  : youtubeItems.isEmpty
+                                      ? false
+                                      : isActive(youtubeItems);
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: ListTileWithCheckMark(
+                                  active: isLocalIconChecked,
+                                  titleWidget: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      AnimatedOpacity(
-                                        duration: const Duration(milliseconds: 200),
-                                        opacity: isLocalIconChecked ? 1.0 : 0.5,
-                                        child: Text(
-                                          "(${totalSizeLocal.fileSizeFormatted})",
-                                          style: context.textTheme.displaySmall,
-                                        ),
+                                      Text(
+                                        title,
+                                        style: context.textTheme.displayMedium,
                                       ),
-                                      if (totalSizeYoutube > 0)
-                                        AnimatedOpacity(
-                                          duration: const Duration(milliseconds: 200),
-                                          opacity: isYoutubeIconChecked ? 1.0 : 0.5,
-                                          child: Text(
-                                            " + (${totalSizeYoutube.fileSizeFormatted})",
-                                            style: context.textTheme.displaySmall,
+                                      Row(
+                                        children: [
+                                          AnimatedOpacity(
+                                            duration: const Duration(milliseconds: 200),
+                                            opacity: isLocalIconChecked ? 1.0 : 0.5,
+                                            child: Text(
+                                              "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
+                                              style: context.textTheme.displaySmall,
+                                            ),
                                           ),
-                                        ),
+                                          if (ytSize > 0 || ytUnknown)
+                                            AnimatedOpacity(
+                                              duration: const Duration(milliseconds: 200),
+                                              opacity: isYoutubeIconChecked ? 1.0 : 0.5,
+                                              child: Text(
+                                                " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
+                                                style: context.textTheme.displaySmall,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ],
                                   ),
-                                ],
-                              ),
-                              icon: icon,
-                              onTap: () => onItemTap(items),
-                            ),
-                          ),
-                          const SizedBox(width: 8.0),
-                          AnimatedOpacity(
-                            duration: const Duration(milliseconds: 300),
-                            opacity: youtubeAvailable ? 1.0 : 0.6,
-                            child: NamidaIconButton(
-                              tooltip: lang.YOUTUBE,
-                              horizontalPadding: 0.0,
-                              icon: null,
-                              onPressed: () {
-                                if (youtubeAvailable) {
-                                  onItemTap(youtubeItems);
-                                }
-                              },
-                              child: StackedIcon(
-                                iconSize: 28.0,
-                                baseIcon: Broken.video_square,
-                                smallChild: NamidaCheckMark(
-                                  size: 12.0,
-                                  active: isYoutubeIconChecked,
+                                  icon: icon,
+                                  onTap: () => onItemTap(items),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 8.0),
-                        ],
+                              const SizedBox(width: 8.0),
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                opacity: youtubeAvailable ? 1.0 : 0.6,
+                                child: NamidaIconButton(
+                                  tooltip: lang.YOUTUBE,
+                                  horizontalPadding: 0.0,
+                                  icon: null,
+                                  onPressed: () {
+                                    if (youtubeAvailable) {
+                                      onItemTap(youtubeItems);
+                                    }
+                                  },
+                                  child: StackedIcon(
+                                    iconSize: 28.0,
+                                    baseIcon: Broken.video_square,
+                                    smallChild: NamidaCheckMark(
+                                      size: 12.0,
+                                      active: isYoutubeIconChecked,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8.0),
+                            ],
+                          );
+                        },
                       );
                     },
                   );

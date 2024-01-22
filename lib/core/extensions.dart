@@ -437,11 +437,24 @@ extension DirectoryUtils on Directory {
         'recursive': recursive,
         'followLinks': followLinks,
       };
-      final res = await compute(_listAllIsolate, params);
-      return res;
+      return await compute(_listAllIsolate, params);
     } catch (e) {
       printy(e, isError: true);
       return [];
+    }
+  }
+
+  Future<int?> getTotalSize({bool recursive = false, bool followLinks = true}) async {
+    try {
+      final params = {
+        'dirPath': path,
+        'recursive': recursive,
+        'followLinks': followLinks,
+      };
+      return await compute(_getDirSizeIsolate, params);
+    } catch (e) {
+      printy(e, isError: true);
+      return null;
     }
   }
 }
@@ -453,7 +466,26 @@ List<FileSystemEntity> _listAllIsolate(Map params) {
   return Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks);
 }
 
+int _getDirSizeIsolate(Map params) {
+  final dirPath = params['dirPath'] as String;
+  final recursive = params['recursive'] as bool;
+  final followLinks = params['followLinks'] as bool;
+  int size = 0;
+  Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks).loop((e, index) {
+    size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
+  });
+  return size;
+}
+
 extension FileUtils on File {
+  Future<int?> fileSize() async {
+    try {
+      return await length();
+    } catch (e) {
+      return null;
+    }
+  }
+
   int? fileSizeSync() {
     try {
       return lengthSync();
