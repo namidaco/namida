@@ -163,22 +163,23 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
   Widget build(BuildContext context) {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
 
-    final panelH = (MiniPlayerController.inst.maxOffset / 1.6 - 100.0);
-    final maxPanelHeight = velpy(a: 82.0, b: panelH, c: 2);
-    final topPadding = MiniPlayerController.inst.maxOffset - maxPanelHeight;
     return MiniplayerRaw(
       constantChild: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + topPadding + MediaQuery.paddingOf(context).bottom + 16.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(32.0.multipliedRadius),
-              topRight: Radius.circular(32.0.multipliedRadius),
-            ),
-            child: Column(
-              children: [
-                Expanded(
+        child: SizedBox(
+          height: context.height,
+          width: context.width,
+          child: Stack(
+            fit: StackFit.loose,
+            alignment: Alignment.bottomCenter,
+            children: [
+              SizedBox(
+                height: MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.0.multipliedRadius),
+                    topRight: Radius.circular(32.0.multipliedRadius),
+                  ),
                   child: Obx(
                     () {
                       final currentIndex = Player.inst.currentIndex;
@@ -186,7 +187,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                         key: const Key('minikuru'),
                         itemExtents: List.filled(Player.inst.currentQueue.length, Dimensions.inst.trackTileItemExtent),
                         scrollController: MiniPlayerController.inst.queueScrollController,
-                        padding: EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.value),
+                        padding: EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.value + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom),
                         onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
                         onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
                         onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
@@ -232,24 +233,24 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                     },
                   ),
                 ),
-                Container(
-                  width: context.width,
-                  height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
-                  decoration: BoxDecoration(
-                    color: context.theme.scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12.0.multipliedRadius),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
-                    child: FittedBox(
-                      child: _queueUtilsRow(context),
-                    ),
+              ),
+              Container(
+                width: context.width,
+                height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
+                decoration: BoxDecoration(
+                  color: context.theme.scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(12.0.multipliedRadius),
                   ),
                 ),
-              ],
-            ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
+                  child: FittedBox(
+                    child: _queueUtilsRow(context),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -278,12 +279,14 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
         slowOpacity,
         opacity,
         fastOpacity,
-        panelHeight,
         miniplayerbottomnavheight,
         bottomOffset,
         navBarHeight,
         constantChild,
       ) {
+        final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0));
+        final panelExtra = panelH / 2.25 - navBarHeight - (100.0 + topInset + 4.0);
+        final panelFinal = panelH - (panelExtra * (1 - qcp));
         return Obx(
           () {
             final currentIndex = Player.inst.currentIndex;
@@ -303,12 +306,12 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                     alignment: Alignment.bottomCenter,
                     child: Transform.translate(
                       offset: Offset(0, bottomOffset),
-                      child: Container(
+                      child: ColoredBox(
                         color: Colors.transparent, // prevents scrolling gap
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 6 * (1 - cp * 10 + 9).clamp(0, 1), vertical: 12 * icp),
                           child: Container(
-                            height: velpy(a: 82.0, b: panelHeight - 4.0, c: p.clamp(0, 3)) - (navBarHeight * qcp),
+                            height: velpy(a: 82.0, b: panelFinal, c: cp),
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: context.theme.scaffoldBackgroundColor,

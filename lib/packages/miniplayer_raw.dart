@@ -32,7 +32,6 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double slowOpacity,
   double opacity,
   double fastOpacity,
-  double panelHeight,
   double miniplayerbottomnavheight,
   double bottomOffset,
   double navBarHeight,
@@ -61,7 +60,7 @@ class MiniplayerRaw extends StatelessWidget {
     final child = AnimatedBuilder(
       animation: MiniPlayerController.inst.animation,
       builder: (context, child) {
-        final maxOffset = MiniPlayerController.inst.maxOffset - navBarHeight;
+        final maxOffset = MiniPlayerController.inst.maxOffset;
         final bounceUp = MiniPlayerController.inst.bounceUp;
         final bounceDown = MiniPlayerController.inst.bounceDown;
         final topInset = MiniPlayerController.inst.topInset;
@@ -99,16 +98,12 @@ class MiniplayerRaw extends StatelessWidget {
         final double slowOpacity = (bcp * 4 - 3).clamp(0, 1);
         final double opacity = (bcp * 5 - 4).clamp(0, 1);
         final double fastOpacity = (bcp * 10 - 9).clamp(0, 1);
-        double panelHeight = maxOffset / 1.6;
-        if (p > 1.0) {
-          panelHeight = velpy(a: panelHeight, b: maxOffset / 1.6 - 100.0 - topInset, c: qcp);
-        }
 
         final miniplayerbottomnavheight = settings.enableBottomNavBar.value ? 60.0 : 0.0;
         final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
 
         return builder(
-          maxOffset,
+          maxOffset - navBarHeight,
           bounceUp,
           bounceDown,
           topInset,
@@ -132,7 +127,6 @@ class MiniplayerRaw extends StatelessWidget {
           slowOpacity,
           opacity,
           fastOpacity,
-          panelHeight,
           miniplayerbottomnavheight,
           bottomOffset,
           navBarHeight,
