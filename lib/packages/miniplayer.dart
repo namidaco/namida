@@ -1495,29 +1495,21 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
       required QueueInsertionType insertionType,
       required void Function(QueueInsertionType insertionType) onTap,
     }) {
-      return Stack(
-        alignment: Alignment.centerRight,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24.0),
-            child: CustomListTile(
-              title: title,
-              subtitle: subtitle,
-              icon: icon,
-              maxSubtitleLines: 22,
-              onTap: () => onTap(insertionType),
-            ),
+      return CustomListTile(
+        title: title,
+        subtitle: subtitle,
+        icon: icon,
+        maxSubtitleLines: 22,
+        onTap: () => onTap(insertionType),
+        trailingRaw: Obx(
+          () => NamidaIconButton(
+            icon: Broken.setting_4,
+            onPressed: () => openQueueInsertionConfigure(insertionType, title),
+          ).animateEntrance(
+            showWhen: shouldShowConfigureIcon.value,
+            durationMS: 200,
           ),
-          Obx(
-            () => NamidaIconButton(
-              icon: Broken.setting_4,
-              onPressed: () => openQueueInsertionConfigure(insertionType, title),
-            ).animateEntrance(
-              showWhen: shouldShowConfigureIcon.value,
-              durationMS: 200,
-            ),
-          ),
-        ],
+        ),
       );
     }
 

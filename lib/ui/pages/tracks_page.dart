@@ -146,6 +146,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
                                 ),
                                 builder: (context, circleAvatar) {
                                   final p = animation.value;
+                                  if (!animation2.isAnimating && p == 0) return const SizedBox();
                                   const multiplier = 4.5;
                                   const minus = multiplier / 3;
                                   return Padding(

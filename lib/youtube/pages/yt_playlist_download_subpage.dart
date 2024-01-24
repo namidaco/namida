@@ -275,7 +275,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   title: widget.playlistName,
                   subtitle: "${_selectedList.length.formatDecimal()}/${widget.ids.length.formatDecimal()}",
                   visualDensity: VisualDensity.compact,
-                  trailing: Row(
+                  trailingRaw: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       NamidaIconButton(
                         tooltip: lang.INVERT_SELECTION,
