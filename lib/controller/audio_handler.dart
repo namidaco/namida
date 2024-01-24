@@ -696,6 +696,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _isFetchingInfo.value = false;
     _nextSeekSetAudioCache = null;
 
+    if (item.id == '' || item.id == 'null') {
+      await skipToNext(startPlaying);
+      return;
+    }
+
     refreshNotification(pi, currentVideoInfo.value);
 
     Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
