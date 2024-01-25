@@ -109,7 +109,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     if (rt.isEmpty) return 0;
 
     final l = playlistsMap.keys.where((name) => name.startsWith(k_PLAYLIST_NAME_AUTO_GENERATED)).length;
-    addNewPlaylist('$k_PLAYLIST_NAME_AUTO_GENERATED ${l + 1}', tracks: rt);
+    addNewPlaylist('$k_PLAYLIST_NAME_AUTO_GENERATED ${l + 1}', tracks: rt.toList());
 
     return rt.length;
   }

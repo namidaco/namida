@@ -4,22 +4,15 @@ import 'dart:isolate';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-typedef _PortsComm = ({ReceivePort items, Completer<SendPort> search});
-
-class SearchPortsProvider {
+class SearchPortsProvider with PortsProvider {
   static final SearchPortsProvider inst = SearchPortsProvider._internal();
   SearchPortsProvider._internal();
 
-  final _ports = <MediaType, _PortsComm?>{};
-
-  Future<void> _disposePort(_PortsComm port) async {
-    port.items.close();
-    (await port.search.future).send('dispose');
-  }
+  final _ports = <MediaType, PortsComm?>{};
 
   void disposeAll() {
     for (final p in _ports.values) {
-      if (p != null) _disposePort(p);
+      if (p != null) disposePort(p);
     }
     _ports.clear();
   }
@@ -27,7 +20,7 @@ class SearchPortsProvider {
   Future<void> closePorts(MediaType type) async {
     final port = _ports[type];
     if (port != null) {
-      await _disposePort(port);
+      await disposePort(port);
       _ports[type] = null;
     }
   }
@@ -38,13 +31,37 @@ class SearchPortsProvider {
     required Future<void> Function(SendPort itemsSendPort) isolateFunction,
     bool force = false,
   }) async {
-    final portC = _ports[type];
-    if (portC != null && !force) return await portC.search.future;
+    return await preparePortRaw(
+      portN: _ports[type],
+      onPortNull: () async {
+        await closePorts(type);
+        _ports[type] = (items: ReceivePort(), search: Completer<SendPort>());
+        return _ports[type]!;
+      },
+      onResult: onResult,
+      isolateFunction: isolateFunction,
+    );
+  }
+}
 
-    await closePorts(type);
-    _ports[type] = (items: ReceivePort(), search: Completer<SendPort>());
-    final port = _ports[type];
-    port!.items.listen((result) {
+typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
+mixin PortsProvider {
+  Future<void> disposePort(PortsComm port) async {
+    port.items.close();
+    (await port.search.future).send('dispose');
+  }
+
+  Future<SendPort> preparePortRaw({
+    required PortsComm? portN,
+    required Future<PortsComm> Function() onPortNull,
+    required void Function(dynamic result) onResult,
+    required Future<void> Function(SendPort itemsSendPort) isolateFunction,
+    bool force = false,
+  }) async {
+    if (portN != null && !force) return await portN.search.future;
+
+    final port = await onPortNull();
+    port.items.listen((result) {
       if (result is SendPort) {
         port.search.completeIfWasnt(result);
       } else {

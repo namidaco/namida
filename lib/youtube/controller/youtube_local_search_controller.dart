@@ -23,6 +23,7 @@ class YTLocalSearchController {
   YTLocalSearchController._internal();
 
   final isLoadingLookupLists = false.obs;
+  Completer<void>? fillingCompleter;
 
   bool enableFuzzySearch = true;
 
@@ -62,11 +63,11 @@ class YTLocalSearchController {
 
   Future<void> initializeLookupMap({required final void Function() onSearchDone}) async {
     isLoadingLookupLists.value = true;
-    final fillingCompleter = Completer<void>();
+    fillingCompleter = Completer<void>();
     await _YTLocalSearchPortsProvider.inst.preparePorts(
       onResult: (result) {
         if (result is bool) {
-          fillingCompleter.complete();
+          fillingCompleter.completeIfWasnt();
           return;
         }
         result as List<StreamInfoItem>;
@@ -86,7 +87,7 @@ class YTLocalSearchController {
         await Isolate.spawn(_prepareResourcesAndSearch, params);
       },
     );
-    await fillingCompleter.future;
+    await fillingCompleter?.future;
     isLoadingLookupLists.value = false;
   }
 
@@ -309,6 +310,8 @@ class YTLocalSearchController {
   }
 
   void cleanResources() {
+    fillingCompleter.completeIfWasnt();
+    fillingCompleter = null;
     _YTLocalSearchPortsProvider.inst.closePorts();
     searchResults.clear();
     scrollController?.dispose();

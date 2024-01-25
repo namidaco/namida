@@ -707,6 +707,29 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
 
     return tracks;
   }
+
+  /// NOTE: Modifies the original list.
+  List<YoutubeID> shuffleOrSortYT(List<YoutubeID> videos) {
+    final sortBy = toQueueInsertion().sortBy;
+
+    switch (sortBy) {
+      case InsertionSortingType.listenCount:
+        if (this == QueueInsertionType.algorithm) {
+          // already sorted by repeated times inside [NamidaGenerator.generateRecommendedTrack].
+        } else {
+          videos.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
+        }
+      // case InsertionSortingType.rating:
+      //   tracks.sortByReverse((e) => e.track.stats.rating);
+      case InsertionSortingType.random:
+        videos.shuffle();
+
+      default:
+        null;
+    }
+
+    return videos;
+  }
 }
 
 extension InsertionSortingTypeTextIcon on InsertionSortingType {

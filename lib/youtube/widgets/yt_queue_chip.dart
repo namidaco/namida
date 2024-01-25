@@ -7,12 +7,16 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/yt_generators_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -108,6 +112,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   void _animateBigToSmall() {
     _animate(0, 1);
     YoutubeController.inst.startDimTimer();
+    NamidaYTGenerator.inst.cleanResources();
     NamidaNavigator.inst.isQueueSheetOpen = false;
   }
 
@@ -190,6 +195,12 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                Icon(
+                                  Broken.airdrop,
+                                  size: 24.0,
+                                  color: context.theme.iconTheme.color?.withOpacity(0.65),
+                                ),
+                                const SizedBox(width: 6.0),
                                 Expanded(
                                   child: Obx(
                                     () {
@@ -207,7 +218,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                             "${Player.inst.currentIndex + 1}/${Player.inst.currentQueueYoutube.length}",
                                             style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
                                           ),
-                                          const SizedBox(height: 2.0),
+                                          // const SizedBox(height: 2.0),
                                           if (nextItemName != null && nextItemName != '')
                                             Text(
                                               "${lang.NEXT}: $nextItemName",
@@ -221,7 +232,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   ),
                                 ),
                                 const SizedBox(width: 6.0),
-                                const Icon(Broken.arrow_up_3)
+                                const Icon(Broken.arrow_up_3, size: 22.0)
                               ],
                             ),
                           ),
@@ -313,14 +324,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             ),
                             const SizedBox(width: 6.0),
                             _ActionItem(
-                              tooltip: lang.SHUFFLE,
-                              icon: Broken.shuffle,
-                              onTap: () {
-                                Player.inst.playOrPause(0, Player.inst.currentQueueYoutube, QueueSource.others, shuffle: true);
-                              },
-                            ),
-                            const SizedBox(width: 6.0),
-                            _ActionItem(
                               icon: Broken.import,
                               tooltip: lang.DOWNLOAD,
                               onTap: () {
@@ -332,14 +335,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   ),
                                 );
                               },
-                            ),
-                            const SizedBox(width: 6.0),
-                            Obx(
-                              () => _ActionItem(
-                                tooltip: '',
-                                icon: _arrowIcon.value,
-                                onTap: _animateQueueToCurrentTrack,
-                              ),
                             ),
                             const SizedBox(width: 4.0),
                             NamidaIconButton(
@@ -405,6 +400,28 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                           },
                         ),
                       ),
+                      ColoredBox(
+                        color: context.theme.scaffoldBackgroundColor,
+                        child: SizedBox(
+                          width: context.width,
+                          height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: FittedBox(
+                              child: QueueUtilsRow(
+                                itemsKeyword: (number) => number.displayVideoKeyword,
+                                onAddItemsTap: () => _onAddVideoTap(),
+                                scrollQueueWidget: Obx(
+                                  () => NamidaButton(
+                                    onPressed: _animateQueueToCurrentTrack,
+                                    icon: _arrowIcon.value,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -430,6 +447,123 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           },
         ),
       ],
+    );
+  }
+
+  void _onAddVideoTap() {
+    final currentVideo = Player.inst.nowPlayingVideoID;
+    if (currentVideo == null) return;
+    final currentVideoId = currentVideo.id;
+    final currentVideoName = YoutubeController.inst.getVideoName(currentVideoId) ?? currentVideoId;
+
+    NamidaYTGenerator.inst.prepareResources();
+    showAddItemsToQueueDialog(
+      context: context,
+      tiles: (getAddTracksTile) {
+        return [
+          Obx(
+            () {
+              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
+              return AnimatedEnabled(
+                enabled: !isLoading,
+                child: getAddTracksTile(
+                  title: lang.NEW_TRACKS_RANDOM,
+                  subtitle: lang.NEW_TRACKS_RANDOM_SUBTITLE,
+                  icon: Broken.format_circle,
+                  insertionType: QueueInsertionType.random,
+                  onTap: (insertionType) async {
+                    final config = insertionType.toQueueInsertion();
+                    final count = config.numberOfTracks;
+                    final rt = await NamidaYTGenerator.inst.getRandomVideos(exclude: currentVideoId, min: count - 1, max: count);
+                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
+                  },
+                  trailingRaw: isLoading ? const LoadingIndicator() : null,
+                ),
+              );
+            },
+          ),
+          getAddTracksTile(
+            title: lang.GENERATE_FROM_DATES,
+            subtitle: lang.GENERATE_FROM_DATES_SUBTITLE,
+            icon: Broken.calendar,
+            insertionType: QueueInsertionType.listenTimeRange,
+            onTap: (insertionType) {
+              NamidaNavigator.inst.closeDialog();
+              final historyTracks = YoutubeHistoryController.inst.historyTracks;
+              if (historyTracks.isEmpty) {
+                snackyy(title: lang.NOTE, message: lang.NO_TRACKS_IN_HISTORY);
+                return;
+              }
+              showCalendarDialog(
+                title: lang.GENERATE_FROM_DATES,
+                buttonText: lang.GENERATE,
+                useHistoryDates: true,
+                historyController: YoutubeHistoryController.inst,
+                onGenerate: (dates) {
+                  final videos = NamidaYTGenerator.inst.generateItemsFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                  Player.inst
+                      .addToQueue(
+                        videos,
+                        insertionType: insertionType,
+                        emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                      )
+                      .closeDialog();
+                },
+              );
+            },
+          ),
+          const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
+          Obx(
+            () {
+              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
+              return AnimatedEnabled(
+                enabled: !isLoading,
+                child: getAddTracksTile(
+                  title: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE,
+                  subtitle: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
+                    '_CURRENT_TRACK_',
+                    currentVideoName.addDQuotation(),
+                  ),
+                  icon: Broken.calendar_1,
+                  insertionType: QueueInsertionType.sameReleaseDate,
+                  onTap: (insertionType) async {
+                    final videos = await NamidaYTGenerator.inst.generateVideoFromSameEra(currentVideoId, videoToRemove: currentVideoId);
+                    Player.inst
+                        .addToQueue(
+                          videos,
+                          insertionType: insertionType,
+                          emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                        )
+                        .closeDialog();
+                  },
+                  trailingRaw: isLoading ? const LoadingIndicator() : null,
+                ),
+              );
+            },
+          ),
+          getAddTracksTile(
+            title: lang.NEW_TRACKS_RECOMMENDED,
+            subtitle: lang.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
+              '_CURRENT_TRACK_',
+              currentVideoName.addDQuotation(),
+            ),
+            icon: Broken.bezier,
+            insertionType: QueueInsertionType.algorithm,
+            onTap: (insertionType) {
+              final genvideos = NamidaYTGenerator.inst.generateRecommendedVideos(currentVideo);
+
+              Player.inst
+                  .addToQueue(
+                    genvideos,
+                    insertionType: insertionType,
+                    insertNext: true,
+                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                  )
+                  .closeDialog();
+            },
+          ),
+        ];
+      },
     );
   }
 }

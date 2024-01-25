@@ -232,10 +232,10 @@ class Player {
     bool showSnackBar = true,
     String? emptyTracksMessage,
   }) async {
+    final insertionDetails = insertionType?.toQueueInsertion();
+    final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
+    final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
     if (tracks.firstOrNull is Selectable) {
-      final insertionDetails = insertionType?.toQueueInsertion();
-      final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
-      final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
       final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
       insertionType?.shuffleOrSort(finalTracks);
 
@@ -257,11 +257,25 @@ class Player {
       }
       return true;
     } else if (tracks.firstOrNull is YoutubeID) {
+      final finalVideos = List<YoutubeID>.from(tracks.withLimit(maxCount));
+      insertionType?.shuffleOrSortYT(finalVideos);
+
+      if (showSnackBar && finalVideos.isEmpty) {
+        snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
+        return false;
+      }
       await _audioHandler.addToQueue(
-        tracks,
-        insertNext: insertNext,
+        finalVideos,
+        insertNext: shouldInsertNext,
         insertAfterLatest: insertAfterLatest,
       );
+      if (showSnackBar) {
+        final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+        snackyy(
+          icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
+          message: '${addins.capitalizeFirst} ${finalVideos.length.displayVideoKeyword}',
+        );
+      }
       return true;
     }
 

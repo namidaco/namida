@@ -8,6 +8,7 @@ import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
+import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -578,4 +579,171 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
     'allPaths': allPaths,
     'pathsExcludedByNoMedia': excludedByNoMedia,
   };
+}
+
+Future<void> showAddItemsToQueueDialog({
+  required BuildContext context,
+  required List<Widget> Function(
+          Widget Function({
+            required String title,
+            required String subtitle,
+            required IconData icon,
+            required QueueInsertionType insertionType,
+            required void Function(QueueInsertionType insertionType) onTap,
+            Widget? trailingRaw,
+          }) addTracksTile)
+      tiles,
+}) async {
+  final shouldShowConfigureIcon = false.obs;
+
+  void openQueueInsertionConfigure(QueueInsertionType insertionType, String title) async {
+    final qinsertion = insertionType.toQueueInsertion();
+    final tracksNo = qinsertion.numberOfTracks.obs;
+    final insertN = qinsertion.insertNext.obs;
+    final sortBy = qinsertion.sortBy.obs;
+    final maxCount = 200.withMaximum(allTracksInLibrary.length);
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        tracksNo.close();
+        insertN.close();
+        sortBy.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: lang.CONFIGURE,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.SAVE,
+            onPressed: () {
+              settings.updateQueueInsertion(
+                insertionType,
+                QueueInsertion(
+                  numberOfTracks: tracksNo.value,
+                  insertNext: insertN.value,
+                  sortBy: sortBy.value,
+                ),
+              );
+              NamidaNavigator.inst.closeDialog();
+            },
+          )
+        ],
+        child: Column(
+          children: [
+            NamidaInkWell(
+              borderRadius: 10.0,
+              bgColor: context.theme.cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+              child: Text(title, style: context.textTheme.displayLarge),
+            ),
+            const SizedBox(height: 24.0),
+            CustomListTile(
+              icon: Broken.computing,
+              title: lang.NUMBER_OF_TRACKS,
+              subtitle: "${lang.UNLIMITED}-$maxCount",
+              trailing: Obx(
+                () => NamidaWheelSlider<int>(
+                  totalCount: maxCount,
+                  initValue: tracksNo.value,
+                  itemSize: 1,
+                  squeeze: 0.3,
+                  onValueChanged: (val) => tracksNo.value = val,
+                  text: tracksNo.value == 0 ? lang.UNLIMITED : '${tracksNo.value}',
+                ),
+              ),
+            ),
+            Obx(
+              () => CustomSwitchListTile(
+                icon: Broken.next,
+                title: lang.PLAY_NEXT,
+                value: insertN.value,
+                onChanged: (isTrue) => insertN.value = !isTrue,
+              ),
+            ),
+            CustomListTile(
+              icon: Broken.sort,
+              title: lang.SORT_BY,
+              trailingRaw: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
+                child: FittedBox(
+                  child: PopupMenuButton<InsertionSortingType>(
+                    child: Obx(
+                      () => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(sortBy.value.toIcon(), size: 18.0),
+                          const SizedBox(width: 8.0),
+                          Text(sortBy.value.toText()),
+                        ],
+                      ),
+                    ),
+                    itemBuilder: (context) {
+                      return <PopupMenuEntry<InsertionSortingType>>[
+                        ...InsertionSortingType.values
+                            .map(
+                              (e) => PopupMenuItem(
+                                value: e,
+                                child: Row(
+                                  children: [
+                                    Icon(e.toIcon(), size: 20.0),
+                                    const SizedBox(width: 8.0),
+                                    Text(e.toText()),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList()
+                      ];
+                    },
+                    onSelected: (value) => sortBy.value = value,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget getAddTracksTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required QueueInsertionType insertionType,
+    required void Function(QueueInsertionType insertionType) onTap,
+    Widget? trailingRaw,
+  }) {
+    return CustomListTile(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      maxSubtitleLines: 22,
+      onTap: () => onTap(insertionType),
+      trailingRaw: trailingRaw ??
+          Obx(
+            () => NamidaIconButton(
+              icon: Broken.setting_4,
+              onPressed: () => openQueueInsertionConfigure(insertionType, title),
+            ).animateEntrance(
+              showWhen: shouldShowConfigureIcon.value,
+              durationMS: 200,
+            ),
+          ),
+    );
+  }
+
+  await NamidaNavigator.inst.navigateDialog(
+    dialog: CustomBlurryDialog(
+      normalTitleStyle: true,
+      title: lang.NEW_TRACKS_ADD,
+      trailingWidgets: [
+        NamidaIconButton(
+          icon: Broken.setting_3,
+          tooltip: lang.CONFIGURE,
+          onPressed: () => shouldShowConfigureIcon.value = !shouldShowConfigureIcon.value,
+        ),
+      ],
+      child: Column(children: tiles(getAddTracksTile)),
+    ),
+  );
 }

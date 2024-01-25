@@ -50,7 +50,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  final _shimmerList = List.filled(20, null);
+  final _shimmerList = List.filled(20, null, growable: true);
   late bool _isLoading;
 
   final _recentlyAddedFull = <Track>[];
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _recentlyAdded.addAll(alltracks.take(40));
 
     // -- Recent Listens --
-    _recentListened.addAllIfEmpty(NamidaGenerator.inst.generateTracksFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow).take(40));
+    _recentListened.addAllIfEmpty(NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow).take(40));
 
     // -- Top Recents --
     _topRecentListened.addAllIfEmpty(
@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // ==== Mixes ====
     // -- Random --
-    _randomTracks.addAllIfEmpty(NamidaGenerator.inst.getRandomTracks(24, 25));
+    _randomTracks.addAllIfEmpty(NamidaGenerator.inst.getRandomTracks(min: 24, max: 25));
 
     // -- favs --
     final favs = List<TrackWithDate>.from(PlaylistController.inst.favouritesPlaylist.value.tracks);

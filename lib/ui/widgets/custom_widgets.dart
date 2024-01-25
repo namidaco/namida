@@ -3356,3 +3356,131 @@ class _DummyElement extends Element {
   // ignore: must_call_super
   void performRebuild() {}
 }
+
+class AnimatedEnabled extends StatelessWidget {
+  final bool enabled;
+  final double disabledOpacity;
+  final int durationMS;
+  final Widget child;
+
+  const AnimatedEnabled({
+    super.key,
+    required this.enabled,
+    this.disabledOpacity = 0.6,
+    this.durationMS = 300,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !enabled,
+      child: AnimatedOpacity(
+        opacity: enabled ? 1.0 : disabledOpacity,
+        duration: Duration(milliseconds: durationMS),
+        child: child,
+      ),
+    );
+  }
+}
+
+class QueueUtilsRow extends StatelessWidget {
+  final String Function(int number) itemsKeyword;
+  final void Function() onAddItemsTap;
+  final Widget scrollQueueWidget;
+
+  const QueueUtilsRow({
+    super.key,
+    required this.itemsKeyword,
+    required this.onAddItemsTap,
+    required this.scrollQueueWidget,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const tileHeight = 48.0;
+    const tileVPadding = 3.0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        SizedBox(width: context.width * 0.23),
+        const SizedBox(width: 6.0),
+        NamidaButton(
+          tooltip: lang.REMOVE_DUPLICATES,
+          icon: Broken.trash,
+          onPressed: () {
+            final removed = Player.inst.removeDuplicatesFromQueue();
+            snackyy(
+              icon: Broken.filter_remove,
+              message: "${lang.REMOVED} ${itemsKeyword(removed)}",
+            );
+          },
+        ),
+        const SizedBox(width: 6.0),
+        NamidaButton(
+          tooltip: lang.NEW_TRACKS_ADD,
+          icon: Broken.add_circle,
+          onPressed: () => onAddItemsTap(),
+        ),
+        const SizedBox(width: 6.0),
+        scrollQueueWidget,
+        const SizedBox(width: 6.0),
+        GestureDetector(
+          onLongPressStart: (details) async {
+            void saveSetting(bool shuffleAll) => settings.save(playerShuffleAllTracks: shuffleAll);
+            await showMenu(
+              context: context,
+              position: RelativeRect.fromLTRB(
+                details.globalPosition.dx,
+                details.globalPosition.dy - kQueueBottomRowHeight - (tileHeight + tileVPadding * 2) * 2,
+                details.globalPosition.dx,
+                details.globalPosition.dy,
+              ),
+              items: [
+                ...[
+                  (
+                    lang.SHUFFLE_NEXT,
+                    Broken.forward,
+                    false,
+                  ),
+                  (
+                    lang.SHUFFLE_ALL,
+                    Broken.task,
+                    true,
+                  ),
+                ].map(
+                  (e) => PopupMenuItem(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: tileVPadding),
+                      child: Obx(
+                        () => SizedBox(
+                          height: tileHeight,
+                          child: ListTileWithCheckMark(
+                            active: settings.playerShuffleAllTracks.value == e.$3,
+                            leading: StackedIcon(
+                              baseIcon: Broken.shuffle,
+                              secondaryIcon: e.$2,
+                              blurRadius: 8.0,
+                            ),
+                            title: e.$1,
+                            onTap: () => saveSetting(e.$3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          child: NamidaButton(
+            text: lang.SHUFFLE,
+            icon: Broken.shuffle,
+            onPressed: () => Player.inst.shuffleTracks(settings.playerShuffleAllTracks.value),
+          ),
+        ),
+        const SizedBox(width: 8.0),
+      ],
+    );
+  }
+}

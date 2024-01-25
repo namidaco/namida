@@ -284,15 +284,20 @@ class YoutubeController {
   }
 
   String? getVideoName(String id, {bool checkFromStorage = false}) {
-    return _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.name ??
-        _getBackupVideoInfo(id)?.title ??
+    return getTemporarelyStreamInfo(id)?.name ??
+        _getBackupVideoInfo(id)?.title ?? //
         _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.name;
   }
 
   String? getVideoChannelName(String id, {bool checkFromStorage = false}) {
-    return _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage)?.uploaderName ??
-        _getBackupVideoInfo(id)?.channel ??
+    return getTemporarelyStreamInfo(id)?.uploaderName ??
+        _getBackupVideoInfo(id)?.channel ?? //
         _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.uploaderName;
+  }
+
+  DateTime? getVideoReleaseDate(String id, {bool checkFromStorage = false}) {
+    return getTemporarelyStreamInfo(id)?.date ?? //
+        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.date;
   }
 
   VideoInfo? _getTemporarelyVideoInfo(String id, {bool checkFromStorage = false}) {
@@ -390,7 +395,7 @@ class YoutubeController {
   }
 
   Future<void> fetchRelatedVideos(String id) async {
-    currentRelatedVideos.value = List.filled(20, null);
+    currentRelatedVideos.value = List.filled(20, null, growable: true);
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
     _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
     items.loop((p, index) {

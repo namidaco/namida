@@ -186,14 +186,14 @@ class YTUtils {
         icon: Broken.next,
         title: lang.PLAY_NEXT,
         onTap: () {
-          Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true);
+          Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true, showSnackBar: false);
         },
       ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
         title: lang.PLAY_LAST,
         onTap: () {
-          Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false);
+          Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false, showSnackBar: false);
         },
       ),
       if (playlistName != '' && videoYTID != null)
