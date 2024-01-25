@@ -62,8 +62,12 @@ class YTLocalSearchController {
   }
 
   Future<void> initializeLookupMap({required final void Function() onSearchDone}) async {
+    _cancelDisposingTimer();
+    if (isLoadingLookupLists.value || fillingCompleter?.isCompleted == true) return;
+
     isLoadingLookupLists.value = true;
     fillingCompleter = Completer<void>();
+
     await _YTLocalSearchPortsProvider.inst.preparePorts(
       onResult: (result) {
         if (result is bool) {
@@ -309,13 +313,23 @@ class YTLocalSearchController {
     return splittedText.every((element) => titleAndChannel.any((p) => p.contains(element)));
   }
 
-  void cleanResources() {
-    fillingCompleter.completeIfWasnt();
-    fillingCompleter = null;
-    _YTLocalSearchPortsProvider.inst.closePorts();
-    searchResults.clear();
-    scrollController?.dispose();
-    scrollController = null;
+  Timer? _disposingTimer;
+
+  void _cancelDisposingTimer() {
+    _disposingTimer?.cancel();
+    _disposingTimer = null;
+  }
+
+  void cleanResources({int afterSeconds = 10}) {
+    _cancelDisposingTimer();
+    _disposingTimer = Timer(Duration(seconds: afterSeconds), () {
+      fillingCompleter.completeIfWasnt();
+      fillingCompleter = null;
+      _YTLocalSearchPortsProvider.inst.closePorts();
+      searchResults.clear();
+      scrollController?.dispose();
+      scrollController = null;
+    });
   }
 }
 

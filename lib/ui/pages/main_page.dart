@@ -27,6 +27,7 @@ import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_search_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 
 class MainPage extends StatelessWidget {
   final AnimationController animation;
@@ -326,6 +327,7 @@ class NamidaSearchBar extends StatelessWidget {
           ClipboardController.inst.setClipboardMonitoringStatus(settings.enableClipboardMonitoring.value);
         } else {
           SearchSortController.inst.disposeResources();
+          YTLocalSearchController.inst.cleanResources();
           ClipboardController.inst.setClipboardMonitoringStatus(false);
         }
       },

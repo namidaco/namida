@@ -60,7 +60,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   void dispose() {
     _isFetchingMoreResults.close();
-    YTLocalSearchController.inst.cleanResources();
     super.dispose();
   }
 

@@ -61,19 +61,30 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     return await _operationsCompleter[type]?.future ?? [];
   }
 
+  Timer? _disposingTimer;
+
+  void _cancelDisposingTimer() {
+    _disposingTimer?.cancel();
+    _disposingTimer = null;
+  }
+
   PortsComm? _portComm;
 
-  void cleanResources() async {
-    fillingCompleter.completeIfWasnt();
-    fillingCompleter = null;
-    if (_portComm != null) {
-      await disposePort(_portComm!);
-      _portComm = null;
-    }
-    isPreparingResources.value = false;
+  void cleanResources({int afterSeconds = 5}) {
+    _cancelDisposingTimer();
+    _disposingTimer = Timer(Duration(seconds: afterSeconds), () async {
+      fillingCompleter.completeIfWasnt();
+      fillingCompleter = null;
+      if (_portComm != null) {
+        await disposePort(_portComm!);
+        _portComm = null;
+      }
+      isPreparingResources.value = false;
+    });
   }
 
   Future<void> prepareResources() async {
+    _cancelDisposingTimer();
     if (isPreparingResources.value || fillingCompleter?.isCompleted == true) return;
 
     isPreparingResources.value = true;

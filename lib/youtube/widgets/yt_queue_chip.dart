@@ -340,7 +340,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             NamidaIconButton(
                               iconColor: context.defaultIconColor().withOpacity(0.95),
                               icon: Broken.arrow_down_2,
-                              onPressed: () => _animate(0.0, 1.0),
+                              onPressed: () => _animateBigToSmall(),
                             ),
                             const SizedBox(width: 12.0),
                           ],
