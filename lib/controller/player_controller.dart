@@ -10,7 +10,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/audio_handler.dart';
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';

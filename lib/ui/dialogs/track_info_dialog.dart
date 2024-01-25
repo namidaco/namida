@@ -9,7 +9,7 @@ import 'package:photo_view/photo_view.dart';
 
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/audio_handler.dart';
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
