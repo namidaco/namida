@@ -605,32 +605,3 @@ extension RxStreamClosing<T extends RxInterface> on T {
     await close.executeAfterDelay(durationMS: durationMS);
   }
 }
-
-mixin LoadingItemsDelayMixin<T extends StatefulWidget> on State<T> {
-  int get itemsLoadingdelayMS => 300;
-
-  Timer? _loadingDelayTimer;
-  Completer<bool>? _loadingDelayCompleter;
-
-  Future<bool> canStartLoadingItems({int? delayMS}) async {
-    if (!mounted) return false;
-    final shouldDelayLoading = Scrollable.recommendDeferredLoadingForContext(context);
-    if (shouldDelayLoading) {
-      _loadingDelayCompleter = Completer<bool>();
-      _loadingDelayTimer = Timer(Duration(milliseconds: delayMS ?? itemsLoadingdelayMS), () {
-        _loadingDelayCompleter?.completeIfWasnt(mounted);
-      });
-      return await _loadingDelayCompleter?.future ?? false;
-    }
-    return true;
-  }
-
-  @override
-  void dispose() {
-    _loadingDelayTimer?.cancel();
-    _loadingDelayTimer = null;
-    _loadingDelayCompleter?.completeIfWasnt(false);
-    _loadingDelayCompleter = null;
-    super.dispose();
-  }
-}

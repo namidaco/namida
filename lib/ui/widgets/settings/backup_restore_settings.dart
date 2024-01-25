@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';

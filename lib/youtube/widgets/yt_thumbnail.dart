@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';

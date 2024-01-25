@@ -7,7 +7,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_streams_manager.dart';
+import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager {

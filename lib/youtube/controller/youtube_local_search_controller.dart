@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -18,7 +19,7 @@ enum YTLocalSearchSortType {
   latestPlayed,
 }
 
-class YTLocalSearchController {
+class YTLocalSearchController with PortsProvider {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
   YTLocalSearchController._internal();
 
@@ -58,7 +59,7 @@ class YTLocalSearchController {
 
     final possibleID = text.getYoutubeID;
     final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
-    (await _YTLocalSearchPortsProvider.inst._port?.search.future)?.send(p);
+    (await port?.search.future)?.send(p);
   }
 
   Future<void> initializeLookupMap({required final void Function() onSearchDone}) async {
@@ -68,7 +69,7 @@ class YTLocalSearchController {
     isLoadingLookupLists.value = true;
     fillingCompleter = Completer<void>();
 
-    await _YTLocalSearchPortsProvider.inst.preparePorts(
+    await preparePortRaw(
       onResult: (result) {
         if (result is bool) {
           fillingCompleter.completeIfWasnt();
@@ -325,51 +326,11 @@ class YTLocalSearchController {
     _disposingTimer = Timer(Duration(seconds: afterSeconds), () {
       fillingCompleter.completeIfWasnt();
       fillingCompleter = null;
-      _YTLocalSearchPortsProvider.inst.closePorts();
+      disposePort();
       searchResults.clear();
       scrollController?.dispose();
       scrollController = null;
     });
-  }
-}
-
-typedef _PortsComm = ({ReceivePort items, Completer<SendPort> search});
-
-class _YTLocalSearchPortsProvider {
-  static final _YTLocalSearchPortsProvider inst = _YTLocalSearchPortsProvider._internal();
-  _YTLocalSearchPortsProvider._internal();
-
-  _PortsComm? _port;
-
-  Future<void> closePorts() async {
-    final port = _port;
-    if (port != null) {
-      port.items.close();
-      (await port.search.future).send('dispose');
-      _port = null;
-    }
-  }
-
-  Future<SendPort> preparePorts({
-    required void Function(dynamic result) onResult,
-    required Future<void> Function(SendPort itemsSendPort) isolateFunction,
-    bool force = false,
-  }) async {
-    final portC = _port;
-    if (portC != null && !force) return await portC.search.future;
-
-    await closePorts();
-    _port = (items: ReceivePort(), search: Completer<SendPort>());
-    final port = _port;
-    port!.items.listen((result) {
-      if (result is SendPort) {
-        port.search.completeIfWasnt(result);
-      } else {
-        onResult(result);
-      }
-    });
-    await isolateFunction(port.items.sendPort);
-    return await port.search.future;
   }
 }
 

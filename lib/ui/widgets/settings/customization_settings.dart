@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';

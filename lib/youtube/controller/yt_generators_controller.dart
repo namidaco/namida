@@ -8,10 +8,10 @@ import 'package:history_manager/history_manager.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:newpipeextractor_dart/utils/stringChecker.dart';
 
+import 'package:namida/base/generator_base.dart';
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/search_ports_provider.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -56,7 +56,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     _operationsCompleter[type]?.completeIfWasnt([]);
     _operationsCompleter[type] = Completer();
 
-    (await _portComm?.search.future)?.send(parameters);
+    (await port?.search.future)?.send(parameters);
 
     return await _operationsCompleter[type]?.future ?? [];
   }
@@ -68,17 +68,12 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     _disposingTimer = null;
   }
 
-  PortsComm? _portComm;
-
   void cleanResources({int afterSeconds = 5}) {
     _cancelDisposingTimer();
     _disposingTimer = Timer(Duration(seconds: afterSeconds), () async {
       fillingCompleter.completeIfWasnt();
       fillingCompleter = null;
-      if (_portComm != null) {
-        await disposePort(_portComm!);
-        _portComm = null;
-      }
+      await disposePort();
       isPreparingResources.value = false;
     });
   }
@@ -90,12 +85,6 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     isPreparingResources.value = true;
     fillingCompleter = Completer();
     await preparePortRaw(
-      portN: _portComm,
-      onPortNull: () async {
-        if (_portComm != null) await disposePort(_portComm!);
-        _portComm = (items: ReceivePort(), search: Completer<SendPort>());
-        return _portComm!;
-      },
       onResult: (result) {
         if (result is bool) {
           fillingCompleter.completeIfWasnt();

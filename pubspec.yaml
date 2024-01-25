@@ -78,6 +78,11 @@ dependencies:
   file_picker: "6.1.1"
 
   # ---- Audio Indexing & Playback ----
+  just_audio:
+    git:
+      url: https://github.com/MSOB7YY/just_audio
+      path: just_audio/
+      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
