@@ -6,6 +6,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -114,12 +115,13 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
                   ),
                   Expanded(
                     child: NamidaListViewRaw(
+                      itemExtents: List.filled(SearchSortController.inst.trackSearchList.length, Dimensions.inst.trackTileItemExtent),
                       itemCount: SearchSortController.inst.trackSearchList.length,
                       scrollController: LibraryTab.tracks.scrollController,
                       itemBuilder: (context, i) {
                         final track = SearchSortController.inst.trackSearchList[i];
                         return AnimatingTile(
-                          key: ValueKey(i),
+                          key: Key("$i${track.path}"),
                           position: i,
                           shouldAnimate: _shouldAnimate,
                           child: TrackTile(
