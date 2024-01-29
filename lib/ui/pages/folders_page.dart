@@ -55,7 +55,8 @@ class FoldersPage extends StatelessWidget {
                               title: Folders.inst.currentFolder.value?.path.formatPath() ?? lang.HOME,
                               titleStyle: context.textTheme.displaySmall,
                               onTap: () => Folders.inst.stepOut(),
-                              trailing: Row(
+                              trailingRaw: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Obx(
                                     () {

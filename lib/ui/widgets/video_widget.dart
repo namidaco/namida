@@ -313,16 +313,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     };
     const color = Color.fromRGBO(222, 222, 222, 0.8);
     const strokeWidth = 1.8;
-    const strokeColor = Color.fromRGBO(20, 20, 20, 1);
+    const strokeColor = Color.fromRGBO(20, 20, 20, 0.8);
+    const shadowBR = 5.0;
     const outlineShadow = <Shadow>[
       // bottomLeft
-      Shadow(offset: Offset(-strokeWidth, -strokeWidth), color: strokeColor, blurRadius: 4.0),
+      Shadow(offset: Offset(-strokeWidth, -strokeWidth), color: strokeColor, blurRadius: shadowBR),
       // bottomRight
-      Shadow(offset: Offset(strokeWidth, -strokeWidth), color: strokeColor, blurRadius: 4.0),
+      Shadow(offset: Offset(strokeWidth, -strokeWidth), color: strokeColor, blurRadius: shadowBR),
       // topRight
-      Shadow(offset: Offset(strokeWidth, strokeWidth), color: strokeColor, blurRadius: 4.0),
+      Shadow(offset: Offset(strokeWidth, strokeWidth), color: strokeColor, blurRadius: shadowBR),
       // topLeft
-      Shadow(offset: Offset(-strokeWidth, strokeWidth), color: strokeColor, blurRadius: 4.0),
+      Shadow(offset: Offset(-strokeWidth, strokeWidth), color: strokeColor, blurRadius: shadowBR),
     ];
     return Positioned(
       right: isForward ? finalOffset : null,

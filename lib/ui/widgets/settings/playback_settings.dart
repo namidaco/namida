@@ -617,6 +617,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               },
             ),
             const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
+            const SizedBox(height: 6.0),
             Obx(
               () {
                 final valInSet = settings.interruptionResumeThresholdMin.value;

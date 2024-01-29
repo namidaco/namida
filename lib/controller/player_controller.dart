@@ -261,7 +261,7 @@ class Player {
       insertionType?.shuffleOrSortYT(finalVideos);
 
       if (showSnackBar && finalVideos.isEmpty) {
-        snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
+        snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
         return false;
       }
       await _audioHandler.addToQueue(
@@ -274,6 +274,7 @@ class Player {
         snackyy(
           icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
           message: '${addins.capitalizeFirst} ${finalVideos.length.displayVideoKeyword}',
+          top: false,
         );
       }
       return true;

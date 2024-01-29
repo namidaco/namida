@@ -229,6 +229,7 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final Widget? trailingRaw;
   final String? trailingText;
   final IconData? icon;
   final Widget? leading;
@@ -237,7 +238,6 @@ class CustomListTile extends StatelessWidget {
   final bool enabled;
   final bool largeTitle;
   final int maxSubtitleLines;
-  final Widget? trailingRaw;
   final VisualDensity? visualDensity;
   final TextStyle? titleStyle;
   final double borderR;
@@ -248,16 +248,16 @@ class CustomListTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.trailingRaw,
+    this.trailingText,
     this.onTap,
     this.leading,
     this.icon,
     this.passedColor,
     this.rotateIcon,
-    this.trailingText,
     this.enabled = true,
     this.largeTitle = false,
     this.maxSubtitleLines = 8,
-    this.trailingRaw,
     this.visualDensity,
     this.titleStyle,
     this.borderR = 20.0,
