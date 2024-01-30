@@ -177,6 +177,7 @@ class SettingsController {
   final RxBool ytTopComments = true.obs;
   final RxBool artworkGestureScale = false.obs;
   final RxBool artworkGestureDoubleTapLRC = true.obs;
+  final RxBool previousButtonReplays = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -465,6 +466,7 @@ class SettingsController {
       ytTopComments.value = json['ytTopComments'] ?? ytTopComments.value;
       artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
+      previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -697,6 +699,7 @@ class SettingsController {
       'ytTopComments': ytTopComments.value,
       'artworkGestureScale': artworkGestureScale.value,
       'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
+      'previousButtonReplays': previousButtonReplays.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -893,6 +896,7 @@ class SettingsController {
     bool? ytTopComments,
     bool? artworkGestureScale,
     bool? artworkGestureDoubleTapLRC,
+    bool? previousButtonReplays,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1388,6 +1392,9 @@ class SettingsController {
     }
     if (artworkGestureDoubleTapLRC != null) {
       this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
+    }
+    if (previousButtonReplays != null) {
+      this.previousButtonReplays.value = previousButtonReplays;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

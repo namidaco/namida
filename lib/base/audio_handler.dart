@@ -1174,6 +1174,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Duration get defaultVolume0ResumeThreshold => Duration(minutes: settings.volume0ResumeThresholdMin.value);
 
+  bool get previousButtonReplays => settings.previousButtonReplays.value;
+
   // ------------------------------------------------------------
 
   Future<void> togglePlayPause() async {
@@ -1214,7 +1216,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> skipToNext([bool? andPlay]) async => await onSkipToNext(andPlay);
 
   @override
-  Future<void> skipToPrevious() async => await onSkipToPrevious();
+  Future<void> skipToPrevious() async {
+    if (previousButtonReplays) {
+      final int secondsToReplay;
+      if (settings.isSeekDurationPercentage.value) {
+        final sFromP = (currentItemDuration?.inSeconds ?? 0) * (settings.seekDurationInPercentage.value / 100);
+        secondsToReplay = sFromP.toInt();
+      } else {
+        secondsToReplay = settings.seekDurationInSeconds.value;
+      }
+
+      if (secondsToReplay > 0 && currentPositionMS > secondsToReplay * 1000) {
+        await seek(Duration.zero);
+        return;
+      }
+    }
+
+    await onSkipToPrevious();
+  }
 
   @override
   Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
