@@ -121,6 +121,9 @@ void main() async {
   Indexer.inst.updateImageSizeInStorage();
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
+  if (!shouldShowOnBoarding && settings.refreshOnStartup.value) {
+    Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
+  }
 
   QueueController.inst.prepareAllQueuesFile();
 

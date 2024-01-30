@@ -178,6 +178,7 @@ class SettingsController {
   final RxBool artworkGestureScale = false.obs;
   final RxBool artworkGestureDoubleTapLRC = true.obs;
   final RxBool previousButtonReplays = false.obs;
+  final RxBool refreshOnStartup = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -467,6 +468,7 @@ class SettingsController {
       artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
+      refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
 
       final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
       tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
@@ -700,6 +702,7 @@ class SettingsController {
       'artworkGestureScale': artworkGestureScale.value,
       'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
       'previousButtonReplays': previousButtonReplays.value,
+      'refreshOnStartup': refreshOnStartup.value,
       'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
       'wakelockMode': wakelockMode.value.convertToString,
       'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -897,6 +900,7 @@ class SettingsController {
     bool? artworkGestureScale,
     bool? artworkGestureDoubleTapLRC,
     bool? previousButtonReplays,
+    bool? refreshOnStartup,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1395,6 +1399,9 @@ class SettingsController {
     }
     if (previousButtonReplays != null) {
       this.previousButtonReplays.value = previousButtonReplays;
+    }
+    if (refreshOnStartup != null) {
+      this.refreshOnStartup.value = refreshOnStartup;
     }
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {

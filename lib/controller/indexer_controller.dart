@@ -170,7 +170,13 @@ class Indexer {
     }
   }
 
-  Future<void> refreshLibraryAndCheckForDiff({Set<String>? currentFiles, bool forceReIndex = false, bool? useMediaStore}) async {
+  Future<void> refreshLibraryAndCheckForDiff({
+    Set<String>? currentFiles,
+    bool forceReIndex = false,
+    bool? useMediaStore,
+    bool allowDeletion = true,
+    bool showFinishedSnackbar = true,
+  }) async {
     if (isIndexing.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
 
     isIndexing.value = true;
@@ -187,7 +193,7 @@ class Indexer {
       currentFiles ??= await getAudioFiles();
       await _fetchAllSongsAndWriteToFile(
         audioFiles: getNewFoundPaths(currentFiles),
-        deletedPaths: getDeletedPaths(currentFiles),
+        deletedPaths: allowDeletion ? getDeletedPaths(currentFiles) : {},
         forceReIndex: false,
         useMediaStore: useMediaStore,
       );
@@ -195,7 +201,7 @@ class Indexer {
 
     _afterIndexing();
     isIndexing.value = false;
-    snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+    if (showFinishedSnackbar) snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
   }
 
   /// Adds all tracks inside [tracksInfoList] to their respective album, artist, etc..

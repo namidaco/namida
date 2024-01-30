@@ -32,6 +32,7 @@ enum _IndexerSettingsKeys {
   minimumFileSize,
   minimumTrackDur,
   useMediaStore,
+  refreshOnStartup,
   reindex,
   refreshLibrary,
   foldersToScan,
@@ -56,6 +57,7 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.minimumFileSize: [lang.MIN_FILE_SIZE],
         _IndexerSettingsKeys.minimumTrackDur: [lang.MIN_FILE_DURATION],
         _IndexerSettingsKeys.useMediaStore: [lang.USE_MEDIA_STORE, lang.USE_MEDIA_STORE_SUBTITLE],
+        _IndexerSettingsKeys.refreshOnStartup: [lang.REFRESH_ON_STARTUP],
         _IndexerSettingsKeys.reindex: [lang.RE_INDEX, lang.RE_INDEX_SUBTITLE],
         _IndexerSettingsKeys.refreshLibrary: [lang.REFRESH_LIBRARY, lang.REFRESH_LIBRARY_SUBTITLE],
         _IndexerSettingsKeys.foldersToScan: [lang.LIST_OF_FOLDERS],
@@ -553,6 +555,18 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           ),
           getMediaStoreWidget(),
+          getItemWrapper(
+            key: _IndexerSettingsKeys.refreshOnStartup,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_IndexerSettingsKeys.refreshOnStartup),
+                icon: Broken.d_rotate,
+                title: lang.REFRESH_ON_STARTUP,
+                value: settings.refreshOnStartup.value,
+                onChanged: (isTrue) => settings.save(refreshOnStartup: !isTrue),
+              ),
+            ),
+          ),
           getItemWrapper(
             key: _IndexerSettingsKeys.reindex,
             child: CustomListTile(
