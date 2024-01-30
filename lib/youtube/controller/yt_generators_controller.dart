@@ -140,12 +140,14 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final allIdsAdded = <String, bool>{};
 
     // -- start listening
-    recievePort.listen((p) async {
+    StreamSubscription? streamSub;
+    streamSub = recievePort.listen((p) async {
       if (p is String && p == 'dispose') {
         recievePort.close();
         releaseDateMap.clear();
         allIds.clear();
         allIdsAdded.clear();
+        streamSub?.cancel();
         return;
       }
       p as Map;

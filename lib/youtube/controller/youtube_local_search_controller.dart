@@ -115,7 +115,8 @@ class YTLocalSearchController with PortsProvider {
     final lookupListYTVH = <YoutubeVideoHistory>[];
 
     // -- start listening
-    recievePort.listen((p) {
+    StreamSubscription? streamSub;
+    streamSub = recievePort.listen((p) {
       if (p is String && p == 'dispose') {
         recievePort.close();
         lookupListStreamInfo.clear();
@@ -123,6 +124,7 @@ class YTLocalSearchController with PortsProvider {
         lookupListStreamInfoMap.clear();
         lookupListVideoInfoMap.clear();
         lookupItemAvailable.clear();
+        streamSub?.cancel();
         return;
       }
       p as Map;

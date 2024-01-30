@@ -15,11 +15,14 @@ class NamidaChannel {
     _channel = const MethodChannel('namida');
     _channelEvent = const EventChannel('namida_events');
 
-    _channelEvent.receiveBroadcastStream().map((event) => event as bool).listen((message) {
+    _streamSub?.cancel();
+    _streamSub = _channelEvent.receiveBroadcastStream().map((event) => event as bool).listen((message) {
       isInPip.value = message;
     });
     _initLiseners();
   }
+
+  StreamSubscription? _streamSub;
 
   final isInPip = false.obs;
 

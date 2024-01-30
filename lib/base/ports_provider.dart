@@ -7,11 +7,13 @@ typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
 
 mixin PortsProvider {
   PortsComm? port;
+  StreamSubscription? _streamSub;
 
   Future<void> disposePort() async {
     final port = this.port;
     if (port != null) {
       port.items.close();
+      _streamSub?.cancel();
       (await port.search.future).send('dispose');
       this.port = null;
     }
@@ -28,7 +30,7 @@ mixin PortsProvider {
     await disposePort();
     this.port = (items: ReceivePort(), search: Completer<SendPort>());
     final port = this.port!;
-    port.items.listen((result) {
+    _streamSub = port.items.listen((result) {
       if (result is SendPort) {
         port.search.completeIfWasnt(result);
       } else {
@@ -41,8 +43,11 @@ mixin PortsProvider {
 }
 
 mixin PortsProviderBase {
+  StreamSubscription? _streamSub;
+
   Future<void> disposePort(PortsComm port) async {
     port.items.close();
+    _streamSub?.cancel();
     (await port.search.future).send('dispose');
   }
 
@@ -56,7 +61,7 @@ mixin PortsProviderBase {
     if (portN != null && !force) return await portN.search.future;
 
     final port = await onPortNull();
-    port.items.listen((result) {
+    _streamSub = port.items.listen((result) {
       if (result is SendPort) {
         port.search.completeIfWasnt(result);
       } else {

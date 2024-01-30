@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 
@@ -6,8 +8,11 @@ class ConnectivityController {
   static final ConnectivityController _instance = ConnectivityController._internal();
   ConnectivityController._internal();
 
+  StreamSubscription<ConnectivityResult>? _streamSub;
+
   void initialize() {
-    _connectivity.onConnectivityChanged.listen((connection) {
+    _streamSub?.cancel();
+    _streamSub = _connectivity.onConnectivityChanged.listen((connection) {
       _connectionType.value = connection;
       _hasConnection.value = connection != ConnectivityResult.none;
     });

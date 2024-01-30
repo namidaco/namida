@@ -344,9 +344,11 @@ class SearchSortController {
       );
     }
 
-    receivePort.listen((p) {
+    StreamSubscription? streamSub;
+    streamSub = receivePort.listen((p) {
       if (p is String && p == 'dispose') {
         receivePort.close();
+        streamSub?.cancel();
         return;
       }
       p as Map<String, dynamic>;
@@ -484,9 +486,11 @@ class SearchSortController {
     final sComment = psfMap['comment'] ?? false;
     final sMoods = psfMap['moods'] ?? false;
 
-    receivePort.listen((p) {
+    StreamSubscription? streamSub;
+    streamSub = receivePort.listen((p) {
       if (p is String && p == 'dispose') {
         receivePort.close();
+        streamSub?.cancel();
         return;
       }
       p as Map<String, dynamic>;
@@ -886,9 +890,11 @@ class SearchSortController {
     sendPort.send(receivePort.sendPort);
 
     final cleanupFunction = _functionOfCleanup(cleanup);
-    receivePort.listen((p) {
+    StreamSubscription? streamSub;
+    streamSub = receivePort.listen((p) {
       if (p is String && p == 'dispose') {
         receivePort.close();
+        streamSub?.cancel();
         return;
       }
       p as Map<String, dynamic>;

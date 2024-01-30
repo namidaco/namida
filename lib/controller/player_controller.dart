@@ -91,6 +91,9 @@ class Player {
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
   int get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;
 
+  StreamSubscription? _videoPlayerInfoSub;
+  StreamSubscription? _notificationClickedSub;
+
   Future<void> initializePlayer() async {
     _audioHandler = await AudioService.init(
       builder: () => NamidaAudioVideoHandler(),
@@ -107,14 +110,16 @@ class Player {
         return imagePath != null ? File(imagePath).statSync().toString() : '';
       },
     );
-    _audioHandler.videoPlayerInfo.listen((info) {
+    _videoPlayerInfoSub?.cancel();
+    _videoPlayerInfoSub = _audioHandler.videoPlayerInfo.listen((info) {
       if (info == null) return;
       if (info.width == -1 || info.height == -1) return;
       NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
     });
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
-    AudioService.notificationClicked.listen((clicked) {
+    _notificationClickedSub?.cancel();
+    _notificationClickedSub = AudioService.notificationClicked.listen((clicked) {
       if (clicked) {
         switch (settings.onNotificationTapAction.value) {
           case NotificationTapAction.openApp:

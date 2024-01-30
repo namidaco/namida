@@ -117,8 +117,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, jump: true);
   }
 
+  StreamSubscription? _streamSub;
   void _listenForPosition() {
-    Player.inst.positionStream.asBroadcastStream().listen((ms) {
+    _streamSub = Player.inst.positionStream.asBroadcastStream().listen((ms) {
       _updateHighlightedLine(ms.milliseconds);
     });
   }
@@ -164,6 +165,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void dispose() {
     _latestUpdatedLineIndex.close();
     _latestUpdatedLine.close();
+    _streamSub?.cancel();
     super.dispose();
   }
 
