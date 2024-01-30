@@ -20,7 +20,10 @@ class QueueController {
   /// holds all queues mapped & sorted by [date] chronologically & reversly.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
 
-  Queue? get _latestQueueInMap => queuesMap.value[queuesMap.value.keys.lastOrNull];
+  Queue? get _latestQueueInMap => queuesMap.value[_latestAddedQueueDate];
+
+  /// faster way to access latest queue
+  int _latestAddedQueueDate = 0;
 
   /// doesnt save queues with more than 2000 tracks.
   Future<void> addNewQueue({
@@ -54,6 +57,7 @@ class QueueController {
 
     final q = Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks);
     _updateMap(q);
+    _latestAddedQueueDate = q.date;
     printy("Added New Queue");
     await _saveQueueToStorage(q);
   }
@@ -136,10 +140,10 @@ class QueueController {
         onMatch: () => queuesToSave.add(q),
       );
     });
-    await queuesToSave.toList().loopFuture((q, index) async {
+    for (final q in queuesToSave) {
       _updateMap(q);
       await _saveQueueToStorage(q);
-    });
+    }
   }
 
   Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
@@ -152,16 +156,17 @@ class QueueController {
         onMatch: () => queuesToSave.add(q),
       );
     });
-    await queuesToSave.loopFuture((q, index) async {
+    for (final q in queuesToSave) {
       _updateMap(q);
       await _saveQueueToStorage(q);
-    });
+    }
   }
 
   ///
   Future<void> prepareAllQueuesFile() async {
     final map = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
     queuesMap.value = map;
+    _latestAddedQueueDate = map.keys.lastOrNull ?? 0;
     _isLoadingQueues = false;
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
