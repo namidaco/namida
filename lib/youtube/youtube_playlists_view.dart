@@ -126,6 +126,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                     playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
                     totalVideosCountInMainList: YoutubeHistoryController.inst.currentMostPlayedTracks.length,
                     displayShimmer: YoutubeHistoryController.inst.isLoadingHistory,
+                    listensMap: YoutubeHistoryController.inst.currentTopTracksMapListens,
                   );
                 },
               );
@@ -325,6 +326,7 @@ class _HorizontalSliverList extends StatelessWidget {
   final EdgeInsets padding;
   final bool displayTimeAgo;
   final bool displayShimmer;
+  final Map<String, List<int>>? listensMap;
 
   const _HorizontalSliverList({
     required this.title,
@@ -338,6 +340,7 @@ class _HorizontalSliverList extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 8.0),
     this.displayTimeAgo = false,
     this.displayShimmer = false,
+    this.listensMap,
   });
 
   void onTap() => NamidaNavigator.inst.navigateTo(viewAllPage);
@@ -420,6 +423,7 @@ class _HorizontalSliverList extends StatelessWidget {
                         displayTimeAgo: displayTimeAgo,
                         minimalCardWidth: thumbWidth,
                         thumbnailHeight: thumbHeight,
+                        overrideListens: listensMap?[finalVideos[index].id] ?? [],
                       );
                     },
                   ),

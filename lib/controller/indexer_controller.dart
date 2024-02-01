@@ -369,13 +369,13 @@ class Indexer {
   }) async {
     // -- most methods dont throw, except for timeout
     try {
-      const timeoutDuration = Duration(seconds: 15);
+      const timeoutDuration = Duration(seconds: 8);
 
       // -- returns null early depending on size [byte] or duration [seconds]
       FileStat? fileStat;
       try {
         fileStat = File(trackPath).statSync();
-        if (minSize != 0 && fileStat.size < minSize) {
+        if (minSize > 0 && fileStat.size < minSize) {
           if (onMinSizeTrigger != null) onMinSizeTrigger();
           return (null, null);
         }
@@ -916,12 +916,16 @@ class Indexer {
     await _createDefaultNamidaArtwork();
   }
 
-  void _clearListsAndResetCounters() {
+  void _clearLists() {
     tracksInfoList.clear();
     allTracksMappedByPath.clear();
     SearchSortController.inst.sortMedia(MediaType.track);
+  }
+
+  void _resetCounters() {
     filteredForSizeDurationTracks.value = 0;
     duplicatedTracksLength.value = 0;
+    tracksExcludedByNoMedia.value = 0;
   }
 
   /// Removes [deletedPaths] and fetches [audioFiles].
@@ -936,8 +940,10 @@ class Indexer {
     required bool forceReIndex,
     required bool useMediaStore,
   }) async {
+    _resetCounters();
+
     if (forceReIndex) {
-      _clearListsAndResetCounters();
+      _clearLists();
       if (!useMediaStore) audioFiles = await getAudioFiles(forceReCheckDirs: true);
     }
 

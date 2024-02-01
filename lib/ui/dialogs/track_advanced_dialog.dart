@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -96,7 +98,7 @@ void showTrackAdvancedDialog({
               oldPath: firstTracksDirectoryPath,
               tracksPaths: tracksUniqued.map((e) => e.track.path),
             ),
-          if (isSingle)
+          if (isSingle && File(tracks.first.track.path).existsSync())
             CustomListTile(
               visualDensity: VisualDensity.compact,
               passedColor: colorScheme,

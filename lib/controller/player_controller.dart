@@ -42,11 +42,6 @@ class Player {
   YoutubeID? get nowPlayingVideoID => _audioHandler.currentVideo;
   List<YoutubeID> get currentQueueYoutube => _audioHandler.currentQueueYoutubeID;
 
-  /// This should be used by [VideoController] to pause playback whenever the video is buffering.
-  ///
-  /// As for audio side, the [NamidaAudioVideoHandler] internally handles pauses/resumes.
-  bool get shouldCareAboutAVSync => currentQueueYoutube.isNotEmpty;
-
   VideoInfoData? get videoPlayerInfo => _audioHandler.videoPlayerInfo.value;
   bool get videoInitialized => videoPlayerInfo?.isInitialized ?? false;
 

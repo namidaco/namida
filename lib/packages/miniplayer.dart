@@ -407,9 +407,6 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                       ],
                     ),
                   ),
-                // if (settings.enablePartyModeInMiniplayer.value) ...[
-
-                // ],
 
                 /// Top Row
                 if (rcp > 0.0)
