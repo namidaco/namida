@@ -810,8 +810,9 @@ class IndexerSettings extends SettingSubpageProvider {
 }
 
 Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
+  // [didModifyFolder] was mainly used to force recheck libraries, now it will always recheck.
   RefreshLibraryIconController.repeat();
-  final currentFiles = await Indexer.inst.getAudioFiles(forceReCheckDirs: didModifyFolder);
+  final currentFiles = await Indexer.inst.getAudioFiles();
   final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
   final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
   if (newPathsLength == 0 && deletedPathLength == 0) {

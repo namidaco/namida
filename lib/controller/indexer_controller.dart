@@ -944,7 +944,7 @@ class Indexer {
 
     if (forceReIndex) {
       _clearLists();
-      if (!useMediaStore) audioFiles = await getAudioFiles(forceReCheckDirs: true);
+      if (!useMediaStore) audioFiles = await getAudioFiles();
     }
 
     printy("Audio Files New: ${audioFiles.length}");
@@ -1203,9 +1203,9 @@ class Indexer {
   ///
   /// ex: if (.nomedia) was found in [/storage/0/Music/],
   /// then subdirectories [/storage/0/Music/folder1/], [/storage/0/Music/folder2/] & [/storage/0/Music/folder2/subfolder/] will be excluded too.
-  Future<Set<String>> getAudioFiles({bool strictNoMedia = true, bool forceReCheckDirs = false}) async {
+  Future<Set<String>> getAudioFiles({bool strictNoMedia = true}) async {
     tracksExcludedByNoMedia.value = 0;
-    final allAvailableDirectories = await getAvailableDirectories(forceReCheck: forceReCheckDirs, strictNoMedia: strictNoMedia);
+    final allAvailableDirectories = await getAvailableDirectories(forceReCheck: true, strictNoMedia: strictNoMedia);
 
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
@@ -1227,28 +1227,22 @@ class Indexer {
     return allPaths;
   }
 
-  bool? _latestRespectNoMedia;
-  Completer<Map<Directory, bool>>? _availableDirs;
-  Future<Map<Directory, bool>> getAvailableDirectories({bool strictNoMedia = true, bool forceReCheck = false}) async {
-    if (_availableDirs != null && !forceReCheck && _latestRespectNoMedia == settings.respectNoMedia.value) {
-      return await _availableDirs!.future;
-    } else {
-      _availableDirs = null; // for when forceReCheck enabled.
-      _availableDirs = Completer<Map<Directory, bool>>();
-
-      _latestRespectNoMedia = settings.respectNoMedia.value;
-
-      final parameters = {
-        'directoriesToScan': settings.directoriesToScan.toList(),
-        'respectNoMedia': settings.respectNoMedia.value,
-        'strictNoMedia': strictNoMedia, // TODO: expose [strictNoMedia] in settings?
-      };
-      final allAvailableDirectories = await _getAvailableDirectoriesIsolate.thready(parameters);
-
-      _availableDirs?.complete(allAvailableDirectories);
-
-      return allAvailableDirectories;
+  Completer<Map<Directory, bool>>? _lastAvailableDirectories;
+  Future<Map<Directory, bool>> getAvailableDirectories({bool forceReCheck = true, bool strictNoMedia = true}) async {
+    if (forceReCheck == false && _lastAvailableDirectories != null) {
+      return await _lastAvailableDirectories!.future;
     }
+
+    _lastAvailableDirectories = null; // for when forceReCheck enabled.
+    _lastAvailableDirectories = Completer<Map<Directory, bool>>();
+    final parameters = {
+      'directoriesToScan': settings.directoriesToScan.toList(),
+      'respectNoMedia': settings.respectNoMedia.value,
+      'strictNoMedia': strictNoMedia, // TODO: expose [strictNoMedia] in settings?
+    };
+    final dirs = await _getAvailableDirectoriesIsolate.thready(parameters);
+    _lastAvailableDirectories?.completeIfWasnt(dirs);
+    return dirs;
   }
 
   static Map<Directory, bool> _getAvailableDirectoriesIsolate(Map parameters) {
