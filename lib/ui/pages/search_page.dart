@@ -396,7 +396,7 @@ class SearchPage extends StatelessWidget {
                                                 children: [
                                                   NamidaPopupWrapper(
                                                     useRootNavigator: false,
-                                                    children: const [SortByMenuTracksSearch()],
+                                                    children: () => const [SortByMenuTracksSearch()],
                                                     child: NamidaInkWell(
                                                       child: Obx(
                                                         () {

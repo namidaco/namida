@@ -208,7 +208,7 @@ class YTCommentCard extends StatelessWidget {
               ),
             ),
             NamidaPopupWrapper(
-              childrenDefault: [
+              childrenDefault: () => [
                 NamidaPopupItem(
                   icon: Broken.copy,
                   title: lang.COPY,

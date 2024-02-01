@@ -2840,19 +2840,21 @@ class NamidaPopupItem {
   final String title;
   final String subtitle;
   final void Function() onTap;
+  final bool enabled;
 
   const NamidaPopupItem({
     required this.icon,
     required this.title,
     this.subtitle = '',
     required this.onTap,
+    this.enabled = true,
   });
 }
 
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
-  final List<Widget> children;
-  final List<NamidaPopupItem> childrenDefault;
+  final List<Widget> Function()? children;
+  final List<NamidaPopupItem> Function()? childrenDefault;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
   final bool openOnTap;
@@ -2862,8 +2864,8 @@ class NamidaPopupWrapper extends StatelessWidget {
   const NamidaPopupWrapper({
     super.key,
     this.child = const MoreIcon(),
-    this.children = const [],
-    this.childrenDefault = const [],
+    this.children,
+    this.childrenDefault,
     this.onTap,
     this.onPop,
     this.openOnTap = true,
@@ -2893,42 +2895,45 @@ class NamidaPopupWrapper extends StatelessWidget {
         context: context,
         position: position,
         items: [
-          ...childrenDefault.map(
-            (e) => PopupMenuItem(
-              height: 42.0,
-              onTap: e.onTap,
-              child: Row(
-                children: [
-                  Icon(e.icon, size: 20.0),
-                  const SizedBox(width: 6.0),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          e.title,
-                          style: context.textTheme.displayMedium,
-                        ),
-                        if (e.subtitle != '')
+          if (childrenDefault != null)
+            ...childrenDefault!().map(
+              (e) => PopupMenuItem(
+                height: 42.0,
+                onTap: e.onTap,
+                enabled: e.enabled,
+                child: Row(
+                  children: [
+                    Icon(e.icon, size: 20.0),
+                    const SizedBox(width: 6.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            e.subtitle,
-                            style: context.textTheme.displaySmall,
+                            e.title,
+                            style: context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4)),
                           ),
-                      ],
+                          if (e.subtitle != '')
+                            Text(
+                              e.subtitle,
+                              style: context.textTheme.displaySmall,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          ...children.map(
-            (e) => PopupMenuItem(
-              onTap: null,
-              height: 32.0,
-              padding: EdgeInsets.zero,
-              child: e,
+          if (children != null)
+            ...children!().map(
+              (e) => PopupMenuItem(
+                onTap: null,
+                height: 32.0,
+                padding: EdgeInsets.zero,
+                child: e,
+              ),
             ),
-          ),
         ],
       ),
     );

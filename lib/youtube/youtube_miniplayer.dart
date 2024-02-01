@@ -83,7 +83,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
 
             final miniTitle = videoInfo?.name;
             final miniSubtitle = videoChannel?.name ?? videoInfo?.uploaderName;
-            final currentId = videoInfo?.id ?? Player.inst.nowPlayingVideoID?.id ?? Player.inst.nowPlayingTrack.youtubeID; // last one not needed
+            final currentId = Player.inst.getCurrentVideoId;
 
             final channelName = videoChannel?.name ?? videoInfo?.uploaderName;
             final channelThumbnail = videoChannel?.avatarUrl ?? videoInfo?.uploaderAvatarUrl;
@@ -132,7 +132,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               key: MiniPlayerController.inst.ytMiniplayerKey,
               duration: const Duration(milliseconds: 1000),
               curve: Curves.easeOutExpo,
-              bottomMargin: 8.0 + (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : 0.0),
+              bottomMargin: 8.0 + (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : 0.0) - 1.0, // -1 is just a clip ensurer.
               minHeight: miniplayerHeight,
               maxHeight: context.height,
               decoration: BoxDecoration(
@@ -192,9 +192,9 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             expandedAlignment: Alignment.centerLeft,
                                             expandedCrossAxisAlignment: CrossAxisAlignment.start,
                                             tilePadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 14.0),
-                                            textColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
+                                            textColor: Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(40), context.theme.colorScheme.onBackground),
                                             collapsedTextColor: context.theme.colorScheme.onBackground,
-                                            iconColor: Color.alphaBlend(CurrentColor.inst.color.withAlpha(40), context.theme.colorScheme.onBackground),
+                                            iconColor: Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(40), context.theme.colorScheme.onBackground),
                                             collapsedIconColor: context.theme.colorScheme.onBackground,
                                             childrenPadding: const EdgeInsets.all(18.0),
                                             onExpansionChanged: (value) => YoutubeController.inst.isTitleExpanded.value = value,
@@ -207,7 +207,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                     if (videoListens.isNotEmpty)
                                                       NamidaInkWell(
                                                         borderRadius: 6.0,
-                                                        bgColor: CurrentColor.inst.color.withOpacity(0.7),
+                                                        bgColor: CurrentColor.inst.miniplayerColor.withOpacity(0.7),
                                                         onTap: () {
                                                           showVideoListensDialog(currentId);
                                                         },

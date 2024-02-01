@@ -63,6 +63,22 @@ class YoutubePlaylistsView extends StatelessWidget {
     return videos;
   }
 
+  List<NamidaPopupItem> getMenuItems(YoutubePlaylist playlist) {
+    return displayMenu
+        ? YTUtils.getVideosMenuItems(
+            videos: playlist.tracks,
+            playlistName: '',
+            moreItems: [
+              NamidaPopupItem(
+                icon: Broken.trash,
+                title: lang.DELETE_PLAYLIST,
+                onTap: () => playlist.promptDelete(name: playlist.name),
+              ),
+            ],
+          )
+        : <NamidaPopupItem>[];
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
@@ -149,7 +165,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                           children: [
                             NamidaPopupWrapper(
                               useRootNavigator: false,
-                              children: [
+                              children: () => [
                                 Obx(
                                   () {
                                     final playlistSort = settings.ytPlaylistSort.value;
@@ -242,21 +258,8 @@ class YoutubePlaylistsView extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final name = playlistsNames[index];
                   final playlist = playlistsMap[name]!;
-                  final menuItems = displayMenu
-                      ? YTUtils.getVideosMenuItems(
-                          videos: playlist.tracks,
-                          playlistName: '',
-                          moreItems: [
-                            NamidaPopupItem(
-                              icon: Broken.trash,
-                              title: lang.DELETE_PLAYLIST,
-                              onTap: () => playlist.promptDelete(name: playlist.name),
-                            ),
-                          ],
-                        )
-                      : <NamidaPopupItem>[];
                   return NamidaPopupWrapper(
-                    childrenDefault: menuItems,
+                    childrenDefault: () => getMenuItems(playlist),
                     openOnTap: false,
                     child: Obx(
                       () {
@@ -294,7 +297,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                           smallBoxText: playlist.tracks.length.formatDecimal(),
                           smallBoxIcon: Broken.play_cricle,
                           checkmarkStatus: idsExist,
-                          menuChildrenDefault: menuItems,
+                          menuChildrenDefault: () => getMenuItems(playlist),
                         );
                       },
                     ),

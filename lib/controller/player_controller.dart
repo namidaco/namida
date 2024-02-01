@@ -37,6 +37,8 @@ class Player {
   Selectable get nowPlayingTWD => _audioHandler.currentTrack;
   List<Selectable> get currentQueue => _audioHandler.currentQueueSelectable;
 
+  String get getCurrentVideoId => (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? currentVideoInfo)?.id ?? nowPlayingVideoID?.id ?? nowPlayingTrack.youtubeID;
+
   YoutubeID? get nowPlayingVideoID => _audioHandler.currentVideo;
   List<YoutubeID> get currentQueueYoutube => _audioHandler.currentQueueYoutubeID;
 

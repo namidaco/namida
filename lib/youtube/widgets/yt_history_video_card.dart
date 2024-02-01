@@ -67,15 +67,6 @@ class YTHistoryVideoCard extends StatelessWidget {
 
     final info = YoutubeController.inst.getVideoInfo(video.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
-    final menuItems = YTUtils.getVideoCardMenuItems(
-      videoId: video.id,
-      url: info?.url,
-      channelUrl: info?.uploaderUrl,
-      playlistID: playlistID,
-      idsNamesLookup: {video.id: info?.name},
-      playlistName: playlistName,
-      videoYTID: video,
-    );
     final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(video.id) ?? video.id;
     final videoChannel = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(video.id);
     final watchMS = video.dateTimeAdded.millisecondsSinceEpoch;
@@ -101,7 +92,15 @@ class YTHistoryVideoCard extends StatelessWidget {
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: openMenuOnLongPress,
-      childrenDefault: menuItems,
+      childrenDefault: () => YTUtils.getVideoCardMenuItems(
+        videoId: video.id,
+        url: info?.url,
+        channelUrl: info?.uploaderUrl,
+        playlistID: playlistID,
+        idsNamesLookup: {video.id: info?.name},
+        playlistName: playlistName,
+        videoYTID: video,
+      ),
       child: Obx(
         () {
           final isCurrentlyPlaying = Player.inst.nowPlayingVideoID == video;
@@ -231,7 +230,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: NamidaPopupWrapper(
-                        childrenDefault: YTUtils.getVideoCardMenuItems(
+                        childrenDefault: () => YTUtils.getVideoCardMenuItems(
                           videoId: video.id,
                           url: info?.url,
                           channelUrl: info?.uploaderUrl,

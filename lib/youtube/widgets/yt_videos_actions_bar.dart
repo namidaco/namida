@@ -101,10 +101,9 @@ class YTVideosActionBar extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  List<NamidaPopupItem> getMenuItems() {
     final countText = videos.length;
-    final menuItems = [
+    return [
       if (menuOptions.addToPlaylist)
         NamidaPopupItem(
           icon: Broken.music_playlist,
@@ -148,7 +147,10 @@ class YTVideosActionBar extends StatelessWidget {
           onTap: _onPlayLast,
         ),
     ];
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         if (barOptions.addToPlaylist)
@@ -187,10 +189,10 @@ class YTVideosActionBar extends StatelessWidget {
             tooltip: lang.PLAY_LAST,
             onTap: _onPlayLast,
           ),
-        if (menuItems.isNotEmpty)
+        if (getMenuItems().isNotEmpty)
           NamidaPopupWrapper(
             openOnLongPress: false,
-            childrenDefault: menuItems,
+            childrenDefault: getMenuItems,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3.0),
               child: Icon(

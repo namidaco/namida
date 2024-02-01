@@ -85,6 +85,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
   }
 
+  void showControlsBriefly() {
+    setControlsVisibily(true);
+    _startTimer();
+  }
+
   final userSeekMS = 0.obs;
 
   Widget _getBuilder({
@@ -689,7 +694,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 _resetTimer();
                                 setControlsVisibily(true);
                               },
-                              children: [
+                              children: () => [
                                 ...[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((speed) {
                                   return Obx(
                                     () {
@@ -776,7 +781,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   _resetTimer();
                                   setControlsVisibily(true);
                                 },
-                                children: [
+                                children: () => [
                                   ...streamsMap.values.map(
                                     (element) => Obx(
                                       () {
@@ -859,7 +864,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     _resetTimer();
                                     setControlsVisibily(true);
                                   },
-                                  children: [
+                                  children: () => [
                                     _getQualityChip(
                                       title: lang.AUDIO_ONLY,
                                       onPlay: (isSelected) {
@@ -1229,64 +1234,60 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           padding: const EdgeInsets.all(14.0),
                           child: Obx(
                             () {
+                              if (_showLoadingIndicator) {
+                                return ThreeArchedCircle(
+                                  color: itemsColor,
+                                  size: 40.0,
+                                );
+                              }
                               final currentPosition = Player.inst.nowPlayingPosition;
                               final currentTotalDur = Player.inst.currentItemDuration?.inMilliseconds ?? 0;
-                              final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 200; // 200ms allowance
-                              if (reachedLastPosition) {
-                                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                  if (!_isVisible) _startTimer(); // should execute once, the next line will set `_isVisible` to true.
-                                  setControlsVisibily(true);
-                                });
-                              }
-                              return _showLoadingIndicator
-                                  ? ThreeArchedCircle(
-                                      color: itemsColor,
-                                      size: 40.0,
+                              final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 100; // 100ms allowance
+
+                              return reachedLastPosition
+                                  ? NamidaIconButton(
+                                      icon: null,
+                                      horizontalPadding: 0.0,
+                                      padding: EdgeInsets.zero,
+                                      onPressed: () async {
+                                        await Player.inst.seek(Duration.zero);
+                                        await Player.inst.play();
+                                        _startTimer();
+                                      },
+                                      child: Icon(
+                                        Broken.refresh,
+                                        size: 40.0,
+                                        color: itemsColor,
+                                        key: const Key('replay'),
+                                      ),
                                     )
-                                  : reachedLastPosition
-                                      ? NamidaIconButton(
-                                          icon: null,
-                                          horizontalPadding: 0.0,
-                                          padding: EdgeInsets.zero,
-                                          onPressed: () async {
-                                            await Player.inst.seek(Duration.zero);
-                                            await Player.inst.play();
-                                            _startTimer();
-                                          },
-                                          child: Icon(
-                                            Broken.refresh,
-                                            size: 40.0,
-                                            color: itemsColor,
-                                            key: const Key('replay'),
-                                          ),
-                                        )
-                                      : NamidaIconButton(
-                                          icon: null,
-                                          horizontalPadding: 0.0,
-                                          padding: EdgeInsets.zero,
-                                          onPressed: () {
-                                            Player.inst.togglePlayPause();
-                                            _startTimer();
-                                          },
-                                          child: Obx(
-                                            () => AnimatedSwitcher(
-                                              duration: const Duration(milliseconds: 200),
-                                              child: Player.inst.isPlaying
-                                                  ? Icon(
-                                                      Broken.pause,
-                                                      size: 40.0,
-                                                      color: itemsColor,
-                                                      key: const Key('paused'),
-                                                    )
-                                                  : Icon(
-                                                      Broken.play,
-                                                      size: 40.0,
-                                                      color: itemsColor,
-                                                      key: const Key('playing'),
-                                                    ),
-                                            ),
-                                          ),
-                                        );
+                                  : NamidaIconButton(
+                                      icon: null,
+                                      horizontalPadding: 0.0,
+                                      padding: EdgeInsets.zero,
+                                      onPressed: () {
+                                        Player.inst.togglePlayPause();
+                                        _startTimer();
+                                      },
+                                      child: Obx(
+                                        () => AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 200),
+                                          child: Player.inst.isPlaying
+                                              ? Icon(
+                                                  Broken.pause,
+                                                  size: 40.0,
+                                                  color: itemsColor,
+                                                  key: const Key('paused'),
+                                                )
+                                              : Icon(
+                                                  Broken.play,
+                                                  size: 40.0,
+                                                  color: itemsColor,
+                                                  key: const Key('playing'),
+                                                ),
+                                        ),
+                                      ),
+                                    );
                             },
                           ),
                         ),

@@ -225,7 +225,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     icon: Broken.story,
                     title: lang.VIDEO_QUALITY,
                     trailing: NamidaPopupWrapper(
-                      childrenDefault: [
+                      childrenDefault: () => [
                         NamidaPopupItem(
                           icon: Broken.musicnote,
                           title: lang.AUDIO,

@@ -343,7 +343,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
       title: lang.FOLDER,
       subtitle: widget.subtitle?.call(groupName.value),
       trailing: NamidaPopupWrapper(
-        childrenDefault: [
+        childrenDefault: () => [
           NamidaPopupItem(
             icon: Broken.add,
             title: lang.ADD,

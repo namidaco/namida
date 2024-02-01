@@ -242,7 +242,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                   ),
                                   NamidaPopupWrapper(
                                     openOnLongPress: false,
-                                    childrenDefault: [
+                                    childrenDefault: () => [
                                       NamidaPopupItem(icon: Broken.share, title: lang.SHARE, onTap: playlist.shareVideos),
                                       if (widget.isEditable) ...[
                                         NamidaPopupItem(
@@ -537,7 +537,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                               ),
                               NamidaPopupWrapper(
                                 openOnLongPress: false,
-                                childrenDefault: playlist.getPopupMenuItems(
+                                childrenDefault: () => playlist.getPopupMenuItems(
                                   context,
                                   displayDownloadItem: false,
                                   displayShuffle: false,

@@ -41,21 +41,25 @@ class YoutubeVideoCard extends StatelessWidget {
     this.displayThirdLine = true,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final idNull = video?.id;
-    final videoId = idNull ?? '';
-    final menuItems = YTUtils.getVideoCardMenuItems(
+  List<NamidaPopupItem> getMenuItems() {
+    final videoId = video?.id ?? '';
+    return YTUtils.getVideoCardMenuItems(
       videoId: videoId,
       url: video?.url,
       channelUrl: video?.uploaderUrl,
       playlistID: playlistID,
       idsNamesLookup: {videoId: video?.name},
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final idNull = video?.id;
+    final videoId = idNull ?? '';
     final videoViewCount = video?.viewCount;
     return NamidaPopupWrapper(
       openOnTap: false,
-      childrenDefault: menuItems,
+      childrenDefault: getMenuItems,
       child: YoutubeCard(
         thumbnailWidthPercentage: thumbnailWidthPercentage,
         fontMultiplier: fontMultiplier,
@@ -108,7 +112,7 @@ class YoutubeVideoCard extends StatelessWidget {
             },
         smallBoxText: video?.duration?.inSeconds.secondsLabel,
         bottomRightWidgets: idNull == null ? [] : YTUtils.getVideoCacheStatusIcons(videoId: idNull, context: context),
-        menuChildrenDefault: menuItems,
+        menuChildrenDefault: getMenuItems,
       ),
     );
   }

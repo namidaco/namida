@@ -72,7 +72,7 @@ class AdvancedSettings extends SettingSubpageProvider {
         icon: Broken.cpu_setting,
         title: lang.PERFORMANCE_MODE,
         trailingRaw: NamidaPopupWrapper(
-          children: [
+          children: () => [
             ...PerformanceMode.values.map(
               (e) => Obx(
                 () => NamidaInkWell(

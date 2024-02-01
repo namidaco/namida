@@ -1113,17 +1113,21 @@ Future<void> showGeneralPopupDialog(
                             if (removeQueueTile != null) removeQueueTile,
 
                             if (Player.inst.currentQueue.isNotEmpty && Player.inst.latestInsertedIndex != Player.inst.currentIndex)
-                              SmallListTile(
-                                color: colorDelightened.value,
-                                compact: true,
-                                title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword}',
-                                subtitle: Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track.title,
-                                icon: Broken.hierarchy_square,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
-                                },
-                              ),
+                              () {
+                                final playAfterTrack = Player.inst.currentQueue.elementAt(Player.inst.latestInsertedIndex).track;
+                                return SmallListTile(
+                                  color: colorDelightened.value,
+                                  compact: true,
+                                  title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword}',
+                                  subtitle: "${playAfterTrack.artistsList.first} - ${playAfterTrack.title}",
+                                  icon: Broken.hierarchy_square,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
+                                  },
+                                );
+                              }(),
+
                             if (isSingle && tracks.first == Player.inst.nowPlayingTrack)
                               Obx(
                                 () => SmallListTile(

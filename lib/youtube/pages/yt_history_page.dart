@@ -92,7 +92,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> {
                               ),
                               NamidaPopupWrapper(
                                 openOnLongPress: false,
-                                childrenDefault: YTUtils.getVideosMenuItems(
+                                childrenDefault: () => YTUtils.getVideosMenuItems(
                                   playlistName: k_PLAYLIST_NAME_HISTORY,
                                   videos: videos,
                                 ),

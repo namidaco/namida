@@ -25,8 +25,8 @@ class YoutubeCard extends StatelessWidget {
   final double thumbnailWidthPercentage;
   final IconData? smallBoxIcon;
   final bool extractColor;
-  final List<Widget> menuChildren;
-  final List<NamidaPopupItem> menuChildrenDefault;
+  final List<Widget> Function()? menuChildren;
+  final List<NamidaPopupItem> Function()? menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
   final bool isImageImportantInCache;
@@ -55,8 +55,8 @@ class YoutubeCard extends StatelessWidget {
     this.thumbnailWidthPercentage = 1.0,
     this.smallBoxIcon,
     this.extractColor = false,
-    this.menuChildren = const [],
-    this.menuChildrenDefault = const [],
+    this.menuChildren,
+    this.menuChildrenDefault,
     this.isCircle = false,
     this.bottomRightWidgets = const [],
     required this.isImageImportantInCache,
@@ -210,7 +210,7 @@ class YoutubeCard extends StatelessWidget {
                 children: bottomRightWidgets,
               ),
             ),
-          if (!shimmerEnabled && (menuChildren.isNotEmpty || menuChildrenDefault.isNotEmpty))
+          if (!shimmerEnabled && ((menuChildren?.call().isNotEmpty ?? false) || (menuChildrenDefault?.call().isNotEmpty ?? false)))
             Positioned(
               top: 0.0,
               right: 0.0,

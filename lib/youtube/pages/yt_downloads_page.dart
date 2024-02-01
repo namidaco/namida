@@ -330,6 +330,7 @@ class YTDownloadsPage extends StatelessWidget {
                                             final confirmed = await _confirmCancelDialog(
                                               context: context,
                                               operationTitle: lang.CANCEL,
+                                              confirmMessage: lang.REMOVE,
                                               groupTitle: groupName,
                                               itemsLength: list.length,
                                             );

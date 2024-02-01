@@ -59,7 +59,8 @@ class YoutubePlaylistCard extends StatelessWidget {
       displaythirdLineText: false,
       smallBoxText: countText,
       smallBoxIcon: Broken.play_cricle,
-      menuChildrenDefault: playlist?.getPopupMenuItems(
+      menuChildrenDefault: () =>
+          playlist?.getPopupMenuItems(
             context,
             displayPlay: playOnTap == false,
             playlistToOpen: playOnTap ? playlist : null,

@@ -475,15 +475,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     final info = YoutubeController.inst.getVideoInfo(item.id);
     final duration = info?.duration?.inSeconds.secondsLabel;
-    final menuItems = YTUtils.getVideoCardMenuItems(
-      videoId: item.id,
-      url: info?.url,
-      channelUrl: info?.uploaderUrl,
-      playlistID: null,
-      idsNamesLookup: {item.id: info?.name},
-      playlistName: '',
-      videoYTID: null,
-    );
 
     final itemIcon = item.videoStream != null
         ? Broken.video
@@ -494,7 +485,15 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,
-      childrenDefault: menuItems,
+      childrenDefault: () => YTUtils.getVideoCardMenuItems(
+        videoId: item.id,
+        url: info?.url,
+        channelUrl: info?.uploaderUrl,
+        playlistID: null,
+        idsNamesLookup: {item.id: info?.name},
+        playlistName: '',
+        videoYTID: null,
+      ),
       child: NamidaInkWell(
         borderRadius: 10.0,
         onTap: () {
