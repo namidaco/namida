@@ -174,7 +174,8 @@ class YTHistoryVideoCard extends StatelessWidget {
                     ],
                   )),
             ),
-            const SizedBox(width: 12.0),
+            const SizedBox(width: 6.0 + 12.0), // right + iconWidth
+            const SizedBox(width: 8.0),
           ];
           return NamidaInkWell(
             borderRadius: minimalCard ? 8.0 : 10.0,
@@ -227,16 +228,16 @@ class YTHistoryVideoCard extends StatelessWidget {
                   Positioned(
                     top: 0.0,
                     right: 0.0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: NamidaPopupWrapper(
-                        childrenDefault: () => YTUtils.getVideoCardMenuItems(
-                          videoId: video.id,
-                          url: info?.url,
-                          channelUrl: info?.uploaderUrl,
-                          playlistID: playlistID,
-                          idsNamesLookup: {video.id: videoTitle},
-                        ),
+                    child: NamidaPopupWrapper(
+                      childrenDefault: () => YTUtils.getVideoCardMenuItems(
+                        videoId: video.id,
+                        url: info?.url,
+                        channelUrl: info?.uploaderUrl,
+                        playlistID: playlistID,
+                        idsNamesLookup: {video.id: videoTitle},
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: MoreIcon(
                           iconSize: 16.0,
                           iconColor: itemsColor6,

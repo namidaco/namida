@@ -1203,9 +1203,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: ClipOval(
                               child: NamidaBgBlur(
                                 blur: 2,
-                                child: Container(
+                                child: ColoredBox(
                                   color: Colors.black.withOpacity(0.2),
-                                  padding: const EdgeInsets.all(10.0),
                                   child: NamidaIconButton(
                                       icon: null,
                                       horizontalPadding: 0.0,
@@ -1214,10 +1213,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Player.inst.previous();
                                         _resetTimer(hideControls: true);
                                       },
-                                      child: Icon(
-                                        Broken.previous,
-                                        size: 30.0,
-                                        color: itemsColor,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Icon(
+                                          Broken.previous,
+                                          size: 30.0,
+                                          color: itemsColor,
+                                        ),
                                       )),
                                 ),
                               ),
@@ -1229,9 +1231,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     ClipOval(
                       child: NamidaBgBlur(
                         blur: 2.5,
-                        child: Container(
+                        child: ColoredBox(
                           color: Colors.black.withOpacity(0.3),
-                          padding: const EdgeInsets.all(14.0),
                           child: Obx(
                             () {
                               if (_showLoadingIndicator) {
@@ -1269,22 +1270,25 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Player.inst.togglePlayPause();
                                         _startTimer();
                                       },
-                                      child: Obx(
-                                        () => AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 200),
-                                          child: Player.inst.isPlaying
-                                              ? Icon(
-                                                  Broken.pause,
-                                                  size: 40.0,
-                                                  color: itemsColor,
-                                                  key: const Key('paused'),
-                                                )
-                                              : Icon(
-                                                  Broken.play,
-                                                  size: 40.0,
-                                                  color: itemsColor,
-                                                  key: const Key('playing'),
-                                                ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(14.0),
+                                        child: Obx(
+                                          () => AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 200),
+                                            child: Player.inst.isPlaying
+                                                ? Icon(
+                                                    Broken.pause,
+                                                    size: 40.0,
+                                                    color: itemsColor,
+                                                    key: const Key('paused'),
+                                                  )
+                                                : Icon(
+                                                    Broken.play,
+                                                    size: 40.0,
+                                                    color: itemsColor,
+                                                    key: const Key('playing'),
+                                                  ),
+                                          ),
                                         ),
                                       ),
                                     );
@@ -1303,9 +1307,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: ClipOval(
                               child: NamidaBgBlur(
                                 blur: 2,
-                                child: Container(
+                                child: ColoredBox(
                                   color: Colors.black.withOpacity(0.2),
-                                  padding: const EdgeInsets.all(10.0),
                                   child: NamidaIconButton(
                                       icon: null,
                                       horizontalPadding: 0.0,
@@ -1314,10 +1317,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Player.inst.next();
                                         _resetTimer(hideControls: true);
                                       },
-                                      child: Icon(
-                                        Broken.next,
-                                        size: 30.0,
-                                        color: itemsColor,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Icon(
+                                          Broken.next,
+                                          size: 30.0,
+                                          color: itemsColor,
+                                        ),
                                       )),
                                 ),
                               ),

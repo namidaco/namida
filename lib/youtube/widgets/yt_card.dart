@@ -214,12 +214,12 @@ class YoutubeCard extends StatelessWidget {
             Positioned(
               top: 0.0,
               right: 0.0,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: NamidaPopupWrapper(
-                  children: menuChildren,
-                  childrenDefault: menuChildrenDefault,
-                  child: const MoreIcon(iconSize: 16.0),
+              child: NamidaPopupWrapper(
+                children: menuChildren,
+                childrenDefault: menuChildrenDefault,
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: MoreIcon(iconSize: 16.0),
                 ),
               ),
             ),

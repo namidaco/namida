@@ -1448,7 +1448,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
         onTapCancel: () => setState(() => isPressed = false),
         onTap: widget.onPressed,
         child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
           opacity: isPressed ? 0.5 : 1.0,
           child: Padding(
             padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
@@ -2952,7 +2952,10 @@ class NamidaPopupWrapper extends StatelessWidget {
         }
       },
       onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
-      child: child,
+      child: ColoredBox(
+        color: Colors.transparent,
+        child: child,
+      ),
     );
   }
 }
