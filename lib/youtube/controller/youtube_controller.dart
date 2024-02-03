@@ -476,7 +476,9 @@ class YoutubeController {
     for (final c in comments) {
       final cid = c?.commentId;
       final ctxt = c?.commentText;
-      if (cid != null && ctxt != null) commentToParsedHtml[cid] = HtmlParser.parseHTML(ctxt).text;
+      if (cid != null && ctxt != null) {
+        commentToParsedHtml[cid] = HtmlParser.parseHTML(ctxt.replaceAll('<br>', '\n')).text;
+      }
     }
 
     currentComments.addAll(comments);
