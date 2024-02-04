@@ -450,7 +450,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false).then((value) => refreshNotification());
 
     Future<Duration?> setPls() async {
-      final dur = await setAudioSource(
+      final dur = await setSource(
         tr.toAudioSource(currentIndex, currentQueue.length),
         startPlaying: startPlaying,
         videoOptions: initialVideo == null
@@ -462,6 +462,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 cacheDirectory: _defaultCacheDirectory,
                 maxTotalCacheSize: _defaultMaxCache,
               ),
+        isVideoFile: true,
       );
       Indexer.inst.updateTrackDuration(tr, dur);
 
@@ -545,7 +546,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (cachedFile != null && useCache) {
       currentCachedVideo.value = videoItem;
-      await setVideoSource(source: cachedFile.path);
+      await setVideoSource(source: cachedFile.path, isFile: true);
     } else if (stream != null && stream.url != null) {
       if (wasPlaying) await onPauseRaw();
       try {
@@ -589,13 +590,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final cachedAudio = stream?.getCachedFile(videoId);
     if (cachedAudio != null && useCache) {
-      await setAudioSource(AudioSource.file(cachedAudio.path, tag: mediaItem), startPlaying: wasPlaying, keepOldVideoSource: true);
+      await setSource(AudioSource.file(cachedAudio.path, tag: mediaItem), startPlaying: wasPlaying, keepOldVideoSource: true);
       refreshNotification();
     } else if (stream != null && stream.url != null) {
       if (wasPlaying) await super.onPauseRaw();
 
       Future<void> setAudioLockCache() async {
-        await setAudioSource(
+        await setSource(
           LockCachingAudioSource(
             Uri.parse(stream.url!),
             cacheFile: File(stream.cachePath(videoId)),
@@ -830,14 +831,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               maxTotalCacheSize: _defaultMaxCache,
             );
           }
+          if (cachedVideo?.path != null) {
+            File(cachedVideo!.path).setLastAccessedTry(DateTime.now());
+          }
           if (shouldResetAudioSource) {
             cachedAudio != null
-                ? await setAudioSource(
+                ? await setSource(
                     AudioSource.file(cachedAudio.path, tag: mediaItem),
                     startPlaying: startPlaying,
                     videoOptions: videoOptions,
+                    isVideoFile: cachedVideo?.path != null,
                   )
-                : await setAudioSource(
+                : await setSource(
                     LockCachingAudioSource(
                       Uri.parse(prefferedAudioStream!.url!),
                       cacheFile: File(prefferedAudioStream.cachePath(item.id)),
@@ -848,6 +853,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                     ),
                     startPlaying: startPlaying,
                     videoOptions: videoOptions,
+                    isVideoFile: cachedVideo?.path != null,
                   );
           } else if (videoOptions != null) {
             await setVideo(videoOptions);
@@ -944,7 +950,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // -- play audio & video
       await whatToAwait();
       try {
-        await setAudioSource(
+        await setSource(
           AudioSource.file(cachedAudio.file.path, tag: mediaItem),
           startPlaying: startPlaying,
           videoOptions: VideoOptions(
@@ -954,6 +960,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             cacheDirectory: _defaultCacheDirectory,
             maxTotalCacheSize: _defaultMaxCache,
           ),
+          isVideoFile: true,
         );
         final audioDetails = AudioCacheDetails(
           youtubeId: item.id,
@@ -972,7 +979,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else if (cachedAudio != null && canPlayAudioOnly) {
       // -- play audio only
       await whatToAwait();
-      await setAudioSource(
+      await setSource(
         AudioSource.file(cachedAudio.file.path, tag: mediaItem),
         startPlaying: startPlaying,
       );
@@ -1201,7 +1208,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           await onPauseRaw();
           // -- try putting cache version if it was cached
           _nextSeekSetAudioCache = null;
-          if (await cachedAudioFile.exists()) await setAudioSource(AudioSource.file(cachedAudioFile.path, tag: mediaItem), keepOldVideoSource: true);
+          if (await cachedAudioFile.exists()) await setSource(AudioSource.file(cachedAudioFile.path, tag: mediaItem), keepOldVideoSource: true);
           _isCurrentAudioFromCache = true;
           await plsSeek();
           if (wasPlaying) await onPlayRaw();
@@ -1252,12 +1259,37 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> rewind() async => await onRewind();
 
+  Future<Duration?> setSource(
+    AudioSource source, {
+    bool preload = true,
+    int? initialIndex,
+    Duration? initialPosition,
+    bool startPlaying = false,
+    VideoOptions? videoOptions,
+    bool keepOldVideoSource = false,
+    bool isVideoFile = false,
+  }) async {
+    if (isVideoFile && videoOptions != null) {
+      File(videoOptions.source).setLastAccessedTry(DateTime.now());
+    }
+    return await setAudioSource(
+      source,
+      preload: preload,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+      startPlaying: startPlaying,
+      videoOptions: videoOptions,
+      keepOldVideoSource: keepOldVideoSource,
+    );
+  }
+
   // ------- video -------
 
   ByteSize get _defaultMaxCache => ByteSize(mb: settings.videosMaxCacheInMB.value);
   Directory get _defaultCacheDirectory => Directory(AppDirs.VIDEOS_CACHE);
 
-  Future<void> setVideoSource({required String source, String cacheKey = '', bool loopingAnimation = false}) async {
+  Future<void> setVideoSource({required String source, String cacheKey = '', bool loopingAnimation = false, bool isFile = false}) async {
+    if (isFile) File(source).setLastAccessedTry(DateTime.now());
     await super.setVideo(
       VideoOptions(
         source: source,

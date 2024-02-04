@@ -300,6 +300,7 @@ class VideoController {
         await Player.inst.setVideo(
           source: v.path,
           loopingAnimation: canLoopVideo(v, track.duration),
+          isFile: true,
         );
         settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
       }

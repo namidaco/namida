@@ -497,6 +497,12 @@ extension FileUtils on File {
   String? fileSizeFormatted() {
     return fileSizeSync()?.fileSizeFormatted;
   }
+
+  Future<void> setLastAccessedTry(DateTime time) async {
+    try {
+      await setLastAccessed(time);
+    } catch (_) {}
+  }
 }
 
 extension FileStatsUtils on FileStat {
