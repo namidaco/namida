@@ -62,7 +62,7 @@ dependencies:
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
-      ref: 8ddc4ac8476d0960016f73fd7d2d50dcaf754245
+      ref: 4c22343d4dddce59958f2fb9d3b31ad9cd4bcc0e
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager

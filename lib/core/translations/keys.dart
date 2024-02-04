@@ -8,6 +8,8 @@ abstract class LanguageKeys {
 
   String get ABOUT => _getKey('ABOUT');
   String get ACTIVE => _getKey('ACTIVE');
+  String get ADD_ALL => _getKey('ADD_ALL');
+  String get ADD_ALL_AND_REMOVE_OLD_ONES => _getKey('ADD_ALL_AND_REMOVE_OLD_ONES');
   String get ADD_AS_A_NEW_PLAYLIST => _getKey('ADD_AS_A_NEW_PLAYLIST');
   String get ADD_AUDIO_TO_LOCAL_LIBRARY => _getKey('ADD_AUDIO_TO_LOCAL_LIBRARY');
   String get ADD_FOLDER => _getKey('ADD_FOLDER');
@@ -21,6 +23,7 @@ abstract class LanguageKeys {
   String get ADD_TO_PLAYLIST => _getKey('ADD_TO_PLAYLIST');
   String get ADD => _getKey('ADD');
   String get ADDED => _getKey('ADDED');
+  String get ADD_ONLY_MISSING => _getKey('ADD_ONLY_MISSING');
   String get ADVANCED_SETTINGS_SUBTITLE => _getKey('ADVANCED_SETTINGS_SUBTITLE');
   String get ADVANCED_SETTINGS => _getKey('ADVANCED_SETTINGS');
   String get ADVANCED => _getKey('ADVANCED');
@@ -168,6 +171,7 @@ abstract class LanguageKeys {
   String get DOWNLOADS_METADATA_TAGS_SUBTITLE => _getKey('DOWNLOADS_METADATA_TAGS_SUBTITLE');
   String get DO_NOTHING => _getKey('DO_NOTHING');
   String get DUCK_AUDIO => _getKey('DUCK_AUDIO');
+  String get DUPLICATED_ITEMS_ADDING => _getKey('DUPLICATED_ITEMS_ADDING');
   String get DUPLICATED_TRACKS => _getKey('DUPLICATED_TRACKS');
   String get DURATION => _getKey('DURATION');
   String get EDGE_COLORS_SWITCHING => _getKey('EDGE_COLORS_SWITCHING');
@@ -548,6 +552,7 @@ abstract class LanguageKeys {
   String get STATS => _getKey('STATS');
   String get STOP_AFTER_THIS_TRACK => _getKey('STOP_AFTER_THIS_TRACK');
   String get STOP => _getKey('STOP');
+  String get STOP_AFTER_THIS_VIDEO => _getKey('STOP_AFTER_THIS_VIDEO');
   String get STORAGE_PERMISSION_DENIED_SUBTITLE => _getKey('STORAGE_PERMISSION_DENIED_SUBTITLE');
   String get STORAGE_PERMISSION_DENIED => _getKey('STORAGE_PERMISSION_DENIED');
   String get SUBSCRIBE => _getKey('SUBSCRIBE');

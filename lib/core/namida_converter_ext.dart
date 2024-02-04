@@ -741,6 +741,10 @@ extension YTHomePagesUils on YTHomePages {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension PlaylistAddDuplicateActionUtils on PlaylistAddDuplicateAction {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension WidgetsPagess on Widget {
   NamidaRoute toNamidaRoute() {
     String name = '';
@@ -1485,6 +1489,11 @@ class _NamidaConverters {
         SetMusicAsAction.ringtone: lang.RINGTONE,
         SetMusicAsAction.notification: lang.NOTIFICATION,
         SetMusicAsAction.alarm: lang.ALARM,
+      },
+      PlaylistAddDuplicateAction: {
+        PlaylistAddDuplicateAction.justAddEverything: lang.ADD_ALL,
+        PlaylistAddDuplicateAction.addAllAndRemoveOldOnes: lang.ADD_ALL_AND_REMOVE_OLD_ONES,
+        PlaylistAddDuplicateAction.addOnlyMissing: lang.ADD_ONLY_MISSING,
       },
     };
 

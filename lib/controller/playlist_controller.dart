@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -20,6 +19,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -56,12 +57,132 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   }
 
   void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
-    final newtracks = tracks.mapped((e) => TrackWithDate(
+    Iterable<TrackWithDate> convertTracks(List<Track> trs) => trs.map((e) => TrackWithDate(
           dateAdded: currentTimeMS,
           track: e,
           source: source,
         ));
-    super.addTracksToPlaylistRaw(playlist, newtracks);
+    final oldTracksList = List<TrackWithDate>.from(playlist.tracks); // for undo
+    int addedTracksLength = tracks.length;
+
+    if (playlist.tracks.any((element) => tracks.contains(element.track))) {
+      TrackWithDate convertTrack(Track e) => TrackWithDate(
+            dateAdded: currentTimeMS,
+            track: e,
+            source: source,
+          );
+      final action = await _showDuplicatedDialogAction();
+      switch (action) {
+        case PlaylistAddDuplicateAction.justAddEverything:
+          playlist.tracks.addAll(convertTracks(tracks));
+          break;
+        case PlaylistAddDuplicateAction.addAllAndRemoveOldOnes:
+          final currentTracks = <Track, List<int>>{};
+          playlist.tracks.loop((e, index) => currentTracks.addForce(e.track, index));
+
+          final indicesToRemove = <int>[];
+          tracks.loop((e, _) {
+            // -- removing same tracks existing in playlist
+            final indexesInPlaylist = currentTracks[e];
+            if (indexesInPlaylist != null) {
+              indicesToRemove.addAll(indexesInPlaylist);
+            }
+          });
+          indicesToRemove.sortByReverse((e) => e);
+          indicesToRemove.loop((indexToRemove, _) => playlist.tracks.removeAt(indexToRemove));
+          playlist.tracks.addAll(convertTracks(tracks));
+          break;
+        case PlaylistAddDuplicateAction.addOnlyMissing:
+          final currentTracks = <Track, int>{};
+          playlist.tracks.loop((e, index) => currentTracks[e.track] = index);
+          tracks.loop((e, _) {
+            if (currentTracks[e] == null) {
+              playlist.tracks.add(convertTrack(e));
+            } else {
+              addedTracksLength--;
+            }
+          });
+
+          break;
+        default:
+          addedTracksLength = 0;
+          return;
+      }
+    } else {
+      playlist.tracks.addAll(convertTracks(tracks));
+    }
+
+    snackyy(
+      message: "${lang.ADDED} ${addedTracksLength.displayTrackKeyword}",
+      displaySeconds: 2,
+      button: TextButton(
+        onPressed: () async {
+          updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: currentTimeMS);
+          Get.closeAllSnackbars();
+        },
+        child: Text(lang.UNDO),
+      ),
+    );
+
+    super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
+  }
+
+  Future<PlaylistAddDuplicateAction?> _showDuplicatedDialogAction() async {
+    final action = Rxn<PlaylistAddDuplicateAction>();
+    await NamidaNavigator.inst.navigateDialog(
+      onDismissing: () {
+        action.close();
+      },
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: lang.CONFIRM,
+        actions: [
+          TextButton(
+            onPressed: () {
+              action.value = null;
+              NamidaNavigator.inst.closeDialog();
+            },
+            child: Text(lang.CANCEL),
+          ),
+          Obx(
+            () => NamidaButton(
+              enabled: action.value != null,
+              text: lang.CONFIRM,
+              onPressed: NamidaNavigator.inst.closeDialog,
+            ),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lang.DUPLICATED_ITEMS_ADDING,
+                style: Get.textTheme.displayMedium,
+              ),
+              Column(
+                children: PlaylistAddDuplicateAction.values
+                    .map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: Obx(
+                          () => ListTileWithCheckMark(
+                            active: action.value == e,
+                            title: e.toText(),
+                            onTap: () => action.value = e,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return action.value;
   }
 
   Future<bool> favouriteButtonOnPressed(Track track) async {

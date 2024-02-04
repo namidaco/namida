@@ -350,3 +350,9 @@ enum SetMusicAsAction {
   notification,
   alarm,
 }
+
+enum PlaylistAddDuplicateAction {
+  justAddEverything,
+  addAllAndRemoveOldOnes,
+  addOnlyMissing,
+}
