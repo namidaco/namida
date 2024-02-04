@@ -170,7 +170,10 @@ class CurrentColor {
     }
   }
 
-  void resetCurrentPlayingTrack() => currentPlayingTrack.value = null;
+  void resetCurrentPlayingTrack() {
+    currentPlayingTrack.value = null;
+    _namidaColorMiniplayer.value = null;
+  }
 
   Future<NamidaColor> getTrackColors(
     Track track, {

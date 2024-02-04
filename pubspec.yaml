@@ -25,6 +25,10 @@ dependency_overrides:
       ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
   archive: ^3.3.8
   intl: ^0.18.0
+  get:
+    git:
+      url: https://github.com/MSOB7YY/getx
+      ref: 8a7a6a840f31b1a76877710a38da2211f5cd8f5b
 
 dependencies:
   flutter:
@@ -34,8 +38,8 @@ dependencies:
   get:
     git:
       url: https://github.com/MSOB7YY/getx
+      ref: 8a7a6a840f31b1a76877710a38da2211f5cd8f5b
   permission_handler: ^11.0.1
-  device_info_plus: ^8.1.0
   intl: ^0.18.0
   flutter_archive: ^5.0.0
   url_launcher: ^6.1.10
@@ -96,7 +100,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 2df6663b46d7d7022816890558a88f02788d1d88
+      ref: 9505185e64b8bae6bc0cae1289edf0bee26bac5c
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query

@@ -467,8 +467,11 @@ void snackyy({
   int? maxLinesMessage,
 }) {
   isError ??= title == lang.ERROR;
+  final view = Get.context == null ? null : View.of(Get.context!);
   Get.showSnackbar(
     GetSnackBar(
+      maxWidth: view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio,
+      alignment: Alignment.centerLeft,
       icon: iconWidget ??
           (icon == null
               ? null

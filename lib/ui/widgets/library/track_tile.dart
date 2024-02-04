@@ -124,7 +124,11 @@ class TrackTile extends StatelessWidget {
             final backgroundColor = bgColor ??
                 Color.alphaBlend(
                   isTrackSelected & !isInSelectedTracksPreview ? context.theme.focusColor : Colors.transparent,
-                  isTrackCurrentlyPlaying ? CurrentColor.inst.color : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
+                  isTrackCurrentlyPlaying
+                      ? comingFromQueue
+                          ? CurrentColor.inst.miniplayerColor
+                          : CurrentColor.inst.color
+                      : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
                 );
 
             return Padding(
