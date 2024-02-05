@@ -356,3 +356,9 @@ enum PlaylistAddDuplicateAction {
   addAllAndRemoveOldOnes,
   addOnlyMissing,
 }
+
+enum YTSeekActionMode {
+  minimizedMiniplayer,
+  expandedMiniplayer,
+  all,
+}

@@ -23,6 +23,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class Player {
   static Player get inst => _instance;
@@ -52,6 +53,17 @@ class Player {
   File? get currentVideoThumbnail => _audioHandler.currentVideoThumbnail.value;
   NamidaVideo? get currentCachedVideo => _audioHandler.currentCachedVideo.value;
   AudioCacheDetails? get currentCachedAudio => _audioHandler.currentCachedAudio.value;
+
+  Duration get getCurrentVideoDuration {
+    Duration? playerDuration = Player.inst.currentItemDuration;
+    if (playerDuration == null || playerDuration == Duration.zero) {
+      playerDuration = Player.inst.currentAudioStream?.durationMS?.milliseconds ??
+          Player.inst.currentVideoStream?.durationMS?.milliseconds ??
+          (nowPlayingVideoID == null ? VideoController.inst.currentVideo.value?.durationMS.milliseconds : YoutubeController.inst.currentYoutubeMetadataVideo.value?.duration) ??
+          Duration.zero;
+    }
+    return playerDuration;
+  }
 
   bool get isAudioOnlyPlayback => _audioHandler.isAudioOnlyPlayback;
   bool get isCurrentAudioFromCache => _audioHandler.isCurrentAudioFromCache;

@@ -227,6 +227,8 @@ class SettingsController {
   final killPlayerAfterDismissingAppMode = KillAppMode.ifNotPlaying.obs;
   final floatingActionButton = FABType.none.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
+  final ytTapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
+  final ytDragToSeek = YTSeekActionMode.all.obs;
 
   final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -507,6 +509,8 @@ class SettingsController {
       killPlayerAfterDismissingAppMode.value = KillAppMode.values.getEnum(json['killPlayerAfterDismissingAppMode']) ?? killPlayerAfterDismissingAppMode.value;
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
+      ytTapToSeek.value = YTSeekActionMode.values.getEnum(json['ytTapToSeek']) ?? ytTapToSeek.value;
+      ytDragToSeek.value = YTSeekActionMode.values.getEnum(json['ytDragToSeek']) ?? ytDragToSeek.value;
 
       trackItem.value = _getEnumMap(
             json['trackItem'],
@@ -715,6 +719,8 @@ class SettingsController {
       'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
       'floatingActionButton': floatingActionButton.value.convertToString,
       'ytInitialHomePage': ytInitialHomePage.value.convertToString,
+      'ytTapToSeek': ytTapToSeek.value.convertToString,
+      'ytDragToSeek': ytDragToSeek.value.convertToString,
       'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
       'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
       'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
@@ -913,6 +919,8 @@ class SettingsController {
     KillAppMode? killPlayerAfterDismissingAppMode,
     FABType? floatingActionButton,
     YTHomePages? ytInitialHomePage,
+    YTSeekActionMode? ytTapToSeek,
+    YTSeekActionMode? ytDragToSeek,
     MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
@@ -1442,6 +1450,12 @@ class SettingsController {
     }
     if (ytInitialHomePage != null) {
       this.ytInitialHomePage.value = ytInitialHomePage;
+    }
+    if (ytTapToSeek != null) {
+      this.ytTapToSeek.value = ytTapToSeek;
+    }
+    if (ytDragToSeek != null) {
+      this.ytDragToSeek.value = ytDragToSeek;
     }
     if (mostPlayedTimeRange != null) {
       this.mostPlayedTimeRange.value = mostPlayedTimeRange;

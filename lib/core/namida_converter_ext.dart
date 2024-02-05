@@ -745,6 +745,10 @@ extension PlaylistAddDuplicateActionUtils on PlaylistAddDuplicateAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension YTSeekActionModeUtils on YTSeekActionMode {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension WidgetsPagess on Widget {
   NamidaRoute toNamidaRoute() {
     String name = '';
@@ -1494,6 +1498,11 @@ class _NamidaConverters {
         PlaylistAddDuplicateAction.justAddEverything: lang.ADD_ALL,
         PlaylistAddDuplicateAction.addAllAndRemoveOldOnes: lang.ADD_ALL_AND_REMOVE_OLD_ONES,
         PlaylistAddDuplicateAction.addOnlyMissing: lang.ADD_ONLY_MISSING,
+      },
+      YTSeekActionMode: {
+        YTSeekActionMode.minimizedMiniplayer: lang.MINIMIZED_MINIPLAYER,
+        YTSeekActionMode.expandedMiniplayer: lang.EXPANDED_MINIPLAYER,
+        YTSeekActionMode.all: lang.ALL,
       },
     };
 

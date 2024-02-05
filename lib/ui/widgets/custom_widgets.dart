@@ -3492,3 +3492,70 @@ class QueueUtilsRow extends StatelessWidget {
     );
   }
 }
+
+class RepeatModeIconButton extends StatelessWidget {
+  final bool compact;
+  final Color? color;
+  final VoidCallback? onPressed;
+
+  const RepeatModeIconButton({
+    super.key,
+    this.compact = false,
+    this.color,
+    this.onPressed,
+  });
+
+  void _switchMode() {
+    final e = settings.playerRepeatMode.value.nextElement(RepeatMode.values);
+    settings.save(playerRepeatMode: e);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
+    return Obx(
+      () {
+        final tooltip = settings.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString());
+        final child = Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              settings.playerRepeatMode.value.toIcon(),
+              size: 20.0,
+              color: iconColor,
+            ),
+            if (settings.playerRepeatMode.value == RepeatMode.forNtimes)
+              Text(
+                Player.inst.numberOfRepeats.toString(),
+                style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+              ),
+          ],
+        );
+        return compact
+            ? NamidaIconButton(
+                tooltip: tooltip,
+                icon: null,
+                horizontalPadding: 0.0,
+                padding: EdgeInsets.zero,
+                iconSize: 20.0,
+                onPressed: () {
+                  onPressed?.call();
+                  _switchMode();
+                },
+                child: child,
+              )
+            : IconButton(
+                visualDensity: VisualDensity.compact,
+                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                padding: const EdgeInsets.all(2.0),
+                tooltip: tooltip,
+                onPressed: () {
+                  onPressed?.call();
+                  _switchMode();
+                },
+                icon: child,
+              );
+      },
+    );
+  }
+}

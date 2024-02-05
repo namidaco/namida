@@ -90,7 +90,7 @@ class NamidaVideoWidget extends StatelessWidget {
                 await _verifyAndEnterFullScreen();
               },
         child: NamidaVideoControls(
-          widgetKey: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
+          key: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
           isLocal: isLocal,
           onMinimizeTap: () {
             if (fullscreen) {
@@ -122,7 +122,7 @@ class VideoController {
   final videoZoomAdditionalScale = 0.0.obs;
 
   void updateShouldShowControls(double animationValue) {
-    final isExpanded = animationValue == 1.0;
+    final isExpanded = animationValue >= 0.95;
     if (isExpanded) {
       // YoutubeController.inst.startDimTimer(); // bad experience honestly
     } else {
@@ -136,7 +136,7 @@ class VideoController {
   }) async {
     final aspect = Player.inst.videoPlayerInfo?.aspectRatio;
     VideoController.inst.fullScreenVideoWidget ??= NamidaVideoControls(
-      widgetKey: VideoController.inst.fullScreenControlskey,
+      key: VideoController.inst.fullScreenControlskey,
       isLocal: isLocal,
       onMinimizeTap: () {
         VideoController.inst.fullScreenVideoWidget = null;

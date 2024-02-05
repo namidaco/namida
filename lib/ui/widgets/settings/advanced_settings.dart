@@ -71,7 +71,7 @@ class AdvancedSettings extends SettingSubpageProvider {
         bgColor: getBgColor(_AdvancedSettingKeys.performanceMode),
         icon: Broken.cpu_setting,
         title: lang.PERFORMANCE_MODE,
-        trailingRaw: NamidaPopupWrapper(
+        trailing: NamidaPopupWrapper(
           children: () => [
             ...PerformanceMode.values.map(
               (e) => Obx(
@@ -546,47 +546,47 @@ class AdvancedSettings extends SettingSubpageProvider {
             ),
           ),
         ],
-        child: NamidaScrollbar(
-          child: SizedBox(
-            width: Get.width,
-            height: Get.height * 0.65,
-            child: Column(
-              children: [
-                const SizedBox(height: 6.0),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Obx(
-                    () => Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const SizedBox(width: 24.0),
-                        getChipButton(
-                          sort: 'size',
-                          title: lang.SIZE,
-                          icon: Broken.size,
-                          enabled: (sort) => sort == currentSort.value,
-                        ),
-                        const SizedBox(width: 12.0),
-                        getChipButton(
-                          sort: 'access_time',
-                          title: lang.OLDEST_WATCH,
-                          icon: Broken.sort,
-                          enabled: (sort) => sort == currentSort.value,
-                        ),
-                        const SizedBox(width: 12.0),
-                        getChipButton(
-                          sort: 'listen_count',
-                          title: lang.TOTAL_LISTENS,
-                          icon: Broken.math,
-                          enabled: (sort) => sort == currentSort.value,
-                        ),
-                        const SizedBox(width: 24.0),
-                      ],
-                    ),
+        child: SizedBox(
+          width: Get.width,
+          height: Get.height * 0.65,
+          child: Column(
+            children: [
+              const SizedBox(height: 6.0),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const SizedBox(width: 24.0),
+                      getChipButton(
+                        sort: 'size',
+                        title: lang.SIZE,
+                        icon: Broken.size,
+                        enabled: (sort) => sort == currentSort.value,
+                      ),
+                      const SizedBox(width: 12.0),
+                      getChipButton(
+                        sort: 'access_time',
+                        title: lang.OLDEST_WATCH,
+                        icon: Broken.sort,
+                        enabled: (sort) => sort == currentSort.value,
+                      ),
+                      const SizedBox(width: 12.0),
+                      getChipButton(
+                        sort: 'listen_count',
+                        title: lang.TOTAL_LISTENS,
+                        icon: Broken.math,
+                        enabled: (sort) => sort == currentSort.value,
+                      ),
+                      const SizedBox(width: 24.0),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6.0),
-                Expanded(
+              ),
+              const SizedBox(height: 6.0),
+              Expanded(
+                child: NamidaScrollbar(
                   child: Obx(
                     () => ListView.builder(
                       padding: EdgeInsets.zero,
@@ -609,6 +609,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                                 width: 92,
                                 height: 92 * 9 / 16,
                                 path: video.pathToYTImage,
+                                forceSquared: true,
                               ),
                               const SizedBox(width: 8.0),
                               Expanded(
@@ -656,8 +657,8 @@ class AdvancedSettings extends SettingSubpageProvider {
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

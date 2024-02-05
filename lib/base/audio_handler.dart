@@ -1107,6 +1107,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
+  void onPlaybackCompleted() {
+    VideoController.inst.normalControlskey.currentState?.showControlsBriefly();
+  }
+
+  @override
   Future<void> setSkipSilenceEnabled(bool enabled) async {
     if (defaultPlayerConfig.skipSilence) await super.setSkipSilenceEnabled(enabled);
   }

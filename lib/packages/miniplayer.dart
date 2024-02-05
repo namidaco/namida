@@ -1018,31 +1018,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
-                                    Obx(
-                                      () => IconButton(
-                                        visualDensity: VisualDensity.compact,
-                                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                        padding: const EdgeInsets.all(2.0),
-                                        tooltip: settings.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString()),
-                                        onPressed: () {
-                                          final e = settings.playerRepeatMode.value.nextElement(RepeatMode.values);
-                                          settings.save(playerRepeatMode: e);
-                                        },
-                                        icon: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Icon(
-                                              settings.playerRepeatMode.value.toIcon(),
-                                              size: 20.0,
-                                              color: context.theme.colorScheme.onSecondaryContainer,
-                                            ),
-                                            if (settings.playerRepeatMode.value == RepeatMode.forNtimes)
-                                              Text(
-                                                Player.inst.numberOfRepeats.toString(),
-                                                style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSecondaryContainer),
-                                              ),
-                                          ],
-                                        ),
+                                    const RepeatModeIconButton(),
                                       ),
                                     ),
                                     GestureDetector(

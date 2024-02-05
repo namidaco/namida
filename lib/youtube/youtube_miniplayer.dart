@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -15,6 +13,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -31,6 +30,7 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_action_button.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
@@ -43,7 +43,8 @@ import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/yt_miniplayer_comments_subpage.dart';
 
 const _space2ForThumbnail = 90.0;
-const kYoutubeMiniplayerHeight = 12.0 + _space2ForThumbnail * 9 / 16;
+const _extraPaddingForYTMiniplayer = 12.0;
+const kYoutubeMiniplayerHeight = _extraPaddingForYTMiniplayer + _space2ForThumbnail * 9 / 16;
 
 class YoutubeMiniPlayer extends StatelessWidget {
   const YoutubeMiniPlayer({super.key});
@@ -936,6 +937,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
                     Player.inst.next();
                   },
                 ),
+                // constant [4]
+                const SeekReadyWidget(),
               ],
               builder: (double height, double p, constantChildren) {
                 final percentage = (p * 2.8).clamp(0.0, 1.0);
@@ -951,10 +954,10 @@ class YoutubeMiniPlayer extends StatelessWidget {
                 final finalthumbnailWidth = (space2ForThumbnail + context.width * percentage).clamp(space2ForThumbnail, context.width - finalspace1sb - finalspace3sb);
                 final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
-                return Column(
+                return Stack(
                   children: [
-                    Stack(
-                      alignment: Alignment.bottomLeft,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
@@ -963,7 +966,6 @@ class YoutubeMiniPlayer extends StatelessWidget {
                               clipBehavior: Clip.antiAlias,
                               margin: EdgeInsets.symmetric(vertical: finalpadding),
                               decoration: BoxDecoration(
-                                // color: shouldShowVideo ? Colors.black : CurrentColor.inst.color,
                                 color: Colors.black,
                                 borderRadius: BorderRadius.circular(finalbr),
                               ),
@@ -1015,49 +1017,35 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             ]
                           ],
                         ),
-                        // -- progress bar
-                        NamidaOpacity(
-                          key: Key("${currentId}_progress_bar"),
-                          enabled: true,
-                          opacity: 1.0 * reverseOpacity,
-                          child: IgnorePointer(
-                            key: Key("${currentId}_progress_bar_child"),
-                            child: Obx(
-                              () {
-                                final dur = Player.inst.currentItemDuration?.inMilliseconds;
-                                final percentage = dur == null ? 0 : Player.inst.nowPlayingPosition / dur;
-                                return Container(
-                                  alignment: Alignment.centerLeft,
-                                  height: 2.0,
-                                  decoration: BoxDecoration(
-                                    color: CurrentColor.inst.color.withOpacity(0.6),
-                                    borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+
+                        // ---- if was in comments subpage, and this gets hidden, the route is popped
+                        // ---- same with [isQueueSheetOpen]
+                        if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isQueueSheetOpen ? true : percentage > 0)
+                          Expanded(
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                constantChildren[0],
+                                IgnorePointer(
+                                  child: ColoredBox(
+                                    color: miniplayerBGColor.withOpacity(1 - percentageFast),
                                   ),
-                                  width: percentage * context.width,
-                                );
-                              },
+                                ),
+                              ],
                             ),
                           ),
-                        ),
                       ],
                     ),
-
-                    // ---- if was in comments subpage, and this gets hidden, the route is popped
-                    // ---- same with [isQueueSheetOpen]
-                    if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isQueueSheetOpen ? true : percentage > 0)
-                      Expanded(
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            constantChildren[0],
-                            IgnorePointer(
-                              child: ColoredBox(
-                                color: miniplayerBGColor.withOpacity(1 - percentageFast),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    Positioned(
+                      top: finalthumbnailHeight -
+                          (_extraPaddingForYTMiniplayer / 2 * (1 - percentage)) -
+                          (SeekReadyDimensions.barHeight / 2) -
+                          (SeekReadyDimensions.barHeight / 2 * percentage) +
+                          (SeekReadyDimensions.progressBarHeight / 2),
+                      left: 0,
+                      right: 0,
+                      child: constantChildren[4],
+                    ),
                   ],
                 );
               },

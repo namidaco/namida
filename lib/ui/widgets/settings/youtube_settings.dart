@@ -22,6 +22,7 @@ enum _YoutubeSettingKeys {
   downloadsMetadataTags,
   downloadLocation,
   onOpeningYTLink,
+  seekbar,
 }
 
 class YoutubeSettings extends SettingSubpageProvider {
@@ -37,6 +38,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
+        _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
         _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
         _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
@@ -193,6 +195,62 @@ class YoutubeSettings extends SettingSubpageProvider {
                   },
                 ),
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.seekbar,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.seekbar),
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+              iconColor: context.defaultIconColor(),
+              icon: Broken.candle_2,
+              titleText: lang.SEEKBAR,
+              children: [
+                CustomListTile(
+                  icon: Broken.mouse_circle,
+                  title: lang.TAP_TO_SEEK,
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => YTSeekActionMode.values
+                        .map(
+                          (e) => NamidaPopupItem(
+                            icon: Broken.external_drive,
+                            title: e.toText(),
+                            onTap: () {
+                              settings.save(ytTapToSeek: e);
+                            },
+                          ),
+                        )
+                        .toList(),
+                    child: Obx(
+                      () => Text(
+                        settings.ytTapToSeek.value.toText(),
+                      ),
+                    ),
+                  ),
+                ),
+                CustomListTile(
+                  icon: Broken.arrow_swap_horizontal,
+                  title: lang.DRAG_TO_SEEK,
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => YTSeekActionMode.values
+                        .map(
+                          (e) => NamidaPopupItem(
+                            icon: Broken.external_drive,
+                            title: e.toText(),
+                            onTap: () {
+                              settings.save(ytDragToSeek: e);
+                            },
+                          ),
+                        )
+                        .toList(),
+                    child: Obx(
+                      () => Text(
+                        settings.ytDragToSeek.value.toText(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           getItemWrapper(

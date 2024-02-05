@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -129,6 +130,13 @@ extension TracksUtils on List<Track> {
 extension StringListJoiner on Iterable<String?> {
   String joinText({String separator = ' • '}) {
     return where((element) => element != null && element != '').join(separator);
+  }
+}
+
+extension ListieListieUtils<T> on List<T> {
+  T get random {
+    final index = math.Random().nextInt(length);
+    return this[index];
   }
 }
 

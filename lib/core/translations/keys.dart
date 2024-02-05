@@ -170,6 +170,7 @@ abstract class LanguageKeys {
   String get DOWNLOADS_METADATA_TAGS => _getKey('DOWNLOADS_METADATA_TAGS');
   String get DOWNLOADS_METADATA_TAGS_SUBTITLE => _getKey('DOWNLOADS_METADATA_TAGS_SUBTITLE');
   String get DO_NOTHING => _getKey('DO_NOTHING');
+  String get DRAG_TO_SEEK => _getKey('DRAG_TO_SEEK');
   String get DUCK_AUDIO => _getKey('DUCK_AUDIO');
   String get DUPLICATED_ITEMS_ADDING => _getKey('DUPLICATED_ITEMS_ADDING');
   String get DUPLICATED_TRACKS => _getKey('DUPLICATED_TRACKS');
@@ -208,6 +209,7 @@ abstract class LanguageKeys {
   String get EXCLUDED_FODLERS => _getKey('EXCLUDED_FODLERS');
   String get EXIT_APP_SUBTITLE => _getKey('EXIT_APP_SUBTITLE');
   String get EXIT => _getKey('EXIT');
+  String get EXPANDED_MINIPLAYER => _getKey('EXPANDED_MINIPLAYER');
   String get EXPORT_AS_M3U => _getKey('EXPORT_AS_M3U');
   String get EXTENSION => _getKey('EXTENSION');
   String get EXTERNAL_FILES => _getKey('EXTERNAL_FILES');
@@ -336,6 +338,7 @@ abstract class LanguageKeys {
   String get METADATA_CACHE => _getKey('METADATA_CACHE');
   String get METADATA_EDIT_FAILED => _getKey('METADATA_EDIT_FAILED');
   String get METADATA_READ_FAILED => _getKey('METADATA_READ_FAILED');
+  String get MINIMIZED_MINIPLAYER => _getKey('MINIMIZED_MINIPLAYER');
   String get MINIMUM_ONE_ITEM => _getKey('MINIMUM_ONE_ITEM');
   String get MINIMUM_ONE_ITEM_SUBTITLE => _getKey('MINIMUM_ONE_ITEM_SUBTITLE');
   String get MIN_FILE_DURATION => _getKey('MIN_FILE_DURATION');
@@ -511,6 +514,7 @@ abstract class LanguageKeys {
   String get SEARCH => _getKey('SEARCH');
   String get SEARCH_YOUTUBE => _getKey('SEARCH_YOUTUBE');
   String get SECONDS => _getKey('SECONDS');
+  String get SEEKBAR => _getKey('SEEKBAR');
   String get SEEK_DURATION_INFO => _getKey('SEEK_DURATION_INFO');
   String get SEEK_DURATION => _getKey('SEEK_DURATION');
   String get SELECT_ALL => _getKey('SELECT_ALL');
@@ -568,6 +572,7 @@ abstract class LanguageKeys {
   String get SYNOPSIS => _getKey('SYNOPSIS');
   String get TAG_FIELDS => _getKey('TAG_FIELDS');
   String get TAGS => _getKey('TAGS');
+  String get TAP_TO_SEEK => _getKey('TAP_TO_SEEK');
   String get THEME_MODE_DARK => _getKey('THEME_MODE_DARK');
   String get THEME_MODE_LIGHT => _getKey('THEME_MODE_LIGHT');
   String get THEME_MODE_SYSTEM => _getKey('THEME_MODE_SYSTEM');
