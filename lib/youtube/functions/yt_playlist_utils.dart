@@ -19,6 +19,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 extension YoutubePlaylistShare on YoutubePlaylist {
   Future<void> shareVideos() async => await tracks.shareVideos();
@@ -236,6 +237,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
     yt.YoutubePlaylist? playlistToOpen,
   }) {
     final countText = streamCount < 0 ? "+25" : streamCount.formatDecimalShort();
+    final playAfterVid = YTUtils.getPlayerAfterVideo();
     return [
       NamidaPopupItem(
         icon: Broken.music_playlist,
@@ -311,6 +313,18 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
           Player.inst.addToQueue(videos, insertNext: true);
         },
       ),
+      if (playAfterVid != null)
+        NamidaPopupItem(
+          icon: Broken.hierarchy_square,
+          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          subtitle: playAfterVid.name,
+          oneLinedSub: true,
+          onTap: () async {
+            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            if (videos.isEmpty) return;
+            Player.inst.addToQueue(videos, insertAfterLatest: true);
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
         title: "${lang.PLAY_LAST} ($countText)",

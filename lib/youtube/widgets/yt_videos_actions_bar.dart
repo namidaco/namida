@@ -13,11 +13,13 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTVideosActionBarOptions {
   final bool shuffle;
   final bool play;
   final bool playNext;
+  final bool playAfter;
   final bool playLast;
   final bool download;
   final bool addToPlaylist;
@@ -26,6 +28,7 @@ class YTVideosActionBarOptions {
     this.shuffle = true,
     this.play = false,
     this.playNext = false,
+    this.playAfter = false,
     this.playLast = true,
     this.download = true,
     this.addToPlaylist = false,
@@ -51,6 +54,7 @@ class YTVideosActionBar extends StatelessWidget {
       shuffle: false,
       play: true,
       playNext: true,
+      playAfter: true,
       playLast: true,
       download: false,
       addToPlaylist: true,
@@ -82,6 +86,10 @@ class YTVideosActionBar extends StatelessWidget {
     await Player.inst.addToQueue(videos, insertNext: true);
   }
 
+  Future<void> _onPlayAfter() async {
+    await Player.inst.addToQueue(videos, insertAfterLatest: true);
+  }
+
   Future<void> _onPlayLast() async {
     await Player.inst.addToQueue(videos, insertNext: false);
   }
@@ -103,6 +111,7 @@ class YTVideosActionBar extends StatelessWidget {
 
   List<NamidaPopupItem> getMenuItems() {
     final countText = videos.length;
+    final playAfterVid = menuOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
     return [
       if (menuOptions.addToPlaylist)
         NamidaPopupItem(
@@ -140,6 +149,14 @@ class YTVideosActionBar extends StatelessWidget {
           title: "${lang.PLAY_NEXT} ($countText)",
           onTap: _onPlayNext,
         ),
+      if (playAfterVid != null)
+        NamidaPopupItem(
+          icon: Broken.hierarchy_square,
+          title: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+          subtitle: playAfterVid.name,
+          oneLinedSub: true,
+          onTap: _onPlayAfter,
+        ),
       if (menuOptions.playLast)
         NamidaPopupItem(
           icon: Broken.play_cricle,
@@ -151,6 +168,7 @@ class YTVideosActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final playAfterVid = barOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
     return Row(
       children: [
         if (barOptions.addToPlaylist)
@@ -182,6 +200,12 @@ class YTVideosActionBar extends StatelessWidget {
             icon: Broken.next,
             tooltip: lang.PLAY_NEXT,
             onTap: _onPlayNext,
+          ),
+        if (playAfterVid != null)
+          _ActionItem(
+            icon: Broken.hierarchy_square,
+            tooltip: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+            onTap: _onPlayAfter,
           ),
         if (barOptions.playLast)
           _ActionItem(

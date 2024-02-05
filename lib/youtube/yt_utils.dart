@@ -100,6 +100,7 @@ class YTUtils {
     List<NamidaPopupItem> moreItems = const [],
     required String playlistName,
   }) {
+    final playAfterVid = getPlayerAfterVideo();
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -114,10 +115,30 @@ class YTUtils {
         onTap: videos.shareVideos,
       ),
       NamidaPopupItem(
+        icon: Broken.play,
+        title: lang.PLAY,
+        onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+      ),
+      NamidaPopupItem(
+        icon: Broken.shuffle,
+        title: lang.SHUFFLE,
+        onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true),
+      ),
+      NamidaPopupItem(
         icon: Broken.next,
         title: lang.PLAY_NEXT,
         onTap: () => Player.inst.addToQueue(videos, insertNext: true),
       ),
+      if (playAfterVid != null)
+        NamidaPopupItem(
+          icon: Broken.hierarchy_square,
+          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          subtitle: playAfterVid.name,
+          oneLinedSub: true,
+          onTap: () {
+            Player.inst.addToQueue(videos, insertAfterLatest: true);
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
         title: lang.PLAY_LAST,
@@ -142,6 +163,7 @@ class YTUtils {
     String playlistName = '',
     YoutubeID? videoYTID,
   }) {
+    final playAfterVid = getPlayerAfterVideo();
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -165,13 +187,22 @@ class YTUtils {
           title: lang.SHARE,
           onTap: () => Share.share(url),
         ),
-      NamidaPopupItem(
-        icon: Broken.play,
-        title: lang.PLAY,
-        onTap: () {
-          Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
-        },
-      ),
+      Player.inst.nowPlayingVideoID != null && videoId == Player.inst.getCurrentVideoId
+          ? NamidaPopupItem(
+              icon: Broken.pause,
+              title: lang.STOP_AFTER_THIS_VIDEO,
+              enabled: Player.inst.sleepAfterTracks != 1,
+              onTap: () {
+                Player.inst.updateSleepTimerValues(enableSleepAfterTracks: true, sleepAfterTracks: 1);
+              },
+            )
+          : NamidaPopupItem(
+              icon: Broken.play,
+              title: lang.PLAY,
+              onTap: () {
+                Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
+              },
+            ),
       if (channelUrl != '')
         NamidaPopupItem(
           icon: Broken.user,
@@ -189,6 +220,16 @@ class YTUtils {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true, showSnackBar: false);
         },
       ),
+      if (playAfterVid != null)
+        NamidaPopupItem(
+          icon: Broken.hierarchy_square,
+          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          subtitle: playAfterVid.name,
+          oneLinedSub: true,
+          onTap: () {
+            Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertAfterLatest: true, showSnackBar: false);
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
         title: lang.PLAY_LAST,
@@ -204,6 +245,17 @@ class YTUtils {
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
         ),
     ];
+  }
+
+  static ({YoutubeID video, int diff, String name})? getPlayerAfterVideo() {
+    final player = Player.inst;
+    if (player.currentQueueYoutube.isNotEmpty && player.latestInsertedIndex != player.currentIndex) {
+      final playAfterVideo = player.currentQueueYoutube[player.latestInsertedIndex];
+      final diff = player.latestInsertedIndex - player.currentIndex;
+      final name = YoutubeController.inst.getVideoName(playAfterVideo.id) ?? '';
+      return (video: playAfterVideo, diff: diff, name: name);
+    }
+    return null;
   }
 
   static Map<String, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {

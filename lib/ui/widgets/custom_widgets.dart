@@ -2841,6 +2841,7 @@ class NamidaPopupItem {
   final String subtitle;
   final void Function() onTap;
   final bool enabled;
+  final bool oneLinedSub;
 
   const NamidaPopupItem({
     required this.icon,
@@ -2848,6 +2849,7 @@ class NamidaPopupItem {
     this.subtitle = '',
     required this.onTap,
     this.enabled = true,
+    this.oneLinedSub = false,
   });
 }
 
@@ -2917,6 +2919,8 @@ class NamidaPopupWrapper extends StatelessWidget {
                             Text(
                               e.subtitle,
                               style: context.textTheme.displaySmall,
+                              maxLines: e.oneLinedSub ? 1 : null,
+                              overflow: TextOverflow.ellipsis,
                             ),
                         ],
                       ),
