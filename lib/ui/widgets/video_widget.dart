@@ -502,6 +502,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final borr = BorderRadius.circular(10.0.multipliedRadius);
 
   bool _pointerDownedOnRight = true;
+
+  bool _doubleTapFirstPress = false;
+  Timer? _doubleTapTimer;
+
   @override
   Widget build(BuildContext context) {
     final fallbackChild = widget.isLocal && !widget.isFullScreen
@@ -592,11 +596,30 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 }
               }
             },
-      child: TapDetector(
-        enableTaps: widget.showControls,
-        onTap: (d) => _onTap(),
-        onDoubleTap: (details) => _onDoubleTap(details.localPosition),
-        doubleTapTime: const Duration(milliseconds: 200),
+      child: Listener(
+        onPointerDown: widget.showControls
+            ? (event) {
+                if (_doubleTapFirstPress) {
+                  _onDoubleTap(event.localPosition);
+                  _doubleTapFirstPress = false;
+                  return;
+                }
+                final screenPart = context.width / 3;
+                final dx = event.position.dx;
+                if (dx >= screenPart && dx <= screenPart * 2) {
+                  // pressed in middle
+                  _onTap();
+                  _doubleTapFirstPress = false;
+                } else {
+                  _doubleTapFirstPress = true;
+                  _doubleTapTimer?.cancel();
+                  _doubleTapTimer = Timer(const Duration(milliseconds: 200), () {
+                    _onTap();
+                    _doubleTapFirstPress = false;
+                  });
+                }
+              }
+            : null,
         child: Stack(
           fit: StackFit.passthrough,
           alignment: Alignment.center,
