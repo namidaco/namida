@@ -179,26 +179,6 @@ void _initLifeCycle() {
 
   NamidaChannel.inst.addOnResume('main', () async {
     CurrentColor.inst.refreshColorsAfterResumeApp();
-    await NamidaNavigator.inst.exitFullScreen();
-  });
-
-  NamidaChannel.inst.addOnSuspending('pip', () async {
-    if (settings.enablePip.value && Player.inst.isPlaying && Player.inst.videoInitialized) {
-      await NamidaNavigator.inst.enterFullScreen(
-        Container(
-          color: Colors.black,
-          alignment: Alignment.topLeft,
-          child: const NamidaVideoWidget(
-            key: Key('pip_widget_child'),
-            enableControls: false,
-            fullscreen: true,
-            isPip: true,
-            isLocal: true,
-          ),
-        ),
-        setOrientations: false,
-      );
-    }
   });
 }
 
