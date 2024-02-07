@@ -118,6 +118,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
                       itemExtents: List.filled(SearchSortController.inst.trackSearchList.length, Dimensions.inst.trackTileItemExtent),
                       itemCount: SearchSortController.inst.trackSearchList.length,
                       scrollController: LibraryTab.tracks.scrollController,
+                      scrollStep: Dimensions.inst.trackTileItemExtent,
                       itemBuilder: (context, i) {
                         final track = SearchSortController.inst.trackSearchList[i];
                         return AnimatingTile(

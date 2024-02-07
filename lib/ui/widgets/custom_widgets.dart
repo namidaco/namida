@@ -2246,6 +2246,7 @@ class NamidaListViewRaw extends StatelessWidget {
   final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
   final Map<String, int> scrollConfig;
+  final double scrollStep;
 
   const NamidaListViewRaw({
     super.key,
@@ -2262,6 +2263,7 @@ class NamidaListViewRaw extends StatelessWidget {
     this.buildDefaultDragHandles = true,
     this.physics,
     this.scrollConfig = const {},
+    this.scrollStep = 0,
   });
 
   @override
@@ -2298,6 +2300,7 @@ class NamidaListViewRaw extends StatelessWidget {
     return AnimationLimiter(
       child: NamidaScrollbar(
         controller: scrollController,
+        scrollStep: scrollStep,
         child: listBuilder(listW),
       ),
     );
@@ -3123,12 +3126,14 @@ class NamidaOpacity extends StatelessWidget {
 class NamidaScrollbar extends StatelessWidget {
   final ScrollController? controller;
   final Widget child;
-  const NamidaScrollbar({super.key, this.controller, required this.child});
+  final double scrollStep;
+  const NamidaScrollbar({super.key, this.controller, required this.child, this.scrollStep = 0});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: controller,
+      scrollStep: scrollStep,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,
