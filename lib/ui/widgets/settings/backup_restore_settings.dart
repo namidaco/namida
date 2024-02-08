@@ -26,6 +26,7 @@ enum _BackupAndRestoreKeys {
   create,
   restore,
   defaultLocation,
+  autoBackupInterval,
   importYT,
   importLastfm,
 }
@@ -41,6 +42,7 @@ class BackupAndRestore extends SettingSubpageProvider {
         _BackupAndRestoreKeys.create: [lang.CREATE_BACKUP],
         _BackupAndRestoreKeys.restore: [lang.RESTORE_BACKUP],
         _BackupAndRestoreKeys.defaultLocation: [lang.DEFAULT_BACKUP_LOCATION],
+        _BackupAndRestoreKeys.autoBackupInterval: [lang.AUTO_BACKUP_INTERVAL],
         _BackupAndRestoreKeys.importYT: [lang.IMPORT_YOUTUBE_HISTORY],
         _BackupAndRestoreKeys.importLastfm: [lang.IMPORT_LAST_FM_HISTORY],
       };
@@ -515,6 +517,31 @@ class BackupAndRestore extends SettingSubpageProvider {
 
           // -- Default Backup Location
           getDefaultBackupLocationWidget(),
+
+          // -- Auto backup interval
+          getItemWrapper(
+            key: _BackupAndRestoreKeys.autoBackupInterval,
+            child: CustomListTile(
+              bgColor: getBgColor(_BackupAndRestoreKeys.autoBackupInterval),
+              title: lang.AUTO_BACKUP_INTERVAL,
+              icon: Broken.timer,
+              trailing: Obx(
+                () {
+                  final days = settings.autoBackupIntervalDays.value;
+                  return NamidaWheelSlider<int>(
+                    totalCount: 14,
+                    squeeze: 1,
+                    initValue: days,
+                    itemSize: 5,
+                    onValueChanged: (val) {
+                      settings.save(autoBackupIntervalDays: val);
+                    },
+                    text: days == 0 ? lang.NONE : "$days ${days == 1 ? lang.DAY : lang.DAYS}",
+                  );
+                },
+              ),
+            ),
+          ),
 
           // -- Import Youtube History
           getItemWrapper(

@@ -93,6 +93,7 @@ class SettingsController {
   final RxBool preventDuplicatedTracks = false.obs;
   final RxBool respectNoMedia = false.obs;
   final RxString defaultBackupLocation = AppDirs.BACKUPS.obs;
+  final RxInt autoBackupIntervalDays = 2.obs;
   final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
   final RxString ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final RxBool enableFoldersHierarchy = true.obs;
@@ -401,6 +402,7 @@ class SettingsController {
       preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
+      autoBackupIntervalDays.value = json['autoBackupIntervalDays'] ?? autoBackupIntervalDays.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
@@ -638,6 +640,7 @@ class SettingsController {
       'preventDuplicatedTracks': preventDuplicatedTracks.value,
       'respectNoMedia': respectNoMedia.value,
       'defaultBackupLocation': defaultBackupLocation.value,
+      'autoBackupIntervalDays': autoBackupIntervalDays.value,
       'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
       'ytDownloadLocation': ytDownloadLocation.value,
       'enableFoldersHierarchy': enableFoldersHierarchy.value,
@@ -830,6 +833,7 @@ class SettingsController {
     bool? preventDuplicatedTracks,
     bool? respectNoMedia,
     String? defaultBackupLocation,
+    int? autoBackupIntervalDays,
     String? defaultFolderStartupLocation,
     String? ytDownloadLocation,
     bool? enableFoldersHierarchy,
@@ -1170,6 +1174,9 @@ class SettingsController {
     }
     if (defaultBackupLocation != null) {
       this.defaultBackupLocation.value = defaultBackupLocation;
+    }
+    if (autoBackupIntervalDays != null) {
+      this.autoBackupIntervalDays.value = autoBackupIntervalDays;
     }
     if (defaultFolderStartupLocation != null) {
       this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;

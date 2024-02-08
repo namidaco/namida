@@ -27,13 +27,49 @@ class BackupController {
   final RxBool isRestoringBackup = false.obs;
 
   String get _backupDirectoryPath => settings.defaultBackupLocation.value;
+  int get _defaultAutoBackupInterval => settings.autoBackupIntervalDays.value;
+
+  Future<void> checkForAutoBackup() async {
+    final interval = _defaultAutoBackupInterval;
+    if (interval <= 0) return;
+
+    if (!await requestManageStoragePermission()) return;
+
+    final sortedBackupFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
+    final latestBackup = sortedBackupFiles.firstOrNull;
+    if (latestBackup != null) {
+      final lastModified = await latestBackup.stat().then((value) => value.modified);
+      final diff = DateTime.now().difference(lastModified).abs().inDays;
+      if (diff > interval) {
+        final itemsToBackup = [
+          AppPaths.TRACKS,
+          AppPaths.TRACKS_STATS,
+          AppPaths.TOTAL_LISTEN_TIME,
+          AppPaths.VIDEOS_CACHE,
+          AppPaths.VIDEOS_LOCAL,
+          AppPaths.FAVOURITES_PLAYLIST,
+          AppPaths.SETTINGS,
+          AppPaths.LATEST_QUEUE,
+          AppPaths.YT_LIKES_PLAYLIST,
+          AppDirs.PLAYLISTS,
+          AppDirs.HISTORY_PLAYLIST,
+          AppDirs.QUEUES,
+          AppDirs.YT_DOWNLOAD_TASKS,
+          AppDirs.YT_STATS,
+          AppDirs.YT_PLAYLISTS,
+          AppDirs.YT_HISTORY_PLAYLIST,
+        ];
+
+        await createBackupFile(itemsToBackup);
+      }
+    }
+  }
 
   Future<void> createBackupFile(List<String> backupItemsPaths) async {
     if (isCreatingBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
 
-    if (!await requestManageStoragePermission()) {
-      return;
-    }
+    if (!await requestManageStoragePermission()) return;
+
     isCreatingBackup.value = true;
 
     // formats date

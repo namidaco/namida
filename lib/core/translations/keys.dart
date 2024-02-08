@@ -53,6 +53,7 @@ abstract class LanguageKeys {
   String get AUDIO => _getKey('AUDIO');
   String get AUDIO_CACHE => _getKey('AUDIO_CACHE');
   String get AUDIO_ONLY => _getKey('AUDIO_ONLY');
+  String get AUTO_BACKUP_INTERVAL => _getKey('AUTO_BACKUP_INTERVAL');
   String get AUTO_COLORING_SUBTITLE => _getKey('AUTO_COLORING_SUBTITLE');
   String get AUTO_COLORING => _getKey('AUTO_COLORING');
   String get AUTO_EXTRACT_TAGS_FROM_FILENAME => _getKey('AUTO_EXTRACT_TAGS_FROM_FILENAME');

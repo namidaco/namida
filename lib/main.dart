@@ -17,6 +17,7 @@ import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -123,6 +124,9 @@ void main() async {
   Indexer.inst.updateVideosSizeInStorage();
   if (!shouldShowOnBoarding && settings.refreshOnStartup.value) {
     Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
+  }
+  if (!shouldShowOnBoarding) {
+    BackupController.inst.checkForAutoBackup();
   }
 
   QueueController.inst.prepareAllQueuesFile();
