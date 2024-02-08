@@ -1064,6 +1064,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> onPlayingStateChange(bool isPlaying) {
     CurrentColor.inst.switchColorPalettes(isPlaying);
+    if (isPlaying) {
+      _resourcesDisposeTimer?.cancel();
+      _resourcesDisposeTimer = null;
+    } else {
+      _resourcesDisposeTimer ??= Timer(const Duration(minutes: 5), () {
+        if (!this.isPlaying) stop();
+      });
+    }
   }
 
   @override
