@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/core/enums.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -41,10 +42,13 @@ import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/yt_miniplayer_comments_subpage.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 const _space2ForThumbnail = 90.0;
 const _extraPaddingForYTMiniplayer = 12.0;
 const kYoutubeMiniplayerHeight = _extraPaddingForYTMiniplayer + _space2ForThumbnail * 9 / 16;
+
+final _numberOfRepeats = 1.obs;
 
 class YoutubeMiniPlayer extends StatelessWidget {
   const YoutubeMiniPlayer({super.key});
@@ -199,35 +203,83 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                             collapsedIconColor: context.theme.colorScheme.onBackground,
                                             childrenPadding: const EdgeInsets.all(18.0),
                                             onExpansionChanged: (value) => YoutubeController.inst.isTitleExpanded.value = value,
-                                            trailing: Obx(
-                                              () {
-                                                final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
-                                                return Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (videoListens.isNotEmpty)
-                                                      NamidaInkWell(
-                                                        borderRadius: 6.0,
-                                                        bgColor: CurrentColor.inst.miniplayerColor.withOpacity(0.7),
-                                                        onTap: () {
-                                                          showVideoListensDialog(currentId);
-                                                        },
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                                        child: Text(
-                                                          videoListens.length.formatDecimal(),
-                                                          style: context.textTheme.displaySmall?.copyWith(
-                                                            color: Colors.white.withOpacity(0.6),
-                                                          ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Obx(
+                                                  () {
+                                                    final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
+                                                    if (videoListens.isEmpty) return const SizedBox();
+                                                    return NamidaInkWell(
+                                                      borderRadius: 6.0,
+                                                      bgColor: CurrentColor.inst.miniplayerColor.withOpacity(0.7),
+                                                      onTap: () {
+                                                        showVideoListensDialog(currentId);
+                                                      },
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                                      child: Text(
+                                                        videoListens.length.formatDecimal(),
+                                                        style: context.textTheme.displaySmall?.copyWith(
+                                                          color: Colors.white.withOpacity(0.6),
                                                         ),
                                                       ),
-                                                    const SizedBox(width: 8.0),
-                                                    const Icon(
-                                                      Broken.arrow_down_2,
-                                                      size: 20.0,
-                                                    ),
-                                                  ],
-                                                );
-                                              },
+                                                    );
+                                                  },
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                                NamidaPopupWrapper(
+                                                  onPop: () {
+                                                    _numberOfRepeats.value = 1;
+                                                  },
+                                                  childrenDefault: () {
+                                                    final videoId = currentId;
+                                                    final items = YTUtils.getVideoCardMenuItems(
+                                                      videoId: videoId,
+                                                      url: videoInfo?.url,
+                                                      channelUrl: channelIDOrURL,
+                                                      playlistID: null,
+                                                      idsNamesLookup: {videoId: videoInfo?.name},
+                                                    );
+                                                    if (Player.inst.nowPlayingVideoID != null && videoId == Player.inst.getCurrentVideoId) {
+                                                      final repeatForWidget = NamidaPopupItem(
+                                                        icon: Broken.cd,
+                                                        title: '',
+                                                        titleBuilder: (style) => Obx(
+                                                          () => Text(
+                                                            lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', _numberOfRepeats.value.toString()),
+                                                            style: style,
+                                                          ),
+                                                        ),
+                                                        onTap: () {
+                                                          settings.save(playerRepeatMode: RepeatMode.forNtimes);
+                                                          Player.inst.updateNumberOfRepeats(_numberOfRepeats.value);
+                                                        },
+                                                        trailing: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            NamidaIconButton(
+                                                              icon: Broken.minus_cirlce,
+                                                              onPressed: () => _numberOfRepeats.value = (_numberOfRepeats.value - 1).clamp(1, 20),
+                                                              iconSize: 20.0,
+                                                            ),
+                                                            NamidaIconButton(
+                                                              icon: Broken.add_circle,
+                                                              onPressed: () => _numberOfRepeats.value = (_numberOfRepeats.value + 1).clamp(1, 20),
+                                                              iconSize: 20.0,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                      items.add(repeatForWidget);
+                                                    }
+                                                    return items;
+                                                  },
+                                                  child: const Icon(
+                                                    Broken.arrow_down_2,
+                                                    size: 20.0,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                             title: Obx(
                                               () {

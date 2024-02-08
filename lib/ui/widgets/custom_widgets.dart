@@ -2841,18 +2841,22 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
 class NamidaPopupItem {
   final IconData icon;
   final String title;
+  final Widget Function(TextStyle? style)? titleBuilder;
   final String subtitle;
   final void Function() onTap;
   final bool enabled;
   final bool oneLinedSub;
+  final Widget? trailing;
 
   const NamidaPopupItem({
     required this.icon,
     required this.title,
+    this.titleBuilder,
     this.subtitle = '',
     required this.onTap,
     this.enabled = true,
     this.oneLinedSub = false,
+    this.trailing,
   });
 }
 
@@ -2902,35 +2906,40 @@ class NamidaPopupWrapper extends StatelessWidget {
         items: [
           if (childrenDefault != null)
             ...childrenDefault!().map(
-              (e) => PopupMenuItem(
-                height: 42.0,
-                onTap: e.onTap,
-                enabled: e.enabled,
-                child: Row(
-                  children: [
-                    Icon(e.icon, size: 20.0),
-                    const SizedBox(width: 6.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            e.title,
-                            style: context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4)),
-                          ),
-                          if (e.subtitle != '')
-                            Text(
-                              e.subtitle,
-                              style: context.textTheme.displaySmall,
-                              maxLines: e.oneLinedSub ? 1 : null,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
+              (e) {
+                final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4));
+                return PopupMenuItem(
+                  height: 42.0,
+                  onTap: e.onTap,
+                  enabled: e.enabled,
+                  child: Row(
+                    children: [
+                      Icon(e.icon, size: 20.0),
+                      const SizedBox(width: 6.0),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            e.titleBuilder?.call(titleStyle) ??
+                                Text(
+                                  e.title,
+                                  style: titleStyle,
+                                ),
+                            if (e.subtitle != '')
+                              Text(
+                                e.subtitle,
+                                style: context.textTheme.displaySmall,
+                                maxLines: e.oneLinedSub ? 1 : null,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                      if (e.trailing != null) e.trailing!,
+                    ],
+                  ),
+                );
+              },
             ),
           if (children != null)
             ...children!().map(

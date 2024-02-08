@@ -164,6 +164,7 @@ class YTUtils {
     YoutubeID? videoYTID,
   }) {
     final playAfterVid = getPlayerAfterVideo();
+    final isCurrentlyPlaying = Player.inst.nowPlayingVideoID != null && videoId == Player.inst.getCurrentVideoId;
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -187,7 +188,7 @@ class YTUtils {
           title: lang.SHARE,
           onTap: () => Share.share(url),
         ),
-      Player.inst.nowPlayingVideoID != null && videoId == Player.inst.getCurrentVideoId
+      isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,
               title: lang.STOP_AFTER_THIS_VIDEO,
