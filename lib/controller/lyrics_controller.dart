@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
@@ -33,6 +34,7 @@ class Lyrics {
   Track? _currentTrack;
 
   void _updateWidgets(Lrc? lrc) {
+    WakelockController.inst.updateLRCStatus(lrc != null);
     lrcViewKey?.currentState?.fillLists(lrc);
     lrcViewKeyFullscreen.currentState?.fillLists(lrc);
   }

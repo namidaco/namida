@@ -11,10 +11,10 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/packages/mp.dart';
 
 class MiniPlayerController {
@@ -275,7 +275,6 @@ class MiniPlayerController {
       if (_defaultShouldDismissMiniplayer) {
         snapToMini();
         _onMiniplayerDismiss();
-        _toggleWakelockOff();
         return;
       }
     }
@@ -312,23 +311,14 @@ class MiniPlayerController {
 
     if (shouldSnapToExpanded) {
       snapToExpanded();
-      _toggleWakelockOn();
     } else {
-      _toggleWakelockOff();
       if (shouldSnapToMini) snapToMini();
       if (shouldSnapToQueue) snapToQueue(animateScrollController: _offset < maxOffset * 1.8);
     }
   }
 
-  void _toggleWakelockOn() {
-    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
-  }
-
-  void _toggleWakelockOff() {
-    settings.wakelockMode.value.toggleOff();
-  }
-
   void snapToExpanded({bool haptic = true}) {
+    WakelockController.inst.updateMiniplayerStatus(true);
     _offset = maxOffset;
     if (_prevOffset < maxOffset) bounceUp = true;
     if (_prevOffset > maxOffset) bounceDown = true;
@@ -337,6 +327,7 @@ class MiniPlayerController {
   }
 
   void snapToMini({bool haptic = true}) {
+    WakelockController.inst.updateMiniplayerStatus(false);
     _offset = 0;
     bounceDown = false;
     _snap(haptic: haptic);
@@ -364,6 +355,7 @@ class MiniPlayerController {
   }
 
   Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
+    WakelockController.inst.updateMiniplayerStatus(false);
     _offset = maxOffset * 2;
     bounceUp = false;
 

@@ -21,7 +21,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
@@ -300,7 +299,6 @@ class VideoController {
           loopingAnimation: canLoopVideo(v, track.duration),
           isFile: true,
         );
-        settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
       }
     });
   }

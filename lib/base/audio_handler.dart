@@ -29,6 +29,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -730,7 +731,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (startPlaying) {
         setVolume(_userPlayerVolume);
         await onPlayRaw();
-        settings.wakelockMode.value.toggleOn(currentVideoStream.value != null || currentCachedVideo.value != null);
       }
       if (sourceChanged) {
         await seek(currentPositionMS.milliseconds);
@@ -1086,6 +1086,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> onPlayingStateChange(bool isPlaying) {
     CurrentColor.inst.switchColorPalettes(isPlaying);
+    WakelockController.inst.updatePlayPauseStatus(isPlaying);
     if (isPlaying) {
       _resourcesDisposeTimer?.cancel();
       _resourcesDisposeTimer = null;

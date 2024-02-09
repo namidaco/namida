@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Used to retain state for cases like navigating after pip mode.
@@ -73,11 +71,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
     _dragheight = _wasExpanded ? _maxHeight : widget.minHeight;
 
-    if (_wasExpanded) {
-      _toggleWakelockOn();
-    } else {
-      _toggleWakelockOff();
-    }
+    WakelockController.inst.updateMiniplayerStatus(_wasExpanded);
   }
 
   void _listenerHeightChange() {
@@ -120,25 +114,13 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false}) {
     if (dismiss) {
       _updateHeight(0, duration: dur ?? widget.duration);
-      _toggleWakelockOff();
+      WakelockController.inst.updateMiniplayerStatus(false);
       return;
     }
 
     _updateHeight(toExpanded ? widget.maxHeight : widget.minHeight, duration: dur ?? widget.duration);
     _wasExpanded = toExpanded;
-    if (toExpanded) {
-      _toggleWakelockOn();
-    } else {
-      _toggleWakelockOff();
-    }
-  }
-
-  void _toggleWakelockOn() {
-    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
-  }
-
-  void _toggleWakelockOff() {
-    settings.wakelockMode.value.toggleOff();
+    WakelockController.inst.updateMiniplayerStatus(toExpanded);
   }
 
   @override

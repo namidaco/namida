@@ -17,6 +17,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -121,9 +122,12 @@ class Player {
     );
     _videoPlayerInfoSub?.cancel();
     _videoPlayerInfoSub = _audioHandler.videoPlayerInfo.listen((info) {
-      if (info == null) return;
-      if (info.width == -1 || info.height == -1) return;
-      NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
+      if (info == null || info.width == -1 || info.height == -1) {
+        WakelockController.inst.updateVideoStatus(false);
+      } else {
+        WakelockController.inst.updateVideoStatus(true);
+        NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
+      }
     });
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
@@ -375,7 +379,6 @@ class Player {
 
   Future<void> play() async {
     await _audioHandler.play();
-    settings.wakelockMode.value.toggleOn(Player.inst.videoInitialized);
   }
 
   Future<void> playRaw() async {
@@ -384,7 +387,6 @@ class Player {
 
   Future<void> pause() async {
     await _audioHandler.pause();
-    settings.wakelockMode.value.toggleOff();
   }
 
   Future<void> dispose() async {

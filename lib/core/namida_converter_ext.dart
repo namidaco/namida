@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/media_info.dart';
@@ -465,18 +464,6 @@ extension PlaylistToQueueSource on Playlist {
 
 extension WAKELOCKMODETEXT on WakelockMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
-  void toggleOn(bool isShowingVideo) {
-    if (settings.wakelockMode.value == WakelockMode.expanded) {
-      WakelockPlus.enable();
-    }
-    if (settings.wakelockMode.value == WakelockMode.expandedAndVideo && isShowingVideo) {
-      WakelockPlus.enable();
-    }
-  }
-
-  void toggleOff() {
-    WakelockPlus.disable();
-  }
 }
 
 extension NotificationTapActionTEXT on NotificationTapAction {

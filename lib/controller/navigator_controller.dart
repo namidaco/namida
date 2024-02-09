@@ -12,6 +12,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -168,6 +169,7 @@ class NamidaNavigator {
     if (_isInFullScreen) return;
 
     _isInFullScreen = true;
+    WakelockController.inst.updateFullscreenStatus(true);
 
     Get.to(
       () => WillPopScope(
@@ -205,6 +207,7 @@ class NamidaNavigator {
     ]);
 
     _isInFullScreen = false;
+    WakelockController.inst.updateFullscreenStatus(false);
   }
 
   Future<void> navigateTo(
