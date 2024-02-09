@@ -249,7 +249,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     // -- similar name exists, so m3u overrides it
     // -- this can produce in an outdated playlist version in cache
     // -- which will be seen if the m3u file got deleted/renamed
-    await _prepareM3UPlaylists();
+    await prepareM3UPlaylists();
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
@@ -270,19 +270,23 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return listy;
   }
 
-  Future<void> _prepareM3UPlaylists() async {
+  Future<void> prepareM3UPlaylists({Set<String> forPaths = const {}}) async {
     final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
 
-    final parameters = {
-      'allAvailableDirectories': allAvailableDirectories,
-      'directoriesToExclude': <String>[],
-      'extensions': kM3UPlaylistsExtensions,
-      'respectNoMedia': false,
-    };
+    late final Set<String> allPaths;
+    if (forPaths.isNotEmpty) {
+      allPaths = forPaths;
+    } else {
+      final parameters = {
+        'allAvailableDirectories': allAvailableDirectories,
+        'directoriesToExclude': <String>[],
+        'extensions': kM3UPlaylistsExtensions,
+        'respectNoMedia': false,
+      };
+      final mapResult = await getFilesTypeIsolate.thready(parameters);
+      allPaths = mapResult['allPaths'] as Set<String>;
+    }
 
-    final mapResult = await getFilesTypeIsolate.thready(parameters);
-
-    final allPaths = mapResult['allPaths'] as Set<String>;
     final resBoth = await _parseM3UPlaylistFiles.thready({
       'paths': allPaths,
       'libraryTracks': allTracksInLibrary,

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:known_extents_list_view_builder/sliver_known_extents_list.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -372,75 +373,132 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
   }
 }
 
-class NormalPlaylistTracksPage extends StatelessWidget {
+class NormalPlaylistTracksPage extends StatefulWidget {
   final String playlistName;
   final bool disableAnimation;
   const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false});
 
   @override
+  State<NormalPlaylistTracksPage> createState() => _NormalPlaylistTracksPageState();
+}
+
+class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
+  @override
+  AnimationController get animation2 => _animation2;
+
+  late final _animation2 = AnimationController(
+    duration: const Duration(milliseconds: 1200),
+    vsync: this,
+  );
+
+  late final _scrollController = ScrollController();
+  late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
+
+  @override
+  void dispose() {
+    _animation2.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  num get pullNormalizer => 100;
+
+  @override
   Widget build(BuildContext context) {
-    return BackgroundWrapper(
-      child: Obx(
-        () {
-          PlaylistController.inst.playlistsMap.entries;
-          final playlist = PlaylistController.inst.getPlaylist(playlistName);
-          if (playlist == null) return const SizedBox();
+    final child = Obx(
+      () {
+        PlaylistController.inst.playlistsMap.entries;
+        final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);
+        if (playlist == null) return const SizedBox();
+        _playlistM3uPath = playlist.m3uPath;
 
-          final tracksWithDate = playlist.tracks;
-          if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
+        final tracksWithDate = playlist.tracks;
+        if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
 
-          final tracks = tracksWithDate.toTracks();
+        final tracks = tracksWithDate.toTracks();
 
-          return NamidaListView(
-            itemCount: tracks.length,
-            itemExtents: tracks.toTrackItemExtents(),
-            header: SubpagesTopContainer(
-              source: playlist.toQueueSource(),
-              title: playlist.name.translatePlaylistName(),
-              subtitle: [tracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
-              thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+        return NamidaListViewRaw(
+          scrollController: _scrollController,
+          itemCount: tracks.length,
+          itemExtents: tracks.toTrackItemExtents(),
+          header: SubpagesTopContainer(
+            source: playlist.toQueueSource(),
+            title: playlist.name.translatePlaylistName(),
+            subtitle: [tracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
+            thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+            heroTag: 'playlist_${playlist.name}',
+            imageWidget: MultiArtworkContainer(
               heroTag: 'playlist_${playlist.name}',
-              imageWidget: MultiArtworkContainer(
-                heroTag: 'playlist_${playlist.name}',
-                size: Get.width * 0.35,
-                paths: tracks.toImagePaths(),
-              ),
-              tracks: tracks,
+              size: Get.width * 0.35,
+              paths: tracks.toImagePaths(),
             ),
-            padding: kBottomPaddingInsets,
-            onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
-            itemBuilder: (context, i) {
-              final trackWithDate = tracksWithDate[i];
-              final w = Obx(
-                () {
-                  final reorderable = PlaylistController.inst.canReorderTracks.value;
-                  return FadeDismissible(
-                    key: Key("Diss_$i$trackWithDate"),
-                    direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
-                    onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
-                    child: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        TrackTile(
-                          index: i,
-                          trackOrTwd: trackWithDate,
-                          playlistName: playlist.name,
-                          queueSource: playlist.toQueueSource(),
-                          draggableThumbnail: reorderable,
-                          selectable: !PlaylistController.inst.canReorderTracks.value,
-                        ),
-                        Obx(() => ThreeLineSmallContainers(enabled: PlaylistController.inst.canReorderTracks.value)),
-                      ],
-                    ),
-                  );
-                },
-              );
-              if (disableAnimation) return SizedBox(key: Key(i.toString()), child: w);
-              return AnimatingTile(key: ValueKey(i), position: i, child: w);
-            },
-          );
-        },
-      ),
+            tracks: tracks,
+          ),
+          padding: kBottomPaddingInsets,
+          onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+          itemBuilder: (context, i) {
+            final trackWithDate = tracksWithDate[i];
+            final w = Obx(
+              () {
+                final reorderable = PlaylistController.inst.canReorderTracks.value;
+                return FadeDismissible(
+                  key: Key("Diss_$i$trackWithDate"),
+                  direction: reorderable ? DismissDirection.horizontal : DismissDirection.none,
+                  onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      TrackTile(
+                        index: i,
+                        trackOrTwd: trackWithDate,
+                        playlistName: playlist.name,
+                        queueSource: playlist.toQueueSource(),
+                        draggableThumbnail: reorderable,
+                        selectable: !PlaylistController.inst.canReorderTracks.value,
+                      ),
+                      Obx(() => ThreeLineSmallContainers(enabled: PlaylistController.inst.canReorderTracks.value)),
+                    ],
+                  ),
+                );
+              },
+            );
+            if (widget.disableAnimation) return SizedBox(key: Key(i.toString()), child: w);
+            return AnimatingTile(key: ValueKey(i), position: i, child: w);
+          },
+          listBuilder: (list) {
+            return Stack(
+              children: [
+                list,
+                pullToRefreshWidget,
+              ],
+            );
+          },
+        );
+      },
+    );
+    return BackgroundWrapper(
+      child: _playlistM3uPath != null
+          ? Listener(
+              onPointerMove: (event) {
+                if (!_scrollController.hasClients) return;
+                final p = _scrollController.position.pixels;
+                if (p <= 0 && event.delta.dx < 0.1) onVerticalDragUpdate(event.delta.dy);
+              },
+              onPointerUp: (event) async {
+                final m3uPath = _playlistM3uPath;
+                if (m3uPath != null && animation.value == 1) {
+                  showRefreshingAnimation(() async {
+                    await PlaylistController.inst.prepareM3UPlaylists(forPaths: {m3uPath});
+                    PlaylistController.inst.sortPlaylists();
+                  });
+                }
+                onVerticalDragFinish();
+              },
+              onPointerCancel: (event) => onVerticalDragFinish(),
+              child: child,
+            )
+          : child,
     );
   }
 }

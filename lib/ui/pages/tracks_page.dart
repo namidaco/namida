@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -26,15 +27,13 @@ class TracksPage extends StatefulWidget {
   State<TracksPage> createState() => _TracksPageState();
 }
 
-class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
+class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
   bool get _shouldAnimate => widget.animateTiles && LibraryTab.tracks.shouldAnimateTiles;
 
   final _animationKey = 'tracks_page';
-  final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
-  late final animation = AnimationController(vsync: this, duration: Duration.zero);
-  AnimationController get animation2 => RefreshLibraryIconController.getController(_animationKey, this);
 
-  final _minTrigger = 20;
+  @override
+  AnimationController get animation2 => RefreshLibraryIconController.getController(_animationKey, this);
 
   @override
   void initState() {
@@ -59,15 +58,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
           }
         },
         child: NotificationListener<ScrollMetricsNotification>(
-          onNotification: (notification) {
-            final pixels = notification.metrics.pixels;
-            if (pixels < -_minTrigger) {
-              animation.animateTo(((pixels + _minTrigger).abs() / 20).clamp(0, 1));
-            } else if (animation.value > 0) {
-              animation.animateTo(0);
-            }
-            return true;
-          },
+          onNotification: onScrollNotification,
           child: Obx(
             () {
               settings.trackListTileHeight.value;
@@ -137,44 +128,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin {
                         return Stack(
                           children: [
                             list,
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              child: AnimatedBuilder(
-                                animation: animation,
-                                child: CircleAvatar(
-                                  radius: 24.0,
-                                  backgroundColor: context.theme.colorScheme.secondaryContainer,
-                                  child: const Icon(Broken.refresh_2),
-                                ),
-                                builder: (context, circleAvatar) {
-                                  final p = animation.value;
-                                  if (!animation2.isAnimating && p == 0) return const SizedBox();
-                                  const multiplier = 4.5;
-                                  const minus = multiplier / 3;
-                                  return Padding(
-                                    padding: EdgeInsets.only(top: 12.0 + p * 128.0),
-                                    child: Transform.rotate(
-                                      angle: (p * multiplier) - minus,
-                                      child: AnimatedBuilder(
-                                        animation: animation2,
-                                        child: circleAvatar,
-                                        builder: (context, circleAvatar) {
-                                          return Opacity(
-                                            opacity: animation2.status == AnimationStatus.forward ? 1.0 : p,
-                                            child: RotationTransition(
-                                              key: const Key('rotatie'),
-                                              turns: turnsTween.animate(animation2),
-                                              child: circleAvatar,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                            pullToRefreshWidget,
                           ],
                         );
                       },
