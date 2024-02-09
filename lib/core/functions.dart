@@ -434,7 +434,7 @@ Future<String> showNamidaBottomSheetWithTextField({
     showDragHandle: showDragHandle,
     isScrollControlled: isScrollControlled,
     builder: (context) {
-      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
+      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28.0).add(EdgeInsets.only(bottom: 18.0 + bottomPadding)),
         child: Form(

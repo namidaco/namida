@@ -358,6 +358,7 @@ enum PlaylistAddDuplicateAction {
 }
 
 enum YTSeekActionMode {
+  none,
   minimizedMiniplayer,
   expandedMiniplayer,
   all,

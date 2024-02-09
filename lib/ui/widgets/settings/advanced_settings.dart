@@ -106,6 +106,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             () => Text(
               settings.performanceMode.value.toText(),
               style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+              textAlign: TextAlign.end,
             ),
           ),
         ),

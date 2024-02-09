@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:faudiotagger/faudiotagger.dart';
 import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/material.dart';
@@ -865,6 +866,7 @@ class Indexer {
 
     imageCache.clear();
     imageCache.clearLiveImages();
+    AudioService.evictArtworkCache();
 
     for (final e in tracksMap.entries) {
       final ot = e.key;

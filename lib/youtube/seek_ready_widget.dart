@@ -58,6 +58,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
   bool _getSeekActionEnable({required YTSeekActionMode mode}) {
     switch (mode) {
+      case YTSeekActionMode.none:
+        return false;
       case YTSeekActionMode.expandedMiniplayer:
         return _isMiniplayerExpanded;
       case YTSeekActionMode.minimizedMiniplayer:
@@ -120,6 +122,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
   bool get _userDragToSeek => widget.isFullscreen ? true : _getSeekActionEnable(mode: settings.ytDragToSeek.value);
 
   bool _dragToSeek = true;
+  String _currentSeekStuckWord = '';
   double _dragUpToCancel = 0.0;
   late final _dragUpToCancelMax = widget.isFullscreen ? 8 : 5;
 
@@ -152,7 +155,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   if (!_canDragToSeek) return;
                   if (!_isMiniplayerExpanded) return;
                   if (_dragUpToCancel > _dragUpToCancelMax) {
-                    setState(() => _dragToSeek = false);
+                    setState(() {
+                      _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm.."].random;
+                      _dragToSeek = false;
+                    });
                     Vibration.vibrate(duration: 20, amplitude: 80);
                   } else {
                     _dragToSeek = true;
@@ -213,7 +219,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 final seekTo = _seekPercentage.value * playerDuration.inMilliseconds;
                 final seekToDiff = seekTo - currentPositionMS;
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
-                final finalText = _canDragToSeek ? "$plusOrMinus${seekToDiff.round().milliSecondsLabel} " : <String>[" --:-- ", " kuru ", "umm.."].random;
+                final finalText = _canDragToSeek ? "$plusOrMinus${seekToDiff.round().milliSecondsLabel} " : _currentSeekStuckWord;
                 return Transform.translate(
                   offset: Offset((maxWidth * _seekPercentage.value - seekTextWidth * 0.5).clamp(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(

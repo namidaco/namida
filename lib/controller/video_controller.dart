@@ -90,7 +90,7 @@ class NamidaVideoWidget extends StatelessWidget {
                 await _verifyAndEnterFullScreen();
               },
         child: NamidaVideoControls(
-          key: fullscreen ? VideoController.inst.fullScreenControlskey : VideoController.inst.normalControlskey,
+          key: fullscreen ? null : VideoController.inst.normalControlskey,
           isLocal: isLocal,
           onMinimizeTap: () {
             if (fullscreen) {
@@ -136,7 +136,6 @@ class VideoController {
   }) async {
     final aspect = Player.inst.videoPlayerInfo?.aspectRatio;
     VideoController.inst.fullScreenVideoWidget ??= NamidaVideoControls(
-      key: VideoController.inst.fullScreenControlskey,
       isLocal: isLocal,
       onMinimizeTap: () {
         VideoController.inst.fullScreenVideoWidget = null;
@@ -155,7 +154,6 @@ class VideoController {
   final currentBrigthnessDim = 1.0.obs;
 
   final normalControlskey = GlobalKey<NamidaVideoControlsState>();
-  final fullScreenControlskey = GlobalKey<NamidaVideoControlsState>();
   Widget? fullScreenVideoWidget;
 
   int get localVideosTotalCount => _allVideoPaths.length;

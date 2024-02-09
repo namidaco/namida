@@ -60,12 +60,12 @@ Future<void> showVideoDownloadOptionsSheet({
     isScrollControlled: true,
     context: context,
     builder: (context) {
-      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
+      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
       return SizedBox(
         height: context.height * 0.65 + bottomPadding,
         width: context.width,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0),
+          padding: const EdgeInsets.symmetric(horizontal: 18.0).add(EdgeInsets.only(bottom: bottomPadding)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

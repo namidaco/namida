@@ -224,6 +224,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     child: Obx(
                       () => Text(
                         settings.ytTapToSeek.value.toText(),
+                        textAlign: TextAlign.end,
                       ),
                     ),
                   ),
@@ -246,6 +247,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     child: Obx(
                       () => Text(
                         settings.ytDragToSeek.value.toText(),
+                        textAlign: TextAlign.end,
                       ),
                     ),
                   ),
@@ -296,7 +298,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 onTap: () {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
-                      title: '',
+                      title: lang.CHOOSE,
                       actions: [
                         NamidaButton(
                           text: lang.DONE,

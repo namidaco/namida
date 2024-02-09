@@ -42,11 +42,14 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
+
+  Timer? _resourcesDisposeTimer;
+
   @override
   AudioLoadConfiguration? get defaultAndroidLoadConfig {
     return AudioLoadConfiguration(
       androidLoadControl: AndroidLoadControl(
-        minBufferDuration: const Duration(minutes: 2),
+        minBufferDuration: const Duration(seconds: 5),
         maxBufferDuration: const Duration(minutes: 3),
       ),
     );
@@ -254,22 +257,41 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await items._execute(
       selectable: (finalItems) async {
         if (currentQueue.firstOrNull is! Selectable) {
-          VideoController.inst.currentYTQualities.clear();
-          VideoController.inst.currentPossibleVideos.clear();
           await clearQueue();
         }
       },
       youtubeID: (finalItem) async {
         if (currentQueue.firstOrNull is! YoutubeID) {
-          YoutubeController.inst.currentYTQualities.clear();
-          YoutubeController.inst.currentYTAudioStreams.clear();
-          YoutubeController.inst.currentCachedQualities.clear();
-          YoutubeController.inst.currentComments.clear();
-          YoutubeController.inst.currentRelatedVideos.clear();
           await clearQueue();
         }
       },
     );
+  }
+
+  @override
+  FutureOr<void> clearQueue() async {
+    CurrentColor.inst.resetCurrentPlayingTrack();
+
+    VideoController.inst.currentYTQualities.clear();
+    VideoController.inst.currentPossibleVideos.clear();
+
+    YoutubeController.inst.currentYTQualities.clear();
+    YoutubeController.inst.currentYTAudioStreams.clear();
+    YoutubeController.inst.currentCachedQualities.clear();
+    YoutubeController.inst.currentComments.clear();
+    YoutubeController.inst.currentRelatedVideos.clear();
+
+    currentVideoInfo.value = null;
+    currentChannelInfo.value = null;
+    currentVideoStream.value = null;
+    currentAudioStream.value = null;
+    currentVideoThumbnail.value = null;
+    currentCachedVideo.value = null;
+    currentCachedAudio.value = null;
+    _isCurrentAudioFromCache = false;
+    _isFetchingInfo.value = false;
+    _nextSeekSetAudioCache = null;
+    await super.clearQueue();
   }
 
   @override

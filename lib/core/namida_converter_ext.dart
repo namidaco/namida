@@ -1500,6 +1500,7 @@ class _NamidaConverters {
         PlaylistAddDuplicateAction.addOnlyMissing: lang.ADD_ONLY_MISSING,
       },
       YTSeekActionMode: {
+        YTSeekActionMode.none: lang.NONE,
         YTSeekActionMode.minimizedMiniplayer: lang.MINIMIZED_MINIPLAYER,
         YTSeekActionMode.expandedMiniplayer: lang.EXPANDED_MINIPLAYER,
         YTSeekActionMode.all: lang.ALL,

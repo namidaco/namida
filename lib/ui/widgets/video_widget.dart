@@ -114,7 +114,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (_isVisible) {
       setControlsVisibily(false);
     } else {
-      if (widget.showControls) {
+      if (_canShowControls) {
         setControlsVisibily(true);
       }
     }
@@ -244,7 +244,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       Player.inst.onVolumeChangeAddListener(
         _volumeListenerKey,
         (mv) async {
-          if (widget.showControls) {
+          if (_canShowControls) {
             _currentDeviceVolume.value = mv;
             if (!_isPointerDown) _startVolumeSwipeTimer(); // only start timer if not handled by pointer down/up
           }
@@ -516,6 +516,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _doubleTapTimer = null;
   }
 
+  bool get _canShowControls => widget.showControls && !NamidaChannel.inst.isInPip.value;
+
   @override
   Widget build(BuildContext context) {
     final fallbackChild = widget.isLocal && !widget.isFullScreen
@@ -549,7 +551,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 32.0) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
-    final shouldShowSliders = widget.showControls && widget.isFullScreen;
+    final shouldShowSliders = _canShowControls && widget.isFullScreen;
     final shouldShowSeekBar = widget.isFullScreen;
     final view = View.of(context);
     return GestureDetector(
@@ -608,8 +610,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 }
               }
             },
-      child: Listener(
-        onPointerDown: widget.showControls
+      child: GestureDetector(
+        onTapUp: _canShowControls
             ? (event) {
                 if (_isDraggingSeekBar) return;
                 if (_doubleTapFirstPress) {
@@ -618,7 +620,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   return;
                 }
                 final screenPart = context.width / 3;
-                final dx = event.position.dx;
+                final dx = event.localPosition.dx;
                 if (dx >= screenPart && dx <= screenPart * 2) {
                   // pressed in middle
                   _onTap();
@@ -676,7 +678,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               ),
             ),
 
-            if (widget.showControls) ...[
+            if (_canShowControls) ...[
               // ---- Mask -----
               Positioned.fill(
                 child: _getBuilder(
@@ -1159,7 +1161,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               _startTimer();
                                               final currentId = Player.inst.getCurrentVideoId;
                                               if (currentId != '') {
-                                                Clipboard.setData(ClipboardData(text: "https://www.youtube.com/watch?v=$currentId"));
+                                                final atSeconds = Player.inst.nowPlayingPosition ~/ 1000;
+                                                final timeStamp = atSeconds > 0 ? '?t=$atSeconds' : '';
+                                                Clipboard.setData(ClipboardData(text: "https://www.youtube.com/watch?v=$currentId$timeStamp"));
                                                 snackyy(message: lang.COPIED_TO_CLIPBOARD, top: false, leftBarIndicatorColor: CurrentColor.inst.color);
                                               }
                                             },

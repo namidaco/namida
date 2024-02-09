@@ -7,6 +7,7 @@ import 'package:catcher/catcher.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -155,6 +156,7 @@ void main() async {
   await Future.wait([
     SystemChrome.setPreferredOrientations(kDefaultOrientations),
     NamidaNavigator.inst.setDefaultSystemUI(),
+    FlutterDisplayMode.setHighRefreshRate(),
   ]);
 
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();

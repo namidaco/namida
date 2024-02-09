@@ -479,8 +479,8 @@ class Player {
 
   // ------- video -------
 
-  Future<void> setVideo({required String source, String cacheKey = '', bool loopingAnimation = false}) async {
-    await _audioHandler.setVideoSource(source: source, cacheKey: cacheKey, loopingAnimation: loopingAnimation);
+  Future<void> setVideo({required String source, String cacheKey = '', bool loopingAnimation = false, required bool isFile}) async {
+    await _audioHandler.setVideoSource(source: source, cacheKey: cacheKey, loopingAnimation: loopingAnimation, isFile: isFile);
   }
 
   Future<void> disposeVideo() async {

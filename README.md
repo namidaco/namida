@@ -179,7 +179,7 @@ Animating Thumbnail        |  Recommends & Listens
 ##### the following actions require <span>`all_files_access`</span> permission (requested when needed)
 
 > - editing audio tags
-> - creating or restoring backups
+> - creating or auto-restoring backups
 > - saving artworks
 > - compressing images
 > - downloading youtube content

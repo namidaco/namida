@@ -41,12 +41,14 @@ void showAddToPlaylistSheet({
     backgroundColor: Colors.transparent,
     context: context,
     builder: (context) {
+      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.0.multipliedRadius),
           color: context.theme.scaffoldBackgroundColor,
         ),
         margin: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.only(bottom: bottomPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

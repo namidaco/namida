@@ -17,12 +17,12 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
+      ref: c5048e17858002cb25d625f0204cc59249981715
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
-      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
+      ref: c5048e17858002cb25d625f0204cc59249981715
   archive: ^3.3.8
   intl: ^0.18.0
   get:
@@ -75,6 +75,8 @@ dependencies:
   flutter_mailer: ^2.1.1
   lrc: ^1.0.2
   system_info2: ^4.0.0
+  vibration: ^1.8.4
+  flutter_displaymode: ^0.6.0
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14
@@ -86,7 +88,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: dd18d3f548a004422505fc8b572c8814bb7a79dd
+      ref: c5048e17858002cb25d625f0204cc59249981715
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -100,7 +102,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 9505185e64b8bae6bc0cae1289edf0bee26bac5c
+      ref: 2cd4ec054703aa1cdd7a4ddc61021c07aaa457c4
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
