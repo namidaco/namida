@@ -1036,7 +1036,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                       : MultiArtworkContainer(
                                           heroTag: 'edittags_artwork',
                                           size: Get.width / 3,
-                                          paths: tracks.toImagePaths(),
+                                          tracks: tracks.toImageTracks(),
+                                          fallbackToFolderCover: false,
                                           onTopWidget: tracks.length > 3
                                               ? Positioned(
                                                   right: 0,

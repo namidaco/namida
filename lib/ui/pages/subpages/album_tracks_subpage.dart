@@ -44,7 +44,7 @@ class AlbumTracksPage extends StatelessWidget {
                   ? MultiArtworkContainer(
                       size: Get.width * 0.35,
                       heroTag: 'album_$albumIdentifier',
-                      paths: [tracks.pathToImage],
+                      tracks: [tracks.trackOfImage ?? kDummyTrack],
                     )
                   : Container(
                       margin: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -53,6 +53,7 @@ class AlbumTracksPage extends StatelessWidget {
                         tag: 'album_$albumIdentifier',
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
+                          track: tracks.trackOfImage,
                           thumbnailSize: Get.width * 0.35,
                           forceSquared: false,
                           path: tracks.pathToImage,

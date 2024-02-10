@@ -35,7 +35,7 @@ class GenreTracksPage extends StatelessWidget {
               imageWidget: MultiArtworkContainer(
                 size: Get.width * 0.35,
                 heroTag: 'genre_$name',
-                paths: tracks.toImagePaths(),
+                tracks: tracks.toImageTracks(),
               ),
               tracks: tracks,
             ),

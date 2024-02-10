@@ -352,6 +352,7 @@ class SearchPage extends StatelessWidget {
                                                   const SizedBox(width: 4.0),
                                                   ArtworkWidget(
                                                     key: Key(tracks.pathToImage),
+                                                    track: tracks.trackOfImage,
                                                     thumbnailSize: 48.0,
                                                     path: tracks.pathToImage,
                                                     forceSquared: true,

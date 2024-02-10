@@ -675,6 +675,7 @@ Future<void> showGeneralPopupDialog(
                               tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}$additionalHero',
                               child: ArtworkWidget(
                                 key: Key(tracks.pathToImage),
+                                track: tracks.trackOfImage,
                                 path: tracks.pathToImage,
                                 thumbnailSize: 60,
                                 forceSquared: forceSquared,
@@ -686,7 +687,8 @@ Future<void> showGeneralPopupDialog(
                             MultiArtworkContainer(
                               heroTag: heroTag ?? 'edittags_artwork',
                               size: 60,
-                              paths: tracks.toImagePaths(),
+                              tracks: tracks.toImageTracks(),
+                              fallbackToFolderCover: false,
                               margin: EdgeInsets.zero,
                             ),
                           const SizedBox(width: 12.0),

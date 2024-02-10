@@ -57,6 +57,7 @@ class ArtistTracksPage extends StatelessWidget {
                       child: ContainerWithBorder(
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
+                          track: tracks.trackOfImage,
                           thumbnailSize: Get.width * 0.35,
                           path: tracks.pathToImage,
                           forceSquared: true,

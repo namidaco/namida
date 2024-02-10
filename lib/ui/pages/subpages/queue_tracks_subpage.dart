@@ -31,7 +31,7 @@ class QueueTracksPage extends StatelessWidget {
           imageWidget: MultiArtworkContainer(
             size: Get.width * 0.35,
             heroTag: 'queue_${queue.date}',
-            paths: queue.tracks.toImagePaths(),
+            tracks: queue.tracks.toImageTracks(),
           ),
           tracks: queue.tracks,
         ),

@@ -297,7 +297,9 @@ const Set<String> kVideoFilesExtensions = {
 };
 
 /// Extensions used to filter m3u files
-const Set<String> kM3UPlaylistsExtensions = {'m3u', 'm3u8', 'M3U', 'M3U8'};
+const Set<String> kM3UPlaylistsExtensions = {'.m3u', '.m3u8', '.M3U', '.M3U8'};
+
+const Set<String> kImageFilesExtensions = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'};
 
 const kDefaultOrientations = <DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
 const kDefaultLang = NamidaLanguage(

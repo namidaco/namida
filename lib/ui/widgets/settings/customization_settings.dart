@@ -640,6 +640,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     width: settings.trackThumbnailSizeinList.value,
                     height: settings.trackThumbnailSizeinList.value,
                     child: ArtworkWidget(
+                      track: allTracksInLibrary.firstOrNull,
                       key: Key(allTracksInLibrary.firstOrNull?.pathToImage ?? ''),
                       thumbnailSize: settings.trackThumbnailSizeinList.value,
                       path: allTracksInLibrary.firstOrNull?.pathToImage,

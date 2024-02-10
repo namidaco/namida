@@ -191,6 +191,7 @@ class TrackTile extends StatelessWidget {
                                       tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero',
                                       child: ArtworkWidget(
                                         key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
+                                        track: track,
                                         thumbnailSize: thumbnailSize,
                                         path: track.pathToImage,
                                         forceSquared: settings.forceSquaredTrackThumbnail.value,

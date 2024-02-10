@@ -2030,7 +2030,8 @@ class _TrackImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArtworkWidget(
-      key: Key(track.path),
+      key: Key(track.pathToImage),
+      track: track,
       path: track.pathToImage,
       thumbnailSize: context.width,
       compressed: false,

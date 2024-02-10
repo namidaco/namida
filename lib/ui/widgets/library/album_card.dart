@@ -79,6 +79,7 @@ class AlbumCard extends StatelessWidget {
                 tag: hero,
                 child: ArtworkWidget(
                   key: Key(album.pathToImage),
+                  track: album.trackOfImage,
                   thumbnailSize: thumbnailSize,
                   path: album.pathToImage,
                   borderRadius: 10.0,

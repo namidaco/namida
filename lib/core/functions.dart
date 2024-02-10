@@ -525,6 +525,7 @@ bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
 ///   'allAvailableDirectories': <Directory, bool>{},
 ///   'directoriesToExclude': <String>[],
 ///   'extensions': <String>{},
+///   'imageExtensions': <String>{},
 ///   'respectNoMedia': bool ?? true,
 /// }
 /// ```
@@ -534,16 +535,25 @@ bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
 /// {
 /// 'allPaths': <String>{},
 /// 'pathsExcludedByNoMedia': <String>{},
+/// 'folderCovers': <String, String>{},
 /// }
 /// ```
-Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
+Map<String, Object> getFilesTypeIsolate(Map parameters) {
   final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
   final directoriesToExclude = parameters['directoriesToExclude'] as List<String>? ?? [];
   final extensions = parameters['extensions'] as Set<String>;
+  final imageExtensions = parameters['imageExtensions'] as Set<String>? ?? {};
   final respectNoMedia = parameters['respectNoMedia'] as bool? ?? true;
 
   final allPaths = <String>{};
   final excludedByNoMedia = <String>{};
+  final folderCovers = <String, String>{};
+  final folderCoversValidity = <String, bool>{};
+
+  final fillFolderCovers = imageExtensions.isNotEmpty;
+
+  // "thumb", "album", "albumart", etc.. are covered by the check `element.contains(filename)`.
+  final coversNames = ["folder", "front", "cover", "thumbnail", "albumartsmall"];
 
   allAvailableDirectories.keys.toList().loop((d, index) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
@@ -551,6 +561,18 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
       for (final systemEntity in d.listSyncSafe()) {
         if (systemEntity is File) {
           final path = systemEntity.path;
+
+          if (fillFolderCovers) {
+            final dirPath = path.getDirectoryPath;
+            if (folderCoversValidity[dirPath] == null || folderCoversValidity[dirPath] == false) {
+              if (imageExtensions.any((ext) => path.endsWith(ext))) {
+                folderCovers[dirPath] = path;
+                final filename = path.getFilenameWOExt.toLowerCase();
+                folderCoversValidity[dirPath] = coversNames.any((element) => element.contains(filename));
+                continue;
+              }
+            }
+          }
 
           // -- skip if hidden
           if (path.startsWith('.')) continue;
@@ -578,6 +600,7 @@ Map<String, Set<String>> getFilesTypeIsolate(Map parameters) {
   return {
     'allPaths': allPaths,
     'pathsExcludedByNoMedia': excludedByNoMedia,
+    'folderCovers': folderCovers,
   };
 }
 

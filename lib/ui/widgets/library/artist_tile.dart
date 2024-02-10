@@ -38,6 +38,7 @@ class ArtistTile extends StatelessWidget {
                   child: ContainerWithBorder(
                     child: ArtworkWidget(
                       key: Key(tracks.pathToImage),
+                      track: tracks.trackOfImage,
                       thumbnailSize: Dimensions.artistThumbnailSize,
                       path: tracks.pathToImage,
                       borderRadius: 64.0,

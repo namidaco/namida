@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -10,10 +11,21 @@ class MultiArtworkContainer extends StatelessWidget {
   final double size;
   final Widget? child;
   final Widget? onTopWidget;
-  final List<String>? paths;
+  final List<Track>? tracks;
   final EdgeInsetsGeometry? margin;
   final String heroTag;
-  const MultiArtworkContainer({super.key, required this.size, this.child, this.margin, this.paths, this.onTopWidget, required this.heroTag});
+  final bool fallbackToFolderCover;
+
+  const MultiArtworkContainer({
+    super.key,
+    required this.size,
+    this.child,
+    this.margin,
+    this.tracks,
+    this.onTopWidget,
+    required this.heroTag,
+    this.fallbackToFolderCover = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +56,13 @@ class MultiArtworkContainer extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.hardEdge,
             children: [
-              if (paths != null)
+              if (tracks != null)
                 MultiArtworks(
                   disableHero: true,
                   heroTag: heroTag,
-                  paths: paths!,
+                  tracks: tracks!,
                   thumbnailSize: size - 6.0,
+                  fallbackToFolderCover: fallbackToFolderCover,
                 ),
               if (child != null) child!,
               if (onTopWidget != null) onTopWidget!,

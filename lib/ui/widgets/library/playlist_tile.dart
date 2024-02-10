@@ -47,7 +47,7 @@ class PlaylistTile extends StatelessWidget {
                     MultiArtworkContainer(
                       heroTag: hero,
                       size: Dimensions.playlistThumbnailSize,
-                      paths: tracksRaw.toImagePaths(),
+                      tracks: tracksRaw.toImageTracks(),
                     ),
                     Expanded(
                       child: Column(

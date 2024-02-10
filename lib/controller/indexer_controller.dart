@@ -68,6 +68,8 @@ class Indexer {
   final allTracksMappedByPath = <Track, TrackExtended>{}.obs;
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
+  var allFolderCovers = <String, String>{}; // {directoryPath, imagePath}
+
   /// Used to prevent duplicated track (by filename).
   final Map<String, bool> _currentFileNamesMap = {};
 
@@ -80,12 +82,12 @@ class Indexer {
     return alltracks;
   }
 
-  Map<String, (TrackExtended, int)> get backupMediaStoreIDS => _backupMediaStoreIDS;
+  Map<String, (Track, int)> get backupMediaStoreIDS => _backupMediaStoreIDS;
 
   bool imageObtainedBefore(String imagePath) => _artworksMap[imagePath] != null || _artworksMapFullRes[imagePath] != null;
 
   /// {imagePath: (TrackExtended, id)};
-  final _backupMediaStoreIDS = <String, (TrackExtended, int)>{};
+  final _backupMediaStoreIDS = <String, (Track, int)>{};
   final artworksMap = <String, Uint8List?>{};
   final _artworksMap = <String, Completer<void>>{};
   final _artworksMapFullRes = <String, Completer<void>>{};
@@ -1213,17 +1215,21 @@ class Indexer {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': settings.directoriesToExclude.toList(),
       'extensions': kAudioFileExtensions,
+      'imageExtensions': kImageFilesExtensions,
     };
 
     final mapResult = await getFilesTypeIsolate.thready(parameters);
 
     final allPaths = mapResult['allPaths'] as Set<String>;
     final excludedByNoMedia = mapResult['pathsExcludedByNoMedia'] as Set<String>;
+    final folderCovers = mapResult['folderCovers'] as Map<String, String>;
 
     tracksExcludedByNoMedia.value += excludedByNoMedia.length;
 
     // ignore: invalid_use_of_protected_member
     allAudioFiles.value = allPaths;
+
+    allFolderCovers = folderCovers;
 
     printy("Paths Found: ${allPaths.length}");
     return allPaths;
@@ -1349,7 +1355,7 @@ class Indexer {
         lyrics: '',
       );
       tracks.add((trext, e.id));
-      _backupMediaStoreIDS[trext.pathToImage] = (trext, e.id);
+      _backupMediaStoreIDS[trext.pathToImage] = (trext.toTrack(), e.id);
     });
     return tracks;
   }

@@ -943,6 +943,7 @@ class _MixesCardState extends State<_MixesCard> {
         tag: 'mix_thumbnail_${widget.title}${widget.index}',
         child: ArtworkWidget(
           key: Key(track?.pathToImage ?? ''),
+          track: track,
           compressed: false,
           blur: 1.5,
           borderRadius: titleInside ? 12.0 : 8.0,
@@ -1201,6 +1202,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
           children: [
             ArtworkWidget(
               key: Key(track.path),
+              track: track,
               blur: 0.0,
               forceSquared: true,
               path: track.pathToImage,

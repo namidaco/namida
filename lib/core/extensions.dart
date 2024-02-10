@@ -28,16 +28,20 @@ export 'package:dart_extensions/dart_extensions.dart';
 extension TracksSelectableUtils on List<Selectable> {
   String get displayTrackKeyword => length.displayTrackKeyword;
 
-  List<String> toImagePaths([int? limit = 4]) {
-    final l = <String>[];
+  List<Track> toImageTracks([int? limit = 4]) {
+    final l = <Track>[];
     for (final p in withLimit(limit)) {
-      l.add(p.track.pathToImage);
+      l.add(p.track);
     }
     if (l.length == limit) {
       // -- return 1 image if all were the same.
       if (l.toSet().length == 1) return [l.first];
     }
     return l;
+  }
+
+  List<String> toImagePaths([int? limit = 4]) {
+    return toImageTracks(limit).map((e) => e.pathToImage).toList();
   }
 }
 
