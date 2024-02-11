@@ -702,7 +702,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     bool startPlaying, {
     bool? canPlayAudioOnlyFromCache,
   }) async {
-    canPlayAudioOnlyFromCache ??= isAudioOnlyPlayback;
+    canPlayAudioOnlyFromCache ??= (isAudioOnlyPlayback || !ConnectivityController.inst.hasConnection);
 
     YoutubeController.inst.currentYTQualities.clear();
     YoutubeController.inst.currentYTAudioStreams.clear();
