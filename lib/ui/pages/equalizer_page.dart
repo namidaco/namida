@@ -114,14 +114,31 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                           displayValue: false,
                           trailing: Row(
                             children: [
+                              const SizedBox(width: 4.0),
                               NamidaIconButton(
-                                horizontalPadding: 8.0,
+                                horizontalPadding: 0.0,
+                                tooltip: lang.TAP_TO_SEEK,
+                                icon: null,
+                                iconSize: 20.0,
+                                onPressed: () => EqualizerSettings.inst.save(uiTapToUpdate: !EqualizerSettings.inst.uiTapToUpdate.value),
+                                child: Obx(
+                                  () => StackedIcon(
+                                    baseIcon: Broken.mouse_1,
+                                    secondaryIcon: EqualizerSettings.inst.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
+                                    secondaryIconSize: 12.0,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12.0),
+                              NamidaIconButton(
+                                horizontalPadding: 0.0,
                                 tooltip: lang.OPEN_APP,
                                 icon: Broken.export_2,
+                                iconColor: context.defaultIconColor(),
                                 iconSize: 20.0,
                                 onPressed: NamidaChannel.inst.openSystemEqualizer,
                               ),
-                              const SizedBox(width: 8.0),
+                              const SizedBox(width: 16.0),
                               CustomSwitch(
                                 active: enabled,
                                 passedColor: null,
@@ -136,6 +153,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                   EqualizerControls(
                     equalizer: _equalizer,
                     onGainSetCallback: _resetPreset,
+                    tapToUpdate: () => EqualizerSettings.inst.uiTapToUpdate.value,
                   ),
                   const SizedBox(height: 12.0),
                   if (_equalizerPresets.isNotEmpty) ...[
@@ -397,11 +415,13 @@ Timer? _longPressTimer;
 class EqualizerControls extends StatelessWidget {
   final AndroidEqualizer equalizer;
   final void Function() onGainSetCallback;
+  final bool Function() tapToUpdate;
 
   const EqualizerControls({
     Key? key,
     required this.equalizer,
     required this.onGainSetCallback,
+    required this.tapToUpdate,
   }) : super(key: key);
 
   Widget _getArrowIcon({required IconData icon, required VoidCallback callback}) {
@@ -477,6 +497,7 @@ class EqualizerControls extends StatelessWidget {
                                         value: band.gain,
                                         onChanged: (value) => _onGainSetNoClamp(band, parameters, value),
                                         circleWidth: (context.width / allBands.length * 0.7).clamp(8.0, 24.0),
+                                        tapToUpdate: tapToUpdate,
                                       ),
                                     ),
                                     const SizedBox(height: 8.0),
@@ -531,6 +552,7 @@ class VerticalSlider extends StatefulWidget {
   final double max;
   final double circleWidth;
   final ValueChanged<double> onChanged;
+  final bool Function() tapToUpdate;
 
   const VerticalSlider({
     Key? key,
@@ -539,6 +561,7 @@ class VerticalSlider extends StatefulWidget {
     this.max = 1.0,
     required this.circleWidth,
     required this.onChanged,
+    required this.tapToUpdate,
   }) : super(key: key);
 
   @override
@@ -570,7 +593,11 @@ class _VerticalSliderState extends State<VerticalSlider> {
       final finalVal = (widget.value - widget.min) / (widget.max - widget.min);
       final height = constraints.maxHeight * finalVal;
       return GestureDetector(
-        onTapDown: (_) => _isPointerDown.value = true,
+        behavior: HitTestBehavior.translucent,
+        onTapDown: (details) {
+          if (widget.tapToUpdate()) _updateValue(constraints, total, details.localPosition.dy);
+          _isPointerDown.value = true;
+        },
         onTapUp: (details) => _isPointerDown.value = false,
         onVerticalDragEnd: (_) {
           _isPointerDown.value = false;
