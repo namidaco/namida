@@ -62,6 +62,11 @@ class NamidaChannel {
     return res ?? false;
   }
 
+  Future<bool> openSystemEqualizer() async {
+    final res = await _channel.invokeMethod<bool?>('openEqualizer');
+    return res ?? false;
+  }
+
   late final MethodChannel _channel;
   late final EventChannel _channelEvent;
 

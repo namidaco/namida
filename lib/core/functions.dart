@@ -28,6 +28,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
@@ -312,6 +313,19 @@ class NamidaOnTaps {
           ),
         ),
       ),
+    );
+  }
+
+  void openEqualizer() {
+    Get.to(
+      () => const EqualizerPage(),
+      id: null,
+      preventDuplicates: true,
+      transition: Transition.cupertino,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 300),
+      opaque: false,
+      fullscreenDialog: false,
     );
   }
 }

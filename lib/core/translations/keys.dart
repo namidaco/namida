@@ -205,6 +205,7 @@ abstract class LanguageKeys {
   String get ENABLE_SEARCH_CLEANUP => _getKey('ENABLE_SEARCH_CLEANUP');
   String get ENABLE_VIDEO_PLAYBACK => _getKey('ENABLE_VIDEO_PLAYBACK');
   String get ENTER_SYMBOL => _getKey('ENTER_SYMBOL');
+  String get EQUALIZER => _getKey('EQUALIZER');
   String get ERROR_PLAYING_TRACK => _getKey('ERROR_PLAYING_TRACK');
   String get ERROR => _getKey('ERROR');
   String get EXCLUDED_FODLERS => _getKey('EXCLUDED_FODLERS');
@@ -324,6 +325,7 @@ abstract class LanguageKeys {
   String get LOCAL_VIDEO_MATCHING => _getKey('LOCAL_VIDEO_MATCHING');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');
   String get LOST_MEMORIES_SUBTITLE => _getKey('LOST_MEMORIES_SUBTITLE');
+  String get LOUDNESS_ENHANCER => _getKey('LOUDNESS_ENHANCER');
   String get LYRICIST => _getKey('LYRICIST');
   String get LYRICS => _getKey('LYRICS');
   String get M3U_PLAYLIST => _getKey('M3U_PLAYLIST');

@@ -1,10 +1,12 @@
 package com.msob7y.namida
 
 import android.app.PictureInPictureParams
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.media.RingtoneManager
+import android.media.audiofx.AudioEffect
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -47,7 +49,7 @@ class NamidaMainActivity : FlutterActivity() {
             result.success(true)
           } catch (e: Exception) {
             result.error("NAMIDA TOAST", "Error showing toast", e)
-            print(e)
+            println(e)
           }
         }
         "cancelToast" -> {
@@ -83,6 +85,9 @@ class NamidaMainActivity : FlutterActivity() {
           } else {
             result.success(null)
           }
+        }
+        "openEqualizer" -> {
+          result.success(openSystemEqualizer())
         }
         else -> result.notImplemented()
       }
@@ -263,6 +268,32 @@ class NamidaMainActivity : FlutterActivity() {
       }
       SET_AS_LATEST_FILE_PATH = null
       SET_AS_LATEST_TYPES = null
+    }
+  }
+
+  // ------- EQUALIZER -------
+
+  private val REQUEST_CODE_OPEN_EQ = 47
+
+  private fun openSystemEqualizer(): Boolean {
+    val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
+    intent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.getPackageName())
+    intent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+    intent.setFlags(
+        Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
+            Intent.FLAG_ACTIVITY_NEW_TASK or
+            Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+    )
+
+    try {
+      activity.startActivityForResult(intent, REQUEST_CODE_OPEN_EQ)
+      return true
+    } catch (notFound: ActivityNotFoundException) {
+      showToast("No Built-in Equalizer was found", 3)
+      return false
+    } catch (e: Exception) {
+      showToast(e.message, 3)
+      return false
     }
   }
 }

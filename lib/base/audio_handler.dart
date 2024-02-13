@@ -43,6 +43,16 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
+  @override
+  AudioPipeline? get audioPipeline => AudioPipeline(
+        androidAudioEffects: [
+          equalizer,
+          loudnessEnhancer,
+        ],
+      );
+
+  late final equalizer = AndroidEqualizer();
+  late final loudnessEnhancer = AndroidLoudnessEnhancer();
 
   Timer? _resourcesDisposeTimer;
 

@@ -11,6 +11,7 @@ import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/base/audio_handler.dart';
+import 'package:namida/controller/equalizer_settings.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -46,6 +47,10 @@ class Player {
 
   VideoInfoData? get videoPlayerInfo => _audioHandler.videoPlayerInfo.value;
   bool get videoInitialized => videoPlayerInfo?.isInitialized ?? false;
+
+  AndroidEqualizer get equalizer => _audioHandler.equalizer;
+  AndroidLoudnessEnhancer get loudnessEnhancer => _audioHandler.loudnessEnhancer;
+  int? get androidAudioSessionId => _audioHandler.androidAudioSessionId;
 
   VideoInfo? get currentVideoInfo => _audioHandler.currentVideoInfo.value;
   YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;
@@ -148,6 +153,26 @@ class Player {
         }
       }
     });
+    _initializeEqualizer();
+  }
+
+  void _initializeEqualizer() async {
+    final eq = EqualizerSettings.inst;
+    _audioHandler.equalizer.setEnabled(eq.equalizerEnabled);
+    if (eq.preset != null) {
+      _audioHandler.equalizer.setPreset(eq.preset!);
+    } else {
+      if (eq.equalizer.isNotEmpty) {
+        _audioHandler.equalizer.parameters.then((parameters) {
+          parameters.bands.loop((b, index) {
+            final userGain = eq.equalizer[b.centerFrequency];
+            if (userGain != null) b.setGain(userGain);
+          });
+        });
+      }
+    }
+    _audioHandler.loudnessEnhancer.setTargetGain(eq.loudnessEnhancer);
+    _audioHandler.loudnessEnhancer.setEnabled(eq.loudnessEnhancerEnabled);
   }
 
   void onVolumeChangeAddListener(String key, void Function(double musicVolume) fn) {
@@ -414,7 +439,7 @@ class Player {
   }
 
   Future<void> skipToQueueItem(int index) async {
-    _audioHandler.skipToQueueItem(index);
+    _audioHandler.skipToQueueItem(index, true);
   }
 
   Future<void> seek(Duration position) async {

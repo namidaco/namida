@@ -21,6 +21,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/equalizer_settings.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
@@ -111,7 +112,11 @@ void main() async {
     AppDirs.INTERNAL_STORAGE,
   ]);
 
-  await settings.prepareSettingsFile();
+  await Future.wait([
+    EqualizerSettings.inst.prepareSettingsFile(),
+    settings.prepareSettingsFile(),
+  ]);
+
   await Future.wait([
     if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
     Language.initialize(),

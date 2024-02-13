@@ -1412,6 +1412,8 @@ class NamidaIconButton extends StatefulWidget {
   final IconData? icon;
   final Color? iconColor;
   final void Function()? onPressed;
+  final void Function(LongPressStartDetails details)? onLongPressStart;
+  final void Function()? onLongPressFinish;
   final String? tooltip;
   final bool disableColor;
   final Widget? child;
@@ -1423,6 +1425,8 @@ class NamidaIconButton extends StatefulWidget {
     this.verticalPadding = 0.0,
     required this.icon,
     this.onPressed,
+    this.onLongPressStart,
+    this.onLongPressFinish,
     this.iconSize,
     this.iconColor,
     this.tooltip,
@@ -1447,6 +1451,10 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
         onTapUp: (value) => setState(() => isPressed = false),
         onTapCancel: () => setState(() => isPressed = false),
         onTap: widget.onPressed,
+        onLongPressStart: widget.onLongPressStart,
+        onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish,
+        onLongPressCancel: widget.onLongPressFinish,
+        onLongPressUp: widget.onLongPressFinish,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
           opacity: isPressed ? 0.5 : 1.0,
@@ -3577,3 +3585,72 @@ class RepeatModeIconButton extends StatelessWidget {
     );
   }
 }
+
+class EqualizerIconButton extends StatelessWidget {
+  final bool compact;
+  final Color? color;
+  final VoidCallback? onPressed;
+
+  const EqualizerIconButton({
+    super.key,
+    this.compact = false,
+    this.color,
+    this.onPressed,
+  });
+
+  void _onTap() {
+    NamidaOnTaps.inst.openEqualizer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tooltip = lang.EQUALIZER;
+    final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
+    final child = StreamBuilder<bool>(
+      stream: Player.inst.equalizer.enabledStream,
+      builder: (context, snapshot) {
+        final enabled = snapshot.data ?? false;
+        return enabled
+            ? StackedIcon(
+                baseIcon: Broken.sound,
+                secondaryIcon: Broken.tick_circle,
+                iconSize: 20.0,
+                secondaryIconSize: 10.0,
+                baseIconColor: iconColor,
+                secondaryIconColor: iconColor,
+              )
+            : Icon(
+                Broken.sound,
+                size: 20.0,
+                color: iconColor,
+              );
+      },
+    );
+
+    return compact
+        ? NamidaIconButton(
+            tooltip: tooltip,
+            icon: null,
+            horizontalPadding: 0.0,
+            padding: EdgeInsets.zero,
+            iconSize: 20.0,
+            onPressed: () {
+              onPressed?.call();
+              _onTap();
+            },
+            child: child,
+          )
+        : IconButton(
+            visualDensity: VisualDensity.compact,
+            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            padding: const EdgeInsets.all(2.0),
+            tooltip: tooltip,
+            onPressed: () {
+              onPressed?.call();
+              _onTap();
+            },
+            icon: child,
+          );
+  }
+}
+

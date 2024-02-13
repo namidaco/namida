@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 
+import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';
@@ -13,7 +12,7 @@ import 'package:namida/core/extensions.dart';
 
 SettingsController get settings => SettingsController.inst;
 
-class SettingsController {
+class SettingsController with SettingsFileWriter {
   static SettingsController get inst => _instance;
   static final SettingsController _instance = SettingsController._internal();
   SettingsController._internal();
@@ -106,6 +105,7 @@ class SettingsController {
     AppPaths.VIDEOS_CACHE,
     AppPaths.VIDEOS_LOCAL,
     AppPaths.SETTINGS,
+    AppPaths.SETTINGS_EQUALIZER,
     AppDirs.PALETTES,
     AppDirs.LYRICS,
     AppDirs.PLAYLISTS,
@@ -306,11 +306,10 @@ class SettingsController {
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
-    final file = await File(AppPaths.SETTINGS).create(recursive: true);
-    try {
-      final json = await file.readAsJson();
-      if (json == null) return;
+    final json = await prepareSettingsFile_();
+    if (json == null) return;
 
+    try {
       /// Assigning Values
       selectedLanguage.value = NamidaLanguage.fromJson(json['selectedLanguage']);
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
@@ -552,7 +551,6 @@ class SettingsController {
       }
     } catch (e) {
       printy(e, isError: true);
-      await file.delete();
     }
   }
 
@@ -562,206 +560,188 @@ class SettingsController {
     ));
   }
 
-  bool _canWriteSettings = true;
+  @override
+  Object get jsonToWrite => {
+        'selectedLanguage': selectedLanguage.toJson(),
+        'themeMode': themeMode.value.convertToString,
+        'pitchBlack': pitchBlack.value,
+        'autoColor': autoColor.value,
+        'staticColor': staticColor.value,
+        'staticColorDark': staticColorDark.value,
+        'selectedLibraryTab': selectedLibraryTab.value.convertToString,
+        'staticLibraryTab': staticLibraryTab.value.convertToString,
+        'autoLibraryTab': autoLibraryTab.value,
+        'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
+        'homePageItems': homePageItems.mapped((element) => element.convertToString),
+        'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.convertToString),
+        'albumIdentifiers': albumIdentifiers.mapped((element) => element.convertToString),
+        'searchResultsPlayMode': searchResultsPlayMode.value,
+        'borderRadiusMultiplier': borderRadiusMultiplier.value,
+        'fontScaleFactor': fontScaleFactor.value,
+        'artworkCacheHeightMultiplier': artworkCacheHeightMultiplier.value,
+        'trackThumbnailSizeinList': trackThumbnailSizeinList.value,
+        'trackListTileHeight': trackListTileHeight.value,
+        'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
+        'albumListTileHeight': albumListTileHeight.value,
+
+        'useMediaStore': useMediaStore.value,
+        'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
+        'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
+        'albumCardTopRightDate': albumCardTopRightDate.value,
+        'forceSquaredTrackThumbnail': forceSquaredTrackThumbnail.value,
+        'forceSquaredAlbumThumbnail': forceSquaredAlbumThumbnail.value,
+        'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
+        'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
+        'albumGridCount': albumGridCount.value,
+        'artistGridCount': artistGridCount.value,
+        'genreGridCount': genreGridCount.value,
+        'playlistGridCount': playlistGridCount.value,
+        'enableBlurEffect': enableBlurEffect.value,
+        'enableGlowEffect': enableGlowEffect.value,
+        'hourFormat12': hourFormat12.value,
+        'dateTimeFormat': dateTimeFormat.value,
+        'trackArtistsSeparators': trackArtistsSeparators.toList(),
+        'trackGenresSeparators': trackGenresSeparators.toList(),
+        'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.toList(),
+        'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.toList(),
+        'tracksSort': tracksSort.value.convertToString,
+        'tracksSortReversed': tracksSortReversed.value,
+        'tracksSortSearch': tracksSortSearch.value.convertToString,
+        'tracksSortSearchReversed': tracksSortSearchReversed.value,
+        'tracksSortSearchIsAuto': tracksSortSearchIsAuto.value,
+        'albumSort': albumSort.value.convertToString,
+        'albumSortReversed': albumSortReversed.value,
+        'artistSort': artistSort.value.convertToString,
+        'artistSortReversed': artistSortReversed.value,
+        'genreSort': genreSort.value.convertToString,
+        'genreSortReversed': genreSortReversed.value,
+        'playlistSort': playlistSort.value.convertToString,
+        'playlistSortReversed': playlistSortReversed.value,
+        'ytPlaylistSort': ytPlaylistSort.value.convertToString,
+        'ytPlaylistSortReversed': ytPlaylistSortReversed.value,
+        'indexMinDurationInSec': indexMinDurationInSec.value,
+        'indexMinFileSizeInB': indexMinFileSizeInB.value,
+        'trackSearchFilter': trackSearchFilter.mapped((e) => e.convertToString),
+        'playlistSearchFilter': playlistSearchFilter.toList(),
+        'directoriesToScan': directoriesToScan.toList(),
+        'directoriesToExclude': directoriesToExclude.toList(),
+        'preventDuplicatedTracks': preventDuplicatedTracks.value,
+        'respectNoMedia': respectNoMedia.value,
+        'defaultBackupLocation': defaultBackupLocation.value,
+        'autoBackupIntervalDays': autoBackupIntervalDays.value,
+        'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
+        'ytDownloadLocation': ytDownloadLocation.value,
+        'enableFoldersHierarchy': enableFoldersHierarchy.value,
+        'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
+        'heatmapListensView': heatmapListensView.value,
+        'backupItemslist': backupItemslist.toList(),
+        'enableVideoPlayback': enableVideoPlayback.value,
+        'enableLyrics': enableLyrics.value,
+        'videoPlaybackSource': videoPlaybackSource.value.convertToString,
+        'youtubeVideoQualities': youtubeVideoQualities.toList(),
+        'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
+        'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
+        'animatingThumbnailInversed': animatingThumbnailInversed.value,
+        'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
+        'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
+        'enableMiniplayerParticles': enableMiniplayerParticles.value,
+        'enableMiniplayerParallaxEffect': enableMiniplayerParallaxEffect.value,
+        'forceMiniplayerTrackColor': forceMiniplayerTrackColor.value,
+        'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
+        'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
+        'waveformTotalBars': waveformTotalBars.value,
+        'videosMaxCacheInMB': videosMaxCacheInMB.value,
+        'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
+        'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
+        'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
+        'playerVolume': playerVolume.value,
+        'playerSpeed': playerSpeed.value,
+        'playerPitch': playerPitch.value,
+        'seekDurationInSeconds': seekDurationInSeconds.value,
+        'seekDurationInPercentage': seekDurationInPercentage.value,
+        'isSeekDurationPercentage': isSeekDurationPercentage.value,
+        'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
+        'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
+        'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
+        'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
+        'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
+        'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
+        'enableCrossFade': enableCrossFade.value,
+        'crossFadeDurationMS': crossFadeDurationMS.value,
+        'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
+        'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
+        'enableSearchCleanup': enableSearchCleanup.value,
+        'enableBottomNavBar': enableBottomNavBar.value,
+        'ytPreferNewComments': ytPreferNewComments.value,
+        'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
+        'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
+        'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
+        'playerShuffleAllTracks': playerShuffleAllTracks.value,
+        'playerPauseOnVolume0': playerPauseOnVolume0.value,
+        'playerResumeAfterOnVolume0Pause': playerResumeAfterOnVolume0Pause.value,
+        'playerResumeAfterWasInterrupted': playerResumeAfterWasInterrupted.value,
+        'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
+        'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
+        'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
+        'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
+        'groupArtworksByAlbum': groupArtworksByAlbum.value,
+        'enableM3USync': enableM3USync.value,
+        'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
+        'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
+        'swipeableDrawer': swipeableDrawer.value,
+        'dismissibleMiniplayer': dismissibleMiniplayer.value,
+        'enableClipboardMonitoring': enableClipboardMonitoring.value,
+        'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
+        'ytRememberAudioOnly': ytRememberAudioOnly.value,
+        'ytTopComments': ytTopComments.value,
+        'artworkGestureScale': artworkGestureScale.value,
+        'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
+        'previousButtonReplays': previousButtonReplays.value,
+        'refreshOnStartup': refreshOnStartup.value,
+        'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
+        'wakelockMode': wakelockMode.value.convertToString,
+        'localVideoMatchingType': localVideoMatchingType.value.convertToString,
+        'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
+        'playerRepeatMode': playerRepeatMode.value.convertToString,
+        'trackPlayMode': trackPlayMode.value.convertToString,
+        'onNotificationTapAction': onNotificationTapAction.value.convertToString,
+        'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
+        'performanceMode': performanceMode.value.convertToString,
+        'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
+        'floatingActionButton': floatingActionButton.value.convertToString,
+        'ytInitialHomePage': ytInitialHomePage.value.convertToString,
+        'ytTapToSeek': ytTapToSeek.value.convertToString,
+        'ytDragToSeek': ytDragToSeek.value.convertToString,
+        'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
+        'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
+        'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
+        'ytMostPlayedTimeRange': ytMostPlayedTimeRange.value.convertToString,
+        'ytMostPlayedCustomDateRange': ytMostPlayedCustomDateRange.value.toJson(),
+        'ytMostPlayedCustomisStartOfDay': ytMostPlayedCustomisStartOfDay.value,
+
+        /// Track Items
+        'displayThirdRow': displayThirdRow.value,
+        'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
+        'trackTileSeparator': trackTileSeparator.value,
+        'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
+        'editTagsKeepFileDates': editTagsKeepFileDates.value,
+        'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
+        'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
+        'enablePip': enablePip.value,
+        'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
+        'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
+        'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
+        'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+        'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+        'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
+        'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
+        'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
+        'lastPlayedIndices': lastPlayedIndices,
+      };
 
   /// Writes the values of this  class to a json file, with a minimum interval of [2 seconds]
   /// to prevent rediculous numbers of successive writes, especially for widgets like [NamidaWheelSlider]
-  Future<void> _writeToStorage({bool justSaveWithoutWaiting = false}) async {
-    if (!_canWriteSettings) {
-      return;
-    }
-    _canWriteSettings = false;
-
-    final file = File(AppPaths.SETTINGS);
-    final res = {
-      'selectedLanguage': selectedLanguage.toJson(),
-      'themeMode': themeMode.value.convertToString,
-      'pitchBlack': pitchBlack.value,
-      'autoColor': autoColor.value,
-      'staticColor': staticColor.value,
-      'staticColorDark': staticColorDark.value,
-      'selectedLibraryTab': selectedLibraryTab.value.convertToString,
-      'staticLibraryTab': staticLibraryTab.value.convertToString,
-      'autoLibraryTab': autoLibraryTab.value,
-      'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
-      'homePageItems': homePageItems.mapped((element) => element.convertToString),
-      'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.convertToString),
-      'albumIdentifiers': albumIdentifiers.mapped((element) => element.convertToString),
-      'searchResultsPlayMode': searchResultsPlayMode.value,
-      'borderRadiusMultiplier': borderRadiusMultiplier.value,
-      'fontScaleFactor': fontScaleFactor.value,
-      'artworkCacheHeightMultiplier': artworkCacheHeightMultiplier.value,
-      'trackThumbnailSizeinList': trackThumbnailSizeinList.value,
-      'trackListTileHeight': trackListTileHeight.value,
-      'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
-      'albumListTileHeight': albumListTileHeight.value,
-
-      'useMediaStore': useMediaStore.value,
-      'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
-      'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
-      'albumCardTopRightDate': albumCardTopRightDate.value,
-      'forceSquaredTrackThumbnail': forceSquaredTrackThumbnail.value,
-      'forceSquaredAlbumThumbnail': forceSquaredAlbumThumbnail.value,
-      'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
-      'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
-      'albumGridCount': albumGridCount.value,
-      'artistGridCount': artistGridCount.value,
-      'genreGridCount': genreGridCount.value,
-      'playlistGridCount': playlistGridCount.value,
-      'enableBlurEffect': enableBlurEffect.value,
-      'enableGlowEffect': enableGlowEffect.value,
-      'hourFormat12': hourFormat12.value,
-      'dateTimeFormat': dateTimeFormat.value,
-      'trackArtistsSeparators': trackArtistsSeparators.toList(),
-      'trackGenresSeparators': trackGenresSeparators.toList(),
-      'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.toList(),
-      'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.toList(),
-      'tracksSort': tracksSort.value.convertToString,
-      'tracksSortReversed': tracksSortReversed.value,
-      'tracksSortSearch': tracksSortSearch.value.convertToString,
-      'tracksSortSearchReversed': tracksSortSearchReversed.value,
-      'tracksSortSearchIsAuto': tracksSortSearchIsAuto.value,
-      'albumSort': albumSort.value.convertToString,
-      'albumSortReversed': albumSortReversed.value,
-      'artistSort': artistSort.value.convertToString,
-      'artistSortReversed': artistSortReversed.value,
-      'genreSort': genreSort.value.convertToString,
-      'genreSortReversed': genreSortReversed.value,
-      'playlistSort': playlistSort.value.convertToString,
-      'playlistSortReversed': playlistSortReversed.value,
-      'ytPlaylistSort': ytPlaylistSort.value.convertToString,
-      'ytPlaylistSortReversed': ytPlaylistSortReversed.value,
-      'indexMinDurationInSec': indexMinDurationInSec.value,
-      'indexMinFileSizeInB': indexMinFileSizeInB.value,
-      'trackSearchFilter': trackSearchFilter.mapped((e) => e.convertToString),
-      'playlistSearchFilter': playlistSearchFilter.toList(),
-      'directoriesToScan': directoriesToScan.toList(),
-      'directoriesToExclude': directoriesToExclude.toList(),
-      'preventDuplicatedTracks': preventDuplicatedTracks.value,
-      'respectNoMedia': respectNoMedia.value,
-      'defaultBackupLocation': defaultBackupLocation.value,
-      'autoBackupIntervalDays': autoBackupIntervalDays.value,
-      'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
-      'ytDownloadLocation': ytDownloadLocation.value,
-      'enableFoldersHierarchy': enableFoldersHierarchy.value,
-      'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
-      'heatmapListensView': heatmapListensView.value,
-      'backupItemslist': backupItemslist.toList(),
-      'enableVideoPlayback': enableVideoPlayback.value,
-      'enableLyrics': enableLyrics.value,
-      'videoPlaybackSource': videoPlaybackSource.value.convertToString,
-      'youtubeVideoQualities': youtubeVideoQualities.toList(),
-      'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
-      'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
-      'animatingThumbnailInversed': animatingThumbnailInversed.value,
-      'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
-      'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
-      'enableMiniplayerParticles': enableMiniplayerParticles.value,
-      'enableMiniplayerParallaxEffect': enableMiniplayerParallaxEffect.value,
-      'forceMiniplayerTrackColor': forceMiniplayerTrackColor.value,
-      'isTrackPlayedSecondsCount': isTrackPlayedSecondsCount.value,
-      'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
-      'waveformTotalBars': waveformTotalBars.value,
-      'videosMaxCacheInMB': videosMaxCacheInMB.value,
-      'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
-      'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
-      'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
-      'playerVolume': playerVolume.value,
-      'playerSpeed': playerSpeed.value,
-      'playerPitch': playerPitch.value,
-      'seekDurationInSeconds': seekDurationInSeconds.value,
-      'seekDurationInPercentage': seekDurationInPercentage.value,
-      'isSeekDurationPercentage': isSeekDurationPercentage.value,
-      'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
-      'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
-      'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
-      'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
-      'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
-      'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
-      'enableCrossFade': enableCrossFade.value,
-      'crossFadeDurationMS': crossFadeDurationMS.value,
-      'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
-      'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
-      'enableSearchCleanup': enableSearchCleanup.value,
-      'enableBottomNavBar': enableBottomNavBar.value,
-      'ytPreferNewComments': ytPreferNewComments.value,
-      'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
-      'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
-      'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
-      'playerShuffleAllTracks': playerShuffleAllTracks.value,
-      'playerPauseOnVolume0': playerPauseOnVolume0.value,
-      'playerResumeAfterOnVolume0Pause': playerResumeAfterOnVolume0Pause.value,
-      'playerResumeAfterWasInterrupted': playerResumeAfterWasInterrupted.value,
-      'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
-      'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
-      'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
-      'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
-      'groupArtworksByAlbum': groupArtworksByAlbum.value,
-      'enableM3USync': enableM3USync.value,
-      'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
-      'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
-      'swipeableDrawer': swipeableDrawer.value,
-      'dismissibleMiniplayer': dismissibleMiniplayer.value,
-      'enableClipboardMonitoring': enableClipboardMonitoring.value,
-      'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
-      'ytRememberAudioOnly': ytRememberAudioOnly.value,
-      'ytTopComments': ytTopComments.value,
-      'artworkGestureScale': artworkGestureScale.value,
-      'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
-      'previousButtonReplays': previousButtonReplays.value,
-      'refreshOnStartup': refreshOnStartup.value,
-      'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
-      'wakelockMode': wakelockMode.value.convertToString,
-      'localVideoMatchingType': localVideoMatchingType.value.convertToString,
-      'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
-      'playerRepeatMode': playerRepeatMode.value.convertToString,
-      'trackPlayMode': trackPlayMode.value.convertToString,
-      'onNotificationTapAction': onNotificationTapAction.value.convertToString,
-      'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
-      'performanceMode': performanceMode.value.convertToString,
-      'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
-      'floatingActionButton': floatingActionButton.value.convertToString,
-      'ytInitialHomePage': ytInitialHomePage.value.convertToString,
-      'ytTapToSeek': ytTapToSeek.value.convertToString,
-      'ytDragToSeek': ytDragToSeek.value.convertToString,
-      'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
-      'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
-      'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
-      'ytMostPlayedTimeRange': ytMostPlayedTimeRange.value.convertToString,
-      'ytMostPlayedCustomDateRange': ytMostPlayedCustomDateRange.value.toJson(),
-      'ytMostPlayedCustomisStartOfDay': ytMostPlayedCustomisStartOfDay.value,
-
-      /// Track Items
-      'displayThirdRow': displayThirdRow.value,
-      'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
-      'trackTileSeparator': trackTileSeparator.value,
-      'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
-      'editTagsKeepFileDates': editTagsKeepFileDates.value,
-      'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
-      'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
-      'enablePip': enablePip.value,
-      'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
-      'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
-      'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
-      'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-      'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-      'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
-      'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
-      'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
-      'lastPlayedIndices': lastPlayedIndices,
-    };
-    await file.writeAsJson(res);
-
-    printy("Setting File Write");
-
-    if (justSaveWithoutWaiting) {
-      _canWriteSettings = true;
-    } else {
-      await Future.delayed(const Duration(seconds: 2));
-      _canWriteSettings = true;
-      _writeToStorage(justSaveWithoutWaiting: true);
-    }
-  }
+  Future<void> _writeToStorage() async => await writeToStorage();
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
   void save({
@@ -1667,4 +1647,7 @@ class SettingsController {
     mediaItemsTrackSortingReverse[media] = isReverse;
     _writeToStorage();
   }
+
+  @override
+  String get filePath => AppPaths.SETTINGS;
 }

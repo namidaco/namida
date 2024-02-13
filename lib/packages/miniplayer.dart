@@ -1019,8 +1019,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
                                     const RepeatModeIconButton(),
-                                      ),
-                                    ),
+                                    const EqualizerIconButton(),
                                     GestureDetector(
                                       onLongPress: () {
                                         showLRCSetDialog(currentTrack, CurrentColor.inst.miniplayerColor);
