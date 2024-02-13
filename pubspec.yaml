@@ -25,6 +25,7 @@ dependency_overrides:
       ref: 4ff36f3eb1cac226051faeb079b9097a9f0bb0f9
   archive: ^3.3.8
   intl: ^0.18.0
+  device_info_plus: ^9.0.2
   get:
     git:
       url: https://github.com/MSOB7YY/getx
