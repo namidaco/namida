@@ -137,8 +137,8 @@ class NamidaNavigator {
     }
   }
 
-  Future<void> setDefaultSystemUI() async {
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: SystemUiOverlay.values);
+  Future<void> setDefaultSystemUI({List<SystemUiOverlay> overlays = SystemUiOverlay.values}) async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: overlays);
   }
 
   void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
@@ -212,7 +212,6 @@ class NamidaNavigator {
 
   Future<void> navigateTo(
     Widget page, {
-    bool nested = true,
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
@@ -223,7 +222,7 @@ class NamidaNavigator {
 
     await Get.to(
       () => page,
-      id: nested ? 1 : null,
+      id: 1,
       preventDuplicates: false,
       transition: transition,
       curve: Curves.easeOut,
@@ -317,7 +316,6 @@ class NamidaNavigator {
 
   Future<void> navigateOff(
     Widget page, {
-    bool nested = true,
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
@@ -329,7 +327,7 @@ class NamidaNavigator {
 
     await Get.off(
       () => page,
-      id: nested ? 1 : null,
+      id: 1,
       preventDuplicates: false,
       transition: transition,
       curve: Curves.easeOut,
@@ -341,7 +339,6 @@ class NamidaNavigator {
 
   Future<void> navigateOffAll(
     Widget page, {
-    bool nested = true,
     Transition transition = Transition.cupertino,
   }) async {
     currentWidgetStack.value = [page.toNamidaRoute()];
@@ -351,7 +348,7 @@ class NamidaNavigator {
 
     await Get.offAll(
       () => page,
-      id: nested ? 1 : null,
+      id: 1,
       transition: transition,
       curve: Curves.easeOut,
       duration: const Duration(milliseconds: 500),

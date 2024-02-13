@@ -263,7 +263,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   final currentPositionMS = Player.inst.nowPlayingPosition;
                   final buffered = Player.inst.buffered;
                   final videoCached = Player.inst.currentCachedVideo != null;
-                  final audioCached = Player.inst.currentCachedAudio != null;
+                  final audioCached = widget.isLocal || Player.inst.currentCachedAudio != null;
                   return SizedBox(
                     width: maxWidth,
                     child: Stack(
@@ -276,7 +276,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(fullscreen ? 0.2 : 0.1),
+                                color: Colors.grey.withOpacity(fullscreen ? 0.3 : 0.2),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
@@ -290,7 +290,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(fullscreen ? 0.2 : 0.1),
+                              color: Colors.grey.withOpacity(fullscreen ? 0.3 : 0.1),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),
@@ -347,7 +347,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                       offset: Offset(-halfCircle / 2 + pos.clamp(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: CurrentColor.inst.miniplayerColor.withOpacity(0.7),
+                          color: CurrentColor.inst.miniplayerColor.withOpacity(0.9),
                           borderRadius: const BorderRadius.all(
                             Radius.circular(6.0),
                           ),

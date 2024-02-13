@@ -3654,3 +3654,37 @@ class EqualizerIconButton extends StatelessWidget {
   }
 }
 
+class TapDetector extends StatelessWidget {
+  final VoidCallback onTap;
+  final void Function(TapGestureRecognizer instance)? initializer;
+  final Widget? child;
+  final HitTestBehavior? behavior;
+
+  const TapDetector({
+    super.key,
+    required this.onTap,
+    this.initializer,
+    this.child,
+    this.behavior,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[TapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+      () => TapGestureRecognizer(debugOwner: this),
+      initializer ??
+          (TapGestureRecognizer instance) {
+            instance
+              ..onTap = onTap
+              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          },
+    );
+
+    return RawGestureDetector(
+      behavior: behavior,
+      gestures: gestures,
+      child: child,
+    );
+  }
+}

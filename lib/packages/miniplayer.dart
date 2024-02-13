@@ -42,6 +42,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
+import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 
@@ -107,11 +108,11 @@ class MiniPlayerSwitchers extends StatelessWidget {
           ? Container(
               color: Colors.black,
               alignment: Alignment.topLeft,
-              child: const NamidaVideoWidget(
+              child: const NamidaVideoControls(
                 key: Key('pip_widget_child'),
-                enableControls: false,
-                fullscreen: true,
-                isPip: true,
+                isFullScreen: true,
+                showControls: false,
+                onMinimizeTap: null,
                 isLocal: true,
               ),
             )

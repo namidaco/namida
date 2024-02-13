@@ -519,17 +519,14 @@ extension FileUtils on File {
 
 extension FileStatsUtils on FileStat {
   DateTime get creationDate {
-    DateTime lowest = modified;
-
-    bool validateLower(DateTime date) {
-      return changed != DateTime(1970) && (lowest == DateTime(1970) || date.microsecondsSinceEpoch < lowest.microsecondsSinceEpoch);
-    }
-
-    if (validateLower(changed)) lowest = changed;
-
-    if (validateLower(accessed)) lowest = accessed;
-
-    return lowest;
+    final minimumMicro = DateTime(1970).microsecondsSinceEpoch;
+    final dates = [
+      if (modified.microsecondsSinceEpoch > minimumMicro) modified,
+      if (changed.microsecondsSinceEpoch > minimumMicro) changed,
+      if (accessed.microsecondsSinceEpoch > minimumMicro) accessed,
+    ];
+    dates.sortBy((e) => e.microsecondsSinceEpoch);
+    return dates.firstOrNull ?? DateTime(1970);
   }
 }
 

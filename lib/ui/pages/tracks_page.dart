@@ -44,7 +44,6 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
   @override
   void dispose() {
     super.dispose();
-    animation.dispose();
     RefreshLibraryIconController.dispose(_animationKey);
   }
 

@@ -48,9 +48,8 @@ class NamidaVideoWidget extends StatelessWidget {
     if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
       await VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal);
     }
-
     // else if (videoZoomAdditionalScale.value < 0.7) {
-    // NamidaNavigator.inst.exitFullScreen();
+    //   NamidaNavigator.inst.exitFullScreen();
     // }
 
     _cancelZoom();
@@ -62,6 +61,11 @@ class NamidaVideoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showControls = isPip
+        ? false
+        : fullscreen
+            ? true
+            : enableControls;
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerMove: !swipeUpToFullscreen
@@ -89,21 +93,20 @@ class NamidaVideoWidget extends StatelessWidget {
                 await _verifyAndEnterFullScreen();
               },
         child: NamidaVideoControls(
-          key: fullscreen ? null : VideoController.inst.normalControlskey,
+          key: !showControls
+              ? null
+              : fullscreen
+                  ? VideoController.inst.videoControlsKeyFullScreen
+                  : VideoController.inst.videoControlsKey,
           isLocal: isLocal,
           onMinimizeTap: () {
             if (fullscreen) {
               NamidaNavigator.inst.exitFullScreen();
-              VideoController.inst.fullScreenVideoWidget = null;
             } else {
               onMinimizeTap?.call();
             }
           },
-          showControls: isPip
-              ? false
-              : fullscreen
-                  ? true
-                  : enableControls,
+          showControls: showControls,
           isFullScreen: fullscreen,
         ),
       ),
@@ -126,7 +129,7 @@ class VideoController {
       // YoutubeController.inst.startDimTimer(); // bad experience honestly
     } else {
       // YoutubeController.inst.cancelDimTimer();
-      normalControlskey.currentState?.setControlsVisibily(false);
+      videoControlsKey.currentState?.setControlsVisibily(false);
     }
   }
 
@@ -134,26 +137,24 @@ class VideoController {
     required bool isLocal,
   }) async {
     final aspect = Player.inst.videoPlayerInfo?.aspectRatio;
-    VideoController.inst.fullScreenVideoWidget ??= NamidaVideoControls(
-      isLocal: isLocal,
-      onMinimizeTap: () {
-        VideoController.inst.fullScreenVideoWidget = null;
-        NamidaNavigator.inst.exitFullScreen();
-      },
-      showControls: true,
-      isFullScreen: true,
-    );
     await NamidaNavigator.inst.toggleFullScreen(
-      VideoController.inst.fullScreenVideoWidget!,
+      NamidaVideoControls(
+        key: VideoController.inst.videoControlsKeyFullScreen,
+        isLocal: isLocal,
+        onMinimizeTap: () {
+          NamidaNavigator.inst.exitFullScreen();
+        },
+        showControls: true,
+        isFullScreen: true,
+      ),
       setOrientations: aspect == null ? true : aspect > 1,
-      onWillPop: () async => VideoController.inst.fullScreenVideoWidget = null,
     );
   }
 
   final currentBrigthnessDim = 1.0.obs;
 
-  final normalControlskey = GlobalKey<NamidaVideoControlsState>();
-  Widget? fullScreenVideoWidget;
+  final videoControlsKey = GlobalKey<NamidaVideoControlsState>();
+  final videoControlsKeyFullScreen = GlobalKey<NamidaVideoControlsState>();
 
   int get localVideosTotalCount => _allVideoPaths.length;
 

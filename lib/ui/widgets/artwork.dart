@@ -11,6 +11,7 @@ import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/drop_shadow.dart';
@@ -277,7 +278,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                               _triedDeleting = true;
                               if (error.toString().contains('Invalid image data')) {
                                 final fp = widget.path;
-                                if (fp != null) {
+                                if (fp != null && widget.fallbackToFolderCover && (fp.startsWith(AppDirs.APP_CACHE) || fp.startsWith(AppDirs.USER_DATA))) {
+                                  // -- fallbackToFolderCover should be always true for app cached images.
+                                  // -- we are allowed to delete only if specified image is app-generated.
                                   File(fp).tryDeleting();
                                   FileImage(File(fp)).evict();
                                 }

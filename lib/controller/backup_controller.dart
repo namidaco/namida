@@ -61,12 +61,12 @@ class BackupController {
           AppDirs.YT_HISTORY_PLAYLIST,
         ];
 
-        await createBackupFile(itemsToBackup);
+        await createBackupFile(itemsToBackup, fileSuffix: " - auto");
       }
     }
   }
 
-  Future<void> createBackupFile(List<String> backupItemsPaths) async {
+  Future<void> createBackupFile(List<String> backupItemsPaths, {String fileSuffix = ''}) async {
     if (isCreatingBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
 
     if (!await requestManageStoragePermission()) return;
@@ -81,7 +81,7 @@ class BackupController {
 
     // creates directories and file
     final dir = await Directory(backupDirPath).create();
-    await File("${dir.path}/Namida Backup - $date.zip").create();
+    await File("${dir.path}/Namida Backup - $date$fileSuffix.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files

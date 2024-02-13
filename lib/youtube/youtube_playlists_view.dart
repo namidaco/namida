@@ -375,7 +375,7 @@ class _HorizontalSliverList extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 130.0,
+            height: displayTimeAgo ? 132.0 : 124.0,
             child: displayShimmer
                 ? ShimmerWrapper(
                     shimmerEnabled: true,

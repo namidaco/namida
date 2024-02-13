@@ -1149,7 +1149,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onPlaybackCompleted() {
-    VideoController.inst.normalControlskey.currentState?.showControlsBriefly();
+    VideoController.inst.videoControlsKey.currentState?.showControlsBriefly();
+    VideoController.inst.videoControlsKeyFullScreen.currentState?.showControlsBriefly();
   }
 
   @override
@@ -1347,6 +1348,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       ),
     );
   }
+
+  @override
+  MediaControlsProvider get mediaControls => _mediaControls;
+
+  static const _mediaControls = MediaControlsProvider(
+    skipToPrevious: MediaControl.skipToPrevious,
+    pause: MediaControl.pause,
+    play: MediaControl.play,
+    skipToNext: MediaControl.skipToNext,
+    stop: MediaControl.stop,
+    fastForward: MediaControl.fastForward,
+    rewind: MediaControl.rewind,
+  );
 }
 
 // ----------------------- Extensions --------------------------

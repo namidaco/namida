@@ -110,7 +110,6 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
-              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
             ),
             child: Row(
               children: [
