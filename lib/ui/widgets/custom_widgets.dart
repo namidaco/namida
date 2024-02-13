@@ -678,6 +678,8 @@ class SmallListTile extends StatelessWidget {
   final double? titleGap;
   final double borderRadius;
   final Widget? leading;
+  final VisualDensity? visualDensity;
+
   const SmallListTile({
     super.key,
     required this.title,
@@ -694,6 +696,7 @@ class SmallListTile extends StatelessWidget {
     this.titleGap,
     this.borderRadius = 0.0,
     this.leading,
+    this.visualDensity,
   });
 
   @override
@@ -716,7 +719,7 @@ class SmallListTile extends StatelessWidget {
                         size: 18.0,
                       ),
           ),
-      visualDensity: compact ? const VisualDensity(horizontal: -2.0, vertical: -2.0) : const VisualDensity(horizontal: -1.0, vertical: -1.0),
+      visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.0, vertical: -2.0) : const VisualDensity(horizontal: -1.0, vertical: -1.0)),
       title: Text(
         title,
         style: context.textTheme.displayMedium?.copyWith(

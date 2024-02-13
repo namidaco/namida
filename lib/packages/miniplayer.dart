@@ -745,7 +745,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                                           bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
                                                           icon: Broken.video,
                                                           title: [
-                                                            "${element.height}p${element.framerateText()}",
+                                                            "${element.resolution}p${element.framerateText()}",
                                                             localOrCache,
                                                           ].join(' • '),
                                                           subtitle: [
@@ -800,7 +800,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                                 final currentVideo = VideoController.inst.currentVideo.value;
                                                 final downloadedBytes = VideoController.inst.currentDownloadedBytes.value;
                                                 final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
-                                                final videoQuality = currentVideo?.height ?? 0;
+                                                final videoQuality = currentVideo?.resolution ?? 0;
                                                 final videoFramerate = currentVideo?.framerateText(30);
                                                 final markText = VideoController.inst.isNoVideosAvailable.value ? 'x' : '?';
                                                 final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;

@@ -8,6 +8,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -376,5 +377,201 @@ class YTUtils {
         },
       );
     }
+  }
+
+  void showVideoClearDialog(BuildContext context, String videoId, Color colorScheme) {
+    final videosCached = VideoController.inst.getNVFromID(videoId);
+    final audiosCached = Player.inst.audioCacheMap[videoId]?.where((element) => element.file.existsSync()).toList() ?? [];
+
+    final fileSizeLookup = <String, int>{};
+    final fileTypeLookup = <String, int>{};
+
+    int videosSize = 0;
+    int audiosSize = 0;
+
+    audiosCached.loop((e, _) {
+      final s = e.file.sizeInBytesSync();
+      audiosSize += s;
+      fileSizeLookup[e.file.path] = s;
+      fileTypeLookup[e.file.path] = 0;
+    });
+    videosCached.loop((e, _) {
+      final s = e.sizeInBytes;
+      videosSize += s;
+      fileSizeLookup[e.path] = s;
+      fileTypeLookup[e.path] = 1;
+    });
+
+    final pathsToDelete = <String, bool>{}.obs;
+    final allSelected = false.obs;
+    final totalSizeToDelete = 0.obs;
+
+    Future<void> deleteItems(Iterable<String> paths) async {
+      for (final path in paths) {
+        await File(path).tryDeleting();
+
+        final type = fileTypeLookup[path];
+        if (type == 1) {
+          VideoController.inst.removeNVFromCacheMap(videoId, path);
+        } else if (type == 0) {
+          Player.inst.audioCacheMap[videoId]?.removeWhere((element) => element.file.path == path);
+        }
+      }
+    }
+
+    Widget getExpansionTileWidget<T>({
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required List<T> items,
+      required ({String title, String subtitle, String path}) Function(T item) itemBuilder,
+      required int Function(T item) itemSize,
+    }) {
+      return NamidaExpansionTile(
+        initiallyExpanded: true,
+        titleText: title,
+        subtitleText: subtitle,
+        icon: icon,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: context.theme.cardColor,
+                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                child: Text("${items.length}"),
+              ),
+            ),
+            const SizedBox(width: 6.0),
+            const Icon(Broken.arrow_down_2, size: 20.0),
+          ],
+        ),
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+        children: items.map(
+          (item) {
+            final data = itemBuilder(item);
+            return SmallListTile(
+              borderRadius: 12.0,
+              color: context.theme.cardColor,
+              visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
+              title: data.title,
+              subtitle: data.subtitle,
+              active: false,
+              onTap: () {
+                final wasTrue = pathsToDelete[data.path] == true;
+                final willEnable = !wasTrue;
+                pathsToDelete[data.path] = willEnable;
+                if (willEnable) {
+                  totalSizeToDelete.value += itemSize(item);
+                } else {
+                  totalSizeToDelete.value -= itemSize(item);
+                }
+              },
+              trailing: Obx(
+                () => NamidaCheckMark(
+                  size: 16.0,
+                  active: allSelected.value || pathsToDelete[data.path] == true,
+                ),
+              ),
+            );
+          },
+        ).toList(),
+      );
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        pathsToDelete.close();
+        allSelected.close();
+        totalSizeToDelete.close();
+      },
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        normalTitleStyle: true,
+        icon: Broken.trash,
+        title: lang.CLEAR,
+        trailingWidgets: [
+          Obx(
+            () => Checkbox.adaptive(
+              splashRadius: 28.0,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+              ),
+              value: allSelected.value,
+              onChanged: (value) {
+                allSelected.value = !allSelected.value;
+                if (allSelected.value) {
+                  totalSizeToDelete.value = audiosSize + videosSize;
+                } else {
+                  int newVal = 0;
+                  for (final k in pathsToDelete.keys) {
+                    if (pathsToDelete[k] == true) newVal += fileSizeLookup[k] ?? 0;
+                  }
+                  totalSizeToDelete.value = newVal;
+                }
+              },
+            ),
+          ),
+        ],
+        actions: [
+          const CancelButton(),
+          Obx(
+            () => NamidaButton(
+              enabled: pathsToDelete.values.any((element) => element) || allSelected.value,
+              text: "${lang.DELETE} (${totalSizeToDelete.value.fileSizeFormatted})",
+              onPressed: () async {
+                if (allSelected.value) {
+                  await Future.wait([
+                    deleteItems(videosCached.map((e) => e.path)),
+                    deleteItems(audiosCached.map((e) => e.file.path)),
+                  ]);
+                } else {
+                  await deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true));
+                }
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+          ),
+        ],
+        child: Column(
+          children: [
+            getExpansionTileWidget(
+              title: lang.VIDEO_CACHE,
+              subtitle: videosSize.fileSizeFormatted,
+              icon: Broken.video,
+              items: videosCached,
+              itemSize: (item) => item.sizeInBytes,
+              itemBuilder: (v) {
+                return (
+                  title: "${v.resolution}p • ${v.framerate}fps ",
+                  subtitle: v.sizeInBytes.fileSizeFormatted,
+                  path: v.path,
+                );
+              },
+            ),
+            getExpansionTileWidget(
+              title: lang.AUDIO_CACHE,
+              subtitle: audiosSize.fileSizeFormatted,
+              icon: Broken.musicnote,
+              items: audiosCached,
+              itemSize: (item) => fileSizeLookup[item.file.path] ?? item.file.sizeInBytesSync(),
+              itemBuilder: (a) {
+                final bitrateText = a.bitrate == null ? null : "${a.bitrate! ~/ 1000}kb/s";
+                final langText = a.langaugeName == null ? '' : " • ${a.langaugeName}";
+                return (
+                  title: "${bitrateText ?? lang.AUDIO}$langText",
+                  subtitle: a.file.fileSizeFormatted() ?? '',
+                  path: a.file.path,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

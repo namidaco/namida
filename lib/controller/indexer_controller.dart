@@ -1427,21 +1427,7 @@ class Indexer {
     await _updateDirectoryStats(AppDirs.PALETTES, colorPalettesInStorage, null);
   }
 
-  Future<void> updateVideosSizeInStorage({String? newVideoPath, File? oldDeletedFile}) async {
-    if (newVideoPath != null || oldDeletedFile != null) {
-      if (oldDeletedFile != null) {
-        if (await oldDeletedFile.exists()) {
-          videosInStorage.value--;
-          videosInStorage.value -= await oldDeletedFile.length();
-        }
-      }
-      if (newVideoPath != null) {
-        videosInStorage.value++;
-        videosInStorage.value += await File(newVideoPath).length();
-      }
-
-      return;
-    }
+  Future<void> updateVideosSizeInStorage() async {
     await _updateDirectoryStats(AppDirs.VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
   }
 
@@ -1471,13 +1457,19 @@ class Indexer {
   /// Deletes specific videos or the whole cache.
   Future<void> clearVideoCache([List<NamidaVideo>? videosToDelete]) async {
     if (videosToDelete != null) {
-      await videosToDelete.loopFuture((v, index) async => await File(v.path).delete());
+      for (final v in videosToDelete) {
+        final deleted = await File(v.path).tryDeleting();
+        if (deleted) {
+          videosInStorage.value--;
+          videosSizeInStorage.value -= v.sizeInBytes;
+        }
+      }
     } else {
       await Directory(AppDirs.VIDEOS_CACHE).delete(recursive: true);
       await Directory(AppDirs.VIDEOS_CACHE).create();
+      videosInStorage.value = 0;
+      videosSizeInStorage.value = 0;
     }
-
-    updateVideosSizeInStorage();
   }
 
   Future<void> _createDefaultNamidaArtwork() async {

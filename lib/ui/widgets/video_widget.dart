@@ -982,14 +982,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ),
                                   ),
                                   ...ytQualities.map((element) {
+                                    final sizeInBytes = element.sizeInBytes;
                                     return Obx(
                                       () {
                                         final isSelected = element.height == Player.inst.currentVideoStream?.height;
                                         final id = Player.inst.nowPlayingVideoID?.id;
                                         final cachedFile = id == null ? null : element.getCachedFile(id);
+
                                         return _getQualityChip(
                                           title: element.resolution ?? '',
-                                          subtitle: " • ${element.sizeInBytes?.fileSizeFormatted ?? ''}",
+                                          subtitle: sizeInBytes == null ? '' : " • ${sizeInBytes.fileSizeFormatted}",
                                           onPlay: (isSelected) {
                                             if (!isSelected) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(

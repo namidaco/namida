@@ -622,7 +622,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                                       style: context.textTheme.displayMedium,
                                     ),
                                     Text(
-                                      "${video.height}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}",
+                                      "${video.resolution}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}",
                                       style: context.textTheme.displaySmall,
                                     ),
                                   ],

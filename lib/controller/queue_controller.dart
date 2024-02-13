@@ -263,7 +263,7 @@ class QueueController {
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
-    await File('${AppDirs.QUEUES}${queue.date}.json').delete();
+    await File('${AppDirs.QUEUES}${queue.date}.json').tryDeleting();
   }
 
   /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.

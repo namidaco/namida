@@ -222,6 +222,17 @@ class VideoController {
     return videos;
   }
 
+  void removeNVFromCacheMap(String youtubeId, String path) {
+    _videoCacheIDMap[youtubeId]?.removeWhere((element) {
+      if (element.path == path) {
+        Indexer.inst.videosInStorage.value--;
+        Indexer.inst.videosSizeInStorage.value -= element.sizeInBytes;
+        return true;
+      }
+      return false;
+    });
+  }
+
   Future<NamidaVideo?> updateCurrentVideo(Track track, {bool returnEarly = false}) async {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = null;

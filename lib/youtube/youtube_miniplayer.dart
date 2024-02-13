@@ -272,6 +272,15 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                       );
                                                       items.add(repeatForWidget);
                                                     }
+                                                    items.add(
+                                                      NamidaPopupItem(
+                                                        icon: Broken.trash,
+                                                        title: lang.CLEAR,
+                                                        onTap: () {
+                                                          YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
+                                                        },
+                                                      ),
+                                                    );
                                                     return items;
                                                   },
                                                   child: const Icon(
