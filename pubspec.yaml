@@ -25,6 +25,7 @@ dependency_overrides:
       ref: 4ff36f3eb1cac226051faeb079b9097a9f0bb0f9
   archive: ^3.3.8
   intl: ^0.18.0
+  device_info_plus: ^9.0.2
   get:
     git:
       url: https://github.com/MSOB7YY/getx
@@ -77,6 +78,9 @@ dependencies:
   system_info2: ^4.0.0
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
+  home_widget: ^0.4.1
+  workmanager: ^0.5.2
+  android_intent_plus: ^4.0.3
 
   # ---- Path/File Providers ----
   path_provider: ^2.0.14

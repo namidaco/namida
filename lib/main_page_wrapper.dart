@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/controller/home_widgets_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -54,6 +55,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
   @override
   void didChangeDependencies() {
     widget.onContextAvailable(context);
+    NamidaWidgetController.onDepChange();
     super.didChangeDependencies();
   }
 

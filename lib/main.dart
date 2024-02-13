@@ -23,6 +23,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/equalizer_settings.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/home_widgets_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -45,9 +46,10 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Paint.enableDithering = true; // for smooth gradient effect.
+  NamidaWidgetController.initManager();
 
   // -- x this makes some issues with GestureDetector
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
@@ -177,6 +179,7 @@ void main() async {
   Folders.inst.onFirstLoad();
 
   _initLifeCycle();
+  NamidaWidgetController.initWidget();
 }
 
 void _initLifeCycle() {
@@ -224,6 +227,10 @@ Future<void> _initializeIntenties() async {
   }
 
   Future<void> playFiles(List<SharedFile> files) async {
+    files.loop((e, index) {
+      printo('NAMIDAWIDGET: ${e.value} || ${e.realPath} || ${e.type}');
+      print('NAMIDAWIDGET: ${e.value} || ${e.realPath} || ${e.type}');
+    });
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       if (files.isNotEmpty) {
         final paths = <String>[];

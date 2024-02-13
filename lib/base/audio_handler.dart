@@ -18,6 +18,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/home_widgets_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -164,18 +165,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   void _notificationUpdateItem({required Q item, required bool isItemFavourite, required int itemIndex, VideoInfo? videoInfo}) {
+    late MediaItem finalMI;
     item._execute(
       selectable: (finalItem) async {
-        mediaItem.add(finalItem.toMediaItem(currentIndex, currentQueue.length));
+        final mediaItemInfo = finalItem.toMediaItem(currentIndex, currentQueue.length);
+        finalMI = mediaItemInfo;
+        mediaItem.add(mediaItemInfo);
         playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
       },
       youtubeID: (finalItem) async {
         final info = videoInfo ?? YoutubeController.inst.getVideoInfo(finalItem.id);
         final thumbnail = finalItem.getThumbnailSync();
-        mediaItem.add(finalItem.toMediaItem(info, thumbnail, currentIndex, currentQueue.length));
+        final mediaItemInfo = finalItem.toMediaItem(info, thumbnail, currentIndex, currentQueue.length);
+        finalMI = mediaItemInfo;
+        mediaItem.add(mediaItemInfo);
         playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex), isItemFavourite, itemIndex));
       },
     );
+    printo('NAMIDAWIDGET: updating ${finalMI.displayTitle}');
+    NamidaWidgetController.updateData(title: finalMI.displayTitle ?? finalMI.title, subtitle: finalMI.displaySubtitle ?? finalMI.artist ?? '');
   }
 
   // =================================================================================
