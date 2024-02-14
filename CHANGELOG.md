@@ -1,5 +1,85 @@
 # Namida Changelog
 
+## 14/02/2024
+### 🎉 New Features:
+- feat:
+   - 09e8c11162582814bea765687c981b211fa11f84: Equalizer
+   - 2bc89dcca989c47faaec9859788dc9e373e00080: new seekbar with functional ux + tap to seek + always ready to seek (yt miniplayer) + drag up to cancel + more buttons for video (copy url, repeat mode)
+   - 241dcfaf46cb5e6d93eea86be69da30bb94c57a8: auto backups, ref #69
+   - 62263d57d2fd889e494133010490d7495db165fd: fallback to folder cover, closes #122
+   - fab509da9f10dc84f1ff6ac22ad490b964956df6: set music as ringtone, notification or alarm, closes #4
+   - 18d4892a0daac72cc1c8adc11ed2355a91e80972: youtube queue generators and some redesign
+   - b67fa6f9834f7869f5eb93da844dba0ccfa2e56f: previous button replays option, closes #112
+   - c3338fab2082577f59c8f459c978bb7779f21c7d: resume playback if was paused for < specific duration + for interruption + for volume 0 pause & fix play button in notification not triggering in A14, fixes #102
+   - 715b75b9021bf8db3e0b23836a738e32eb2ac106: copy lyrics to clipboard
+   - 42285da53409082d3293f10cfc189b41a2665a73: refresh library on startup option, ref #111, #119
+   - 5c832b02bde7f9250f3e4c5f7b1c84f37514ff4f: action when adding duplicated tracks to playlist + undo button, closes #120
+   - 19bbf117ced7b4272ee2bee0fcf2c8082eafa5fc: pull to refresh m3u playlists for main playlists page and m3u playlist subpage, ref #125
+   - a6e767ebd24908035699537f3c264fdc37bbc4a6: clear audio/video cache for playing yt item
+
+### 🛠️ Bug fixes & Improvements:
+- core!:
+   - 6b147a2a59e755d1b561db8126c18f9b026e8b88: player settings refactor
+
+- perf:
+   - 961e8afa366b0f4bfd0975b42422006c41ddca34: sort initial history top items in isolate
+   - f227d05df61d417656862242c638ebcd5aaec845: Directory.listAllIsolate() easier to allow multiple dir listing in the same isolate
+   - 96a768b09f1779c5e8dd8d2c598fba5e389bce64: faster backup dialog opening by runnning calculations on isolates
+   - 35b543fae2c6e552f18fa6ac0faf1d555c603946: accessing latest queue in O(1)
+   - 397aa0e36796ac7eaa46cb89a80b62fc80af0e7f: close stream subscriptions manually
+   - 26224d7c59abd1cde05cf4846931d66cc9d7dfa4: release resources after 5 min of inactivity
+   - 69cb045371028bf7f95ebd721f717b260324a7fd: some ui tweakies + AnimatedSizedBox instead of AnimatedContainer
+
+- chore:
+   - 7380108604faa702b7baef6d83d221737d105e22: yt local search ui tweaks
+   - 1c2bb1741a10ba6da982844ee2c7e0dad8b2232e: monitor clipboard only when search is active
+   - 298082798b07010d1bce192b55f3fef564ca1c1f: semi transparent system nav bars when tapping video in fullscreen
+   - 030f40b802c0df34fc25e5ac8b41759b301183d4: refactor miniplayer bottom row this allows for more icons without overlapping with text closes #50
+   - 1b889efaa17607806156dc76fe70ab48725bbc9b: various tweaks & fixes
+   - 20610805419de99cc91cb3a11dfadcdcf7224f55: miniplayer dimensions tweaks
+   - 889061c1a910d6555bf4af23f615371304d4e2af: ui thingys
+   - 8c7b45f4ba4e8b7fc6fee9527d7318b0a25ae3f5: skip dummy videos in queue
+   - 4cba1016d7c341e3594a2c798ef78ccb15498a11: dispose yt generator & search resources after a timer
+   - 8cf0ed60ba2597093eea0cad47788f7a01fdaf5a: ui tweaks
+   - 4333056a0480f37f61d574c6e4af464804a3470b: ui stuff
+   - 531d9752664372324eb4291f8425c1d1de15bfba: some fixes
+   - d163aca13c9b10b375a29140fa753174804ad8bf: increase hit area for some icons
+   - d0aaf868300581040398680170d062a25e30f3d5: ui tweaks
+   - 59a920cf400b08a823d932e31a0a1f8c4b7b67e7: faster video tap detecting now will only delay if pressed at seek areas
+   - 31ee86d5dfe6c3d58ebd10e7a40c75fd8f49db07: more buttons for video card + play + shuffle + pause after this + play after
+   - 9fd1c451eacce6d0141de7f71cca99893671fd99: scrolling steps for tracks page
+   - 4d5c41c7592087e95f21cfe61abda5dea9846b45: menu for current yt video + repeat for n times button
+   - 4177354497d5c9271e36d5914cbb064a10dc4adf: some tweakies
+   - 47bc40748deb34bb7d6bfe0317ab49fb1b38cd58: some tweakies
+   - 3aa0956efc6e2da44b1ce1dbf685390c687e5705: equalizer toggle tap to update button
+
+- core:
+   - 16aa9f5dee1661e404f74d75ea1c26941bff8818: video library rewrite + video playback is now properly a/v synced (ref #1) + pip mode is now stable
+   - 4c4471eb9a5b62e72d602ddfb2ea14e5d2e9e07d: exclude webm & hidden files, ref #108
+   - d7bb2bf2fdfd3a017eea691825e60bf6a0823e8a: wakelock logic rewrite
+   - c7ad8832ca3b7232aaaaf6aff0dd66c383753a9e: allow audio only playback from cache when no internet
+
+- fix:
+   - 54aeac5ab8389f0f57bb7c00069ef407f69fc80d: default library tab name in settings, closes #104
+   - 3c12410d677e7452ffb45b3a6d689bba7856998a: auto brightness always dark, closes #105
+   - 1889ca850acb77c87accb7f980303ad90ba2e2ab: home screen items not playing
+   - 6dc31fb17435fd7c5a9c1ebfd7dd853e82bcf365: tracks page grey screen due to animation controller not being reinitialized properly
+   - 3700df07afad911cd1e8133e0f96766d2a7dbefe: yt miniplayer getting stuck after coming back from pip
+   - 14ec3ed36cdb35ae2f7e492aa9b8bc80e576f601: yt miniplayer physics broken after pip
+   - ed02698744de808e09ca1c8ef2b8d3750e90cf30: min track dur to restore pos not saving properly, ref #112
+   - b675fc846e4e533954d6a56c8b1de1e1fcc7aa39: lyrics parsing in some cases this brings more advanced lrc parsing as a fallback
+   - 52d485523f9c3e177b63e69ae5f218efa2bbbfb1: laggy tracks page scrolling this came after pull-to-refresh feat
+   - 1f10167b40ff0bccd44b8a64fab84b9095059726: empty top history items on startup when set to specific period
+   - f148dfb1d8171e02968ad2a12274bb9741a45bce: refresh doesnt detect new folders, fixes #119
+   - 9d182a8d507b494a4aeecb1c165e46c4c1e6eb7e: comments line break
+   - 2f1c9d819f6387b0fc184412d23cfec796d6988d: setting video last accessed for cache trimming
+   - 7879155c61f55a4aea8e1636117ffdce7bf0a254: pip black screen
+
+- code:
+   - e2338cebc040d3e4cad20f73bddb0bdd36e4139f: project refactor
+   - 69a93681c7799f591cfc6f9911b40bc67ee51e21: move audio_handler to lib/base
+
+
 ## 08/01/2024
 # v1.9.3
 ### 🛠️ Bug fixes & Improvements:
