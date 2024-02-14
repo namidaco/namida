@@ -1458,6 +1458,7 @@ class _NamidaConverters {
         FABType.none: lang.NONE,
         FABType.search: lang.SEARCH,
         FABType.shuffle: lang.SHUFFLE,
+        FABType.play: lang.PLAY,
       },
       YTHomePages: {
         YTHomePages.home: lang.HOME,
@@ -1588,6 +1589,7 @@ class _NamidaConverters {
         FABType.none: Broken.status,
         FABType.search: Broken.search_normal,
         FABType.shuffle: Broken.shuffle,
+        FABType.play: Broken.play_cricle,
       },
     };
 

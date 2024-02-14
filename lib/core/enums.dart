@@ -334,6 +334,7 @@ enum SettingSubpageEnum {
 
 enum FABType {
   none,
+  play,
   shuffle,
   search,
 }

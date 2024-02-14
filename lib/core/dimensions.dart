@@ -26,7 +26,7 @@ class Dimensions {
             route == RouteType.SETTINGS_page || // bcz no search
             route == RouteType.SETTINGS_subpage || // bcz no search
             route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
-            (fab == FABType.shuffle && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
+            ((fab == FABType.shuffle || fab == FABType.play) && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
             (settings.selectedLibraryTab.value == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
     return shouldHide;
   }

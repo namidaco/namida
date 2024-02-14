@@ -150,8 +150,8 @@ class MainPage extends StatelessWidget {
                             if (forceSearch || fab == FABType.search) {
                               ScrollSearchController.inst.toggleSearchMenu();
                               ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
-                            } else if (fab == FABType.shuffle) {
-                              Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: true);
+                            } else if (fab == FABType.shuffle || fab == FABType.play) {
+                              Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: fab == FABType.shuffle);
                             }
                           },
                           child: Icon(
