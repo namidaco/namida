@@ -19,6 +19,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -487,7 +488,7 @@ void _showTrackColorPaletteDialog({
                 const SizedBox(width: 12.0),
                 Expanded(
                   child: Obx(
-                    () => AnimatedContainer(
+                    () => AnimatedSizedBox(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
                         color: finalColorToBeUsed.value,

@@ -8,6 +8,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
@@ -266,9 +267,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         ),
         const NamidaContainerDivider(margin: EdgeInsets.only(left: 8.0, right: 8.0)),
         Obx(
-          () => AnimatedContainer(
+          () => AnimatedSizedBox(
             duration: const Duration(milliseconds: 200),
             width: context.width,
+            animateWidth: false,
             height: listHeight,
             child: Container(
               padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),

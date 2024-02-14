@@ -83,8 +83,9 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
         duration: const Duration(milliseconds: 400),
         tapScaffoldEnabled: false,
         velocity: 0.01,
+        maxChildWidth: (context.width * 0.48).withMaximum(264.0),
         leftChild: SafeArea(
-          child: Container(
+          child: ColoredBox(
             color: context.theme.scaffoldBackgroundColor,
             child: Column(
               children: [

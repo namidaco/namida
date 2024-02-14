@@ -37,6 +37,7 @@ import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -603,7 +604,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                             child: AnimatedScale(
                                               duration: const Duration(milliseconds: 400),
                                               scale: isButtonHighlighed ? 0.97 : 1.0,
-                                              child: AnimatedContainer(
+                                              child: AnimatedDecoration(
                                                 duration: const Duration(milliseconds: 400),
                                                 decoration: BoxDecoration(
                                                   color: isButtonHighlighed
@@ -806,7 +807,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                                 final fallbackQualityLabel = currentVideo?.nameInCache?.split('_').last;
                                                 final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
                                                 final framerateText = videoFramerate ?? '';
-                                                return AnimatedContainer(
+                                                return AnimatedDecoration(
                                                   duration: animationDuration,
                                                   decoration: isMenuOpened.value
                                                       ? BoxDecoration(

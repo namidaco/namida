@@ -14,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class EqualizerPage extends StatefulWidget {
@@ -197,7 +198,11 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                     },
                                     child: Text(
                                       e.value,
-                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 13.5.multipliedFontScale),
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        color: _activePreset.value == e.value ? Colors.white.withOpacity(0.7) : null,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.5.multipliedFontScale,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -637,20 +642,21 @@ class _VerticalSliderState extends State<VerticalSlider> {
               ),
               Positioned(
                 bottom: 0,
-                child: SizedBox(
+                child: AnimatedSizedBox(
+                  duration: const Duration(milliseconds: 50),
                   height: height,
                   width: 8.0,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: context.theme.colorScheme.primary.withOpacity(0.5),
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(12.0),
-                      ),
+                  animateWidth: false,
+                  decoration: BoxDecoration(
+                    color: context.theme.colorScheme.primary.withOpacity(0.5),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(12.0),
                     ),
                   ),
                 ),
               ),
-              Positioned(
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 50),
                 bottom: height - circleHeight / 2,
                 child: Obx(
                   () => AnimatedScale(

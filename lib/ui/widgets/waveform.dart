@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 
 bool themeCanRebuildWaveform = false;
 
@@ -146,10 +147,11 @@ class NamidaWaveBars extends StatelessWidget {
       mainAxisSize: MainAxisSize.max,
       children: [
         ...waveList.map(
-          (e) => AnimatedContainer(
+          (e) => AnimatedSizedBox(
             duration: Duration(milliseconds: animationDurationMS),
             height: e.clamp(barMinHeight, barMaxHeight),
             width: barWidth,
+            animateWidth: false,
             curve: animationCurve,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),

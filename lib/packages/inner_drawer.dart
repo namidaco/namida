@@ -74,6 +74,7 @@ class InnerDrawer extends StatefulWidget {
     this.backgroundDecoration,
     this.innerDrawerCallback,
     this.onDragUpdate,
+    this.maxChildWidth,
   })  : assert(
           leftChild != null || rightChild != null,
           'You must specify at least one child',
@@ -144,6 +145,8 @@ class InnerDrawer extends StatefulWidget {
 
   /// when a pointer that is in contact with the screen and moves to the right or left
   final InnerDragUpdateCallback? onDragUpdate;
+
+  final double? maxChildWidth;
 
   @override
   InnerDrawerState createState() => InnerDrawerState();
@@ -441,7 +444,10 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
     final invC = _invisibleCover();
 
     final Widget scaffoldChild = Stack(
-      children: <Widget?>[widget.scaffold, if (invC != null) invC else null].whereType<Widget>().toList(),
+      children: [
+        widget.scaffold,
+        if (invC != null) invC,
+      ],
     );
 
     Widget container = DecoratedBox(
@@ -531,8 +537,14 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
         child: child,
       );
     }
+    final w = widget.proportionalChildArea ? _width - _widthWithOffset : _width;
+    final maxW = widget.maxChildWidth;
     final Widget container = SizedBox(
-      width: widget.proportionalChildArea ? _width - _widthWithOffset : _width,
+      width: maxW == null
+          ? w
+          : w > maxW
+              ? maxW
+              : w,
       height: MediaQuery.sizeOf(context).height,
       child: child,
     );
@@ -587,10 +599,15 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
     }
 
     /// wFactor depends of offset and is used by the second Align that contains the Scaffold
-    final offset = 0.5 - _offset * 0.5;
+    final maxWidth = widget.maxChildWidth;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final divider = maxWidth == null || maxWidth >= screenWidth ? 0.5 : 1 - (maxWidth / screenWidth);
+    final offset = divider - _offset * divider;
     //NEW
     //final double offset = 1 - _offset * 1;
     final wFactor = (_controller.value * (1 - offset)) + offset;
+    final leftChildTrigger = _trigger(AlignmentDirectional.centerStart, _leftChild);
+    final rightChildTrigger = _trigger(AlignmentDirectional.centerEnd, _rightChild);
 
     return DecoratedBox(
       decoration: widget.backgroundDecoration ??
@@ -610,7 +627,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
             excludeFromSemantics: true,
             child: RepaintBoundary(
               child: Stack(
-                children: <Widget?>[
+                children: [
                   ///Gradient
                   Container(
                     width: _controller.value == 0 || _animationType == InnerDrawerAnimation.linear ? 0 : null,
@@ -626,9 +643,9 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
                   ),
 
                   ///Trigger
-                  _trigger(AlignmentDirectional.centerStart, _leftChild),
-                  _trigger(AlignmentDirectional.centerEnd, _rightChild),
-                ].whereType<Widget>().toList(),
+                  if (leftChildTrigger != null) leftChildTrigger,
+                  if (rightChildTrigger != null) rightChildTrigger,
+                ],
               ),
             ),
           ),

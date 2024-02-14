@@ -22,6 +22,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -514,13 +515,18 @@ class ThreeLineSmallContainers extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List<Widget>.filled(
         3,
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.fastEaseInToSlowEaseOut,
-          width: enabled ? 9.0 : 2.0,
-          height: 1.2,
-          margin: const EdgeInsets.symmetric(vertical: 1),
-          color: color ?? context.theme.listTileTheme.iconColor?.withAlpha(120),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1),
+          child: AnimatedSizedBox(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.fastEaseInToSlowEaseOut,
+            width: enabled ? 9.0 : 2.0,
+            height: 1.2,
+            animateHeight: false,
+            decoration: BoxDecoration(
+              color: color ?? context.theme.listTileTheme.iconColor?.withAlpha(120),
+            ),
+          ),
         ),
       ),
     );

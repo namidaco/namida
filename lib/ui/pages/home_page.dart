@@ -25,6 +25,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
@@ -424,18 +425,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                 _updateSameTimeNYearsAgo(DateTime.now(), e);
                                                 if (mounted) setState(() {});
                                               },
-                                              child: AnimatedContainer(
+                                              child: AnimatedDecoration(
                                                 duration: const Duration(milliseconds: 250),
-                                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                                 decoration: BoxDecoration(
                                                   color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
                                                   borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                                                 ),
-                                                child: Text(
-                                                  '$e',
-                                                  style: context.textTheme.displaySmall?.copyWith(
-                                                    color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
-                                                    fontWeight: FontWeight.w600,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                  child: Text(
+                                                    '$e',
+                                                    style: context.textTheme.displaySmall?.copyWith(
+                                                      color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -920,20 +923,22 @@ class _MixesCardState extends State<_MixesCard> {
     int alpha = 255,
     double blur = 0.0,
   }) {
-    return AnimatedContainer(
-      margin: EdgeInsets.only(top: topPadding),
-      duration: const Duration(milliseconds: 300),
-      width: widget.width - horizontalPadding,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: _cardColor?.withAlpha(alpha),
-        border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
-        borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-      ),
-      child: NamidaBgBlur(
-        blur: blur,
-        child: Container(
-          color: Colors.transparent,
+    return Padding(
+      padding: EdgeInsets.only(top: topPadding),
+      child: AnimatedSizedBox(
+        duration: const Duration(milliseconds: 300),
+        width: widget.width - horizontalPadding,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: _cardColor?.withAlpha(alpha),
+          border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
+          borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+        ),
+        child: NamidaBgBlur(
+          blur: blur,
+          child: Container(
+            color: Colors.transparent,
+          ),
         ),
       ),
     );
@@ -1062,38 +1067,40 @@ class _MixesCardState extends State<_MixesCard> {
 
     return NamidaInkWell(
       onTap: () => onMixTap(artworkWidget(true, displayShimmer)),
-      child: AnimatedContainer(
-        width: widget.width,
-        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-        duration: const Duration(milliseconds: 300),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(child: thumbnailWidget),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4.0),
-                  Text(
-                    widget.title,
-                    style: context.textTheme.displayMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    widget.tracks.map((e) => e.title).join(', '),
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4.0),
-                ],
-              ),
-            )
-          ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: AnimatedSizedBox(
+          width: widget.width,
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(child: thumbnailWidget),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4.0),
+                    Text(
+                      widget.title,
+                      style: context.textTheme.displayMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.tracks.map((e) => e.title).join(', '),
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4.0),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

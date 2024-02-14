@@ -562,7 +562,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
             ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0) // lanscape videos
-            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 32.0) // vertical videos
+            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 24.0) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowSliders = _canShowControls && widget.isFullScreen;

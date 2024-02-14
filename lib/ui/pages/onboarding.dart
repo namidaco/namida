@@ -11,6 +11,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
@@ -179,18 +180,20 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                               ],
                             ),
                             Obx(
-                              () => AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                              () => SizedBox(
                                 height: 12.0,
                                 width: context.width,
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _shouldShowGlow.value ? CurrentColor.inst.color : Colors.transparent,
-                                      blurRadius: 12.0,
-                                      spreadRadius: 2.0,
-                                    )
-                                  ],
+                                child: AnimatedDecoration(
+                                  duration: const Duration(milliseconds: 200),
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _shouldShowGlow.value ? CurrentColor.inst.color : Colors.transparent,
+                                        blurRadius: 12.0,
+                                        spreadRadius: 2.0,
+                                      )
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

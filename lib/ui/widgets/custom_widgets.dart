@@ -37,6 +37,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
@@ -113,7 +114,7 @@ class CustomSwitch extends StatelessWidget {
     this.height = 21.0,
     this.width = 40.0,
     this.circleColor,
-    this.durationInMillisecond = 400,
+    this.durationInMillisecond = 300,
     this.bgColor,
     this.shadowColor,
     this.passedColor,
@@ -122,38 +123,44 @@ class CustomSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalColor = passedColor ?? CurrentColor.inst.color;
-    return AnimatedContainer(
+    return SizedBox(
       width: width,
       height: height,
-      duration: Duration(milliseconds: durationInMillisecond),
-      padding: EdgeInsets.symmetric(horizontal: width / 10),
-      decoration: BoxDecoration(
-        color: (active
-            ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
-            // : context.theme.scaffoldBackgroundColor.withAlpha(34)
-            : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
-        borderRadius: BorderRadius.circular(30.0.multipliedRadius),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 2),
-            blurRadius: active ? 8 : 2,
-            spreadRadius: 0,
-            color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
-          ),
-        ],
-      ),
-      child: AnimatedAlign(
+      child: AnimatedDecoration(
         duration: Duration(milliseconds: durationInMillisecond),
-        alignment: active ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          width: width / 3,
-          height: height / 1.5,
-          decoration: BoxDecoration(
-            color: circleColor ?? Colors.white.withAlpha(222),
-            borderRadius: BorderRadius.circular(30.0.multipliedRadius),
-            // boxShadow: [
-            //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
-            // ],
+        decoration: BoxDecoration(
+          color: (active
+              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
+              // : context.theme.scaffoldBackgroundColor.withAlpha(34)
+              : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
+          borderRadius: BorderRadius.circular(30.0.multipliedRadius),
+          boxShadow: [
+            BoxShadow(
+              offset: const Offset(0, 2),
+              blurRadius: active ? 8 : 2,
+              spreadRadius: 0,
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: width / 10),
+          child: AnimatedAlign(
+            duration: Duration(milliseconds: durationInMillisecond),
+            alignment: active ? Alignment.centerRight : Alignment.centerLeft,
+            child: SizedBox(
+              width: width / 3,
+              height: height / 1.5,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: circleColor ?? Colors.white.withAlpha(222),
+                  borderRadius: BorderRadius.circular(30.0.multipliedRadius),
+                  // boxShadow: [
+                  //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+                  // ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1516,7 +1523,7 @@ class NamidaPartyContainer extends StatelessWidget {
       return Obx(
         () {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-          return AnimatedContainer(
+          return AnimatedSizedBox(
             duration: const Duration(milliseconds: 400),
             height: height,
             width: width,
@@ -1542,7 +1549,7 @@ class NamidaPartyContainer extends StatelessWidget {
               ? Row(
                   children: [
                     ...firstHalf.map(
-                      (e) => AnimatedContainer(
+                      (e) => AnimatedSizedBox(
                         duration: const Duration(milliseconds: 400),
                         height: height,
                         width: width ?? context.width / firstHalf.length,
@@ -1562,7 +1569,7 @@ class NamidaPartyContainer extends StatelessWidget {
               : Column(
                   children: [
                     ...secondHalf.map(
-                      (e) => AnimatedContainer(
+                      (e) => AnimatedSizedBox(
                         duration: const Duration(milliseconds: 400),
                         height: height ?? context.height / secondHalf.length,
                         width: width,
@@ -1855,7 +1862,7 @@ class NamidaDrawerListTile extends StatelessWidget {
                   title,
                   style: context.textTheme.displayMedium?.copyWith(
                     color: enabled ? Colors.white.withAlpha(200) : null,
-                    fontSize: context.width / 29,
+                    fontSize: 15.0.multipliedFontScale,
                   ),
                 ),
               ],
@@ -1974,7 +1981,7 @@ class NamidaLogoContainer extends StatelessWidget {
                 'Namida',
                 style: context.textTheme.displayLarge?.copyWith(
                   color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
-                  fontSize: context.width / 26,
+                  fontSize: 17.5.multipliedFontScale,
                 ),
               ),
             ],

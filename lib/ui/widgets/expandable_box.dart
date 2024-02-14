@@ -6,6 +6,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
@@ -47,9 +48,10 @@ class ExpandableBox extends StatelessWidget {
           AnimatedOpacity(
             opacity: isBarVisible ? 1 : 0,
             duration: const Duration(milliseconds: 400),
-            child: AnimatedContainer(
+            child: AnimatedSizedBox(
               duration: const Duration(milliseconds: 400),
               height: isBarVisible ? kExpandableBoxHeight : 0.0,
+              animateWidth: false,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
@@ -86,9 +88,10 @@ class ExpandableBox extends StatelessWidget {
             duration: const Duration(milliseconds: 400),
             child: AnimatedSize(
               duration: const Duration(milliseconds: 400),
-              child: AnimatedContainer(
+              child: AnimatedSizedBox(
                 duration: const Duration(milliseconds: 400),
                 height: showSearchBox ? 58.0 : 0,
+                animateWidth: false,
                 child: Row(
                   children: [
                     const SizedBox(width: 12.0),

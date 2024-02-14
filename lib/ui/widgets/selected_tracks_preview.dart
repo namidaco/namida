@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
@@ -55,8 +56,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                 stc.isMenuMinimized.value = true;
                               }
                             },
-                            child: AnimatedContainer(
-                              clipBehavior: Clip.antiAlias,
+                            child: AnimatedSizedBox(
                               duration: const Duration(seconds: 1),
                               curve: Curves.fastLinearToSlowEaseIn,
                               height: stc.isMenuMinimized.value
@@ -78,44 +78,46 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              padding: const EdgeInsets.all(15),
-                              child: stc.isMenuMinimized.value
-                                  ? const FittedBox(child: SelectedTracksRow())
-                                  : Column(
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        const FittedBox(child: SelectedTracksRow()),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Expanded(
-                                          child: Container(
-                                            clipBehavior: Clip.antiAlias,
-                                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                            child: NamidaListView(
-                                              itemExtents: stc.selectedTracks.toTrackItemExtents(),
-                                              itemCount: stc.selectedTracks.length,
-                                              onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                              padding: EdgeInsets.zero,
-                                              itemBuilder: (context, i) {
-                                                return Dismissible(
-                                                  key: ValueKey(stc.selectedTracks[i]),
-                                                  onDismissed: (direction) => stc.removeTrack(i),
-                                                  child: TrackTile(
-                                                    key: Key('$i${stc.selectedTracks[i].track.path}'),
-                                                    index: i,
-                                                    trackOrTwd: stc.selectedTracks[i],
-                                                    displayRightDragHandler: true,
-                                                    queueSource: QueueSource.selectedTracks,
-                                                  ),
-                                                );
-                                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: stc.isMenuMinimized.value
+                                    ? const FittedBox(child: SelectedTracksRow())
+                                    : Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          const FittedBox(child: SelectedTracksRow()),
+                                          const SizedBox(
+                                            height: 20,
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              clipBehavior: Clip.antiAlias,
+                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                              child: NamidaListView(
+                                                itemExtents: stc.selectedTracks.toTrackItemExtents(),
+                                                itemCount: stc.selectedTracks.length,
+                                                onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
+                                                padding: EdgeInsets.zero,
+                                                itemBuilder: (context, i) {
+                                                  return Dismissible(
+                                                    key: ValueKey(stc.selectedTracks[i]),
+                                                    onDismissed: (direction) => stc.removeTrack(i),
+                                                    child: TrackTile(
+                                                      key: Key('$i${stc.selectedTracks[i].track.path}'),
+                                                      index: i,
+                                                      trackOrTwd: stc.selectedTracks[i],
+                                                      displayRightDragHandler: true,
+                                                      queueSource: QueueSource.selectedTracks,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
+                              ),
                             ),
                           ),
                         ],
