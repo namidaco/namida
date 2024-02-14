@@ -3464,7 +3464,7 @@ class QueueUtilsRow extends StatelessWidget {
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
-            void saveSetting(bool shuffleAll) => settings.save(playerShuffleAllTracks: shuffleAll);
+            void saveSetting(bool shuffleAll) => settings.player.save(shuffleAllTracks: shuffleAll);
             await showMenu(
               context: context,
               position: RelativeRect.fromLTRB(
@@ -3493,7 +3493,7 @@ class QueueUtilsRow extends StatelessWidget {
                         () => SizedBox(
                           height: tileHeight,
                           child: ListTileWithCheckMark(
-                            active: settings.playerShuffleAllTracks.value == e.$3,
+                            active: settings.player.shuffleAllTracks.value == e.$3,
                             leading: StackedIcon(
                               baseIcon: Broken.shuffle,
                               secondaryIcon: e.$2,
@@ -3513,7 +3513,7 @@ class QueueUtilsRow extends StatelessWidget {
           child: NamidaButton(
             text: lang.SHUFFLE,
             icon: Broken.shuffle,
-            onPressed: () => Player.inst.shuffleTracks(settings.playerShuffleAllTracks.value),
+            onPressed: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
           ),
         ),
         const SizedBox(width: 8.0),
@@ -3535,8 +3535,8 @@ class RepeatModeIconButton extends StatelessWidget {
   });
 
   void _switchMode() {
-    final e = settings.playerRepeatMode.value.nextElement(RepeatMode.values);
-    settings.save(playerRepeatMode: e);
+    final e = settings.player.repeatMode.value.nextElement(RepeatMode.values);
+    settings.player.save(repeatMode: e);
   }
 
   @override
@@ -3544,16 +3544,16 @@ class RepeatModeIconButton extends StatelessWidget {
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
     return Obx(
       () {
-        final tooltip = settings.playerRepeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString());
+        final tooltip = settings.player.repeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString());
         final child = Stack(
           alignment: Alignment.center,
           children: [
             Icon(
-              settings.playerRepeatMode.value.toIcon(),
+              settings.player.repeatMode.value.toIcon(),
               size: 20.0,
               color: iconColor,
             ),
-            if (settings.playerRepeatMode.value == RepeatMode.forNtimes)
+            if (settings.player.repeatMode.value == RepeatMode.forNtimes)
               Text(
                 Player.inst.numberOfRepeats.toString(),
                 style: context.textTheme.displaySmall?.copyWith(color: iconColor),

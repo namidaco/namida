@@ -130,10 +130,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> tryRestoringLastPosition(Track trackPre) async {
-    final minValueInSet = settings.minTrackDurationToRestoreLastPosInMinutes.value * 60;
+    final minValueInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.value * 60;
 
     if (minValueInSet >= 0) {
-      final seekValueInMS = settings.seekDurationInSeconds.value * 1000;
+      final seekValueInMS = settings.player.seekDurationInSeconds.value * 1000;
       final track = trackPre.toTrackExt();
       final lastPos = track.stats.lastPositionInMs;
       // -- only seek if not at the start of track.
@@ -193,11 +193,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     refreshNotification(newItem);
     await newItem._execute(
       selectable: (finalItem) async {
-        settings.save(lastPlayedIndices: {LibraryCategory.localTracks: newIndex});
+        settings.player.save(lastPlayedIndices: {LibraryCategory.localTracks: newIndex});
         await CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
       youtubeID: (finalItem) async {
-        settings.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
+        settings.player.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
         final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
         if (image != null && finalItem == currentItem) {
           // -- only extract if same item is still playing, i.e. user didn't skip.
@@ -405,7 +405,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ================================== NamidaBasicAudioHandler Overriden ====================================
 
   @override
-  InterruptionAction defaultOnInterruption(InterruptionType type) => settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
+  InterruptionAction defaultOnInterruption(InterruptionType type) => settings.player.onInterrupted[type] ?? InterruptionAction.pause;
 
   @override
   FutureOr<int> itemToDurationInSeconds(Q item) async {
@@ -1109,7 +1109,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> onRepeatForNtimesFinish() {
-    settings.save(playerRepeatMode: RepeatMode.none);
+    settings.player.save(repeatMode: RepeatMode.none);
   }
 
   @override
@@ -1160,52 +1160,52 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   PlayerConfig get defaultPlayerConfig => PlayerConfig(
-        skipSilence: settings.playerSkipSilenceEnabled.value && currentVideo == null,
-        speed: settings.playerSpeed.value,
+        skipSilence: settings.player.skipSilenceEnabled.value && currentVideo == null,
+        speed: settings.player.speed.value,
         volume: _userPlayerVolume,
-        pitch: settings.playerPitch.value,
+        pitch: settings.player.pitch.value,
       );
 
-  double get _userPlayerVolume => settings.playerVolume.value;
+  double get _userPlayerVolume => settings.player.volume.value;
 
   @override
-  bool get enableCrossFade => settings.enableCrossFade.value && currentQueueYoutubeID.isEmpty;
+  bool get enableCrossFade => settings.player.enableCrossFade.value && currentQueueYoutubeID.isEmpty;
 
   @override
-  int get defaultCrossFadeMilliseconds => settings.crossFadeDurationMS.value;
+  int get defaultCrossFadeMilliseconds => settings.player.crossFadeDurationMS.value;
 
   @override
-  int get defaultCrossFadeTriggerStartOffsetSeconds => settings.crossFadeAutoTriggerSeconds.value;
+  int get defaultCrossFadeTriggerStartOffsetSeconds => settings.player.crossFadeAutoTriggerSeconds.value;
 
   @override
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
 
   @override
-  bool get defaultShouldStartPlaying => (settings.playerPlayOnNextPrev.value || isPlaying);
+  bool get defaultShouldStartPlaying => (settings.player.playOnNextPrev.value || isPlaying);
 
   @override
-  bool get enableVolumeFadeOnPlayPause => settings.enableVolumeFadeOnPlayPause.value;
+  bool get enableVolumeFadeOnPlayPause => settings.player.enableVolumeFadeOnPlayPause.value;
 
   @override
-  bool get playerInfiniyQueueOnNextPrevious => settings.playerInfiniyQueueOnNextPrevious.value;
+  bool get playerInfiniyQueueOnNextPrevious => settings.player.infiniyQueueOnNextPrevious.value;
 
   @override
-  int get playerPauseFadeDurInMilli => settings.playerPauseFadeDurInMilli.value;
+  int get playerPauseFadeDurInMilli => settings.player.pauseFadeDurInMilli.value;
 
   @override
-  int get playerPlayFadeDurInMilli => settings.playerPlayFadeDurInMilli.value;
+  int get playerPlayFadeDurInMilli => settings.player.playFadeDurInMilli.value;
 
   @override
-  bool get playerPauseOnVolume0 => settings.playerPauseOnVolume0.value;
+  bool get playerPauseOnVolume0 => settings.player.pauseOnVolume0.value;
 
   @override
-  RepeatMode get playerRepeatMode => settings.playerRepeatMode.value;
+  RepeatMode get playerRepeatMode => settings.player.repeatMode.value;
 
   @override
-  bool get playerResumeAfterOnVolume0Pause => settings.playerResumeAfterOnVolume0Pause.value;
+  bool get playerResumeAfterOnVolume0Pause => settings.player.resumeAfterOnVolume0Pause.value;
 
   @override
-  bool get jumpToFirstItemAfterFinishingQueue => settings.jumpToFirstTrackAfterFinishingQueue.value;
+  bool get jumpToFirstItemAfterFinishingQueue => settings.player.jumpToFirstTrackAfterFinishingQueue.value;
 
   @override
   int get listenCounterMarkPlayedPercentage => settings.isTrackPlayedPercentageCount.value;
@@ -1223,10 +1223,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   InterruptionAction get onBecomingNoisyEventStream => InterruptionAction.pause;
 
   @override
-  Duration get defaultInterruptionResumeThreshold => Duration(minutes: settings.interruptionResumeThresholdMin.value);
+  Duration get defaultInterruptionResumeThreshold => Duration(minutes: settings.player.interruptionResumeThresholdMin.value);
 
   @override
-  Duration get defaultVolume0ResumeThreshold => Duration(minutes: settings.volume0ResumeThresholdMin.value);
+  Duration get defaultVolume0ResumeThreshold => Duration(minutes: settings.player.volume0ResumeThresholdMin.value);
 
   bool get previousButtonReplays => settings.previousButtonReplays.value;
 
@@ -1273,11 +1273,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> skipToPrevious() async {
     if (previousButtonReplays) {
       final int secondsToReplay;
-      if (settings.isSeekDurationPercentage.value) {
-        final sFromP = (currentItemDuration?.inSeconds ?? 0) * (settings.seekDurationInPercentage.value / 100);
+      if (settings.player.isSeekDurationPercentage.value) {
+        final sFromP = (currentItemDuration?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
         secondsToReplay = sFromP.toInt();
       } else {
-        secondsToReplay = settings.seekDurationInSeconds.value;
+        secondsToReplay = settings.player.seekDurationInSeconds.value;
       }
 
       if (secondsToReplay > 0 && currentPositionMS > secondsToReplay * 1000) {

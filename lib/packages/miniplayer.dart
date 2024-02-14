@@ -553,7 +553,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                             tag: 'MINIPLAYER_DURATION',
                                             child: Obx(
                                               () {
-                                                final displayRemaining = settings.displayRemainingDurInsteadOfTotal.value;
+                                                final displayRemaining = settings.player.displayRemainingDurInsteadOfTotal.value;
                                                 final toSubtract = displayRemaining ? Player.inst.nowPlayingPosition : 0;
                                                 final msToDisplay = currentDurationInMS - toSubtract;
                                                 final prefix = displayRemaining ? '-' : '';
@@ -877,10 +877,10 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                                                         Player.inst.setPlayerPitch(val);
                                                                         Player.inst.setPlayerSpeed(val);
                                                                         Player.inst.setPlayerVolume(val);
-                                                                        settings.save(
-                                                                          playerPitch: val,
-                                                                          playerSpeed: val,
-                                                                          playerVolume: val,
+                                                                        settings.player.save(
+                                                                          pitch: val,
+                                                                          speed: val,
+                                                                          volume: val,
                                                                         );
                                                                       },
                                                                     ),
@@ -895,41 +895,41 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                                                     padding: const EdgeInsets.all(12.0),
                                                                     shrinkWrap: true,
                                                                     children: [
-                                                                      Obx(() => getTextWidget(Broken.airpods, lang.PITCH, settings.playerPitch.value)),
+                                                                      Obx(() => getTextWidget(Broken.airpods, lang.PITCH, settings.player.pitch.value)),
                                                                       Obx(
                                                                         () => getSlider(
-                                                                          value: settings.playerPitch.value,
+                                                                          value: settings.player.pitch.value,
                                                                           onChanged: (value) {
                                                                             Player.inst.setPlayerPitch(value);
-                                                                            settings.save(playerPitch: value);
+                                                                            settings.player.save(pitch: value);
                                                                           },
                                                                         ),
                                                                       ),
                                                                       const SizedBox(height: 12.0),
                                                                       Obx(
-                                                                        () => getTextWidget(Broken.forward, lang.SPEED, settings.playerSpeed.value),
+                                                                        () => getTextWidget(Broken.forward, lang.SPEED, settings.player.speed.value),
                                                                       ),
                                                                       Obx(
                                                                         () => getSlider(
-                                                                          value: settings.playerSpeed.value,
+                                                                          value: settings.player.speed.value,
                                                                           onChanged: (value) {
                                                                             Player.inst.setPlayerSpeed(value);
-                                                                            settings.save(playerSpeed: value);
+                                                                            settings.player.save(speed: value);
                                                                           },
                                                                         ),
                                                                       ),
                                                                       const SizedBox(height: 12.0),
                                                                       Obx(
-                                                                        () => getTextWidget(settings.playerVolume.value > 0 ? Broken.volume_high : Broken.volume_slash, lang.VOLUME,
-                                                                            settings.playerVolume.value),
+                                                                        () => getTextWidget(settings.player.volume.value > 0 ? Broken.volume_high : Broken.volume_slash,
+                                                                            lang.VOLUME, settings.player.volume.value),
                                                                       ),
                                                                       Obx(
                                                                         () => getSlider(
                                                                           max: 1.0,
-                                                                          value: settings.playerVolume.value,
+                                                                          value: settings.player.volume.value,
                                                                           onChanged: (value) {
                                                                             Player.inst.setPlayerVolume(value);
-                                                                            settings.save(playerVolume: value);
+                                                                            settings.player.save(volume: value);
                                                                           },
                                                                         ),
                                                                       ),

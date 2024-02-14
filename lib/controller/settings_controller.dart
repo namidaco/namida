@@ -6,6 +6,8 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
+import 'package:namida/controller/settings.equalizer.dart';
+import 'package:namida/controller/settings.player.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -16,6 +18,9 @@ class SettingsController with SettingsFileWriter {
   static SettingsController get inst => _instance;
   static final SettingsController _instance = SettingsController._internal();
   SettingsController._internal();
+
+  EqualizerSettings get equalizer => EqualizerSettings.inst;
+  PlayerSettings get player => PlayerSettings.inst;
 
   final Rx<NamidaLanguage> selectedLanguage = kDefaultLang.obs;
   final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
@@ -44,7 +49,6 @@ class SettingsController with SettingsFileWriter {
   final RxDouble albumListTileHeight = 90.0.obs;
 
   final RxBool useMediaStore = false.obs;
-  final RxBool enableVolumeFadeOnPlayPause = true.obs;
   final RxBool displayTrackNumberinAlbumPage = true.obs;
   final RxBool albumCardTopRightDate = true.obs;
   final RxBool forceSquaredTrackThumbnail = false.obs;
@@ -136,39 +140,17 @@ class SettingsController with SettingsFileWriter {
   final RxInt imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
   final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
-  final RxDouble playerVolume = 1.0.obs;
-  final RxDouble playerSpeed = 1.0.obs;
-  final RxDouble playerPitch = 1.0.obs;
-  final RxInt seekDurationInSeconds = 5.obs;
-  final RxInt seekDurationInPercentage = 2.obs;
-  final RxBool isSeekDurationPercentage = false.obs;
   final RxBool hideStatusBarInExpandedMiniplayer = false.obs;
-  final RxInt playerPlayFadeDurInMilli = 300.obs;
-  final RxInt playerPauseFadeDurInMilli = 300.obs;
-  final RxInt minTrackDurationToRestoreLastPosInMinutes = 5.obs;
-  final RxInt interruptionResumeThresholdMin = 2.obs;
-  final RxInt volume0ResumeThresholdMin = 5.obs;
-  final RxBool enableCrossFade = true.obs;
-  final RxInt crossFadeDurationMS = 500.obs;
-  final RxInt crossFadeAutoTriggerSeconds = 5.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = true.obs;
   final RxBool enableBottomNavBar = true.obs;
   final RxBool ytPreferNewComments = false.obs;
   final RxBool ytAutoExtractVideoTagsFromInfo = true.obs;
-  final RxBool playerPlayOnNextPrev = true.obs;
-  final RxBool playerSkipSilenceEnabled = false.obs;
-  final RxBool playerShuffleAllTracks = false.obs;
-  final RxBool playerPauseOnVolume0 = true.obs;
-  final RxBool playerResumeAfterOnVolume0Pause = true.obs;
-  final RxBool playerResumeAfterWasInterrupted = true.obs;
-  final RxBool jumpToFirstTrackAfterFinishingQueue = true.obs;
   final RxBool displayAudioInfoMiniplayer = false.obs;
   final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
   final RxBool extractFeatArtistFromTitle = true.obs;
   final RxBool groupArtworksByAlbum = false.obs;
   final RxBool enableM3USync = false.obs;
-  final RxBool canAskForBatteryOptimizations = true.obs;
   final RxBool prioritizeEmbeddedLyrics = true.obs;
   final RxBool swipeableDrawer = true.obs;
   final RxBool dismissibleMiniplayer = false.obs;
@@ -198,8 +180,6 @@ class SettingsController with SettingsFileWriter {
   final Rx<LocalVideoMatchingType> localVideoMatchingType = LocalVideoMatchingType.auto.obs;
   final RxBool localVideoMatchingCheckSameDir = false.obs;
 
-  final Rx<RepeatMode> playerRepeatMode = RepeatMode.none.obs;
-
   final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
 
   final mostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
@@ -219,13 +199,10 @@ class SettingsController with SettingsFileWriter {
   final RxBool downloadFilesWriteUploadDate = true.obs;
   final RxBool downloadFilesKeepCachedVersions = true.obs;
   final RxBool enablePip = true.obs;
-  final RxBool playerInfiniyQueueOnNextPrevious = true.obs;
-  final RxBool displayRemainingDurInsteadOfTotal = false.obs;
   final RxBool pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
-  final killPlayerAfterDismissingAppMode = KillAppMode.ifNotPlaying.obs;
   final floatingActionButton = FABType.none.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
   final ytTapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
@@ -243,12 +220,6 @@ class SettingsController with SettingsFileWriter {
     TrackTilePosition.row3Item3: TrackTileItem.none,
     TrackTilePosition.rightItem1: TrackTileItem.duration,
     TrackTilePosition.rightItem2: TrackTileItem.none,
-  }.obs;
-
-  final playerOnInterrupted = <InterruptionType, InterruptionAction>{
-    InterruptionType.shouldPause: InterruptionAction.pause,
-    InterruptionType.shouldDuck: InterruptionAction.duckAudio,
-    InterruptionType.unknown: InterruptionAction.pause,
   }.obs;
 
   final queueInsertion = <QueueInsertionType, QueueInsertion>{
@@ -297,12 +268,7 @@ class SettingsController with SettingsFileWriter {
     MediaType.folder: false,
   }.obs;
 
-  final lastPlayedIndices = {
-    LibraryCategory.localTracks: 0,
-    LibraryCategory.localVideos: 0,
-    LibraryCategory.youtube: 0,
-  };
-
+  bool canAskForBatteryOptimizations = true;
   bool didSupportNamida = false;
 
   Future<void> prepareSettingsFile() async {
@@ -349,7 +315,6 @@ class SettingsController with SettingsFileWriter {
       albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
 
       useMediaStore.value = json['useMediaStore'] ?? useMediaStore.value;
-      enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
       displayTrackNumberinAlbumPage.value = json['displayTrackNumberinAlbumPage'] ?? displayTrackNumberinAlbumPage.value;
       albumCardTopRightDate.value = json['albumCardTopRightDate'] ?? albumCardTopRightDate.value;
       forceSquaredTrackThumbnail.value = json['forceSquaredTrackThumbnail'] ?? forceSquaredTrackThumbnail.value;
@@ -410,7 +375,7 @@ class SettingsController with SettingsFileWriter {
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
-      videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['VideoPlaybackSource']) ?? videoPlaybackSource.value;
+      videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['videoPlaybackSource']) ?? videoPlaybackSource.value;
       youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
 
       animatingThumbnailScaleMultiplier.value = json['animatingThumbnailScaleMultiplier'] ?? animatingThumbnailScaleMultiplier.value;
@@ -428,39 +393,17 @@ class SettingsController with SettingsFileWriter {
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
       ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
-      playerVolume.value = json['playerVolume'] ?? playerVolume.value;
-      playerSpeed.value = json['playerSpeed'] ?? playerSpeed.value;
-      playerPitch.value = json['playerPitch'] ?? playerPitch.value;
-      seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
-      seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
-      isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
       hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
-      playerPlayFadeDurInMilli.value = json['playerPlayFadeDurInMilli'] ?? playerPlayFadeDurInMilli.value;
-      playerPauseFadeDurInMilli.value = json['playerPauseFadeDurInMilli'] as int? ?? playerPauseFadeDurInMilli.value;
-      minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
-      interruptionResumeThresholdMin.value = json['interruptionResumeThresholdMin'] ?? interruptionResumeThresholdMin.value;
-      volume0ResumeThresholdMin.value = json['volume0ResumeThresholdMin'] ?? volume0ResumeThresholdMin.value;
-      enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
-      crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
-      crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       ytPreferNewComments.value = json['ytPreferNewComments'] ?? ytPreferNewComments.value;
       ytAutoExtractVideoTagsFromInfo.value = json['ytAutoExtractVideoTagsFromInfo'] ?? ytAutoExtractVideoTagsFromInfo.value;
-      playerPlayOnNextPrev.value = json['playerPlayOnNextPrev'] ?? playerPlayOnNextPrev.value;
-      playerSkipSilenceEnabled.value = json['playerSkipSilenceEnabled'] ?? playerSkipSilenceEnabled.value;
-      playerShuffleAllTracks.value = json['playerShuffleAllTracks'] ?? playerShuffleAllTracks.value;
-      playerPauseOnVolume0.value = json['playerPauseOnVolume0'] ?? playerPauseOnVolume0.value;
-      playerResumeAfterOnVolume0Pause.value = json['playerResumeAfterOnVolume0Pause'] ?? playerResumeAfterOnVolume0Pause.value;
-      playerResumeAfterWasInterrupted.value = json['playerResumeAfterWasInterrupted'] ?? playerResumeAfterWasInterrupted.value;
-      jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
-      canAskForBatteryOptimizations.value = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
@@ -481,7 +424,6 @@ class SettingsController with SettingsFileWriter {
       localVideoMatchingType.value = LocalVideoMatchingType.values.getEnum(json['localVideoMatchingType']) ?? localVideoMatchingType.value;
       localVideoMatchingCheckSameDir.value = json['localVideoMatchingCheckSameDir'] ?? localVideoMatchingCheckSameDir.value;
 
-      playerRepeatMode.value = RepeatMode.values.getEnum(json['playerRepeatMode']) ?? playerRepeatMode.value;
       trackPlayMode.value = TrackPlayMode.values.getEnum(json['trackPlayMode']) ?? trackPlayMode.value;
 
       mostPlayedTimeRange.value = MostPlayedTimeRange.values.getEnum(json['mostPlayedTimeRange']) ?? mostPlayedTimeRange.value;
@@ -501,19 +443,16 @@ class SettingsController with SettingsFileWriter {
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
-      playerInfiniyQueueOnNextPrevious.value = json['playerInfiniyQueueOnNextPrevious'] ?? playerInfiniyQueueOnNextPrevious.value;
-      displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
-      killPlayerAfterDismissingAppMode.value = KillAppMode.values.getEnum(json['killPlayerAfterDismissingAppMode']) ?? killPlayerAfterDismissingAppMode.value;
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
       ytTapToSeek.value = YTSeekActionMode.values.getEnum(json['ytTapToSeek']) ?? ytTapToSeek.value;
       ytDragToSeek.value = YTSeekActionMode.values.getEnum(json['ytDragToSeek']) ?? ytDragToSeek.value;
 
-      trackItem.value = _getEnumMap(
+      trackItem.value = getEnumMap_(
             json['trackItem'],
             TrackTilePosition.values,
             TrackTilePosition.rightItem3,
@@ -521,15 +460,6 @@ class SettingsController with SettingsFileWriter {
             TrackTileItem.none,
           ) ??
           trackItem.map((key, value) => MapEntry(key, value));
-
-      playerOnInterrupted.value = _getEnumMap(
-            json['playerOnInterrupted'],
-            InterruptionType.values,
-            InterruptionType.unknown,
-            InterruptionAction.values,
-            InterruptionAction.doNothing,
-          ) ??
-          playerOnInterrupted.map((key, value) => MapEntry(key, value));
 
       queueInsertion.value = ((json["queueInsertion"] as Map?)?.map(
             (key, value) => MapEntry(QueueInsertionType.values.getEnum(key) ?? QueueInsertionType.moreAlbum, QueueInsertion.fromJson(value)),
@@ -544,20 +474,10 @@ class SettingsController with SettingsFileWriter {
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
 
-      final lpi = json['lastPlayedIndices'];
-      if (lpi is Map) {
-        lastPlayedIndices.clear();
-        lastPlayedIndices.addAll(lpi.cast());
-      }
+      canAskForBatteryOptimizations = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations;
     } catch (e) {
       printy(e, isError: true);
     }
-  }
-
-  Map<K, V>? _getEnumMap<K, V>(dynamic jsonMap, List<K> enumKeys, K defaultKey, List<V> enumValues, V defaultValue) {
-    return ((jsonMap as Map?)?.map(
-      (key, value) => MapEntry(enumKeys.getEnum(key) ?? defaultKey, enumValues.getEnum(value) ?? defaultValue),
-    ));
   }
 
   @override
@@ -585,7 +505,6 @@ class SettingsController with SettingsFileWriter {
         'albumListTileHeight': albumListTileHeight.value,
 
         'useMediaStore': useMediaStore.value,
-        'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
         'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
         'albumCardTopRightDate': albumCardTopRightDate.value,
         'forceSquaredTrackThumbnail': forceSquaredTrackThumbnail.value,
@@ -654,39 +573,17 @@ class SettingsController with SettingsFileWriter {
         'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
         'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
-        'playerVolume': playerVolume.value,
-        'playerSpeed': playerSpeed.value,
-        'playerPitch': playerPitch.value,
-        'seekDurationInSeconds': seekDurationInSeconds.value,
-        'seekDurationInPercentage': seekDurationInPercentage.value,
-        'isSeekDurationPercentage': isSeekDurationPercentage.value,
         'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
-        'playerPlayFadeDurInMilli': playerPlayFadeDurInMilli.value,
-        'playerPauseFadeDurInMilli': playerPauseFadeDurInMilli.value,
-        'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
-        'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
-        'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
-        'enableCrossFade': enableCrossFade.value,
-        'crossFadeDurationMS': crossFadeDurationMS.value,
-        'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
         'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
         'enableSearchCleanup': enableSearchCleanup.value,
         'enableBottomNavBar': enableBottomNavBar.value,
         'ytPreferNewComments': ytPreferNewComments.value,
         'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
-        'playerPlayOnNextPrev': playerPlayOnNextPrev.value,
-        'playerSkipSilenceEnabled': playerSkipSilenceEnabled.value,
-        'playerShuffleAllTracks': playerShuffleAllTracks.value,
-        'playerPauseOnVolume0': playerPauseOnVolume0.value,
-        'playerResumeAfterOnVolume0Pause': playerResumeAfterOnVolume0Pause.value,
-        'playerResumeAfterWasInterrupted': playerResumeAfterWasInterrupted.value,
-        'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
         'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
         'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
         'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
         'groupArtworksByAlbum': groupArtworksByAlbum.value,
         'enableM3USync': enableM3USync.value,
-        'canAskForBatteryOptimizations': canAskForBatteryOptimizations.value,
         'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
         'swipeableDrawer': swipeableDrawer.value,
         'dismissibleMiniplayer': dismissibleMiniplayer.value,
@@ -702,12 +599,10 @@ class SettingsController with SettingsFileWriter {
         'wakelockMode': wakelockMode.value.convertToString,
         'localVideoMatchingType': localVideoMatchingType.value.convertToString,
         'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
-        'playerRepeatMode': playerRepeatMode.value.convertToString,
         'trackPlayMode': trackPlayMode.value.convertToString,
         'onNotificationTapAction': onNotificationTapAction.value.convertToString,
         'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
         'performanceMode': performanceMode.value.convertToString,
-        'killPlayerAfterDismissingAppMode': killPlayerAfterDismissingAppMode.value.convertToString,
         'floatingActionButton': floatingActionButton.value.convertToString,
         'ytInitialHomePage': ytInitialHomePage.value.convertToString,
         'ytTapToSeek': ytTapToSeek.value.convertToString,
@@ -728,15 +623,13 @@ class SettingsController with SettingsFileWriter {
         'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
         'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
         'enablePip': enablePip.value,
-        'playerInfiniyQueueOnNextPrevious': playerInfiniyQueueOnNextPrevious.value,
-        'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
         'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-        'playerOnInterrupted': playerOnInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
         'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
         'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
         'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
-        'lastPlayedIndices': lastPlayedIndices,
+
+        'canAskForBatteryOptimizations': canAskForBatteryOptimizations,
       };
 
   /// Writes the values of this  class to a json file, with a minimum interval of [2 seconds]
@@ -767,7 +660,6 @@ class SettingsController with SettingsFileWriter {
     double? albumThumbnailSizeinList,
     double? albumListTileHeight,
     bool? useMediaStore,
-    bool? enableVolumeFadeOnPlayPause,
     bool? displayTrackNumberinAlbumPage,
     bool? albumCardTopRightDate,
     bool? forceSquaredTrackThumbnail,
@@ -839,47 +731,23 @@ class SettingsController with SettingsFileWriter {
     bool? downloadFilesWriteUploadDate,
     bool? downloadFilesKeepCachedVersions,
     bool? enablePip,
-    bool? playerInfiniyQueueOnNextPrevious,
-    bool? displayRemainingDurInsteadOfTotal,
     bool? pickColorsFromDeviceWallpaper,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
     int? imagesMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
-    double? playerVolume,
-    double? playerSpeed,
-    double? playerPitch,
-    int? seekDurationInSeconds,
-    int? seekDurationInPercentage,
-    bool? isSeekDurationPercentage,
     bool? hideStatusBarInExpandedMiniplayer,
-    int? playerPlayFadeDurInMilli,
-    int? playerPauseFadeDurInMilli,
-    int? minTrackDurationToRestoreLastPosInMinutes,
-    int? interruptionResumeThresholdMin,
-    int? volume0ResumeThresholdMin,
-    bool? enableCrossFade,
-    int? crossFadeDurationMS,
-    int? crossFadeAutoTriggerSeconds,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
     bool? ytPreferNewComments,
     bool? ytAutoExtractVideoTagsFromInfo,
-    bool? playerPlayOnNextPrev,
-    bool? playerSkipSilenceEnabled,
-    bool? playerShuffleAllTracks,
-    bool? playerPauseOnVolume0,
-    bool? playerResumeAfterOnVolume0Pause,
-    bool? playerResumeAfterWasInterrupted,
-    bool? jumpToFirstTrackAfterFinishingQueue,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
     bool? groupArtworksByAlbum,
     bool? enableM3USync,
-    bool? canAskForBatteryOptimizations,
     bool? prioritizeEmbeddedLyrics,
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
@@ -895,12 +763,10 @@ class SettingsController with SettingsFileWriter {
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
     bool? localVideoMatchingCheckSameDir,
-    RepeatMode? playerRepeatMode,
     TrackPlayMode? trackPlayMode,
     NotificationTapAction? onNotificationTapAction,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     PerformanceMode? performanceMode,
-    KillAppMode? killPlayerAfterDismissingAppMode,
     FABType? floatingActionButton,
     YTHomePages? ytInitialHomePage,
     YTSeekActionMode? ytTapToSeek,
@@ -911,36 +777,18 @@ class SettingsController with SettingsFileWriter {
     MostPlayedTimeRange? ytMostPlayedTimeRange,
     DateRange? ytMostPlayedCustomDateRange,
     bool? ytMostPlayedCustomisStartOfDay,
-    Map<String, int>? lastPlayedIndices,
     bool? didSupportNamida,
+    bool? canAskForBatteryOptimizations,
   }) {
-    if (selectedLanguage != null) {
-      this.selectedLanguage.value = selectedLanguage;
-    }
-    if (themeMode != null) {
-      this.themeMode.value = themeMode;
-    }
-    if (pitchBlack != null) {
-      this.pitchBlack.value = pitchBlack;
-    }
-    if (autoColor != null) {
-      this.autoColor.value = autoColor;
-    }
-    if (staticColor != null) {
-      this.staticColor.value = staticColor;
-    }
-    if (staticColorDark != null) {
-      this.staticColorDark.value = staticColorDark;
-    }
-    if (selectedLibraryTab != null) {
-      this.selectedLibraryTab.value = selectedLibraryTab;
-    }
-    if (staticLibraryTab != null) {
-      this.staticLibraryTab.value = staticLibraryTab;
-    }
-    if (autoLibraryTab != null) {
-      this.autoLibraryTab.value = autoLibraryTab;
-    }
+    if (selectedLanguage != null) this.selectedLanguage.value = selectedLanguage;
+    if (themeMode != null) this.themeMode.value = themeMode;
+    if (pitchBlack != null) this.pitchBlack.value = pitchBlack;
+    if (autoColor != null) this.autoColor.value = autoColor;
+    if (staticColor != null) this.staticColor.value = staticColor;
+    if (staticColorDark != null) this.staticColorDark.value = staticColorDark;
+    if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
+    if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
+    if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (libraryTabs != null) {
       libraryTabs.loop((t, index) {
         if (!this.libraryTabs.contains(t)) {
@@ -970,154 +818,62 @@ class SettingsController with SettingsFileWriter {
       });
     }
 
-    if (searchResultsPlayMode != null) {
-      this.searchResultsPlayMode.value = searchResultsPlayMode;
-    }
-    if (borderRadiusMultiplier != null) {
-      this.borderRadiusMultiplier.value = borderRadiusMultiplier;
-    }
-    if (fontScaleFactor != null) {
-      this.fontScaleFactor.value = fontScaleFactor;
-    }
-    if (artworkCacheHeightMultiplier != null) {
-      this.artworkCacheHeightMultiplier.value = artworkCacheHeightMultiplier;
-    }
-    if (trackThumbnailSizeinList != null) {
-      this.trackThumbnailSizeinList.value = trackThumbnailSizeinList;
-    }
-    if (trackListTileHeight != null) {
-      this.trackListTileHeight.value = trackListTileHeight;
-    }
+    if (searchResultsPlayMode != null) this.searchResultsPlayMode.value = searchResultsPlayMode;
+    if (borderRadiusMultiplier != null) this.borderRadiusMultiplier.value = borderRadiusMultiplier;
+    if (fontScaleFactor != null) this.fontScaleFactor.value = fontScaleFactor;
+    if (artworkCacheHeightMultiplier != null) this.artworkCacheHeightMultiplier.value = artworkCacheHeightMultiplier;
+    if (trackThumbnailSizeinList != null) this.trackThumbnailSizeinList.value = trackThumbnailSizeinList;
+    if (trackListTileHeight != null) this.trackListTileHeight.value = trackListTileHeight;
 
-    if (albumThumbnailSizeinList != null) {
-      this.albumThumbnailSizeinList.value = albumThumbnailSizeinList;
-    }
-    if (albumListTileHeight != null) {
-      this.albumListTileHeight.value = albumListTileHeight;
-    }
+    if (albumThumbnailSizeinList != null) this.albumThumbnailSizeinList.value = albumThumbnailSizeinList;
+    if (albumListTileHeight != null) this.albumListTileHeight.value = albumListTileHeight;
 
-    if (useMediaStore != null) {
-      this.useMediaStore.value = useMediaStore;
-    }
-    if (enableVolumeFadeOnPlayPause != null) {
-      this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
-    }
-    if (displayTrackNumberinAlbumPage != null) {
-      this.displayTrackNumberinAlbumPage.value = displayTrackNumberinAlbumPage;
-    }
-    if (albumCardTopRightDate != null) {
-      this.albumCardTopRightDate.value = albumCardTopRightDate;
-    }
-    if (forceSquaredTrackThumbnail != null) {
-      this.forceSquaredTrackThumbnail.value = forceSquaredTrackThumbnail;
-    }
-    if (forceSquaredAlbumThumbnail != null) {
-      this.forceSquaredAlbumThumbnail.value = forceSquaredAlbumThumbnail;
-    }
-    if (useAlbumStaggeredGridView != null) {
-      this.useAlbumStaggeredGridView.value = useAlbumStaggeredGridView;
-    }
-    if (useSettingCollapsedTiles != null) {
-      this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
-    }
-    if (albumGridCount != null) {
-      this.albumGridCount.value = albumGridCount;
-    }
-    if (artistGridCount != null) {
-      this.artistGridCount.value = artistGridCount;
-    }
-    if (genreGridCount != null) {
-      this.genreGridCount.value = genreGridCount;
-    }
-    if (playlistGridCount != null) {
-      this.playlistGridCount.value = playlistGridCount;
-    }
-    if (enableBlurEffect != null) {
-      this.enableBlurEffect.value = enableBlurEffect;
-    }
-    if (enableGlowEffect != null) {
-      this.enableGlowEffect.value = enableGlowEffect;
-    }
-    if (hourFormat12 != null) {
-      this.hourFormat12.value = hourFormat12;
-    }
-    if (dateTimeFormat != null) {
-      this.dateTimeFormat.value = dateTimeFormat;
-    }
+    if (useMediaStore != null) this.useMediaStore.value = useMediaStore;
+
+    if (displayTrackNumberinAlbumPage != null) this.displayTrackNumberinAlbumPage.value = displayTrackNumberinAlbumPage;
+    if (albumCardTopRightDate != null) this.albumCardTopRightDate.value = albumCardTopRightDate;
+    if (forceSquaredTrackThumbnail != null) this.forceSquaredTrackThumbnail.value = forceSquaredTrackThumbnail;
+    if (forceSquaredAlbumThumbnail != null) this.forceSquaredAlbumThumbnail.value = forceSquaredAlbumThumbnail;
+    if (useAlbumStaggeredGridView != null) this.useAlbumStaggeredGridView.value = useAlbumStaggeredGridView;
+    if (useSettingCollapsedTiles != null) this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
+    if (albumGridCount != null) this.albumGridCount.value = albumGridCount;
+    if (artistGridCount != null) this.artistGridCount.value = artistGridCount;
+    if (genreGridCount != null) this.genreGridCount.value = genreGridCount;
+    if (playlistGridCount != null) this.playlistGridCount.value = playlistGridCount;
+    if (enableBlurEffect != null) this.enableBlurEffect.value = enableBlurEffect;
+    if (enableGlowEffect != null) this.enableGlowEffect.value = enableGlowEffect;
+    if (hourFormat12 != null) this.hourFormat12.value = hourFormat12;
+    if (dateTimeFormat != null) this.dateTimeFormat.value = dateTimeFormat;
 
     ///
-    if (trackArtistsSeparators != null && !this.trackArtistsSeparators.contains(trackArtistsSeparators[0])) {
-      this.trackArtistsSeparators.addAll(trackArtistsSeparators);
-    }
-    if (trackGenresSeparators != null && !this.trackGenresSeparators.contains(trackGenresSeparators[0])) {
-      this.trackGenresSeparators.addAll(trackGenresSeparators);
-    }
+    if (trackArtistsSeparators != null && !this.trackArtistsSeparators.contains(trackArtistsSeparators[0])) this.trackArtistsSeparators.addAll(trackArtistsSeparators);
+    if (trackGenresSeparators != null && !this.trackGenresSeparators.contains(trackGenresSeparators[0])) this.trackGenresSeparators.addAll(trackGenresSeparators);
     if (trackArtistsSeparatorsBlacklist != null && !this.trackArtistsSeparatorsBlacklist.contains(trackArtistsSeparatorsBlacklist[0])) {
       this.trackArtistsSeparatorsBlacklist.addAll(trackArtistsSeparatorsBlacklist);
     }
     if (trackGenresSeparatorsBlacklist != null && !this.trackGenresSeparatorsBlacklist.contains(trackGenresSeparatorsBlacklist[0])) {
       this.trackGenresSeparatorsBlacklist.addAll(trackGenresSeparatorsBlacklist);
     }
-    if (tracksSort != null) {
-      this.tracksSort.value = tracksSort;
-    }
-    if (tracksSortReversed != null) {
-      this.tracksSortReversed.value = tracksSortReversed;
-    }
-    if (tracksSortSearch != null) {
-      this.tracksSortSearch.value = tracksSortSearch;
-    }
-    if (tracksSortSearchReversed != null) {
-      this.tracksSortSearchReversed.value = tracksSortSearchReversed;
-    }
-    if (tracksSortSearchIsAuto != null) {
-      this.tracksSortSearchIsAuto.value = tracksSortSearchIsAuto;
-    }
-    if (albumSort != null) {
-      this.albumSort.value = albumSort;
-    }
-    if (albumSortReversed != null) {
-      this.albumSortReversed.value = albumSortReversed;
-    }
-    if (artistSort != null) {
-      this.artistSort.value = artistSort;
-    }
-    if (artistSortReversed != null) {
-      this.artistSortReversed.value = artistSortReversed;
-    }
-    if (genreSort != null) {
-      this.genreSort.value = genreSort;
-    }
-    if (genreSortReversed != null) {
-      this.genreSortReversed.value = genreSortReversed;
-    }
-    if (playlistSort != null) {
-      this.playlistSort.value = playlistSort;
-    }
-    if (playlistSortReversed != null) {
-      this.playlistSortReversed.value = playlistSortReversed;
-    }
-    if (ytPlaylistSort != null) {
-      this.ytPlaylistSort.value = ytPlaylistSort;
-    }
-    if (ytPlaylistSortReversed != null) {
-      this.ytPlaylistSortReversed.value = ytPlaylistSortReversed;
-    }
-    if (displayThirdRow != null) {
-      this.displayThirdRow.value = displayThirdRow;
-    }
-    if (displayThirdItemInEachRow != null) {
-      this.displayThirdItemInEachRow.value = displayThirdItemInEachRow;
-    }
-    if (trackTileSeparator != null) {
-      this.trackTileSeparator.value = trackTileSeparator;
-    }
-    if (indexMinDurationInSec != null) {
-      this.indexMinDurationInSec.value = indexMinDurationInSec;
-    }
-    if (indexMinFileSizeInB != null) {
-      this.indexMinFileSizeInB.value = indexMinFileSizeInB;
-    }
+    if (tracksSort != null) this.tracksSort.value = tracksSort;
+    if (tracksSortReversed != null) this.tracksSortReversed.value = tracksSortReversed;
+    if (tracksSortSearch != null) this.tracksSortSearch.value = tracksSortSearch;
+    if (tracksSortSearchReversed != null) this.tracksSortSearchReversed.value = tracksSortSearchReversed;
+    if (tracksSortSearchIsAuto != null) this.tracksSortSearchIsAuto.value = tracksSortSearchIsAuto;
+    if (albumSort != null) this.albumSort.value = albumSort;
+    if (albumSortReversed != null) this.albumSortReversed.value = albumSortReversed;
+    if (artistSort != null) this.artistSort.value = artistSort;
+    if (artistSortReversed != null) this.artistSortReversed.value = artistSortReversed;
+    if (genreSort != null) this.genreSort.value = genreSort;
+    if (genreSortReversed != null) this.genreSortReversed.value = genreSortReversed;
+    if (playlistSort != null) this.playlistSort.value = playlistSort;
+    if (playlistSortReversed != null) this.playlistSortReversed.value = playlistSortReversed;
+    if (ytPlaylistSort != null) this.ytPlaylistSort.value = ytPlaylistSort;
+    if (ytPlaylistSortReversed != null) this.ytPlaylistSortReversed.value = ytPlaylistSortReversed;
+    if (displayThirdRow != null) this.displayThirdRow.value = displayThirdRow;
+    if (displayThirdItemInEachRow != null) this.displayThirdItemInEachRow.value = displayThirdItemInEachRow;
+    if (trackTileSeparator != null) this.trackTileSeparator.value = trackTileSeparator;
+    if (indexMinDurationInSec != null) this.indexMinDurationInSec.value = indexMinDurationInSec;
+    if (indexMinFileSizeInB != null) this.indexMinFileSizeInB.value = indexMinFileSizeInB;
     if (trackSearchFilter != null) {
       trackSearchFilter.loop((f, index) {
         if (!this.trackSearchFilter.contains(f)) {
@@ -1146,33 +902,15 @@ class SettingsController with SettingsFileWriter {
         }
       });
     }
-    if (preventDuplicatedTracks != null) {
-      this.preventDuplicatedTracks.value = preventDuplicatedTracks;
-    }
-    if (respectNoMedia != null) {
-      this.respectNoMedia.value = respectNoMedia;
-    }
-    if (defaultBackupLocation != null) {
-      this.defaultBackupLocation.value = defaultBackupLocation;
-    }
-    if (autoBackupIntervalDays != null) {
-      this.autoBackupIntervalDays.value = autoBackupIntervalDays;
-    }
-    if (defaultFolderStartupLocation != null) {
-      this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
-    }
-    if (ytDownloadLocation != null) {
-      this.ytDownloadLocation.value = ytDownloadLocation;
-    }
-    if (enableFoldersHierarchy != null) {
-      this.enableFoldersHierarchy.value = enableFoldersHierarchy;
-    }
-    if (displayArtistBeforeTitle != null) {
-      this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
-    }
-    if (heatmapListensView != null) {
-      this.heatmapListensView.value = heatmapListensView;
-    }
+    if (preventDuplicatedTracks != null) this.preventDuplicatedTracks.value = preventDuplicatedTracks;
+    if (respectNoMedia != null) this.respectNoMedia.value = respectNoMedia;
+    if (defaultBackupLocation != null) this.defaultBackupLocation.value = defaultBackupLocation;
+    if (autoBackupIntervalDays != null) this.autoBackupIntervalDays.value = autoBackupIntervalDays;
+    if (defaultFolderStartupLocation != null) this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
+    if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
+    if (enableFoldersHierarchy != null) this.enableFoldersHierarchy.value = enableFoldersHierarchy;
+    if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
+    if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
     if (backupItemslist != null) {
       backupItemslist.loop((d, index) {
         if (!this.backupItemslist.contains(d)) {
@@ -1187,217 +925,56 @@ class SettingsController with SettingsFileWriter {
         }
       });
     }
-    if (enableVideoPlayback != null) {
-      this.enableVideoPlayback.value = enableVideoPlayback;
-    }
-    if (enableLyrics != null) {
-      this.enableLyrics.value = enableLyrics;
-    }
-    if (videoPlaybackSource != null) {
-      this.videoPlaybackSource.value = videoPlaybackSource;
-    }
-    if (animatingThumbnailScaleMultiplier != null) {
-      this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;
-    }
-    if (animatingThumbnailIntensity != null) {
-      this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
-    }
-    if (animatingThumbnailInversed != null) {
-      this.animatingThumbnailInversed.value = animatingThumbnailInversed;
-    }
-    if (enablePartyModeInMiniplayer != null) {
-      this.enablePartyModeInMiniplayer.value = enablePartyModeInMiniplayer;
-    }
-    if (enablePartyModeColorSwap != null) {
-      this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
-    }
-    if (enableMiniplayerParticles != null) {
-      this.enableMiniplayerParticles.value = enableMiniplayerParticles;
-    }
-    if (enableMiniplayerParallaxEffect != null) {
-      this.enableMiniplayerParallaxEffect.value = enableMiniplayerParallaxEffect;
-    }
-    if (forceMiniplayerTrackColor != null) {
-      this.forceMiniplayerTrackColor.value = forceMiniplayerTrackColor;
-    }
-    if (isTrackPlayedSecondsCount != null) {
-      this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
-    }
-    if (isTrackPlayedPercentageCount != null) {
-      this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
-    }
-    if (displayFavouriteIconInListTile != null) {
-      this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
-    }
-    if (editTagsKeepFileDates != null) {
-      this.editTagsKeepFileDates.value = editTagsKeepFileDates;
-    }
-    if (downloadFilesWriteUploadDate != null) {
-      this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
-    }
-    if (downloadFilesKeepCachedVersions != null) {
-      this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
-    }
-    if (enablePip != null) {
-      this.enablePip.value = enablePip;
-    }
-    if (playerInfiniyQueueOnNextPrevious != null) {
-      this.playerInfiniyQueueOnNextPrevious.value = playerInfiniyQueueOnNextPrevious;
-    }
-    if (displayRemainingDurInsteadOfTotal != null) {
-      this.displayRemainingDurInsteadOfTotal.value = displayRemainingDurInsteadOfTotal;
-    }
-    if (pickColorsFromDeviceWallpaper != null) {
-      this.pickColorsFromDeviceWallpaper.value = pickColorsFromDeviceWallpaper;
-    }
-    if (waveformTotalBars != null) {
-      this.waveformTotalBars.value = waveformTotalBars;
-    }
-    if (videosMaxCacheInMB != null) {
-      this.videosMaxCacheInMB.value = videosMaxCacheInMB;
-    }
-    if (imagesMaxCacheInMB != null) {
-      this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
-    }
-    if (ytMiniplayerDimAfterSeconds != null) {
-      this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
-    }
-    if (ytMiniplayerDimOpacity != null) {
-      this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
-    }
-    if (playerVolume != null) {
-      this.playerVolume.value = playerVolume;
-    }
-    if (playerSpeed != null) {
-      this.playerSpeed.value = playerSpeed;
-    }
-    if (playerPitch != null) {
-      this.playerPitch.value = playerPitch;
-    }
-    if (seekDurationInSeconds != null) {
-      this.seekDurationInSeconds.value = seekDurationInSeconds;
-    }
-    if (seekDurationInPercentage != null) {
-      this.seekDurationInPercentage.value = seekDurationInPercentage;
-    }
-    if (isSeekDurationPercentage != null) {
-      this.isSeekDurationPercentage.value = isSeekDurationPercentage;
-    }
-    if (hideStatusBarInExpandedMiniplayer != null) {
-      this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
-    }
-    if (playerPlayFadeDurInMilli != null) {
-      this.playerPlayFadeDurInMilli.value = playerPlayFadeDurInMilli;
-    }
-    if (playerPauseFadeDurInMilli != null) {
-      this.playerPauseFadeDurInMilli.value = playerPauseFadeDurInMilli;
-    }
-    if (minTrackDurationToRestoreLastPosInMinutes != null) {
-      this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
-    }
-    if (interruptionResumeThresholdMin != null) {
-      this.interruptionResumeThresholdMin.value = interruptionResumeThresholdMin;
-    }
-    if (volume0ResumeThresholdMin != null) {
-      this.volume0ResumeThresholdMin.value = volume0ResumeThresholdMin;
-    }
-    if (enableCrossFade != null) {
-      this.enableCrossFade.value = enableCrossFade;
-    }
-    if (crossFadeDurationMS != null) {
-      this.crossFadeDurationMS.value = crossFadeDurationMS;
-    }
-    if (crossFadeAutoTriggerSeconds != null) {
-      this.crossFadeAutoTriggerSeconds.value = crossFadeAutoTriggerSeconds;
-    }
-    if (displayFavouriteButtonInNotification != null) {
-      this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
-    }
-    if (enableSearchCleanup != null) {
-      this.enableSearchCleanup.value = enableSearchCleanup;
-    }
-    if (enableBottomNavBar != null) {
-      this.enableBottomNavBar.value = enableBottomNavBar;
-    }
-    if (ytPreferNewComments != null) {
-      this.ytPreferNewComments.value = ytPreferNewComments;
-    }
+    if (enableVideoPlayback != null) this.enableVideoPlayback.value = enableVideoPlayback;
+    if (enableLyrics != null) this.enableLyrics.value = enableLyrics;
+    if (videoPlaybackSource != null) this.videoPlaybackSource.value = videoPlaybackSource;
+    if (animatingThumbnailScaleMultiplier != null) this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;
+    if (animatingThumbnailIntensity != null) this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
+    if (animatingThumbnailInversed != null) this.animatingThumbnailInversed.value = animatingThumbnailInversed;
+    if (enablePartyModeInMiniplayer != null) this.enablePartyModeInMiniplayer.value = enablePartyModeInMiniplayer;
+    if (enablePartyModeColorSwap != null) this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
+    if (enableMiniplayerParticles != null) this.enableMiniplayerParticles.value = enableMiniplayerParticles;
+    if (enableMiniplayerParallaxEffect != null) this.enableMiniplayerParallaxEffect.value = enableMiniplayerParallaxEffect;
+    if (forceMiniplayerTrackColor != null) this.forceMiniplayerTrackColor.value = forceMiniplayerTrackColor;
+    if (isTrackPlayedSecondsCount != null) this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
+    if (isTrackPlayedPercentageCount != null) this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
+    if (displayFavouriteIconInListTile != null) this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
+    if (editTagsKeepFileDates != null) this.editTagsKeepFileDates.value = editTagsKeepFileDates;
+    if (downloadFilesWriteUploadDate != null) this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
+    if (downloadFilesKeepCachedVersions != null) this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
+    if (enablePip != null) this.enablePip.value = enablePip;
+    if (pickColorsFromDeviceWallpaper != null) this.pickColorsFromDeviceWallpaper.value = pickColorsFromDeviceWallpaper;
+    if (waveformTotalBars != null) this.waveformTotalBars.value = waveformTotalBars;
+    if (videosMaxCacheInMB != null) this.videosMaxCacheInMB.value = videosMaxCacheInMB;
+    if (imagesMaxCacheInMB != null) this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
+    if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
+    if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
 
-    if (ytAutoExtractVideoTagsFromInfo != null) {
-      this.ytAutoExtractVideoTagsFromInfo.value = ytAutoExtractVideoTagsFromInfo;
-    }
-    if (playerPlayOnNextPrev != null) {
-      this.playerPlayOnNextPrev.value = playerPlayOnNextPrev;
-    }
-    if (playerSkipSilenceEnabled != null) {
-      this.playerSkipSilenceEnabled.value = playerSkipSilenceEnabled;
-    }
-    if (playerShuffleAllTracks != null) {
-      this.playerShuffleAllTracks.value = playerShuffleAllTracks;
-    }
-    if (playerPauseOnVolume0 != null) {
-      this.playerPauseOnVolume0.value = playerPauseOnVolume0;
-    }
-    if (playerResumeAfterOnVolume0Pause != null) {
-      this.playerResumeAfterOnVolume0Pause.value = playerResumeAfterOnVolume0Pause;
-    }
-    if (playerResumeAfterWasInterrupted != null) {
-      this.playerResumeAfterWasInterrupted.value = playerResumeAfterWasInterrupted;
-    }
-    if (jumpToFirstTrackAfterFinishingQueue != null) {
-      this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
-    }
-    if (displayAudioInfoMiniplayer != null) {
-      this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;
-    }
-    if (showUnknownFieldsInTrackInfoDialog != null) {
-      this.showUnknownFieldsInTrackInfoDialog.value = showUnknownFieldsInTrackInfoDialog;
-    }
-    if (extractFeatArtistFromTitle != null) {
-      this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
-    }
-    if (groupArtworksByAlbum != null) {
-      this.groupArtworksByAlbum.value = groupArtworksByAlbum;
-    }
-    if (enableM3USync != null) {
-      this.enableM3USync.value = enableM3USync;
-    }
-    if (canAskForBatteryOptimizations != null) {
-      this.canAskForBatteryOptimizations.value = canAskForBatteryOptimizations;
-    }
-    if (prioritizeEmbeddedLyrics != null) {
-      this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
-    }
-    if (swipeableDrawer != null) {
-      this.swipeableDrawer.value = swipeableDrawer;
-    }
-    if (dismissibleMiniplayer != null) {
-      this.dismissibleMiniplayer.value = dismissibleMiniplayer;
-    }
-    if (enableClipboardMonitoring != null) {
-      this.enableClipboardMonitoring.value = enableClipboardMonitoring;
-    }
-    if (ytIsAudioOnlyMode != null) {
-      this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
-    }
-    if (ytRememberAudioOnly != null) {
-      this.ytRememberAudioOnly.value = ytRememberAudioOnly;
-    }
-    if (ytTopComments != null) {
-      this.ytTopComments.value = ytTopComments;
-    }
-    if (artworkGestureScale != null) {
-      this.artworkGestureScale.value = artworkGestureScale;
-    }
-    if (artworkGestureDoubleTapLRC != null) {
-      this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
-    }
-    if (previousButtonReplays != null) {
-      this.previousButtonReplays.value = previousButtonReplays;
-    }
-    if (refreshOnStartup != null) {
-      this.refreshOnStartup.value = refreshOnStartup;
-    }
+    if (hideStatusBarInExpandedMiniplayer != null) this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
+
+    if (displayFavouriteButtonInNotification != null) this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
+    if (enableSearchCleanup != null) this.enableSearchCleanup.value = enableSearchCleanup;
+    if (enableBottomNavBar != null) this.enableBottomNavBar.value = enableBottomNavBar;
+    if (ytPreferNewComments != null) this.ytPreferNewComments.value = ytPreferNewComments;
+
+    if (ytAutoExtractVideoTagsFromInfo != null) this.ytAutoExtractVideoTagsFromInfo.value = ytAutoExtractVideoTagsFromInfo;
+
+    if (displayAudioInfoMiniplayer != null) this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;
+    if (showUnknownFieldsInTrackInfoDialog != null) this.showUnknownFieldsInTrackInfoDialog.value = showUnknownFieldsInTrackInfoDialog;
+    if (extractFeatArtistFromTitle != null) this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
+    if (groupArtworksByAlbum != null) this.groupArtworksByAlbum.value = groupArtworksByAlbum;
+    if (enableM3USync != null) this.enableM3USync.value = enableM3USync;
+    if (prioritizeEmbeddedLyrics != null) this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
+    if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
+    if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;
+    if (enableClipboardMonitoring != null) this.enableClipboardMonitoring.value = enableClipboardMonitoring;
+    if (ytIsAudioOnlyMode != null) this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
+    if (ytRememberAudioOnly != null) this.ytRememberAudioOnly.value = ytRememberAudioOnly;
+    if (ytTopComments != null) this.ytTopComments.value = ytTopComments;
+    if (artworkGestureScale != null) this.artworkGestureScale.value = artworkGestureScale;
+    if (artworkGestureDoubleTapLRC != null) this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
+    if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
+    if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d, index) {
         if (!this.tagFieldsToEdit.contains(d)) {
@@ -1405,72 +982,28 @@ class SettingsController with SettingsFileWriter {
         }
       });
     }
-    if (wakelockMode != null) {
-      this.wakelockMode.value = wakelockMode;
-    }
-    if (localVideoMatchingType != null) {
-      this.localVideoMatchingType.value = localVideoMatchingType;
-    }
-    if (localVideoMatchingCheckSameDir != null) {
-      this.localVideoMatchingCheckSameDir.value = localVideoMatchingCheckSameDir;
-    }
-    if (playerRepeatMode != null) {
-      this.playerRepeatMode.value = playerRepeatMode;
-    }
-    if (trackPlayMode != null) {
-      this.trackPlayMode.value = trackPlayMode;
-    }
-    if (onNotificationTapAction != null) {
-      this.onNotificationTapAction.value = onNotificationTapAction;
-    }
-    if (onYoutubeLinkOpen != null) {
-      this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
-    }
-    if (performanceMode != null) {
-      this.performanceMode.value = performanceMode;
-    }
-    if (killPlayerAfterDismissingAppMode != null) {
-      this.killPlayerAfterDismissingAppMode.value = killPlayerAfterDismissingAppMode;
-    }
-    if (floatingActionButton != null) {
-      this.floatingActionButton.value = floatingActionButton;
-    }
-    if (ytInitialHomePage != null) {
-      this.ytInitialHomePage.value = ytInitialHomePage;
-    }
-    if (ytTapToSeek != null) {
-      this.ytTapToSeek.value = ytTapToSeek;
-    }
-    if (ytDragToSeek != null) {
-      this.ytDragToSeek.value = ytDragToSeek;
-    }
-    if (mostPlayedTimeRange != null) {
-      this.mostPlayedTimeRange.value = mostPlayedTimeRange;
-    }
-    if (mostPlayedCustomDateRange != null) {
-      this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
-    }
-    if (mostPlayedCustomisStartOfDay != null) {
-      this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;
-    }
-    if (ytMostPlayedTimeRange != null) {
-      this.ytMostPlayedTimeRange.value = ytMostPlayedTimeRange;
-    }
-    if (ytMostPlayedCustomDateRange != null) {
-      this.ytMostPlayedCustomDateRange.value = ytMostPlayedCustomDateRange;
-    }
-    if (ytMostPlayedCustomisStartOfDay != null) {
-      this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
-    }
-    if (lastPlayedIndices != null) {
-      for (final e in lastPlayedIndices.entries) {
-        this.lastPlayedIndices[e.key] = e.value;
-      }
-    }
+    if (wakelockMode != null) this.wakelockMode.value = wakelockMode;
+    if (localVideoMatchingType != null) this.localVideoMatchingType.value = localVideoMatchingType;
+    if (localVideoMatchingCheckSameDir != null) this.localVideoMatchingCheckSameDir.value = localVideoMatchingCheckSameDir;
 
-    if (didSupportNamida != null) {
-      this.didSupportNamida = didSupportNamida;
-    }
+    if (trackPlayMode != null) this.trackPlayMode.value = trackPlayMode;
+    if (onNotificationTapAction != null) this.onNotificationTapAction.value = onNotificationTapAction;
+    if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
+    if (performanceMode != null) this.performanceMode.value = performanceMode;
+
+    if (floatingActionButton != null) this.floatingActionButton.value = floatingActionButton;
+    if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
+    if (ytTapToSeek != null) this.ytTapToSeek.value = ytTapToSeek;
+    if (ytDragToSeek != null) this.ytDragToSeek.value = ytDragToSeek;
+    if (mostPlayedTimeRange != null) this.mostPlayedTimeRange.value = mostPlayedTimeRange;
+    if (mostPlayedCustomDateRange != null) this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
+    if (mostPlayedCustomisStartOfDay != null) this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;
+    if (ytMostPlayedTimeRange != null) this.ytMostPlayedTimeRange.value = ytMostPlayedTimeRange;
+    if (ytMostPlayedCustomDateRange != null) this.ytMostPlayedCustomDateRange.value = ytMostPlayedCustomDateRange;
+    if (ytMostPlayedCustomisStartOfDay != null) this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
+
+    if (didSupportNamida != null) this.didSupportNamida = didSupportNamida;
+    if (canAskForBatteryOptimizations != null) this.canAskForBatteryOptimizations = canAskForBatteryOptimizations;
     _writeToStorage();
   }
 
@@ -1481,18 +1014,10 @@ class SettingsController with SettingsFileWriter {
     TagField? tagFieldsToEdit1,
     HomePageItems? homePageItem1,
   }) {
-    if (libraryTab1 != null) {
-      libraryTabs.insert(index, libraryTab1);
-    }
-    if (homePageItem1 != null) {
-      homePageItems.insert(index, homePageItem1);
-    }
-    if (youtubeVideoQualities1 != null) {
-      youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
-    }
-    if (tagFieldsToEdit1 != null) {
-      tagFieldsToEdit.insertSafe(index, tagFieldsToEdit1);
-    }
+    if (libraryTab1 != null) libraryTabs.insert(index, libraryTab1);
+    if (homePageItem1 != null) homePageItems.insert(index, homePageItem1);
+    if (youtubeVideoQualities1 != null) youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
+    if (tagFieldsToEdit1 != null) tagFieldsToEdit.insertSafe(index, tagFieldsToEdit1);
 
     _writeToStorage();
   }
@@ -1524,112 +1049,39 @@ class SettingsController with SettingsFileWriter {
     TagField? tagFieldsToEdit1,
     List<TagField>? tagFieldsToEditAll,
   }) {
-    if (trackArtistsSeparator != null) {
-      trackArtistsSeparators.remove(trackArtistsSeparator);
-    }
-    if (trackGenresSeparator != null) {
-      trackGenresSeparators.remove(trackGenresSeparator);
-    }
-    if (trackArtistsSeparatorsBlacklist1 != null) {
-      trackArtistsSeparatorsBlacklist.remove(trackArtistsSeparatorsBlacklist1);
-    }
-    if (trackGenresSeparatorsBlacklist1 != null) {
-      trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
-    }
-    if (trackSearchFilter1 != null) {
-      trackSearchFilter.remove(trackSearchFilter1);
-    }
-    if (trackSearchFilterAll != null) {
-      trackSearchFilterAll.loop((f, index) {
-        trackSearchFilter.remove(f);
-      });
-    }
-    if (playlistSearchFilter1 != null) {
-      playlistSearchFilter.remove(playlistSearchFilter1);
-    }
+    if (trackArtistsSeparator != null) trackArtistsSeparators.remove(trackArtistsSeparator);
+    if (trackGenresSeparator != null) trackGenresSeparators.remove(trackGenresSeparator);
+    if (trackArtistsSeparatorsBlacklist1 != null) trackArtistsSeparatorsBlacklist.remove(trackArtistsSeparatorsBlacklist1);
+    if (trackGenresSeparatorsBlacklist1 != null) trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
+    if (trackSearchFilter1 != null) trackSearchFilter.remove(trackSearchFilter1);
+    if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f, index) => trackSearchFilter.remove(f));
+    if (playlistSearchFilter1 != null) playlistSearchFilter.remove(playlistSearchFilter1);
     if (playlistSearchFilterAll != null) {
-      playlistSearchFilterAll.loop((f, index) {
-        playlistSearchFilter.remove(f);
-      });
+      playlistSearchFilterAll.loop((f, index) => playlistSearchFilter.remove(f));
     }
-    if (directoriesToScan1 != null) {
-      directoriesToScan.remove(directoriesToScan1);
-    }
-    if (directoriesToScanAll != null) {
-      directoriesToScanAll.loop((f, index) {
-        directoriesToScan.remove(f);
-      });
-    }
-    if (directoriesToExclude1 != null) {
-      directoriesToExclude.remove(directoriesToExclude1);
-    }
-    if (directoriesToExcludeAll != null) {
-      directoriesToExcludeAll.loop((f, index) {
-        directoriesToExclude.remove(f);
-      });
-    }
-    if (libraryTab1 != null) {
-      libraryTabs.remove(libraryTab1);
-    }
-    if (libraryTabsAll != null) {
-      libraryTabsAll.loop((t, index) {
-        libraryTabs.remove(t);
-      });
-    }
-    if (homePageItem1 != null) {
-      homePageItems.remove(homePageItem1);
-    }
-    if (homePageItemsAll != null) {
-      homePageItemsAll.loop((t, index) {
-        homePageItems.remove(t);
-      });
-    }
-    if (activeSearchMediaTypes1 != null) {
-      activeSearchMediaTypes.remove(activeSearchMediaTypes1);
-    }
-    if (albumIdentifiers1 != null) {
-      albumIdentifiers.remove(albumIdentifiers1);
-    }
-    if (albumIdentifiersAll != null) {
-      albumIdentifiersAll.loop((t, index) {
-        albumIdentifiers.remove(t);
-      });
-    }
-    if (backupItemslist1 != null) {
-      backupItemslist.remove(backupItemslist1);
-    }
-    if (backupItemslistAll != null) {
-      backupItemslistAll.loop((t, index) {
-        backupItemslist.remove(t);
-      });
-    }
-    if (youtubeVideoQualities1 != null) {
-      youtubeVideoQualities.remove(youtubeVideoQualities1);
-    }
-    if (youtubeVideoQualitiesAll != null) {
-      youtubeVideoQualitiesAll.loop((t, index) {
-        youtubeVideoQualities.remove(t);
-      });
-    }
-    if (tagFieldsToEdit1 != null) {
-      tagFieldsToEdit.remove(tagFieldsToEdit1);
-    }
-    if (tagFieldsToEditAll != null) {
-      tagFieldsToEditAll.loop((t, index) {
-        tagFieldsToEdit.remove(t);
-      });
-    }
+    if (directoriesToScan1 != null) directoriesToScan.remove(directoriesToScan1);
+    if (directoriesToScanAll != null) directoriesToScanAll.loop((f, index) => directoriesToScan.remove(f));
+    if (directoriesToExclude1 != null) directoriesToExclude.remove(directoriesToExclude1);
+    if (directoriesToExcludeAll != null) directoriesToExcludeAll.loop((f, index) => directoriesToExclude.remove(f));
+    if (libraryTab1 != null) libraryTabs.remove(libraryTab1);
+    if (libraryTabsAll != null) libraryTabsAll.loop((t, index) => libraryTabs.remove(t));
+    if (homePageItem1 != null) homePageItems.remove(homePageItem1);
+    if (homePageItemsAll != null) homePageItemsAll.loop((t, index) => homePageItems.remove(t));
+    if (activeSearchMediaTypes1 != null) activeSearchMediaTypes.remove(activeSearchMediaTypes1);
+    if (albumIdentifiers1 != null) albumIdentifiers.remove(albumIdentifiers1);
+    if (albumIdentifiersAll != null) albumIdentifiersAll.loop((t, index) => albumIdentifiers.remove(t));
+    if (backupItemslist1 != null) backupItemslist.remove(backupItemslist1);
+    if (backupItemslistAll != null) backupItemslistAll.loop((t, index) => backupItemslist.remove(t));
+    if (youtubeVideoQualities1 != null) youtubeVideoQualities.remove(youtubeVideoQualities1);
+    if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t, index) => youtubeVideoQualities.remove(t));
+    if (tagFieldsToEdit1 != null) tagFieldsToEdit.remove(tagFieldsToEdit1);
+    if (tagFieldsToEditAll != null) tagFieldsToEditAll.loop((t, index) => tagFieldsToEdit.remove(t));
 
     _writeToStorage();
   }
 
   void updateTrackItemList(TrackTilePosition p, TrackTileItem i) {
     trackItem[p] = i;
-    _writeToStorage();
-  }
-
-  void updatePlayerInterruption(InterruptionType type, InterruptionAction action) {
-    playerOnInterrupted[type] = action;
     _writeToStorage();
   }
 

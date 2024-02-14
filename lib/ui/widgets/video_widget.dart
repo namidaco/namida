@@ -1112,7 +1112,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     child: TapDetector(
                                       behavior: HitTestBehavior.translucent,
                                       onTap: () {
-                                        settings.save(displayRemainingDurInsteadOfTotal: !settings.displayRemainingDurInsteadOfTotal.value);
+                                        settings.player.save(displayRemainingDurInsteadOfTotal: !settings.player.displayRemainingDurInsteadOfTotal.value);
                                       },
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -1130,7 +1130,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             () {
                                               int totalDurMs = Player.inst.getCurrentVideoDuration.inMilliseconds;
                                               String prefix = '';
-                                              if (settings.displayRemainingDurInsteadOfTotal.value) {
+                                              if (settings.player.displayRemainingDurInsteadOfTotal.value) {
                                                 totalDurMs = totalDurMs - Player.inst.nowPlayingPosition;
                                                 prefix = '-';
                                               }

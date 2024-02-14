@@ -21,7 +21,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/equalizer_settings.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
@@ -113,7 +112,8 @@ void main() async {
   ]);
 
   await Future.wait([
-    EqualizerSettings.inst.prepareSettingsFile(),
+    settings.equalizer.prepareSettingsFile(),
+    settings.player.prepareSettingsFile(),
     settings.prepareSettingsFile(),
   ]);
 
@@ -181,7 +181,7 @@ void main() async {
 
 void _initLifeCycle() {
   NamidaChannel.inst.addOnDestroy('main', () async {
-    final mode = settings.killPlayerAfterDismissingAppMode.value;
+    final mode = settings.player.killAfterDismissingApp.value;
     if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.isPlaying)) {
       await Player.inst.pause();
       await Player.inst.dispose();
@@ -329,7 +329,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
   final granted = await Permission.ignoreBatteryOptimizations.isGranted;
   if (granted) return true;
   settings.save(canAskForBatteryOptimizations: true);
-  if (!settings.canAskForBatteryOptimizations.value) return false;
+  if (!settings.canAskForBatteryOptimizations) return false;
 
   snackyy(
     message: lang.IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE,

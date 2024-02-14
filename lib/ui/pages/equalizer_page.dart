@@ -6,7 +6,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/equalizer_settings.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -66,8 +65,8 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
   void _resetPreset({bool writeSettings = true}) {
     _activePresetCustom.value = true;
     _activePreset.value = '';
-    if (writeSettings && EqualizerSettings.inst.preset != null) {
-      EqualizerSettings.inst.save(preset: null, resetPreset: true);
+    if (writeSettings && settings.equalizer.preset != null) {
+      settings.equalizer.save(preset: null, resetPreset: true);
     }
   }
 
@@ -103,7 +102,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                       final enabled = snapshot.data ?? false;
                       return NamidaInkWell(
                         onTap: () {
-                          EqualizerSettings.inst.save(equalizerEnabled: !_equalizer.enabled);
+                          settings.equalizer.save(equalizerEnabled: !_equalizer.enabled);
                           _equalizer.setEnabled(!_equalizer.enabled);
                         },
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -120,12 +119,13 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                 tooltip: lang.TAP_TO_SEEK,
                                 icon: null,
                                 iconSize: 20.0,
-                                onPressed: () => EqualizerSettings.inst.save(uiTapToUpdate: !EqualizerSettings.inst.uiTapToUpdate.value),
+                                onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
                                 child: Obx(
                                   () => StackedIcon(
                                     baseIcon: Broken.mouse_1,
-                                    secondaryIcon: EqualizerSettings.inst.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
-                                    secondaryIconSize: 12.0,
+                                    secondaryIcon: settings.equalizer.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
+                                    secondaryIconSize: 10.0,
+                                    iconSize: 20.0,
                                   ),
                                 ),
                               ),
@@ -153,7 +153,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                   EqualizerControls(
                     equalizer: _equalizer,
                     onGainSetCallback: _resetPreset,
-                    tapToUpdate: () => EqualizerSettings.inst.uiTapToUpdate.value,
+                    tapToUpdate: () => settings.equalizer.uiTapToUpdate.value,
                   ),
                   const SizedBox(height: 12.0),
                   if (_equalizerPresets.isNotEmpty) ...[
@@ -191,7 +191,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                     onTap: () async {
                                       _activePreset.value = e.value;
                                       _activePresetCustom.value = false;
-                                      EqualizerSettings.inst.save(preset: e.key);
+                                      settings.equalizer.save(preset: e.key);
                                       final newPreset = await _equalizer.setPreset(e.key);
                                       if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
                                     },
@@ -218,7 +218,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                           final targetGain = snapshot.data ?? 0.0;
                           return NamidaInkWell(
                             onTap: () {
-                              EqualizerSettings.inst.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
+                              settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
                               _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
                             },
                             child: Column(
@@ -230,7 +230,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                   title: lang.LOUDNESS_ENHANCER,
                                   value: targetGain,
                                   restoreDefault: () {
-                                    EqualizerSettings.inst.save(loudnessEnhancer: 0.0);
+                                    settings.equalizer.save(loudnessEnhancer: 0.0);
                                     _loudnessEnhancer.setTargetGain(0.0);
                                   },
                                   trailing: CustomSwitch(
@@ -243,7 +243,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                   min: 0,
                                   max: 2,
                                   onChanged: (value) {
-                                    EqualizerSettings.inst.save(loudnessEnhancer: value - 1.0);
+                                    settings.equalizer.save(loudnessEnhancer: value - 1.0);
                                     _loudnessEnhancer.setTargetGain(value - 1.0);
                                   },
                                 ),
@@ -259,19 +259,19 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                     () => _SliderTextWidget(
                       icon: Broken.airpods,
                       title: lang.PITCH,
-                      value: settings.playerPitch.value,
+                      value: settings.player.pitch.value,
                       restoreDefault: () {
                         Player.inst.setPlayerPitch(1.0);
-                        settings.save(playerPitch: 1.0);
+                        settings.player.save(pitch: 1.0);
                       },
                     ),
                   ),
                   Obx(
                     () => _CuteSlider(
-                      value: settings.playerPitch.value,
+                      value: settings.player.pitch.value,
                       onChanged: (value) {
                         Player.inst.setPlayerPitch(value);
-                        settings.save(playerPitch: value);
+                        settings.player.save(pitch: value);
                       },
                     ),
                   ),
@@ -280,41 +280,41 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                     () => _SliderTextWidget(
                       icon: Broken.forward,
                       title: lang.SPEED,
-                      value: settings.playerSpeed.value,
+                      value: settings.player.speed.value,
                       restoreDefault: () {
                         Player.inst.setPlayerSpeed(1.0);
-                        settings.save(playerSpeed: 1.0);
+                        settings.player.save(speed: 1.0);
                       },
                     ),
                   ),
                   Obx(
                     () => _CuteSlider(
-                      value: settings.playerSpeed.value,
+                      value: settings.player.speed.value,
                       onChanged: (value) {
                         Player.inst.setPlayerSpeed(value);
-                        settings.save(playerSpeed: value);
+                        settings.player.save(speed: value);
                       },
                     ),
                   ),
                   const SizedBox(height: 12.0),
                   Obx(
                     () => _SliderTextWidget(
-                      icon: settings.playerVolume.value > 0 ? Broken.volume_up : Broken.volume_slash,
+                      icon: settings.player.volume.value > 0 ? Broken.volume_up : Broken.volume_slash,
                       title: lang.VOLUME,
-                      value: settings.playerVolume.value,
+                      value: settings.player.volume.value,
                       restoreDefault: () {
                         Player.inst.setPlayerVolume(1.0);
-                        settings.save(playerVolume: 1.0);
+                        settings.player.save(volume: 1.0);
                       },
                     ),
                   ),
                   Obx(
                     () => _CuteSlider(
                       max: 1.0,
-                      value: settings.playerVolume.value,
+                      value: settings.player.volume.value,
                       onChanged: (value) {
                         Player.inst.setPlayerVolume(value);
-                        settings.save(playerVolume: value);
+                        settings.player.save(volume: value);
                       },
                     ),
                   ),
@@ -447,13 +447,13 @@ class EqualizerControls extends StatelessWidget {
 
   void _onGainSet(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
     final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels);
-    EqualizerSettings.inst.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
+    settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newVal);
     onGainSetCallback();
   }
 
   void _onGainSetNoClamp(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    EqualizerSettings.inst.save(equalizerValue: MapEntry(band.centerFrequency, newValue));
+    settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newValue));
     band.setGain(newValue);
     onGainSetCallback();
   }

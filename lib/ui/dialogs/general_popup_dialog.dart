@@ -1139,7 +1139,7 @@ Future<void> showGeneralPopupDialog(
                                   icon: Broken.cd,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    settings.save(playerRepeatMode: RepeatMode.forNtimes);
+                                    settings.player.save(repeatMode: RepeatMode.forNtimes);
                                     Player.inst.updateNumberOfRepeats(numberOfRepeats.value);
                                   },
                                   trailing: Row(

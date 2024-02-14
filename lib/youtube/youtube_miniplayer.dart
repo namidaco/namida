@@ -145,7 +145,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               ),
               onDismiss: settings.dismissibleMiniplayer.value ? () async => await Player.inst.clearQueue() : null,
               onDismissing: (dismissPercentage) {
-                Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.playerVolume.value));
+                Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.player.volume.value));
               },
               onHeightChange: (percentage) => MiniPlayerController.inst.animateMiniplayer(percentage),
               constantChildren: [
@@ -251,7 +251,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                           ),
                                                         ),
                                                         onTap: () {
-                                                          settings.save(playerRepeatMode: RepeatMode.forNtimes);
+                                                          settings.player.save(repeatMode: RepeatMode.forNtimes);
                                                           Player.inst.updateNumberOfRepeats(_numberOfRepeats.value);
                                                         },
                                                         trailing: Row(

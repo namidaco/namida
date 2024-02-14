@@ -313,10 +313,10 @@ class PlaybackSettings extends SettingSubpageProvider {
             title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
             icon: Broken.forbidden_2,
             onTap: () {
-              final element = settings.killPlayerAfterDismissingAppMode.value.nextElement(KillAppMode.values);
-              settings.save(killPlayerAfterDismissingAppMode: element);
+              final element = settings.player.killAfterDismissingApp.value.nextElement(KillAppMode.values);
+              settings.player.save(killAfterDismissingApp: element);
             },
-            trailingText: settings.killPlayerAfterDismissingAppMode.value.toText(),
+            trailingText: settings.player.killAfterDismissingApp.value.toText(),
           ),
         ),
       ),
@@ -356,10 +356,10 @@ class PlaybackSettings extends SettingSubpageProvider {
             title: lang.SKIP_SILENCE,
             onChanged: (value) async {
               final willBeTrue = !value;
-              settings.save(playerSkipSilenceEnabled: willBeTrue);
+              settings.player.save(skipSilenceEnabled: willBeTrue);
               await Player.inst.setSkipSilenceEnabled(willBeTrue);
             },
-            value: settings.playerSkipSilenceEnabled.value,
+            value: settings.player.skipSilenceEnabled.value,
           ),
         ),
       ),
@@ -369,7 +369,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
           normalRightPadding: true,
-          initiallyExpanded: settings.enableCrossFade.value,
+          initiallyExpanded: settings.player.enableCrossFade.value,
           leading: const StackedIcon(
             baseIcon: Broken.play,
             secondaryIcon: Broken.recovery_convert,
@@ -378,37 +378,39 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           titleText: lang.ENABLE_CROSSFADE_EFFECT,
           onExpansionChanged: (value) {
-            settings.save(enableCrossFade: value);
+            settings.player.save(enableCrossFade: value);
           },
-          trailing: Obx(() => CustomSwitch(active: settings.enableCrossFade.value)),
+          trailing: Obx(() => CustomSwitch(active: settings.player.enableCrossFade.value)),
           children: [
             Obx(
               () {
                 const stepper = 100;
                 const minVal = 100;
                 return CustomListTile(
-                  enabled: settings.enableCrossFade.value,
+                  enabled: settings.player.enableCrossFade.value,
                   icon: Broken.blend_2,
                   title: lang.CROSSFADE_DURATION,
                   trailing: NamidaWheelSlider<int>(
                     totalCount: (10000 - minVal) ~/ stepper,
-                    initValue: settings.crossFadeDurationMS.value ~/ stepper,
+                    initValue: settings.player.crossFadeDurationMS.value ~/ stepper,
                     itemSize: 5,
                     squeeze: 1,
                     onValueChanged: (val) {
                       final v = (val * stepper + minVal);
-                      settings.save(crossFadeDurationMS: v);
+                      settings.player.save(crossFadeDurationMS: v);
                     },
-                    text: settings.crossFadeDurationMS.value >= 1000 ? "${settings.crossFadeDurationMS.value / 1000}s" : "${settings.crossFadeDurationMS.value}ms",
+                    text: settings.player.crossFadeDurationMS.value >= 1000
+                        ? "${settings.player.crossFadeDurationMS.value / 1000}s"
+                        : "${settings.player.crossFadeDurationMS.value}ms",
                   ),
                 );
               },
             ),
             Obx(
               () {
-                final val = settings.crossFadeAutoTriggerSeconds.value;
+                final val = settings.player.crossFadeAutoTriggerSeconds.value;
                 return CustomListTile(
-                  enabled: settings.enableCrossFade.value,
+                  enabled: settings.player.enableCrossFade.value,
                   icon: Broken.blend,
                   title: val == 0 ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$val"),
                   trailing: NamidaWheelSlider<int>(
@@ -417,7 +419,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     itemSize: 7,
                     squeeze: 1.4,
                     onValueChanged: (val) {
-                      settings.save(crossFadeAutoTriggerSeconds: val);
+                      settings.player.save(crossFadeAutoTriggerSeconds: val);
                     },
                     text: "${val}s",
                   ),
@@ -433,7 +435,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
           normalRightPadding: true,
-          initiallyExpanded: settings.enableVolumeFadeOnPlayPause.value,
+          initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value,
           leading: const StackedIcon(
             baseIcon: Broken.play,
             secondaryIcon: Broken.pause,
@@ -442,44 +444,44 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           titleText: lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
           onExpansionChanged: (value) {
-            settings.save(enableVolumeFadeOnPlayPause: value);
-            Player.inst.setVolume(settings.playerVolume.value);
+            settings.player.save(enableVolumeFadeOnPlayPause: value);
+            Player.inst.setVolume(settings.player.volume.value);
           },
-          trailing: Obx(() => CustomSwitch(active: settings.enableVolumeFadeOnPlayPause.value)),
+          trailing: Obx(() => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.value)),
           children: [
             Obx(
               () => CustomListTile(
-                enabled: settings.enableVolumeFadeOnPlayPause.value,
+                enabled: settings.player.enableVolumeFadeOnPlayPause.value,
                 icon: Broken.play,
                 title: lang.PLAY_FADE_DURATION,
                 trailing: NamidaWheelSlider<int>(
                   totalCount: 1900 ~/ 50,
-                  initValue: settings.playerPlayFadeDurInMilli.value ~/ 50,
+                  initValue: settings.player.playFadeDurInMilli.value ~/ 50,
                   itemSize: 2,
                   squeeze: 0.4,
                   onValueChanged: (val) {
                     final v = (val * 50 + 100);
-                    settings.save(playerPlayFadeDurInMilli: v);
+                    settings.player.save(playFadeDurInMilli: v);
                   },
-                  text: "${settings.playerPlayFadeDurInMilli.value}ms",
+                  text: "${settings.player.playFadeDurInMilli.value}ms",
                 ),
               ),
             ),
             Obx(
               () => CustomListTile(
-                enabled: settings.enableVolumeFadeOnPlayPause.value,
+                enabled: settings.player.enableVolumeFadeOnPlayPause.value,
                 icon: Broken.pause,
                 title: lang.PAUSE_FADE_DURATION,
                 trailing: NamidaWheelSlider<int>(
                   totalCount: 1900 ~/ 50,
-                  initValue: settings.playerPauseFadeDurInMilli.value ~/ 50,
+                  initValue: settings.player.pauseFadeDurInMilli.value ~/ 50,
                   itemSize: 2,
                   squeeze: 0.4,
                   onValueChanged: (val) {
                     final v = (val * 50 + 100);
-                    settings.save(playerPauseFadeDurInMilli: v);
+                    settings.player.save(pauseFadeDurInMilli: v);
                   },
-                  text: "${settings.playerPauseFadeDurInMilli.value}ms",
+                  text: "${settings.player.pauseFadeDurInMilli.value}ms",
                 ),
               ),
             ),
@@ -496,8 +498,8 @@ class PlaybackSettings extends SettingSubpageProvider {
               secondaryIcon: Broken.record,
             ),
             title: lang.PLAY_AFTER_NEXT_PREV,
-            onChanged: (value) => settings.save(playerPlayOnNextPrev: !value),
-            value: settings.playerPlayOnNextPrev.value,
+            onChanged: (value) => settings.player.save(playOnNextPrev: !value),
+            value: settings.player.playOnNextPrev.value,
           ),
         ),
       ),
@@ -509,8 +511,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.repeat,
             title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
             subtitle: lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE,
-            onChanged: (value) => settings.save(playerInfiniyQueueOnNextPrevious: !value),
-            value: settings.playerInfiniyQueueOnNextPrevious.value,
+            onChanged: (value) => settings.player.save(infiniyQueueOnNextPrevious: !value),
+            value: settings.player.infiniyQueueOnNextPrevious.value,
           ),
         ),
       ),
@@ -527,14 +529,14 @@ class PlaybackSettings extends SettingSubpageProvider {
               () => CustomSwitchListTile(
                 icon: Broken.pause_circle,
                 title: lang.PAUSE_PLAYBACK,
-                onChanged: (value) => settings.save(playerPauseOnVolume0: !value),
-                value: settings.playerPauseOnVolume0.value,
+                onChanged: (value) => settings.player.save(pauseOnVolume0: !value),
+                value: settings.player.pauseOnVolume0.value,
               ),
             ),
             Obx(
               () {
-                final valInSet = settings.volume0ResumeThresholdMin.value;
-                final disabled = !settings.playerResumeAfterOnVolume0Pause.value;
+                final valInSet = settings.player.volume0ResumeThresholdMin.value;
+                final disabled = !settings.player.resumeAfterOnVolume0Pause.value;
                 const max = 61;
                 return CustomListTile(
                   icon: Broken.play_circle,
@@ -542,7 +544,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       ? lang.DONT_RESUME
                       : valInSet == 0
                           ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
-                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.volume0ResumeThresholdMin.value}"),
+                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.value}"),
                   trailing: NamidaWheelSlider<int>(
                     totalCount: max,
                     initValue: valInSet,
@@ -550,9 +552,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                     squeeze: 0.4,
                     onValueChanged: (val) {
                       if (val == max) {
-                        settings.save(playerResumeAfterOnVolume0Pause: false);
+                        settings.player.save(resumeAfterOnVolume0Pause: false);
                       } else {
-                        settings.save(playerResumeAfterOnVolume0Pause: true, volume0ResumeThresholdMin: val);
+                        settings.player.save(resumeAfterOnVolume0Pause: true, volume0ResumeThresholdMin: val);
                       }
                     },
                     text: disabled
@@ -584,7 +586,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   subtitle: type.toSubtitle(),
                   trailing: PopupMenuButton<InterruptionAction>(
                     child: Obx(() {
-                      final actionInSetting = settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
+                      final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
                       return Text(actionInSetting.toText());
                     }),
                     itemBuilder: (context) => <PopupMenuItem<InterruptionAction>>[
@@ -600,7 +602,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                               const Spacer(),
                               Obx(
                                 () {
-                                  final actionInSetting = settings.playerOnInterrupted[type] ?? InterruptionAction.pause;
+                                  final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
                                   return NamidaCheckMark(
                                     size: 16.0,
                                     active: actionInSetting == action,
@@ -613,7 +615,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                         ),
                       ),
                     ],
-                    onSelected: (action) => settings.updatePlayerInterruption(type, action),
+                    onSelected: (action) => settings.player.updatePlayerInterruption(type, action),
                   ),
                 );
               },
@@ -622,8 +624,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             const SizedBox(height: 6.0),
             Obx(
               () {
-                final valInSet = settings.interruptionResumeThresholdMin.value;
-                final disabled = !settings.playerResumeAfterWasInterrupted.value;
+                final valInSet = settings.player.interruptionResumeThresholdMin.value;
+                final disabled = !settings.player.resumeAfterWasInterrupted.value;
                 const max = 61;
                 return CustomListTile(
                   icon: Broken.play_circle,
@@ -631,7 +633,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       ? lang.DONT_RESUME
                       : valInSet == 0
                           ? lang.RESUME_IF_WAS_INTERRUPTED
-                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.interruptionResumeThresholdMin.value}"),
+                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.value}"),
                   trailing: NamidaWheelSlider<int>(
                     totalCount: max,
                     initValue: valInSet,
@@ -639,9 +641,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                     squeeze: 0.4,
                     onValueChanged: (val) {
                       if (val == max) {
-                        settings.save(playerResumeAfterWasInterrupted: false);
+                        settings.player.save(resumeAfterWasInterrupted: false);
                       } else {
-                        settings.save(playerResumeAfterWasInterrupted: true, interruptionResumeThresholdMin: val);
+                        settings.player.save(resumeAfterWasInterrupted: true, interruptionResumeThresholdMin: val);
                       }
                     },
                     text: disabled
@@ -664,8 +666,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
             icon: Broken.rotate_left,
             title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
-            onChanged: (value) => settings.save(jumpToFirstTrackAfterFinishingQueue: !value),
-            value: settings.jumpToFirstTrackAfterFinishingQueue.value,
+            onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
+            value: settings.player.jumpToFirstTrackAfterFinishingQueue.value,
           ),
         ),
       ),
@@ -692,31 +694,31 @@ class PlaybackSettings extends SettingSubpageProvider {
           () => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.seekDuration),
             icon: Broken.forward_5_seconds,
-            title: "${lang.SEEK_DURATION} (${settings.isSeekDurationPercentage.value ? lang.PERCENTAGE : lang.SECONDS})",
+            title: "${lang.SEEK_DURATION} (${settings.player.isSeekDurationPercentage.value ? lang.PERCENTAGE : lang.SECONDS})",
             subtitle: lang.SEEK_DURATION_INFO,
-            onTap: () => settings.save(isSeekDurationPercentage: !settings.isSeekDurationPercentage.value),
-            trailing: settings.isSeekDurationPercentage.value
+            onTap: () => settings.player.save(isSeekDurationPercentage: !settings.player.isSeekDurationPercentage.value),
+            trailing: settings.player.isSeekDurationPercentage.value
                 ? NamidaWheelSlider(
                     totalCount: 50,
-                    initValue: settings.seekDurationInPercentage.value,
+                    initValue: settings.player.seekDurationInPercentage.value,
                     itemSize: 2,
                     squeeze: 0.4,
                     onValueChanged: (val) {
                       final v = (val) as int;
-                      settings.save(seekDurationInPercentage: v);
+                      settings.player.save(seekDurationInPercentage: v);
                     },
-                    text: "${settings.seekDurationInPercentage.value}%",
+                    text: "${settings.player.seekDurationInPercentage.value}%",
                   )
                 : NamidaWheelSlider(
                     totalCount: 120,
-                    initValue: settings.seekDurationInSeconds.value,
+                    initValue: settings.player.seekDurationInSeconds.value,
                     itemSize: 2,
                     squeeze: 0.4,
                     onValueChanged: (val) {
                       final v = (val) as int;
-                      settings.save(seekDurationInSeconds: v);
+                      settings.player.save(seekDurationInSeconds: v);
                     },
-                    text: "${settings.seekDurationInSeconds.value}s",
+                    text: "${settings.player.seekDurationInSeconds.value}s",
                   ),
           ),
         ),
@@ -725,7 +727,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         key: _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition,
         child: Obx(
           () {
-            final valInSet = settings.minTrackDurationToRestoreLastPosInMinutes.value;
+            final valInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
             const max = 121;
             return CustomListTile(
               bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
@@ -737,7 +739,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {
-                  settings.save(minTrackDurationToRestoreLastPosInMinutes: val >= max ? -1 : val);
+                  settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val >= max ? -1 : val);
                 },
                 text: valInSet == 0
                     ? lang.ALWAYS_RESTORE

@@ -35,6 +35,7 @@ class AppPaths {
   // ================= User Data =================
   static final SETTINGS = '$_USER_DATA/namida_settings.json';
   static final SETTINGS_EQUALIZER = '$_USER_DATA/namida_settings_eq.json';
+  static final SETTINGS_PLAYER = '$_USER_DATA/namida_settings_player.json';
   static final TRACKS = '$_USER_DATA/tracks.json';
   static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
   static final VIDEOS_CACHE = '$_USER_DATA/cache_videos.json';

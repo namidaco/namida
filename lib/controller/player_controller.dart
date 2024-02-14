@@ -11,7 +11,7 @@ import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/base/audio_handler.dart';
-import 'package:namida/controller/equalizer_settings.dart';
+import 'package:namida/controller/settings.equalizer.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -92,8 +92,8 @@ class Player {
   int get sleepAfterMin => _audioHandler.sleepAfterMin;
   int get sleepAfterTracks => _audioHandler.sleepAfterItems;
   bool get isLastItem => _audioHandler.isLastItem;
-  bool get canJumpToNext => !isLastItem || settings.playerInfiniyQueueOnNextPrevious.value;
-  bool get canJumpToPrevious => currentIndex != 0 || settings.playerInfiniyQueueOnNextPrevious.value;
+  bool get canJumpToNext => !isLastItem || settings.player.infiniyQueueOnNextPrevious.value;
+  bool get canJumpToPrevious => currentIndex != 0 || settings.player.infiniyQueueOnNextPrevious.value;
 
   RxMap<String, int>? get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 
@@ -134,7 +134,7 @@ class Player {
       }
     });
     prepareTotalListenTime();
-    setSkipSilenceEnabled(settings.playerSkipSilenceEnabled.value);
+    setSkipSilenceEnabled(settings.player.skipSilenceEnabled.value);
     _notificationClickedSub?.cancel();
     _notificationClickedSub = AudioService.notificationClicked.listen((clicked) {
       if (clicked) {
@@ -462,11 +462,11 @@ class Player {
   int _secondsToSeek([int? seconds]) {
     int? newSeconds = seconds;
     if (newSeconds == null) {
-      if (settings.isSeekDurationPercentage.value) {
-        final sFromP = (currentItemDuration?.inSeconds ?? 0) * (settings.seekDurationInPercentage.value / 100);
+      if (settings.player.isSeekDurationPercentage.value) {
+        final sFromP = (currentItemDuration?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
         newSeconds = sFromP.toInt();
       } else {
-        newSeconds = settings.seekDurationInSeconds.value;
+        newSeconds = settings.player.seekDurationInSeconds.value;
       }
     }
     return newSeconds == 0 ? 5 : newSeconds;

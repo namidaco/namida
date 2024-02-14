@@ -209,7 +209,7 @@ class QueueController {
       if (res != null) {
         final t = res['type'] as String? ?? LibraryCategory.localTracks;
         final items = res['items'] as List;
-        index = settings.lastPlayedIndices[t] ?? 0;
+        index = settings.player.lastPlayedIndices[t] ?? 0;
         switch (t) {
           case LibraryCategory.localTracks:
             items.loop((e, _) => latestQueue.add(Track(e)));

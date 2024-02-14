@@ -9,6 +9,7 @@ mixin SettingsFileWriter {
   Object get jsonToWrite;
   Duration get delay => const Duration(seconds: 2);
 
+  @protected
   Future<dynamic> prepareSettingsFile_() async {
     final file = await File(filePath).create(recursive: true);
     try {
@@ -19,7 +20,7 @@ mixin SettingsFileWriter {
   }
 
   @protected
-  Future<void> writeToStorage({bool justSaveWithoutWaiting = false}) async {
+  Future<void> writeToStorage() async {
     if (_canWriteSettings) {
       _canWriteSettings = false;
       _writeToStorageRaw();
@@ -41,4 +42,11 @@ mixin SettingsFileWriter {
 
   Timer? _writeTimer;
   bool _canWriteSettings = true;
+
+  @protected
+  Map<K, V>? getEnumMap_<K, V>(dynamic jsonMap, List<K> enumKeys, K defaultKey, List<V> enumValues, V defaultValue) {
+    return ((jsonMap as Map?)?.map(
+      (key, value) => MapEntry(enumKeys.getEnum(key) ?? defaultKey, enumValues.getEnum(value) ?? defaultValue),
+    ));
+  }
 }
