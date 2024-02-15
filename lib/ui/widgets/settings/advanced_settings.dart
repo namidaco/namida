@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:checkmark/checkmark.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:namida/class/track.dart';
+import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -43,6 +43,8 @@ enum _AdvancedSettingKeys {
   clearImageCache,
   clearVideoCache,
 }
+
+enum _VideoCacheSorting { size, listenCount, accessTime }
 
 class AdvancedSettings extends SettingSubpageProvider {
   const AdvancedSettings({super.key, super.initialItem});
@@ -442,39 +444,53 @@ class AdvancedSettings extends SettingSubpageProvider {
   }
 
   void _showChooseVideosToDeleteDialog(List<NamidaVideo> allVideoFiles) {
-    final RxList<NamidaVideo> videosToDelete = <NamidaVideo>[].obs;
+    final videosToDelete = <NamidaVideo>[].obs;
+    final videosToDeleteSize = 0.obs;
     final videoFiles = List<NamidaVideo>.from(allVideoFiles).obs;
 
-    final currentSort = 'size'.obs;
+    final currentSort = _VideoCacheSorting.size.obs;
 
     final localIdTrackMap = {for (final tr in allTracksInLibrary) tr.youtubeID: tr};
 
-    List<int> getTotalListensForID(String? id) {
+    final accessTimeMap = <String, (int, String)>{};
+
+    assignAccessTimeMap() {
+      videoFiles.loop((e, _) {
+        final stats = File(e.path).statSync();
+        final accessed = stats.accessed.millisecondsSinceEpoch;
+        final modified = stats.modified.millisecondsSinceEpoch;
+        final finalMS = modified > accessed ? modified : accessed;
+        accessTimeMap[e.path] = (finalMS, Jiffy.parseFromMillisecondsSinceEpoch(finalMS).fromNow());
+      });
+    }
+
+    int getTotalListensForIDLength(String? id) {
       final correspondingTrack = localIdTrackMap[id];
       final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens[correspondingTrack] ?? [];
       final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
-      return [...local, ...yt];
+      return local.length + yt.length;
     }
 
-    void sortBy(String type) {
+    void sortBy(_VideoCacheSorting type) {
       currentSort.value = type;
       switch (type) {
-        case 'size':
+        case _VideoCacheSorting.size:
           videoFiles.sortByReverse((e) => e.sizeInBytes);
-        case 'access_time':
-          videoFiles.sortByAlt((e) => File(e.path).statSync().accessed, (e) => File(e.path).statSync().modified);
-        case 'listen_count':
-          videoFiles.sortBy((e) => getTotalListensForID(e.ytID).length);
+        case _VideoCacheSorting.accessTime:
+          if (accessTimeMap.isEmpty) assignAccessTimeMap();
+          videoFiles.sortBy((e) => accessTimeMap[e.path]?.$1 ?? 0);
+        case _VideoCacheSorting.listenCount:
+          videoFiles.sortBy((e) => getTotalListensForIDLength(e.ytID));
         default:
           null;
       }
     }
 
     Widget getChipButton({
-      required String sort,
+      required _VideoCacheSorting sort,
       required String title,
       required IconData icon,
-      required bool Function(String sort) enabled,
+      required bool Function(_VideoCacheSorting sort) enabled,
     }) {
       return NamidaInkWell(
         animationDurationMS: 100,
@@ -522,7 +538,7 @@ class AdvancedSettings extends SettingSubpageProvider {
           Obx(
             () => NamidaButton(
               enabled: videosToDelete.isNotEmpty,
-              text: lang.DELETE.toUpperCase(),
+              text: "${lang.DELETE.toUpperCase()} (${videosToDeleteSize.value.fileSizeFormatted})",
               onPressed: () async {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
@@ -552,7 +568,7 @@ class AdvancedSettings extends SettingSubpageProvider {
           height: Get.height * 0.65,
           child: Column(
             children: [
-              const SizedBox(height: 6.0),
+              const SizedBox(height: 12.0),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Obx(
@@ -561,21 +577,21 @@ class AdvancedSettings extends SettingSubpageProvider {
                     children: [
                       const SizedBox(width: 24.0),
                       getChipButton(
-                        sort: 'size',
+                        sort: _VideoCacheSorting.size,
                         title: lang.SIZE,
                         icon: Broken.size,
                         enabled: (sort) => sort == currentSort.value,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
-                        sort: 'access_time',
+                        sort: _VideoCacheSorting.accessTime,
                         title: lang.OLDEST_WATCH,
                         icon: Broken.sort,
                         enabled: (sort) => sort == currentSort.value,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
-                        sort: 'listen_count',
+                        sort: _VideoCacheSorting.listenCount,
                         title: lang.TOTAL_LISTENS,
                         icon: Broken.math,
                         enabled: (sort) => sort == currentSort.value,
@@ -596,11 +612,19 @@ class AdvancedSettings extends SettingSubpageProvider {
                         final video = videoFiles[index];
                         final id = video.ytID;
                         final title = id == null ? null : YoutubeController.inst.getVideoName(id);
-                        final listens = getTotalListensForID(id).length;
+                        final listens = getTotalListensForIDLength(id);
                         return NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                          onTap: () => videosToDelete.addOrRemove(video),
+                          onTap: () {
+                            final didRemove = videosToDelete.remove(video);
+                            if (didRemove) {
+                              videosToDeleteSize.value -= video.sizeInBytes;
+                            } else {
+                              videosToDelete.add(video);
+                              videosToDeleteSize.value += video.sizeInBytes;
+                            }
+                          },
                           child: Row(
                             children: [
                               ArtworkWidget(
@@ -625,6 +649,11 @@ class AdvancedSettings extends SettingSubpageProvider {
                                       "${video.resolution}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}",
                                       style: context.textTheme.displaySmall,
                                     ),
+                                    if (currentSort.value == _VideoCacheSorting.accessTime)
+                                      Text(
+                                        accessTimeMap[video.path]?.$2 ?? '',
+                                        style: context.textTheme.displaySmall,
+                                      ),
                                   ],
                                 ),
                               ),
