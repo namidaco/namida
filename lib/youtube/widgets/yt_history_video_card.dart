@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -111,6 +112,7 @@ class YTHistoryVideoCard extends StatelessWidget {
           final itemsColor6 = isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null;
           final itemsColor5 = isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null;
           final threeLines = draggableThumbnail ? ThreeLineSmallContainers(enabled: draggingEnabled, color: itemsColor5) : null;
+          final willSleepAfterThis = fromPlayerQueue && Player.inst.enableSleepAfterTracks && Player.inst.sleepingTrackIndex == index;
           final children = [
             if (threeLines != null) draggingBarsBuilder?.call(itemsColor5) ?? threeLines,
             SizedBox(
@@ -129,6 +131,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                     height: thumbHeight - 3.0,
                     videoId: video.id,
                     smallBoxText: duration,
+                    smallBoxIcon: willSleepAfterThis ? Broken.timer_1 : null,
                   ),
                 ),
                 if (draggingThumbWidget != null) draggingThumbnailBuilder?.call(draggingThumbWidget) ?? draggingThumbWidget

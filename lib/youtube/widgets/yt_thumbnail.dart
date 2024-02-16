@@ -195,7 +195,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: [
           ...widget.onTopWidgets,
-          if (widget.smallBoxText != null)
+          if (widget.smallBoxText != null || widget.smallBoxIcon != null)
             Positioned(
               bottom: 0.0,
               right: 0.0,
@@ -212,20 +212,23 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
                   enabled: settings.enableBlurEffect.value,
                   child: widget.smallBoxIcon != null
                       ? Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               widget.smallBoxIcon,
                               size: 15.0,
                               color: Colors.white.withOpacity(0.8),
                             ),
-                            const SizedBox(width: 2.0),
-                            Text(
-                              widget.smallBoxText!,
-                              style: context.textTheme.displaySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                                fontWeight: FontWeight.w600,
+                            if (widget.smallBoxText != null) ...[
+                              const SizedBox(width: 2.0),
+                              Text(
+                                widget.smallBoxText!,
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         )
                       : Text(
