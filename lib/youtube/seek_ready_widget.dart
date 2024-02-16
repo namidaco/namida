@@ -269,7 +269,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                     child: Stack(
                       alignment: Alignment.centerLeft,
                       children: [
-                        if (videoCached || audioCached)
+                        if (fullscreen || videoCached || audioCached)
                           Positioned(
                             left: 0,
                             top: 0,
