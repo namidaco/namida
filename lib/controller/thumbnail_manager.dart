@@ -19,6 +19,17 @@ class ThumbnailManager {
   static final ThumbnailManager inst = ThumbnailManager._internal();
   ThumbnailManager._internal();
 
+  static String getPathToYTImage(String? id) {
+    String getPath(String prefix) => "${AppDirs.YT_THUMBNAILS}$prefix$id.png";
+
+    final path = getPath('');
+    if (File(path).existsSync()) {
+      return path;
+    }
+
+    return getPath('EXT_');
+  }
+
   File? imageUrlToCacheFile({
     required String? id,
     required String? url,

@@ -88,6 +88,7 @@ abstract class LanguageKeys {
   String get CLEAR_VIDEO_CACHE_SUBTITLE => _getKey('CLEAR_VIDEO_CACHE_SUBTITLE');
   String get CLEAR_VIDEO_CACHE => _getKey('CLEAR_VIDEO_CACHE');
   String get CLEAR => _getKey('CLEAR');
+  String get CLEAR_AUDIO_CACHE => _getKey('CLEAR_AUDIO_CACHE');
   String get CLOCK => _getKey('CLOCK');
   String get COLOR_PALETTE => _getKey('COLOR_PALETTE');
   String get COLOR_PALETTES => _getKey('COLOR_PALETTES');
@@ -138,6 +139,7 @@ abstract class LanguageKeys {
   String get DEFAULT_DOWNLOAD_LOCATION => _getKey('DEFAULT_DOWNLOAD_LOCATION');
   String get DELETE_PLAYLIST => _getKey('DELETE_PLAYLIST');
   String get DELETE => _getKey('DELETE');
+  String get DELETE_FILE_CACHE_SUBTITLE => _getKey('DELETE_FILE_CACHE_SUBTITLE');
   String get DESCRIPTION => _getKey('DESCRIPTION');
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');
@@ -336,6 +338,7 @@ abstract class LanguageKeys {
   String get MATCH_ALL_TRACKS => _getKey('MATCH_ALL_TRACKS');
   String get MATCH_ALL_TRACKS_NOTE => _getKey('MATCH_ALL_TRACKS_NOTE');
   String get MAXIMUM => _getKey('MAXIMUM');
+  String get MAX_AUDIO_CACHE_SIZE => _getKey('MAX_AUDIO_CACHE_SIZE');
   String get MAX_IMAGE_CACHE_SIZE => _getKey('MAX_IMAGE_CACHE_SIZE');
   String get MAX_VIDEO_CACHE_SIZE => _getKey('MAX_VIDEO_CACHE_SIZE');
   String get METADATA_CACHE => _getKey('METADATA_CACHE');

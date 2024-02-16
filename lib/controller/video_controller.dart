@@ -117,9 +117,7 @@ class NamidaVideoWidget extends StatelessWidget {
 class VideoController {
   static VideoController get inst => _instance;
   static final VideoController _instance = VideoController._internal();
-  VideoController._internal() {
-    _trimExcessImageCache();
-  }
+  VideoController._internal();
 
   final videoZoomAdditionalScale = 0.0.obs;
 
@@ -827,45 +825,6 @@ class VideoController {
       ytID: id,
       path: path,
     );
-  }
-
-  Future<void> _trimExcessImageCache() async {
-    final totalMaxBytes = settings.imagesMaxCacheInMB.value * 1024 * 1024;
-    final paramters = {
-      'maxBytes': totalMaxBytes,
-      'dirPath': AppDirs.YT_THUMBNAILS,
-      'dirPathChannel': AppDirs.YT_THUMBNAILS_CHANNELS,
-    };
-    await _trimExcessImageCacheIsolate.thready(paramters);
-  }
-
-  /// Returns total deleted bytes.
-  static Future<int> _trimExcessImageCacheIsolate(Map map) async {
-    final maxBytes = map['maxBytes'] as int;
-    final dirPath = map['dirPath'] as String;
-    final dirPathChannel = map['dirPathChannel'] as String;
-
-    int totalDeletedBytes = 0;
-
-    final imagesVideos = Directory(dirPath).listSyncSafe();
-    final imagesChannels = Directory(dirPathChannel).listSyncSafe();
-    final images = [...imagesVideos, ...imagesChannels];
-
-    images.sortBy((e) => e.statSync().accessed);
-    int totalBytes = images.fold(0, (previousValue, element) => previousValue + element.statSync().size);
-
-    // -- deleting
-    for (final image in images) {
-      if (totalBytes <= maxBytes) break; // better than checking with each loop
-      final deletedSize = image.statSync().size;
-      try {
-        image.deleteSync();
-        totalBytes -= deletedSize;
-        totalDeletedBytes += deletedSize;
-      } catch (_) {}
-    }
-
-    return totalDeletedBytes;
   }
 
   NamidaVideo _getNVFromFFMPEGMap({required String path, MediaInfo? mediaInfo, required FileStat stats, String? ytID}) {

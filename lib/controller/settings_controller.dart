@@ -137,6 +137,7 @@ class SettingsController with SettingsFileWriter {
   final RxInt isTrackPlayedPercentageCount = 40.obs;
   final RxInt waveformTotalBars = 140.obs;
   final RxInt videosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final RxInt audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
   final RxInt imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
   final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
@@ -390,6 +391,7 @@ class SettingsController with SettingsFileWriter {
       isTrackPlayedPercentageCount.value = json['isTrackPlayedPercentageCount'] ?? isTrackPlayedPercentageCount.value;
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
+      audiosMaxCacheInMB.value = json['audiosMaxCacheInMB'] ?? audiosMaxCacheInMB.value;
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
       ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
@@ -570,6 +572,7 @@ class SettingsController with SettingsFileWriter {
         'isTrackPlayedPercentageCount': isTrackPlayedPercentageCount.value,
         'waveformTotalBars': waveformTotalBars.value,
         'videosMaxCacheInMB': videosMaxCacheInMB.value,
+        'audiosMaxCacheInMB': audiosMaxCacheInMB.value,
         'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
         'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
@@ -734,6 +737,7 @@ class SettingsController with SettingsFileWriter {
     bool? pickColorsFromDeviceWallpaper,
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
+    int? audiosMaxCacheInMB,
     int? imagesMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
@@ -946,6 +950,7 @@ class SettingsController with SettingsFileWriter {
     if (pickColorsFromDeviceWallpaper != null) this.pickColorsFromDeviceWallpaper.value = pickColorsFromDeviceWallpaper;
     if (waveformTotalBars != null) this.waveformTotalBars.value = waveformTotalBars;
     if (videosMaxCacheInMB != null) this.videosMaxCacheInMB.value = videosMaxCacheInMB;
+    if (audiosMaxCacheInMB != null) this.audiosMaxCacheInMB.value = audiosMaxCacheInMB;
     if (imagesMaxCacheInMB != null) this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
     if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;

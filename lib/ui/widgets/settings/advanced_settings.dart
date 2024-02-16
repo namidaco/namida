@@ -1,20 +1,20 @@
 import 'dart:io';
 
-import 'package:checkmark/checkmark.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
-import 'package:namida/class/track.dart';
+import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -24,12 +24,9 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 enum _AdvancedSettingKeys {
   performanceMode,
@@ -39,12 +36,12 @@ enum _AdvancedSettingKeys {
   fixYTDLPBigThumbnail,
   compressImages,
   maxImageCache,
+  maxAudioCache,
   maxVideoCache,
   clearImageCache,
+  clearAudioCache,
   clearVideoCache,
 }
-
-enum _VideoCacheSorting { size, listenCount, accessTime }
 
 class AdvancedSettings extends SettingSubpageProvider {
   const AdvancedSettings({super.key, super.initialItem});
@@ -61,8 +58,10 @@ class AdvancedSettings extends SettingSubpageProvider {
         _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE],
         _AdvancedSettingKeys.compressImages: [lang.COMPRESS_IMAGES],
         _AdvancedSettingKeys.maxImageCache: [lang.MAX_IMAGE_CACHE_SIZE],
+        _AdvancedSettingKeys.maxAudioCache: [lang.MAX_AUDIO_CACHE_SIZE],
         _AdvancedSettingKeys.maxVideoCache: [lang.MAX_VIDEO_CACHE_SIZE],
         _AdvancedSettingKeys.clearImageCache: [lang.CLEAR_IMAGE_CACHE],
+        _AdvancedSettingKeys.clearAudioCache: [lang.CLEAR_AUDIO_CACHE],
         _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
       };
 
@@ -327,26 +326,52 @@ class AdvancedSettings extends SettingSubpageProvider {
             int getValue(int mb) => (mb - minimumValue) ~/ stepper;
             return getItemWrapper(
               key: _AdvancedSettingKeys.maxImageCache,
-              child: Obx(
-                () {
-                  return CustomListTile(
-                    bgColor: getBgColor(_AdvancedSettingKeys.maxImageCache),
-                    leading: const StackedIcon(
-                      baseIcon: Broken.gallery,
-                      secondaryIcon: Broken.cpu,
-                    ),
-                    title: lang.MAX_IMAGE_CACHE_SIZE,
-                    trailing: NamidaWheelSlider<int>(
-                      totalCount: getValue(4 * 1024), // 4 GB
-                      initValue: getValue(settings.imagesMaxCacheInMB.value),
-                      itemSize: 5,
-                      text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                      onValueChanged: (val) {
-                        settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
-                      },
-                    ),
-                  );
-                },
+              child: CustomListTile(
+                bgColor: getBgColor(_AdvancedSettingKeys.maxImageCache),
+                leading: const StackedIcon(
+                  baseIcon: Broken.gallery,
+                  secondaryIcon: Broken.cpu,
+                ),
+                title: lang.MAX_IMAGE_CACHE_SIZE,
+                trailing: Obx(
+                  () => NamidaWheelSlider<int>(
+                    totalCount: getValue(4 * 1024), // 4 GB
+                    initValue: getValue(settings.imagesMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                ),
+              ),
+            );
+          }(),
+
+          () {
+            const stepper = 8 * 4;
+            const minimumValue = stepper;
+            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
+            return getItemWrapper(
+              key: _AdvancedSettingKeys.maxAudioCache,
+              child: CustomListTile(
+                bgColor: getBgColor(_AdvancedSettingKeys.maxAudioCache),
+                leading: const StackedIcon(
+                  baseIcon: Broken.audio_square,
+                  secondaryIcon: Broken.cpu,
+                ),
+                title: lang.MAX_AUDIO_CACHE_SIZE,
+                trailing: Obx(
+                  () => NamidaWheelSlider<int>(
+                    totalCount: getValue(4 * 1024), // 4 GB
+                    initValue: getValue(settings.audiosMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.audiosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(audiosMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                ),
               ),
             );
           }(),
@@ -357,26 +382,24 @@ class AdvancedSettings extends SettingSubpageProvider {
             int getValue(int mb) => (mb - minimumValue) ~/ stepper;
             return getItemWrapper(
               key: _AdvancedSettingKeys.maxVideoCache,
-              child: Obx(
-                () {
-                  return CustomListTile(
-                    bgColor: getBgColor(_AdvancedSettingKeys.maxVideoCache),
-                    leading: const StackedIcon(
-                      baseIcon: Broken.video,
-                      secondaryIcon: Broken.cpu,
-                    ),
-                    title: lang.MAX_VIDEO_CACHE_SIZE,
-                    trailing: NamidaWheelSlider<int>(
-                      totalCount: getValue(10 * 1024), // 10 GB
-                      initValue: getValue(settings.videosMaxCacheInMB.value),
-                      itemSize: 5,
-                      text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                      onValueChanged: (val) {
-                        settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
-                      },
-                    ),
-                  );
-                },
+              child: CustomListTile(
+                bgColor: getBgColor(_AdvancedSettingKeys.maxVideoCache),
+                leading: const StackedIcon(
+                  baseIcon: Broken.video,
+                  secondaryIcon: Broken.cpu,
+                ),
+                title: lang.MAX_VIDEO_CACHE_SIZE,
+                trailing: Obx(
+                  () => NamidaWheelSlider<int>(
+                    totalCount: getValue(10 * 1024), // 10 GB
+                    initValue: getValue(settings.videosMaxCacheInMB.value),
+                    itemSize: 5,
+                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
+                    onValueChanged: (val) {
+                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
+                    },
+                  ),
+                ),
               ),
             );
           }(),
@@ -384,6 +407,12 @@ class AdvancedSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _AdvancedSettingKeys.clearImageCache,
             child: _ClearImageCacheListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
+            ),
+          ),
+          getItemWrapper(
+            key: _AdvancedSettingKeys.clearAudioCache,
+            child: _ClearAudioCacheListTile(
               bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
             ),
           ),
@@ -399,298 +428,33 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.CLEAR_VIDEO_CACHE,
                 trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
-                onTap: () async {
-                  final allvideo = VideoController.inst.getCurrentVideosInCache();
-
-                  /// First Dialog
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      isWarning: true,
-                      normalTitleStyle: true,
-                      bodyText: "${_getVideoSubtitleText(allvideo)}\n${lang.CLEAR_VIDEO_CACHE_NOTE}",
-                      actions: [
-                        /// Pressing Choose
-                        NamidaButton(
-                          text: lang.CHOOSE,
-                          onPressed: () {
-                            NamidaNavigator.inst.closeDialog();
-                            _showChooseVideosToDeleteDialog(allvideo);
-                          },
-                        ),
-                        const CancelButton(),
-                        NamidaButton(
-                          text: lang.DELETE.toUpperCase(),
-                          onPressed: () async {
-                            NamidaNavigator.inst.closeDialog();
-                            await Indexer.inst.clearVideoCache();
-                          },
-                        ),
-                      ],
-                    ),
+                onTap: () {
+                  final allvideos = VideoController.inst.getCurrentVideosInCache();
+                  const cacheManager = StorageCacheManager();
+                  cacheManager.promptCacheDeleteDialog(
+                    allItems: allvideos,
+                    deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, Indexer.inst.videosSizeInStorage.value),
+                    chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
+                    onChoosePrompt: () {
+                      cacheManager.showChooseToDeleteDialog(
+                        allItems: allvideos,
+                        itemToPath: (item) => item.path,
+                        itemToYtId: (item) => item.ytID,
+                        itemToSubtitle: (item, itemSize) => "${item.resolution}p • ${item.framerate}fps - ${itemSize.fileSizeFormatted}",
+                        confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
+                        onConfirm: (itemsToDelete) async {
+                          await Indexer.inst.clearVideoCache(itemsToDelete);
+                        },
+                        includeLocalTracksListens: true,
+                      );
+                    },
+                    onDeleteAll: () async => await Indexer.inst.clearVideoCache(),
                   );
                 },
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  String _getVideoSubtitleText(List<NamidaVideo> videos) {
-    return lang.CLEAR_VIDEO_CACHE_SUBTITLE
-        .replaceFirst('_CURRENT_VIDEOS_COUNT_', videos.length.formatDecimal())
-        .replaceFirst('_TOTAL_SIZE_', videos.fold(0, (previousValue, element) => previousValue + element.sizeInBytes).fileSizeFormatted);
-  }
-
-  void _showChooseVideosToDeleteDialog(List<NamidaVideo> allVideoFiles) {
-    final videosToDelete = <NamidaVideo>[].obs;
-    final videosToDeleteSize = 0.obs;
-    final videoFiles = List<NamidaVideo>.from(allVideoFiles).obs;
-
-    final currentSort = _VideoCacheSorting.size.obs;
-
-    final localIdTrackMap = {for (final tr in allTracksInLibrary) tr.youtubeID: tr};
-
-    final accessTimeMap = <String, (int, String)>{};
-
-    assignAccessTimeMap() {
-      videoFiles.loop((e, _) {
-        final stats = File(e.path).statSync();
-        final accessed = stats.accessed.millisecondsSinceEpoch;
-        final modified = stats.modified.millisecondsSinceEpoch;
-        final finalMS = modified > accessed ? modified : accessed;
-        accessTimeMap[e.path] = (finalMS, Jiffy.parseFromMillisecondsSinceEpoch(finalMS).fromNow());
-      });
-    }
-
-    int getTotalListensForIDLength(String? id) {
-      final correspondingTrack = localIdTrackMap[id];
-      final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens[correspondingTrack] ?? [];
-      final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
-      return local.length + yt.length;
-    }
-
-    void sortBy(_VideoCacheSorting type) {
-      currentSort.value = type;
-      switch (type) {
-        case _VideoCacheSorting.size:
-          videoFiles.sortByReverse((e) => e.sizeInBytes);
-        case _VideoCacheSorting.accessTime:
-          if (accessTimeMap.isEmpty) assignAccessTimeMap();
-          videoFiles.sortBy((e) => accessTimeMap[e.path]?.$1 ?? 0);
-        case _VideoCacheSorting.listenCount:
-          videoFiles.sortBy((e) => getTotalListensForIDLength(e.ytID));
-        default:
-          null;
-      }
-    }
-
-    Widget getChipButton({
-      required _VideoCacheSorting sort,
-      required String title,
-      required IconData icon,
-      required bool Function(_VideoCacheSorting sort) enabled,
-    }) {
-      return NamidaInkWell(
-        animationDurationMS: 100,
-        borderRadius: 8.0,
-        bgColor: Get.theme.cardTheme.color,
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          border: enabled(sort) ? Border.all(color: Get.theme.colorScheme.primary) : null,
-          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        ),
-        onTap: () => sortBy(sort),
-        child: Row(
-          children: [
-            Icon(icon, size: 18.0),
-            const SizedBox(width: 4.0),
-            Text(
-              title,
-              style: Get.textTheme.displayMedium,
-            ),
-            const SizedBox(width: 4.0),
-            const Icon(Broken.arrow_down_2, size: 14.0),
-          ],
-        ),
-      );
-    }
-
-    sortBy(currentSort.value);
-
-    NamidaNavigator.inst.navigateDialog(
-      onDisposing: () {
-        videosToDelete.close();
-        videoFiles.close();
-        currentSort.close();
-      },
-      dialog: CustomBlurryDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-        isWarning: true,
-        normalTitleStyle: true,
-        title: lang.CHOOSE,
-        actions: [
-          const CancelButton(),
-
-          /// Clear after choosing
-          Obx(
-            () => NamidaButton(
-              enabled: videosToDelete.isNotEmpty,
-              text: "${lang.DELETE.toUpperCase()} (${videosToDeleteSize.value.fileSizeFormatted})",
-              onPressed: () async {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    isWarning: true,
-                    normalTitleStyle: true,
-                    actions: [
-                      const CancelButton(),
-
-                      /// final clear confirm
-                      NamidaButton(
-                        text: lang.DELETE.toUpperCase(),
-                        onPressed: () async {
-                          NamidaNavigator.inst.closeDialog(2);
-                          await Indexer.inst.clearVideoCache(videosToDelete);
-                        },
-                      ),
-                    ],
-                    bodyText: _getVideoSubtitleText(videosToDelete),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-        child: SizedBox(
-          width: Get.width,
-          height: Get.height * 0.65,
-          child: Column(
-            children: [
-              const SizedBox(height: 12.0),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Obx(
-                  () => Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const SizedBox(width: 24.0),
-                      getChipButton(
-                        sort: _VideoCacheSorting.size,
-                        title: lang.SIZE,
-                        icon: Broken.size,
-                        enabled: (sort) => sort == currentSort.value,
-                      ),
-                      const SizedBox(width: 12.0),
-                      getChipButton(
-                        sort: _VideoCacheSorting.accessTime,
-                        title: lang.OLDEST_WATCH,
-                        icon: Broken.sort,
-                        enabled: (sort) => sort == currentSort.value,
-                      ),
-                      const SizedBox(width: 12.0),
-                      getChipButton(
-                        sort: _VideoCacheSorting.listenCount,
-                        title: lang.TOTAL_LISTENS,
-                        icon: Broken.math,
-                        enabled: (sort) => sort == currentSort.value,
-                      ),
-                      const SizedBox(width: 24.0),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6.0),
-              Expanded(
-                child: NamidaScrollbar(
-                  child: Obx(
-                    () => ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: videoFiles.length,
-                      itemBuilder: (context, index) {
-                        final video = videoFiles[index];
-                        final id = video.ytID;
-                        final title = id == null ? null : YoutubeController.inst.getVideoName(id);
-                        final listens = getTotalListensForIDLength(id);
-                        return NamidaInkWell(
-                          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                          onTap: () {
-                            final didRemove = videosToDelete.remove(video);
-                            if (didRemove) {
-                              videosToDeleteSize.value -= video.sizeInBytes;
-                            } else {
-                              videosToDelete.add(video);
-                              videosToDeleteSize.value += video.sizeInBytes;
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              ArtworkWidget(
-                                key: Key(id ?? ''),
-                                thumbnailSize: 92.0,
-                                iconSize: 24.0,
-                                width: 92,
-                                height: 92 * 9 / 16,
-                                path: video.pathToYTImage,
-                                forceSquared: true,
-                              ),
-                              const SizedBox(width: 8.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title ?? video.ytID ?? '',
-                                      style: context.textTheme.displayMedium,
-                                    ),
-                                    Text(
-                                      "${video.resolution}p • ${video.framerate}fps - ${video.sizeInBytes.fileSizeFormatted}",
-                                      style: context.textTheme.displaySmall,
-                                    ),
-                                    if (currentSort.value == _VideoCacheSorting.accessTime)
-                                      Text(
-                                        accessTimeMap[video.path]?.$2 ?? '',
-                                        style: context.textTheme.displaySmall,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              if (listens > 0) ...[
-                                Text(
-                                  listens.toString(),
-                                  style: context.textTheme.displaySmall,
-                                ),
-                                const SizedBox(width: 8.0),
-                              ],
-                              IgnorePointer(
-                                child: SizedBox(
-                                  height: 16.0,
-                                  width: 16.0,
-                                  child: Obx(
-                                    () => CheckMark(
-                                      strokeWidth: 2,
-                                      activeColor: context.theme.listTileTheme.iconColor!,
-                                      inactiveColor: context.theme.listTileTheme.iconColor!,
-                                      duration: const Duration(milliseconds: 400),
-                                      active: videosToDelete.contains(video),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -759,7 +523,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
           secondaryIcon: Broken.close_circle,
         ),
         title: lang.CLEAR_IMAGE_CACHE,
-        trailingText: totalBytes.fileSizeFormatted,
+        trailingText: dirsMap.isEmpty ? '?' : totalBytes.fileSizeFormatted,
         onTap: () {
           NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
@@ -818,6 +582,88 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
           );
         },
       ),
+    );
+  }
+}
+
+class _ClearAudioCacheListTile extends StatefulWidget {
+  final Color? bgColor;
+  const _ClearAudioCacheListTile({this.bgColor});
+
+  @override
+  State<_ClearAudioCacheListTile> createState() => __ClearAudioCacheListTileState();
+}
+
+class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
+  int totalSize = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _fillSizes();
+  }
+
+  void _fillSizes() async {
+    final res = await _fillSizeIsolate.thready(AppDirs.AUDIOS_CACHE);
+    if (mounted) setState(() => totalSize = res);
+  }
+
+  static int _fillSizeIsolate(String dirPath) {
+    int size = 0;
+    Directory(dirPath).listSyncSafe().loop((e, _) {
+      size += e.statSync().size;
+    });
+    return size;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: widget.bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.musicnote,
+        secondaryIcon: Broken.close_circle,
+      ),
+      title: lang.CLEAR_AUDIO_CACHE,
+      trailingText: totalSize == -1 ? '?' : totalSize.fileSizeFormatted,
+      onTap: () {
+        final allaudios = <AudioCacheDetails>[];
+        for (final acFiles in Player.inst.audioCacheMap.values) {
+          acFiles.loop((e, index) => allaudios.add(e));
+        }
+
+        const cacheManager = StorageCacheManager();
+        cacheManager.promptCacheDeleteDialog(
+          allItems: allaudios,
+          deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, totalSize),
+          chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
+          onChoosePrompt: () {
+            cacheManager.showChooseToDeleteDialog(
+              allItems: allaudios,
+              itemToPath: (item) => item.file.path,
+              itemToYtId: (item) => item.youtubeId,
+              itemToSubtitle: (item, size) => "${(item.bitrate ?? 0) ~/ 1000}kb/s - ${size.fileSizeFormatted}",
+              confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
+              onConfirm: (itemsToDelete) async {
+                setState(() => totalSize = -1);
+
+                // for (final audio in itemsToDelete) {
+                //   await audio.file.tryDeleting();
+                // }
+
+                _fillSizes();
+              },
+              includeLocalTracksListens: true,
+            );
+          },
+          onDeleteAll: () async {
+            final dir = Directory(AppDirs.AUDIOS_CACHE);
+            await dir.delete(recursive: true);
+            await dir.create();
+            if (mounted) setState(() => totalSize = 0);
+          },
+        );
+      },
     );
   }
 }

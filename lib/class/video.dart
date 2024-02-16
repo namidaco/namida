@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -192,14 +193,5 @@ extension NamidaVideoUtils on NamidaVideo {
     return "${AppDirs.THUMBNAILS}$prefix$name.png";
   }
 
-  String get pathToYTImage {
-    String getPath(String prefix) => "${AppDirs.YT_THUMBNAILS}$prefix$ytID.png";
-
-    final path = getPath('');
-    if (File(path).existsSync()) {
-      return path;
-    }
-
-    return getPath('EXT_');
-  }
+  String get pathToYTImage => ThumbnailManager.getPathToYTImage(ytID);
 }

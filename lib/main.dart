@@ -30,6 +30,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -134,6 +135,8 @@ void main() async {
   if (!shouldShowOnBoarding) {
     BackupController.inst.checkForAutoBackup();
   }
+
+  const StorageCacheManager().trimExtraFiles();
 
   QueueController.inst.prepareAllQueuesFile();
 
