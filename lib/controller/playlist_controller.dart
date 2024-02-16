@@ -161,6 +161,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
                 lang.DUPLICATED_ITEMS_ADDING,
                 style: Get.textTheme.displayMedium,
               ),
+              const SizedBox(height: 12.0),
               Column(
                 children: PlaylistAddDuplicateAction.values
                     .map(

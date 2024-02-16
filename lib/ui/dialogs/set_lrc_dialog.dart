@@ -163,7 +163,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
 
     await NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
-        newOffset.closeAfterDelay();
+        newOffset.close();
         offsetController.dispose();
       },
       colorScheme: colorScheme,

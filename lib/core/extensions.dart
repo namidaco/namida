@@ -7,7 +7,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_extensions/dart_extensions.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
@@ -30,13 +29,18 @@ extension TracksSelectableUtils on List<Selectable> {
 
   List<Track> toImageTracks([int? limit = 4]) {
     final l = <Track>[];
+    String previousArtwork = '';
+    bool sameArtwork = true;
     for (final p in withLimit(limit)) {
+      final currentArtwork = p.track.pathToImage;
+      if (sameArtwork && previousArtwork != '' && currentArtwork != previousArtwork) {
+        sameArtwork = false;
+      }
       l.add(p.track);
+      previousArtwork = currentArtwork;
     }
-    if (l.length == limit) {
-      // -- return 1 image if all were the same.
-      if (l.toSet().length == 1) return [l.first];
-    }
+    if (l.isEmpty) return [];
+    if (sameArtwork) return [l.first];
     return l;
   }
 
@@ -612,11 +616,5 @@ extension ExecuteDelayedMinUtils<T> on Future<T> {
       Future.delayed(Duration(milliseconds: delayMS)),
     ]);
     return v;
-  }
-}
-
-extension RxStreamClosing<T extends RxInterface> on T {
-  Future<void> closeAfterDelay({int durationMS = 2000}) async {
-    await close.executeAfterDelay(durationMS: durationMS);
   }
 }

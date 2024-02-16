@@ -211,5 +211,4 @@ Future<void> showSettingDialogWithTextField({
       ),
     ),
   );
-  controller.disposeAfterAnimation();
 }

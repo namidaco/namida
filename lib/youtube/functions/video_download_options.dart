@@ -292,6 +292,9 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     final c = TextEditingController();
     final fk = GlobalKey<FormState>();
     await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        c.dispose();
+      },
       dialog: Form(
         key: fk,
         child: CustomBlurryDialog(
@@ -326,7 +329,6 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
         ),
       ),
     );
-    c.disposeAfterAnimation();
   }
 
   @override
