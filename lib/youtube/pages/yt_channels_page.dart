@@ -1,18 +1,21 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
-import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
@@ -31,13 +34,22 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   late final ScrollController _horizontalListController;
 
   final _allChannelsStreamsProgress = 0.0.obs;
+  final _allChannelsStreamsLoading = false.obs;
+
+  late final Rx<DateTime> allChannelFetchOldestDate;
 
   @override
   void initState() {
     _horizontalListController = ScrollController();
     YoutubeSubscriptionsController.inst.sortByLastFetched();
-    final sub = YoutubeSubscriptionsController.inst.subscribedChannels.values.lastOrNull;
-    _updateChannel(sub);
+    final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
+    if (subCh != null) {
+      final sub = YoutubeSubscriptionsController.inst.getChannel(subCh);
+      _updateChannel(sub);
+    }
+
+    final now = DateTime.now();
+    allChannelFetchOldestDate = DateTime(now.year, now.month, now.day - 32).obs;
     super.initState();
   }
 
@@ -45,6 +57,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   void dispose() {
     _horizontalListController.dispose();
     _allChannelsStreamsProgress.close();
+    _allChannelsStreamsLoading.close();
     super.dispose();
   }
 
@@ -61,28 +74,56 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     if (sub != null) {
       fetchChannelStreams(sub);
     } else {
-      _fetchAllChannelsStreams(null);
+      _fetchAllChannelsStreams();
     }
   }
 
-  Future<void> _fetchAllChannelsStreams(DateTime? since) async {
+  Future<void> _fetchAllChannelsStreams() async {
+    setState(() {
+      isLoadingInitialStreams = true;
+      streamsList.clear();
+    });
+    _allChannelsStreamsLoading.value = true;
+
     final streams = <StreamInfoItem>[];
-    final ids = YoutubeSubscriptionsController.inst.subscribedChannels.keys.toList();
+    final ids = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
     final idsLength = ids.length;
+
+    final maxDateBeforeMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;
+
+    bool enoughStreams(List<StreamInfoItem> streams) {
+      final lastDate = streams.lastOrNull?.date;
+      if (lastDate == null || lastDate.millisecondsSinceEpoch < maxDateBeforeMS) {
+        streams.removeWhere((element) {
+          final date = element.date;
+          return date != null && date.millisecondsSinceEpoch < maxDateBeforeMS;
+        });
+        return true;
+      }
+      return false;
+    }
+
     for (int i = 0; i < idsLength; i++) {
       final channelID = ids[i];
       _allChannelsStreamsProgress.value = i / idsLength;
-      final st = await YoutubeController.inst.getChannelStreams(channelID);
-      printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${st.length} videos');
+      final chStreams = await YoutubeController.inst.getChannelStreams(channelID);
+      while (!enoughStreams(chStreams)) {
+        final nextPage = await YoutubeController.inst.getChannelStreamsNextPage();
+        if (nextPage.isEmpty) break;
+        chStreams.addAll(nextPage);
+      }
+      printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${chStreams.length} videos');
       if (channel != null) {
         _allChannelsStreamsProgress.value = 0.0;
+        _allChannelsStreamsLoading.value = false;
         return;
       }
       YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
-      streams.addAll(st);
+      streams.addAll(chStreams);
     }
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     _allChannelsStreamsProgress.value = 0.0;
+    _allChannelsStreamsLoading.value = false;
 
     sortStreams(streams: streams);
 
@@ -126,7 +167,80 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           child: ch == null
-              ? sortWidget
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: sortWidget),
+                        NamidaIconButton(
+                          icon: Broken.calendar,
+                          onPressed: () {
+                            showCalendarDialog(
+                              title: lang.DATE,
+                              buttonText: lang.CONFIRM,
+                              useHistoryDates: false,
+                              calendarType: CalendarDatePicker2Type.single,
+                              lastDate: DateTime.now(),
+                              onGenerate: (dates) {
+                                if (dates.isNotEmpty) {
+                                  allChannelFetchOldestDate.value = dates.first;
+                                  _fetchAllChannelsStreams();
+                                }
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+                    Row(
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: context.theme.cardColor,
+                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                            border: Border.all(
+                              width: 1.2,
+                              color: context.theme.colorScheme.secondary.withOpacity(0.6),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                            child: Text(
+                              streamsList.length.displayVideoKeyword,
+                              style: context.textTheme.displayMedium,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4.0),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: context.theme.cardColor,
+                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                            border: Border.all(
+                              width: 1.2,
+                              color: context.theme.colorScheme.secondary.withOpacity(0.6),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                            child: Obx(
+                              () {
+                                final oldestDate = allChannelFetchOldestDate.value;
+                                return Text(
+                                  "${oldestDate.millisecondsSinceEpoch.dateFormattedOriginal} - ${Jiffy.parseFromDateTime(oldestDate).fromNow()}",
+                                  style: context.textTheme.displayMedium,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                )
               : Row(
                   children: [
                     Expanded(
@@ -156,7 +270,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    ch.title,
+                                    ch.title != '' ? ch.title : YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID)?.name ?? '',
                                     style: context.textTheme.displayMedium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -227,7 +341,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       : LazyLoadListView(
                           scrollController: uploadsScrollController,
                           onReachingEnd: () async {
-                            await fetchStreamsNextPage(channel);
+                            if (channel != null) await fetchStreamsNextPage(channel);
                           },
                           listview: (controller) {
                             return ListView.builder(
@@ -282,7 +396,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
               ),
               child: Obx(
                 () {
-                  final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.keys.toList();
+                  final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
                   final totalIDsLength = channelIDS.length;
                   return Row(
                     children: [
@@ -311,7 +425,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   child: FittedBox(
                                     child: Obx(
                                       () => CircularProgressIndicator(
-                                        value: _allChannelsStreamsProgress.value,
+                                        value: _allChannelsStreamsLoading.value && _allChannelsStreamsProgress.value <= 0 ? null : _allChannelsStreamsProgress.value,
                                         strokeWidth: 2.0,
                                       ),
                                     ),
@@ -338,7 +452,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           itemBuilder: (context, indexPre) {
                             final index = totalIDsLength - indexPre - 1;
                             final key = channelIDS[index];
-                            final ch = YoutubeSubscriptionsController.inst.subscribedChannels[key]!;
+                            final ch = YoutubeSubscriptionsController.inst.getChannel(key)!;
                             final info = YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID);
                             final channelName = info?.name == null || info?.name == '' ? ch.title : info?.name;
                             return NamidaInkWell(

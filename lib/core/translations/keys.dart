@@ -85,7 +85,6 @@ abstract class LanguageKeys {
   String get CLEAR_TRACK_ITEM_MULTIPLE => _getKey('CLEAR_TRACK_ITEM_MULTIPLE');
   String get CLEAR_TRACK_ITEM => _getKey('CLEAR_TRACK_ITEM');
   String get CLEAR_VIDEO_CACHE_NOTE => _getKey('CLEAR_VIDEO_CACHE_NOTE');
-  String get CLEAR_VIDEO_CACHE_SUBTITLE => _getKey('CLEAR_VIDEO_CACHE_SUBTITLE');
   String get CLEAR_VIDEO_CACHE => _getKey('CLEAR_VIDEO_CACHE');
   String get CLEAR => _getKey('CLEAR');
   String get CLEAR_AUDIO_CACHE => _getKey('CLEAR_AUDIO_CACHE');

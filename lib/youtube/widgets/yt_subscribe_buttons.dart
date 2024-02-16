@@ -15,7 +15,7 @@ class YTSubscribeButton extends StatelessWidget {
       () {
         final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
         final disabled = channelID == null;
-        final subscribed = YoutubeSubscriptionsController.inst.subscribedChannels[channelID ?? '']?.subscribed ?? false;
+        final subscribed = YoutubeSubscriptionsController.inst.getChannel(channelID ?? '')?.subscribed ?? false;
         return AnimatedOpacity(
           opacity: disabled ? 0.5 : 1.0,
           duration: const Duration(milliseconds: 300),
@@ -34,7 +34,7 @@ class YTSubscribeButton extends StatelessWidget {
             ),
             onPressed: () async {
               if (channelIDOrURL != null) {
-                await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL!, null);
+                await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL!);
               }
             },
           ),

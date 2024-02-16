@@ -78,12 +78,15 @@ class YoutubeImportController {
     isImportingSubscriptions.value = true;
     final res = await _parseSubscriptions.thready(subscriptionsFilePath);
     res.loop((e, index) {
-      final valInMap = YoutubeSubscriptionsController.inst.subscribedChannels[e.id];
-      YoutubeSubscriptionsController.inst.subscribedChannels[e.id] = YoutubeSubscription(
-        title: valInMap != null && valInMap.title == '' ? e.title : valInMap?.title ?? e.title,
-        channelID: e.id,
-        subscribed: true,
-        lastFetched: valInMap?.lastFetched,
+      final valInMap = YoutubeSubscriptionsController.inst.getChannel(e.id);
+      YoutubeSubscriptionsController.inst.setChannel(
+        e.id,
+        YoutubeSubscription(
+          title: valInMap != null && valInMap.title == '' ? e.title : valInMap?.title ?? e.title,
+          channelID: e.id,
+          subscribed: true,
+          lastFetched: valInMap?.lastFetched,
+        ),
       );
     });
     YoutubeSubscriptionsController.inst.sortByLastFetched();
