@@ -12,16 +12,6 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   num get pullNormalizer => 20;
 
-  bool onScrollNotification(ScrollMetricsNotification notification) {
-    final pixels = notification.metrics.pixels;
-    if (pixels < -_minTrigger) {
-      animation.animateTo(((pixels + _minTrigger).abs() / pullNormalizer).clamp(0, 1));
-    } else if (animation.value > 0) {
-      animation.animateTo(0);
-    }
-    return true;
-  }
-
   double _distanceDragged = 0;
   bool onVerticalDragUpdate(double dy) {
     _distanceDragged -= dy;
