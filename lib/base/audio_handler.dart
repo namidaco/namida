@@ -1414,10 +1414,18 @@ extension YoutubeIDToMediaItem on YoutubeID {
     final artistAndTitle = vi?.name?.splitArtistAndTitle();
     final videoName = vi?.name;
     final channelName = vi?.uploaderName;
+
+    final title = artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoName ?? '';
+    String? artistName = artistAndTitle?.$1;
+    if ((artistName == null || artistName == '') && channelName != null) {
+      const topic = '- Topic';
+      final startIndex = (channelName.length - topic.length).withMinimum(0);
+      artistName = channelName.replaceFirst(topic, '', startIndex).trimAll();
+    }
     return MediaItem(
       id: vi?.id ?? '',
-      title: artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoName ?? '',
-      artist: artistAndTitle?.$1 ?? channelName?.replaceFirst('- Topic', '').trimAll(),
+      title: title,
+      artist: artistName,
       album: '',
       genre: '',
       displayTitle: videoName,

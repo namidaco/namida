@@ -262,6 +262,12 @@ class YTUtils {
   }
 
   static Map<String, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {
+    String removeTopic(String text) {
+      const topic = '- Topic';
+      final startIndex = (text.length - topic.length).withMinimum(0);
+      return text.replaceFirst(topic, '', startIndex).trimAll();
+    }
+
     final date = info?.date;
     final description = info?.description;
     String? title = info?.name;
@@ -272,9 +278,12 @@ class YTUtils {
       if (splitted != null && splitted.$1 != null && splitted.$2 != null) {
         title = splitted.$2;
         artist = splitted.$1;
-        album = info?.uploaderName;
       }
+      final uploaderName = info?.uploaderName;
+      if (uploaderName != null) album = removeTopic(uploaderName);
     }
+
+    if (artist != null) artist = removeTopic(artist);
 
     String? synopsis;
     if (description != null) {
