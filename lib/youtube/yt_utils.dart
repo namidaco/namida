@@ -13,6 +13,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -406,6 +407,33 @@ class YTUtils {
     final allSelected = false.obs;
     final totalSizeToDelete = 0.obs;
 
+    final deleteTempAudio = false.obs;
+    final deleteTempVideo = false.obs;
+    final tempFilesSizeAudio = <File, int>{}.obs;
+    final tempFilesSizeVideo = <File, int>{}.obs;
+
+    const cm = StorageCacheManager();
+    cm.getTempAudiosForID(videoId).then((value) => tempFilesSizeAudio.value = value);
+    cm.getTempVideosForID(videoId).then((value) => tempFilesSizeVideo.value = value);
+
+    void reEvaluateTotalSize() {
+      int newVal = 0;
+      for (final k in pathsToDelete.keys) {
+        if (pathsToDelete[k] == true) newVal += fileSizeLookup[k] ?? 0;
+      }
+      if (deleteTempAudio.value) {
+        for (final v in tempFilesSizeAudio.values) {
+          newVal += v;
+        }
+      }
+      if (deleteTempVideo.value) {
+        for (final v in tempFilesSizeVideo.values) {
+          newVal += v;
+        }
+      }
+      totalSizeToDelete.value = newVal;
+    }
+
     Future<void> deleteItems(Iterable<String> paths) async {
       for (final path in paths) {
         await File(path).tryDeleting();
@@ -426,6 +454,8 @@ class YTUtils {
       required List<T> items,
       required ({String title, String subtitle, String path}) Function(T item) itemBuilder,
       required int Function(T item) itemSize,
+      required RxMap<File, int> tempFilesSize,
+      required RxBool tempFilesDelete,
     }) {
       return NamidaExpansionTile(
         initiallyExpanded: true,
@@ -450,35 +480,70 @@ class YTUtils {
           ],
         ),
         childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-        children: items.map(
-          (item) {
-            final data = itemBuilder(item);
-            return SmallListTile(
-              borderRadius: 12.0,
-              color: context.theme.cardColor,
-              visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
-              title: data.title,
-              subtitle: data.subtitle,
-              active: false,
-              onTap: () {
-                final wasTrue = pathsToDelete[data.path] == true;
-                final willEnable = !wasTrue;
-                pathsToDelete[data.path] = willEnable;
-                if (willEnable) {
-                  totalSizeToDelete.value += itemSize(item);
-                } else {
-                  totalSizeToDelete.value -= itemSize(item);
-                }
-              },
-              trailing: Obx(
-                () => NamidaCheckMark(
-                  size: 16.0,
-                  active: allSelected.value || pathsToDelete[data.path] == true,
+        children: [
+          ...items.map(
+            (item) {
+              final data = itemBuilder(item);
+              return SmallListTile(
+                borderRadius: 12.0,
+                icon: Broken.arrow_right_3,
+                iconSize: 20.0,
+                color: context.theme.cardColor,
+                visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
+                title: data.title,
+                subtitle: data.subtitle,
+                active: false,
+                onTap: () {
+                  final wasTrue = pathsToDelete[data.path] == true;
+                  final willEnable = !wasTrue;
+                  pathsToDelete[data.path] = willEnable;
+                  if (willEnable) {
+                    totalSizeToDelete.value += itemSize(item);
+                  } else {
+                    totalSizeToDelete.value -= itemSize(item);
+                  }
+                  allSelected.value = false;
+                },
+                trailing: Obx(
+                  () => NamidaCheckMark(
+                    size: 16.0,
+                    active: pathsToDelete[data.path] == true,
+                  ),
                 ),
-              ),
-            );
-          },
-        ).toList(),
+              );
+            },
+          ),
+          Obx(
+            () {
+              final size = tempFilesSize.values.fold(0, (p, e) => p + e);
+              if (size <= 0) return const SizedBox();
+              return SmallListTile(
+                borderRadius: 12.0,
+                icon: Broken.broom,
+                iconSize: 20.0,
+                color: context.theme.cardColor,
+                visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
+                title: lang.DELETE_TEMP_FILES,
+                subtitle: size.fileSizeFormatted,
+                active: false,
+                onTap: () {
+                  tempFilesDelete.value = !tempFilesDelete.value;
+                  if (tempFilesDelete.value) {
+                    totalSizeToDelete.value += size;
+                  } else {
+                    totalSizeToDelete.value -= size;
+                  }
+                },
+                trailing: Obx(
+                  () => NamidaCheckMark(
+                    size: 16.0,
+                    active: tempFilesDelete.value,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       );
     }
 
@@ -487,6 +552,10 @@ class YTUtils {
         pathsToDelete.close();
         allSelected.close();
         totalSizeToDelete.close();
+        deleteTempAudio.close();
+        deleteTempVideo.close();
+        tempFilesSizeAudio.close();
+        tempFilesSizeVideo.close();
       },
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
@@ -504,15 +573,17 @@ class YTUtils {
               value: allSelected.value,
               onChanged: (value) {
                 allSelected.value = !allSelected.value;
-                if (allSelected.value) {
-                  totalSizeToDelete.value = audiosSize + videosSize;
+                if (allSelected.value == true) {
+                  audiosCached.loop((e, _) => pathsToDelete[e.file.path] = true);
+                  videosCached.loop((e, _) => pathsToDelete[e.path] = true);
+                  deleteTempAudio.value = true;
+                  deleteTempVideo.value = true;
                 } else {
-                  int newVal = 0;
-                  for (final k in pathsToDelete.keys) {
-                    if (pathsToDelete[k] == true) newVal += fileSizeLookup[k] ?? 0;
-                  }
-                  totalSizeToDelete.value = newVal;
+                  pathsToDelete.clear();
+                  deleteTempAudio.value = false;
+                  deleteTempVideo.value = false;
                 }
+                reEvaluateTotalSize();
               },
             ),
           ),
@@ -521,17 +592,14 @@ class YTUtils {
           const CancelButton(),
           Obx(
             () => NamidaButton(
-              enabled: pathsToDelete.values.any((element) => element) || allSelected.value,
+              enabled: deleteTempAudio.value || deleteTempVideo.value || pathsToDelete.values.any((element) => element),
               text: "${lang.DELETE} (${totalSizeToDelete.value.fileSizeFormatted})",
               onPressed: () async {
-                if (allSelected.value) {
-                  await Future.wait([
-                    deleteItems(videosCached.map((e) => e.path)),
-                    deleteItems(audiosCached.map((e) => e.file.path)),
-                  ]);
-                } else {
-                  await deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true));
-                }
+                await Future.wait([
+                  deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true)),
+                  if (deleteTempAudio.value) deleteItems(tempFilesSizeAudio.keys.map((e) => e.path)),
+                  if (deleteTempVideo.value) deleteItems(tempFilesSizeVideo.keys.map((e) => e.path)),
+                ]);
                 NamidaNavigator.inst.closeDialog();
               },
             ),
@@ -545,6 +613,8 @@ class YTUtils {
               icon: Broken.video,
               items: videosCached,
               itemSize: (item) => item.sizeInBytes,
+              tempFilesDelete: deleteTempVideo,
+              tempFilesSize: tempFilesSizeVideo,
               itemBuilder: (v) {
                 return (
                   title: "${v.resolution}p • ${v.framerate}fps ",
@@ -559,6 +629,8 @@ class YTUtils {
               icon: Broken.musicnote,
               items: audiosCached,
               itemSize: (item) => fileSizeLookup[item.file.path] ?? item.file.sizeInBytesSync(),
+              tempFilesDelete: deleteTempAudio,
+              tempFilesSize: tempFilesSizeAudio,
               itemBuilder: (a) {
                 final bitrateText = a.bitrate == null ? null : "${a.bitrate! ~/ 1000}kb/s";
                 final langText = a.langaugeName == null ? '' : " • ${a.langaugeName}";

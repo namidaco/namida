@@ -1506,7 +1506,10 @@ class YoutubeController {
     int downloadStartRange = 0;
 
     final file = await File(destinationFilePath).create(); // retrieving the temp file (or creating a new one).
-    final initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
+    int initialFileSizeOnDisk = 0;
+    try {
+      initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
+    } catch (_) {}
     onInitialFileSize(initialFileSizeOnDisk);
     // only download if the download is incomplete, useful sometimes when file 'moving' fails.
     if (initialFileSizeOnDisk < targetSize) {
@@ -1579,7 +1582,10 @@ class YoutubeController {
       final erabaretaStreamSizeInBytes = erabaretaStream.sizeInBytes ?? 0;
 
       final file = await File(getVPath(true)).create(); // retrieving the temp file (or creating a new one).
-      final initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
+      int initialFileSizeOnDisk = 0;
+      try {
+        initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
+      } catch (_) {}
       onInitialFileSize(initialFileSizeOnDisk);
       // only download if the download is incomplete, useful sometimes when file 'moving' fails.
       if (initialFileSizeOnDisk < erabaretaStreamSizeInBytes) {

@@ -680,6 +680,7 @@ class SmallListTile extends StatelessWidget {
   final bool displayAnimatedCheck;
   final bool compact;
   final Color? color;
+  final double? iconSize;
   final void Function()? onTap;
   final EdgeInsetsGeometry? padding;
   final double? titleGap;
@@ -699,6 +700,7 @@ class SmallListTile extends StatelessWidget {
     this.compact = true,
     this.subtitle,
     this.color,
+    this.iconSize,
     this.padding = const EdgeInsets.only(left: 16.0, right: 12.0),
     this.titleGap,
     this.borderRadius = 0.0,
@@ -708,6 +710,7 @@ class SmallListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = color != null ? context.defaultIconColor(color, context.textTheme.displayMedium?.color) : null;
     return ListTile(
       contentPadding: padding,
       horizontalTitleGap: titleGap,
@@ -718,9 +721,12 @@ class SmallListTile extends StatelessWidget {
           SizedBox(
             height: double.infinity,
             child: icon != null
-                ? Icon(icon, color: color != null ? context.defaultIconColor(color, context.textTheme.displayMedium?.color) : null)
+                ? Icon(icon, color: iconColor, size: iconSize)
                 : active
-                    ? const Icon(Broken.arrow_circle_right)
+                    ? const Icon(
+                        Broken.arrow_circle_right,
+                        size: 20.0,
+                      )
                     : const Icon(
                         Broken.arrow_right_3,
                         size: 18.0,

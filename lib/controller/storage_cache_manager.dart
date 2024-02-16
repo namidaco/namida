@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:checkmark/checkmark.dart';
@@ -25,11 +26,26 @@ class StorageCacheManager {
   const StorageCacheManager();
 
   Future<void> trimExtraFiles() async {
-    final trimmer = _Trimmer();
     await Future.wait([
-      trimmer._trimExcessImageCache(),
-      trimmer._trimExcessAudioCache(),
+      _ImageTrimmer()._trimExcessImageCache(),
+      _AudioTrimmer()._trimExcessAudioCache(),
     ]);
+  }
+
+  Future<int> getTempVideosSize() async {
+    return _VideoTrimmer._getFilesSizeIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+  }
+
+  Future<void> deleteTempVideos() async {
+    return _VideoTrimmer._deleteTempFilesIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+  }
+
+  Future<Map<File, int>> getTempVideosForID(String videoId) async {
+    return _VideoTrimmer._getTempVideosForID.thready({'id': videoId, 'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+  }
+
+  Future<Map<File, int>> getTempAudiosForID(String videoId) async {
+    return _AudioTrimmer._getTempAudiosForID.thready({'id': videoId, 'dirPath': AppDirs.AUDIOS_CACHE});
   }
 
   String getDeleteSizeSubtitleText(int length, int totalSize) {
@@ -78,11 +94,17 @@ class StorageCacheManager {
     required String Function(T item, int itemSize) itemToSubtitle,
     required String Function(int length, int totalSize) confirmDialogText,
     required Future<void> Function(List<T> itemsToDelete) onConfirm,
+    required Future<int> Function() tempFilesSize,
+    required Future<void> Function() onDeleteTempFiles,
     bool includeLocalTracksListens = true,
   }) {
     final itemsToDelete = <T>[].obs;
     final itemsToDeleteSize = 0.obs;
     final allFiles = allItems.obs;
+
+    final deleteTempFiles = false.obs;
+    final tempFilesSizeFinal = 0.obs;
+    tempFilesSize().then((value) => tempFilesSizeFinal.value = value);
 
     final currentSort = _CacheSorting.size.obs;
 
@@ -162,6 +184,8 @@ class StorageCacheManager {
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         itemsToDelete.close();
+        deleteTempFiles.close();
+        tempFilesSizeFinal.close();
         allFiles.close();
         currentSort.close();
       },
@@ -177,9 +201,13 @@ class StorageCacheManager {
           /// Clear after choosing
           Obx(
             () => NamidaButton(
-              enabled: itemsToDelete.isNotEmpty,
+              enabled: itemsToDeleteSize.value > 0 || itemsToDelete.isNotEmpty,
               text: "${lang.DELETE.toUpperCase()} (${itemsToDeleteSize.value.fileSizeFormatted})",
               onPressed: () async {
+                final hasTemp = deleteTempFiles.value && tempFilesSizeFinal.value > 0;
+                final finalItemsToDeleteOnlySize = itemsToDeleteSize.value - (hasTemp ? tempFilesSizeFinal.value : 0);
+                final firstLine = itemsToDelete.isNotEmpty || finalItemsToDeleteOnlySize > 0 ? confirmDialogText(itemsToDelete.length, finalItemsToDeleteOnlySize) : '';
+                final tempFilesLine = hasTemp ? "${lang.DELETE_TEMP_FILES} (${tempFilesSizeFinal.value.fileSizeFormatted})?" : '';
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     isWarning: true,
@@ -193,10 +221,11 @@ class StorageCacheManager {
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog(2);
                           onConfirm(itemsToDelete);
+                          onDeleteTempFiles();
                         },
                       ),
                     ],
-                    bodyText: confirmDialogText(itemsToDelete.length, itemsToDeleteSize.value),
+                    bodyText: [firstLine, tempFilesLine].joinText(separator: '\n'),
                   ),
                 );
               },
@@ -207,6 +236,7 @@ class StorageCacheManager {
           width: Get.width,
           height: Get.height * 0.65,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12.0),
               SingleChildScrollView(
@@ -329,6 +359,44 @@ class StorageCacheManager {
                   ),
                 ),
               ),
+              Obx(
+                () => tempFilesSizeFinal.value > 0
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: deleteTempFiles.value ? 1.0 : 0.6,
+                          child: NamidaInkWell(
+                            borderRadius: 6.0,
+                            bgColor: Get.theme.cardColor,
+                            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
+                            onTap: () {
+                              deleteTempFiles.value = !deleteTempFiles.value;
+                              if (deleteTempFiles.value) {
+                                itemsToDeleteSize.value += tempFilesSizeFinal.value;
+                              } else {
+                                itemsToDeleteSize.value -= tempFilesSizeFinal.value;
+                              }
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                NamidaCheckMark(
+                                  size: 12.0,
+                                  active: deleteTempFiles.value,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Text(
+                                  '${lang.DELETE_TEMP_FILES} (${tempFilesSizeFinal.value.fileSizeFormatted})',
+                                  style: Get.textTheme.displaySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox(),
+              ),
             ],
           ),
         ),
@@ -337,9 +405,112 @@ class StorageCacheManager {
   }
 }
 
-class _Trimmer {
-  int get _imagesMaxCacheInMB => settings.imagesMaxCacheInMB.value;
+class _VideoTrimmer {
+  static Map<File, int> _getTempVideosForID(Map params) {
+    final id = params['id'] as String;
+    final tempDir = params['temp'] as String;
+    final normalDir = params['normal'] as String;
+
+    final filesMap = <File, int>{};
+    void checkFile(FileSystemEntity e) {
+      if (e is File) {
+        final filename = e.path.split(Platform.pathSeparator).last;
+        if (filename.startsWith(id)) {
+          filesMap[e] = e.statSync().size;
+        }
+      }
+    }
+
+    Directory(tempDir).listSyncSafe().loop((e, _) => checkFile(e));
+    Directory(normalDir).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.download')) {
+        checkFile(e);
+      }
+    });
+    return filesMap;
+  }
+
+  static int _getFilesSizeIsolate(Map dirsPath) {
+    int size = 0;
+    final tempDir = dirsPath['temp'] as String;
+    final normalDir = dirsPath['normal'] as String;
+    Directory(tempDir).listSyncSafe().loop((e, _) {
+      size += e.statSync().size;
+    });
+    Directory(normalDir).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.download')) {
+        size += e.statSync().size;
+      }
+    });
+    return size;
+  }
+
+  static void _deleteTempFilesIsolate(Map dirsPath) {
+    final tempDir = dirsPath['temp'] as String;
+    final normalDir = dirsPath['normal'] as String;
+    Directory(tempDir).listSyncSafe().loop((e, _) {
+      if (e is File) {
+        try {
+          e.deleteSync();
+        } catch (_) {}
+      }
+    });
+    Directory(normalDir).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.download')) {
+        if (e is File) {
+          try {
+            e.deleteSync();
+          } catch (_) {}
+        }
+      }
+    });
+  }
+}
+
+class _AudioTrimmer {
   int get _audiosMaxCacheInMB => settings.audiosMaxCacheInMB.value;
+
+  /// Returns total deleted bytes.
+  Future<int> _trimExcessAudioCache() async {
+    final totalMaxBytes = _audiosMaxCacheInMB * 1024 * 1024;
+    final paramters = {
+      'maxBytes': totalMaxBytes,
+      'dirPath': AppDirs.AUDIOS_CACHE,
+    };
+    return await _trimExcessAudioCacheIsolate.thready(paramters);
+  }
+
+  static int _trimExcessAudioCacheIsolate(Map map) {
+    final maxBytes = map['maxBytes'] as int;
+    final dirPath = map['dirPath'] as String;
+
+    final audios = Directory(dirPath).listSyncSafe();
+    audios.sortBy((e) => e.statSync().accessed);
+    return _Trimmer._trimExcessCache(audios, maxBytes);
+  }
+
+  static Map<File, int> _getTempAudiosForID(Map params) {
+    final id = params['id'] as String;
+    final dirPath = params['dirPath'] as String;
+
+    final filesMap = <File, int>{};
+
+    Directory(dirPath).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.part')) {
+        if (e is File) {
+          final filename = e.path.split(Platform.pathSeparator).last;
+          if (filename.startsWith(id)) {
+            filesMap[e] = e.statSync().size;
+          }
+        }
+      }
+    });
+    return filesMap;
+  }
+}
+
+class _ImageTrimmer {
+  int get _imagesMaxCacheInMB => settings.imagesMaxCacheInMB.value;
 
   /// Returns total deleted bytes.
   Future<int> _trimExcessImageCache() async {
@@ -352,16 +523,6 @@ class _Trimmer {
     return await _trimExcessImageCacheIsolate.thready(paramters);
   }
 
-  /// Returns total deleted bytes.
-  Future<int> _trimExcessAudioCache() async {
-    final totalMaxBytes = _audiosMaxCacheInMB * 1024 * 1024;
-    final paramters = {
-      'maxBytes': totalMaxBytes,
-      'dirPath': AppDirs.AUDIOS_CACHE,
-    };
-    return await _trimExcessAudioCacheIsolate.thready(paramters);
-  }
-
   static int _trimExcessImageCacheIsolate(Map map) {
     final maxBytes = map['maxBytes'] as int;
     final dirPath = map['dirPath'] as String;
@@ -372,18 +533,11 @@ class _Trimmer {
     final images = [...imagesVideos, ...imagesChannels];
 
     images.sortBy((e) => e.statSync().accessed);
-    return _trimExcessCache(images, maxBytes);
+    return _Trimmer._trimExcessCache(images, maxBytes);
   }
+}
 
-  static int _trimExcessAudioCacheIsolate(Map map) {
-    final maxBytes = map['maxBytes'] as int;
-    final dirPath = map['dirPath'] as String;
-
-    final audios = Directory(dirPath).listSyncSafe();
-    audios.sortBy((e) => e.statSync().accessed);
-    return _trimExcessCache(audios, maxBytes);
-  }
-
+class _Trimmer {
   static int _trimExcessCache(List<FileSystemEntity> files, int maxBytes) {
     int totalDeletedBytes = 0;
     int totalBytes = 0;

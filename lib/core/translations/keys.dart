@@ -139,6 +139,7 @@ abstract class LanguageKeys {
   String get DELETE_PLAYLIST => _getKey('DELETE_PLAYLIST');
   String get DELETE => _getKey('DELETE');
   String get DELETE_FILE_CACHE_SUBTITLE => _getKey('DELETE_FILE_CACHE_SUBTITLE');
+  String get DELETE_TEMP_FILES => _getKey('DELETE_TEMP_FILES');
   String get DESCRIPTION => _getKey('DESCRIPTION');
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');

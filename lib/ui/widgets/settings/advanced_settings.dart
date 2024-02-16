@@ -446,6 +446,8 @@ class AdvancedSettings extends SettingSubpageProvider {
                           await Indexer.inst.clearVideoCache(itemsToDelete);
                         },
                         includeLocalTracksListens: true,
+                        tempFilesSize: () async => await cacheManager.getTempVideosSize(),
+                        onDeleteTempFiles: () async => await cacheManager.deleteTempVideos(),
                       );
                     },
                     onDeleteAll: () async => await Indexer.inst.clearVideoCache(),
@@ -616,6 +618,26 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
     return size;
   }
 
+  static int _tempFilesSizeIsolate(String dirPath) {
+    int size = 0;
+    Directory(dirPath).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.part')) size += e.statSync().size;
+    });
+    return size;
+  }
+
+  static void _tempFilesDeleteIsolate(String dirPath) {
+    Directory(dirPath).listSyncSafe().loop((e, _) {
+      if (e.path.endsWith('.part')) {
+        if (e is File) {
+          try {
+            e.deleteSync();
+          } catch (_) {}
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
@@ -647,13 +669,15 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
               onConfirm: (itemsToDelete) async {
                 setState(() => totalSize = -1);
 
-                // for (final audio in itemsToDelete) {
-                //   await audio.file.tryDeleting();
-                // }
+                for (final audio in itemsToDelete) {
+                  await audio.file.tryDeleting();
+                }
 
                 _fillSizes();
               },
               includeLocalTracksListens: true,
+              tempFilesSize: () async => await _tempFilesSizeIsolate.thready(AppDirs.AUDIOS_CACHE),
+              onDeleteTempFiles: () async => await _tempFilesDeleteIsolate.thready(AppDirs.AUDIOS_CACHE),
             );
           },
           onDeleteAll: () async {

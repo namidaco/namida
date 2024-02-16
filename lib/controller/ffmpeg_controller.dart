@@ -146,7 +146,10 @@ class NamidaFFMPEG {
 
     final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.$ext");
     final didSuccess = await _ffmpegExecute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
-    final canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
+    bool canSafelyMoveBack = false;
+    try {
+      canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
+    } catch (_) {}
     if (canSafelyMoveBack) {
       // only move output file back in case of success.
       await cacheFile.copy(audioPath);
