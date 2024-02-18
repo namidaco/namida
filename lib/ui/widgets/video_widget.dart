@@ -932,13 +932,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   (widget.isLocal ? VideoController.inst.currentYTQualities : YoutubeController.inst.currentYTQualities).where((s) => s.formatSuffix != 'webm');
                               final cachedQualitiesAll = widget.isLocal ? VideoController.inst.currentPossibleVideos : YoutubeController.inst.currentCachedQualities;
                               final cachedQualities = List<NamidaVideo>.from(cachedQualitiesAll);
+                              final videoId = Player.inst.nowPlayingVideoID?.id;
                               cachedQualities.removeWhere(
                                 (cq) {
                                   return ytQualities.any((ytq) {
-                                    final c1 = ytq.resolution?.startsWith(cq.resolution.toString()) ?? false;
-                                    final c2 = ytq.sizeInBytes == cq.sizeInBytes;
-                                    final isSame = c1 && c2;
-                                    return isSame;
+                                    final cachePath = videoId == null ? null : ytq.cachePath(videoId);
+                                    if (cachePath == cq.path) return true;
+                                    if (ytq.sizeInBytes == cq.sizeInBytes) return true;
+                                    final sameRes = ytq.resolution == null ? false : cq.resolution.toString().startsWith(ytq.resolution!); // 720p.startsWith(720p60).
+                                    final sameFrames = ytq.fps == null ? true : ytq.fps == cq.framerate;
+                                    return sameRes && sameFrames;
                                   });
                                 },
                               );
@@ -985,9 +988,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     final sizeInBytes = element.sizeInBytes;
                                     return Obx(
                                       () {
-                                        final isSelected = element.height == Player.inst.currentVideoStream?.height;
                                         final id = Player.inst.nowPlayingVideoID?.id;
                                         final cachedFile = id == null ? null : element.getCachedFile(id);
+                                        final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution ||
+                                            (Player.inst.currentCachedVideo != null && cachedFile?.path == Player.inst.currentCachedVideo?.path);
 
                                         return _getQualityChip(
                                           title: element.resolution ?? '',

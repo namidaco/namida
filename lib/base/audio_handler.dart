@@ -825,9 +825,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             streams.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm') ??
             streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
-          final isStreamRequiredBetterThanCachedSet = playedFromCacheDetails.video == null
-              ? true
-              : playedFromCacheDetails.video != null && (prefferedVideoStream?.width ?? 0) > (playedFromCacheDetails.video?.resolution ?? 0);
+          final cachedVideoSet = playedFromCacheDetails.video;
+          final isStreamRequiredBetterThanCachedSet = cachedVideoSet == null ? true : (prefferedVideoStream?.width ?? 0) > (cachedVideoSet.width);
 
           currentVideoStream.value = isAudioOnlyPlayback
               ? null

@@ -92,14 +92,22 @@ Future<void> showDownloadVideoBottomSheet({
     video.value = v;
     videoInfo.value = v.videoInfo;
 
-    selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm') ?? video.value?.audioOnlyStreams?.firstOrNull;
-
+    selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
+    if (selectedAudioOnlyStream.value == null) {
+      selectedAudioOnlyStream.value = video.value?.audioOnlyStreams?.firstOrNull;
+      if (selectedAudioOnlyStream.value?.formatSuffix == 'webm') {
+        showAudioWebm.value = true;
+      }
+    }
     selectedVideoOnlyStream.value = video.value?.videoOnlyStreams?.firstWhereEff(
-          (e) =>
-              e.formatSuffix != 'webm' &&
-              settings.youtubeVideoQualities.contains(
-                e.resolution?.videoLabelToSettingLabel(),
-              ),
+          (e) {
+            final cached = e.getCachedFile(videoId);
+            if (cached != null) return true;
+            return e.formatSuffix != 'webm' &&
+                settings.youtubeVideoQualities.contains(
+                  e.resolution?.videoLabelToSettingLabel(),
+                );
+          },
         ) ??
         video.value?.videoOnlyStreams?.firstWhereEff((e) => e.formatSuffix != 'webm');
 
