@@ -3704,3 +3704,41 @@ class TapDetector extends StatelessWidget {
     );
   }
 }
+
+class ScaleDetector extends StatelessWidget {
+  final GestureScaleStartCallback? onScaleStart;
+  final GestureScaleUpdateCallback? onScaleUpdate;
+  final GestureScaleEndCallback? onScaleEnd;
+  final Widget? child;
+  final HitTestBehavior? behavior;
+
+  const ScaleDetector({
+    super.key,
+    this.onScaleStart,
+    this.onScaleUpdate,
+    this.onScaleEnd,
+    this.child,
+    this.behavior,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[ScaleGestureRecognizer] = GestureRecognizerFactoryWithHandlers<ScaleGestureRecognizer>(
+      () => ScaleGestureRecognizer(debugOwner: this),
+      (ScaleGestureRecognizer instance) {
+        instance
+          ..onStart = onScaleStart
+          ..onUpdate = onScaleUpdate
+          ..onEnd = onScaleEnd
+          ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+      },
+    );
+
+    return RawGestureDetector(
+      behavior: behavior,
+      gestures: gestures,
+      child: child,
+    );
+  }
+}

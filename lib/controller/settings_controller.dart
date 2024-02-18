@@ -269,6 +269,8 @@ class SettingsController with SettingsFileWriter {
     MediaType.folder: false,
   }.obs;
 
+  double fontScaleLRC = 1.0;
+
   bool canAskForBatteryOptimizations = true;
   bool didSupportNamida = false;
 
@@ -476,6 +478,8 @@ class SettingsController with SettingsFileWriter {
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
 
+      fontScaleLRC = json['fontScaleLRC'] ?? fontScaleLRC;
+
       canAskForBatteryOptimizations = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations;
     } catch (e) {
       printy(e, isError: true);
@@ -632,6 +636,8 @@ class SettingsController with SettingsFileWriter {
         'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
         'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
 
+        'fontScaleLRC': fontScaleLRC,
+
         'canAskForBatteryOptimizations': canAskForBatteryOptimizations,
       };
 
@@ -781,6 +787,7 @@ class SettingsController with SettingsFileWriter {
     MostPlayedTimeRange? ytMostPlayedTimeRange,
     DateRange? ytMostPlayedCustomDateRange,
     bool? ytMostPlayedCustomisStartOfDay,
+    double? fontScaleLRC,
     bool? didSupportNamida,
     bool? canAskForBatteryOptimizations,
   }) {
@@ -1006,6 +1013,8 @@ class SettingsController with SettingsFileWriter {
     if (ytMostPlayedTimeRange != null) this.ytMostPlayedTimeRange.value = ytMostPlayedTimeRange;
     if (ytMostPlayedCustomDateRange != null) this.ytMostPlayedCustomDateRange.value = ytMostPlayedCustomDateRange;
     if (ytMostPlayedCustomisStartOfDay != null) this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
+
+    if (fontScaleLRC != null) this.fontScaleLRC = fontScaleLRC;
 
     if (didSupportNamida != null) this.didSupportNamida = didSupportNamida;
     if (canAskForBatteryOptimizations != null) this.canAskForBatteryOptimizations = canAskForBatteryOptimizations;

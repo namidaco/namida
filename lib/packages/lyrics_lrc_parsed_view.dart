@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lrc/lrc.dart';
-import 'package:namida/controller/lyrics_controller.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/miniplayer.dart';
@@ -161,6 +162,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   var lyrics = <LrcLine>[];
   final timestampsMap = <Duration, (int, LrcLine)>{};
 
+  late double _previousFontMultiplier = settings.fontScaleLRC;
+  late double _fontMultiplier = settings.fontScaleLRC;
+
   @override
   void dispose() {
     _latestUpdatedLineIndex.close();
@@ -173,7 +177,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   Widget build(BuildContext context) {
     final fullscreen = widget.isFullScreenView;
     final initialFontSize = fullscreen ? 25.0 : 15.0;
-    final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: initialFontSize.multipliedFontScale);
+    final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize.multipliedFontScale);
 
     return Stack(
       alignment: Alignment.center,
@@ -427,6 +431,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 ),
               ),
             ),
+          ),
+        ),
+        Positioned.fill(
+          child: ScaleDetector(
+            onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,
+            onScaleUpdate: (details) => setState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clamp(0.5, 2.0)),
+            onScaleEnd: (details) => settings.save(fontScaleLRC: _fontMultiplier),
           ),
         ),
       ],
