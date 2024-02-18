@@ -98,8 +98,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get isCurrentAudioFromCache => _isCurrentAudioFromCache;
   bool _isCurrentAudioFromCache = false;
 
-  // Completer<void>? _audioShouldBeLoading;
-
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
     settings.save(ytIsAudioOnlyMode: audioOnly);
     if (audioOnly) {
@@ -507,42 +505,44 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     try {
       duration = await setPls();
-    } catch (e) {
+    } on Exception catch (e) {
       if (duration != null && currentPositionMS > 0) return;
-      if (item.track == currentTrack.track) {
-        // -- playing music from root folders still require `all_file_access`
-        // -- this is a fix for not playing some external files reported by some users.
-        final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
-        if (hadPermissionBefore) {
-          pause();
-          cancelPlayErrorSkipTimer();
-          _playErrorRemainingSecondsToSkip.value = 7;
+      if (item.track != currentTrack.track) return;
+      printy(e, isError: true);
+      // -- playing music from root folders still require `all_file_access`
+      // -- this is a fix for not playing some external files reported by some users.
+      final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+      if (hadPermissionBefore) {
+        pause();
+        cancelPlayErrorSkipTimer();
+        _playErrorRemainingSecondsToSkip.value = 7;
 
-          _playErrorSkipTimer = Timer.periodic(
-            const Duration(seconds: 1),
-            (timer) {
-              _playErrorRemainingSecondsToSkip.value--;
-              if (_playErrorRemainingSecondsToSkip.value <= 0) {
-                NamidaNavigator.inst.closeDialog();
-                skipToNext();
-                timer.cancel();
-              }
-            },
-          );
-          NamidaDialogs.inst.showTrackDialog(
-            tr,
-            isFromPlayerQueue: true,
-            errorPlayingTrack: true,
-            source: QueueSource.playerQueue,
-          );
+        _playErrorSkipTimer = Timer.periodic(
+          const Duration(seconds: 1),
+          (timer) {
+            _playErrorRemainingSecondsToSkip.value--;
+            if (_playErrorRemainingSecondsToSkip.value <= 0) {
+              NamidaNavigator.inst.closeDialog();
+              skipToNext();
+              timer.cancel();
+            }
+          },
+        );
+        NamidaDialogs.inst.showTrackDialog(
+          tr,
+          isFromPlayerQueue: true,
+          errorPlayingTrack: e,
+          source: QueueSource.playerQueue,
+        );
+        return;
+      } else {
+        final hasPermission = await requestManageStoragePermission();
+        if (hasPermission) {
+          duration = await setPls();
         } else {
-          final hasPermission = await requestManageStoragePermission();
-          if (hasPermission) await setPls();
+          return;
         }
       }
-
-      printy(e, isError: true);
-      return;
     }
 
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
@@ -788,6 +788,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       whatToAwait: () async => await playerStoppingSeikoo.future,
       startPlaying: startPlaying,
     );
+    if (item != currentVideo) return;
+
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
 
@@ -798,6 +800,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else {
       heyIhandledAudioPlaying = false;
     }
+
+    if (item != currentVideo) return;
 
     if (ConnectivityController.inst.hasConnection) {
       try {
@@ -1337,7 +1341,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (cachedAudioPath != null) {
       File(cachedAudioPath).setLastAccessedTry(DateTime.now());
     }
-    return await setAudioSource(
+    return setAudioSource(
       source,
       preload: preload,
       initialIndex: initialIndex,

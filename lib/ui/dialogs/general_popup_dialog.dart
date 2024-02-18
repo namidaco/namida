@@ -59,21 +59,27 @@ Future<void> showGeneralPopupDialog(
   bool useTrackTileCacheHeight = false,
   bool isCircle = false,
   bool isFromPlayerQueue = false,
-  bool errorPlayingTrack = false,
+  Exception? errorPlayingTrack,
   String? artistToAddFrom,
   (String, String)? albumToAddFrom,
   String? heroTag,
   String? additionalHero,
 }) async {
   final tracksExisting = <Track>[];
-  tracks.loop((t, index) {
-    final existingTrack = t.path.toTrackOrNull();
-    if (existingTrack != null) tracksExisting.add(existingTrack);
-  });
+  if (errorPlayingTrack != null) {
+    // -- fill using real-time checks if there was an error.
+    tracks.loop((t, index) {
+      if (File(t.path).existsSync()) tracksExisting.add(t);
+    });
+  } else {
+    tracks.loop((t, index) {
+      final existingTrack = t.path.toTrackOrNull();
+      if (existingTrack != null) tracksExisting.add(existingTrack);
+    });
+  }
 
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
-  final doesTracksExist = !errorPlayingTrack && tracksExisting.isNotEmpty;
 
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
@@ -758,14 +764,27 @@ Future<void> showGeneralPopupDialog(
                   ),
 
                   /// if the track doesnt exist
-                  !doesTracksExist
+                  errorPlayingTrack != null || tracksExisting.isEmpty
                       ? Column(
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                '${errorPlayingTrack ? lang.ERROR_PLAYING_TRACK : lang.TRACK_NOT_FOUND}.\n${lang.PROMPT_TO_CHANGE_TRACK_PATH}',
-                                style: theme.textTheme.displayMedium,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.3),
+                                  ),
+                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    tracksExisting.isEmpty
+                                        ? "${lang.TRACK_NOT_FOUND}.\n${lang.PROMPT_TO_CHANGE_TRACK_PATH}"
+                                        : "${lang.ERROR_PLAYING_TRACK}.\n${errorPlayingTrack.toString()}",
+                                    style: theme.textTheme.displayMedium,
+                                  ),
+                                ),
                               ),
                             ),
                             if (isSingle) ...[
@@ -806,35 +825,31 @@ Future<void> showGeneralPopupDialog(
                                   await pickDirectoryToUpdateTrack();
                                 },
                               ),
-                              if (errorPlayingTrack)
-                                () {
-                                  void onSkip() {
-                                    cancelSkipTimer();
-                                    NamidaNavigator.inst.closeDialog();
-                                    Player.inst.next();
-                                  }
-
-                                  return Obx(
-                                    () {
-                                      final remainingSecondsToSkip = Player.inst.playErrorRemainingSecondsToSkip;
-                                      return SmallListTile(
-                                        title: lang.SKIP,
-                                        subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
-                                        color: colorDelightened.value,
-                                        compact: true,
-                                        icon: Broken.next,
-                                        trailing: remainingSecondsToSkip <= 0
-                                            ? null
-                                            : NamidaIconButton(
-                                                icon: Broken.close_circle,
-                                                iconColor: Get.context?.defaultIconColor(colorDelightened.value, theme.textTheme.displayMedium?.color),
-                                                onPressed: cancelSkipTimer,
-                                              ),
-                                        onTap: onSkip,
-                                      );
-                                    },
-                                  );
-                                }()
+                              if (errorPlayingTrack != null)
+                                Obx(
+                                  () {
+                                    final remainingSecondsToSkip = Player.inst.playErrorRemainingSecondsToSkip;
+                                    return SmallListTile(
+                                      title: lang.SKIP,
+                                      subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
+                                      color: colorDelightened.value,
+                                      compact: true,
+                                      icon: Broken.next,
+                                      trailing: remainingSecondsToSkip <= 0
+                                          ? null
+                                          : NamidaIconButton(
+                                              icon: Broken.close_circle,
+                                              iconColor: Get.context?.defaultIconColor(colorDelightened.value, theme.textTheme.displayMedium?.color),
+                                              onPressed: cancelSkipTimer,
+                                            ),
+                                      onTap: () {
+                                        cancelSkipTimer();
+                                        NamidaNavigator.inst.closeDialog();
+                                        Player.inst.next();
+                                      },
+                                    );
+                                  },
+                                ),
                             ],
                             advancedStuffListTile,
                             if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,

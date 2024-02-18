@@ -27,7 +27,7 @@ class NamidaDialogs {
     int? index,
     bool comingFromQueue = false,
     bool isFromPlayerQueue = false,
-    bool errorPlayingTrack = false,
+    Exception? errorPlayingTrack,
     required QueueSource source,
     String? additionalHero,
   }) async {

@@ -103,7 +103,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 2cd4ec054703aa1cdd7a4ddc61021c07aaa457c4
+      ref: b033a802fda0c796a45c6030d5625daad616c0fc
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query

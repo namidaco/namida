@@ -66,6 +66,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
   void _resetPreset({bool writeSettings = true}) {
     _activePresetCustom.value = true;
     _activePreset.value = '';
+    _equalizer.setPreset(null);
     if (writeSettings && settings.equalizer.preset != null) {
       settings.equalizer.save(preset: null, resetPreset: true);
     }
