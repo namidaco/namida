@@ -678,7 +678,7 @@ Future<void> showGeneralPopupDialog(
                           const SizedBox(width: 16.0),
                           if (forceSingleArtwork!)
                             NamidaHero(
-                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.first.path}$additionalHero',
+                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.firstOrNull?.path}$additionalHero',
                               child: ArtworkWidget(
                                 key: Key(tracks.pathToImage),
                                 track: tracks.trackOfImage,
@@ -1136,7 +1136,7 @@ Future<void> showGeneralPopupDialog(
                                   color: colorDelightened.value,
                                   compact: true,
                                   title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex).displayTrackKeyword}',
-                                  subtitle: "${playAfterTrack.artistsList.first} - ${playAfterTrack.title}",
+                                  subtitle: [playAfterTrack.artistsList.firstOrNull, playAfterTrack.title].joinText(separator: ' - '),
                                   icon: Broken.hierarchy_square,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
