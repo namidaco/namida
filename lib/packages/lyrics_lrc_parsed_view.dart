@@ -366,6 +366,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     ),
                     if (fullscreen) ...[
                       const WaveformMiniplayer(fixPadding: true),
+                      const SizedBox(height: 8.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -420,6 +421,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         ],
                       ),
                       const SizedBox(height: 12.0),
+                      SizedBox(height: MediaQuery.paddingOf(context).bottom),
                     ]
                   ],
                 ),
