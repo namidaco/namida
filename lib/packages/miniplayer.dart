@@ -1766,58 +1766,22 @@ class _TrackInfo extends StatelessWidget {
     final track = trackPre.toTrackExt();
     final title = track.title;
     final artist = track.originalArtist;
-    final canShowArtist = artist != '';
-    final canShowTitle = track.title != '';
-    final bigFontSize = velpy(a: 15.0, b: 20.0, c: p);
-    final smallFontSize = velpy(a: 13.0, b: 15.0, c: p);
-    TextStyle? getStyle(bool bigger, bool makeSmallBiggerIf) {
-      return bigger
-          ? context.textTheme.displayMedium?.copyWith(
-              fontSize: bigFontSize.multipliedFontScale,
-              height: 1,
-            )
-          : context.textTheme.displayMedium?.copyWith(
-              fontSize: (makeSmallBiggerIf ? bigFontSize : smallFontSize).multipliedFontScale,
-            );
+
+    String firstLine = '';
+    String secondLine = '';
+
+    if (settings.displayArtistBeforeTitle.value) {
+      firstLine = artist.overflow;
+      secondLine = title.overflow;
+    } else {
+      firstLine = title.overflow;
+      secondLine = artist.overflow;
     }
 
-    final artistAndTitle = settings.displayArtistBeforeTitle.value
-        ? [
-            if (canShowArtist) ...[
-              Text(
-                artist.overflow,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: getStyle(true, !canShowTitle),
-              ),
-              const SizedBox(height: 4.0),
-            ],
-            if (canShowTitle)
-              Text(
-                title.overflow,
-                maxLines: canShowArtist ? 1 : 2,
-                overflow: TextOverflow.ellipsis,
-                style: getStyle(false, !canShowArtist),
-              ),
-          ]
-        : [
-            if (canShowTitle) ...[
-              Text(
-                title.overflow,
-                maxLines: canShowArtist ? 1 : 2,
-                overflow: TextOverflow.ellipsis,
-                style: getStyle(true, !canShowTitle),
-              ),
-              const SizedBox(height: 4.0),
-            ],
-            if (canShowArtist)
-              Text(
-                artist.overflow,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: getStyle(false, !canShowArtist),
-              ),
-          ];
+    if (firstLine == '') {
+      firstLine = secondLine;
+      secondLine = '';
+    }
 
     return Transform.translate(
       offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * p.clamp(0, 2))),
@@ -1844,10 +1808,30 @@ class _TrackInfo extends StatelessWidget {
                               onTap: cp == 1 ? () => NamidaDialogs.inst.showTrackDialog(trackPre, source: QueueSource.playerQueue) : null,
                               padding: EdgeInsets.only(left: 8.0 * cp),
                               child: Column(
-                                key: Key(track.title),
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: artistAndTitle,
+                                children: [
+                                  if (firstLine != '')
+                                    Text(
+                                      firstLine,
+                                      maxLines: secondLine == '' ? 2 : 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.displayMedium?.copyWith(
+                                        fontSize: velpy(a: 15.0, b: 20.0, c: p).multipliedFontScale,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  if (firstLine != '' && secondLine != '') const SizedBox(height: 4.0),
+                                  if (secondLine != '')
+                                    Text(
+                                      secondLine,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.displayMedium?.copyWith(
+                                        fontSize: velpy(a: 13.0, b: 15.0, c: p).multipliedFontScale,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),

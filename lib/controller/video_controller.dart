@@ -21,6 +21,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
@@ -83,7 +84,7 @@ class NamidaVideoWidget extends StatelessWidget {
               await _verifyAndEnterFullScreen();
             },
       onPointerCancel: !swipeUpToFullscreen ? null : (event) => _cancelZoom(),
-      child: GestureDetector(
+      child: ScaleDetector(
         behavior: HitTestBehavior.translucent,
         onScaleUpdate: !zoomInToFullscreen ? null : (details) => VideoController.inst.videoZoomAdditionalScale.value = details.scale,
         onScaleEnd: !zoomInToFullscreen

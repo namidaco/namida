@@ -126,7 +126,12 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
   double _dragUpToCancel = 0.0;
   late final _dragUpToCancelMax = widget.isFullscreen ? 8 : 5;
 
-  bool get _canDragToSeek => _userDragToSeek && _dragToSeek && (widget.canDrag == null ? true : widget.canDrag!());
+  late bool _canDragToSeekLatest = _userDragToSeek; // used for dragging update.
+  bool get _canDragToSeek {
+    final can = _userDragToSeek && _dragToSeek && (widget.canDrag == null ? true : widget.canDrag!());
+    _canDragToSeekLatest = can;
+    return can;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,8 +156,9 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 top: barHeight / 2,
               ),
               child: Listener(
+                onPointerDown: (_) => _canDragToSeek, // refresh `_canDragToSeekLatest`
                 onPointerMove: (event) {
-                  if (!_canDragToSeek) return;
+                  if (!_canDragToSeekLatest) return;
                   if (!_isMiniplayerExpanded) return;
                   if (_dragUpToCancel > _dragUpToCancelMax) {
                     setState(() {
@@ -161,6 +167,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                     });
                     Vibration.vibrate(duration: 20, amplitude: 80);
                   } else {
+                    _currentSeekStuckWord = '';
                     _dragToSeek = true;
                     _dragUpToCancel -= event.delta.dy * 0.1;
                   }
@@ -182,7 +189,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                     _onDragStart(details.localPosition.dx, c.maxWidth);
                   },
                   onHorizontalDragUpdate: (event) {
-                    if (!_canDragToSeek) return;
+                    if (!_canDragToSeekLatest) return;
                     _onSeekDragUpdate(event.localPosition.dx, c.maxWidth);
                   },
                   onHorizontalDragEnd: (_) {
@@ -219,7 +226,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 final seekTo = _seekPercentage.value * playerDuration.inMilliseconds;
                 final seekToDiff = seekTo - currentPositionMS;
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
-                final finalText = _canDragToSeek ? "$plusOrMinus${seekToDiff.round().milliSecondsLabel} " : _currentSeekStuckWord;
+                final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";
                 return Transform.translate(
                   offset: Offset((maxWidth * _seekPercentage.value - seekTextWidth * 0.5).clamp(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(
