@@ -162,8 +162,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   var lyrics = <LrcLine>[];
   final timestampsMap = <Duration, (int, LrcLine)>{};
 
-  late double _previousFontMultiplier = settings.fontScaleLRC;
-  late double _fontMultiplier = settings.fontScaleLRC;
+  double _previousFontMultiplier = settings.fontScaleLRC;
+  double _fontMultiplier = settings.fontScaleLRC;
 
   @override
   void dispose() {

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -447,7 +447,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   RxDouble get _currentBrigthnessDim => VideoController.inst.currentBrigthnessDim;
 
-  Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, FlutterView view) {
+  Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view) {
     final totalHeight = view.physicalSize.shortestSide / view.devicePixelRatio * 0.75;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -595,6 +595,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         }
         _disableSliders = !_canSlideVolume(context, event.globalPosition.dy);
       },
+      onVerticalDragEnd: (_) {
+        _startVolumeSwipeTimer();
+        _startBrightnessDimTimer();
+      },
+      onVerticalDragCancel: () {
+        _startVolumeSwipeTimer();
+        _startBrightnessDimTimer();
+      },
       onVerticalDragUpdate: !shouldShowSliders
           ? null
           : (event) async {
@@ -701,6 +709,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
             // ---- Top Row ----
             SafeArea(
+              left: false,
+              right: false,
               child: Padding(
                 padding: horizontalControlsPadding,
                 child: GestureDetector(
@@ -936,6 +946,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               cachedQualities.removeWhere(
                                 (cq) {
                                   return ytQualities.any((ytq) {
+                                    if (widget.isLocal) return ytq.height == cq.height;
                                     final cachePath = videoId == null ? null : ytq.cachePath(videoId);
                                     if (cachePath == cq.path) return true;
                                     if (ytq.sizeInBytes == cq.sizeInBytes) return true;
@@ -953,14 +964,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   setControlsVisibily(true);
                                 },
                                 children: () => [
-                                  _getQualityChip(
-                                    title: lang.AUDIO_ONLY,
-                                    onPlay: (isSelected) {
-                                      Player.inst.setAudioOnlyPlayback(true);
-                                    },
-                                    selected: Player.inst.isAudioOnlyPlayback,
-                                    isCached: false,
-                                    icon: Broken.musicnote,
+                                  Obx(
+                                    () => _getQualityChip(
+                                      title: lang.AUDIO_ONLY,
+                                      onPlay: (isSelected) {
+                                        Player.inst.setAudioOnlyPlayback(true);
+                                        VideoController.inst.currentVideo.value = null;
+                                        settings.save(enableVideoPlayback: false);
+                                      },
+                                      selected: (widget.isLocal ? VideoController.inst.currentVideo.value == null : Player.inst.isAudioOnlyPlayback),
+                                      isCached: false,
+                                      icon: Broken.musicnote,
+                                    ),
                                   ),
                                   ...cachedQualities.map(
                                     (element) => Obx(
@@ -977,9 +992,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               useCache: true,
                                               videoId: Player.inst.nowPlayingVideoID?.id ?? '',
                                             );
+                                            if (widget.isLocal) {
+                                              VideoController.inst.currentVideo.value = element;
+                                              settings.save(enableVideoPlayback: true);
+                                            }
                                           }
                                         },
-                                        selected: Player.inst.currentCachedVideo?.path == element.path,
+                                        selected: (widget.isLocal ? VideoController.inst.currentVideo.value : Player.inst.currentCachedVideo)?.path == element.path,
                                         isCached: true,
                                       ),
                                     ),
@@ -988,27 +1007,49 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     final sizeInBytes = element.sizeInBytes;
                                     return Obx(
                                       () {
-                                        final id = Player.inst.nowPlayingVideoID?.id;
-                                        final cachedFile = id == null ? null : element.getCachedFile(id);
-                                        final isSelected = element.resolution == Player.inst.currentVideoStream?.resolution ||
-                                            (Player.inst.currentCachedVideo != null && cachedFile?.path == Player.inst.currentCachedVideo?.path);
+                                        if (widget.isLocal) {
+                                          final id = Player.inst.nowPlayingVideoID?.id;
+                                          final isSelected = element.height == VideoController.inst.currentVideo.value?.height;
 
-                                        return _getQualityChip(
-                                          title: element.resolution ?? '',
-                                          subtitle: sizeInBytes == null ? '' : " • ${sizeInBytes.fileSizeFormatted}",
-                                          onPlay: (isSelected) {
-                                            if (!isSelected) {
-                                              Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                stream: element,
-                                                cachedFile: cachedFile,
-                                                useCache: true,
-                                                videoId: id ?? '',
-                                              );
-                                            }
-                                          },
-                                          selected: isSelected,
-                                          isCached: cachedFile != null,
-                                        );
+                                          return _getQualityChip(
+                                            title: element.resolution ?? '',
+                                            subtitle: sizeInBytes == null ? '' : " • ${sizeInBytes.fileSizeFormatted}",
+                                            onPlay: (isSelected) {
+                                              if (!isSelected) {
+                                                Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                  stream: element,
+                                                  cachedFile: null,
+                                                  useCache: true,
+                                                  videoId: id ?? '',
+                                                );
+                                              }
+                                            },
+                                            selected: isSelected,
+                                            isCached: isSelected,
+                                          );
+                                        } else {
+                                          final id = Player.inst.nowPlayingVideoID?.id;
+                                          final cachedFile = id == null ? null : element.getCachedFile(id);
+                                          final isSelected = (element.resolution == Player.inst.currentVideoStream?.resolution ||
+                                              (Player.inst.currentCachedVideo != null && cachedFile?.path == Player.inst.currentCachedVideo?.path));
+
+                                          return _getQualityChip(
+                                            title: element.resolution ?? '',
+                                            subtitle: sizeInBytes == null ? '' : " • ${sizeInBytes.fileSizeFormatted}",
+                                            onPlay: (isSelected) {
+                                              if (!isSelected) {
+                                                Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                  stream: element,
+                                                  cachedFile: cachedFile,
+                                                  useCache: true,
+                                                  videoId: id ?? '',
+                                                );
+                                              }
+                                            },
+                                            selected: isSelected,
+                                            isCached: cachedFile != null,
+                                          );
+                                        }
                                       },
                                     );
                                   }).toList(),
@@ -1027,10 +1068,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         ),
                                         child: Obx(
                                           () {
-                                            final qts = Player.inst.currentVideoStream?.resolution;
-                                            final c = Player.inst.currentCachedVideo;
-                                            final qtc = c == null ? null : '${c.resolution}p${c.framerateText()}';
-                                            final qt = qts ?? qtc;
+                                            String? qt;
+                                            if (widget.isLocal) {
+                                              final video = VideoController.inst.currentVideo.value;
+                                              qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
+                                            } else {
+                                              qt = Player.inst.currentVideoStream?.resolution;
+                                              if (qt == null) {
+                                                final c = Player.inst.currentCachedVideo;
+                                                qt = c == null ? null : '${c.resolution}p${c.framerateText()}';
+                                              }
+                                            }
+
+                                            final isAudio = widget.isLocal ? VideoController.inst.currentVideo.value == null : Player.inst.isAudioOnlyPlayback;
+
                                             return Row(
                                               children: [
                                                 if (qt != null) ...[
@@ -1041,7 +1092,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   const SizedBox(width: 4.0),
                                                 ],
                                                 Icon(
-                                                  Player.inst.isAudioOnlyPlayback ? Broken.musicnote : Broken.setting,
+                                                  isAudio ? Broken.musicnote : Broken.setting,
                                                   color: itemsColor,
                                                   size: 16.0,
                                                 ),

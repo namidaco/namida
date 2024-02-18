@@ -281,6 +281,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   FutureOr<void> clearQueue() async {
     CurrentColor.inst.resetCurrentPlayingTrack();
 
+    VideoController.inst.currentVideo.value = null;
     VideoController.inst.currentYTQualities.clear();
     VideoController.inst.currentPossibleVideos.clear();
 
