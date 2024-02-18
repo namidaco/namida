@@ -635,25 +635,23 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       onTapUp: _canShowControls
           ? (event) {
               if (_isDraggingSeekBar) return;
-              final screenPart = context.width / 3;
-              final dx = event.localPosition.dx;
-              if (dx >= screenPart && dx <= screenPart * 2) {
-                // pressed in middle
-                _onTap();
-                _onFinishingDoubleTapTimer();
-              } else {
-                if (_doubleTapFirstPress) {
-                  _onDoubleTap(event.localPosition);
+
+              if (_doubleTapFirstPress && _doubleTapTimer?.isActive == true) {
+                // -- pressed again within 200ms.
+                _onDoubleTap(event.localPosition);
+                setControlsVisibily(false);
+                _doubleTapTimer?.cancel();
+                _doubleTapTimer = Timer(const Duration(milliseconds: 200), () {
+                  _doubleTapFirstPress = false;
                   _onFinishingDoubleTapTimer();
-                } else {
-                  _doubleTapFirstPress = true;
-                  _doubleTapTimer ??= Timer(const Duration(milliseconds: 200), () {
-                    if (_doubleTapFirstPress) {
-                      _onTap();
-                      _onFinishingDoubleTapTimer();
-                    }
-                  });
-                }
+                });
+              } else {
+                _onTap();
+                _doubleTapFirstPress = true;
+                _doubleTapTimer?.cancel();
+                _doubleTapTimer = Timer(const Duration(milliseconds: 200), () {
+                  _doubleTapFirstPress = false;
+                });
               }
             }
           : null,
