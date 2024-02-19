@@ -29,7 +29,10 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 import 'package:namida/main.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
+
+final _editingInProgress = <String, bool>{}.obs;
 
 /// Tested And Working on:
 /// - Android 9 (API 29): Internal ✓, External X `Needs SAF`
@@ -53,10 +56,14 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
   final ytSearchPageController = GlobalKey<YoutubeSearchResultsPageState>();
   final ytlink = singleTrack.youtubeLink;
   controller.text = ytlink;
+
+  final canEditComment = false.obs;
+
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       controller.dispose();
       ytSearchController.dispose();
+      canEditComment.close();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => Form(
@@ -113,6 +120,8 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                             final url = video.url;
                             if (url != null) {
                               controller.text = url;
+                              canEditComment.value = true;
+
                               snackyy(
                                 message: 'Set to "${video.name ?? ''}" by "${video.uploaderName ?? ''}"',
                                 top: false,
@@ -134,20 +143,38 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
         ),
         actions: [
           const CancelButton(),
-          NamidaButton(
-            text: lang.SAVE,
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                await _updateTracksMetadata(
-                  tagger: null,
-                  tracks: [singleTrack],
-                  editedTags: {},
-                  commentToInsert: controller.text,
-                  trimWhiteSpaces: false,
-                );
-                NamidaNavigator.inst.closeDialog();
-              }
-            },
+          Obx(
+            () => NamidaButton(
+              enabled: canEditComment.value && _editingInProgress[singleTrack.path] != true,
+              textWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_editingInProgress[singleTrack.path] == true) ...[
+                    const LoadingIndicator(),
+                    const SizedBox(width: 8.0),
+                  ],
+                  Text(
+                    lang.SAVE,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  _editingInProgress[singleTrack.path] = true;
+                  await _updateTracksMetadata(
+                    tagger: null,
+                    tracks: [singleTrack],
+                    editedTags: {},
+                    commentToInsert: controller.text,
+                    trimWhiteSpaces: false,
+                  );
+                  _editingInProgress[singleTrack.path] = false;
+                  NamidaNavigator.inst.closeDialog();
+                }
+              },
+            ),
           ),
         ],
         child: CustomTagTextField(
@@ -155,6 +182,9 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
           hintText: ytlink.overflow,
           labelText: lang.LINK,
           keyboardType: TextInputType.url,
+          onChanged: (value) {
+            canEditComment.value = true;
+          },
           validator: (value) {
             if (value!.isEmpty) {
               return lang.PLEASE_ENTER_A_NAME;
@@ -412,10 +442,24 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
               actions: [
                 Obx(
                   () => NamidaButton(
-                    enabled: canEditTags.value,
+                    enabled: canEditTags.value && _editingInProgress[track.path] != true,
                     icon: Broken.pen_add,
-                    text: lang.SAVE,
+                    textWidget: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_editingInProgress[track.path] == true) ...[
+                          const LoadingIndicator(),
+                          const SizedBox(width: 8.0),
+                        ],
+                        Text(
+                          lang.SAVE,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                     onPressed: () async {
+                      _editingInProgress[track.path] = true;
                       await _updateTracksMetadata(
                         tagger: tagger,
                         tracks: [track],
@@ -428,6 +472,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                           }
                         },
                       );
+                      _editingInProgress[track.path] = false;
 
                       NamidaNavigator.inst.closeDialog();
                     },
@@ -796,168 +841,189 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
         _getKeepDatesWidget,
       ],
       actions: [
-        NamidaButton(
-          icon: Broken.pen_add,
-          text: lang.SAVE,
-          onPressed: () {
-            NamidaNavigator.inst.navigateDialog(
-              dialog: CustomBlurryDialog(
-                title: lang.NOTE,
-                insetPadding: const EdgeInsets.all(42.0),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
-                isWarning: true,
-                normalTitleStyle: true,
-                actions: [
-                  NamidaButton(
-                    text: lang.CANCEL,
-                    onPressed: () => NamidaNavigator.inst.closeDialog(),
-                  ),
-                  NamidaButton(
-                    text: lang.CONFIRM,
-                    onPressed: () async {
-                      NamidaNavigator.inst.closeDialog();
-                      if (trimWhiteSpaces.value) {
-                        editedTags.updateAll((key, value) => value.trimAll());
-                      }
-
-                      final RxInt successfullEdits = 0.obs;
-                      final RxList<Track> failedEditsTracks = <Track>[].obs;
-                      final RxBool finishedEditing = false.obs;
-                      final RxString updatingLibrary = '?'.obs;
-
-                      void showFailedTracksDialogs() {
-                        NamidaNavigator.inst.navigateDialog(
-                          dialog: CustomBlurryDialog(
-                            contentPadding: EdgeInsets.zero,
-                            title: lang.FAILED_EDITS,
-                            actions: [
-                              NamidaButton(
-                                onPressed: NamidaNavigator.inst.closeDialog,
-                                text: lang.CONFIRM,
-                              )
-                            ],
-                            child: SizedBox(
-                              height: Get.height * 0.5,
-                              width: Get.width,
-                              child: NamidaTracksList(
-                                padding: EdgeInsets.zero,
-                                queueLength: failedEditsTracks.length,
-                                queueSource: QueueSource.others,
-                                itemBuilder: (context, i) {
-                                  return TrackTile(
-                                    key: Key(i.toString()),
-                                    trackOrTwd: failedEditsTracks[i],
-                                    index: i,
-                                    queueSource: QueueSource.others,
-                                    onTap: () {},
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      Widget getText(String text, {TextStyle? style}) {
-                        return Text(
-                          text,
-                          style: style ?? Get.textTheme.displayMedium,
-                        );
-                      }
-
-                      NamidaNavigator.inst.navigateDialog(
-                        onDisposing: () {
-                          successfullEdits.close();
-                          failedEditsTracks.close();
-                          finishedEditing.close();
-                          updatingLibrary.close();
-                        },
-                        tapToDismiss: false,
-                        dialog: Obx(
-                          () => CustomBlurryDialog(
-                            title: lang.PROGRESS,
-                            normalTitleStyle: true,
-                            trailingWidgets: [
-                              NamidaIconButton(
-                                icon: Broken.activity,
-                                onPressed: showFailedTracksDialogs,
-                              ),
-                            ],
-                            actions: [
-                              Obx(
-                                () => NamidaButton(
-                                  enabled: finishedEditing.value,
-                                  text: lang.DONE,
-                                  onPressed: () => NamidaNavigator.inst.closeDialog(),
-                                ),
-                              )
-                            ],
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  getText('${lang.SUCCEEDED}: ${successfullEdits.value}'),
-                                  const SizedBox(height: 8.0),
-                                  Obx(
-                                    () => Row(
-                                      children: [
-                                        getText('${lang.FAILED}: ${failedEditsTracks.length}'),
-                                        const SizedBox(width: 4.0),
-                                        if (failedEditsTracks.isNotEmpty)
-                                          GestureDetector(
-                                            onTap: showFailedTracksDialogs,
-                                            child: getText(
-                                              lang.CHECK_LIST,
-                                              style: Get.textTheme.displaySmall?.copyWith(
-                                                color: Get.theme.colorScheme.secondary,
-                                                decoration: TextDecoration.underline,
-                                                decorationStyle: TextDecorationStyle.solid,
-                                              ),
-                                            ),
-                                          )
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8.0),
-                                  getText('${lang.UPDATING} ${updatingLibrary.value}'),
-                                  const SizedBox(height: 8.0),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                      String? errorMsg;
-                      await _updateTracksMetadata(
-                        tagger: null,
-                        tracks: tracks,
-                        editedTags: editedTags,
-                        trimWhiteSpaces: trimWhiteSpaces.value,
-                        imagePath: currentImagePath.value,
-                        onEdit: (didUpdate, error, track) {
-                          if (didUpdate) {
-                            successfullEdits.value++;
-                          } else {
-                            failedEditsTracks.add(track);
-                            errorMsg = error;
-                          }
-                        },
-                        onUpdatingTracksStart: () {
-                          updatingLibrary.value = '...';
-                        },
-                      );
-
-                      if (failedEditsTracks.isNotEmpty) {
-                        snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: errorMsg ?? '');
-                      }
-                      updatingLibrary.value = '✓';
-                      finishedEditing.value = true;
-                    },
+        Obx(
+          () {
+            final isEditing = tracks.any((track) => _editingInProgress[track.path] == true);
+            return NamidaButton(
+              enabled: canEditTags.value && !isEditing,
+              icon: Broken.pen_add,
+              textWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isEditing) ...[
+                    const LoadingIndicator(),
+                    const SizedBox(width: 8.0),
+                  ],
+                  Text(
+                    lang.SAVE,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                child: toBeEditedTracksColumn,
               ),
+              onPressed: () {
+                tracks.loop((track, _) => _editingInProgress[track.path] = true);
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    title: lang.NOTE,
+                    insetPadding: const EdgeInsets.all(42.0),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+                    isWarning: true,
+                    normalTitleStyle: true,
+                    actions: [
+                      NamidaButton(
+                        text: lang.CANCEL,
+                        onPressed: () => NamidaNavigator.inst.closeDialog(),
+                      ),
+                      NamidaButton(
+                        text: lang.CONFIRM,
+                        onPressed: () async {
+                          NamidaNavigator.inst.closeDialog();
+                          if (trimWhiteSpaces.value) {
+                            editedTags.updateAll((key, value) => value.trimAll());
+                          }
+
+                          final RxInt successfullEdits = 0.obs;
+                          final RxList<Track> failedEditsTracks = <Track>[].obs;
+                          final RxBool finishedEditing = false.obs;
+                          final RxString updatingLibrary = '?'.obs;
+
+                          void showFailedTracksDialogs() {
+                            NamidaNavigator.inst.navigateDialog(
+                              dialog: CustomBlurryDialog(
+                                contentPadding: EdgeInsets.zero,
+                                title: lang.FAILED_EDITS,
+                                actions: [
+                                  NamidaButton(
+                                    onPressed: NamidaNavigator.inst.closeDialog,
+                                    text: lang.CONFIRM,
+                                  )
+                                ],
+                                child: SizedBox(
+                                  height: Get.height * 0.5,
+                                  width: Get.width,
+                                  child: NamidaTracksList(
+                                    padding: EdgeInsets.zero,
+                                    queueLength: failedEditsTracks.length,
+                                    queueSource: QueueSource.others,
+                                    itemBuilder: (context, i) {
+                                      return TrackTile(
+                                        key: Key(i.toString()),
+                                        trackOrTwd: failedEditsTracks[i],
+                                        index: i,
+                                        queueSource: QueueSource.others,
+                                        onTap: () {},
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          Widget getText(String text, {TextStyle? style}) {
+                            return Text(
+                              text,
+                              style: style ?? Get.textTheme.displayMedium,
+                            );
+                          }
+
+                          NamidaNavigator.inst.navigateDialog(
+                            onDisposing: () {
+                              successfullEdits.close();
+                              failedEditsTracks.close();
+                              finishedEditing.close();
+                              updatingLibrary.close();
+                            },
+                            tapToDismiss: false,
+                            dialog: Obx(
+                              () => CustomBlurryDialog(
+                                title: lang.PROGRESS,
+                                normalTitleStyle: true,
+                                trailingWidgets: [
+                                  NamidaIconButton(
+                                    icon: Broken.activity,
+                                    onPressed: showFailedTracksDialogs,
+                                  ),
+                                ],
+                                actions: [
+                                  Obx(
+                                    () => NamidaButton(
+                                      enabled: finishedEditing.value,
+                                      text: lang.DONE,
+                                      onPressed: () => NamidaNavigator.inst.closeDialog(),
+                                    ),
+                                  )
+                                ],
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      getText('${lang.SUCCEEDED}: ${successfullEdits.value}'),
+                                      const SizedBox(height: 8.0),
+                                      Obx(
+                                        () => Row(
+                                          children: [
+                                            getText('${lang.FAILED}: ${failedEditsTracks.length}'),
+                                            const SizedBox(width: 4.0),
+                                            if (failedEditsTracks.isNotEmpty)
+                                              GestureDetector(
+                                                onTap: showFailedTracksDialogs,
+                                                child: getText(
+                                                  lang.CHECK_LIST,
+                                                  style: Get.textTheme.displaySmall?.copyWith(
+                                                    color: Get.theme.colorScheme.secondary,
+                                                    decoration: TextDecoration.underline,
+                                                    decorationStyle: TextDecorationStyle.solid,
+                                                  ),
+                                                ),
+                                              )
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8.0),
+                                      getText('${lang.UPDATING} ${updatingLibrary.value}'),
+                                      const SizedBox(height: 8.0),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                          String? errorMsg;
+                          await _updateTracksMetadata(
+                            tagger: null,
+                            tracks: tracks,
+                            editedTags: editedTags,
+                            trimWhiteSpaces: trimWhiteSpaces.value,
+                            imagePath: currentImagePath.value,
+                            onEdit: (didUpdate, error, track) {
+                              if (didUpdate) {
+                                successfullEdits.value++;
+                              } else {
+                                failedEditsTracks.add(track);
+                                errorMsg = error;
+                              }
+                            },
+                            onUpdatingTracksStart: () {
+                              updatingLibrary.value = '...';
+                            },
+                          );
+
+                          if (failedEditsTracks.isNotEmpty) {
+                            snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: errorMsg ?? '');
+                          }
+                          updatingLibrary.value = '✓';
+                          finishedEditing.value = true;
+                          tracks.loop((track, _) => _editingInProgress[track.path] = false);
+                        },
+                      ),
+                    ],
+                    child: toBeEditedTracksColumn,
+                  ),
+                );
+              },
             );
           },
         )
@@ -1219,21 +1285,6 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
   void initState() {
     super.initState();
     initialText = widget.controller.text;
-    widget.controller.addListener(_controllerListener);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_controllerListener);
-    super.dispose();
-  }
-
-  void _controllerListener() {
-    final ct = widget.controller.text;
-    if (widget.onChanged != null) widget.onChanged!(ct);
-    setState(() {
-      didChange = initialText != ct;
-    });
   }
 
   @override
@@ -1252,6 +1303,13 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
       onTapOutside: (event) {
         FocusScope.of(context).unfocus();
+      },
+      onChanged: (value) {
+        if (widget.onChanged != null) widget.onChanged!(value);
+        final isDifferent = initialText != value;
+        if (isDifferent != didChange) {
+          setState(() => didChange = isDifferent);
+        }
       },
       onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(

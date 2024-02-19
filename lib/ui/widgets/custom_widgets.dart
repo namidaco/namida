@@ -562,12 +562,6 @@ class NamidaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconChild = Icon(icon, size: iconSize);
-    final textChild = Text(
-      text ?? '',
-      softWrap: false,
-      overflow: TextOverflow.ellipsis,
-    );
     final onTap = onPressed;
     final style = minimumSize
         ? ElevatedButton.styleFrom(
@@ -575,7 +569,6 @@ class NamidaButton extends StatelessWidget {
             padding: EdgeInsets.zero,
           )
         : null;
-
     if (textWidget != null) {
       return _getWidget(
         ElevatedButton(
@@ -585,6 +578,14 @@ class NamidaButton extends StatelessWidget {
         ),
       );
     }
+
+    final iconChild = Icon(icon, size: iconSize);
+    final textChild = Text(
+      text ?? '',
+      softWrap: false,
+      overflow: TextOverflow.ellipsis,
+    );
+
     // -- icon X && text ✓
     if (icon == null && text != null) {
       return _getWidget(
