@@ -9,6 +9,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -81,7 +82,9 @@ class YTUtils {
           child: Icon(
             Broken.video,
             size: 15.0,
-            color: iconsColor?.withOpacity(VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1),
+            color: iconsColor?.withOpacity(
+              VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
+            ),
           ),
         ),
         const SizedBox(width: 4.0),
@@ -90,7 +93,9 @@ class YTUtils {
           child: Icon(
             Broken.audio_square,
             size: 15.0,
-            color: iconsColor?.withOpacity(Player.inst.audioCacheMap[videoId] != null ? 0.6 : 0.1),
+            color: iconsColor?.withOpacity(
+              Player.inst.audioCacheMap[videoId] != null || Indexer.inst.allTracksMappedByYTID[videoId] != null ? 0.6 : 0.1,
+            ),
           ),
         ),
       ],

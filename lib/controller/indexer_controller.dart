@@ -69,6 +69,7 @@ class Indexer {
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
   var allFolderCovers = <String, String>{}; // {directoryPath, imagePath}
+  var allTracksMappedByYTID = <String, List<Track>>{};
 
   /// Used to prevent duplicated track (by filename).
   final Map<String, bool> _currentFileNamesMap = {};
@@ -667,6 +668,7 @@ class Indexer {
     for (final trext in tracks) {
       final tr = trext.toTrack();
       allTracksMappedByPath[tr] = trext;
+      allTracksMappedByYTID.addForce(trext.youtubeID, tr);
       _currentFileNamesMap[trext.path.getFilename] = true;
       if (checkForDuplicates) {
         tracksInfoList.addNoDuplicates(tr);
@@ -876,6 +878,7 @@ class Indexer {
       oldTracks.add(ot);
       newTracks.add(nt);
       allTracksMappedByPath[ot] = e.value;
+      allTracksMappedByYTID.addForce(e.value.youtubeID, ot);
       _currentFileNamesMap.remove(ot.filename);
       _currentFileNamesMap[nt.filename] = true;
 
@@ -923,6 +926,7 @@ class Indexer {
   void _clearLists() {
     tracksInfoList.clear();
     allTracksMappedByPath.clear();
+    allTracksMappedByYTID.clear();
     SearchSortController.inst.sortMedia(MediaType.track);
   }
 
@@ -965,6 +969,7 @@ class Indexer {
       final trs = await _fetchMediaStoreTracks();
       tracksInfoList.clear();
       allTracksMappedByPath.clear();
+      allTracksMappedByYTID.clear();
       _currentFileNamesMap.clear();
       _addTracksToLists(trs.map((e) => e.$1), false);
     } else {
@@ -1077,8 +1082,9 @@ class Indexer {
       genresConfig: GenresSplitConfig.settings(),
     );
     final tracksResult = await _readTracksFileCompute.thready(splitconfig);
-    allTracksMappedByPath.value = tracksResult;
-    tracksInfoList.addAll(tracksResult.keys);
+    allTracksMappedByPath.value = tracksResult.$1;
+    allTracksMappedByYTID = tracksResult.$2;
+    tracksInfoList.value = tracksResult.$3;
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
@@ -1100,8 +1106,10 @@ class Indexer {
     return map;
   }
 
-  static Future<Map<Track, TrackExtended>> _readTracksFileCompute(_SplitArtistGenreConfig config) async {
+  static (Map<Track, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(_SplitArtistGenreConfig config) {
     final map = <Track, TrackExtended>{};
+    final idsMap = <String, List<Track>>{};
+    final allTracks = <Track>[];
     final list = File(config.path).readAsJsonSync() as List?;
     if (list != null) {
       for (int i = 0; i <= list.length - 1; i++) {
@@ -1114,12 +1122,14 @@ class Indexer {
           );
           final track = trExt.toTrack();
           map[track] = trExt;
+          allTracks.add(track);
+          idsMap.addForce(trExt.youtubeID, track);
         } catch (e) {
           continue;
         }
       }
     }
-    return map;
+    return (map, idsMap, allTracks);
   }
 
   static List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {

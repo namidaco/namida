@@ -788,6 +788,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       disableVideo: isAudioOnlyPlayback,
       whatToAwait: () async => await playerStoppingSeikoo.future,
       startPlaying: startPlaying,
+      possibleAudioFiles: audioCacheMap[item.id] ?? [],
+      possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
     );
     if (item != currentVideo) return;
 
@@ -923,6 +925,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           disableVideo: isAudioOnlyPlayback,
           whatToAwait: () async => await playerStoppingSeikoo.future,
           startPlaying: startPlaying,
+          possibleAudioFiles: audioCacheMap[item.id] ?? [],
+          possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
         );
         if (!okaySetFromCache()) {
           showSnackError('skipping');
@@ -962,6 +966,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool disableVideo,
     required Future<void> Function() whatToAwait,
     required bool startPlaying,
+    required List<AudioCacheDetails> possibleAudioFiles,
+    required List<Track> possibleLocalFiles,
   }) async {
     // ------ Getting Video ------
     final allCachedVideos = VideoController.inst.getNVFromID(item.id);
@@ -980,12 +986,27 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);
 
     // ------ Getting Audio ------
-    final audioFiles = await _getCachedAudiosForID.thready({
-      "dirPath": AppDirs.AUDIOS_CACHE,
-      "id": item.id,
-    });
+    final audioFiles = possibleAudioFiles.isNotEmpty
+        ? possibleAudioFiles
+        : await _getCachedAudiosForID.thready({
+            "dirPath": AppDirs.AUDIOS_CACHE,
+            "id": item.id,
+          });
     final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0);
-    final cachedAudio = finalAudioFiles.firstOrNull;
+    AudioCacheDetails? cachedAudio = finalAudioFiles.firstOrNull;
+
+    if (cachedAudio == null) {
+      final localTrack = possibleLocalFiles.firstOrNull;
+      if (localTrack != null) {
+        cachedAudio = AudioCacheDetails(
+          youtubeId: item.id,
+          bitrate: localTrack.bitrate,
+          langaugeCode: null,
+          langaugeName: null,
+          file: File(localTrack.path),
+        );
+      }
+    }
 
     // ------ Playing ------
     if (cachedVideo != null && cachedAudio != null && !disableVideo) {
