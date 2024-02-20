@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Modify applicationIdSuffix
+        run: sed -i 's/applicationIdSuffix ".release"/applicationIdSuffix ".snapshot"/' android/app/build.gradle
+
       - name: Build APKs
         run: flutter build apk --target-platform android-arm,android-arm64 --release --split-per-abi -v
 
