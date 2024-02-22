@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:faudiotagger/models/tag.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -353,7 +353,7 @@ extension TrackExtUtils on TrackExtended {
   }
 
   TrackExtended copyWithTag({
-    required Tag tag,
+    required FTags tag,
     int? dateModified,
     String? path,
   }) {

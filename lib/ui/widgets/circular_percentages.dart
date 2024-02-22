@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -19,7 +18,7 @@ class IndexingPercentage extends StatelessWidget {
       () => NamidaHero(
         tag: 'indexingper',
         child: NamidaCircularPercentage(
-          percentage: allTracksInLibrary.length / Indexer.inst.allAudioFiles.length,
+          percentage: Indexer.inst.tracksInfoList.length / Indexer.inst.allAudioFiles.length,
           size: size,
         ).animateEntrance(showWhen: Indexer.inst.isIndexing.value),
       ),

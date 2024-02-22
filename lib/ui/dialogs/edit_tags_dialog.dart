@@ -1,21 +1,15 @@
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:faudiotagger/models/faudiomodel.dart';
-import 'package:flutter/material.dart';
-
 import 'package:checkmark/checkmark.dart';
-import 'package:faudiotagger/faudiotagger.dart';
-import 'package:faudiotagger/models/tag.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -23,12 +17,11 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-
-import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
@@ -163,8 +156,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   _editingInProgress[singleTrack.path] = true;
-                  await _updateTracksMetadata(
-                    tagger: null,
+                  await FAudioTaggerController.inst.updateTracksMetadata(
                     tracks: [singleTrack],
                     editedTags: {},
                     commentToInsert: controller.text,
@@ -216,9 +208,7 @@ Widget get _getKeepDatesWidget => NamidaIconButton(
     );
 
 Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
-  if (!await requestManageStoragePermission()) {
-    return;
-  }
+  if (!await requestManageStoragePermission()) return;
 
   final color = (colorScheme ?? CurrentColor.inst.color).obs;
   if (colorScheme == null) {
@@ -228,16 +218,20 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
     });
   }
 
-  final tagger = FAudioTagger();
+  FTags? tags;
+  FArtwork? artwork;
 
-  FAudioModel? info;
-  Uint8List? artwork;
-
-  final infoFull = await tagger.extractMetadata(trackPath: track.path);
-  info = infoFull.$1;
-  artwork = infoFull.$2;
-  if (info == null) {
-    snackyy(title: lang.ERROR, message: lang.METADATA_READ_FAILED);
+  final infoFull = await FAudioTaggerController.inst.extractMetadata(trackPath: track.path, saveArtworkToCache: false);
+  tags = infoFull.tags;
+  artwork = tags.artwork;
+  if (infoFull.hasError) {
+    snackyy(
+      title: lang.ERROR,
+      message: "${lang.METADATA_READ_FAILED}\n${infoFull.errorsMap}",
+      isError: true,
+    );
+  } else if (infoFull.errorsMap.isNotEmpty) {
+    snackyy(title: lang.NOTE, message: "${infoFull.errorsMap}");
   }
 
   final trimWhiteSpaces = true.obs;
@@ -249,25 +243,25 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   final editedTags = <TagField, String>{};
 
   // filling fields
-  tagsControllers[TagField.title] = TextEditingController(text: info?.title ?? '');
-  tagsControllers[TagField.album] = TextEditingController(text: info?.album ?? '');
-  tagsControllers[TagField.artist] = TextEditingController(text: info?.artist ?? '');
-  tagsControllers[TagField.albumArtist] = TextEditingController(text: info?.albumArtist ?? '');
-  tagsControllers[TagField.genre] = TextEditingController(text: info?.genre ?? '');
-  tagsControllers[TagField.mood] = TextEditingController(text: info?.mood ?? '');
-  tagsControllers[TagField.composer] = TextEditingController(text: info?.composer ?? '');
-  tagsControllers[TagField.comment] = TextEditingController(text: info?.comment ?? '');
-  tagsControllers[TagField.lyrics] = TextEditingController(text: info?.lyrics ?? '');
-  tagsControllers[TagField.trackNumber] = TextEditingController(text: info?.trackNumber.toIf('', '0'));
-  tagsControllers[TagField.discNumber] = TextEditingController(text: info?.discNumber.toIf('', '0'));
-  tagsControllers[TagField.year] = TextEditingController(text: info?.year.toIf('', '0'));
-  tagsControllers[TagField.remixer] = TextEditingController(text: info?.remixer);
-  tagsControllers[TagField.trackTotal] = TextEditingController(text: info?.trackTotal.toIf('', '0'));
-  tagsControllers[TagField.discTotal] = TextEditingController(text: info?.discTotal ?? '');
-  tagsControllers[TagField.lyricist] = TextEditingController(text: info?.lyricist ?? '');
-  tagsControllers[TagField.language] = TextEditingController(text: info?.language ?? '');
-  tagsControllers[TagField.recordLabel] = TextEditingController(text: info?.recordLabel ?? '');
-  tagsControllers[TagField.country] = TextEditingController(text: info?.country ?? '');
+  tagsControllers[TagField.title] = TextEditingController(text: tags.title ?? '');
+  tagsControllers[TagField.album] = TextEditingController(text: tags.album ?? '');
+  tagsControllers[TagField.artist] = TextEditingController(text: tags.artist ?? '');
+  tagsControllers[TagField.albumArtist] = TextEditingController(text: tags.albumArtist ?? '');
+  tagsControllers[TagField.genre] = TextEditingController(text: tags.genre ?? '');
+  tagsControllers[TagField.mood] = TextEditingController(text: tags.mood ?? '');
+  tagsControllers[TagField.composer] = TextEditingController(text: tags.composer ?? '');
+  tagsControllers[TagField.comment] = TextEditingController(text: tags.comment ?? '');
+  tagsControllers[TagField.lyrics] = TextEditingController(text: tags.lyrics ?? '');
+  tagsControllers[TagField.trackNumber] = TextEditingController(text: tags.trackNumber.toIf('', '0'));
+  tagsControllers[TagField.discNumber] = TextEditingController(text: tags.discNumber.toIf('', '0'));
+  tagsControllers[TagField.year] = TextEditingController(text: tags.year.toIf('', '0'));
+  tagsControllers[TagField.remixer] = TextEditingController(text: tags.remixer);
+  tagsControllers[TagField.trackTotal] = TextEditingController(text: tags.trackTotal.toIf('', '0'));
+  tagsControllers[TagField.discTotal] = TextEditingController(text: tags.discTotal ?? '');
+  tagsControllers[TagField.lyricist] = TextEditingController(text: tags.lyricist ?? '');
+  tagsControllers[TagField.language] = TextEditingController(text: tags.language ?? '');
+  tagsControllers[TagField.recordLabel] = TextEditingController(text: tags.recordLabel ?? '');
+  tagsControllers[TagField.country] = TextEditingController(text: tags.country ?? '');
 
   Widget getTagTextField(TagField tag) {
     return CustomTagTextField(
@@ -460,15 +454,14 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                     ),
                     onPressed: () async {
                       _editingInProgress[track.path] = true;
-                      await _updateTracksMetadata(
-                        tagger: tagger,
+                      await FAudioTaggerController.inst.updateTracksMetadata(
                         tracks: [track],
                         editedTags: editedTags,
                         imagePath: currentImagePath.value,
                         trimWhiteSpaces: trimWhiteSpaces.value,
                         onEdit: (didUpdate, error, track) {
                           if (!didUpdate) {
-                            snackyy(title: lang.METADATA_EDIT_FAILED, message: error);
+                            snackyy(title: lang.METADATA_EDIT_FAILED, message: error ?? '', isError: true);
                           }
                         },
                       );
@@ -500,7 +493,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                       () => ArtworkWidget(
                                         key: Key(currentImagePath.value),
                                         thumbnailSize: Get.width / 3,
-                                        bytes: currentImagePath.value != '' ? null : artwork,
+                                        bytes: currentImagePath.value != '' ? null : artwork?.bytes,
                                         path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
                                         onTopWidgets: [
                                           Positioned(
@@ -613,124 +606,9 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   );
 }
 
-Future<void> _updateTracksMetadata({
-  required FAudioTagger? tagger,
-  required List<Track> tracks,
-  required Map<TagField, String> editedTags,
-  required bool trimWhiteSpaces,
-  String imagePath = '',
-  String commentToInsert = '',
-  void Function(bool didUpdate, dynamic error, Track track)? onEdit,
-  void Function()? onUpdatingTracksStart,
-  bool? keepFileDates,
-}) async {
-  tagger ??= FAudioTagger();
-
-  if (trimWhiteSpaces) {
-    editedTags.updateAll((key, value) => value.trimAll());
-  }
-
-  final shouldUpdateArtwork = imagePath != '';
-
-  String oldComment = '';
-  if (commentToInsert != '') {
-    oldComment = await tagger.extractMetadata(trackPath: tracks.first.path).then((value) => value.$1?.comment ?? '');
-  }
-  final newTag = commentToInsert != ''
-      ? Tag(comment: oldComment == '' ? commentToInsert : '$commentToInsert\n$oldComment')
-      : Tag(
-          artwork: shouldUpdateArtwork ? imagePath : null,
-          title: editedTags[TagField.title],
-          album: editedTags[TagField.album],
-          artist: editedTags[TagField.artist],
-          albumArtist: editedTags[TagField.albumArtist],
-          composer: editedTags[TagField.composer],
-          genre: editedTags[TagField.genre],
-          mood: editedTags[TagField.mood],
-          trackNumber: editedTags[TagField.trackNumber],
-          discNumber: editedTags[TagField.discNumber],
-          year: editedTags[TagField.year],
-          comment: editedTags[TagField.comment],
-          lyrics: editedTags[TagField.lyrics],
-          remixer: editedTags[TagField.remixer],
-          trackTotal: editedTags[TagField.trackTotal],
-          discTotal: editedTags[TagField.discTotal],
-          lyricist: editedTags[TagField.lyricist],
-          language: editedTags[TagField.language],
-          recordLabel: editedTags[TagField.recordLabel],
-          country: editedTags[TagField.country],
-        );
-
-  final tracksMap = <Track, TrackExtended>{};
-  await tracks.loopFuture((track, _) async {
-    final file = File(track.path);
-    await file.executeAndKeepStats(
-      () async {
-        bool didUpdate = false;
-
-        // -- 1. try tagger
-        final error = await tagger!.writeTags(
-          path: track.path,
-          tag: newTag,
-        );
-
-        // didUpdate = error == null || error == '';
-
-        if (!didUpdate) {
-          // -- 2. try with ffmpeg
-          final ffmpegTagsMap = commentToInsert != ''
-              ? <String, String?>{
-                  FFMPEGTagField.comment: oldComment == '' ? commentToInsert : '$commentToInsert\n$oldComment',
-                }
-              : <String, String?>{
-                  FFMPEGTagField.title: editedTags[TagField.title],
-                  FFMPEGTagField.artist: editedTags[TagField.artist],
-                  FFMPEGTagField.album: editedTags[TagField.album],
-                  FFMPEGTagField.albumArtist: editedTags[TagField.albumArtist],
-                  FFMPEGTagField.composer: editedTags[TagField.composer],
-                  FFMPEGTagField.genre: editedTags[TagField.genre],
-                  FFMPEGTagField.mood: editedTags[TagField.mood],
-                  FFMPEGTagField.year: editedTags[TagField.year],
-                  FFMPEGTagField.trackNumber: editedTags[TagField.trackNumber],
-                  FFMPEGTagField.discNumber: editedTags[TagField.discNumber],
-                  FFMPEGTagField.trackTotal: editedTags[TagField.trackTotal],
-                  FFMPEGTagField.discTotal: editedTags[TagField.discTotal],
-                  FFMPEGTagField.comment: editedTags[TagField.comment],
-                  FFMPEGTagField.lyrics: editedTags[TagField.lyrics],
-                  FFMPEGTagField.remixer: editedTags[TagField.remixer],
-                  FFMPEGTagField.lyricist: editedTags[TagField.lyricist],
-                  FFMPEGTagField.language: editedTags[TagField.language],
-                  FFMPEGTagField.recordLabel: editedTags[TagField.recordLabel],
-                  FFMPEGTagField.country: editedTags[TagField.country],
-                };
-          didUpdate = await NamidaFFMPEG.inst.editMetadata(
-            path: track.path,
-            tagsMap: ffmpegTagsMap,
-          );
-        }
-        if (didUpdate) {
-          final trExt = track.toTrackExt();
-          tracksMap[track] = trExt.copyWithTag(tag: newTag);
-        }
-        printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-        if (onEdit != null) onEdit(didUpdate, error, track);
-      },
-      keepStats: keepFileDates ?? settings.editTagsKeepFileDates.value,
-    );
-  });
-
-  if (onUpdatingTracksStart != null) onUpdatingTracksStart();
-
-  await Indexer.inst.updateTrackMetadata(
-    tracksMap: tracksMap,
-    newArtworkPath: imagePath,
-  );
-}
-
 Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
-  if (!await requestManageStoragePermission()) {
-    return;
-  }
+  if (!await requestManageStoragePermission()) return;
+
   final RxList<Track> tracks = List<Track>.from(tracksPre).obs;
 
   final toBeEditedTracksColumn = Column(
@@ -992,8 +870,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                             ),
                           );
                           String? errorMsg;
-                          await _updateTracksMetadata(
-                            tagger: null,
+                          await FAudioTaggerController.inst.updateTracksMetadata(
                             tracks: tracks,
                             editedTags: editedTags,
                             trimWhiteSpaces: trimWhiteSpaces.value,
@@ -1012,10 +889,15 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                           );
 
                           if (failedEditsTracks.isNotEmpty) {
-                            snackyy(title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})', message: errorMsg ?? '');
+                            snackyy(
+                              title: '${lang.METADATA_EDIT_FAILED} (${failedEditsTracks.length})',
+                              message: errorMsg ?? '',
+                              isError: true,
+                            );
                           }
                           updatingLibrary.value = '✓';
                           finishedEditing.value = true;
+                          canEditTags.value = false;
                           tracks.loop((track, _) => _editingInProgress[track.path] = false);
                         },
                       ),

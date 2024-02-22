@@ -28,6 +28,7 @@ class NamidaMainActivity : FlutterActivity() {
   private var toast: Toast? = null
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    flutterEngine.plugins.add(FAudioTagger())
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       pipBuilder = PictureInPictureParams.Builder()

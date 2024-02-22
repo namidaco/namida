@@ -146,6 +146,18 @@ extension ListieListieUtils<T> on List<T> {
     final index = math.Random().nextInt(length);
     return this[index];
   }
+
+  List<List<T>> split([int parts = 2]) {
+    final mainList = this;
+    if (parts > mainList.length) parts = mainList.length;
+    final finalParts = List.generate(parts, (_) => <T>[]);
+    for (int partIndex = 0; partIndex < parts; partIndex++) {
+      for (int i = partIndex; i < mainList.length; i += parts) {
+        finalParts[partIndex].add(mainList[i]);
+      }
+    }
+    return finalParts;
+  }
 }
 
 extension DisplayKeywords on int {
@@ -287,10 +299,23 @@ extension ConvertPathToTrack on String {
   Future<TrackExtended?> removeTrackThenExtract({bool onlyIfNewFileExists = true}) async {
     if (onlyIfNewFileExists && !await File(this).exists()) return null;
     Indexer.inst.allTracksMappedByPath.remove(Track(this));
-    return (await Indexer.inst.extractTracksInfo(tracksPath: [this]))[this];
+    return await Indexer.inst.extractTrackInfo(
+      trackPath: this,
+      onMinDurTrigger: () => null,
+      onMinSizeTrigger: () => null,
+    );
   }
 
-  Future<TrackExtended?> toTrackExtOrExtract() async => toTrackExtOrNull() ?? (await Indexer.inst.extractTracksInfo(tracksPath: [this]))[this];
+  Future<TrackExtended?> toTrackExtOrExtract() async {
+    final initial = toTrackExtOrNull();
+    if (initial != null) return initial;
+    return await Indexer.inst.extractTrackInfo(
+      trackPath: this,
+      onMinDurTrigger: () => null,
+      onMinSizeTrigger: () => null,
+    );
+  }
+
   Track toTrack() => Track(this);
   Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];

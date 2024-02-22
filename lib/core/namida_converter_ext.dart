@@ -1,16 +1,14 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:faudiotagger/faudiotagger.dart';
-import 'package:faudiotagger/models/faudiomodel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/queue.dart';
@@ -286,89 +284,41 @@ extension StreamInfoUtils on StreamInfoItem {
   }
 }
 
-extension FAudioTaggerFFMPEGExtractor on FAudioTagger {
-  Future<(FAudioModel?, Uint8List?)> extractMetadata({
-    required String trackPath,
-    bool extractFFmpegThumbnailIfFailed = true,
-    bool forceExtractByFFmpeg = false,
-    void Function(String err)? onError,
-    void Function(String err)? onArtworkError,
-  }) async {
-    FAudioModel? trackInfo;
-    Uint8List? artwork;
-
-    IOSink? sink;
-
-    if (!forceExtractByFFmpeg) {
-      // -- preparing logs file
-      if (onError == null) {
-        final logsFile = File(AppPaths.LOGS_TAGGER);
-        await logsFile.create();
-        sink = logsFile.openWrite(mode: FileMode.append);
-      }
-
-      trackInfo = await readAllData(
-        path: trackPath,
-        onError: onError ?? (err) => (err) => sink?.write("Error Extracting [$trackPath]: $err\n\n\n"),
-      );
-      artwork = trackInfo?.firstArtwork ??
-          await readArtwork(
-            path: trackPath,
-            onError: onArtworkError ?? (err) => (err) => sink?.write("Error Extracting Artwork: [$trackPath]: $err\n\n\n"),
-          );
-    }
-
-    await sink?.flush();
-    await sink?.close();
-
-    if (trackInfo == null) {
-      final ffmpegInfo = await NamidaFFMPEG.inst.extractMetadata(trackPath);
-      trackInfo = ffmpegInfo.toFAudioModel();
-    }
-
-    if (artwork == null || artwork.isEmpty) {
-      final file = await NamidaFFMPEG.inst.extractAudioThumbnail(
-        audioPath: trackPath,
-        thumbnailSavePath: "${AppDirs.APP_CACHE}/${trackPath.hashCode}.png",
-      );
-      artwork = await file?.readAsBytes();
-      file?.tryDeleting();
-    }
-    return (trackInfo, artwork);
-  }
-}
-
 extension MediaInfoToFAudioModel on MediaInfo? {
   FAudioModel? toFAudioModel() {
     final infoFull = this;
     final info = infoFull?.format?.tags;
-    if (info == null) return null;
+    if (infoFull == null || info == null) return null;
     final trackNumberTotal = info.track?.split('/');
     final discNumberTotal = info.disc?.split('/');
-    final audioStream = infoFull?.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
+    final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
     int? parsy(String? v) => v == null ? null : int.tryParse(v);
-    final bitrate = parsy(infoFull?.format?.bitRate); // 234292
+    final bitrate = parsy(infoFull.format?.bitRate); // 234292
     final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
     return FAudioModel(
-      title: info.title,
-      album: info.album,
-      albumArtist: info.albumArtist,
-      artist: info.artist,
-      composer: info.composer,
-      genre: info.genre,
-      trackNumber: trackNumberTotal?.first ?? info.track,
-      trackTotal: info.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
-      discNumber: discNumberTotal?.first ?? info.disc,
-      discTotal: info.discTotal ?? (discNumberTotal?.length == 2 ? discNumberTotal?.last : null),
-      lyrics: info.lyrics,
-      comment: info.comment,
-      year: info.date,
-      language: info.language,
-      lyricist: info.lyricist,
-      remixer: info.remixer,
-      mood: info.mood,
-      country: info.country,
-      length: infoFull?.format?.duration?.inSeconds,
+      tags: FTags(
+        path: infoFull.path,
+        artwork: FArtwork(),
+        title: info.title,
+        album: info.album,
+        albumArtist: info.albumArtist,
+        artist: info.artist,
+        composer: info.composer,
+        genre: info.genre,
+        trackNumber: trackNumberTotal?.first ?? info.track,
+        trackTotal: info.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
+        discNumber: discNumberTotal?.first ?? info.disc,
+        discTotal: info.discTotal ?? (discNumberTotal?.length == 2 ? discNumberTotal?.last : null),
+        lyrics: info.lyrics,
+        comment: info.comment,
+        year: info.date,
+        language: info.language,
+        lyricist: info.lyricist,
+        remixer: info.remixer,
+        mood: info.mood,
+        country: info.country,
+      ),
+      length: infoFull.format?.duration?.inSeconds,
       bitRate: bitrateThousands?.round(),
       channels: audioStream?.channels == null
           ? null
@@ -378,7 +328,7 @@ extension MediaInfoToFAudioModel on MediaInfo? {
                 2: 'stereo',
               }[audioStream?.channels] ??
               'unknown',
-      format: infoFull?.format?.formatName,
+      format: infoFull.format?.formatName,
       sampleRate: parsy(audioStream?.sampleRate),
     );
   }

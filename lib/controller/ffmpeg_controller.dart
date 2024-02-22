@@ -9,7 +9,7 @@ import 'package:get/get_rx/get_rx.dart';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -32,6 +32,7 @@ class NamidaFFMPEG {
     if (output != null && output != '') {
       try {
         final decoded = jsonDecode(output);
+        decoded["PATH"] = path;
         final mi = MediaInfo.fromMap(decoded);
         final formatGood = (decoded['format'] as Map?)?.isNotEmpty ?? false;
         final tagsGood = (decoded['format']?['tags'] as Map?)?.isNotEmpty ?? false;
@@ -44,10 +45,12 @@ class NamidaFFMPEG {
 
     final map = information?.getAllProperties();
     if (map != null) {
+      map["PATH"] = path;
       final miBackup = MediaInfo.fromMap(map);
       final format = miBackup.format;
       final tags = information?.getTags() ?? (map['streams'] as List?)?.firstWhereEff((e) => e['tags'].isNotEmpty)?['tags'];
       final mi = MediaInfo(
+        path: path,
         streams: miBackup.streams,
         format: MIFormat(
           bitRate: format?.bitRate ?? information?.getBitrate(),
@@ -261,15 +264,18 @@ class NamidaFFMPEG {
         if (cachedThumbnail == null) {
           currentFailed++;
         } else {
-          final file = await Indexer.inst
-              .extractTracksArtworks(
-                [filee.path],
-                forceReExtract: true,
-                artworkPaths: {filee.path: cachedThumbnail.path},
-                albumIdendifiers: {filee.path: tr.albumIdentifier},
-              )
-              .then((value) => value.first);
-          final didUpdate = file == null ? false : await editAudioThumbnail(audioPath: filee.path, thumbnailPath: file.path);
+          final copiedArtwork = await FAudioTaggerController.inst.copyArtworkToCache(
+            trackPath: filee.path,
+            trackExtended: tr,
+            artworkFile: cachedThumbnail,
+          );
+
+          final didUpdate = copiedArtwork == null
+              ? false
+              : await editAudioThumbnail(
+                  audioPath: filee.path,
+                  thumbnailPath: copiedArtwork.path,
+                );
           if (!didUpdate) currentFailed++;
         }
 

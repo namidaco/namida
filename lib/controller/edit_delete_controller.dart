@@ -9,6 +9,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -56,20 +57,13 @@ class EditDeleteController {
     }
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
     final saveDirPath = saveDir.path;
-    final newPath = "$saveDirPath${Platform.pathSeparator}${track.filenameWOExt}.png";
-    final imgFiles = await Indexer.inst.extractTracksArtworks(
-      [track.path],
-      albumIdendifiers: {track.path: track.albumIdentifier},
+    final info = await FAudioTaggerController.inst.extractMetadata(
+      trackPath: track.path,
+      cacheDirectoryPath: saveDirPath,
     );
-    final imgFile = imgFiles.firstOrNull;
-    try {
-      // try copying
-      await imgFile?.copy(newPath);
-      return saveDirPath;
-    } catch (e) {
-      printy(e, isError: true);
-      return null;
-    }
+    final imgFile = info.tags.artwork.file;
+    if (imgFile != null) return saveDirPath;
+    return null;
   }
 
   /// returns save directory path if saved successfully

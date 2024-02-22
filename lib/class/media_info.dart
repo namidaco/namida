@@ -1,14 +1,17 @@
 class MediaInfo {
+  final String path;
   final List<MIStream>? streams;
   final MIFormat? format;
 
   const MediaInfo({
+    required this.path,
     this.streams,
     this.format,
   });
 
   factory MediaInfo.fromMap(Map<dynamic, dynamic> json) {
     return MediaInfo(
+      path: json["PATH"],
       streams: (json["streams"] as List?)?.map((e) => MIStream.fromMap(e)).toList(),
       format: json["format"] == null ? null : MIFormat.fromMap(json["format"]),
     );

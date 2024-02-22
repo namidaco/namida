@@ -75,7 +75,6 @@ dependencies:
   flutter_markdown: ^0.6.17+3
   flutter_mailer: ^2.1.1
   lrc: ^1.0.2
-  system_info2: ^4.0.0
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
 
@@ -95,10 +94,6 @@ dependencies:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
       ref: 050ab2a29d1d69fdc65ff3e370e0567b27ca48f5
-  faudiotagger:
-    git:
-      url: https://github.com/MSOB7YY/faudiotagger
-      ref: cb8399eec6bc9d238e53125d294c9a3cb5b91434
   waveform_extractor: ^1.0.1
   basic_audio_handler:
     git:
