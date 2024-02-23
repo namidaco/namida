@@ -47,7 +47,6 @@ dependencies:
   connectivity_plus: ^4.0.2
   selectable_autolink_text: ^2.6.0
   share_plus: ^7.1.0
-  read_more_text: ^0.0.5
   calendar_date_picker2: ^0.5.2
   wakelock_plus: ^1.1.1
   flutter_local_notifications: ^15.1.0

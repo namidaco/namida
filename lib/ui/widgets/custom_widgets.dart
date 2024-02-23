@@ -2090,6 +2090,7 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
         backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
         fontSize: 13.5.multipliedFontScale,
       ),
+      scrollPhysics: const NeverScrollableScrollPhysics(),
       onTap: (url) async {
         try {
           await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);

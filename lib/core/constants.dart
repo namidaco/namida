@@ -3,6 +3,7 @@
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/track.dart';
@@ -27,6 +28,49 @@ final RegExp kYoutubeRegexPlaylists = RegExp(
 const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
 const Color kMainColorLight = Color.fromARGB(255, 116, 126, 219);
 const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
+
+abstract class NamidaLinkRegex {
+  static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
+  static const phoneNumber = r'[+0]\d+[\d-]+\d';
+  static const email = r'[^@\s]+@([^@\s]+\.)+[^@\W]+';
+  static const duration = r'\b(\d{1,2}:)?(\d{1,2}):(\d{2})\b';
+  static const all = '($url|$duration|$phoneNumber|$email)';
+}
+
+class NamidaLinkUtils {
+  NamidaLinkUtils._();
+
+  static Duration? parseDuration(String url) {
+    final match = RegExp(NamidaLinkRegex.duration).firstMatch(url);
+    if (match != null && match.groupCount > 1) {
+      Duration? dur;
+      try {
+        if (match.groupCount == 3) {
+          dur = Duration(
+            hours: int.parse(match[1]!.split(':').first),
+            minutes: int.parse(match[2]!),
+            seconds: int.parse(match[3]!),
+          );
+        } else if (match.groupCount == 2) {
+          dur = Duration(
+            minutes: int.parse(match[1]!),
+            seconds: int.parse(match[2]!),
+          );
+        }
+        return dur;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  static Future<bool> openLink(String url) async {
+    try {
+      return await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+    } catch (e) {
+      return await launchUrlString(url);
+    }
+  }
+}
 
 /// Files used by Namida
 class AppPaths {

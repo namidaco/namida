@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
-import 'package:read_more_text/read_more_text.dart';
+import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -12,6 +14,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/widgets/namida_read_more.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -145,27 +148,67 @@ class YTCommentCard extends StatelessWidget {
                                       ),
                                     ],
                                   )
-                                : ReadMoreText(
-                                    YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
-                                    numLines: 5,
-                                    readMoreText: lang.SHOW_MORE,
-                                    readLessText: '',
-                                    readLessIcon: Icon(
-                                      Broken.arrow_up_3,
-                                      size: 18.0,
-                                      color: readmoreColor,
-                                    ),
-                                    readMoreIcon: Icon(
-                                      Broken.arrow_down_2,
-                                      size: 18.0,
-                                      color: readmoreColor,
-                                    ),
-                                    readMoreTextStyle: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
-                                    style: context.textTheme.displaySmall?.copyWith(
-                                      fontSize: 13.5.multipliedFontScale,
-                                      fontWeight: FontWeight.w500,
-                                      color: context.theme.colorScheme.onBackground.withAlpha(220),
-                                    ),
+                                : NamidaReadMoreText(
+                                    text: YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
+                                    lines: 5,
+                                    builder: (text, lines, isExpanded, exceededMaxLines, toggle) {
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SelectableAutoLinkText(
+                                            text,
+                                            maxLines: lines,
+                                            style: context.textTheme.displaySmall?.copyWith(
+                                              fontSize: 13.5.multipliedFontScale,
+                                              fontWeight: FontWeight.w500,
+                                              color: context.theme.colorScheme.onBackground.withAlpha(220),
+                                            ),
+                                            linkStyle: context.textTheme.displayMedium?.copyWith(
+                                              color: context.theme.colorScheme.primary.withAlpha(210),
+                                              fontSize: 13.5.multipliedFontScale,
+                                            ),
+                                            highlightedLinkStyle: TextStyle(
+                                              color: context.theme.colorScheme.primary.withAlpha(220),
+                                              backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
+                                              fontSize: 13.5.multipliedFontScale,
+                                            ),
+                                            scrollPhysics: const NeverScrollableScrollPhysics(),
+                                            linkRegExpPattern: NamidaLinkRegex.all,
+                                            onTap: (url) async {
+                                              final dur = NamidaLinkUtils.parseDuration(url);
+                                              if (dur != null) {
+                                                Player.inst.seek(dur);
+                                              } else {
+                                                NamidaLinkUtils.openLink(url);
+                                              }
+                                            },
+                                          ),
+                                          if (exceededMaxLines)
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: TapDetector(
+                                                onTap: toggle,
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    Text(
+                                                      isExpanded ? '' : lang.SHOW_MORE,
+                                                      style: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Icon(
+                                                      isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                                      size: 18.0,
+                                                      color: readmoreColor,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
                                   ),
                           ),
                           const SizedBox(height: 8.0),
