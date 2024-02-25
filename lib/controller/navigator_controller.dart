@@ -21,8 +21,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/packages/inner_drawer.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/widgets/inner_drawer.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class NamidaNavigator {
@@ -45,7 +45,7 @@ class NamidaNavigator {
   int _currentDialogNumber = 0;
   int _currentMenusNumber = 0;
 
-  final innerDrawerKey = GlobalKey<InnerDrawerState>();
+  final innerDrawerKey = GlobalKey<NamidaInnerDrawerState>();
   final ytQueueSheetKey = GlobalKey<YTMiniplayerQueueChipState>();
   final heroController = HeroController();
 

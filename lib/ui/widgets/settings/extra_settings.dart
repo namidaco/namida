@@ -327,7 +327,10 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.sidebar_right,
                 title: lang.SWIPE_TO_OPEN_DRAWER,
                 value: settings.swipeableDrawer.value,
-                onChanged: (isTrue) => settings.save(swipeableDrawer: !isTrue),
+                onChanged: (isTrue) {
+                  settings.save(swipeableDrawer: !isTrue);
+                  NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(!isTrue);
+                },
               ),
             ),
           ),
