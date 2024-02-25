@@ -1,6 +1,5 @@
 package com.msob7y.namida
 
-import android.app.Activity
 import android.content.Context
 import android.media.MediaScannerConnection
 import io.flutter.Log
@@ -35,14 +34,44 @@ import org.jaudiotagger.tag.reference.PictureTypes
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentFieldKey
 import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag
 
-public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
+public class FAudioTagger : FlutterPlugin, MethodCallHandler {
 
   lateinit var channel: MethodChannel
   lateinit var binaryMessenger: BinaryMessenger
   val eventChannels = HashMap<Long, BetterEventChannel>()
   lateinit var context: Context
-  var logFilePath: String? = null
-  private val mainScope = CoroutineScope(Dispatchers.IO)
+
+  companion object {
+    var logFilePath: String? = null
+    var logWriter: BufferedWriter? = null
+    private var logWriterUsers: Int = 0
+
+    fun writeError(
+        path: String,
+        function: String,
+        type: String,
+        error: String,
+    ) {
+      if (logWriter != null) {
+        try {
+          logWriter!!.append("${path}\n=>> ${function}.${type}: ${error}\n\n")
+        } catch (_: Exception) {}
+      }
+    }
+
+    fun _addLogsUser() {
+      if (logWriterUsers == 0 && logFilePath != null) {
+        File(logFilePath!!).createNewFile()
+        if (logWriter == null) logWriter = BufferedWriter(FileWriter(logFilePath))
+      }
+      logWriterUsers++
+    }
+
+    fun _removeLogsUser() {
+      logWriter?.flush()
+      if (logWriterUsers <= 0) logWriter?.close()
+    }
+  }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "faudiotagger")
@@ -63,7 +92,8 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
           val extractArtwork = call.argument<Boolean?>("extractArtwork") ?: true
           val overrideArtwork = call.argument<Boolean?>("overrideArtwork") ?: false
 
-          fun extractFunction(writer: BufferedWriter?) {
+          CoroutineScope(Dispatchers.IO).launch {
+            _addLogsUser()
             val map =
                 readAllData(
                     path,
@@ -71,16 +101,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
                     artworkIdentifiers,
                     extractArtwork,
                     overrideArtwork,
-                    writer
                 )
             map["path"] = path
             result.success(map)
-          }
-
-          if (logFilePath != null) {
-            BufferedWriter(FileWriter(logFilePath)).use { extractFunction(it) }
-          } else {
-            extractFunction(null)
+            _removeLogsUser()
           }
         } else {
           result.error("Failure", "path parameter isn't provided", "")
@@ -101,29 +125,22 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
           )
           val eventChannel = eventChannels.get(streamKey)!!
           result.success(true)
-          mainScope.launch {
-            fun loopFunction(writer: BufferedWriter?) {
-              for (p in paths) {
-                val map =
-                    readAllData(
-                        p,
-                        artworkDirectory,
-                        artworkIdentifiers,
-                        extractArtwork,
-                        overrideArtwork,
-                        writer
-                    )
-                map["path"] = p
-                runOnUiThread { eventChannel.success(map) }
-              }
+          _addLogsUser()
+          CoroutineScope(Dispatchers.IO).launch {
+            for (p in paths) {
+              val map =
+                  readAllData(
+                      p,
+                      artworkDirectory,
+                      artworkIdentifiers,
+                      extractArtwork,
+                      overrideArtwork,
+                  )
+              map["path"] = p
+              withContext(Dispatchers.Main) { eventChannel.success(map) }
             }
-            if (logFilePath != null) {
-              BufferedWriter(FileWriter(logFilePath)).use { loopFunction(it) }
-            } else {
-              loopFunction(null)
-            }
-
-            runOnUiThread { eventChannel.endOfStream() }
+            withContext(Dispatchers.Main) { eventChannel.endOfStream() }
+            _removeLogsUser()
           }
         } else {
           result.error("Failure", "path parameter isn't provided", "")
@@ -133,14 +150,11 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
         val path = call.argument<String>("path")
         val map = call.argument<Map<String?, String?>>("tags")
         if (path != null && map != null) {
-          if (logFilePath != null) {
-            BufferedWriter(FileWriter(logFilePath)).use {
-              val res = writeTags(path, map, context, it)
-              result.success(res)
-            }
-          } else {
-            val res = writeTags(path, map, context, null)
+          CoroutineScope(Dispatchers.IO).launch {
+            _addLogsUser()
+            val res = writeTags(path, map, context)
             result.success(res)
+            _removeLogsUser()
           }
         } else {
           result.error("Failure", "path or tags parameters aren't provided", "")
@@ -148,6 +162,13 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
       }
       "setLogFile" -> {
         logFilePath = call.argument<String?>("path")
+        logWriter?.flush()
+        logWriter?.close()
+        if (logFilePath != null) {
+          logWriter = BufferedWriter(FileWriter(logFilePath))
+        } else {
+          logWriter = null
+        }
       }
       else -> {
         result.notImplemented()
@@ -172,7 +193,6 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
       artworkIdentifiers: HashMap<ArtworkIdentifier, Boolean>?,
       extractArtwork: Boolean,
       overrideOldArtwork: Boolean,
-      logWriter: BufferedWriter?,
   ): HashMap<String, Any> {
     val metadata = HashMap<String, Any>()
     val errorsMap = HashMap<String, String>()
@@ -194,7 +214,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
           metadata["length"] = audioHeader.getTrackLength()
         }
       } catch (e: Exception) {
-        writeError(logWriter, path, "readAllData", "ERROR_HEADER", e.toString())
+        writeError(path, "readAllData", "ERROR_HEADER", e.toString())
         errorsMap["HEADER"] = e.toString()
         metadata["ERROR_FAULTY"] = true
       }
@@ -273,18 +293,18 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
                 }
               }
             } catch (e: Exception) {
-              writeError(logWriter, path, "readAllData", "ERROR_ARTWORK", e.toString())
+              writeError(path, "readAllData", "ERROR_ARTWORK", e.toString())
               errorsMap["ARTWORK"] = e.message.toString()
             }
           }
         }
       } catch (e: Exception) {
-        writeError(logWriter, path, "readAllData", "ERROR_TAG", e.toString())
+        writeError(path, "readAllData", "ERROR_TAG", e.toString())
         errorsMap["TAG"] = e.message.toString()
         metadata["ERROR_FAULTY"] = true
       }
     } catch (e: Exception) {
-      writeError(logWriter, path, "readAllData", "ERROR", e.toString())
+      writeError(path, "readAllData", "ERROR", e.toString())
       errorsMap["ERROR"] = e.message.toString()
       metadata["ERROR_FAULTY"] = true
     }
@@ -296,7 +316,6 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
       path: String,
       map: Map<String?, Any?>,
       context: Context,
-      logWriter: BufferedWriter?,
   ): String? {
     try {
       val mp3File: File = File(path)
@@ -402,7 +421,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
 
       return null
     } catch (e: Exception) {
-      writeError(logWriter, path, "writeTags", "ERROR", e.toString())
+      writeError(path, "writeTags", "ERROR", e.toString())
       return e.toString()
     }
   }
@@ -422,25 +441,14 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler, Activity() {
     }
   }
 
-  fun writeError(
-      logWriter: BufferedWriter?,
-      path: String,
-      function: String,
-      type: String,
-      error: String,
-  ) {
-    if (logWriter != null) {
-      try {
-        logWriter.append("${path}\n=>> ${function}.${type}: ${error}\n\n")
-      } catch (_: Exception) {}
-    }
-  }
-
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
+    logWriter?.flush()
+    logWriter?.close()
     for (eventChannel in eventChannels.values) {
       eventChannel.endOfStream()
     }
+    eventChannels.clear()
   }
 }
 
