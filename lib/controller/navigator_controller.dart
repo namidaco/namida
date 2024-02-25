@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -22,7 +21,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/widgets/inner_drawer.dart';
+import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class NamidaNavigator {

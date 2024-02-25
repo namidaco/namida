@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaInnerDrawer extends StatefulWidget {
@@ -99,9 +100,18 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 ),
               ),
             ),
+            // -- absort edge drags so that drawer can be swiped
+            if (_canSwipe)
+              ColoredBox(
+                color: Colors.transparent,
+                child: SizedBox(
+                  height: context.height,
+                  width: MediaQuery.paddingOf(context).left.withMinimum(20.0),
+                ),
+              ),
           ],
         );
-        return Stack(
+        final finalBuilder = Stack(
           children: [
             // -- bg
             if (controller.value > 0) ...[
@@ -138,16 +148,18 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                     )
                   : child,
             ),
+          ],
+        );
+        return _canSwipe
             // -- touch absorber
-            if (_canSwipe)
-              _HorizontalDragDetector(
+            ? _HorizontalDragDetector(
                 behavior: HitTestBehavior.translucent,
                 onDown: (details) {
                   controller.stop();
                   _recalculateDistanceTraveled();
                 },
                 onUpdate: (details) {
-                  _distanceTraveled += details.delta.dx;
+                  _distanceTraveled = (_distanceTraveled + details.delta.dx).withMinimum(0);
                   controller.animateTo(_distanceTraveled / context.width);
                 },
                 onEnd: (details) {
@@ -162,9 +174,9 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                     _closeDrawer();
                   }
                 },
-              ),
-          ],
-        );
+                child: finalBuilder,
+              )
+            : finalBuilder;
       },
     );
   }

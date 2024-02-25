@@ -18,10 +18,10 @@ import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
-import 'package:namida/youtube/widgets/inner_drawer.dart';
 
 class MainPageWrapper extends StatefulWidget {
   final bool shouldShowOnBoarding;
