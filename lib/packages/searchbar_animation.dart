@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class SearchBarAnimation extends StatefulWidget {
   /// This gives the width to the searchbar by default it will take the size of whole screen.
@@ -306,7 +307,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                           ),
                           child: DecoratedBoxTransition(
                             decoration: decorationTween.animate(_animationController),
-                            child: GestureDetector(
+                            child: TapDetector(
                               onTap: () {
                                 widget.onPressButton?.call(!switcher);
                                 _onTapFunctionOriginalAnim();
@@ -335,7 +336,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                                   ]
                                 : null,
                           ),
-                          child: GestureDetector(
+                          child: TapDetector(
                             onTap: () {
                               widget.onPressButton?.call(!switcher);
                               _onTapFunction();

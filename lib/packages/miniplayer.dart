@@ -532,7 +532,7 @@ class _NamidaMiniPlayerState extends State<NamidaMiniPlayer> {
                                           ),
                                         ),
                                       ),
-                                      GestureDetector(
+                                      TapDetector(
                                         onTap: () => Player.inst.seekSecondsForward(),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),

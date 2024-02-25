@@ -406,7 +406,7 @@ class CustomBlurryDialog extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           insetPadding: insetPadding,
           clipBehavior: Clip.antiAlias,
-          child: GestureDetector(
+          child: TapDetector(
             onTap: () {},
             child: Container(
               color: Colors.transparent,
@@ -3666,7 +3666,7 @@ class EqualizerIconButton extends StatelessWidget {
 }
 
 class TapDetector extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final void Function(TapGestureRecognizer instance)? initializer;
   final Widget? child;
   final HitTestBehavior? behavior;
@@ -3688,6 +3688,41 @@ class TapDetector extends StatelessWidget {
           (TapGestureRecognizer instance) {
             instance
               ..onTap = onTap
+              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          },
+    );
+
+    return RawGestureDetector(
+      behavior: behavior,
+      gestures: gestures,
+      child: child,
+    );
+  }
+}
+
+class LongPressDetector extends StatelessWidget {
+  final VoidCallback? onLongPress;
+  final void Function(LongPressGestureRecognizer instance)? initializer;
+  final Widget? child;
+  final HitTestBehavior? behavior;
+
+  const LongPressDetector({
+    super.key,
+    required this.onLongPress,
+    this.initializer,
+    this.child,
+    this.behavior,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[LongPressGestureRecognizer] = GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+      () => LongPressGestureRecognizer(debugOwner: this),
+      initializer ??
+          (LongPressGestureRecognizer instance) {
+            instance
+              ..onLongPress = onLongPress
               ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
           },
     );

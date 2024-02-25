@@ -88,7 +88,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4.0),
-                GestureDetector(
+                TapDetector(
                   onTap: isAuto ? () {} : null,
                   child: ColoredBox(
                     color: Colors.transparent,

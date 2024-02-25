@@ -704,7 +704,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               right: false,
               child: Padding(
                 padding: horizontalControlsPadding,
-                child: GestureDetector(
+                child: TapDetector(
                   onTap: () {},
                   child: Align(
                     alignment: Alignment.topCenter,
@@ -1108,7 +1108,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             // ---- Bottom Row ----
             Padding(
               padding: horizontalControlsPadding,
-              child: GestureDetector(
+              child: TapDetector(
                 onTap: () {},
                 child: Align(
                   alignment: Alignment.bottomCenter,

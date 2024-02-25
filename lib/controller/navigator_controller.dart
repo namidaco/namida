@@ -268,7 +268,7 @@ class NamidaNavigator {
     await Get.to(
       () => WillPopScope(
         onWillPop: onWillPop,
-        child: GestureDetector(
+        child: TapDetector(
           onTap: onWillPop,
           child: NamidaBgBlur(
             blur: 5.0,

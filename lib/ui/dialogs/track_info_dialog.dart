@@ -215,11 +215,11 @@ Future<void> showTrackInfoDialog(
                               child: Row(
                                 children: [
                                   const SizedBox(width: 2.0),
-                                  GestureDetector(
+                                  TapDetector(
                                     onTap: () => NamidaNavigator.inst.navigateDialog(
                                       scale: 1.0,
                                       blackBg: true,
-                                      dialog: GestureDetector(
+                                      dialog: LongPressDetector(
                                         onLongPress: () async {
                                           final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
                                           String title = lang.COPIED_ARTWORK;

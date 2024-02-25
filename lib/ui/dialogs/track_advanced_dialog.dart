@@ -313,7 +313,7 @@ void _showTrackColorPaletteDialog({
     return Row(
       children: [
         getText('$title  '),
-        GestureDetector(onTap: () => finalColorToBeUsed.value = mix, child: getColorWidget(mix)),
+        TapDetector(onTap: () => finalColorToBeUsed.value = mix, child: getColorWidget(mix)),
       ],
     );
   }

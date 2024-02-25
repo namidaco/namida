@@ -806,7 +806,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                               const Text(
                                 'this one is actually supposed to be for supporters, if you don\'t mind u can support namida and get the power to unleash this cool feature',
                               ),
-                              GestureDetector(
+                              TapDetector(
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();
                                   NamidaNavigator.inst.navigateDialog(

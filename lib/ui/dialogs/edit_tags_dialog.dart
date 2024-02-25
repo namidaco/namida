@@ -846,7 +846,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                             getText('${lang.FAILED}: ${failedEditsTracks.length}'),
                                             const SizedBox(width: 4.0),
                                             if (failedEditsTracks.isNotEmpty)
-                                              GestureDetector(
+                                              TapDetector(
                                                 onTap: showFailedTracksDialogs,
                                                 child: getText(
                                                   lang.CHECK_LIST,

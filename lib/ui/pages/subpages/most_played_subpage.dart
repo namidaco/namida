@@ -62,7 +62,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     final textColor = _isEnabled(mptr) ? const Color.fromARGB(200, 255, 255, 255) : null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: GestureDetector(
+      child: TapDetector(
         onTap: () => _onSelectingTimeRange(
           dateCustom: dateCustom,
           mptr: mptr,

@@ -420,7 +420,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                         return years.map(
                                           (e) => Padding(
                                             padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                                            child: GestureDetector(
+                                            child: TapDetector(
                                               onTap: () {
                                                 _updateSameTimeNYearsAgo(DateTime.now(), e);
                                                 if (mounted) setState(() {});

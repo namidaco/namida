@@ -36,7 +36,7 @@ class ParsingJsonPercentage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => JsonToHistoryParser.inst.isParsing.value && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.value)
-          ? GestureDetector(
+          ? TapDetector(
               onTap: () => JsonToHistoryParser.inst.showParsingProgressDialog(),
               child: NamidaHero(
                 tag: 'parsingjsonper',

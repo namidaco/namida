@@ -73,7 +73,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
       blackBg: true,
-      dialog: GestureDetector(
+      dialog: LongPressDetector(
         onLongPress: () async {
           final saveDirPath = await EditDeleteController.inst.saveImageToStorage(file!);
           String title = lang.COPIED_ARTWORK;
@@ -128,7 +128,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
           Stack(
             children: [
               if (bannerUrl != null)
-                GestureDetector(
+                TapDetector(
                   onTap: () => _onImageTap(context, channelID, bannerUrl, true),
                   child: NamidaHero(
                     tag: 'true_${channelID}_$bannerUrl',
@@ -151,7 +151,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                     const SizedBox(width: 12.0),
                     Transform.translate(
                       offset: bannerUrl == null ? const Offset(0, 0) : const Offset(0, -bannerHeight * 0.1),
-                      child: GestureDetector(
+                      child: TapDetector(
                         onTap: () => _onImageTap(context, channelID, avatarUrl, false),
                         child: NamidaHero(
                           tag: 'false_${channelID}_$avatarUrl',

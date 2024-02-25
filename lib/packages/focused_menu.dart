@@ -2,6 +2,7 @@ library focused_menu;
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FocusedMenuHolder extends StatefulWidget {
   final Widget child;
@@ -226,7 +227,7 @@ class FocusedMenuDetails extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
-            GestureDetector(
+            TapDetector(
               onTap: () => _onDismiss(context),
               child: enableBackgroundEffects
                   ? BackdropFilter(
@@ -264,7 +265,7 @@ class FocusedMenuDetails extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         itemBuilder: (context, index) {
                           final FocusedMenuItem item = menuItems[index];
-                          final Widget listItem = GestureDetector(
+                          final Widget listItem = TapDetector(
                               onTap: () {
                                 if (popOnItemTap) Navigator.pop(context);
                                 item.onPressed();
@@ -307,7 +308,7 @@ class FocusedMenuDetails extends StatelessWidget {
             Positioned(
               top: childOffset.dy,
               left: childOffset.dx,
-              child: GestureDetector(
+              child: TapDetector(
                 onTap: () => _onDismiss(context),
                 child: AbsorbPointer(
                   absorbing: true,
