@@ -65,39 +65,13 @@ void main() async {
     shouldShowOnBoarding = true;
   }
 
-  try {
-    AppDirs.USER_DATA = await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
-  } catch (_) {}
-  try {
-    AppDirs.APP_CACHE = await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
-  } catch (_) {}
+  late final List<String> paths;
 
-  final paths = <String>[];
-
-  try {
-    final appStoragePaths = await getExternalStorageDirectories();
-    appStoragePaths?.loop((e, _) {
-      paths.add(e.path.split('/Android/data').first);
-    });
-  } catch (_) {}
-
-  if (paths.isEmpty) {
-    try {
-      final pths = await ExternalPath.getExternalStorageDirectories();
-      paths.addAll(pths);
-    } catch (_) {}
-  }
-
-  if (paths.isEmpty) {
-    try {
-      final pth = await ExternalPath.getExternalStoragePublicDirectory('');
-      paths.add(pth);
-    } catch (_) {}
-  }
-
-  if (paths.isEmpty) {
-    paths.add('/storage/emulated/0'); // hope lost
-  }
+  await Future.wait([
+    _MainInitializers.paths.then((value) => paths = value),
+    _MainInitializers.pathUserData.then((value) => AppDirs.USER_DATA = value),
+    _MainInitializers.pathUserCache.then((value) => AppDirs.APP_CACHE = value),
+  ]);
 
   // -- creating directories
   AppDirs.values.loop((p, _) => Directory(p).createSync(recursive: true));
@@ -147,18 +121,18 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
-  await PlaylistController.inst.prepareDefaultPlaylistsFile();
-  if (!shouldShowOnBoarding) await QueueController.inst.prepareLatestQueue();
+  await Future.wait([
+    PlaylistController.inst.prepareDefaultPlaylistsFile(),
+    if (!shouldShowOnBoarding) QueueController.inst.prepareLatestQueue(),
+    YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),
+    YoutubeController.inst.loadDownloadTasksInfoFile(),
+    YoutubeSubscriptionsController.inst.loadSubscriptionsFile()
+  ]);
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
 
   YoutubeController.inst.loadInfoToMemory();
   YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
-  await [
-    YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),
-    YoutubeController.inst.loadDownloadTasksInfoFile(),
-    YoutubeSubscriptionsController.inst.loadSubscriptionsFile()
-  ].execute();
 
   await _initializeIntenties();
 
@@ -181,6 +155,54 @@ void main() async {
   Folders.inst.onFirstLoad();
 
   _initLifeCycle();
+}
+
+class _MainInitializers {
+  static Future<List<String>> get paths async {
+    final paths = <String>[];
+
+    try {
+      final appStoragePaths = await getExternalStorageDirectories();
+      appStoragePaths?.loop((e, _) {
+        paths.add(e.path.split('/Android/data').first);
+      });
+    } catch (_) {}
+
+    if (paths.isEmpty) {
+      try {
+        final pths = await ExternalPath.getExternalStorageDirectories();
+        paths.addAll(pths);
+      } catch (_) {}
+    }
+
+    if (paths.isEmpty) {
+      try {
+        final pth = await ExternalPath.getExternalStoragePublicDirectory('');
+        paths.add(pth);
+      } catch (_) {}
+    }
+
+    if (paths.isEmpty) {
+      paths.add('/storage/emulated/0'); // hope lost
+    }
+    return paths;
+  }
+
+  static Future<String> get pathUserData async {
+    try {
+      return await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static Future<String> get pathUserCache async {
+    try {
+      return await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
+    } catch (_) {
+      return '';
+    }
+  }
 }
 
 void _initLifeCycle() {
