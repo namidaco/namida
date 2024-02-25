@@ -358,7 +358,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   video: item,
                                   playlistID: null,
                                   thumbnailWidthPercentage: 0.8,
-                                  displayThirdLine: false,
+                                  dateInsteadOfChannel: true,
                                 );
                               },
                             );

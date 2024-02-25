@@ -632,9 +632,11 @@ class Indexer {
     final oldTracks = <Track>[];
     final newTracks = <Track>[];
 
-    imageCache.clear();
-    imageCache.clearLiveImages();
-    AudioService.evictArtworkCache();
+    if (newArtworkPath != '') {
+      imageCache.clear();
+      imageCache.clearLiveImages();
+      AudioService.evictArtworkCache();
+    }
 
     for (final e in tracksMap.entries) {
       final ot = e.key;
@@ -728,9 +730,6 @@ class Indexer {
       tracksInfoList.removeWhere((tr) => deletedPaths.contains(tr.path));
     }
 
-    print('INDEX: START');
-    final start = DateTime.now();
-
     final minDur = settings.indexMinDurationInSec.value; // Seconds
     final minSize = settings.indexMinFileSizeInB.value; // bytes
     final prevDuplicated = settings.preventDuplicatedTracks.value;
@@ -786,9 +785,6 @@ class Indexer {
 
       currentTrackPathBeingExtracted.value = '';
     }
-
-    final end = DateTime.now();
-    print('INDEX: TIME: ${end.difference(start)}');
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.

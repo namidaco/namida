@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
+import 'package:namida/youtube/yt_utils.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
@@ -541,9 +542,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   );
                 }
               }
-              final vidId = widget.isLocal
-                  ? Player.inst.nowPlayingTrack.youtubeID
-                  : (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo)?.id ?? Player.inst.nowPlayingVideoID?.id;
+              final vidId = Player.inst.nowPlayingVideoID?.id ?? (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo)?.id;
               return YoutubeThumbnail(
                 key: Key(vidId ?? ''),
                 isImportantInCache: true,
@@ -570,21 +569,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final view = View.of(context);
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onPanCancel: () {
-        _isPointerDown = false;
-        _disableSliders = false;
-        if (shouldShowSliders) {
-          _startVolumeSwipeTimer();
-          _startBrightnessDimTimer();
-        }
-      },
       onPanEnd: (event) {
         _isPointerDown = false;
         _disableSliders = false;
-        if (shouldShowSliders) {
-          _startVolumeSwipeTimer();
-          _startBrightnessDimTimer();
-        }
+        _startVolumeSwipeTimer();
+        _startBrightnessDimTimer();
       },
       onPanDown: (event) {
         _pointerDownedOnRight = event.globalPosition.dx > context.width / 2;
@@ -595,11 +584,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         }
         _disableSliders = !_canSlideVolume(context, event.globalPosition.dy);
       },
-      onVerticalDragEnd: (_) {
+      onVerticalDragCancel: () {
+        _isPointerDown = false;
+        _disableSliders = false;
         _startVolumeSwipeTimer();
         _startBrightnessDimTimer();
       },
-      onVerticalDragCancel: () {
+      onVerticalDragEnd: (details) {
+        _isPointerDown = false;
+        _disableSliders = false;
         _startVolumeSwipeTimer();
         _startBrightnessDimTimer();
       },
@@ -1272,13 +1265,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           iconColor: itemsColor,
                                           onPressed: () {
                                             _startTimer();
-                                            final currentId = Player.inst.getCurrentVideoId;
-                                            if (currentId != '') {
-                                              final atSeconds = Player.inst.nowPlayingPosition ~/ 1000;
-                                              final timeStamp = atSeconds > 0 ? '?t=$atSeconds' : '';
-                                              Clipboard.setData(ClipboardData(text: "https://www.youtube.com/watch?v=$currentId$timeStamp"));
-                                              snackyy(message: lang.COPIED_TO_CLIPBOARD, top: false, leftBarIndicatorColor: CurrentColor.inst.color);
-                                            }
+                                            YTUtils().copyVideoUrl(Player.inst.getCurrentVideoId);
                                           },
                                         ),
                                         SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),

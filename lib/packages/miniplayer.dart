@@ -105,28 +105,14 @@ class MiniPlayerSwitchers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => NamidaChannel.inst.isInPip.value && Player.inst.videoPlayerInfo != null
-          ? Container(
-              color: Colors.black,
-              alignment: Alignment.topLeft,
-              child: const NamidaVideoControls(
-                key: Key('pip_widget_child'),
-                isFullScreen: true,
-                showControls: false,
-                onMinimizeTap: null,
-                isLocal: true,
-              ),
-            )
-          : Obx(
-              () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                child: Player.inst.nowPlayingTrack == kDummyTrack || Player.inst.currentQueue.isEmpty
-                    ? Player.inst.currentQueueYoutube.isNotEmpty
-                        ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
-                        : const SizedBox(key: Key('empty_miniplayer'))
-                    : const NamidaMiniPlayer(key: Key('actualminiplayer')),
-              ),
-            ),
+      () => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: (Player.inst.nowPlayingTrack == kDummyTrack || Player.inst.currentQueue.isEmpty
+            ? Player.inst.currentQueueYoutube.isNotEmpty
+                ? const YoutubeMiniPlayer(key: Key('ytminiplayer'))
+                : const SizedBox(key: Key('empty_miniplayer'))
+            : const NamidaMiniPlayer(key: Key('actualminiplayer'))),
+      ),
     );
   }
 }

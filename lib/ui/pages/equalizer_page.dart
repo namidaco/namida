@@ -176,7 +176,11 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                               onTap: _resetPreset,
                               child: Text(
                                 lang.CUSTOM,
-                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 13.5.multipliedFontScale),
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.5.multipliedFontScale,
+                                  color: _activePresetCustom.value ? Colors.white.withOpacity(0.7) : null,
+                                ),
                               ),
                             ),
                           ),

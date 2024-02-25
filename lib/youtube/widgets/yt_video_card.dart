@@ -24,7 +24,7 @@ class YoutubeVideoCard extends StatelessWidget {
   final int? index;
   final double fontMultiplier;
   final double thumbnailWidthPercentage;
-  final bool displayThirdLine;
+  final bool dateInsteadOfChannel;
 
   const YoutubeVideoCard({
     super.key,
@@ -38,7 +38,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.index,
     this.fontMultiplier = 1.0,
     this.thumbnailWidthPercentage = 1.0,
-    this.displayThirdLine = true,
+    this.dateInsteadOfChannel = false,
   });
 
   List<NamidaPopupItem> getMenuItems() {
@@ -75,9 +75,11 @@ class YoutubeVideoCard extends StatelessWidget {
           if (videoViewCount != null && videoViewCount >= 0) "${videoViewCount.formatDecimalShort()} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
           if (video?.textualUploadDate != null) video?.textualUploadDate,
         ].join(' - '),
-        displaythirdLineText: displayThirdLine,
-        thirdLineText: video?.uploaderName ?? YoutubeController.inst.getVideoChannelName(videoId) ?? '',
-        displayChannelThumbnail: displayThirdLine,
+        displaythirdLineText: true,
+        thirdLineText: dateInsteadOfChannel
+            ? video?.date?.millisecondsSinceEpoch.dateAndClockFormattedOriginal ?? ''
+            : video?.uploaderName ?? YoutubeController.inst.getVideoChannelName(videoId) ?? '',
+        displayChannelThumbnail: !dateInsteadOfChannel,
         channelThumbnailUrl: video?.uploaderAvatarUrl,
         onTap: onTap ??
             () async {

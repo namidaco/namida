@@ -17,12 +17,12 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: faae4cf64f47629fafb3ba247100b919be3d385e
+      ref: 308efe72339bab5b6fb37b329d1bfcad355a6965
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
-      ref: faae4cf64f47629fafb3ba247100b919be3d385e
+      ref: 308efe72339bab5b6fb37b329d1bfcad355a6965
   archive: ^3.3.8
   intl: ^0.18.0
   device_info_plus: ^9.0.2
@@ -87,7 +87,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: faae4cf64f47629fafb3ba247100b919be3d385e
+      ref: 308efe72339bab5b6fb37b329d1bfcad355a6965
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
@@ -97,7 +97,7 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: b033a802fda0c796a45c6030d5625daad616c0fc
+      ref: 3ce441524f0d031420103cf472ef1cd1b0d70e09
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
@@ -112,7 +112,6 @@ dependencies:
       ref: 183f75193c02555971713557e956e453c4b6be4f
 
   # ---- Image Utilities ----
-  extended_image: ^8.0.2
   palette_generator: ^0.3.3+2
   photo_view: ^0.14.0
 

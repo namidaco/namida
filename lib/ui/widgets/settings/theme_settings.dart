@@ -297,7 +297,7 @@ class ThemeSetting extends SettingSubpageProvider {
                           NamidaNavigator.inst.navigateDialog(
                             dialog: Obx(
                               () => Theme(
-                                data: AppThemes.inst.getAppTheme(color),
+                                data: AppThemes.inst.getAppTheme(CurrentColor.inst.color),
                                 child: NamidaColorPickerDialog(
                                   initialColor: color,
                                   doneText: lang.DONE,
@@ -458,6 +458,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
       child: ColorPicker(
         pickerColor: initialColor,
         onColorChanged: onColorChanged,
+        hexInputBar: true,
       ),
     );
   }

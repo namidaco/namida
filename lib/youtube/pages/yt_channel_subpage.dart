@@ -341,7 +341,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                               video: item,
                               playlistID: null,
                               thumbnailWidthPercentage: 0.8,
-                              displayThirdLine: false,
+                              dateInsteadOfChannel: true,
                             );
                           },
                         );

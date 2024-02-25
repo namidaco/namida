@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -659,5 +661,19 @@ class YTUtils {
         ),
       ),
     );
+  }
+
+  void copyVideoUrl(String videoId) {
+    if (videoId != '') {
+      final atSeconds = Player.inst.nowPlayingPosition ~/ 1000;
+      final timeStamp = atSeconds > 0 ? '?t=$atSeconds' : '';
+      final finalUrl = "https://www.youtube.com/watch?v=$videoId$timeStamp";
+      Clipboard.setData(ClipboardData(text: finalUrl));
+      snackyy(
+        message: lang.COPIED_TO_CLIPBOARD,
+        top: false,
+        leftBarIndicatorColor: CurrentColor.inst.color,
+      );
+    }
   }
 }

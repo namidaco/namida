@@ -475,6 +475,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool startPlaying) async {
     final tr = item.track;
+    videoPlayerInfo.value = null;
     WaveformController.inst.generateWaveform(tr);
     final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
 
@@ -764,17 +765,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else {
       if (isPlaying) {
         // wait for pausing only if playing.
-        pause().then((_) async {
-          await super.onDispose();
+        pause(pauseFadeMillis: 100).then((_) async {
+          if (item == currentVideo) await super.onDispose();
           playerStoppingSeikoo.complete(true);
         });
       } else {
-        await super.onDispose();
+        if (item == currentVideo) await super.onDispose();
         playerStoppingSeikoo.complete(true);
       }
     }
 
-    // await setVideo(null);
+    videoPlayerInfo.value = null;
 
     ({AudioCacheDetails? audio, NamidaVideo? video}) playedFromCacheDetails = (audio: null, video: null);
     bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.video != null);
@@ -996,7 +997,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     AudioCacheDetails? cachedAudio = finalAudioFiles.firstOrNull;
 
     if (cachedAudio == null) {
-      final localTrack = possibleLocalFiles.firstOrNull;
+      final localTrack = possibleLocalFiles.firstWhereEff((e) => File(e.path).existsSync());
       if (localTrack != null) {
         cachedAudio = AudioCacheDetails(
           youtubeId: item.id,

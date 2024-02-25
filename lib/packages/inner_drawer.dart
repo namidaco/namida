@@ -529,6 +529,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
 
   /// return widget with specific animation
   Widget _animatedChild() {
+    if (_controller.value == 1) return const SizedBox();
     Widget? child = _position == InnerDrawerDirection.start ? _leftChild : _rightChild;
     if (_swipeChild) {
       child = GestureDetector(
@@ -569,6 +570,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
 
   /// Trigger Area
   Widget? _trigger(AlignmentDirectional alignment, Widget? child) {
+    if (child == null) return null;
     final drawerIsStart = _position == InnerDrawerDirection.start;
     final padding = MediaQuery.paddingOf(context);
     double dragAreaWidth = drawerIsStart ? padding.left : padding.right;
@@ -578,7 +580,7 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
     }
     dragAreaWidth = max(dragAreaWidth, _kEdgeDragWidth);
 
-    if (_controller.status == AnimationStatus.completed && _swipe && child != null) {
+    if (_controller.status == AnimationStatus.completed && _swipe) {
       return Align(
         alignment: alignment,
         child: Container(color: Colors.transparent, width: dragAreaWidth),
@@ -590,8 +592,6 @@ class InnerDrawerState extends State<InnerDrawer> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    //assert(debugCheckHasMaterialLocalizations(context));
-
     /// initialize the correct width
     if (_initWidth == 400 || MediaQuery.orientationOf(context) != _orientation) {
       _updateWidth();

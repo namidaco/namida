@@ -41,6 +41,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
@@ -466,6 +467,20 @@ class Namida extends StatelessWidget {
             ),
           ),
         ),
+
+        NamidaChannel.inst.isInPip.value && Player.inst.videoPlayerInfo != null
+            ? Container(
+                color: Colors.black,
+                alignment: Alignment.topLeft,
+                child: const NamidaVideoControls(
+                  key: Key('pip_widget_child'),
+                  isFullScreen: true,
+                  showControls: false,
+                  onMinimizeTap: null,
+                  isLocal: true,
+                ),
+              )
+            : const SizedBox(),
       ],
     );
   }

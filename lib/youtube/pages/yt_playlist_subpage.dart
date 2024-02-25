@@ -298,7 +298,6 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                         day: null,
                         playlistID: playlist.playlistID,
                         playlistName: playlistCurrentName,
-                        fromPlayerQueue: true,
                         draggingEnabled: YoutubePlaylistController.inst.canReorderVideos.value,
                         draggableThumbnail: true,
                         showMoreIcon: true,

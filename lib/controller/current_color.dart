@@ -379,7 +379,7 @@ class CurrentColor {
   }
 
   static Future<List<int>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
-    final result = await PaletteGenerator.fromByteData(encimg, filters: [], maximumColorCount: 28);
+    final result = await PaletteGenerator.fromByteData(encimg, filters: [avoidRedBlackWhitePaletteFilter], maximumColorCount: 28);
     return result.colors.map((e) => e.value).toList();
   }
 

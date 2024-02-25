@@ -536,7 +536,10 @@ class YoutubeController {
   }
 
   Future<void> updateVideoDetails(String id, {bool forceRequest = false}) async {
-    if (scrollController.hasClients) scrollController.jumpTo(0);
+    if (scrollController.hasClients) {
+      scrollController.jumpTo(0);
+      resetGlowUnderVideo();
+    }
     startDimTimer();
     isTitleExpanded.value = false;
 
