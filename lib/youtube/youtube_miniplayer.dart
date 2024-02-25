@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:namida/core/enums.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -14,7 +12,9 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -121,11 +121,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                     },
                     onLinkTap: (url, attributes, element) async {
                       if (url != null) {
-                        try {
-                          await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
-                        } catch (e) {
-                          await launchUrlString(url);
-                        }
+                        await NamidaLinkUtils.openLink(url);
                       }
                     },
                   );

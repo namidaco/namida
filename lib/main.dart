@@ -281,7 +281,7 @@ Future<void> _initializeIntenties() async {
             return id == '' ? null : id;
           }).whereType<String>();
           final ytPlaylists = paths.map((e) {
-            final match = e.isEmpty ? null : kYoutubeRegexPlaylists.firstMatch(e)?[0];
+            final match = e.isEmpty ? null : NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(e)?[0];
             return match;
           }).whereType<String>();
           if (youtubeIds.isNotEmpty) {

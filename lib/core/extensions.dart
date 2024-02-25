@@ -327,8 +327,7 @@ extension ConvertPathToTrack on String {
 
 extension YTLinkToID on String {
   String get getYoutubeID {
-    final regex = RegExp(r'((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?', caseSensitive: false);
-    final match = regex.firstMatch(this);
+    final match = NamidaLinkRegex.youtubeIdRegex.firstMatch(this);
     final idAndMore = match?.group(5);
     final id = idAndMore?.length == 11 ? idAndMore : null;
     return id ?? '';

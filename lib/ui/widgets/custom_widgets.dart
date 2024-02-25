@@ -14,7 +14,6 @@ import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable
 import 'package:like_button/like_button.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
@@ -2091,13 +2090,7 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
         fontSize: 13.5.multipliedFontScale,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
-      onTap: (url) async {
-        try {
-          await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
-        } catch (e) {
-          await launchUrlString(url);
-        }
-      },
+      onTap: (url) async => await NamidaLinkUtils.openLink(url),
     );
   }
 }
@@ -2419,7 +2412,7 @@ class NamidaSupportButton extends StatelessWidget {
       text: title ?? lang.SUPPORT,
       onPressed: () {
         closeDialog.closeDialog();
-        launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE);
+        NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
       },
     );
   }

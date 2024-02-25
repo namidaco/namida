@@ -181,7 +181,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
             if (value!.isEmpty) {
               return lang.PLEASE_ENTER_A_NAME;
             }
-            if ((kYoutubeRegex.firstMatch(value) ?? '') == '') {
+            if ((NamidaLinkRegex.youtubeLinkRegex.firstMatch(value) ?? '') == '') {
               return lang.PLEASE_ENTER_A_LINK_SUBTITLE;
             }
             return null;

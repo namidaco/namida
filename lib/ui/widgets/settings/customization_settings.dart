@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/track.dart';
@@ -837,7 +836,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                                     text: lang.SUPPORT.toUpperCase(),
                                                     onPressed: () {
                                                       NamidaNavigator.inst.closeDialog();
-                                                      launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE);
+                                                      NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
                                                     },
                                                   ),
                                                 ],

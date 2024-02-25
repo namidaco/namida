@@ -15,14 +15,6 @@ int kSdkVersion = 21;
 
 final Set<String> kStoragePaths = {};
 final Set<String> kInitialDirectoriesToScan = {};
-final RegExp kYoutubeRegex = RegExp(
-  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
-  caseSensitive: false,
-);
-final RegExp kYoutubeRegexPlaylists = RegExp(
-  r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=)([\w\-]+)(?:\S+)?',
-  caseSensitive: false,
-);
 
 /// Main Color
 const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
@@ -35,6 +27,21 @@ abstract class NamidaLinkRegex {
   static const email = r'[^@\s]+@([^@\s]+\.)+[^@\W]+';
   static const duration = r'\b(\d{1,2}:)?(\d{1,2}):(\d{2})\b';
   static const all = '($url|$duration|$phoneNumber|$email)';
+
+  static final youtubeLinkRegex = RegExp(
+    r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
+    caseSensitive: false,
+  );
+
+  static final youtubeIdRegex = RegExp(
+    r'((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?',
+    caseSensitive: false,
+  );
+
+  static final youtubePlaylistsLinkRegex = RegExp(
+    r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=)([\w\-]+)(?:\S+)?',
+    caseSensitive: false,
+  );
 }
 
 class NamidaLinkUtils {
@@ -64,11 +71,16 @@ class NamidaLinkUtils {
   }
 
   static Future<bool> openLink(String url) async {
+    bool didLaunch = false;
     try {
-      return await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
-    } catch (e) {
-      return await launchUrlString(url);
+      didLaunch = await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+    } catch (_) {}
+    if (!didLaunch) {
+      try {
+        didLaunch = await launchUrlString(url);
+      } catch (_) {}
     }
+    return didLaunch;
   }
 }
 

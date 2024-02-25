@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -541,10 +540,7 @@ Future<void> showGeneralPopupDialog(
       snackyy(title: lang.COULDNT_OPEN, message: lang.COULDNT_OPEN_YT_LINK);
       return;
     }
-    launchUrlString(
-      link,
-      mode: LaunchMode.externalNonBrowserApplication,
-    );
+    NamidaLinkUtils.openLink(link);
   }
 
   final advancedStuffListTile = Obx(

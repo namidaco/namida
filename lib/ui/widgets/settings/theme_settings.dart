@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
@@ -169,7 +168,7 @@ class ThemeSetting extends SettingSubpageProvider {
                           title: lang.ADD_LANGUAGE,
                           subtitle: lang.ADD_LANGUAGE_SUBTITLE,
                           onTap: () {
-                            launchUrl(Uri.parse(AppSocial.TRANSLATION_REPO));
+                            NamidaLinkUtils.openLink(AppSocial.TRANSLATION_REPO);
                           },
                         ),
                       ],

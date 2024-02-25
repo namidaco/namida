@@ -8,7 +8,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:namida/core/constants.dart';
@@ -233,7 +232,7 @@ class AboutPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   InkWell(
-                    onTap: () => launchUrlString(AppSocial.DONATE_KOFI, mode: LaunchMode.externalApplication),
+                    onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_KOFI),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                       child: context.isDarkMode
@@ -250,7 +249,7 @@ class AboutPage extends StatelessWidget {
                     ),
                   ),
                   InkWell(
-                    onTap: () => launchUrlString(AppSocial.DONATE_BUY_ME_A_COFFEE, mode: LaunchMode.externalApplication),
+                    onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE),
                     child: Image.asset(
                       'assets/logos/donate_bmc.webp',
                       height: 48.0,
@@ -321,7 +320,7 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
           final version = text.text.replaceAll(' ', '');
           if (version.startsWith('v') && version.split('.').length > 1) {
             final url = "${AppSocial.GITHUB}/releases/tag/$version";
-            launchUrlString(url);
+            NamidaLinkUtils.openLink(url);
           }
         },
         bgColor: Get.theme.cardTheme.color?.withOpacity(0.8),
@@ -363,7 +362,7 @@ class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
           fontSize: 13.5.multipliedFontScale,
           color: Get.theme.colorScheme.secondary,
         ),
-        recognizer: TapGestureRecognizer()..onTap = () => launchUrlString(url),
+        recognizer: TapGestureRecognizer()..onTap = () => NamidaLinkUtils.openLink(url),
         children: [
           TextSpan(
             text: textWithoutCommit,
@@ -412,7 +411,7 @@ class NamidaAboutListTile extends StatelessWidget {
       onTap: onTap ??
           () {
             if (link != null) {
-              launchUrlString(link!, mode: LaunchMode.externalApplication);
+              NamidaLinkUtils.openLink(link!);
             }
           },
     );
