@@ -51,7 +51,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   @override
   void initState() {
     super.initState();
-    if (_maxHeight < widget.maxHeight) _maxHeight = widget.maxHeight;
+    if (_maxHeight < maxHeight) _maxHeight = maxHeight;
 
     controller = widget.animationController ??
         AnimationController(
@@ -92,19 +92,22 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     super.dispose();
   }
 
-  bool get isExpanded => _dragheight >= widget.maxHeight - widget.minHeight;
+  bool get isExpanded => _dragheight >= maxHeight - widget.minHeight;
   bool get _dismissible => widget.onDismiss != null;
 
   double _dragheight = 0;
 
-  double get controllerHeight => controller.value * widget.maxHeight;
-  double get percentage => (controllerHeight - widget.minHeight) / (widget.maxHeight - widget.minHeight);
+  EdgeInsets _padding = const EdgeInsets.only();
+
+  double get maxHeight => widget.maxHeight - _padding.bottom - _padding.top;
+  double get controllerHeight => controller.value * maxHeight;
+  double get percentage => (controllerHeight - widget.minHeight) / (maxHeight - widget.minHeight);
   double get dismissPercentage => (controllerHeight / widget.minHeight).clamp(0.0, 1.0);
 
   void _updateHeight(double heightPre, {Duration? duration}) {
     final height = _dismissible ? heightPre : heightPre.withMinimum(widget.minHeight);
     controller.animateTo(
-      height / widget.maxHeight,
+      height / maxHeight,
       duration: duration,
       curve: widget.curve,
     );
@@ -118,13 +121,14 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       return;
     }
 
-    _updateHeight(toExpanded ? widget.maxHeight : widget.minHeight, duration: dur ?? widget.duration);
+    _updateHeight(toExpanded ? maxHeight : widget.minHeight, duration: dur ?? widget.duration);
     _wasExpanded = toExpanded;
     WakelockController.inst.updateMiniplayerStatus(toExpanded);
   }
 
   @override
   Widget build(BuildContext context) {
+    _padding = MediaQuery.paddingOf(context);
     return AnimatedBuilderMulti(
       animation: controller,
       builder: (context, children) {
@@ -133,7 +137,10 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
           alignment: Alignment.bottomCenter,
           children: [
             Padding(
-              padding: EdgeInsets.only(bottom: (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin)),
+              padding: EdgeInsets.only(
+                top: _padding.top,
+                bottom: _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin),
+              ),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: GestureDetector(
@@ -163,7 +170,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                     } else if (v < -200) {
                       shouldSnapToMax = true;
                     } else {
-                      final percentage = _dragheight / widget.maxHeight;
+                      final percentage = _dragheight / maxHeight;
                       if (percentage > 0.4) {
                         shouldSnapToMax = true;
                       } else {
