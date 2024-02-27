@@ -128,7 +128,11 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    _padding = MediaQuery.paddingOf(context);
+    final padding = MediaQuery.paddingOf(context);
+    if (padding != _padding) {
+      _padding = padding;
+      animateToState(_wasExpanded);
+    }
     return AnimatedBuilderMulti(
       animation: controller,
       builder: (context, children) {

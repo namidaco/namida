@@ -12,7 +12,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
@@ -20,7 +20,6 @@ class LyricsLRCParsedView extends StatefulWidget {
   final Lrc? lrc;
   final Widget videoOrImage;
   final bool isFullScreenView;
-  final Duration totalDuration;
 
   const LyricsLRCParsedView({
     super.key,
@@ -28,7 +27,6 @@ class LyricsLRCParsedView extends StatefulWidget {
     required this.lrc,
     required this.videoOrImage,
     this.isFullScreenView = false,
-    required this.totalDuration,
   });
 
   @override
@@ -42,7 +40,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         builder: (context) {
           return LyricsLRCParsedView(
             key: Lyrics.inst.lrcViewKeyFullscreen,
-            totalDuration: widget.totalDuration,
             cp: widget.cp,
             lrc: currentLRC,
             videoOrImage: const SizedBox(),
@@ -89,7 +86,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           seconds: int.parse(parts[1]),
           milliseconds: int.parse("${parts[2]}0"), // aditional 0 to convert to millis
         );
-        cal = widget.totalDuration.inMicroseconds / lyricsDuration.inMicroseconds;
+        final totalDur = Player.inst.currentItemDuration ?? Player.inst.nowPlayingTrack.duration.seconds;
+        cal = totalDur.inMicroseconds / lyricsDuration.inMicroseconds;
       } catch (_) {}
     }
 
@@ -346,20 +344,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   if (fullscreen) {
                                     Navigator.of(context).pop();
                                   } else {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return LyricsLRCParsedView(
-                                            key: Lyrics.inst.lrcViewKeyFullscreen,
-                                            totalDuration: widget.totalDuration,
-                                            cp: widget.cp,
-                                            lrc: currentLRC,
-                                            videoOrImage: const SizedBox(),
-                                            isFullScreenView: true,
-                                          );
-                                        },
-                                      ),
-                                    );
+                                    enterFullScreen();
                                   }
                                 },
                               ),

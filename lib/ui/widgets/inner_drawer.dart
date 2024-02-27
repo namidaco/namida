@@ -91,9 +91,9 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
             children[1],
             Positioned.fill(
               child: TapDetector(
-                onTap: controller.value != controller.upperBound ? null : _closeDrawer,
+                onTap: controller.value == controller.lowerBound ? null : _closeDrawer,
                 child: IgnorePointer(
-                  ignoring: controller.value != controller.upperBound,
+                  ignoring: controller.value == controller.lowerBound,
                   child: ColoredBox(
                     color: Colors.black.withOpacity(controller.value),
                   ),
