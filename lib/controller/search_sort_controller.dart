@@ -329,13 +329,13 @@ class SearchSortController {
                   title: trMap['title'],
                   originalArtist: trMap['artist'],
                   config: artistsSplitConfig,
-                )
+                ).map((e) => textCleanedForSearch(e)).toList()
               : [],
           splitGenre: sgenre
               ? Indexer.splitGenre(
                   trMap['genre'],
                   config: genresSplitConfig,
-                )
+                ).map((e) => textCleanedForSearch(e)).toList()
               : [],
           splitComposer: splitThis(trMap['composer'], scomposer),
           splitComment: splitThis(trMap['comment'], scomment),
