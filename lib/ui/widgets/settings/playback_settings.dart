@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -23,6 +24,7 @@ enum _PlaybackSettingsKeys {
   localVideoMatching,
   keepScreenAwake,
   displayFavButtonInNotif,
+  displayArtworkOnLockscreen,
   killPlayerAfterDismissing,
   onNotificationTap,
   dismissibleMiniplayer,
@@ -55,6 +57,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         _PlaybackSettingsKeys.localVideoMatching: [lang.LOCAL_VIDEO_MATCHING],
         _PlaybackSettingsKeys.keepScreenAwake: [lang.KEEP_SCREEN_AWAKE_WHEN],
         _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION],
+        _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.DISPLAY_ARTWORK_ON_LOCKSCREEN],
         _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
         _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
         _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
@@ -301,6 +304,24 @@ class PlaybackSettings extends SettingSubpageProvider {
               if (!val && kSdkVersion < 31) {
                 snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
               }
+            },
+          ),
+        ),
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
+        child: Obx(
+          () => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
+            title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
+            leading: const StackedIcon(
+              baseIcon: Broken.gallery,
+              secondaryIcon: Broken.lock_circle,
+            ),
+            value: settings.player.lockscreenArtwork.value,
+            onChanged: (val) {
+              settings.player.save(lockscreenArtwork: !val);
+              AudioService.setLockScreenArtwork(!val);
             },
           ),
         ),

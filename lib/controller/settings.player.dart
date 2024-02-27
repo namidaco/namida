@@ -38,6 +38,7 @@ class PlayerSettings with SettingsFileWriter {
   final infiniyQueueOnNextPrevious = true.obs;
   final displayRemainingDurInsteadOfTotal = false.obs;
   final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
+  final lockscreenArtwork = true.obs;
 
   final onInterrupted = <InterruptionType, InterruptionAction>{
     InterruptionType.shouldPause: InterruptionAction.pause,
@@ -78,6 +79,7 @@ class PlayerSettings with SettingsFileWriter {
     bool? jumpToFirstTrackAfterFinishingQueue,
     RepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
+    bool? lockscreenArtwork,
     Map<String, int>? lastPlayedIndices,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
@@ -106,6 +108,7 @@ class PlayerSettings with SettingsFileWriter {
     if (jumpToFirstTrackAfterFinishingQueue != null) this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
+    if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
     if (lastPlayedIndices != null) {
       for (final e in lastPlayedIndices.entries) {
         this.lastPlayedIndices[e.key] = e.value;
@@ -149,6 +152,7 @@ class PlayerSettings with SettingsFileWriter {
       infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       killAfterDismissingApp.value = KillAppMode.values.getEnum(json['killAfterDismissingApp']) ?? killAfterDismissingApp.value;
+      lockscreenArtwork.value = json['lockscreenArtwork'] ?? lockscreenArtwork.value;
       onInterrupted.value = getEnumMap_(
             json['onInterrupted'],
             InterruptionType.values,
@@ -193,6 +197,7 @@ class PlayerSettings with SettingsFileWriter {
         'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
         'repeatMode': repeatMode.value.convertToString,
         'killAfterDismissingApp': killAfterDismissingApp.value.convertToString,
+        'lockscreenArtwork': lockscreenArtwork.value,
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),

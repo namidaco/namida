@@ -136,6 +136,7 @@ class Player {
     });
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.player.skipSilenceEnabled.value);
+    AudioService.setLockScreenArtwork(settings.player.lockscreenArtwork.value);
     _notificationClickedSub?.cancel();
     _notificationClickedSub = AudioService.notificationClicked.listen((clicked) {
       if (clicked) {

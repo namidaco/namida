@@ -92,7 +92,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
-      ref: 050ab2a29d1d69fdc65ff3e370e0567b27ca48f5
+      ref: e576b78b5b67f9ac750d8223096fbd5ed5503d17
   waveform_extractor: ^1.0.1
   basic_audio_handler:
     git:
