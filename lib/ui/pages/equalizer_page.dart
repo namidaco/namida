@@ -138,7 +138,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                 icon: Broken.export_2,
                                 iconColor: context.defaultIconColor(),
                                 iconSize: 20.0,
-                                onPressed: NamidaChannel.inst.openSystemEqualizer,
+                                onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
                               ),
                               const SizedBox(width: 16.0),
                               CustomSwitch(

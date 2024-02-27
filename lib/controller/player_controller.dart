@@ -50,6 +50,7 @@ class Player {
 
   AndroidEqualizer get equalizer => _audioHandler.equalizer;
   AndroidLoudnessEnhancer get loudnessEnhancer => _audioHandler.loudnessEnhancer;
+  int? get androidSessionId => _audioHandler.androidSessionId;
 
   VideoInfo? get currentVideoInfo => _audioHandler.currentVideoInfo.value;
   YoutubeChannel? get currentChannelInfo => _audioHandler.currentChannelInfo.value;

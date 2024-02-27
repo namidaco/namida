@@ -88,7 +88,7 @@ class NamidaMainActivity : FlutterActivity() {
           }
         }
         "openEqualizer" -> {
-          result.success(openSystemEqualizer())
+          result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
         }
         else -> result.notImplemented()
       }
@@ -276,9 +276,10 @@ class NamidaMainActivity : FlutterActivity() {
 
   private val REQUEST_CODE_OPEN_EQ = 47
 
-  private fun openSystemEqualizer(): Boolean {
+  private fun openSystemEqualizer(sessionId: Int?): Boolean {
     val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
     intent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.getPackageName())
+    intent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
     intent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
     intent.setFlags(
         Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
