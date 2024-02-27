@@ -141,6 +141,7 @@ class SettingsController with SettingsFileWriter {
   final RxInt imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
   final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
+  final RxBool youtubeStyleMiniplayer = true.obs;
   final RxBool hideStatusBarInExpandedMiniplayer = false.obs;
   final RxBool displayFavouriteButtonInNotification = false.obs;
   final RxBool enableSearchCleanup = true.obs;
@@ -397,6 +398,7 @@ class SettingsController with SettingsFileWriter {
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
       ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
+      youtubeStyleMiniplayer.value = json['youtubeStyleMiniplayer'] ?? youtubeStyleMiniplayer.value;
       hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
@@ -580,6 +582,7 @@ class SettingsController with SettingsFileWriter {
         'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
         'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
+        'youtubeStyleMiniplayer': youtubeStyleMiniplayer.value,
         'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
         'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
         'enableSearchCleanup': enableSearchCleanup.value,
@@ -747,6 +750,7 @@ class SettingsController with SettingsFileWriter {
     int? imagesMaxCacheInMB,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
+    bool? youtubeStyleMiniplayer,
     bool? hideStatusBarInExpandedMiniplayer,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
@@ -961,6 +965,7 @@ class SettingsController with SettingsFileWriter {
     if (imagesMaxCacheInMB != null) this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
     if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
+    if (youtubeStyleMiniplayer != null) this.youtubeStyleMiniplayer.value = youtubeStyleMiniplayer;
 
     if (hideStatusBarInExpandedMiniplayer != null) this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
 

@@ -5,7 +5,6 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -13,9 +12,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
@@ -410,7 +407,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             child: FittedBox(
                               child: QueueUtilsRow(
                                 itemsKeyword: (number) => number.displayVideoKeyword,
-                                onAddItemsTap: () => _onAddVideoTap(),
+                                onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
                                 scrollQueueWidget: Obx(
                                   () => NamidaButton(
                                     onPressed: _animateQueueToCurrentTrack,
@@ -447,123 +444,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           },
         ),
       ],
-    );
-  }
-
-  void _onAddVideoTap() {
-    final currentVideo = Player.inst.nowPlayingVideoID;
-    if (currentVideo == null) return;
-    final currentVideoId = currentVideo.id;
-    final currentVideoName = YoutubeController.inst.getVideoName(currentVideoId) ?? currentVideoId;
-
-    NamidaYTGenerator.inst.prepareResources();
-    showAddItemsToQueueDialog(
-      context: context,
-      tiles: (getAddTracksTile) {
-        return [
-          Obx(
-            () {
-              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
-              return AnimatedEnabled(
-                enabled: !isLoading,
-                child: getAddTracksTile(
-                  title: lang.NEW_TRACKS_RANDOM,
-                  subtitle: lang.NEW_TRACKS_RANDOM_SUBTITLE,
-                  icon: Broken.format_circle,
-                  insertionType: QueueInsertionType.random,
-                  onTap: (insertionType) async {
-                    final config = insertionType.toQueueInsertion();
-                    final count = config.numberOfTracks;
-                    final rt = await NamidaYTGenerator.inst.getRandomVideos(exclude: currentVideoId, min: count - 1, max: count);
-                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
-                  },
-                  trailingRaw: isLoading ? const LoadingIndicator() : null,
-                ),
-              );
-            },
-          ),
-          getAddTracksTile(
-            title: lang.GENERATE_FROM_DATES,
-            subtitle: lang.GENERATE_FROM_DATES_SUBTITLE,
-            icon: Broken.calendar,
-            insertionType: QueueInsertionType.listenTimeRange,
-            onTap: (insertionType) {
-              NamidaNavigator.inst.closeDialog();
-              final historyTracks = YoutubeHistoryController.inst.historyTracks;
-              if (historyTracks.isEmpty) {
-                snackyy(title: lang.NOTE, message: lang.NO_TRACKS_IN_HISTORY);
-                return;
-              }
-              showCalendarDialog(
-                title: lang.GENERATE_FROM_DATES,
-                buttonText: lang.GENERATE,
-                useHistoryDates: true,
-                historyController: YoutubeHistoryController.inst,
-                onGenerate: (dates) {
-                  final videos = NamidaYTGenerator.inst.generateItemsFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
-                  Player.inst
-                      .addToQueue(
-                        videos,
-                        insertionType: insertionType,
-                        emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
-                      )
-                      .closeDialog();
-                },
-              );
-            },
-          ),
-          const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
-          Obx(
-            () {
-              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
-              return AnimatedEnabled(
-                enabled: !isLoading,
-                child: getAddTracksTile(
-                  title: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE,
-                  subtitle: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
-                    '_CURRENT_TRACK_',
-                    currentVideoName.addDQuotation(),
-                  ),
-                  icon: Broken.calendar_1,
-                  insertionType: QueueInsertionType.sameReleaseDate,
-                  onTap: (insertionType) async {
-                    final videos = await NamidaYTGenerator.inst.generateVideoFromSameEra(currentVideoId, videoToRemove: currentVideoId);
-                    Player.inst
-                        .addToQueue(
-                          videos,
-                          insertionType: insertionType,
-                          emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
-                        )
-                        .closeDialog();
-                  },
-                  trailingRaw: isLoading ? const LoadingIndicator() : null,
-                ),
-              );
-            },
-          ),
-          getAddTracksTile(
-            title: lang.NEW_TRACKS_RECOMMENDED,
-            subtitle: lang.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-              '_CURRENT_TRACK_',
-              currentVideoName.addDQuotation(),
-            ),
-            icon: Broken.bezier,
-            insertionType: QueueInsertionType.algorithm,
-            onTap: (insertionType) {
-              final genvideos = NamidaYTGenerator.inst.generateRecommendedVideos(currentVideo);
-
-              Player.inst
-                  .addToQueue(
-                    genvideos,
-                    insertionType: insertionType,
-                    insertNext: true,
-                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
-                  )
-                  .closeDialog();
-            },
-          ),
-        ];
-      },
     );
   }
 }

@@ -2906,6 +2906,57 @@ class NamidaPopupWrapper extends StatelessWidget {
     NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
   }
 
+  List<PopupMenuEntry<dynamic>> convertItems(BuildContext context) {
+    return [
+      if (childrenDefault != null)
+        ...childrenDefault!().map(
+          (e) {
+            final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4));
+            return PopupMenuItem(
+              height: 42.0,
+              onTap: e.onTap,
+              enabled: e.enabled,
+              child: Row(
+                children: [
+                  Icon(e.icon, size: 20.0),
+                  const SizedBox(width: 6.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        e.titleBuilder?.call(titleStyle) ??
+                            Text(
+                              e.title,
+                              style: titleStyle,
+                            ),
+                        if (e.subtitle != '')
+                          Text(
+                            e.subtitle,
+                            style: context.textTheme.displaySmall,
+                            maxLines: e.oneLinedSub ? 1 : null,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (e.trailing != null) e.trailing!,
+                ],
+              ),
+            );
+          },
+        ),
+      if (children != null)
+        ...children!().map(
+          (e) => PopupMenuItem(
+            onTap: null,
+            height: 32.0,
+            padding: EdgeInsets.zero,
+            child: e,
+          ),
+        ),
+    ];
+  }
+
   void _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject()! as RenderBox;
     final RenderBox overlay = Navigator.of(context, rootNavigator: useRootNavigator).overlay!.context.findRenderObject()! as RenderBox;
@@ -2922,54 +2973,7 @@ class NamidaPopupWrapper extends StatelessWidget {
         useRootNavigator: useRootNavigator,
         context: context,
         position: position,
-        items: [
-          if (childrenDefault != null)
-            ...childrenDefault!().map(
-              (e) {
-                final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4));
-                return PopupMenuItem(
-                  height: 42.0,
-                  onTap: e.onTap,
-                  enabled: e.enabled,
-                  child: Row(
-                    children: [
-                      Icon(e.icon, size: 20.0),
-                      const SizedBox(width: 6.0),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            e.titleBuilder?.call(titleStyle) ??
-                                Text(
-                                  e.title,
-                                  style: titleStyle,
-                                ),
-                            if (e.subtitle != '')
-                              Text(
-                                e.subtitle,
-                                style: context.textTheme.displaySmall,
-                                maxLines: e.oneLinedSub ? 1 : null,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (e.trailing != null) e.trailing!,
-                    ],
-                  ),
-                );
-              },
-            ),
-          if (children != null)
-            ...children!().map(
-              (e) => PopupMenuItem(
-                onTap: null,
-                height: 32.0,
-                padding: EdgeInsets.zero,
-                child: e,
-              ),
-            ),
-        ],
+        items: convertItems(context),
       ),
     );
     if (context.mounted) {

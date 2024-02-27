@@ -544,8 +544,10 @@ class YoutubeController {
     isTitleExpanded.value = false;
 
     updateCurrentVideoMetadata(id, forceRequest: forceRequest);
-    updateCurrentComments(id);
-    fetchRelatedVideos(id);
+    if (settings.youtubeStyleMiniplayer.value) {
+      updateCurrentComments(id);
+      fetchRelatedVideos(id);
+    }
   }
 
   Future<void> updateCurrentVideoMetadata(String id, {bool forceRequest = false}) async {

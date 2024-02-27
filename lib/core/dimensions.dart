@@ -34,7 +34,9 @@ class Dimensions {
   /// + active miniplayer padding
   double get globalBottomPaddingEffective {
     return (Player.inst.currentQueueYoutube.isNotEmpty
-            ? kYoutubeMiniplayerHeight
+            ? settings.youtubeStyleMiniplayer.value
+                ? kYoutubeMiniplayerHeight
+                : _kMiniplayerBottomPadding
             : Player.inst.currentQueue.isNotEmpty
                 ? _kMiniplayerBottomPadding
                 : 0.0) +

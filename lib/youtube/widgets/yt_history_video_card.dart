@@ -36,6 +36,8 @@ class YTHistoryVideoCard extends StatelessWidget {
   final bool showMoreIcon;
   final Widget Function(Color? color)? draggingBarsBuilder;
   final Widget Function(Widget draggingTrigger)? draggingThumbnailBuilder;
+  final double cardColorOpacity;
+  final double fadeOpacity;
 
   const YTHistoryVideoCard({
     super.key,
@@ -57,6 +59,8 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.showMoreIcon = false,
     this.draggingBarsBuilder,
     this.draggingThumbnailBuilder,
+    this.cardColorOpacity = 0.75,
+    this.fadeOpacity = 0,
   });
 
   @override
@@ -199,7 +203,7 @@ class YTHistoryVideoCard extends StatelessWidget {
             },
             height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
             margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
-            bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor),
+            bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor.withOpacity(cardColorOpacity)),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             ),
@@ -245,6 +249,14 @@ class YTHistoryVideoCard extends StatelessWidget {
                           iconSize: 16.0,
                           iconColor: itemsColor6,
                         ),
+                      ),
+                    ),
+                  ),
+                if (fadeOpacity > 0)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ColoredBox(
+                        color: context.theme.cardColor.withOpacity(fadeOpacity),
                       ),
                     ),
                   ),

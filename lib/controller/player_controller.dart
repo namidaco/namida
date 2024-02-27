@@ -505,6 +505,10 @@ class Player {
 
   // ------- video -------
 
+  Future<void> tryGenerateWaveform(YoutubeID? video) async {
+    return _audioHandler.tryGenerateWaveform(video);
+  }
+
   Future<void> setVideo({required String source, String cacheKey = '', bool loopingAnimation = false, required bool isFile}) async {
     await _audioHandler.setVideoSource(source: source, cacheKey: cacheKey, loopingAnimation: loopingAnimation, isFile: isFile);
   }

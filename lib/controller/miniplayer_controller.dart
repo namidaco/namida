@@ -138,9 +138,11 @@ class MiniPlayerController {
   bool bounceUp = false;
   bool bounceDown = false;
 
+  double get _currentItemExtent => Player.inst.currentQueueYoutube.isNotEmpty ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
+
   void animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
     if (queueScrollController.hasClients) {
-      final trackTileItemScrollOffsetInQueue = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex - screenSize.height * 0.3;
+      final trackTileItemScrollOffsetInQueue = _currentItemExtent * Player.inst.currentIndex - screenSize.height * 0.3;
       if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
         return;
       }
@@ -337,7 +339,7 @@ class MiniPlayerController {
   void _updateScrollPositionInQueue() {
     void updateIcon() {
       final pixels = queueScrollController.position.pixels;
-      final sizeInSettings = Dimensions.inst.trackTileItemExtent * Player.inst.currentIndex - Get.height * 0.3;
+      final sizeInSettings = _currentItemExtent * Player.inst.currentIndex - Get.height * 0.3;
       if (pixels > sizeInSettings) {
         arrowIcon.value = Broken.arrow_up_1;
       }

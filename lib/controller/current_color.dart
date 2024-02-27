@@ -61,7 +61,7 @@ class CurrentColor {
   void switchColorPalettes(bool isPlaying) {
     _colorsSwitchTimer?.cancel();
     _colorsSwitchTimer = null;
-    if (Player.inst.nowPlayingTrack == kDummyTrack) return;
+    if (Player.inst.currentQueue.isEmpty && Player.inst.currentQueueYoutube.isEmpty) return;
     final durms = isPlaying ? 500 : 2000;
     _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
       if (settings.enablePartyModeColorSwap.value) {

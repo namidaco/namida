@@ -168,7 +168,7 @@ class MainPage extends StatelessWidget {
           Obx(
             () => AnimatedSwitcher(
               duration: const Duration(milliseconds: 600),
-              child: Player.inst.currentQueue.isNotEmpty
+              child: Player.inst.currentQueue.isNotEmpty || (Player.inst.currentQueueYoutube.isNotEmpty && !settings.youtubeStyleMiniplayer.value)
                   ? Container(
                       key: const Key('actualglow'),
                       height: 28.0,

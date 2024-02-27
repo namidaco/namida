@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
 import 'package:waveform_extractor/waveform_extractor.dart';
 
-import 'package:namida/class/track.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -17,29 +15,33 @@ class WaveformController {
 
   final RxMap<int, double> _currentScaleMap = <int, double>{}.obs;
 
-  /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
-  Future<void> generateWaveform(Track track) async {
+  bool get isDummy => _currentWaveform.isEmpty;
+
+  void resetWaveform() {
     _currentWaveform = [];
     currentWaveformUI.value = List.filled(settings.waveformTotalBars.value, 2.0);
+  }
 
+  /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
+  Future<void> generateWaveform({required String path, required Duration duration, required bool Function(String path) stillPlaying}) async {
     final samplePerSecond = _waveformExtractor.getSampleRateFromDuration(
-      audioDuration: Duration(seconds: track.duration),
+      audioDuration: duration,
       maxSampleRate: 400,
       scaleFactor: 0.4,
     );
 
     List<int> waveformData = [];
     await Future.wait([
-      _waveformExtractor.extractWaveformDataOnly(track.path, samplePerSecond: samplePerSecond).then((value) {
+      _waveformExtractor.extractWaveformDataOnly(path, samplePerSecond: samplePerSecond).then((value) {
         waveformData = value;
       }),
       Future.delayed(const Duration(milliseconds: 800)),
     ]);
 
-    if (track == Player.inst.nowPlayingTrack) {
+    if (stillPlaying(path)) {
       // ----- Updating [_currentWaveform]
       const maxWaveformCount = 2000;
-      final numberOfScales = (track.duration * 1000) ~/ 50;
+      final numberOfScales = duration.inMilliseconds ~/ 50;
       final downscaledLists = await _downscaledWaveformLists.thready((
         targetSizes: [maxWaveformCount, numberOfScales],
         original: waveformData,

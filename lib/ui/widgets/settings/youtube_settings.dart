@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -14,6 +15,7 @@ import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
 enum _YoutubeSettingKeys {
+  youtubeStyleMiniplayer,
   rememberAudioOnly,
   topComments,
   preferNewComments,
@@ -33,6 +35,7 @@ class YoutubeSettings extends SettingSubpageProvider {
 
   @override
   Map<Enum, List<String>> get lookupMap => {
+        _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
         _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
@@ -52,6 +55,21 @@ class YoutubeSettings extends SettingSubpageProvider {
       icon: Broken.video,
       child: Column(
         children: [
+          getItemWrapper(
+            key: _YoutubeSettingKeys.youtubeStyleMiniplayer,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
+                icon: Broken.video_octagon,
+                title: lang.YOUTUBE_STYLE_MINIPLAYER,
+                value: settings.youtubeStyleMiniplayer.value,
+                onChanged: (isTrue) {
+                  settings.save(youtubeStyleMiniplayer: !isTrue);
+                  Player.inst.tryGenerateWaveform(Player.inst.nowPlayingVideoID);
+                },
+              ),
+            ),
+          ),
           getItemWrapper(
             key: _YoutubeSettingKeys.rememberAudioOnly,
             child: Obx(
