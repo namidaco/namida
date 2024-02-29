@@ -62,11 +62,13 @@ class FAudioTaggerController {
       "artworkIdentifiers": _defaultGroupArtworksByAlbum ? _defaultAlbumIdentifier.map((e) => e.index).toList() : null,
     });
     final channelEvent = EventChannel('faudiotagger/stream/$streamKey');
-    return channelEvent.receiveBroadcastStream().map((event) {
+    final stream = channelEvent.receiveBroadcastStream().map((event) {
       final message = event as Map<Object?, Object?>;
       final map = message.cast<String, dynamic>();
       return map;
     });
+    _channel.invokeMethod("streamReady", {"streamKey": streamKey, "count": paths.length});
+    return stream;
   }
 
   Future<String?> writeTags({
@@ -246,7 +248,7 @@ class FAudioTaggerController {
       editedTags.updateAll((key, value) => value.trimAll());
     }
 
-    final shouldUpdateArtwork = imagePath != '';
+    final imageFile = imagePath != '' ? File(imagePath) : null;
 
     String oldComment = '';
     if (commentToInsert != '') {
@@ -260,7 +262,7 @@ class FAudioTaggerController {
           )
         : FTags(
             path: '',
-            artwork: FArtwork(file: shouldUpdateArtwork ? File(imagePath) : null),
+            artwork: FArtwork(file: imageFile),
             title: editedTags[TagField.title],
             album: editedTags[TagField.album],
             artist: editedTags[TagField.artist],
@@ -303,15 +305,13 @@ class FAudioTaggerController {
 
       await file.executeAndKeepStats(
         () async {
-          bool didUpdate = false;
-
           // -- 1. try tagger
           error = await FAudioTaggerController.inst.writeTags(
             path: track.path,
             tags: newTags,
           );
 
-          // didUpdate = error == null || error == '';
+          bool didUpdate = error == null || error == '';
 
           if (!didUpdate) {
             // -- 2. try with ffmpeg
@@ -347,7 +347,9 @@ class FAudioTaggerController {
           }
           if (didUpdate) {
             final trExt = track.toTrackExt();
-            tracksMap[track] = trExt.copyWithTag(tag: newTags);
+            final newTrExt = trExt.copyWithTag(tag: newTags);
+            tracksMap[track] = newTrExt;
+            if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
           }
           printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
           if (onEdit != null) onEdit(didUpdate, error, track);

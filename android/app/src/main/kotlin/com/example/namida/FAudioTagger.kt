@@ -14,6 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.Base64
+import java.util.concurrent.CompletableFuture
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlinx.coroutines.*
@@ -39,6 +40,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
   lateinit var channel: MethodChannel
   lateinit var binaryMessenger: BinaryMessenger
   val eventChannels = HashMap<Long, BetterEventChannel>()
+  val streamCompleters = HashMap<Long, CompletableFuture<Number>>()
   lateinit var context: Context
 
   companion object {
@@ -110,6 +112,17 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           result.error("Failure", "path parameter isn't provided", "")
         }
       }
+      "streamReady" -> {
+        val streamKey = call.argument<Long?>("streamKey") ?: 0
+        val count = call.argument<Number?>("count") ?: 0
+        val completer = streamCompleters.get(streamKey)
+        if (completer != null) {
+          completer.complete(count)
+          result.success(true)
+        } else {
+          result.success(false)
+        }
+      }
       "readAllDataAsStream" -> {
         val paths = call.argument<List<String>?>("paths")
         if (paths != null) {
@@ -124,9 +137,14 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
               BetterEventChannel(binaryMessenger, "faudiotagger/stream/" + streamKey)
           )
           val eventChannel = eventChannels.get(streamKey)!!
-          result.success(true)
-          _addLogsUser()
+
+          streamCompleters.set(streamKey, CompletableFuture<Number>())
+          result.success(streamKey)
+
           CoroutineScope(Dispatchers.IO).launch {
+            _addLogsUser()
+            // waiting for confirmation before posting to stream
+            streamCompleters.get(streamKey)!!.get()
             for (p in paths) {
               val map =
                   readAllData(

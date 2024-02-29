@@ -494,7 +494,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                         key: Key(currentImagePath.value),
                                         thumbnailSize: Get.width / 3,
                                         bytes: currentImagePath.value != '' ? null : artwork?.bytes,
-                                        path: currentImagePath.value != '' ? currentImagePath.value : track.pathToImage,
+                                        path: currentImagePath.value != '' ? currentImagePath.value : null,
                                         onTopWidgets: [
                                           Positioned(
                                             bottom: 0,
