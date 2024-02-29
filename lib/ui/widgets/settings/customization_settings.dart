@@ -797,7 +797,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              GestureDetector(
+                              DoubleTapDetector(
                                 onDoubleTap: () {
                                   settings.save(didSupportNamida: true);
                                 },

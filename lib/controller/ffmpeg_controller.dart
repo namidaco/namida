@@ -48,7 +48,16 @@ class NamidaFFMPEG {
       map["PATH"] = path;
       final miBackup = MediaInfo.fromMap(map);
       final format = miBackup.format;
-      final tags = information?.getTags() ?? (map['streams'] as List?)?.firstWhereEff((e) => e['tags'].isNotEmpty)?['tags'];
+      Map? tags = information?.getTags();
+      if (tags == null) {
+        try {
+          final mainTags = (map['streams'] as List?)?.firstWhereEff((e) {
+            final t = e['tags'];
+            return t is List && t.isNotEmpty;
+          });
+          tags = mainTags?['tags'];
+        } catch (_) {}
+      }
       final mi = MediaInfo(
         path: path,
         streams: miBackup.streams,

@@ -173,7 +173,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 children: [
                   SizedBox(
                     height: MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0,
-                    child: ClipRRect(
+                    child: BorderRadiusClip(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32.0.multipliedRadius),
                         topRight: Radius.circular(32.0.multipliedRadius),

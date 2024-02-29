@@ -622,9 +622,9 @@ class _AnimatingTrackImage extends StatelessWidget {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: videoInfo != null && videoInfo.isInitialized
-                          ? ClipRRect(
+                          ? BorderRadiusClip(
                               borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                              child: GestureDetector(
+                              child: DoubleTapDetector(
                                 onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
                                 child: NamidaAspectRatio(
                                   aspectRatio: videoInfo.aspectRatio,
@@ -780,9 +780,9 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: videoInfo != null && videoInfo.isInitialized
-              ? ClipRRect(
+              ? BorderRadiusClip(
                   borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                  child: GestureDetector(
+                  child: DoubleTapDetector(
                     onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
                     child: NamidaAspectRatio(
                       aspectRatio: videoInfo.aspectRatio,

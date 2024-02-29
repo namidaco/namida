@@ -440,11 +440,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   bool _isDraggingSeekBar = false;
 
-  bool get _showLoadingIndicator {
-    final isLoading = Player.inst.isBuffering || Player.inst.isLoading;
-    return isLoading && !Player.inst.isPlaying;
-  }
-
   RxDouble get _currentBrigthnessDim => VideoController.inst.currentBrigthnessDim;
 
   Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view) {
@@ -813,7 +808,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             ],
                             child: Padding(
                               padding: const EdgeInsets.all(4.0),
-                              child: ClipRRect(
+                              child: BorderRadiusClip(
                                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                 child: NamidaBgBlur(
                                   blur: 3.0,
@@ -895,7 +890,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               ],
                               child: Padding(
                                 padding: const EdgeInsets.all(4.0),
-                                child: ClipRRect(
+                                child: BorderRadiusClip(
                                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                   child: NamidaBgBlur(
                                     blur: 3.0,
@@ -1051,7 +1046,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ],
                                 child: Padding(
                                   padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
+                                  child: BorderRadiusClip(
                                     borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     child: NamidaBgBlur(
                                       blur: 3.0,
@@ -1157,7 +1152,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               ),
                             Row(
                               children: [
-                                ClipRRect(
+                                BorderRadiusClip(
                                   borderRadius: borr8,
                                   child: NamidaBgBlur(
                                     blur: 3.0,
@@ -1215,7 +1210,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     () {
                                       final queueL = (widget.isLocal ? Player.inst.currentQueue : Player.inst.currentQueueYoutube).length;
                                       if (queueL <= 1) return const SizedBox();
-                                      return ClipRRect(
+                                      return BorderRadiusClip(
                                         borderRadius: borr8,
                                         child: NamidaBgBlur(
                                           blur: 3.0,
@@ -1240,7 +1235,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ],
                                 const Spacer(),
                                 const SizedBox(width: 4.0),
-                                ClipRRect(
+                                BorderRadiusClip(
                                   borderRadius: borr8,
                                   child: NamidaBgBlur(
                                     blur: 3.0,
@@ -1357,15 +1352,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           color: Colors.black.withOpacity(0.3),
                           child: Obx(
                             () {
-                              if (_showLoadingIndicator) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(14.0),
-                                  child: ThreeArchedCircle(
-                                    color: itemsColor,
-                                    size: 40.0,
-                                  ),
-                                );
-                              }
                               final currentPosition = Player.inst.nowPlayingPosition;
                               final currentTotalDur = Player.inst.currentItemDuration?.inMilliseconds ?? 0;
                               final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 100; // 100ms allowance
@@ -1465,10 +1451,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ),
               Obx(
-                () => _showLoadingIndicator
+                () => Player.inst.isBuffering || Player.inst.isLoading
                     ? ThreeArchedCircle(
                         color: itemsColor,
-                        size: 40.0,
+                        size: 52.0,
                       )
                     : const SizedBox(),
               ),

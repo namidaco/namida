@@ -196,7 +196,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         // NamidaOpacity causes rebuilds
         Opacity(
           opacity: widget.cp,
-          child: ClipRRect(
+          child: BorderRadiusClip(
             borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),
             child: NamidaBgBlur(
               blur: fullscreen ? 0.0 : 14.0,

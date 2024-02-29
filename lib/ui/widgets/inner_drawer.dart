@@ -79,6 +79,15 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
+    const scaffoldShadows = [
+      BoxShadow(
+        color: Color(0x20202020),
+        blurRadius: 4.0,
+        spreadRadius: 2.0,
+        offset: Offset(-2.0, 0),
+      ),
+    ];
+
     return AnimatedBuilderMulti(
       animation: controller,
       children: [
@@ -95,7 +104,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 child: IgnorePointer(
                   ignoring: controller.value == controller.lowerBound,
                   child: ColoredBox(
-                    color: Colors.black.withOpacity(controller.value),
+                    color: Colors.black.withOpacity(controller.value * 1.2),
                   ),
                 ),
               ),
@@ -132,7 +141,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               Positioned.fill(
                 child: IgnorePointer(
                   child: ColoredBox(
-                    color: Colors.black.withOpacity(controller.upperBound - controller.value),
+                    color: Colors.black.withOpacity((controller.upperBound - controller.value) * 1.8),
                   ),
                 ),
               ),
@@ -142,11 +151,25 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
             Transform.translate(
               offset: Offset(context.width * controller.value, 0),
               child: widget.borderRadius > 0
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(widget.borderRadius * controller.value),
-                      child: child,
+                  ? DecoratedBox(
+                      decoration: const BoxDecoration(
+                        boxShadow: scaffoldShadows,
+                      ),
+                      child: ClipPath(
+                        clipper: DecorationClipper(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(widget.borderRadius * controller.value),
+                          ),
+                        ),
+                        child: child,
+                      ),
                     )
-                  : child,
+                  : DecoratedBox(
+                      decoration: const BoxDecoration(
+                        boxShadow: scaffoldShadows,
+                      ),
+                      child: child,
+                    ),
             ),
           ],
         );

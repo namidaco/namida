@@ -551,7 +551,7 @@ class BackupAndRestore extends SettingSubpageProvider {
               title: lang.IMPORT_YOUTUBE_HISTORY,
               leading: StackedIcon(
                 baseIcon: Broken.import_2,
-                smallChild: ClipRRect(
+                smallChild: BorderRadiusClip(
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                   child: Image.asset(
                     'assets/icons/youtube.png',
@@ -707,7 +707,7 @@ class BackupAndRestore extends SettingSubpageProvider {
               title: lang.IMPORT_LAST_FM_HISTORY,
               leading: StackedIcon(
                 baseIcon: Broken.import_2,
-                smallChild: ClipRRect(
+                smallChild: BorderRadiusClip(
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                   child: Image.asset(
                     'assets/icons/lastfm.png',

@@ -3704,6 +3704,41 @@ class TapDetector extends StatelessWidget {
   }
 }
 
+class DoubleTapDetector extends StatelessWidget {
+  final VoidCallback? onDoubleTap;
+  final void Function(DoubleTapGestureRecognizer instance)? initializer;
+  final Widget? child;
+  final HitTestBehavior? behavior;
+
+  const DoubleTapDetector({
+    super.key,
+    required this.onDoubleTap,
+    this.initializer,
+    this.child,
+    this.behavior,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[DoubleTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+      () => DoubleTapGestureRecognizer(debugOwner: this),
+      initializer ??
+          (DoubleTapGestureRecognizer instance) {
+            instance
+              ..onDoubleTap = onDoubleTap
+              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          },
+    );
+
+    return RawGestureDetector(
+      behavior: behavior,
+      gestures: gestures,
+      child: child,
+    );
+  }
+}
+
 class LongPressDetector extends StatelessWidget {
   final VoidCallback? onLongPress;
   final void Function(LongPressGestureRecognizer instance)? initializer;
@@ -3772,6 +3807,52 @@ class ScaleDetector extends StatelessWidget {
     return RawGestureDetector(
       behavior: behavior,
       gestures: gestures,
+      child: child,
+    );
+  }
+}
+
+class DecorationClipper extends CustomClipper<Path> {
+  const DecorationClipper({
+    this.textDirection = TextDirection.ltr,
+    required this.decoration,
+  });
+
+  final TextDirection textDirection;
+  final Decoration decoration;
+
+  @override
+  Path getClip(Size size) {
+    return decoration.getClipPath(Offset.zero & size, textDirection);
+  }
+
+  @override
+  bool shouldReclip(DecorationClipper oldClipper) {
+    return oldClipper.decoration != decoration || oldClipper.textDirection != textDirection;
+  }
+}
+
+class BorderRadiusClip extends StatelessWidget {
+  final TextDirection textDirection;
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  const BorderRadiusClip({
+    super.key,
+    this.textDirection = TextDirection.ltr,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipPath(
+      clipper: DecorationClipper(
+        textDirection: textDirection,
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+        ),
+      ),
       child: child,
     );
   }

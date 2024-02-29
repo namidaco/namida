@@ -64,8 +64,11 @@ Future<void> showGeneralPopupDialog(
   String? heroTag,
   String? additionalHero,
 }) async {
+  final isSingle = tracks.length == 1;
+  forceSingleArtwork ??= isSingle;
+
   final tracksExisting = <Track>[];
-  if (errorPlayingTrack != null) {
+  if (isSingle || errorPlayingTrack != null) {
     // -- fill using real-time checks if there was an error.
     tracks.loop((t, index) {
       if (File(t.path).existsSync()) tracksExisting.add(t);
@@ -76,9 +79,6 @@ Future<void> showGeneralPopupDialog(
       if (existingTrack != null) tracksExisting.add(existingTrack);
     });
   }
-
-  final isSingle = tracks.length == 1;
-  forceSingleArtwork ??= isSingle;
 
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
