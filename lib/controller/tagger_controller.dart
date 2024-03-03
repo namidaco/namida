@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:queue/queue.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -87,6 +88,8 @@ class FAudioTaggerController {
 
   final _streamControllers = <int, StreamController<FAudioModel>>{};
 
+  final currentPathsBeingExtracted = <int, String>{}.obs;
+
   Future<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
     bool extractArtwork = true,
@@ -116,19 +119,33 @@ class FAudioTaggerController {
       streamController.close();
       streamSub?.cancel();
       _streamControllers.remove(streamKey);
+      currentPathsBeingExtracted.remove(streamKey);
+    }
+
+    int extractingCount = 0;
+    void incrementCurrentExtracting() {
+      if (paths.isEmpty) return;
+      try {
+        extractingCount++;
+        currentPathsBeingExtracted[streamKey] = paths[extractingCount];
+      } catch (_) {}
     }
 
     void onExtract(FAudioModel info) {
       streamController.add(info);
       toExtract--;
+      incrementCurrentExtracting();
       if (toExtract <= 0) usingStream.completeIfWasnt();
     }
 
+    currentPathsBeingExtracted[streamKey] = paths[0];
+
     streamSub = initialStream.listen(
       (map) {
+        final path = map['path'] as String;
         if (map["ERROR_FAULTY"] == true) {
           extractMetadata(
-            trackPath: map['path'] as String,
+            trackPath: path,
             tagger: false,
             ffmpeg: fallbackToFFMPEG,
             saveArtworkToCache: saveArtworkToCache,
@@ -140,7 +157,7 @@ class FAudioTaggerController {
           try {
             onExtract(FAudioModel.fromMap(map));
           } catch (e) {
-            onExtract(FAudioModel.dummy(map['path'] as String));
+            onExtract(FAudioModel.dummy(path));
           }
         }
       },

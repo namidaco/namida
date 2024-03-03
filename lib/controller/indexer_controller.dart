@@ -38,7 +38,7 @@ class Indexer {
 
   final RxBool isIndexing = false.obs;
 
-  final currentTrackPathBeingExtracted = ''.obs;
+  final currentTracksPathsBeingExtracted = <String>[].obs;
   final RxSet<String> allAudioFiles = <String>{}.obs;
   final RxInt filteredForSizeDurationTracks = 0.obs;
   final RxInt duplicatedTracksLength = 0.obs;
@@ -543,7 +543,6 @@ class Indexer {
     );
 
     await for (final item in stream) {
-      currentTrackPathBeingExtracted.value = item.tags.path;
       final trext = extractFunction(item);
       if (trext != null) _addTrackToLists(trext, checkForDuplicates, item.tags.artwork);
     }
@@ -741,8 +740,7 @@ class Indexer {
       _currentFileNamesMap.clear();
       trs.loop((e, _) => _addTrackToLists(e.$1, false, null));
     } else {
-      currentTrackPathBeingExtracted.value = '';
-
+      FAudioTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
       if (prevDuplicated) {
         /// skip duplicated tracks according to filename
@@ -782,8 +780,6 @@ class Indexer {
         extractFunction(part).then((value) => audioFilesCompleters[partIndex].complete());
       });
       await Future.wait(audioFilesCompleters.map((e) => e.future).toList());
-
-      currentTrackPathBeingExtracted.value = '';
     }
 
     /// doing some checks to remove unqualified tracks.

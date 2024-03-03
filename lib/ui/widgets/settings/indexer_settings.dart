@@ -9,6 +9,7 @@ import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -346,15 +347,19 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
           Obx(
             () {
-              final p = Indexer.inst.currentTrackPathBeingExtracted.value;
-              return p == ''
+              final paths = FAudioTaggerController.inst.currentPathsBeingExtracted.values;
+              return paths.isEmpty
                   ? const SizedBox()
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
-                      child: Text(
-                        p,
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
-                      ),
+                  : Column(
+                      children: paths
+                          .map((e) => Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+                                child: Text(
+                                  e,
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                                ),
+                              ))
+                          .toList(),
                     );
             },
           ),
