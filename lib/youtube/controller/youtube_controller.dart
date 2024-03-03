@@ -477,11 +477,15 @@ class YoutubeController {
       final cid = c?.commentId;
       final ctxt = c?.commentText;
       if (cid != null && ctxt != null) {
-        commentToParsedHtml[cid] = HtmlParser.parseHTML(ctxt.replaceAll('<br>', '\n')).text;
+        commentToParsedHtml[cid] = removeCommentHTML(ctxt);
       }
     }
 
     currentComments.addAll(comments);
+  }
+
+  String removeCommentHTML(String htmlComment) {
+    return HtmlParser.parseHTML(htmlComment.replaceAll('<br>', '\n')).text;
   }
 
   Future<void> _fetchNextComments(String id) async {

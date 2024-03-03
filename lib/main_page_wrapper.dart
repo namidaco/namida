@@ -67,8 +67,9 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
   Widget build(BuildContext context) {
     return NamidaInnerDrawer(
       key: NamidaNavigator.inst.innerDrawerKey,
-      borderRadius: 38.0.multipliedRadius,
+      borderRadius: 42.0.multipliedRadius,
       drawerChild: const NamidaDrawer(),
+      maxPercentage: 0.465.withMaximum(324.0 / context.width),
       child: const MainScreenStack(),
     );
   }

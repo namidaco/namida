@@ -150,23 +150,27 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         queueItemExtent: Dimensions.inst.trackTileItemExtent,
         itemBuilder: (context, i, currentIndex) {
           final track = Player.inst.currentQueue[i];
-          return TrackTile(
-            key: Key("tt_$key"),
-            index: i,
-            trackOrTwd: track,
-            displayRightDragHandler: true,
-            draggableThumbnail: true,
-            queueSource: QueueSource.playerQueue,
-            cardColorOpacity: 0.5,
-            fadeOpacity: i < currentIndex ? 0.3 : 0.0,
-            onPlaying: () {
-              // -- to improve performance, skipping process of checking new queues, etc..
-              if (i == currentIndex) {
-                Player.inst.togglePlayPause();
-              } else {
-                Player.inst.skipToQueueItem(i);
-              }
-            },
+          final key = Key("${i}_${track.track.path}");
+          return (
+            TrackTile(
+              key: key,
+              index: i,
+              trackOrTwd: track,
+              displayRightDragHandler: true,
+              draggableThumbnail: true,
+              queueSource: QueueSource.playerQueue,
+              cardColorOpacity: 0.5,
+              fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+              onPlaying: () {
+                // -- to improve performance, skipping process of checking new queues, etc..
+                if (i == currentIndex) {
+                  Player.inst.togglePlayPause();
+                } else {
+                  Player.inst.skipToQueueItem(i);
+                }
+              },
+            ),
+            key,
           );
         },
         getDurationMS: (currentItem) => currentItem.track.duration * 1000,
@@ -317,6 +321,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           cp: bcp,
         ),
         textBuilder: _textBuilder,
+        canShowBuffering: false,
       ),
     );
   }
@@ -378,22 +383,26 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         queueItemExtent: Dimensions.youtubeCardItemExtent,
         itemBuilder: (context, i, currentIndex) {
           final video = Player.inst.currentQueueYoutube[i];
-          return YTHistoryVideoCard(
-            key: Key("${i}_${video.id}"),
-            videos: Player.inst.currentQueueYoutube,
-            index: i,
-            day: null,
-            playlistID: null,
-            playlistName: '',
-            openMenuOnLongPress: false,
-            displayTimeAgo: false,
-            thumbnailHeight: context.width * 0.3 * 9 / 16,
-            fromPlayerQueue: true,
-            draggingEnabled: true,
-            draggableThumbnail: true,
-            showMoreIcon: true,
-            cardColorOpacity: 0.8,
-            fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+          final key = Key("${i}_${video.id}");
+          return (
+            YTHistoryVideoCard(
+              key: key,
+              videos: Player.inst.currentQueueYoutube,
+              index: i,
+              day: null,
+              playlistID: null,
+              playlistName: '',
+              openMenuOnLongPress: false,
+              displayTimeAgo: false,
+              thumbnailHeight: context.width * 0.3 * 9 / 16,
+              fromPlayerQueue: true,
+              draggingEnabled: true,
+              draggableThumbnail: true,
+              showMoreIcon: true,
+              cardColorOpacity: 0.8,
+              fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+            ),
+            key,
           );
         },
         getDurationMS: null,
@@ -549,6 +558,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
           cp: bcp,
         ),
         textBuilder: (item) => _textBuilder(context, item),
+        canShowBuffering: true,
       ),
     );
   }

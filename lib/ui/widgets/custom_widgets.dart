@@ -1531,8 +1531,8 @@ class NamidaPartyContainer extends StatelessWidget {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
           return AnimatedSizedBox(
             duration: const Duration(milliseconds: 400),
-            height: height,
-            width: width,
+            height: height ?? context.height,
+            width: width ?? context.width,
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(

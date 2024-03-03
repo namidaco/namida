@@ -269,7 +269,12 @@ class YTCommentCard extends StatelessWidget {
               NamidaPopupItem(
                 icon: Broken.copy,
                 title: lang.COPY,
-                onTap: () => comment?.commentText != null ? Clipboard.setData(ClipboardData(text: comment!.commentText!)) : null,
+                onTap: () {
+                  final commentHTML = comment?.commentText;
+                  if (commentHTML != null) {
+                    Clipboard.setData(ClipboardData(text: YoutubeController.inst.removeCommentHTML(commentHTML)));
+                  }
+                },
               ),
               NamidaPopupItem(
                 icon: Broken.user,

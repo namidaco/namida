@@ -265,62 +265,84 @@ class ThemeSetting extends SettingSubpageProvider {
                 ),
               ),
             ),
-            ...[false, true].map(
-              (isDark) {
-                final darkText = isDark ? " (${lang.THEME_MODE_DARK})" : '';
-                final key = isDark ? _ThemeSettingsKeys.defaultColorDark : _ThemeSettingsKeys.defaultColor;
-                return getItemWrapper(
-                  key: key,
+            getItemWrapper(
+              key: _ThemeSettingsKeys.defaultColor,
+              child: CustomListTile(
+                bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
+                enabled: !settings.autoColor.value,
+                icon: Broken.bucket,
+                title: lang.DEFAULT_COLOR,
+                subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                trailingRaw: FittedBox(
                   child: Obx(
-                    () {
-                      final color = isDark ? playerStaticColorDark : playerStaticColorLight;
-                      return CustomListTile(
-                        bgColor: getBgColor(key),
-                        enabled: !settings.autoColor.value,
-                        icon: !isDark ? Broken.bucket : null,
-                        leading: isDark
-                            ? const StackedIcon(
-                                baseIcon: Broken.bucket,
-                                secondaryIcon: Broken.moon,
-                              )
-                            : null,
-                        title: "${lang.DEFAULT_COLOR}$darkText",
-                        subtitle: lang.DEFAULT_COLOR_SUBTITLE,
-                        trailingRaw: FittedBox(
-                          child: CircleAvatar(
-                            minRadius: 12,
-                            backgroundColor: color,
-                          ),
-                        ),
-                        onTap: () {
-                          NamidaNavigator.inst.navigateDialog(
-                            dialog: Obx(
-                              () => Theme(
-                                data: AppThemes.inst.getAppTheme(CurrentColor.inst.color),
-                                child: NamidaColorPickerDialog(
-                                  initialColor: color,
-                                  doneText: lang.DONE,
-                                  onColorChanged: (value) => _updateColor(value, isDark),
-                                  onDonePressed: NamidaNavigator.inst.closeDialog,
-                                  onRefreshButtonPressed: () {
-                                    if (isDark) {
-                                      _updateColor(kMainColorDark, true);
-                                    } else {
-                                      _updateColor(kMainColorLight, false);
-                                    }
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                  cancelButton: false,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+                    () => CircleAvatar(
+                      minRadius: 12,
+                      backgroundColor: playerStaticColorLight,
+                    ),
                   ),
-                );
-              },
+                ),
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: Obx(
+                      () => Theme(
+                        data: AppThemes.inst.getAppTheme(playerStaticColorLight),
+                        child: NamidaColorPickerDialog(
+                          initialColor: playerStaticColorLight,
+                          doneText: lang.DONE,
+                          onColorChanged: (value) => _updateColorLight(value),
+                          onDonePressed: NamidaNavigator.inst.closeDialog,
+                          onRefreshButtonPressed: () {
+                            _updateColorLight(kMainColorLight);
+                            NamidaNavigator.inst.closeDialog();
+                          },
+                          cancelButton: false,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            getItemWrapper(
+              key: _ThemeSettingsKeys.defaultColorDark,
+              child: CustomListTile(
+                bgColor: getBgColor(_ThemeSettingsKeys.defaultColorDark),
+                enabled: !settings.autoColor.value,
+                leading: const StackedIcon(
+                  baseIcon: Broken.bucket,
+                  secondaryIcon: Broken.moon,
+                ),
+                title: "${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})",
+                subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                trailingRaw: FittedBox(
+                  child: Obx(
+                    () => CircleAvatar(
+                      minRadius: 12,
+                      backgroundColor: playerStaticColorDark,
+                    ),
+                  ),
+                ),
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: Obx(
+                      () => Theme(
+                        data: AppThemes.inst.getAppTheme(playerStaticColorDark),
+                        child: NamidaColorPickerDialog(
+                          initialColor: playerStaticColorDark,
+                          doneText: lang.DONE,
+                          onColorChanged: (value) => _updateColorDark(value),
+                          onDonePressed: NamidaNavigator.inst.closeDialog,
+                          onRefreshButtonPressed: () {
+                            _updateColorDark(kMainColorDark);
+                            NamidaNavigator.inst.closeDialog();
+                          },
+                          cancelButton: false,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
             getLanguageTile(context),
           ],
@@ -329,17 +351,17 @@ class ThemeSetting extends SettingSubpageProvider {
     );
   }
 
-  void _updateColor(Color color, bool darkMode) {
-    if (darkMode) {
-      settings.save(staticColorDark: color.value);
-      if (Get.isDarkMode) {
-        CurrentColor.inst.updatePlayerColorFromColor(color, false);
-      }
-    } else {
-      settings.save(staticColor: color.value);
-      if (!Get.isDarkMode) {
-        CurrentColor.inst.updatePlayerColorFromColor(color, false);
-      }
+  void _updateColorLight(Color color) {
+    settings.save(staticColor: color.value);
+    if (!Get.isDarkMode) {
+      CurrentColor.inst.updatePlayerColorFromColor(color, false);
+    }
+  }
+
+  void _updateColorDark(Color color) {
+    settings.save(staticColorDark: color.value);
+    if (Get.isDarkMode) {
+      CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }
   }
 }

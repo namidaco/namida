@@ -79,12 +79,14 @@ class MainPage extends StatelessWidget {
         preferredSize: const Size(0, 56.0),
         child: Obx(
           () {
-            final isReallyHidden = animation.value > 1; // queue
-            return isReallyHidden || !settings.enableMiniplayerParallaxEffect.value
+            return !settings.enableMiniplayerParallaxEffect.value
                 ? appbar(1.0)
                 : AnimatedBuilder(
                     animation: animation,
-                    builder: (context, child) => appbar((1 - animation.value * 0.3)),
+                    builder: (context, child) {
+                      if (animation.value > 1) return const SizedBox(); // expanded/queue
+                      return appbar((1 - animation.value * 0.3));
+                    },
                   );
           },
         ),
@@ -93,16 +95,18 @@ class MainPage extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         children: [
           Obx(() {
-            final isReallyHidden = animation.value > 1; // queue
-            return isReallyHidden || !settings.enableMiniplayerParallaxEffect.value
+            return !settings.enableMiniplayerParallaxEffect.value
                 ? main
                 : AnimatedBuilder(
                     animation: animation,
                     child: main,
                     builder: (context, child) {
-                      return Transform.scale(
-                        scale: 1 - (animation.value * 0.05),
-                        child: child,
+                      return Visibility.maintain(
+                        visible: animation.value < 1, // not expanded/queue
+                        child: Transform.scale(
+                          scale: 1 - (animation.value * 0.05),
+                          child: child,
+                        ),
                       );
                     },
                   );
@@ -215,6 +219,7 @@ class MainPage extends StatelessWidget {
                   ),
                 ),
                 builder: (context, child) {
+                  if (animation.value > 1) return const SizedBox(); // expanded/queue
                   return Transform.translate(
                     offset: Offset(0, (kBottomNavigationBarHeight * animation.value).withMinimum(0)),
                     child: child,

@@ -120,7 +120,16 @@ class YoutubeMiniPlayer extends StatelessWidget {
                   },
                   onLinkTap: (url, attributes, element) async {
                     if (url != null) {
-                      await NamidaLinkUtils.openLink(url);
+                      final partsDur = url.split("$currentId&t=");
+                      if (partsDur.length > 1) {
+                        try {
+                          await Player.inst.seek(Duration(seconds: int.parse(partsDur.last)));
+                        } catch (e) {
+                          snackyy(title: lang.ERROR, message: e.toString(), isError: true, top: false);
+                        }
+                      } else {
+                        await NamidaLinkUtils.openLink(url);
+                      }
                     }
                   },
                 );

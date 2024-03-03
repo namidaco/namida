@@ -53,7 +53,7 @@ class NamidaFFMPEG {
         try {
           final mainTags = (map['streams'] as List?)?.firstWhereEff((e) {
             final t = e['tags'];
-            return t is List && t.isNotEmpty;
+            return t is Map && t.isNotEmpty;
           });
           tags = mainTags?['tags'];
         } catch (_) {}

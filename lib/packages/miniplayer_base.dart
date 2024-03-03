@@ -23,6 +23,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/focused_menu.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -78,7 +79,7 @@ class MiniplayerTextData {
 class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final List<E> queue;
   final double queueItemExtent;
-  final Widget Function(BuildContext context, int index, int currentIndex) itemBuilder;
+  final (Widget, Key) Function(BuildContext context, int index, int currentIndex) itemBuilder;
   final int Function(E currentItem)? getDurationMS;
   final String Function(int number) itemsKeyword;
   final void Function(E currentItem) onAddItemsTap;
@@ -90,6 +91,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final Widget Function(E item, double cp) imageBuilder;
   final Widget Function(E item, double bcp) currentImageBuilder;
   final MiniplayerTextData Function(E item) textBuilder;
+  final bool canShowBuffering;
 
   const NamidaMiniPlayerBase({
     super.key,
@@ -107,6 +109,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
     required this.imageBuilder,
     required this.currentImageBuilder,
     required this.textBuilder,
+    required this.canShowBuffering,
   });
 
   @override
@@ -194,8 +197,9 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                             onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
                             padding: padding,
                             itemBuilder: (context, i) {
+                              final childWK = widget.itemBuilder(context, i, currentIndex);
                               return FadeDismissible(
-                                key: Key("Diss_$i"),
+                                key: Key("Diss_${i}_${childWK.$2}"),
                                 onDismissed: (direction) {
                                   Player.inst.removeFromQueue(i);
                                   MiniPlayerController.inst.invokeDoneReordering();
@@ -208,7 +212,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                     MiniPlayerController.inst.invokeDoneReordering();
                                   }
                                 },
-                                child: widget.itemBuilder(context, i, currentIndex),
+                                child: childWK.$1,
                               );
                             },
                           );
@@ -280,6 +284,8 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
             final panelFinal = panelH - (panelExtra * (1 - qcp));
 
             final currentImage = widget.currentImageBuilder(currentItem, bcp);
+            final iconBoxSize = (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp;
+            final iconSize = (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp;
             return Stack(
               children: [
                 /// MiniPlayer Body
@@ -570,8 +576,8 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   SizedBox(width: 7 * rcp),
                                   SizedBox(
                                     key: const Key("playpause"),
-                                    height: (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
-                                    width: (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp,
+                                    height: iconBoxSize,
+                                    width: iconBoxSize,
                                     child: Center(
                                       child: Obx(
                                         () {
@@ -609,30 +615,46 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                     ),
                                                   ],
                                                 ),
-                                                child: IconButton(
-                                                  highlightColor: Colors.transparent,
-                                                  onPressed: () => Player.inst.togglePlayPause(),
-                                                  icon: Padding(
-                                                    padding: EdgeInsets.all(6.0 * cp * rcp),
-                                                    child: Obx(
-                                                      () => AnimatedSwitcher(
-                                                        duration: const Duration(milliseconds: 200),
-                                                        child: Player.inst.isPlaying
-                                                            ? Icon(
-                                                                Broken.pause,
-                                                                size: (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                                key: const Key("pauseicon"),
-                                                                color: Colors.white.withAlpha(180),
-                                                              )
-                                                            : Icon(
-                                                                Broken.play,
-                                                                size: (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp,
-                                                                key: const Key("playicon"),
-                                                                color: Colors.white.withAlpha(180),
-                                                              ),
+                                                child: Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    IconButton(
+                                                      highlightColor: Colors.transparent,
+                                                      onPressed: () => Player.inst.togglePlayPause(),
+                                                      icon: Padding(
+                                                        padding: EdgeInsets.all(6.0 * cp * rcp),
+                                                        child: Obx(
+                                                          () => AnimatedSwitcher(
+                                                            duration: const Duration(milliseconds: 200),
+                                                            child: Player.inst.isPlaying
+                                                                ? Icon(
+                                                                    Broken.pause,
+                                                                    size: iconSize,
+                                                                    key: const Key("pauseicon"),
+                                                                    color: Colors.white.withAlpha(180),
+                                                                  )
+                                                                : Icon(
+                                                                    Broken.play,
+                                                                    size: iconSize,
+                                                                    key: const Key("playicon"),
+                                                                    color: Colors.white.withAlpha(180),
+                                                                  ),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
+                                                    if (widget.canShowBuffering)
+                                                      IgnorePointer(
+                                                        child: Obx(
+                                                          () => Player.inst.isBuffering || Player.inst.isLoading
+                                                              ? ThreeArchedCircle(
+                                                                  color: Colors.white.withAlpha(120),
+                                                                  size: iconSize * 1.4,
+                                                                )
+                                                              : const SizedBox(),
+                                                        ),
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
