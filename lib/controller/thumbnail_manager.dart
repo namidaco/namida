@@ -140,23 +140,21 @@ class ThumbnailManager {
     final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrlOrID, keepInMemory: false);
     _printie('Downloading Thumbnail Finished with ${bytes?.length} bytes');
 
-    final savedFile = (id != null
-            ? saveThumbnailToStorage(
-                videoPath: null,
-                bytes: bytes,
-                isLocal: false,
-                idOrFileNameWOExt: id,
-                isExtracted: false,
-              )
-            : _saveChannelThumbnailToStorage(
-                file: file,
-                bytes: bytes,
-              ))
-        .then((savedFile) {
-      trySavingLastAccessed(savedFile);
-    });
+    final savedFileFuture = id != null
+        ? saveThumbnailToStorage(
+            videoPath: null,
+            bytes: bytes,
+            isLocal: false,
+            idOrFileNameWOExt: id,
+            isExtracted: false,
+          )
+        : _saveChannelThumbnailToStorage(
+            file: file,
+            bytes: bytes,
+          );
 
-    return savedFile;
+    savedFileFuture.then(trySavingLastAccessed);
+    return savedFileFuture;
   }
 
   void closeThumbnailClients(List<String?> links) {
