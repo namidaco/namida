@@ -3,20 +3,21 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
-
-import 'package:get/get.dart';
-import 'package:queue/queue.dart' as qs;
-import 'package:palette_generator/palette_generator.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:palette_generator/palette_generator.dart';
+import 'package:queue/queue.dart' as qs;
 
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 Color get playerStaticColor => Get.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
 Color get playerStaticColorLight => Color(settings.staticColor.value);
@@ -55,7 +56,8 @@ class CurrentColor {
 
   final isGeneratingAllColorPalettes = false.obs;
 
-  final colorsMap = <String, NamidaColor>{};
+  final _colorsMap = <String, NamidaColor>{};
+  final _colorsMapYTID = <String, NamidaColor>{};
 
   Timer? _colorsSwitchTimer;
   void switchColorPalettes(bool isPlaying) {
@@ -140,11 +142,55 @@ class CurrentColor {
   }
 
   Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
-    if (!updateIndexOnly && track != null && (settings.autoColor.value || settings.forceMiniplayerTrackColor.value)) {
+    if (!updateIndexOnly && track != null) {
+      await _updatePlayerColorFromItem(
+        getColorPalette: () async => await getTrackColors(track.track),
+        stillPlaying: () => track.track == Player.inst.nowPlayingTrack,
+      );
+    }
+    if (track != null) {
+      currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed
+      currentPlayingTrack.value = track;
+    }
+    if (index != null) {
+      currentPlayingIndex.value = index;
+    }
+  }
+
+  Future<void> updatePlayerColorFromYoutubeID(YoutubeID ytIdItem) async {
+    final id = ytIdItem.id;
+    if (id == '') return;
+
+    // -- only extract if same item is still playing, i.e. user didn't skip.
+    bool stillPlaying() => ytIdItem.id == Player.inst.nowPlayingVideoID?.id;
+
+    await _updatePlayerColorFromItem(
+      getColorPalette: () async {
+        if (_colorsMapYTID[id] != null) return _colorsMapYTID[id]!;
+
+        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
+        if (image != null && stillPlaying()) {
+          final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
+          if (color != null && stillPlaying()) {
+            _colorsMapYTID[id] = color; // saving in memory
+            return color;
+          }
+        }
+        return null;
+      },
+      stillPlaying: stillPlaying,
+    );
+  }
+
+  Future<void> _updatePlayerColorFromItem({
+    required Future<NamidaColor?> Function() getColorPalette,
+    required bool Function() stillPlaying,
+  }) async {
+    if (settings.autoColor.value || settings.forceMiniplayerTrackColor.value) {
       NamidaColor? namidaColor;
 
-      final trColors = await getTrackColors(track.track);
-      if (track.track != Player.inst.nowPlayingTrack) return; // -- check current track
+      final trColors = await getColorPalette();
+      if (trColors == null || !stillPlaying()) return; // -- check current item
       _namidaColorMiniplayer.value = trColors.color;
 
       if (settings.autoColor.value) {
@@ -160,13 +206,6 @@ class CurrentColor {
           );
         }
       }
-    }
-    if (track != null) {
-      currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed
-      currentPlayingTrack.value = track;
-    }
-    if (index != null) {
-      currentPlayingIndex.value = index;
     }
   }
 
@@ -205,7 +244,7 @@ class CurrentColor {
 
     final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
 
-    final valInMap = colorsMap[filename];
+    final valInMap = _colorsMap[filename];
     if (!forceReCheck && valInMap != null) {
       return maybeDelightned(valInMap);
     }
@@ -384,7 +423,7 @@ class CurrentColor {
   }
 
   void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {
-    if (nc != null) colorsMap[filenameWoExt] = nc;
+    if (nc != null) _colorsMap[filenameWoExt] = nc;
     if (filenameWoExt == Player.inst.nowPlayingTrack.path.getFilename) {
       updatePlayerColorFromTrack(Player.inst.nowPlayingTrack, null);
     }

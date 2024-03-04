@@ -308,24 +308,25 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
-        child: Obx(
-          () => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
-            title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
-            leading: const StackedIcon(
-              baseIcon: Broken.gallery,
-              secondaryIcon: Broken.lock_circle,
+      if (kSdkVersion < 33)
+        getItemWrapper(
+          key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
+          child: Obx(
+            () => CustomSwitchListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
+              title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
+              leading: const StackedIcon(
+                baseIcon: Broken.gallery,
+                secondaryIcon: Broken.lock_circle,
+              ),
+              value: settings.player.lockscreenArtwork.value,
+              onChanged: (val) {
+                settings.player.save(lockscreenArtwork: !val);
+                AudioService.setLockScreenArtwork(!val).then((_) => Player.inst.refreshNotification());
+              },
             ),
-            value: settings.player.lockscreenArtwork.value,
-            onChanged: (val) {
-              settings.player.save(lockscreenArtwork: !val);
-              AudioService.setLockScreenArtwork(!val);
-            },
           ),
         ),
-      ),
       getItemWrapper(
         key: _PlaybackSettingsKeys.killPlayerAfterDismissing,
         child: Obx(

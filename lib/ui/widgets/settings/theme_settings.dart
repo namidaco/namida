@@ -52,9 +52,9 @@ class ThemeSetting extends SettingSubpageProvider {
         _ThemeSettingsKeys.language: [lang.LANGUAGE],
       };
 
-  Future<void> _refreshColorCurrentTrack() async {
-    if (Player.inst.currentQueueYoutube.isNotEmpty && Player.inst.latestExtractedColor != null) {
-      CurrentColor.inst.updatePlayerColorFromColor(Player.inst.latestExtractedColor!);
+  Future<void> _refreshColorCurrentPlayingItem() async {
+    if (Player.inst.nowPlayingVideoID != null) {
+      await CurrentColor.inst.updatePlayerColorFromYoutubeID(Player.inst.nowPlayingVideoID!);
     } else {
       await CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
     }
@@ -208,7 +208,7 @@ class ThemeSetting extends SettingSubpageProvider {
                     if (isTrue) {
                       CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
                     } else {
-                      await _refreshColorCurrentTrack();
+                      await _refreshColorCurrentPlayingItem();
                     }
                   },
                 ),
@@ -228,7 +228,7 @@ class ThemeSetting extends SettingSubpageProvider {
                     onChanged: (isTrue) async {
                       settings.save(pickColorsFromDeviceWallpaper: !isTrue);
 
-                      await _refreshColorCurrentTrack();
+                      await _refreshColorCurrentPlayingItem();
                     },
                   ),
                 ),
@@ -244,7 +244,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   value: settings.forceMiniplayerTrackColor.value,
                   onChanged: (isTrue) async {
                     settings.save(forceMiniplayerTrackColor: !isTrue);
-                    await _refreshColorCurrentTrack();
+                    await _refreshColorCurrentPlayingItem();
                   },
                 ),
               ),
@@ -260,7 +260,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   value: settings.pitchBlack.value,
                   onChanged: (isTrue) async {
                     settings.save(pitchBlack: !isTrue);
-                    await _refreshColorCurrentTrack();
+                    await _refreshColorCurrentPlayingItem();
                   },
                 ),
               ),

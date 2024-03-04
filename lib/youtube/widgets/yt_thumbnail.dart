@@ -40,7 +40,6 @@ class YoutubeThumbnail extends StatefulWidget {
   final String channelIDForHQImage;
   final bool hqChannelImage;
   final bool isPlaylist;
-  final bool forceSquared;
   final double? iconSize;
   final List<BoxShadow>? boxShadow;
 
@@ -68,7 +67,6 @@ class YoutubeThumbnail extends StatefulWidget {
     this.channelIDForHQImage = '',
     this.hqChannelImage = false,
     this.isPlaylist = false,
-    this.forceSquared = true,
     this.iconSize,
     this.boxShadow,
   });
@@ -143,6 +141,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
               if (mounted) setState(() => imageBytes = lowerRes);
             }
           },
+          bytesIfWontWriteToFile: (bytes) {
+            if (mounted) setState(() => imageBytes = bytes);
+          },
         );
       }
 
@@ -198,7 +199,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
                 ? Broken.user
                 : Broken.video,
         iconSize: widget.iconSize ?? (widget.channelUrl != null ? null : widget.width * 0.3),
-        forceSquared: widget.forceSquared,
+        forceSquared: true,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: [
           ...widget.onTopWidgets,

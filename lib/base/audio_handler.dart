@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/extensions/num_extensions.dart';
@@ -184,8 +183,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ==============================================================================================
   // ================================== QueueManager Overriden ====================================
 
-  Color? latestExtractedColor;
-
   @override
   void onIndexChanged(int newIndex, Q newItem) async {
     refreshNotification(newItem);
@@ -196,16 +193,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) async {
         settings.player.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
-        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: finalItem.id);
-        if (image != null && finalItem == currentItem) {
-          // -- only extract if same item is still playing, i.e. user didn't skip.
-          final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
-          if (color != null && finalItem == currentItem) {
-            // -- only update if same item is still playing, i.e. user didn't skip.
-            CurrentColor.inst.updatePlayerColorFromColor(color.color);
-            latestExtractedColor = color.color;
-          }
-        }
+        await CurrentColor.inst.updatePlayerColorFromYoutubeID(finalItem);
       },
     );
   }
@@ -485,7 +473,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
 
     // -- generating artwork in case it wasnt, to be displayed in notification
-    Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false).then((value) => refreshNotification());
+    File(tr.pathToImage).exists().then((exists) {
+      // -- we check if it exists to avoid refreshing notification redundently.
+      // -- otherwise `getArtwork` already handles duplications.
+      if (!exists) {
+        Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
+      }
+    });
 
     Future<Duration?> setPls() async {
       final dur = await setSource(

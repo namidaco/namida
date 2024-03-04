@@ -516,15 +516,13 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
           localVideos: YoutubeController.inst.currentCachedQualities,
           streamVideos: YoutubeController.inst.currentYTQualities,
           onLocalVideoTap: (item, video) async {
-            if (!Player.inst.videoInitialized) {
-              Player.inst.onItemPlayYoutubeIDSetQuality(
-                stream: null,
-                cachedFile: File(video.path),
-                videoItem: video,
-                useCache: true,
-                videoId: Player.inst.nowPlayingVideoID?.id ?? '',
-              );
-            }
+            Player.inst.onItemPlayYoutubeIDSetQuality(
+              stream: null,
+              cachedFile: File(video.path),
+              videoItem: video,
+              useCache: true,
+              videoId: Player.inst.nowPlayingVideoID?.id ?? '',
+            );
           },
           onStreamVideoTap: (item, videoId, stream, cacheFile) async {
             Player.inst.onItemPlayYoutubeIDSetQuality(
@@ -745,15 +743,15 @@ class _YoutubeIDImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = context.width;
     return YoutubeThumbnail(
       key: Key(video.id),
       videoId: video.id,
-      width: context.width,
-      height: context.width * 9 / 16,
+      width: width,
+      height: settings.forceSquaredTrackThumbnail.value ? width : width * 9 / 16,
       isImportantInCache: true,
       compressed: false,
       preferLowerRes: false,
-      forceSquared: settings.forceSquaredTrackThumbnail.value,
       borderRadius: 6.0 + 10.0 * cp,
       boxShadow: [
         BoxShadow(

@@ -1003,7 +1003,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             title: element.resolution ?? '',
                                             subtitle: sizeInBytes == null ? '' : " • ${sizeInBytes.fileSizeFormatted}",
                                             onPlay: (isSelected) {
-                                              if (!isSelected) {
+                                              if (!isSelected || !Player.inst.videoInitialized) {
                                                 Player.inst.onItemPlayYoutubeIDSetQuality(
                                                   stream: element,
                                                   cachedFile: null,

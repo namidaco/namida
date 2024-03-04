@@ -109,15 +109,13 @@ class ThumbnailManager {
     String? channelUrlOrID,
     bool isImportantInCache = true,
     FutureOr<void> Function()? beforeFetchingFromInternet,
+    void Function(Uint8List? bytes)? bytesIfWontWriteToFile,
     bool hqChannelImage = false,
   }) async {
     if (id == null && channelUrlOrID == null) return null;
 
-    void trySavingLastAccessed(File? file) async {
-      final time = isImportantInCache ? DateTime.now() : DateTime(1970);
-      try {
-        if (file != null && await file.exists()) await file.setLastAccessed(time);
-      } catch (_) {}
+    void updateLastAccessed(File? file) async {
+      await file?.setLastAccessed(DateTime.now()).catchError((_) {});
     }
 
     final file = imageUrlToCacheFile(id: id, url: channelUrlOrID);
@@ -125,7 +123,7 @@ class ThumbnailManager {
 
     if (file.existsSync() == true) {
       _printie('Downloading Thumbnail Already Exists');
-      trySavingLastAccessed(file);
+      if (isImportantInCache) updateLastAccessed(file);
       return file;
     }
 
@@ -137,8 +135,16 @@ class ThumbnailManager {
       if (res != null) channelUrlOrID = res;
     }
 
-    final bytes = await getYoutubeThumbnailAsBytes(youtubeId: id, url: channelUrlOrID, keepInMemory: false);
+    final bytes = await getYoutubeThumbnailAsBytes(
+      youtubeId: id,
+      url: channelUrlOrID,
+      keepInMemory: isImportantInCache ? false : true, // important in cache will write to file so we dont need to keep in memory
+    );
     _printie('Downloading Thumbnail Finished with ${bytes?.length} bytes');
+    if (!isImportantInCache) {
+      bytesIfWontWriteToFile?.call(bytes);
+      return null;
+    }
 
     final savedFileFuture = id != null
         ? saveThumbnailToStorage(
@@ -153,8 +159,9 @@ class ThumbnailManager {
             bytes: bytes,
           );
 
-    savedFileFuture.then(trySavingLastAccessed);
-    return savedFileFuture;
+    final savedFile = await savedFileFuture;
+    updateLastAccessed(savedFile);
+    return savedFile;
   }
 
   void closeThumbnailClients(List<String?> links) {
