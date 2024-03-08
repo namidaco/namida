@@ -383,6 +383,7 @@ abstract class LanguageKeys {
   String get NEW_TRACKS_SIMILARR_RELEASE_DATE => _getKey('NEW_TRACKS_SIMILARR_RELEASE_DATE');
   String get NEW_TRACKS_UNKNOWN_YEAR => _getKey('NEW_TRACKS_UNKNOWN_YEAR');
   String get NEXT => _getKey('NEXT');
+  String get NON_FAVOURITES => _getKey('NON_FAVOURITES');
   String get NOTIFICATION => _getKey('NOTIFICATION');
   String get NO_CHANGES_FOUND => _getKey('NO_CHANGES_FOUND');
   String get NO_ENOUGH_TRACKS => _getKey('NO_ENOUGH_TRACKS');

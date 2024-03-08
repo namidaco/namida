@@ -333,6 +333,213 @@ class NamidaOnTaps {
       fullscreenDialog: false,
     );
   }
+
+  static Map<int, int> _getQueuesSize(String dir) {
+    final map = <int, int>{};
+    Directory(dir).listSync().loop((e, index) {
+      try {
+        if (e is File) map[int.parse(e.path.getFilenameWOExt)] = e.lengthSync();
+      } catch (_) {}
+    });
+    return map;
+  }
+
+  void onQueuesClearIconTap() {
+    final sizesLookupMap = <int, int>{}.obs;
+    _getQueuesSize.thready(AppDirs.QUEUES).then((value) => sizesLookupMap.value = value);
+    String getSubtitle(Map<int, int> lookup, List<int> datesList) {
+      int total = 0;
+      String? suffix;
+      datesList.loop((e, index) {
+        final size = lookup[e];
+        if (size != null) {
+          total += size;
+        } else {
+          suffix ??= '?';
+        }
+      });
+      return "${total.fileSizeFormatted}${suffix ?? ''}";
+    }
+
+    final selectedToClear = <QueueSource>[].obs;
+    final selectedHomepageItemToClear = <HomePageItems>[].obs;
+    final values = List<QueueSource>.from(QueueSource.values);
+    values.remove(QueueSource.homePageItem);
+
+    final lookup = <QueueSource, List<int>>{};
+    final lookupHomepageItem = <HomePageItems, List<int>>{};
+    final lookupNonFavourites = <int, bool>{};
+    final map = QueueController.inst.queuesMap.value;
+    for (final e in map.entries) {
+      final queue = e.value;
+      final date = queue.date;
+      lookupNonFavourites[date] = !queue.isFav;
+      final hpi = queue.homePageItem;
+      if (hpi != null) {
+        lookupHomepageItem.addForce(hpi, date);
+      } else {
+        lookup.addForce(queue.source, date);
+      }
+    }
+    final nonFavourites = false.obs;
+
+    final totalToRemove = 0.obs;
+    void updateTotalToRemove() {
+      int total = 0;
+      if (nonFavourites.value) {
+        total += lookupNonFavourites.values.where((v) => v).length;
+        selectedToClear.loop((e, index) {
+          total += lookup[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
+        });
+        selectedHomepageItemToClear.loop((e, index) {
+          total += lookupHomepageItem[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
+        });
+      } else {
+        selectedToClear.loop((e, index) {
+          total += lookup[e]?.length ?? 0;
+        });
+        selectedHomepageItemToClear.loop((e, index) {
+          total += lookupHomepageItem[e]?.length ?? 0;
+        });
+      }
+
+      totalToRemove.value = total;
+    }
+
+    final isRemoving = false.obs;
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        selectedToClear.close();
+        selectedHomepageItemToClear.close();
+        nonFavourites.close();
+        totalToRemove.close();
+        isRemoving.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: lang.CLEAR,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 8.0),
+          Obx(
+            () => NamidaButton(
+              enabled: !isRemoving.value && totalToRemove.value > 0,
+              textWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isRemoving.value) ...[
+                    const LoadingIndicator(),
+                    const SizedBox(width: 8.0),
+                  ],
+                  Text("${lang.DELETE} (${totalToRemove.value})"),
+                ],
+              ),
+              onPressed: () async {
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    isWarning: true,
+                    normalTitleStyle: true,
+                    bodyText: "${lang.DELETE} ${totalToRemove.value}?",
+                    actions: [
+                      const CancelButton(),
+                      const SizedBox(width: 8.0),
+                      NamidaButton(
+                        text: lang.DELETE.toUpperCase(),
+                        onPressed: () async {
+                          NamidaNavigator.inst.closeDialog();
+                          isRemoving.value = true;
+                          if (nonFavourites.value) {
+                            await QueueController.inst.removeQueues(lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList());
+                          }
+                          for (final s in selectedToClear) {
+                            final queues = lookup[s];
+                            if (queues != null) await QueueController.inst.removeQueues(queues);
+                          }
+                          for (final s in selectedHomepageItemToClear) {
+                            final queues = lookupHomepageItem[s];
+                            if (queues != null) await QueueController.inst.removeQueues(queues);
+                          }
+                          isRemoving.value = false;
+                          NamidaNavigator.inst.closeDialog();
+                        },
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+        child: SizedBox(
+          height: Get.height * 0.6,
+          width: Get.width,
+          child: Obx(
+            () => ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: ListTileWithCheckMark(
+                    dense: true,
+                    icon: Broken.heart_slash,
+                    title: '${lang.NON_FAVOURITES} (${lookupNonFavourites.length})',
+                    subtitle: getSubtitle(sizesLookupMap, lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList()),
+                    active: nonFavourites.value,
+                    onTap: () {
+                      nonFavourites.value = !nonFavourites.value;
+                      updateTotalToRemove();
+                    },
+                  ),
+                ),
+                const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
+                ...values.map(
+                  (e) {
+                    final list = lookup[e];
+                    return list != null && list.isNotEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: ListTileWithCheckMark(
+                              dense: true,
+                              title: "${e.toText()} (${list.length})",
+                              subtitle: getSubtitle(sizesLookupMap, list),
+                              active: selectedToClear.contains(e),
+                              onTap: () {
+                                selectedToClear.addOrRemove(e);
+                                updateTotalToRemove();
+                              },
+                            ),
+                          )
+                        : const SizedBox();
+                  },
+                ),
+                const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
+                ...HomePageItems.values.map(
+                  (e) {
+                    final list = lookupHomepageItem[e];
+                    return list != null && list.isNotEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: ListTileWithCheckMark(
+                              dense: true,
+                              title: "${e.toText()} (${list.length})",
+                              subtitle: getSubtitle(sizesLookupMap, list),
+                              active: selectedHomepageItemToClear.contains(e),
+                              onTap: () {
+                                selectedHomepageItemToClear.addOrRemove(e);
+                                updateTotalToRemove();
+                              },
+                            ),
+                          )
+                        : const SizedBox();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Future<void> showCalendarDialog<T extends ItemWithDate, E>({

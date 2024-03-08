@@ -954,6 +954,14 @@ extension RouteUtils on NamidaRoute {
     }
 
     return <Widget>[
+      getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.trush_square,
+          onPressed: () => NamidaOnTaps.inst.onQueuesClearIconTap(),
+        ),
+        shouldShow: route == RouteType.PAGE_queue,
+      ),
+
       // -- Stats Icon
       getAnimatedCrossFade(
           child: NamidaAppBarIcon(
@@ -1310,6 +1318,7 @@ class _NamidaConverters {
         QueueSource.selectedTracks: lang.SELECTED_TRACKS,
         QueueSource.externalFile: lang.EXTERNAL_FILES,
         QueueSource.recentlyAdded: lang.RECENTLY_ADDED,
+        QueueSource.homePageItem: '',
         QueueSource.others: lang.OTHERS,
       },
       TagField: {

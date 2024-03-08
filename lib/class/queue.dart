@@ -31,7 +31,7 @@ class Queue {
     return Queue(
       source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
-      date: json['date'] ?? currentTimeMS,
+      date: json['date'] ?? DateTime(1970),
       isFav: json['isFav'] ?? false,
       tracks: finalTracks,
     );

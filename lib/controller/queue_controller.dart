@@ -63,9 +63,18 @@ class QueueController {
   }
 
   Future<void> removeQueue(Queue queue) async {
+    if (queue.date == _latestAddedQueueDate) _latestAddedQueueDate = queuesMap.value.keys.lastOrNull ?? 0;
+
     queuesMap.value.remove(queue.date);
     queuesMap.refresh();
     await _deleteQueueFromStorage(queue);
+  }
+
+  Future<void> removeQueues(List<int> queuesDates) async {
+    _latestAddedQueueDate = queuesMap.value.keys.lastOrNull ?? 0;
+    queuesDates.loop((date, _) => queuesMap.value.remove(date));
+    queuesMap.refresh();
+    await _deleteQueuesFromStorage(queuesDates);
   }
 
   Future<void> reAddQueue(Queue queue) async {
@@ -264,6 +273,18 @@ class QueueController {
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
     await File('${AppDirs.QUEUES}${queue.date}.json').tryDeleting();
+  }
+
+  Future<void> _deleteQueuesFromStorage(List<int> queuesDates) async {
+    await _deleteQueuesFromStorageIsolate.thready((AppDirs.QUEUES, queuesDates));
+  }
+
+  static void _deleteQueuesFromStorageIsolate((String, List<int>) pathAndDates) async {
+    pathAndDates.$2.loop((date, _) {
+      try {
+        File('${pathAndDates.$1}$date.json').deleteSync();
+      } catch (_) {}
+    });
   }
 
   /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.
