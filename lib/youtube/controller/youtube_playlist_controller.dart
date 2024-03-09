@@ -14,7 +14,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 typedef YoutubePlaylist = GeneralPlaylist<YoutubeID>;
 
@@ -129,12 +128,6 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
   }
 
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
-
-  @override
-  Future<void> prepareDefaultPlaylistsFile() async {
-    YoutubeHistoryController.inst.prepareHistoryFile();
-    await super.prepareDefaultPlaylistsFile();
-  }
 
   @override
   String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;

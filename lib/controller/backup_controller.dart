@@ -5,6 +5,7 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -16,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class BackupController {
@@ -235,13 +237,15 @@ class BackupController {
 
     QueueController.inst.prepareAllQueuesFile();
 
-    PlaylistController.inst.prepareAllPlaylists();
     VideoController.inst.initialize();
 
+    PlaylistController.inst.prepareAllPlaylists();
+    HistoryController.inst.prepareHistoryFile();
     await PlaylistController.inst.prepareDefaultPlaylistsFile();
     // await QueueController.inst.prepareLatestQueue();
 
     YoutubePlaylistController.inst.prepareAllPlaylists();
+    YoutubeHistoryController.inst.prepareHistoryFile();
     await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
     YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
   }

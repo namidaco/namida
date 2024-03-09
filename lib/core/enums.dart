@@ -199,6 +199,7 @@ enum RouteType {
   SUBPAGE_historyTracks,
   SUBPAGE_mostPlayedTracks,
   SUBPAGE_queueTracks,
+  SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS,
 
   // ----- Subpages -----
   SETTINGS_page,

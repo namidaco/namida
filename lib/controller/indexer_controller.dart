@@ -665,17 +665,43 @@ class Indexer {
 
   Future<List<Track>> convertPathToTrack(Iterable<String> tracksPathPre) async {
     final List<Track> finalTracks = <Track>[];
-    final tracksPath = tracksPathPre.toList();
+    final tracksToExtract = <String>[];
 
-    await tracksPath.loopFuture((tp, index) async {
-      final trako = await tp.toTrackExtOrExtract();
-      if (trako != null) finalTracks.add(trako.toTrack());
-    });
+    final orderLookup = <String, int>{};
+    int index = 0;
+    for (final path in tracksPathPre) {
+      final trInLib = path.toTrackOrNull();
+      if (trInLib != null) {
+        finalTracks.add(trInLib);
+      } else {
+        tracksToExtract.add(path);
+      }
+      orderLookup[path] = index;
+      index++;
+    }
+
+    if (tracksToExtract.isNotEmpty) {
+      TrackExtended? extractFunction(FAudioModel item) => _convertTagToTrack(
+            trackPath: item.tags.path,
+            trackInfo: item,
+            tryExtractingFromFilename: true,
+            onMinDurTrigger: () => null,
+            onMinSizeTrigger: () => null,
+            onError: (_) => null,
+          );
+
+      final stream = await FAudioTaggerController.inst.extractMetadataAsStream(paths: tracksToExtract);
+      await for (final item in stream) {
+        finalTracks.add(Track(item.tags.path));
+        final trext = extractFunction(item);
+        if (trext != null) _addTrackToLists(trext, true, item.tags.artwork);
+      }
+    }
 
     _addTheseTracksToAlbumGenreArtistEtc(finalTracks);
     await _sortAndSaveTracks();
 
-    finalTracks.sortBy((e) => tracksPath.indexOf(e.path));
+    finalTracks.sortBy((e) => orderLookup[e.path] ?? 0);
     return finalTracks;
   }
 

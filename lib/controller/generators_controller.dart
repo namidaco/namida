@@ -14,7 +14,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
   @override
   HistoryManager<TrackWithDate, Track> get historyController => HistoryController.inst;
 
-  Set<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filename) {
+  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filename) {
     return files.where(
       (element) {
         final trackFilename = filename;
@@ -26,7 +26,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
         final matching2 = fileSystemFilenameCleaned.contains(trackTitle.split('(').first) && fileSystemFilenameCleaned.contains(trackArtist);
         return matching1 || matching2;
       },
-    ).toSet();
+    );
   }
 
   Iterable<Track> getRandomTracks({Track? exclude, int? min, int? max}) {

@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -17,8 +16,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -34,6 +34,7 @@ enum _IndexerSettingsKeys {
   minimumTrackDur,
   useMediaStore,
   refreshOnStartup,
+  missingTracks,
   reindex,
   refreshLibrary,
   foldersToScan,
@@ -59,6 +60,7 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.minimumTrackDur: [lang.MIN_FILE_DURATION],
         _IndexerSettingsKeys.useMediaStore: [lang.USE_MEDIA_STORE, lang.USE_MEDIA_STORE_SUBTITLE],
         _IndexerSettingsKeys.refreshOnStartup: [lang.REFRESH_ON_STARTUP],
+        _IndexerSettingsKeys.missingTracks: [lang.MISSING_TRACKS],
         _IndexerSettingsKeys.reindex: [lang.RE_INDEX, lang.RE_INDEX_SUBTITLE],
         _IndexerSettingsKeys.refreshLibrary: [lang.REFRESH_LIBRARY, lang.REFRESH_LIBRARY_SUBTITLE],
         _IndexerSettingsKeys.foldersToScan: [lang.LIST_OF_FOLDERS],
@@ -570,6 +572,16 @@ class IndexerSettings extends SettingSubpageProvider {
                 value: settings.refreshOnStartup.value,
                 onChanged: (isTrue) => settings.save(refreshOnStartup: !isTrue),
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _IndexerSettingsKeys.missingTracks,
+            child: CustomListTile(
+              bgColor: getBgColor(_IndexerSettingsKeys.missingTracks),
+              icon: Broken.location_cross,
+              title: lang.MISSING_TRACKS,
+              trailing: const Icon(Broken.arrow_right_3),
+              onTap: () => NamidaNavigator.inst.navigateTo(const IndexerMissingTracksSubpage()),
             ),
           ),
           getItemWrapper(

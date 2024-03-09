@@ -50,6 +50,7 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
@@ -748,6 +749,9 @@ extension WidgetsPagess on Widget {
       case QueueTracksPage:
         route = RouteType.SUBPAGE_queueTracks;
         name = (this as QueueTracksPage).queue.date.toString();
+        break;
+      case IndexerMissingTracksSubpage:
+        route = RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS;
         break;
 
       // ----- Search Results -----

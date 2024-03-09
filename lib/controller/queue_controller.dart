@@ -155,15 +155,17 @@ class QueueController {
     }
   }
 
-  Future<void> replaceTrackInAllQueues(Track oldTrack, Track newTrack) async {
+  Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
     final queuesToSave = <Queue>[];
     queuesMap.value.entries.toList().loop((entry, index) {
       final q = entry.value;
-      q.tracks.replaceItems(
-        oldTrack,
-        newTrack,
-        onMatch: () => queuesToSave.add(q),
-      );
+      for (final e in oldNewTrack.entries) {
+        q.tracks.replaceItems(
+          e.key,
+          e.value,
+          onMatch: () => queuesToSave.add(q),
+        );
+      }
     });
     for (final q in queuesToSave) {
       _updateMap(q);

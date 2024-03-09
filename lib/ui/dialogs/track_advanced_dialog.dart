@@ -93,7 +93,7 @@ void showTrackAdvancedDialog({
             ),
 
           // -- Updating directory path option, only for tracks whithin the same parent directory.
-          if (tracksUniqued.every((element) => element.track.path.startsWith(firstTracksDirectoryPath)))
+          if (!isSingle && tracksUniqued.every((element) => element.track.path.startsWith(firstTracksDirectoryPath)))
             UpdateDirectoryPathListTile(
               colorScheme: colorScheme,
               oldPath: firstTracksDirectoryPath,

@@ -452,7 +452,7 @@ Future<void> showGeneralPopupDialog(
     final paths = files.mapped((e) => e.path);
     paths.sortBy((e) => e);
 
-    final highMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename);
+    final highMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename).toSet();
 
     /// Searching
     final txtc = TextEditingController();
@@ -798,7 +798,7 @@ Future<void> showGeneralPopupDialog(
                                   }
 
                                   /// firstly checks if a file exists in current library
-                                  final firstHighMatchesFiles = NamidaGenerator.inst.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename);
+                                  final firstHighMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles, tracks.first.path.getFilename).toSet();
                                   if (firstHighMatchesFiles.isNotEmpty) {
                                     await openDialog(
                                       CustomBlurryDialog(

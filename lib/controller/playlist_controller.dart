@@ -10,7 +10,6 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
-import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -225,6 +224,23 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     );
   }
 
+  Future<void> replaceTrackInAllPlaylistsBulk(Map<Track, Track> oldNewTrack) async {
+    final fnList = <MapEntry<bool Function(TrackWithDate e), TrackWithDate Function(TrackWithDate old)>>[];
+    for (final entry in oldNewTrack.entries) {
+      fnList.add(
+        MapEntry(
+          (e) => e.track == entry.key,
+          (old) => TrackWithDate(
+            dateAdded: old.dateAdded,
+            track: entry.value,
+            source: old.source,
+          ),
+        ),
+      );
+    }
+    await replaceTheseTracksInPlaylistsBulk(fnList);
+  }
+
   /// Returns number of generated tracks.
   int generateRandomPlaylist() {
     final rt = NamidaGenerator.inst.getRandomTracks();
@@ -271,6 +287,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return listy;
   }
 
+  final _m3uPlaylistsCompleter = Completer<bool>();
+  Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
+
   Future<void> prepareM3UPlaylists({Set<String> forPaths = const {}}) async {
     final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
 
@@ -304,6 +323,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
     }
     _pathsM3ULookup = infoMap;
+    if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
   }
 
   /// saves each track m3u info for writing back
@@ -516,12 +536,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   @override
   Future<GeneralPlaylist<TrackWithDate>?> prepareFavouritePlaylistFunction() async {
     return await _prepareFavouritesFile.thready(favouritePlaylistPath);
-  }
-
-  @override
-  Future<void> prepareDefaultPlaylistsFile() async {
-    HistoryController.inst.prepareHistoryFile();
-    await super.prepareDefaultPlaylistsFile();
   }
 
   static Future<Playlist?> _prepareFavouritesFile(String path) async {

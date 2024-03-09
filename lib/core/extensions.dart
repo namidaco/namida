@@ -450,7 +450,9 @@ extension ThreadOpener<M, R> on ComputeCallback<M, R> {
   /// Executes function on a separate thread using compute().
   /// Must be `static` or `global` function.
   Future<R> thready(M parameter) async {
-    WidgetsFlutterBinding.ensureInitialized();
+    try {
+      WidgetsFlutterBinding.ensureInitialized();
+    } catch (_) {}
     return await compute(this, parameter);
   }
 }

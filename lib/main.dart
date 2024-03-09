@@ -22,6 +22,7 @@ import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -43,6 +44,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
@@ -121,6 +123,8 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
+  HistoryController.inst.prepareHistoryFile();
+  YoutubeHistoryController.inst.prepareHistoryFile();
   await Future.wait([
     PlaylistController.inst.prepareDefaultPlaylistsFile(),
     if (!shouldShowOnBoarding) QueueController.inst.prepareLatestQueue(),

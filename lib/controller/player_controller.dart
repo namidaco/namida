@@ -337,6 +337,10 @@ class Player {
     await _audioHandler.replaceAllItemsInQueue(oldTrack, newTrack);
   }
 
+  Future<void> replaceAllTracksInQueueBulk(Map<Playable, Playable> oldNewTrack) async {
+    await _audioHandler.replaceAllItemsInQueueBulk(oldNewTrack);
+  }
+
   Future<void> replaceTracksDirectoryInQueue(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
     if (currentQueue.isNotEmpty) {
