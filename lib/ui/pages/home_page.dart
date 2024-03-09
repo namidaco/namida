@@ -70,10 +70,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final _mixes = <String, List<Track>>{};
 
   int currentYearLostMemories = 0;
+  late final ScrollController lostMemoriesScrollController;
 
   @override
   void initState() {
     _fillLists();
+    lostMemoriesScrollController = ScrollController();
     super.initState();
   }
 
@@ -90,6 +92,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _topRecentAlbums.clear();
     _topRecentArtists.clear();
     _mixes.clear();
+    lostMemoriesScrollController.dispose();
     super.dispose();
   }
 
@@ -177,6 +180,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       isStartOfDay: false,
     );
     currentYearLostMemories = year;
+    if (lostMemoriesScrollController.hasClients) lostMemoriesScrollController.jumpTo(0);
   }
 
   List<E?> _listOrShimmer<E>(List<E> listy) {
@@ -364,6 +368,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                         case HomePageItems.recentListens:
                           return _TracksList(
+                            listId: 'recentListens',
                             homepageItem: element,
                             title: lang.RECENT_LISTENS,
                             icon: Broken.command_square,
@@ -379,6 +384,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                         case HomePageItems.topRecentListens:
                           return _TracksList(
+                            listId: 'topRecentListens',
                             homepageItem: element,
                             title: lang.TOP_RECENTS,
                             icon: Broken.crown_1,
@@ -389,6 +395,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                         case HomePageItems.lostMemories:
                           return _TracksList(
+                            listId: 'lostMemories_$currentYearLostMemories',
+                            controller: lostMemoriesScrollController,
                             homepageItem: element,
                             title: lang.LOST_MEMORIES,
                             subtitle: () {
@@ -455,6 +463,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                         case HomePageItems.recentlyAdded:
                           return _TracksList(
+                            listId: 'recentlyAdded',
                             queueSource: QueueSource.recentlyAdded,
                             homepageItem: element,
                             title: lang.RECENTLY_ADDED,
@@ -542,6 +551,8 @@ class _TracksList extends StatelessWidget {
   final Widget? leading;
   final String? Function(Selectable? track)? topRightText;
   final QueueSource queueSource;
+  final String listId;
+  final ScrollController? controller;
 
   const _TracksList({
     super.key,
@@ -556,6 +567,8 @@ class _TracksList extends StatelessWidget {
     this.leading,
     this.topRightText,
     this.queueSource = QueueSource.homePageItem,
+    required this.listId,
+    this.controller,
   });
 
   @override
@@ -566,6 +579,7 @@ class _TracksList extends StatelessWidget {
       final queue = listWithListens?.firstOrNull == null ? <Track>[] : listWithListens!.map((e) => e!.key);
       return SliverToBoxAdapter(
         child: _HorizontalList(
+          controller: controller,
           title: title,
           icon: icon,
           leading: leading,
@@ -578,6 +592,7 @@ class _TracksList extends StatelessWidget {
           itemBuilder: (context, index) {
             final twl = finalListWithListens[index];
             return _TrackCard(
+              listId: listId,
               homepageItem: homepageItem,
               title: title,
               index: index,
@@ -607,6 +622,7 @@ class _TracksList extends StatelessWidget {
             itemBuilder: (context, index) {
               final tr = finalList[index];
               return _TrackCard(
+                listId: listId,
                 homepageItem: homepageItem,
                 title: title,
                 index: index,
@@ -735,6 +751,7 @@ class _HorizontalList extends StatelessWidget {
   final Widget? leading;
   final NullableIndexedWidgetBuilder itemBuilder;
   final Color? iconColor;
+  final ScrollController? controller;
 
   const _HorizontalList({
     required this.title,
@@ -749,6 +766,7 @@ class _HorizontalList extends StatelessWidget {
     this.thirdWidget,
     this.leading,
     this.iconColor,
+    this.controller,
   });
 
   @override
@@ -789,6 +807,7 @@ class _HorizontalList extends StatelessWidget {
           height: height,
           width: context.width,
           child: ListView.builder(
+            controller: controller,
             itemExtent: itemExtent,
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
             scrollDirection: Axis.horizontal,
@@ -1115,6 +1134,7 @@ class _TrackCard extends StatefulWidget {
   final double width;
   final Color? color;
   final Track? track;
+  final String listId;
   final Iterable<Selectable> queue;
   final int index;
   final Iterable<int>? listens;
@@ -1127,6 +1147,7 @@ class _TrackCard extends StatefulWidget {
     required this.width,
     this.color,
     required this.track,
+    required this.listId,
     required this.queue,
     required this.index,
     this.listens,
@@ -1173,7 +1194,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     }
     return NamidaInkWell(
       onTap: () {
-        if (mounted) setState(() => _enabledTrack = (widget.title, widget.index));
+        if (mounted) setState(() => _enabledTrack = (widget.listId, widget.index));
 
         Player.inst.playOrPause(
           widget.index,
@@ -1190,7 +1211,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
       width: widget.width,
       bgColor: color,
       decoration: BoxDecoration(
-        border: _enabledTrack == (widget.title, widget.index)
+        border: _enabledTrack == (widget.listId, widget.index)
             ? Border.all(
                 color: _cardColor ?? color,
                 width: 1.5,

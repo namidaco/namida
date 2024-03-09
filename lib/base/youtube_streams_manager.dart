@@ -121,7 +121,9 @@ mixin YoutubeStreamsManager {
       case YTVideosSorting.date:
         return (lang.DATE, Broken.calendar);
       case YTVideosSorting.views:
-        return (lang.VIEWS, Broken.eye);
+        final word = lang.VIEWS;
+        final finalw = word.length > 1 ? "${word[0].toUpperCase()}${word.substring(1)}" : word;
+        return (finalw, Broken.eye);
       case YTVideosSorting.duration:
         return (lang.DURATION, Broken.timer_1);
     }

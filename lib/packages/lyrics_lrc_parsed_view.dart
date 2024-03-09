@@ -185,7 +185,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 child: Obx(
                   () => Container(
                     color: Color.alphaBlend(
-                      CurrentColor.inst.color.withOpacity(0.2),
+                      CurrentColor.inst.miniplayerColor.withOpacity(0.2),
                       context.isDarkMode ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.5),
                     ),
                   ),
@@ -249,7 +249,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         return const SizedBox();
                                       }
 
-                                      final color = CurrentColor.inst.color;
+                                      final color = CurrentColor.inst.miniplayerColor;
                                       final highlighted = timestampsMap[_latestUpdatedLine.value]?.$2;
                                       return PageStorage(
                                         bucket: PageStorageBucket(),

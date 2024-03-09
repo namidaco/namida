@@ -1083,7 +1083,7 @@ class StackedIcon extends StatelessWidget {
             ),
             child: smallChild ??
                 (secondaryText != null
-                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: context.defaultIconColor()))
+                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)))
                     : Icon(
                         secondaryIcon,
                         size: secondaryIconSize,
@@ -1536,7 +1536,7 @@ class NamidaPartyContainer extends StatelessWidget {
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: CurrentColor.inst.color.withAlpha(150),
+                  color: CurrentColor.inst.miniplayerColor.withAlpha(150),
                   spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
                   blurRadius: 10 + (200 * finalScale),
                 ),

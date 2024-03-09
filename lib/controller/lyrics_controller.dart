@@ -279,6 +279,7 @@ class Lyrics {
       if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
       if (lyricsRes.contains('please enable javascript on your web browser')) return '';
       if (lyricsRes.contains('Error 500 (Server Error)')) return '';
+      if (lyricsRes.contains('systems have detected unusual traffic from your computer network')) return '';
       return lyricsRes;
     }
 

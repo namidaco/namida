@@ -384,26 +384,14 @@ class NormalPlaylistTracksPage extends StatefulWidget {
 }
 
 class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
-  @override
-  AnimationController get animation2 => _animation2;
-
-  late final _animation2 = AnimationController(
-    duration: const Duration(milliseconds: 1200),
-    vsync: this,
-  );
-
   late final _scrollController = ScrollController();
   late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
 
   @override
   void dispose() {
-    _animation2.dispose();
     _scrollController.dispose();
     super.dispose();
   }
-
-  @override
-  num get pullNormalizer => 100;
 
   @override
   Widget build(BuildContext context) {
@@ -482,19 +470,18 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
       child: _playlistM3uPath != null
           ? Listener(
               onPointerMove: (event) {
-                if (!_scrollController.hasClients) return;
-                final p = _scrollController.position.pixels;
-                if (p <= 0 && event.delta.dx < 0.1) onVerticalDragUpdate(event.delta.dy);
+                onPointerMove(_scrollController, event);
               },
               onPointerUp: (event) async {
                 final m3uPath = _playlistM3uPath;
-                if (m3uPath != null && animation.value == 1) {
-                  showRefreshingAnimation(() async {
+                if (m3uPath != null) {
+                  onRefresh(() async {
                     await PlaylistController.inst.prepareM3UPlaylists(forPaths: {m3uPath});
                     PlaylistController.inst.sortPlaylists();
                   });
+                } else {
+                  onVerticalDragFinish();
                 }
-                onVerticalDragFinish();
               },
               onPointerCancel: (event) => onVerticalDragFinish(),
               child: child,

@@ -672,7 +672,7 @@ class YTUtils {
       snackyy(
         message: lang.COPIED_TO_CLIPBOARD,
         top: false,
-        leftBarIndicatorColor: CurrentColor.inst.color,
+        leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
       );
     }
   }

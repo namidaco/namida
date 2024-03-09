@@ -486,49 +486,45 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                   const SizedBox(width: 8.0),
                   Obx(
-                    () => AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      opacity: _selectedList.isEmpty ? 1 : 1.0,
-                      child: FloatingActionButton.extended(
-                        heroTag: 'download_fab',
-                        backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
-                        isExtended: true,
-                        icon: Icon(
-                          Broken.import_2,
-                          size: 28.0,
+                    () => FloatingActionButton.extended(
+                      heroTag: 'download_fab',
+                      backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
+                      isExtended: true,
+                      icon: Icon(
+                        Broken.import_2,
+                        size: 28.0,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                      label: Text(
+                        lang.DOWNLOAD,
+                        style: context.textTheme.displayMedium?.copyWith(
                           color: Colors.white.withOpacity(0.7),
                         ),
-                        label: Text(
-                          lang.DOWNLOAD,
-                          style: context.textTheme.displayMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                        onPressed: () async {
-                          if (_selectedList.isEmpty) return;
-                          if (!await requestManageStoragePermission()) return;
-                          NamidaNavigator.inst.popPage();
-                          YoutubeController.inst.downloadYoutubeVideos(
-                            groupName: widget.playlistName,
-                            itemsConfig: _selectedList.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
-                            useCachedVersionsIfAvailable: true,
-                            autoExtractTitleAndArtist: autoExtractTitleAndArtist,
-                            keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
-                            downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
-                            addAudioToLocalLibrary: true,
-                            deleteOldFile: overrideOldFiles,
-                            audioOnly: downloadAudioOnly.value,
-                            preferredQualities: () {
-                              final list = <String>[];
-                              for (final q in kStockVideoQualities) {
-                                list.add(q);
-                                if (q == preferredQuality.value) break;
-                              }
-                              return list;
-                            }(),
-                          );
-                        },
                       ),
+                      onPressed: () async {
+                        if (_selectedList.isEmpty) return;
+                        if (!await requestManageStoragePermission()) return;
+                        NamidaNavigator.inst.popPage();
+                        YoutubeController.inst.downloadYoutubeVideos(
+                          groupName: widget.playlistName,
+                          itemsConfig: _selectedList.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
+                          useCachedVersionsIfAvailable: true,
+                          autoExtractTitleAndArtist: autoExtractTitleAndArtist,
+                          keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
+                          downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
+                          addAudioToLocalLibrary: true,
+                          deleteOldFile: overrideOldFiles,
+                          audioOnly: downloadAudioOnly.value,
+                          preferredQualities: () {
+                            final list = <String>[];
+                            for (final q in kStockVideoQualities) {
+                              list.add(q);
+                              if (q == preferredQuality.value) break;
+                            }
+                            return list;
+                          }(),
+                        );
+                      },
                     ),
                   ),
                 ],

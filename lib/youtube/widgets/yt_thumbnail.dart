@@ -124,14 +124,21 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       if (res == null) {
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems()) return;
-        res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-          id: widget.videoId,
-          channelUrlOrID: finalChAvatarUrl,
-          hqChannelImage: fetchHQChImg,
-          isImportantInCache: widget.isImportantInCache,
-          // -- get lower res first
-          beforeFetchingFromInternet: () async {
-            if (widget.videoId == null) return;
+        if (widget.videoId != null) {
+          // -- for video:
+          // --- isImportantInCache -> fetch to file
+          // --- !isImportantInCache -> fetch lowres bytes only
+          if (widget.isImportantInCache) {
+            res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+              id: widget.videoId,
+              channelUrlOrID: finalChAvatarUrl,
+              hqChannelImage: fetchHQChImg,
+              isImportantInCache: true,
+              bytesIfWontWriteToFile: (bytes) {
+                if (mounted) setState(() => imageBytes = bytes);
+              },
+            );
+          } else {
             final lowerRes = await ThumbnailManager.inst.getYoutubeThumbnailAsBytes(
               youtubeId: widget.videoId,
               lowerResYTID: true,
@@ -140,11 +147,19 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             if (lowerRes != null && lowerRes.isNotEmpty) {
               if (mounted) setState(() => imageBytes = lowerRes);
             }
-          },
-          bytesIfWontWriteToFile: (bytes) {
-            if (mounted) setState(() => imageBytes = bytes);
-          },
-        );
+          }
+        } else {
+          // for channels/playlists -> default
+          res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+            id: widget.videoId,
+            channelUrlOrID: finalChAvatarUrl,
+            hqChannelImage: fetchHQChImg,
+            isImportantInCache: widget.isImportantInCache,
+            bytesIfWontWriteToFile: (bytes) {
+              if (mounted) setState(() => imageBytes = bytes);
+            },
+          );
+        }
       }
 
       widget.onImageReady?.call(res);

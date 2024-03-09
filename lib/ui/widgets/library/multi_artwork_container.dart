@@ -15,6 +15,7 @@ class MultiArtworkContainer extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final String heroTag;
   final bool fallbackToFolderCover;
+  final bool reduceQuality;
 
   const MultiArtworkContainer({
     super.key,
@@ -25,6 +26,7 @@ class MultiArtworkContainer extends StatelessWidget {
     this.onTopWidget,
     required this.heroTag,
     this.fallbackToFolderCover = true,
+    this.reduceQuality = false,
   });
 
   @override
@@ -63,6 +65,7 @@ class MultiArtworkContainer extends StatelessWidget {
                   tracks: tracks!,
                   thumbnailSize: size - 6.0,
                   fallbackToFolderCover: fallbackToFolderCover,
+                  reduceQuality: reduceQuality,
                 ),
               if (child != null) child!,
               if (onTopWidget != null) onTopWidget!,

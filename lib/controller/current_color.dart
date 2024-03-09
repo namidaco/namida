@@ -37,7 +37,7 @@ class CurrentColor {
 
   final _namidaColorMiniplayer = Rxn<Color>();
 
-  final Rx<NamidaColor> _namidaColor = NamidaColor(
+  late final Rx<NamidaColor> _namidaColor = NamidaColor(
     used: playerStaticColor,
     mix: playerStaticColor,
     palette: [playerStaticColor],
@@ -352,8 +352,8 @@ class CurrentColor {
       final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true, useIsolate: useIsolate);
       _updateInColorMap(filename, nc);
     }
-    if (Player.inst.nowPlayingTrack == track) {
-      updatePlayerColorFromTrack(track, null);
+    if (Player.inst.nowPlayingTWD == track) {
+      updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
     }
   }
 
@@ -424,9 +424,6 @@ class CurrentColor {
 
   void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {
     if (nc != null) _colorsMap[filenameWoExt] = nc;
-    if (filenameWoExt == Player.inst.nowPlayingTrack.path.getFilename) {
-      updatePlayerColorFromTrack(Player.inst.nowPlayingTrack, null);
-    }
   }
 
   void _updateCurrentPaletteHalfs(NamidaColor nc) {

@@ -82,7 +82,12 @@ class Player {
   bool get isBuffering => _audioHandler.currentState == ProcessingState.buffering;
   bool get isLoading => _audioHandler.currentState == ProcessingState.loading;
   bool get isFetchingInfo => _audioHandler.isFetchingInfo;
-  bool get shouldShowLoadingIndicator => (isFetchingInfo && _audioHandler.currentCachedVideo.value == null) || isBuffering || isLoading;
+  bool get shouldShowLoadingIndicator {
+    if (isBuffering || isLoading) return true;
+    if (isFetchingInfo && _audioHandler.currentState != ProcessingState.ready) return true;
+    return false;
+  }
+
   Duration get buffered => _audioHandler.buffered;
   int get numberOfRepeats => _audioHandler.numberOfRepeats;
   int get latestInsertedIndex => _audioHandler.latestInsertedIndex;

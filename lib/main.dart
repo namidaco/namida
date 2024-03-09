@@ -259,8 +259,9 @@ Future<void> _initializeIntenties() async {
         final paths = <String>[];
         final m3uPaths = <String>{};
         files.loop((f, _) {
-          final path = f.realPath?.replaceAll('\\', '');
-          if (path != null) {
+          final realPath = f.realPath;
+          if (realPath != null) {
+            final path = realPath.replaceAll('\\', '');
             if (kM3UPlaylistsExtensions.any((ext) => path.endsWith(ext))) {
               m3uPaths.add(path);
             } else {
@@ -418,59 +419,65 @@ class Namida extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // -- no need to listen, widget is rebuilt on applifecycle
+    final showPipOnly = NamidaChannel.inst.isInPip.value && Player.inst.videoPlayerInfo != null;
     return Stack(
       alignment: Alignment.bottomLeft,
       children: [
-        Obx(
-          () {
-            final codes = settings.selectedLanguage.value.code.split('_');
-            return Localizations(
-              locale: Locale(codes.first, codes.last),
-              delegates: const [
-                DefaultWidgetsLocalizations.delegate,
-                DefaultMaterialLocalizations.delegate,
-              ],
-              child: GetMaterialApp(
-                key: const Key('namida_app'),
-                debugShowCheckedModeBanner: false,
-                title: 'Namida',
-                // restorationScopeId: 'Namida',
-                builder: (context, widget) {
-                  return ScrollConfiguration(
-                    behavior: const ScrollBehaviorModified(),
-                    child: Obx(
-                      () {
-                        final mode = settings.themeMode.value;
-                        final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-                        final isLight = !useDarkTheme;
-                        final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                        SystemChrome.setSystemUIOverlayStyle(
-                          SystemUiOverlayStyle(
-                            systemNavigationBarContrastEnforced: false,
-                            systemNavigationBarColor: const Color(0x00000000),
-                            systemNavigationBarDividerColor: const Color(0x00000000),
-                            systemNavigationBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
-                          ),
-                        );
-                        return AnimatedTheme(
-                          duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                          data: theme,
-                          child: widget!,
-                        );
-                      },
-                    ),
-                  );
-                },
-                home: MainPageWrapper(
-                  shouldShowOnBoarding: shouldShowOnBoarding,
-                  onContextAvailable: (ctx) {
-                    _initialContext = ctx;
-                    _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+        Visibility(
+          maintainState: true,
+          visible: !showPipOnly,
+          child: Obx(
+            () {
+              final codes = settings.selectedLanguage.value.code.split('_');
+              return Localizations(
+                locale: Locale(codes.first, codes.last),
+                delegates: const [
+                  DefaultWidgetsLocalizations.delegate,
+                  DefaultMaterialLocalizations.delegate,
+                ],
+                child: GetMaterialApp(
+                  key: const Key('namida_app'),
+                  debugShowCheckedModeBanner: false,
+                  title: 'Namida',
+                  // restorationScopeId: 'Namida',
+                  builder: (context, widget) {
+                    return ScrollConfiguration(
+                      behavior: const ScrollBehaviorModified(),
+                      child: Obx(
+                        () {
+                          final mode = settings.themeMode.value;
+                          final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+                          final isLight = !useDarkTheme;
+                          final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                          SystemChrome.setSystemUIOverlayStyle(
+                            SystemUiOverlayStyle(
+                              systemNavigationBarContrastEnforced: false,
+                              systemNavigationBarColor: const Color(0x00000000),
+                              systemNavigationBarDividerColor: const Color(0x00000000),
+                              systemNavigationBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
+                            ),
+                          );
+                          return AnimatedTheme(
+                            duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                            data: theme,
+                            child: widget!,
+                          );
+                        },
+                      ),
+                    );
                   },
+                  home: MainPageWrapper(
+                    shouldShowOnBoarding: shouldShowOnBoarding,
+                    onContextAvailable: (ctx) {
+                      _initialContext = ctx;
+                      _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+                    },
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
 
         // prevent accidental opening for drawer when performing back gesture
@@ -494,19 +501,18 @@ class Namida extends StatelessWidget {
           ),
         ),
 
-        NamidaChannel.inst.isInPip.value && Player.inst.videoPlayerInfo != null
-            ? Container(
-                color: Colors.black,
-                alignment: Alignment.topLeft,
-                child: const NamidaVideoControls(
-                  key: Key('pip_widget_child'),
-                  isFullScreen: true,
-                  showControls: false,
-                  onMinimizeTap: null,
-                  isLocal: true,
-                ),
-              )
-            : const SizedBox(),
+        if (showPipOnly)
+          Container(
+            color: Colors.black,
+            alignment: Alignment.topLeft,
+            child: const NamidaVideoControls(
+              key: Key('pip_widget_child'),
+              isFullScreen: true,
+              showControls: false,
+              onMinimizeTap: null,
+              isLocal: true,
+            ),
+          )
       ],
     );
   }

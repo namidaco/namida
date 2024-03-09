@@ -137,6 +137,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
           YoutubeController.inst.downloadedFilesMap; // for refreshing.
           final downloadedFileExists = YoutubeController.inst.doesIDHasFileDownloaded(currentId) != null;
 
+          final defaultIconColor = context.defaultIconColor(CurrentColor.inst.miniplayerColor);
+
           return NamidaYTMiniplayer(
             key: MiniPlayerController.inst.ytMiniplayerKey,
             duration: const Duration(milliseconds: 1000),
@@ -636,15 +638,17 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                               forceRequest: ConnectivityController.inst.hasConnection,
                                                             ),
                                                             child: YoutubeController.inst.isCurrentCommentsFromCache
-                                                                ? const StackedIcon(
+                                                                ? StackedIcon(
                                                                     baseIcon: Broken.refresh,
                                                                     secondaryIcon: Broken.global,
                                                                     iconSize: 20.0,
                                                                     secondaryIconSize: 12.0,
+                                                                    baseIconColor: defaultIconColor,
+                                                                    secondaryIconColor: defaultIconColor,
                                                                   )
                                                                 : Icon(
                                                                     Broken.refresh,
-                                                                    color: context.defaultIconColor(),
+                                                                    color: defaultIconColor,
                                                                     size: 20.0,
                                                                   ),
                                                           )
@@ -766,7 +770,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                                                         )
                                                       : Icon(
                                                           Broken.refresh,
-                                                          color: context.defaultIconColor(),
+                                                          color: defaultIconColor,
                                                         ),
                                                 )
                                               ],
@@ -963,7 +967,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
                             opacity: 0.3,
                             child: ThreeArchedCircle(
                               key: Key("${currentId}_button_loading_child"),
-                              color: context.defaultIconColor(),
+                              color: defaultIconColor,
                               size: 36.0,
                             ),
                           ),
@@ -979,12 +983,12 @@ class YoutubeMiniPlayer extends StatelessWidget {
                           child: Player.inst.isPlaying
                               ? Icon(
                                   Broken.pause,
-                                  color: context.defaultIconColor(),
+                                  color: defaultIconColor,
                                   key: const Key('pause'),
                                 )
                               : Icon(
                                   Broken.play,
-                                  color: context.defaultIconColor(),
+                                  color: defaultIconColor,
                                   key: const Key('play'),
                                 ),
                         ),
@@ -997,7 +1001,7 @@ class YoutubeMiniPlayer extends StatelessWidget {
               NamidaIconButton(
                 horizontalPadding: 0.0,
                 icon: Broken.next,
-                iconColor: context.defaultIconColor(),
+                iconColor: defaultIconColor,
                 onPressed: () {
                   Player.inst.next();
                 },

@@ -108,7 +108,6 @@ class ThumbnailManager {
     String? id,
     String? channelUrlOrID,
     bool isImportantInCache = true,
-    FutureOr<void> Function()? beforeFetchingFromInternet,
     void Function(Uint8List? bytes)? bytesIfWontWriteToFile,
     bool hqChannelImage = false,
   }) async {
@@ -128,7 +127,6 @@ class ThumbnailManager {
     }
 
     _printie('Downloading Thumbnail Started');
-    await beforeFetchingFromInternet?.call();
 
     if (channelUrlOrID != null && hqChannelImage) {
       final res = await _getChannelAvatarUrlIsolate.thready(channelUrlOrID);

@@ -291,7 +291,7 @@ Future<void> showDownloadVideoBottomSheet({
                           width: context.width * 0.2,
                           height: context.width * 0.2 * 9 / 16,
                           onImageReady: (imageFile) {
-                            videoThumbnail.value = imageFile;
+                            if (imageFile != null) videoThumbnail.value = imageFile;
                           },
                         ),
                         const SizedBox(width: 12.0),

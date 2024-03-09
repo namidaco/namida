@@ -52,23 +52,6 @@ class PlaylistsPage extends StatefulWidget {
 }
 
 class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateMixin, PullToRefreshMixin {
-  @override
-  AnimationController get animation2 => _animation2;
-
-  late final _animation2 = AnimationController(
-    duration: const Duration(milliseconds: 1200),
-    vsync: this,
-  );
-
-  @override
-  void dispose() {
-    _animation2.dispose();
-    super.dispose();
-  }
-
-  @override
-  num get pullNormalizer => 100;
-
   bool get _shouldAnimate => widget.animateTiles && LibraryTab.playlists.shouldAnimateTiles;
 
   @override
@@ -83,18 +66,13 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       child: Listener(
         onPointerMove: (event) {
           final c = scrollController;
-          if (c == null || !c.hasClients) return;
-          final p = c.position.pixels;
-          if (p <= 0 && event.delta.dx < 0.1) onVerticalDragUpdate(event.delta.dy);
+          if (c != null) onPointerMove(c, event);
         },
         onPointerUp: (event) async {
-          if (animation.value == 1) {
-            showRefreshingAnimation(() async {
-              await PlaylistController.inst.prepareM3UPlaylists();
-              PlaylistController.inst.sortPlaylists();
-            });
-          }
-          onVerticalDragFinish();
+          onRefresh(() async {
+            await PlaylistController.inst.prepareM3UPlaylists();
+            PlaylistController.inst.sortPlaylists();
+          });
         },
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: NamidaScrollbar(

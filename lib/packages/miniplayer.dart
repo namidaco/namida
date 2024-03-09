@@ -297,6 +297,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                             iconSize: 20.0,
                             blurRadius: 6.0,
                             baseIconColor: context.theme.colorScheme.onSecondaryContainer,
+                            secondaryIconColor: context.theme.colorScheme.onSecondaryContainer,
                           )
                         : Icon(
                             Broken.document,

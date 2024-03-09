@@ -646,7 +646,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                     if (widget.canShowBuffering)
                                                       IgnorePointer(
                                                         child: Obx(
-                                                          () => Player.inst.isBuffering || Player.inst.isLoading
+                                                          () => Player.inst.shouldShowLoadingIndicator
                                                               ? ThreeArchedCircle(
                                                                   color: Colors.white.withAlpha(120),
                                                                   size: iconSize * 1.4,
@@ -815,7 +815,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                               Widget getTextWidget(IconData icon, String title, double value) {
                                                                 return Row(
                                                                   children: [
-                                                                    Icon(icon, color: context.defaultIconColor()),
+                                                                    Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
                                                                     const SizedBox(width: 12.0),
                                                                     Text(
                                                                       title,
@@ -1250,7 +1250,7 @@ class _TrackInfo extends StatelessWidget {
                                         maxLines: textData.secondLine == '' ? 2 : 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: velpy(a: 15.0, b: 20.0, c: p).multipliedFontScale,
+                                          fontSize: velpy(a: 14.5, b: 20.0, c: p).multipliedFontScale,
                                           height: 1,
                                         ),
                                       ),
@@ -1261,7 +1261,7 @@ class _TrackInfo extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: velpy(a: 13.0, b: 15.0, c: p).multipliedFontScale,
+                                          fontSize: velpy(a: 12.5, b: 15.0, c: p).multipliedFontScale,
                                         ),
                                       ),
                                   ],

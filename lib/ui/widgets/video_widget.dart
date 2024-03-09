@@ -380,7 +380,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
       decoration: const BoxDecoration(),
       borderRadius: 6.0,
-      bgColor: selected ? CurrentColor.inst.color.withAlpha(100) : null,
+      bgColor: selected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
       padding: const EdgeInsets.all(6.0),
       child: Row(
@@ -473,7 +473,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: CurrentColor.inst.color,
+                            color: CurrentColor.inst.miniplayerColor,
                             borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                           ),
                           width: 4.0,
@@ -788,7 +788,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       },
                                       decoration: const BoxDecoration(),
                                       borderRadius: 6.0,
-                                      bgColor: isSelected ? CurrentColor.inst.color.withAlpha(100) : null,
+                                      bgColor: isSelected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
                                       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                                       padding: const EdgeInsets.all(6.0),
                                       child: Row(
@@ -1451,7 +1451,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ),
               Obx(
-                () => Player.inst.isBuffering || Player.inst.isLoading
+                () => Player.inst.shouldShowLoadingIndicator
                     ? ThreeArchedCircle(
                         color: itemsColor,
                         size: 52.0,

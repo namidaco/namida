@@ -33,7 +33,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
   final _animationKey = 'tracks_page';
 
   @override
-  AnimationController get animation2 => RefreshLibraryIconController.getController(_animationKey, this);
+  AnimationController get refreshAnimation => RefreshLibraryIconController.getController(_animationKey, this);
 
   @override
   void initState() {
@@ -53,16 +53,10 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
     return BackgroundWrapper(
       child: Listener(
         onPointerMove: (event) {
-          final c = scrollController;
-          if (!c.hasClients) return;
-          final p = c.position.pixels;
-          if (p <= 0 && event.delta.dx < 0.1) onVerticalDragUpdate(event.delta.dy);
+          onPointerMove(scrollController, event);
         },
         onPointerUp: (event) {
-          if (animation.value == 1) {
-            showRefreshPromptDialog(false);
-          }
-          onVerticalDragFinish();
+          onRefresh(() async => await showRefreshPromptDialog(false));
         },
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: Obx(

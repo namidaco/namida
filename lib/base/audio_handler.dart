@@ -53,6 +53,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   late final equalizer = AndroidEqualizer();
   late final loudnessEnhancer = AndroidLoudnessEnhancer();
 
+  Duration? get currentItemDuration => _currentItemDuration.value;
+  final _currentItemDuration = Rxn<Duration>();
+
   Timer? _resourcesDisposeTimer;
 
   @override
@@ -441,6 +444,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onItemPlay(Q item, int index, bool startPlaying) async {
+    _currentItemDuration.value = null;
+
     await item._execute(
       selectable: (finalItem) async {
         await onItemPlaySelectable(item, finalItem, index, startPlaying);
@@ -504,44 +509,55 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration;
 
+    bool checkInterrupted() {
+      if (item.track != currentTrack.track) {
+        return true;
+      } else {
+        if (duration != null) _currentItemDuration.value = duration;
+        return false;
+      }
+    }
+
     try {
       duration = await setPls();
+      if (checkInterrupted()) return;
     } on Exception catch (e) {
-      if (duration != null && currentPositionMS > 0) return;
-      if (item.track != currentTrack.track) return;
-      printy(e, isError: true);
-      // -- playing music from root folders still require `all_file_access`
-      // -- this is a fix for not playing some external files reported by some users.
-      final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
-      if (hadPermissionBefore) {
-        pause();
-        cancelPlayErrorSkipTimer();
-        _playErrorRemainingSecondsToSkip.value = 7;
+      if (checkInterrupted()) return;
+      final reallyError = !(duration != null && currentPositionMS > 0);
+      if (reallyError) {
+        printy(e, isError: true);
+        // -- playing music from root folders still require `all_file_access`
+        // -- this is a fix for not playing some external files reported by some users.
+        final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+        if (hadPermissionBefore) {
+          pause();
+          cancelPlayErrorSkipTimer();
+          _playErrorRemainingSecondsToSkip.value = 7;
 
-        _playErrorSkipTimer = Timer.periodic(
-          const Duration(seconds: 1),
-          (timer) {
-            _playErrorRemainingSecondsToSkip.value--;
-            if (_playErrorRemainingSecondsToSkip.value <= 0) {
-              NamidaNavigator.inst.closeDialog();
-              skipToNext();
-              timer.cancel();
-            }
-          },
-        );
-        NamidaDialogs.inst.showTrackDialog(
-          tr,
-          isFromPlayerQueue: true,
-          errorPlayingTrack: e,
-          source: QueueSource.playerQueue,
-        );
-        return;
-      } else {
-        final hasPermission = await requestManageStoragePermission();
-        if (hasPermission) {
-          duration = await setPls();
-        } else {
+          _playErrorSkipTimer = Timer.periodic(
+            const Duration(seconds: 1),
+            (timer) {
+              _playErrorRemainingSecondsToSkip.value--;
+              if (_playErrorRemainingSecondsToSkip.value <= 0) {
+                NamidaNavigator.inst.closeDialog();
+                skipToNext();
+                timer.cancel();
+              }
+            },
+          );
+          NamidaDialogs.inst.showTrackDialog(
+            tr,
+            isFromPlayerQueue: true,
+            errorPlayingTrack: e,
+            source: QueueSource.playerQueue,
+          );
           return;
+        } else {
+          final hasPermission = await requestManageStoragePermission();
+          if (!hasPermission) return;
+          try {
+            duration = await setPls();
+          } catch (_) {}
         }
       }
     }
@@ -837,7 +853,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       possibleAudioFiles: audioCacheMap[item.id] ?? [],
       possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
     );
-    if (item != currentVideo) return;
+
+    Duration? duration = playedFromCacheDetails.duration;
+
+    // race avoidance when playing multiple videos
+    bool checkInterrupted() {
+      if (item != currentVideo) {
+        return true;
+      } else {
+        if (duration != null) _currentItemDuration.value = duration;
+        return false;
+      }
+    }
+
+    if (checkInterrupted()) return;
 
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
@@ -852,7 +881,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       heyIhandledAudioPlaying = false;
     }
 
-    if (item != currentVideo) return;
+    if (checkInterrupted()) return;
 
     if (ConnectivityController.inst.hasConnection) {
       try {
@@ -865,7 +894,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
         _isFetchingInfo.value = false;
         if (streams == null) return;
-        if (item != currentVideo) return; // race avoidance when playing multiple videos
+        if (checkInterrupted()) return;
         YoutubeController.inst.currentYTQualities.value = streams.videoOnlyStreams ?? [];
         YoutubeController.inst.currentYTAudioStreams.value = streams.audioOnlyStreams ?? [];
         currentVideoInfo.value = streams.videoInfo;
@@ -895,7 +924,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final cachedAudio = prefferedAudioStream?.getCachedFile(item.id);
           final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);
           _isCurrentAudioFromCache = cachedAudio != null;
-          if (item != currentVideo) return; // race avoidance when playing multiple videos
+          if (checkInterrupted()) return;
           final isVideoCacheSameAsPrevSet = cachedVideo != null &&
               playedFromCacheDetails.video != null &&
               playedFromCacheDetails.video?.path == cachedVideo.path; // only if not the same cache path (i.e. diff resolution)
@@ -920,13 +949,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             );
           }
           await playerStoppingSeikoo.future;
-          if (item != currentVideo) return;
+          if (checkInterrupted()) return;
 
           if (cachedVideo?.path != null) {
             File(cachedVideo!.path).setLastAccessedTry(DateTime.now());
           }
           if (shouldResetAudioSource) {
-            cachedAudio != null
+            duration = cachedAudio != null
                 ? await setSource(
                     AudioSource.file(cachedAudio.path, tag: mediaItem),
                     startPlaying: startPlaying,
@@ -955,7 +984,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           refreshNotification();
         }
       } catch (e) {
-        if (item != currentVideo) return; // race avoidance when playing multiple videos
+        if (checkInterrupted()) return;
         void showSnackError(String nextAction) {
           SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
             if (item == currentItem) {
@@ -977,10 +1006,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           possibleAudioFiles: audioCacheMap[item.id] ?? [],
           possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
         );
-        if (item == currentVideo) generateWaveform();
-        if (!okaySetFromCache()) {
-          showSnackError('skipping');
-          skipToNext();
+        if (!checkInterrupted()) {
+          generateWaveform();
+          if (!okaySetFromCache()) {
+            showSnackError('skipping');
+            skipToNext();
+          }
         }
       }
     }

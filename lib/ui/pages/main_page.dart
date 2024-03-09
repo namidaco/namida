@@ -101,7 +101,8 @@ class MainPage extends StatelessWidget {
                     animation: animation,
                     child: main,
                     builder: (context, child) {
-                      return Visibility.maintain(
+                      return Visibility(
+                        maintainState: true,
                         visible: animation.value < 1, // not expanded/queue
                         child: Transform.scale(
                           scale: 1 - (animation.value * 0.05),

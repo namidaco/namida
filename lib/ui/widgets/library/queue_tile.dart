@@ -77,6 +77,7 @@ class QueueTile extends StatelessWidget {
                       heroTag: hero,
                       size: Dimensions.queueThumbnailSize,
                       tracks: queue.tracks.toImageTracks(),
+                      reduceQuality: true,
                     ),
                   ),
                   Column(
