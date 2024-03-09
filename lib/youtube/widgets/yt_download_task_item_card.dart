@@ -478,7 +478,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             : null;
 
     return NamidaPopupWrapper(
-      openOnTap: false,
+      openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         videoId: item.id,
@@ -488,13 +488,20 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         idsNamesLookup: {item.id: info?.name},
         playlistName: '',
         videoYTID: null,
-      ),
+      )..insert(
+          0,
+          NamidaPopupItem(
+            icon: Broken.play_circle,
+            title: lang.PLAY_ALL,
+            onTap: () {
+              YTUtils.expandMiniplayer();
+              Player.inst.playOrPause(index, videos.map((e) => YoutubeID(id: e.id, playlistID: null)), QueueSource.others);
+            },
+          ),
+        ),
       child: NamidaInkWell(
         borderRadius: 10.0,
-        onTap: () {
-          YTUtils.expandMiniplayer();
-          Player.inst.playOrPause(index, videos.map((e) => YoutubeID(id: e.id, playlistID: null)), QueueSource.others);
-        },
+        onTap: null,
         margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
         padding: const EdgeInsets.symmetric(vertical: 4.0),
         bgColor: context.theme.cardColor,
