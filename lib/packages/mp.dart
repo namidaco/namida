@@ -26,6 +26,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final void Function()? onDismiss;
   final List<Widget> constantChildren;
   final bool displayBottomBGLayer;
+  final void Function()? onAlternativePercentageExecute;
 
   const NamidaYTMiniplayer({
     super.key,
@@ -42,6 +43,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
     this.onDismiss,
     required this.constantChildren,
     this.displayBottomBGLayer = false,
+    this.onAlternativePercentageExecute,
   });
 
   @override
@@ -87,11 +89,19 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     }
   }
 
+  /// used to invoke other animation (eg. entering video fullscreen),
+  bool _alternativePercentage = false;
+  bool _isDraggingDownwards = false;
+  double get _percentageMultiplier => _alternativePercentage && _isDraggingDownwards ? 0.5 : 1.0;
+
+  bool _isDragManagedInternally = true;
+  void updatePercentageMultiplier(bool alt) {
+    _alternativePercentage = alt;
+  }
+
   @override
   void dispose() {
     controller.dispose();
-    controller.removeListener(_listenerHeightChange);
-    controller.removeListener(_listenerDismissing);
     super.dispose();
   }
 
@@ -129,6 +139,52 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     WakelockController.inst.updateMiniplayerStatus(toExpanded);
   }
 
+  void onVerticalDragUpdate(double dy) {
+    _isDraggingDownwards = dy > 0;
+    _dragheight -= dy * _percentageMultiplier;
+    _updateHeight(_dragheight, duration: Duration.zero);
+  }
+
+  void _resetValues() {
+    _isDragManagedInternally = false;
+    _alternativePercentage = false;
+  }
+
+  void onVerticalDragEnd(double v) {
+    if (!_alternativePercentage && widget.onDismiss != null && ((v > 200 && _dragheight <= widget.minHeight * 0.9) || _dragheight <= widget.minHeight * 0.65)) {
+      animateToState(false, dismiss: true);
+      widget.onDismiss!();
+      _resetValues();
+      return;
+    }
+
+    bool shouldSnapToMax = false;
+    if (v > 200) {
+      shouldSnapToMax = false;
+    } else if (v < -200) {
+      shouldSnapToMax = true;
+    } else {
+      final percentage = _dragheight / maxHeight * _percentageMultiplier;
+      if (percentage > 0.4) {
+        shouldSnapToMax = true;
+      } else {
+        shouldSnapToMax = false;
+      }
+    }
+
+    if (shouldSnapToMax) {
+      animateToState(true);
+    } else {
+      if (_alternativePercentage) {
+        widget.onAlternativePercentageExecute?.call();
+        animateToState(_wasExpanded);
+      } else {
+        animateToState(false);
+      }
+    }
+    _resetValues();
+  }
+
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
@@ -159,51 +215,25 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: GestureDetector(
-                  onTap: _dragheight == widget.minHeight
-                      ? () {
-                          animateToState(true);
-                        }
-                      : null,
-                  onVerticalDragUpdate: (details) {
-                    final dd = details.delta.dy;
-                    _dragheight -= dd;
-                    _updateHeight(_dragheight, duration: Duration.zero);
+                  onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
+                  onVerticalDragStart: (details) {
+                    _isDragManagedInternally = !_alternativePercentage;
                   },
-                  onVerticalDragCancel: () => animateToState(_wasExpanded),
-                  onVerticalDragEnd: (details) {
-                    final v = details.velocity.pixelsPerSecond.dy;
-
-                    if (widget.onDismiss != null && ((v > 200 && _dragheight <= widget.minHeight * 0.9) || _dragheight <= widget.minHeight * 0.65)) {
-                      animateToState(false, dismiss: true);
-                      widget.onDismiss!();
-                      return;
-                    }
-
-                    bool shouldSnapToMax = false;
-                    if (v > 200) {
-                      shouldSnapToMax = false;
-                    } else if (v < -200) {
-                      shouldSnapToMax = true;
-                    } else {
-                      final percentage = _dragheight / maxHeight;
-                      if (percentage > 0.4) {
-                        shouldSnapToMax = true;
-                      } else {
-                        shouldSnapToMax = false;
-                      }
-                    }
-                    animateToState(shouldSnapToMax);
-                  },
+                  onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
+                  // onVerticalDragCancel: () => !_isDragManagedInternally ? null : animateToState(_wasExpanded),
+                  onVerticalDragEnd: (details) => !_isDragManagedInternally ? null : onVerticalDragEnd(details.velocity.pixelsPerSecond.dy),
                   child: Material(
                     clipBehavior: Clip.hardEdge,
                     type: MaterialType.transparency,
                     child: NamidaOpacity(
                       enabled: controllerHeight < widget.minHeight,
                       opacity: dismissPercentage,
-                      child: Container(
+                      child: SizedBox(
                         height: controllerHeight,
-                        decoration: widget.decoration,
-                        child: widget.builder(controllerHeight, percentage, children),
+                        child: ColoredBox(
+                          color: widget.bgColor,
+                          child: widget.builder(controllerHeight, percentage, children),
+                        ),
                       ),
                     ),
                   ),

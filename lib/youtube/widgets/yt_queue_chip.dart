@@ -265,6 +265,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                     _updateCanScrollQueue(true);
                   }
                 },
+                onPointerDown: (_) => _updateCanScrollQueue(true),
+                onPointerUp: (_) => _updateCanScrollQueue(true),
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onVerticalDragUpdate: (event) {
