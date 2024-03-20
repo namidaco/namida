@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -62,8 +62,8 @@ class BackupController {
           AppDirs.YT_PLAYLISTS,
           AppDirs.YT_HISTORY_PLAYLIST,
         ];
-
         await createBackupFile(itemsToBackup, fileSuffix: " - auto");
+        _trimExtraBackupFiles.thready(_backupDirectoryPath);
       }
     }
   }
@@ -83,7 +83,7 @@ class BackupController {
 
     // creates directories and file
     final dir = await Directory(backupDirPath).create();
-    await File("${dir.path}/Namida Backup - $date$fileSuffix.zip").create();
+    final backupFile = await File("${dir.path}/Namida Backup - $date$fileSuffix.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files
@@ -126,13 +126,12 @@ class BackupController {
         await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
-      final zipFile = File("$backupDirPath/Namida Backup - $date.zip");
       final allFiles = [
         if (tempAllLocal != null) tempAllLocal,
         if (tempAllYoutube != null) tempAllYoutube,
         ...compressedDirectories,
       ];
-      await ZipFile.createFromFiles(sourceDir: sourceDir, files: allFiles, zipFile: zipFile);
+      await ZipFile.createFromFiles(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);
 
       snackyy(title: lang.CREATED_BACKUP_SUCCESSFULLY, message: lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
     } catch (e) {
@@ -169,6 +168,45 @@ class BackupController {
     return matchingBackups;
   }
 
+  static void _trimExtraBackupFiles(String dirPath) {
+    final dir = Directory(dirPath);
+    final possibleFiles = dir.listSyncSafe();
+
+    final statsLookup = <String, FileStat>{};
+    possibleFiles.loop((pf, index) {
+      if (pf is File) {
+        final filename = pf.path.getFilename;
+        if (filename.startsWith('Namida Backup - ') && filename.endsWith(" - auto.zip")) {
+          try {
+            statsLookup[pf.path] = pf.statSync();
+          } catch (_) {}
+        }
+      }
+    });
+
+    final remainingBackups = <File>[];
+    for (final s in statsLookup.entries) {
+      if (s.value.size == 0) {
+        try {
+          File(s.key).deleteSync();
+        } catch (_) {}
+      } else {
+        remainingBackups.add(File(s.key));
+      }
+    }
+
+    const maxAutoBackups = 10;
+    final extra = remainingBackups.length - maxAutoBackups;
+    if (extra > 0) {
+      remainingBackups.sortBy((e) => e.lastModifiedSync()); // sorting by oldest
+      for (int i = 0; i < extra; i++) {
+        try {
+          remainingBackups[i].deleteSync();
+        } catch (_) {}
+      }
+    }
+  }
+
   Future<void> restoreBackupOnTap(bool auto) async {
     if (isRestoringBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
 
@@ -177,8 +215,8 @@ class BackupController {
       final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
       backupzip = sortedFiles.firstOrNull;
     } else {
-      final filePicked = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
-      final path = filePicked?.files.first.path;
+      final filePicked = await NamidaStorage.inst.pickFiles(allowedExtensions: ['zip']);
+      final path = filePicked.firstOrNull;
       if (path != null) {
         backupzip = File(path);
       }
