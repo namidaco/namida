@@ -726,117 +726,118 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         final GlobalKey<FormState> formKey = GlobalKey<FormState>();
         final updateMissingOnly = true.obs;
         NamidaNavigator.inst.navigateDialog(
-            onDisposing: () {
-              updateMissingOnly.close();
-              oldDirController.dispose();
-              newDirController.dispose();
-            },
-            colorScheme: colorScheme,
-            dialogBuilder: (theme) => Form(
-                  key: formKey,
-                  child: CustomBlurryDialog(
-                    title: lang.UPDATE_DIRECTORY_PATH,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: lang.UPDATE,
-                        onPressed: () async {
-                          Future<void> okUpdate() async {
-                            await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
-                              oldDirController.text,
-                              newDirController.text,
-                              forThesePathsOnly: tracksPaths,
-                              ensureNewFileExists: updateMissingOnly.value,
-                            );
-                            NamidaNavigator.inst.closeDialog();
-                          }
+          onDisposing: () {
+            updateMissingOnly.close();
+            oldDirController.dispose();
+            newDirController.dispose();
+          },
+          colorScheme: colorScheme,
+          dialogBuilder: (theme) => Form(
+            key: formKey,
+            child: CustomBlurryDialog(
+              title: lang.UPDATE_DIRECTORY_PATH,
+              actions: [
+                const CancelButton(),
+                NamidaButton(
+                  text: lang.UPDATE,
+                  onPressed: () async {
+                    Future<void> okUpdate() async {
+                      await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
+                        oldDirController.text,
+                        newDirController.text,
+                        forThesePathsOnly: tracksPaths,
+                        ensureNewFileExists: updateMissingOnly.value,
+                      );
+                      NamidaNavigator.inst.closeDialog();
+                    }
 
-                          if (formKey.currentState?.validate() ?? false) {
-                            if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
-                              NamidaNavigator.inst.navigateDialog(
-                                colorScheme: colorScheme,
-                                dialogBuilder: (theme) => CustomBlurryDialog(
-                                  normalTitleStyle: true,
-                                  isWarning: true,
-                                  actions: [
-                                    const CancelButton(),
-                                    NamidaButton(
-                                      text: lang.CONFIRM,
-                                      onPressed: () async {
-                                        NamidaNavigator.inst.closeDialog();
-                                        await okUpdate();
-                                      },
-                                    )
-                                  ],
-                                  bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
-                                ),
-                              );
-                            } else {
-                              await okUpdate();
-                            }
-                          }
-                        },
-                      )
-                    ],
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 12.0),
-                        CustomTagTextField(
-                          controller: oldDirController,
+                    if (formKey.currentState?.validate() ?? false) {
+                      if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
+                        NamidaNavigator.inst.navigateDialog(
+                          colorScheme: colorScheme,
+                          dialogBuilder: (theme) => CustomBlurryDialog(
+                            normalTitleStyle: true,
+                            isWarning: true,
+                            actions: [
+                              const CancelButton(),
+                              NamidaButton(
+                                text: lang.CONFIRM,
+                                onPressed: () async {
+                                  NamidaNavigator.inst.closeDialog();
+                                  await okUpdate();
+                                },
+                              )
+                            ],
+                            bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
+                          ),
+                        );
+                      } else {
+                        await okUpdate();
+                      }
+                    }
+                  },
+                )
+              ],
+              child: Column(
+                children: [
+                  const SizedBox(height: 12.0),
+                  CustomTagTextField(
+                    controller: oldDirController,
+                    hintText: '',
+                    labelText: lang.OLD_DIRECTORY,
+                    validator: (value) {
+                      value ??= '';
+                      if (value.isEmpty) {
+                        return lang.PLEASE_ENTER_A_NAME;
+                      }
+
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24.0),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTagTextField(
+                          controller: newDirController,
                           hintText: '',
-                          labelText: lang.OLD_DIRECTORY,
+                          labelText: lang.NEW_DIRECTORY,
                           validator: (value) {
                             value ??= '';
                             if (value.isEmpty) {
                               return lang.PLEASE_ENTER_A_NAME;
                             }
-
+                            if (!Directory(value).existsSync()) {
+                              return lang.DIRECTORY_DOESNT_EXIST;
+                            }
                             return null;
                           },
                         ),
-                        const SizedBox(height: 24.0),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CustomTagTextField(
-                                controller: newDirController,
-                                hintText: '',
-                                labelText: lang.NEW_DIRECTORY,
-                                validator: (value) {
-                                  value ??= '';
-                                  if (value.isEmpty) {
-                                    return lang.PLEASE_ENTER_A_NAME;
-                                  }
-                                  if (!Directory(value).existsSync()) {
-                                    return lang.DIRECTORY_DOESNT_EXIST;
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12.0),
-                            NamidaIconButton(
-                              onPressed: () async {
-                                final dir = await FilePicker.platform.getDirectoryPath();
-                                if (dir != null) newDirController.text = dir;
-                              },
-                              icon: Broken.folder,
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: 12.0),
-                        Obx(
-                          () => CustomSwitchListTile(
-                            passedColor: colorScheme,
-                            title: lang.UPDATE_MISSING_TRACKS_ONLY,
-                            value: updateMissingOnly.value,
-                            onChanged: (isTrue) => updateMissingOnly.value = !updateMissingOnly.value,
-                          ),
-                        ),
-                      ],
+                      ),
+                      const SizedBox(width: 12.0),
+                      NamidaIconButton(
+                        onPressed: () async {
+                          final dir = await FilePicker.platform.getDirectoryPath();
+                          if (dir != null) newDirController.text = dir;
+                        },
+                        icon: Broken.folder,
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 12.0),
+                  Obx(
+                    () => CustomSwitchListTile(
+                      passedColor: colorScheme,
+                      title: lang.UPDATE_MISSING_TRACKS_ONLY,
+                      value: updateMissingOnly.value,
+                      onChanged: (isTrue) => updateMissingOnly.value = !updateMissingOnly.value,
                     ),
                   ),
-                ));
+                ],
+              ),
+            ),
+          ),
+        );
       },
     );
   }

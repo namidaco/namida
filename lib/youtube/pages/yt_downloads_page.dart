@@ -278,12 +278,13 @@ class YTDownloadsPage extends StatelessWidget {
                 : const SizedBox(),
           ),
           Expanded(
-            child: NamidaScrollbar(
-              child: Obx(
+            child: NamidaScrollbarWithController(
+              child: (sc) => Obx(
                 () {
                   final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
                   keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                   return CustomScrollView(
+                    controller: sc,
                     slivers: [
                       _isOnGoingSelected == null
                           ? SliverList.builder(

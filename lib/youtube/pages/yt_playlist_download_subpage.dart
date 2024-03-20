@@ -327,8 +327,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 ),
               ),
               Expanded(
-                child: NamidaScrollbar(
-                  child: CustomScrollView(
+                child: NamidaScrollbarWithController(
+                  child: (sc) => CustomScrollView(
+                    controller: sc,
                     slivers: [
                       const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
                       SliverFixedExtentList.builder(

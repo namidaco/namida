@@ -311,8 +311,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
-      child: NamidaScrollbar(
-        child: ShimmerWrapper(
+      child: NamidaScrollbarWithController(
+        child: (sc) => ShimmerWrapper(
           shimmerDurationMS: 550,
           shimmerDelayMS: 250,
           shimmerEnabled: _isLoading,
@@ -321,6 +321,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               initialData: settings.homePageItems,
               stream: settings.homePageItems.stream,
               builder: (context, homePageItems) => CustomScrollView(
+                controller: sc,
                 slivers: [
                   const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
                   SliverPadding(

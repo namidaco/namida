@@ -83,8 +83,9 @@ class YoutubePlaylistsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
 
-    return NamidaScrollbar(
-      child: CustomScrollView(
+    return NamidaScrollbarWithController(
+      child: (sc) => CustomScrollView(
+        controller: sc,
         slivers: [
           const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
           if (!isMinimalView) ...[

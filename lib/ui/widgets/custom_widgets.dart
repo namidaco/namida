@@ -3159,7 +3159,7 @@ class NamidaScrollbar extends StatelessWidget {
   final ScrollController? controller;
   final Widget child;
   final double scrollStep;
-  const NamidaScrollbar({super.key, this.controller, required this.child, this.scrollStep = 0});
+  const NamidaScrollbar({super.key, required this.controller, required this.child, this.scrollStep = 0});
 
   @override
   Widget build(BuildContext context) {

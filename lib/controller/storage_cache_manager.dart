@@ -273,9 +273,10 @@ class StorageCacheManager {
               ),
               const SizedBox(height: 6.0),
               Expanded(
-                child: NamidaScrollbar(
-                  child: Obx(
+                child: NamidaScrollbarWithController(
+                  child: (sc) => Obx(
                     () => ListView.builder(
+                      controller: sc,
                       padding: EdgeInsets.zero,
                       itemCount: allFiles.length,
                       itemBuilder: (context, index) {

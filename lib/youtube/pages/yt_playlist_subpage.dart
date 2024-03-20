@@ -137,13 +137,14 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(
-        child: NamidaScrollbar(
-          child: Obx(
+        child: NamidaScrollbarWithController(
+          child: (sc) => Obx(
             () {
               final playlist = YoutubePlaylistController.inst.getPlaylist(playlistCurrentName);
               if (playlist == null) return const SizedBox();
               final firstID = playlist.tracks.firstOrNull?.id;
               return CustomScrollView(
+                controller: sc,
                 slivers: [
                   SliverToBoxAdapter(
                     child: Stack(

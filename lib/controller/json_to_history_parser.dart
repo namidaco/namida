@@ -160,8 +160,9 @@ class JsonToHistoryParser {
                 child: Obx(
                   () {
                     final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
-                    return NamidaScrollbar(
-                      child: ListView.separated(
+                    return NamidaScrollbarWithController(
+                      child: (sc) => ListView.separated(
+                        controller: sc,
                         separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                         itemCount: missing.length,
                         itemBuilder: (context, index) {
