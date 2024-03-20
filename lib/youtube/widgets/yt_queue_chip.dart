@@ -401,7 +401,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         color: context.theme.scaffoldBackgroundColor,
                         child: SizedBox(
                           width: context.width,
-                          height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
+                          height: kQueueBottomRowHeight,
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: FittedBox(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -16,7 +17,7 @@ double _maxHeight = 0;
 class NamidaYTMiniplayer extends StatefulWidget {
   final double minHeight, maxHeight, bottomMargin;
   final Widget Function(double height, double percentage, List<Widget> constantChildren) builder;
-  final Decoration? decoration;
+  final Color bgColor;
   final void Function(double percentage)? onHeightChange;
   final void Function(double dismissPercentage)? onDismissing;
   final Duration duration;
@@ -24,13 +25,14 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final AnimationController? animationController;
   final void Function()? onDismiss;
   final List<Widget> constantChildren;
+  final bool displayBottomBGLayer;
 
   const NamidaYTMiniplayer({
     super.key,
     required this.minHeight,
     required this.maxHeight,
     required this.builder,
-    this.decoration,
+    required this.bgColor,
     this.onHeightChange,
     this.onDismissing,
     this.bottomMargin = 0.0,
@@ -39,6 +41,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
     this.animationController,
     this.onDismiss,
     required this.constantChildren,
+    this.displayBottomBGLayer = false,
   });
 
   @override
@@ -133,17 +136,25 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       _padding = padding;
       animateToState(_wasExpanded);
     }
+    final maxWidth = context.width;
     return AnimatedBuilderMulti(
       animation: controller,
       builder: (context, children) {
         final percentage = this.percentage;
+        final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin);
         return Stack(
           alignment: Alignment.bottomCenter,
           children: [
+            if (widget.displayBottomBGLayer)
+              SizedBox(
+                height: totalBottomPadding,
+                width: maxWidth,
+                child: ColoredBox(color: widget.bgColor),
+              ),
             Padding(
               padding: EdgeInsets.only(
                 top: _padding.top,
-                bottom: _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin),
+                bottom: totalBottomPadding,
               ),
               child: Align(
                 alignment: Alignment.bottomCenter,

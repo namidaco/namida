@@ -146,9 +146,8 @@ class YoutubeMiniPlayer extends StatelessWidget {
             bottomMargin: 8.0 + (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : 0.0) - 1.0, // -1 is just a clip ensurer.
             minHeight: miniplayerHeight,
             maxHeight: context.height,
-            decoration: BoxDecoration(
-              color: miniplayerBGColor,
-            ),
+            bgColor: miniplayerBGColor,
+            displayBottomBGLayer: !settings.enableBottomNavBar.value,
             onDismiss: settings.dismissibleMiniplayer.value ? () async => await Player.inst.clearQueue() : null,
             onDismissing: (dismissPercentage) {
               Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.player.volume.value));
