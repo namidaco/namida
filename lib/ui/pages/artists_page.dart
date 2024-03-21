@@ -62,7 +62,7 @@ class ArtistsPage extends StatelessWidget {
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                   sortByMenuWidget: SortByMenu(
                     title: settings.artistSort.value.toText(),
-                    popupMenuChild: const SortByMenuArtists(),
+                    popupMenuChild: () => const SortByMenuArtists(),
                     isCurrentlyReversed: settings.artistSortReversed.value,
                     onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !settings.artistSortReversed.value),
                   ),

@@ -857,11 +857,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Duration? duration = playedFromCacheDetails.duration;
 
     // race avoidance when playing multiple videos
-    bool checkInterrupted() {
+    bool checkInterrupted([Duration? dur]) {
       if (item != currentVideo) {
         return true;
       } else {
-        if (duration != null) _currentItemDuration.value = duration;
+        dur ??= duration ?? playedFromCacheDetails.duration;
+        if (dur != null) _currentItemDuration.value = dur;
         return false;
       }
     }
@@ -870,6 +871,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
+
+    if (checkInterrupted(playedFromCacheDetails.duration)) return;
 
     generateWaveform();
 
@@ -881,7 +884,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       heyIhandledAudioPlaying = false;
     }
 
-    if (checkInterrupted()) return;
+    if (checkInterrupted(playedFromCacheDetails.duration)) return;
 
     if (ConnectivityController.inst.hasConnection) {
       try {
@@ -898,6 +901,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         YoutubeController.inst.currentYTQualities.value = streams.videoOnlyStreams ?? [];
         YoutubeController.inst.currentYTAudioStreams.value = streams.audioOnlyStreams ?? [];
         currentVideoInfo.value = streams.videoInfo;
+        if (checkInterrupted(streams.videoInfo.duration)) return;
         final vos = streams.videoOnlyStreams;
         final allVideoStream = isAudioOnlyPlayback || vos == null || vos.isEmpty ? null : YoutubeController.inst.getPreferredStreamQuality(vos, preferIncludeWebm: false);
         final prefferedVideoStream = allVideoStream;
@@ -924,7 +928,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final cachedAudio = prefferedAudioStream?.getCachedFile(item.id);
           final mediaItem = item.toMediaItem(currentVideoInfo.value, currentVideoThumbnail.value, index, currentQueue.length);
           _isCurrentAudioFromCache = cachedAudio != null;
-          if (checkInterrupted()) return;
+          if (checkInterrupted(streams.videoInfo.duration)) return;
           final isVideoCacheSameAsPrevSet = cachedVideo != null &&
               playedFromCacheDetails.video != null &&
               playedFromCacheDetails.video?.path == cachedVideo.path; // only if not the same cache path (i.e. diff resolution)
@@ -949,7 +953,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             );
           }
           await playerStoppingSeikoo.future;
-          if (checkInterrupted()) return;
+          if (checkInterrupted(streams.videoInfo.duration)) return;
 
           if (cachedVideo?.path != null) {
             File(cachedVideo!.path).setLastAccessedTry(DateTime.now());
@@ -1387,9 +1391,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> skipToNext([bool? andPlay]) async => await onSkipToNext(andPlay);
-
-  @override
   Future<void> skipToPrevious() async {
     if (previousButtonReplays) {
       final int secondsToReplay;
@@ -1406,11 +1407,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    await onSkipToPrevious();
+    await skipToPrevious();
   }
-
-  @override
-  Future<void> skipToQueueItem(int index, [bool? andPlay]) async => await onSkipToQueueItem(index, andPlay);
 
   @override
   Future<void> onDispose() async {

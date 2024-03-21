@@ -74,10 +74,11 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     _seekPercentage.value = percentageSwiped;
   }
 
+  Duration get _currentDuration => Player.inst.getCurrentVideoDuration;
+
   void _onSeekEnd() async {
     widget.onDraggingChange?.call(false);
-    final plDur = Player.inst.currentItemDuration ?? Duration.zero;
-    final newSeek = _seekPercentage.value * (plDur.inMilliseconds);
+    final newSeek = _seekPercentage.value * (_currentDuration.inMilliseconds);
     await Player.inst.seek(Duration(milliseconds: newSeek.round()));
   }
 
@@ -221,9 +222,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- current seek
             Obx(
               () {
-                final playerDuration = Player.inst.currentItemDuration ?? Duration.zero;
                 final currentPositionMS = Player.inst.nowPlayingPosition;
-                final seekTo = _seekPercentage.value * playerDuration.inMilliseconds;
+                final seekTo = _seekPercentage.value * _currentDuration.inMilliseconds;
                 final seekToDiff = seekTo - currentPositionMS;
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
                 final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";

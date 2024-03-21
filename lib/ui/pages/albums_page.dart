@@ -64,7 +64,7 @@ class AlbumsPage extends StatelessWidget {
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                   sortByMenuWidget: SortByMenu(
                     title: settings.albumSort.value.toText(),
-                    popupMenuChild: const SortByMenuAlbums(),
+                    popupMenuChild: () => const SortByMenuAlbums(),
                     isCurrentlyReversed: settings.albumSortReversed.value,
                     onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                   ),

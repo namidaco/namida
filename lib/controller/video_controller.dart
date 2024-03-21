@@ -134,19 +134,18 @@ class VideoController {
 
   Future<void> toggleFullScreenVideoView({
     required bool isLocal,
+    bool? setOrientations,
   }) async {
     final aspect = Player.inst.videoPlayerInfo?.aspectRatio;
     await NamidaNavigator.inst.toggleFullScreen(
       NamidaVideoControls(
         key: VideoController.inst.videoControlsKeyFullScreen,
         isLocal: isLocal,
-        onMinimizeTap: () {
-          NamidaNavigator.inst.exitFullScreen();
-        },
+        onMinimizeTap: NamidaNavigator.inst.exitFullScreen,
         showControls: true,
         isFullScreen: true,
       ),
-      setOrientations: aspect == null ? true : aspect > 1,
+      setOrientations: setOrientations ?? (aspect == null ? true : aspect > 1),
     );
   }
 

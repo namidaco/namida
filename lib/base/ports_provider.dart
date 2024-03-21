@@ -5,16 +5,20 @@ import 'package:namida/core/extensions.dart';
 
 typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
 
+abstract class _PortsProviderDisposeMessage {}
+
 mixin PortsProvider {
   PortsComm? port;
   StreamSubscription? _streamSub;
+
+  static bool isDisposeMessage(dynamic message) => message == _PortsProviderDisposeMessage;
 
   Future<void> disposePort() async {
     final port = this.port;
     if (port != null) {
       port.items.close();
       _streamSub?.cancel();
-      (await port.search.future).send('dispose');
+      (await port.search.future).send(_PortsProviderDisposeMessage);
       this.port = null;
     }
   }
@@ -48,7 +52,7 @@ mixin PortsProviderBase {
   Future<void> disposePort(PortsComm port) async {
     port.items.close();
     _streamSub?.cancel();
-    (await port.search.future).send('dispose');
+    (await port.search.future).send(_PortsProviderDisposeMessage);
   }
 
   Future<SendPort> preparePortBase({

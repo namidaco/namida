@@ -92,7 +92,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   },
                   sortByMenuWidget: SortByMenu(
                     title: settings.tracksSort.value.toText(),
-                    popupMenuChild: const SortByMenuTracks(),
+                    popupMenuChild: () => const SortByMenuTracks(),
                     isCurrentlyReversed: settings.tracksSortReversed.value,
                     onReverseIconTap: () {
                       SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value);

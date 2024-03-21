@@ -148,7 +148,7 @@ class CustomTextFiled extends StatelessWidget {
 }
 
 class SortByMenu extends StatelessWidget {
-  final Widget popupMenuChild;
+  final Widget Function() popupMenuChild;
   final String title;
   final bool isCurrentlyReversed;
   final void Function()? onReverseIconTap;
@@ -177,7 +177,7 @@ class SortByMenu extends StatelessWidget {
             items: [
               PopupMenuItem(
                 padding: const EdgeInsets.symmetric(vertical: 0.0),
-                child: popupMenuChild,
+                child: popupMenuChild(),
               ),
             ],
           ),

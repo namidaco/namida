@@ -515,49 +515,69 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
-    final fallbackChild = widget.isLocal && !widget.isFullScreen
-        ? Container(
-            key: const Key('dummy_container'),
-            color: Colors.transparent,
-          )
-        : Obx(
-            () {
-              if (widget.isLocal) {
-                final track = Player.inst.nowPlayingTrack;
-                if (File(track.pathToImage).existsSync()) {
-                  return ArtworkWidget(
-                    key: Key(track.path),
-                    track: track,
-                    path: track.pathToImage,
-                    thumbnailSize: context.width,
-                    width: context.width,
-                    height: context.width * 9 / 16,
-                    borderRadius: 0,
-                    blur: 0,
-                    compressed: false,
-                  );
-                }
-              }
-              final vidId = Player.inst.nowPlayingVideoID?.id ?? (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo)?.id;
-              return YoutubeThumbnail(
-                key: Key(vidId ?? ''),
-                isImportantInCache: true,
-                width: context.width,
-                height: context.width * 9 / 16,
-                borderRadius: 0,
-                blur: 0,
-                videoId: vidId,
-                displayFallbackIcon: false,
-                compressed: false,
-                preferLowerRes: false,
-              );
-            },
-          );
+    final maxWidth = context.width;
+    final maxHeight = context.height;
     final inLandscape = NamidaNavigator.inst.isInLanscape;
+
+    // -- in landscape, the size is calculated based on height, to fit in correctly.
+    final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
+    final fallbackWidth = inLandscape ? maxHeight * 16 / 9 : maxWidth;
+
+    final finalVideoWidget = Obx(() {
+      final info = Player.inst.videoPlayerInfo;
+      if (info != null && info.isInitialized) {
+        return NamidaAspectRatio(
+          aspectRatio: info.aspectRatio,
+          child: Obx(
+            () => AnimatedScale(
+              duration: const Duration(milliseconds: 200),
+              scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
+              child: Texture(textureId: info.textureId),
+            ),
+          ),
+        );
+      }
+      if (widget.isLocal && !widget.isFullScreen) {
+        return Container(
+          key: const Key('dummy_container'),
+          color: Colors.transparent,
+        );
+      }
+      // -- fallback images
+      if (widget.isLocal) {
+        final track = Player.inst.nowPlayingTrack;
+        if (File(track.pathToImage).existsSync()) {
+          return ArtworkWidget(
+            key: Key(track.path),
+            track: track,
+            path: track.pathToImage,
+            thumbnailSize: fallbackWidth,
+            width: fallbackWidth,
+            height: fallbackHeight,
+            borderRadius: 0,
+            blur: 0,
+            compressed: false,
+          );
+        }
+      }
+      final vidId = Player.inst.nowPlayingVideoID?.id ?? (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? Player.inst.currentVideoInfo)?.id;
+      return YoutubeThumbnail(
+        key: Key(vidId ?? ''),
+        isImportantInCache: true,
+        width: fallbackWidth,
+        height: fallbackHeight,
+        borderRadius: 0,
+        blur: 0,
+        videoId: vidId,
+        displayFallbackIcon: false,
+        compressed: false,
+        preferLowerRes: false,
+      );
+    });
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
-            ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0) // lanscape videos
-            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 24.0) // vertical videos
+            ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 0.0) // lanscape videos
+            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowSliders = _canShowControls && widget.isFullScreen;
@@ -644,29 +664,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           fit: StackFit.passthrough,
           alignment: Alignment.center,
           children: [
-            Stack(
+            Align(
               alignment: Alignment.center,
-              children: [
-                Obx(() {
-                  final info = Player.inst.videoPlayerInfo;
-                  return info != null && info.isInitialized
-                      ? NamidaAspectRatio(
-                          aspectRatio: info.aspectRatio,
-                          child: Obx(
-                            () => AnimatedScale(
-                              duration: const Duration(milliseconds: 200),
-                              scale: 1.0 + VideoController.inst.videoZoomAdditionalScale.value * 0.02,
-                              child: Texture(textureId: info.textureId),
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          height: context.height,
-                          width: context.height * 16 / 9,
-                          child: fallbackChild,
-                        );
-                })
-              ],
+              child: finalVideoWidget,
             ),
             // ---- Brightness Mask -----
             Positioned.fill(

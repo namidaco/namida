@@ -99,7 +99,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                     sortByMenuWidget: SortByMenu(
                       title: settings.playlistSort.value.toText(),
-                      popupMenuChild: const SortByMenuPlaylist(),
+                      popupMenuChild: () => const SortByMenuPlaylist(),
                       isCurrentlyReversed: settings.playlistSortReversed.value,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                     ),

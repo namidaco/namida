@@ -60,7 +60,7 @@ class GenresPage extends StatelessWidget {
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                   sortByMenuWidget: SortByMenu(
                     title: settings.genreSort.value.toText(),
-                    popupMenuChild: const SortByMenuGenres(),
+                    popupMenuChild: () => const SortByMenuGenres(),
                     isCurrentlyReversed: settings.genreSortReversed.value,
                     onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
                   ),

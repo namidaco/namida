@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -346,7 +347,7 @@ class SearchSortController {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (p is String && p == 'dispose') {
+      if (PortsProvider.isDisposeMessage(p)) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -488,7 +489,7 @@ class SearchSortController {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (p is String && p == 'dispose') {
+      if (PortsProvider.isDisposeMessage(p)) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -892,7 +893,7 @@ class SearchSortController {
     final cleanupFunction = _functionOfCleanup(cleanup);
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (p is String && p == 'dispose') {
+      if (PortsProvider.isDisposeMessage(p)) {
         receivePort.close();
         streamSub?.cancel();
         return;

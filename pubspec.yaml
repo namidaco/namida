@@ -92,7 +92,7 @@ dependencies:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
       ref: e576b78b5b67f9ac750d8223096fbd5ed5503d17
-  waveform_extractor: ^1.0.1
+  waveform_extractor: ^1.0.3
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler

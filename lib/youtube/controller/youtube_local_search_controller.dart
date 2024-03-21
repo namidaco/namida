@@ -117,7 +117,7 @@ class YTLocalSearchController with PortsProvider {
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
-      if (p is String && p == 'dispose') {
+      if (PortsProvider.isDisposeMessage(p)) {
         recievePort.close();
         lookupListStreamInfo.clear();
         lookupListYTVH.clear();
