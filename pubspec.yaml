@@ -12,7 +12,7 @@ dependency_overrides:
   dart_extensions:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
-      ref: fa35f7764425e9c25d577a6912457a2cc6d6d516
+      ref: 4bdeef5f1ba5c9be527d338a45b92859d127669b
   just_audio:
     git:
       url: https://github.com/MSOB7YY/just_audio
