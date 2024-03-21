@@ -1,9 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -231,8 +231,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                       text: lang.IMPORT,
                       enabled: !YoutubeImportController.inst.isImportingPlaylists.value,
                       onTap: () async {
-                        showSystemToast(message: 'choose playlist directory from a google takeout');
-                        final dirPath = await FilePicker.platform.getDirectoryPath();
+                        final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
                         if (dirPath != null) {
                           final imported = await YoutubeImportController.inst.importPlaylists(dirPath);
                           if (imported > 0) {

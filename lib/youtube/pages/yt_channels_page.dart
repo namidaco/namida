@@ -1,11 +1,11 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/base/youtube_channel_controller.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -134,9 +134,11 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   }
 
   Future<void> _onSubscriptionFileImportTap() async {
-    showSystemToast(message: 'choose a "subscriptions.csv" file from a google takeout');
-    final files = await FilePicker.platform.pickFiles(allowedExtensions: ['csv', 'CSV'], type: FileType.custom);
-    final fp = files?.files.firstOrNull?.path;
+    final file = await NamidaFileBrowser.pickFile(
+      note: 'Choose a "subscriptions.csv" file from a google takeout',
+      allowedExtensions: ['csv', 'CSV'],
+    );
+    final fp = file?.path;
     if (fp != null) {
       final imported = await YoutubeImportController.inst.importSubscriptions(fp);
       if (imported > 0) {

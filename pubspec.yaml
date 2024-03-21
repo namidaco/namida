@@ -81,11 +81,6 @@ dependencies:
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
 
-  # ---- Path/File Providers ----
-  path_provider: ^2.0.14
-  external_path: ^1.0.3
-  file_picker: "6.1.1"
-
   # ---- Audio Indexing & Playback ----
   just_audio:
     git:

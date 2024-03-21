@@ -3,15 +3,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -510,12 +510,12 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                 title: lang.ADD_LRC_FILE,
                 trailingText: (availableLyrics.length + fetchedLyrics.length).formatDecimal(),
                 onTap: () async {
-                  final picked = await FilePicker.platform.pickFiles(
-                    type: FileType.custom,
+                  final picked = await NamidaFileBrowser.pickFile(
+                    note: lang.ADD_LRC_FILE,
                     allowedExtensions: ['lrc', 'LRC', 'txt', 'TXT'],
                     initialDirectory: track.path.getDirectoryPath,
                   );
-                  final path = picked?.files.firstOrNull?.path;
+                  final path = picked?.path;
                   if (path != null) {
                     final file = File(path);
                     final ext = path.getExtension;

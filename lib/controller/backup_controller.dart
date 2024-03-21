@@ -4,9 +4,9 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -215,8 +215,8 @@ class BackupController {
       final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
       backupzip = sortedFiles.firstOrNull;
     } else {
-      final filePicked = await NamidaStorage.inst.pickFiles(allowedExtensions: ['zip']);
-      final path = filePicked.firstOrNull;
+      final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: ['zip']);
+      final path = filePicked?.path;
       if (path != null) {
         backupzip = File(path);
       }

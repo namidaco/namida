@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
@@ -11,6 +10,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -27,6 +27,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
@@ -37,8 +38,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-
-import 'package:namida/main.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -439,7 +438,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   Future<void> pickDirectoryToUpdateTrack() async {
-    final dirPath = await FilePicker.platform.getDirectoryPath();
+    final dirPath = await NamidaFileBrowser.getDirectory(note: lang.PICK_FROM_STORAGE);
     if (dirPath == null) return;
 
     final files = await Directory(dirPath).listAllIsolate();
@@ -632,6 +631,7 @@ Future<void> showGeneralPopupDialog(
       isLoadingFilesToShare.close();
       stats?.close();
       colorDelightened.close();
+      iconColor.close();
     },
     lighterDialogColor: false,
     durationInMs: 400,

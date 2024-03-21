@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -9,6 +8,7 @@ import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -817,7 +817,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                       const SizedBox(width: 12.0),
                       NamidaIconButton(
                         onPressed: () async {
-                          final dir = await FilePicker.platform.getDirectoryPath();
+                          final dir = await NamidaFileBrowser.getDirectory(note: lang.NEW_DIRECTORY);
                           if (dir != null) newDirController.text = dir;
                         },
                         icon: Broken.folder,
@@ -851,9 +851,9 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   Future<void> _onFixYTDLPPress() async {
     if (!await requestManageStoragePermission()) return;
 
-    final dir = await FilePicker.platform.getDirectoryPath();
-    if (dir == null) return;
-    await NamidaFFMPEG.inst.fixYTDLPBigThumbnailSize(directoryPath: dir);
+    final dirs = await NamidaFileBrowser.getDirectories(note: lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE);
+    if (dirs.isEmpty) return;
+    await NamidaFFMPEG.inst.fixYTDLPBigThumbnailSize(directoriesPaths: dirs);
   }
 
   @override
@@ -960,10 +960,10 @@ class _CompressImagesListTile extends StatelessWidget {
               icon: Broken.folder_add,
               title: lang.PICK_FROM_STORAGE,
               onTap: () async {
-                final dirPath = await FilePicker.platform.getDirectoryPath();
-                if (dirPath == null) return;
-                initialDirectories.add(dirPath);
-                dirsToCompress.add(dirPath);
+                final dirsPath = await NamidaFileBrowser.getDirectories(note: lang.COMPRESS_IMAGES);
+                if (dirsPath.isEmpty) return;
+                initialDirectories.addAll(dirsPath);
+                dirsToCompress.addAll(dirsPath);
               },
             ),
             Obx(

@@ -11,6 +11,7 @@ import 'package:namida/core/extensions.dart';
 /// so we use a method channel whenever `onUserLeaveHint`, etc is called from FlutterActivity
 class NamidaChannel {
   static final NamidaChannel inst = NamidaChannel._internal();
+
   NamidaChannel._internal() {
     _channel = const MethodChannel('namida');
     _channelEvent = const EventChannel('namida_events');

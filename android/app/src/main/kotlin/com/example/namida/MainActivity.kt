@@ -1,9 +1,11 @@
 package com.msob7y.namida
 
+import android.Manifest
 import android.app.PictureInPictureParams
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.RingtoneManager
 import android.media.audiofx.AudioEffect
@@ -14,18 +16,28 @@ import android.util.Rational
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.util.concurrent.CompletableFuture
 
 class NamidaMainActivity : FlutterActivity() {
   private val CHANNELNAME = "namida"
+  private val CHANNELNAME_STORAGE = "namida/storage"
   private val EVENTCHANNELNAME = "namida_events"
   private lateinit var channel: MethodChannel
+  private lateinit var channelStorage: MethodChannel
   private lateinit var context: Context
   private var toast: Toast? = null
+
+  private val storageUtilsCompleter = CompletableFuture<StorageUtils>()
+  private val storageUtils: StorageUtils
+    get() {
+      return storageUtilsCompleter.get()
+    }
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
     flutterEngine.plugins.add(FAudioTagger())
@@ -79,16 +91,60 @@ class NamidaMainActivity : FlutterActivity() {
             result.success(false)
           }
         }
-        "getCurrentlySet" -> {
-          val type = call.argument<Int?>("type")
-          if (type != null) {
-            result.success(RingtoneController().getCurrentlySet(context, type))
-          } else {
-            result.success(null)
-          }
-        }
         "openEqualizer" -> {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
+        }
+        else -> result.notImplemented()
+      }
+    }
+
+    channelStorage = MethodChannel(messenger, CHANNELNAME_STORAGE)
+    channelStorage.setMethodCallHandler { call, result ->
+      when (call.method) {
+        "getStorageDirs" -> {
+          storageUtils.fillStoragePaths()
+          result.success(storageUtils.storagePaths)
+        }
+        "getStorageDirsData" -> {
+          result.success(storageUtils.getStorageDirsData())
+        }
+        "getStorageDirsCache" -> {
+          result.success(storageUtils.getStorageDirsCache())
+        }
+        "getRealPath" -> {
+          val contentUri = call.argument<String?>("contentUri")
+          val realPath = storageUtils.contentUriToPath(Uri.parse(contentUri))
+          result.success(realPath)
+        }
+        "pickFile" -> {
+          checkStorageReadPermission()
+          val note = call.argument("note") as String?
+          if (note != null && note != "") showToast(note, 3)
+          val multiple = call.argument<Boolean?>("multiple") ?: false
+          val allowedExtensions = call.argument("allowedExtensions") as List<String>?
+          val type = call.argument("type") as String?
+          val error =
+              FileSysPicker.pickFile(
+                  result,
+                  activity,
+                  NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
+                  multiple,
+                  allowedExtensions,
+                  type
+              )
+          if (error != null) showToast(error, 3)
+        }
+        "pickDirectory" -> {
+          checkStorageReadPermission()
+          val note = call.argument("note") as String?
+          if (note != null && note != "") showToast(note, 3)
+          val error =
+              FileSysPicker.pickDirectory(
+                  result,
+                  activity,
+                  NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
+              )
+          if (error != null) showToast(error, 3)
         }
         else -> result.notImplemented()
       }
@@ -109,6 +165,9 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun provideFlutterEngine(@NonNull context: Context): FlutterEngine {
     this.context = context
+    try {
+      storageUtilsCompleter.complete(StorageUtils(context))
+    } catch (_: Exception) {}
     return AudioServicePlugin.getFlutterEngine(context)
   }
 
@@ -128,6 +187,9 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun onResume() {
     channel.invokeMethod("onResume", null)
+    if (FileSysPicker.pendingPickerResult != null) {
+      FileSysPicker.finishWithSuccess(mutableListOf())
+    }
     super.onResume()
   }
 
@@ -194,7 +256,6 @@ class NamidaMainActivity : FlutterActivity() {
 
   // ------- RINGTONE -------
 
-  private val REQUEST_CODE_WRITE_SETTINGS = 9696
   private var SET_AS_LATEST_FILE_PATH: String? = null
   private var SET_AS_LATEST_TYPES: List<Int>? = null
 
@@ -253,13 +314,13 @@ class NamidaMainActivity : FlutterActivity() {
   private fun openAndroidPermissionsMenu() {
     val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
     intent.data = Uri.parse("package:" + packageName)
-    startActivityForResult(intent, REQUEST_CODE_WRITE_SETTINGS)
+    startActivityForResult(intent, NamidaRequestCodes.REQUEST_CODE_WRITE_SETTINGS)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
 
-    if (requestCode == REQUEST_CODE_WRITE_SETTINGS) {
+    if (requestCode == NamidaRequestCodes.REQUEST_CODE_WRITE_SETTINGS) {
       if (Settings.System.canWrite(this)) {
         if (SET_AS_LATEST_FILE_PATH != null && SET_AS_LATEST_TYPES != null) {
           setMusicAs(SET_AS_LATEST_FILE_PATH!!, SET_AS_LATEST_TYPES!!, false)
@@ -269,12 +330,16 @@ class NamidaMainActivity : FlutterActivity() {
       }
       SET_AS_LATEST_FILE_PATH = null
       SET_AS_LATEST_TYPES = null
+    } else if (requestCode == NamidaRequestCodes.REQUEST_CODE_FILES_PICKER) {
+      if (resultCode == RESULT_OK) {
+        FileSysPicker.onPickerResult(data, storageUtils)
+      } else if (resultCode == RESULT_CANCELED) {
+        FileSysPicker.finishWithSuccess(mutableListOf())
+      }
     }
   }
 
   // ------- EQUALIZER -------
-
-  private val REQUEST_CODE_OPEN_EQ = 47
 
   private fun openSystemEqualizer(sessionId: Int?): Boolean {
     val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
@@ -288,7 +353,7 @@ class NamidaMainActivity : FlutterActivity() {
     )
 
     try {
-      activity.startActivityForResult(intent, REQUEST_CODE_OPEN_EQ)
+      activity.startActivityForResult(intent, NamidaRequestCodes.REQUEST_CODE_OPEN_EQ)
       return true
     } catch (notFound: ActivityNotFoundException) {
       showToast("No Built-in Equalizer was found", 3)
@@ -297,5 +362,29 @@ class NamidaMainActivity : FlutterActivity() {
       showToast(e.message, 3)
       return false
     }
+  }
+
+  fun checkStorageReadPermission() {
+    if (Build.VERSION.SDK_INT < 33) {
+      val granted =
+          ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+              PackageManager.PERMISSION_GRANTED
+      if (!granted) {
+        ActivityCompat.requestPermissions(
+            activity,
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+            NamidaRequestCodes.REQUEST_CODE_STORAGE_READ_PERMISSION
+        )
+      }
+    }
+  }
+}
+
+class NamidaRequestCodes {
+  companion object {
+    val REQUEST_CODE_OPEN_EQ = 47
+    val REQUEST_CODE_WRITE_SETTINGS = 9696
+    val REQUEST_CODE_FILES_PICKER = 911
+    val REQUEST_CODE_STORAGE_READ_PERMISSION = 899
   }
 }

@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:catcher/catcher.dart';
-import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -25,6 +24,7 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
+import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -70,10 +70,12 @@ void main() async {
   late final List<String> paths;
 
   await Future.wait([
-    _MainInitializers.paths.then((value) => paths = value),
-    _MainInitializers.pathUserData.then((value) => AppDirs.USER_DATA = value),
-    _MainInitializers.pathUserCache.then((value) => AppDirs.APP_CACHE = value),
+    NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),
+    NamidaStorage.inst.getStorageDirectoriesAppData().then((value) => AppDirs.USER_DATA = value.firstOrNull ?? ''),
+    NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
   ]);
+
+  if (paths.isEmpty) paths.add('/storage/emulated/0');
 
   // -- creating directories
   AppDirs.values.loop((p, _) => Directory(p).createSync(recursive: true));
@@ -159,54 +161,6 @@ void main() async {
   Folders.inst.onFirstLoad();
 
   _initLifeCycle();
-}
-
-class _MainInitializers {
-  static Future<List<String>> get paths async {
-    final paths = <String>[];
-
-    try {
-      final appStoragePaths = await getExternalStorageDirectories();
-      appStoragePaths?.loop((e, _) {
-        paths.add(e.path.split('/Android/data').first);
-      });
-    } catch (_) {}
-
-    if (paths.isEmpty) {
-      try {
-        final pths = await ExternalPath.getExternalStorageDirectories();
-        paths.addAll(pths);
-      } catch (_) {}
-    }
-
-    if (paths.isEmpty) {
-      try {
-        final pth = await ExternalPath.getExternalStoragePublicDirectory('');
-        paths.add(pth);
-      } catch (_) {}
-    }
-
-    if (paths.isEmpty) {
-      paths.add('/storage/emulated/0'); // hope lost
-    }
-    return paths;
-  }
-
-  static Future<String> get pathUserData async {
-    try {
-      return await getExternalStorageDirectory().then((value) async => value?.path ?? await getApplicationDocumentsDirectory().then((value) => value.path));
-    } catch (_) {
-      return '';
-    }
-  }
-
-  static Future<String> get pathUserCache async {
-    try {
-      return await getExternalCacheDirectories().then((value) async => value?.firstOrNull?.path ?? '');
-    } catch (_) {
-      return '';
-    }
-  }
 }
 
 void _initLifeCycle() {

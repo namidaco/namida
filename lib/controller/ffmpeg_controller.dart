@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -249,12 +250,25 @@ class NamidaFFMPEG {
     currentOperations[OperationType.imageCompress]!.value.currentFilePath = null;
   }
 
-  Future<void> fixYTDLPBigThumbnailSize({required String directoryPath, bool recursive = true}) async {
+  Future<void> fixYTDLPBigThumbnailSize({required List<String> directoriesPaths, bool recursive = true}) async {
     if (!await requestManageStoragePermission()) return;
 
     final dio = Dio();
-    final allFiles = await Directory(directoryPath).listAllIsolate(recursive: recursive);
+    final allFiles = <FileSystemEntity>[];
+    int remainingDirsLength = directoriesPaths.length;
+    final completer = Completer<void>();
+    directoriesPaths.loop((e, index) {
+      Directory(e).listAllIsolate(recursive: recursive).then(
+        (value) {
+          allFiles.addAll(value);
+          remainingDirsLength--;
+          if (remainingDirsLength == 0) completer.complete();
+        },
+      );
+    });
+    await completer.future;
     final totalFilesLength = allFiles.length;
+
     int currentProgress = 0;
     int currentFailed = 0;
 

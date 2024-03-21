@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
@@ -9,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -93,8 +93,8 @@ class ThemeSetting extends SettingSubpageProvider {
                 actions: [
                   NamidaButton(
                     onPressed: () async {
-                      final files = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json', 'JSON']);
-                      final path = files?.files.firstOrNull?.path;
+                      final files = await NamidaFileBrowser.pickFile(note: lang.ADD_LANGUAGE, allowedExtensions: ['json', 'JSON']);
+                      final path = files?.path;
                       if (path != null) {
                         try {
                           final st = await File(path).readAsString();

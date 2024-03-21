@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/backup_controller.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -17,8 +16,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -131,7 +130,7 @@ class BackupAndRestore extends SettingSubpageProvider {
           icon: Broken.direct_inbox,
           subtitle: settings.defaultBackupLocation.value,
           onTap: () async {
-            final path = await FilePicker.platform.getDirectoryPath();
+            final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_BACKUP_LOCATION);
 
             if (path != null) {
               settings.save(defaultBackupLocation: path);
@@ -586,7 +585,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 child: Text("- $text", style: Get.textTheme.displayLarge),
                               );
 
-                          final jsonfile = await FilePicker.platform.pickFiles(allowedExtensions: ['json'], type: FileType.custom);
+                          final jsonfile = await NamidaFileBrowser.pickFile(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: ['json', 'JSON']);
                           if (jsonfile != null) {
                             final RxBool isMatchingTypeLink = true.obs;
                             final RxBool isMatchingTypeTitleAndArtist = false.obs;
@@ -614,7 +613,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                       onPressed: () async {
                                         NamidaNavigator.inst.closeDialog();
                                         await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                          file: File(jsonfile.files.first.path!),
+                                          file: File(jsonfile.path),
                                           source: TrackSource.youtube,
                                           ytIsMatchingTypeLink: isMatchingTypeLink.value,
                                           isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
@@ -737,8 +736,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
 
-                          final csvFiles = await FilePicker.platform.pickFiles(allowedExtensions: ['csv'], type: FileType.custom);
-                          final csvFilePath = csvFiles?.files.first.path;
+                          final csvFiles = await NamidaFileBrowser.pickFile(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: ['csv']);
+                          final csvFilePath = csvFiles?.path;
                           if (csvFiles != null && csvFilePath != null) {
                             final oldestDate = Rxn<DateTime>();
                             DateTime? newestDate;

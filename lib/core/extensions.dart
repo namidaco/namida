@@ -166,6 +166,7 @@ extension DisplayKeywords on int {
   String get displayAlbumKeyword => displayKeyword(lang.ALBUM, lang.ALBUMS);
   String get displayArtistKeyword => displayKeyword(lang.ARTIST, lang.ARTISTS);
   String get displayGenreKeyword => displayKeyword(lang.GENRE, lang.GENRES);
+  String get displayFilesKeyword => displayKeyword(lang.FILE, lang.FILES);
   String get displayFolderKeyword => displayKeyword(lang.FOLDER, lang.FOLDERS);
   String get displayPlaylistKeyword => displayKeyword(lang.PLAYLIST, lang.PLAYLISTS);
   String get displayVideoKeyword => displayKeyword(lang.VIDEO, lang.VIDEOS);

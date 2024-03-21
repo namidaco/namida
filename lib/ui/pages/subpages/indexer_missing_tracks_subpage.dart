@@ -2,15 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -75,10 +74,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     try {
       _isolate?.kill(priority: Isolate.immediate);
       _resultPort?.close();
-      _resultPort?.close();
+      _portLoadingProgress?.close();
       _isolate = null;
       _resultPort = null;
-      _resultPort = null;
+      _portLoadingProgress = null;
     } catch (_) {}
   }
 
@@ -143,6 +142,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       _missingTracksPaths = res.$1;
       _missingTracksSuggestions.value = res.$2;
 
+      _resultPort?.close();
       _portLoadingProgress?.close();
       portLoadingProgressSub.cancel();
     } catch (_) {}
@@ -188,13 +188,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   }
 
   void _pickNewPathFor(String path) async {
-    final file = await FilePicker.platform.pickFiles().then((value) => value?.files.firstOrNull);
-    final newContentUri = file?.identifier;
-    if (newContentUri != null) {
-      final finalPath = await FlutterSharingIntent.instance.getRealPath(newContentUri) ?? file?.path;
-      _missingTracksSuggestions[path] = finalPath;
-      if (finalPath != null) _selectedTracksToUpdate[path] = true;
-    }
+    final file = await NamidaFileBrowser.pickFile(note: lang.UPDATE);
+    final newPath = file?.path;
+    _missingTracksSuggestions[path] = newPath;
+    if (newPath != null) _selectedTracksToUpdate[path] = true;
   }
 
   Future<void> _onUpdating() async {

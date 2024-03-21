@@ -11,6 +11,12 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <queries>
+      <intent>
+         <action android:name="android.intent.action.GET_CONTENT" />
+         <data android:mimeType="*/*"/>
+     </intent>
+     </queries>
     <application
         android:label="Namida"
         android:name="${applicationName}"

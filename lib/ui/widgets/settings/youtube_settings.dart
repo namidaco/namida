@@ -1,8 +1,8 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -299,7 +299,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 icon: Broken.folder_favorite,
                 subtitle: settings.ytDownloadLocation.value,
                 onTap: () async {
-                  final path = await FilePicker.platform.getDirectoryPath();
+                  final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_DOWNLOAD_LOCATION);
                   if (path != null) settings.save(ytDownloadLocation: path);
                 },
               ),

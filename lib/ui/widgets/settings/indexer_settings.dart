@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -67,18 +67,19 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.foldersToExclude: [lang.EXCLUDED_FODLERS],
       };
 
-  Widget addFolderButton(void Function(String dirPath) onSuccessChoose) {
+  Widget addFolderButton(void Function(List<String> dirsPath) onSuccessChoose) {
     return NamidaButton(
       icon: Broken.folder_add,
       text: lang.ADD,
       onPressed: () async {
-        final path = await FilePicker.platform.getDirectoryPath();
-        if (path == null) {
+        final folders = await NamidaFileBrowser.pickDirectories(note: lang.ADD_FOLDER);
+
+        if (folders.isEmpty) {
           snackyy(title: lang.NOTE, message: lang.NO_FOLDER_CHOSEN);
           return;
         }
 
-        onSuccessChoose(path);
+        onSuccessChoose(folders.map((e) => e.path).toList());
         showRefreshPromptDialog(true);
       },
     );
@@ -143,8 +144,8 @@ class IndexerSettings extends SettingSubpageProvider {
               children: [
                 IgnorePointer(
                   ignoring: settings.useMediaStore.value,
-                  child: addFolderButton((dirPath) {
-                    settings.save(directoriesToScan: [dirPath]);
+                  child: addFolderButton((dirsPath) {
+                    settings.save(directoriesToScan: dirsPath);
                   }),
                 ),
                 const SizedBox(width: 8.0),
@@ -217,8 +218,8 @@ class IndexerSettings extends SettingSubpageProvider {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              addFolderButton((dirPath) {
-                settings.save(directoriesToExclude: [dirPath]);
+              addFolderButton((dirsPath) {
+                settings.save(directoriesToExclude: dirsPath);
               }),
               const SizedBox(width: 8.0),
               const Icon(Broken.arrow_down_2),

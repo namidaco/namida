@@ -12,7 +12,7 @@ import java.io.IOException
 
 public class RingtoneController {
 
-  public fun getCurrentlySet(context: Context, type: Int): String? {
+  public fun getCurrentRingtone(context: Context, type: Int): String? {
     val defaultRingtoneUri = RingtoneManager.getActualDefaultRingtoneUri(context, type)
     return defaultRingtoneUri.path
   }

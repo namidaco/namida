@@ -1,12 +1,13 @@
 import 'package:checkmark/checkmark.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -501,8 +502,8 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                             right: 0,
                                             child: NamidaBlurryContainer(
                                               onTap: () async {
-                                                final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
-                                                final path = pickedFile?.files.first.path ?? '';
+                                                final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
+                                                final path = pickedFile?.path ?? '';
                                                 if (pickedFile != null && path != '') {
                                                   currentImagePath.value = path;
                                                   canEditTags.value = true;
@@ -1049,8 +1050,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                     child: NamidaButton(
                                       text: lang.EDIT_ARTWORK,
                                       onPressed: () async {
-                                        final pickedFile = await FilePicker.platform.pickFiles(type: FileType.image);
-                                        final path = pickedFile?.files.first.path ?? '';
+                                        final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
+                                        final path = pickedFile?.path ?? '';
                                         if (pickedFile != null && path != '') {
                                           currentImagePath.value = path;
                                           canEditTags.value = true;
