@@ -92,6 +92,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   final currentCachedVideo = Rxn<NamidaVideo>();
   final currentCachedAudio = Rxn<AudioCacheDetails>();
 
+  final _allowSwitchingVideoStreamIfCachedPlaying = false;
+
   bool get isFetchingInfo => _isFetchingInfo.value;
   final _isFetchingInfo = false.obs;
 
@@ -910,7 +912,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             streams.audioOnlyStreams?.firstOrNull;
         if (prefferedAudioStream?.url != null || prefferedVideoStream?.url != null) {
           final cachedVideoSet = playedFromCacheDetails.video;
-          final isStreamRequiredBetterThanCachedSet = cachedVideoSet == null ? true : (prefferedVideoStream?.width ?? 0) > (cachedVideoSet.width);
+          bool isStreamRequiredBetterThanCachedSet = cachedVideoSet == null
+              ? true
+              : _allowSwitchingVideoStreamIfCachedPlaying
+                  ? (prefferedVideoStream?.width ?? 0) > (cachedVideoSet.width)
+                  : false;
 
           currentVideoStream.value = isAudioOnlyPlayback
               ? null
