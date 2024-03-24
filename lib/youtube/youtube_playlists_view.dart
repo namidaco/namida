@@ -287,7 +287,24 @@ class YoutubePlaylistsView extends StatelessWidget {
                                     indexes.add(index);
                                   }
                                 });
-                                YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
+                                NamidaNavigator.inst.navigateDialog(
+                                  dialog: CustomBlurryDialog(
+                                    isWarning: true,
+                                    normalTitleStyle: true,
+                                    bodyText: "${lang.REMOVE_FROM_PLAYLIST} ${playlist.name.addDQuotation()}?",
+                                    actions: [
+                                      const CancelButton(),
+                                      const SizedBox(width: 6.0),
+                                      NamidaButton(
+                                        text: lang.REMOVE.toUpperCase(),
+                                        onPressed: () {
+                                          NamidaNavigator.inst.closeDialog();
+                                          YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                );
                               } else {
                                 YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
                               }
