@@ -92,7 +92,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   /// used to invoke other animation (eg. entering video fullscreen),
   bool _alternativePercentage = false;
   bool _isDraggingDownwards = false;
-  double get _percentageMultiplier => _alternativePercentage && _isDraggingDownwards ? 0.5 : 1.0;
+  double get _percentageMultiplier => _alternativePercentage && _isDraggingDownwards ? 0.25 : 1.0;
 
   bool _isDragManagedInternally = true;
   void updatePercentageMultiplier(bool alt) {

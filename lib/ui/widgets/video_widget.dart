@@ -784,6 +784,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         Navigator.of(context).pop();
                                         if (!isSelected) {
                                           Player.inst.setPlayerSpeed(speed);
+                                          settings.player.save(speed: speed);
                                         }
                                       },
                                       decoration: const BoxDecoration(),

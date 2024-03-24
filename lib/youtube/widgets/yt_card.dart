@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -69,8 +70,9 @@ class YoutubeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
-    final thumbnailWidth = this.thumbnailWidth ?? (thumbnailWidthPercentage * context.width * 0.36);
-    final thumbnailHeight = this.thumbnailHeight ?? (isCircle ? thumbnailWidth : thumbnailWidth * 9 / 16);
+
+    final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding));
+    final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
 
     final channelThumbSize = 20.0 * thumbnailWidthPercentage;
 

@@ -83,6 +83,10 @@ class YoutubePlaylistsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
 
+    const playlistsItemExtent = Dimensions.youtubeCardItemExtent * 0.9;
+    const playlistThumbnailHeight = playlistsItemExtent - Dimensions.tileBottomMargin - (Dimensions.youtubeCardItemVerticalPadding * 2);
+    const playlistThumbnailWidth = playlistThumbnailHeight * 16 / 9;
+
     return NamidaScrollbarWithController(
       child: (sc) => CustomScrollView(
         controller: sc,
@@ -254,7 +258,7 @@ class YoutubePlaylistsView extends StatelessWidget {
               final playlistsMap = YoutubePlaylistController.inst.playlistsMap;
               final playlistsNames = playlistsMap.keys.toList();
               return SliverFixedExtentList.builder(
-                itemExtent: Dimensions.youtubeCardItemExtent * 0.9,
+                itemExtent: playlistsItemExtent,
                 itemCount: playlistsNames.length,
                 itemBuilder: (context, index) {
                   final name = playlistsNames[index];
@@ -278,6 +282,8 @@ class YoutubePlaylistsView extends StatelessWidget {
                           thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(playlist.modifiedDate).fromNow(),
                           displayChannelThumbnail: false,
                           channelThumbnailUrl: '',
+                          thumbnailHeight: playlistThumbnailHeight,
+                          thumbnailWidth: playlistThumbnailWidth,
                           onTap: () {
                             if (idsToAdd.isNotEmpty) {
                               if (idsExist == true) {

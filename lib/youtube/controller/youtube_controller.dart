@@ -425,7 +425,12 @@ class YoutubeController {
   Future<List<StreamInfoItem>> getChannelStreams(String channelID) async {
     if (channelID == '') return [];
     final url = 'https://www.youtube.com/channel/$channelID';
-    final streams = await NewPipeExtractorDart.channels.getChannelUploads(url);
+    var streams = await NewPipeExtractorDart.channels.getChannelUploads(url);
+    int retries = 3;
+    while (streams.isEmpty && retries > 0) {
+      retries--;
+      streams = await NewPipeExtractorDart.channels.getChannelUploads(url);
+    }
     _fillTempVideoInfoMap(streams);
     return streams;
   }
@@ -1086,7 +1091,8 @@ class YoutubeController {
               config.videoStream = availableVideos.firstWhereEff((e) => e.id == config.prefferedVideoQualityID);
             }
             if (config.videoStream == null || config.videoStream?.url == null || config.videoStream?.url == '') {
-              config.videoStream = getPreferredStreamQuality(availableVideos, qualities: preferredQualities);
+              final webm = config.filename.endsWith('.webm') || config.filename.endsWith('.WEBM');
+              config.videoStream = getPreferredStreamQuality(availableVideos, qualities: preferredQualities, preferIncludeWebm: webm);
             }
             completerV.completeIfWasnt();
           });

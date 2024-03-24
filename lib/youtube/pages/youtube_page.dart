@@ -28,7 +28,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final thumbnailWidth = context.width * 0.36;
+    final thumbnailWidth = context.width * 0.36; // card height is dynamic
     final thumbnailHeight = thumbnailWidth * 9 / 16;
     final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     return BackgroundWrapper(

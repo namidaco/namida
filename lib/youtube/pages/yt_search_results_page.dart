@@ -99,13 +99,13 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final thumbnailWidth = context.width * 0.36;
-    final thumbnailHeight = thumbnailWidth * 9 / 16;
-    final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
+    const thumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
+    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     const localMultiplier = 0.7;
-    final thumbnailWidthLocal = thumbnailWidth * localMultiplier;
-    final thumbnailHeightLocal = thumbnailHeight * localMultiplier;
-    final thumbnailItemExtentLocal = thumbnailItemExtent * localMultiplier;
+    const thumbnailWidthLocal = thumbnailWidth * localMultiplier;
+    const thumbnailHeightLocal = thumbnailHeight * localMultiplier;
+    const thumbnailItemExtentLocal = thumbnailItemExtent * localMultiplier;
     return BackgroundWrapper(
       child: Navigator(
         key: NamidaNavigator.inst.ytLocalSearchNavigatorKey,

@@ -141,7 +141,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   Widget build(BuildContext context) {
     final maxHeight = context.height;
     const minHeight = kYTQueueSheetMinHeight;
-    final itemThumbnailHeight = context.width * 0.3 * 9 / 16;
+
+    const itemThumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
 
     return Stack(
       alignment: Alignment.bottomCenter,

@@ -52,6 +52,7 @@ class BackupController {
           AppPaths.FAVOURITES_PLAYLIST,
           AppPaths.SETTINGS,
           AppPaths.SETTINGS_EQUALIZER,
+          AppPaths.SETTINGS_PLAYER,
           AppPaths.LATEST_QUEUE,
           AppPaths.YT_LIKES_PLAYLIST,
           AppDirs.PLAYLISTS,

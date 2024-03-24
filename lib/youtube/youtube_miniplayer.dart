@@ -84,9 +84,9 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     const space5sb = 8.0;
     const miniplayerHeight = kYoutubeMiniplayerHeight;
 
-    final relatedThumbnailWidth = context.width * 0.36;
-    final relatedThumbnailHeight = relatedThumbnailWidth * 9 / 16;
-    final relatedThumbnailItemExtent = relatedThumbnailHeight + 8.0 * 2;
+    const relatedThumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
+    const relatedThumbnailWidth = relatedThumbnailHeight * 16 / 9;
+    const relatedThumbnailItemExtent = relatedThumbnailHeight + 8.0 * 2;
 
     final miniplayerBGColor = Color.alphaBlend(context.theme.secondaryHeaderColor.withOpacity(0.25), context.theme.scaffoldBackgroundColor);
 
@@ -1146,7 +1146,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 alignment: Alignment.centerRight,
                                 child: SizedBox(
                                   height: context.height,
-                                  width: (context.width / 2).withMaximum(324.0),
+                                  width: (context.width * 0.25).withMaximum(324.0),
                                   child: Listener(
                                     behavior: HitTestBehavior.translucent,
                                     onPointerDown: (event) {

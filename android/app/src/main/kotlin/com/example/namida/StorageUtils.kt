@@ -30,19 +30,24 @@ public class StorageUtils(private val context: Context) {
 
   fun getStorageDirsData(): MutableList<String> {
     val folders = mutableListOf<String>()
-    for (dir in context.getExternalFilesDirs(null)) {
-      if (dir != null) {
-        folders.add(dir.getAbsolutePath())
+    try {
+      for (dir in context.getExternalFilesDirs(null)) {
+        if (dir != null) {
+          folders.add(dir.getAbsolutePath())
+        }
       }
-    }
+    } catch (ignore: Exception) {}
     return folders
   }
 
   fun getStorageDirsCache(): MutableList<String> {
     val folders = mutableListOf<String>()
-    for (f in context.getExternalCacheDirs()) {
-      folders.add(f.path)
-    }
+    try {
+      for (f in context.getExternalCacheDirs()) {
+        folders.add(f.path)
+      }
+    } catch (ignore: Exception) {}
+
     return folders
   }
 }

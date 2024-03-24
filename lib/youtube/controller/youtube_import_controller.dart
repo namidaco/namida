@@ -195,8 +195,9 @@ class YoutubeImportController {
     final file = File(filePath);
     try {
       final lines = file.readAsLinesSync();
-      lines.removeAt(0);
+      final header = lines.removeAt(0);
       final list = <({String id, String title})>[];
+      if (header.split(',').length < 3) return list;
       lines.loop((e, _) {
         try {
           final parts = e.split(','); // id, url, name

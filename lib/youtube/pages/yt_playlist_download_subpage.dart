@@ -261,8 +261,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final thumWidth = context.width * 0.3 * _hmultiplier;
-    final thumHeight = thumWidth * 9 / 16;
+    final thumHeight = _hmultiplier * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding);
+    final thumWidth = thumHeight * 16 / 9;
     return BackgroundWrapper(
       child: Stack(
         children: [

@@ -111,9 +111,9 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
   @override
   Widget build(BuildContext context) {
-    final thumbnailWidth = context.width * 0.28;
-    final thumbnailHeight = thumbnailWidth * 9 / 16;
-    final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
+    const thumbnailHeight = 0.8 * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding);
+    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final channelID = _channelInfo?.id ?? ch.channelID;
     final avatarUrl = _channelInfo?.avatarUrl ?? _channelInfo?.thumbnailUrl ?? ch.channelID;
     final bannerUrl = _channelInfo?.bannerUrl ?? _channelInfo?.bannerUrl;
@@ -309,7 +309,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                       child: ListView.builder(
                         itemCount: 15,
                         itemBuilder: (context, index) {
-                          return YoutubeVideoCard(
+                          return const YoutubeVideoCard(
                             thumbnailHeight: thumbnailHeight,
                             thumbnailWidth: thumbnailWidth,
                             isImageImportantInCache: false,

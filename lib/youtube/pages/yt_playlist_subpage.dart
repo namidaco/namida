@@ -410,10 +410,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final bigThumbWidth = context.width - horizontalBigThumbPadding * 2;
     final playlist = widget.playlist;
 
-    const hmultiplier = 0.3;
-    final itemsThumbnailWidth = context.width * hmultiplier;
-    final itemsThumbnailHeight = itemsThumbnailWidth * 9 / 16;
-    final itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
+    const itemsThumbnailHeight = (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding);
+    const itemsThumbnailWidth = itemsThumbnailHeight * 16 / 9;
+    const itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
 
     final firstID = playlist.streams.firstOrNull?.id;
     final hasMoreStreamsLeft = playlist.streams.length < playlist.streamCount;
