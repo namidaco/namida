@@ -443,7 +443,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> onItemPlay(Q item, int index, bool startPlaying) async {
+  Future<void> onItemPlay(Q item, int index, bool Function() startPlaying) async {
     _currentItemDuration.value = null;
 
     await item._execute(
@@ -466,7 +466,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _playErrorRemainingSecondsToSkip.value = 0;
   }
 
-  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool startPlaying) async {
+  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
     WaveformController.inst.resetWaveform();
@@ -571,7 +571,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       tryRestoringLastPosition(tr),
     ]);
 
-    if (startPlaying) {
+    if (startPlaying()) {
       setVolume(_userPlayerVolume);
       await onPlayRaw();
     }
@@ -642,7 +642,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (cachedAudio != null && useCache) {
       await setSource(
         AudioSource.file(cachedAudio.path, tag: mediaItem),
-        startPlaying: wasPlaying,
+        startPlaying: () => wasPlaying,
         keepOldVideoSource: true,
         cachedAudioPath: cachedAudio.path,
       );
@@ -660,7 +660,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               await _onAudioCacheDone(videoId, cacheFile);
             },
           ),
-          startPlaying: wasPlaying,
+          startPlaying: () => wasPlaying,
           keepOldVideoSource: true,
         );
         refreshNotification();
@@ -759,7 +759,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Q pi,
     YoutubeID item,
     int index,
-    bool startPlaying, {
+    bool Function() startPlaying, {
     bool? canPlayAudioOnlyFromCache,
   }) async {
     canPlayAudioOnlyFromCache ??= (isAudioOnlyPlayback || !ConnectivityController.inst.hasConnection);
@@ -783,14 +783,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetAudioCache = null;
 
     if (item.id == '' || item.id == 'null') {
-      await skipToNext(startPlaying);
+      await skipToNext(startPlaying());
       return;
     }
 
     refreshNotification(pi, currentVideoInfo.value);
 
     Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
-      if (startPlaying) {
+      if (startPlaying()) {
         setVolume(_userPlayerVolume);
         await onPlayRaw();
       }
@@ -1050,7 +1050,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool canPlayAudioOnly,
     required bool disableVideo,
     required Future<void> Function() whatToAwait,
-    required bool startPlaying,
+    required bool Function() startPlaying,
     required List<AudioCacheDetails> possibleAudioFiles,
     required List<Track> possibleLocalFiles,
   }) async {
@@ -1378,6 +1378,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               AudioSource.file(cachedAudioFile.path, tag: mediaItem),
               keepOldVideoSource: true,
               cachedAudioPath: cachedAudioFile.path,
+              startPlaying: () => wasPlaying,
             );
           }
           _isCurrentAudioFromCache = true;
@@ -1407,7 +1408,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    await skipToPrevious();
+    await super.skipToPrevious();
   }
 
   @override
@@ -1429,7 +1430,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     bool preload = true,
     int? initialIndex,
     Duration? initialPosition,
-    bool startPlaying = false,
+    required bool Function() startPlaying,
     VideoOptions? videoOptions,
     bool keepOldVideoSource = false,
     bool isVideoFile = false,
