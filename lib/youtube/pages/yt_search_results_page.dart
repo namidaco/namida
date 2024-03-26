@@ -99,8 +99,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    const thumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
-    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     const localMultiplier = 0.7;
     const thumbnailWidthLocal = thumbnailWidth * localMultiplier;

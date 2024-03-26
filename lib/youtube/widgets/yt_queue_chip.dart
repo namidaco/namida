@@ -142,8 +142,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     final maxHeight = context.height;
     const minHeight = kYTQueueSheetMinHeight;
 
-    const itemThumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
-
     return Stack(
       alignment: Alignment.bottomCenter,
       fit: StackFit.expand,
@@ -387,7 +385,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       playlistName: '',
                                       openMenuOnLongPress: false,
                                       displayTimeAgo: false,
-                                      thumbnailHeight: itemThumbnailHeight,
+                                      thumbnailHeight: Dimensions.youtubeThumbnailHeight,
                                       fromPlayerQueue: true,
                                       draggingEnabled: true,
                                       draggableThumbnail: true,

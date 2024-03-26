@@ -67,6 +67,8 @@ class Dimensions {
   static const youtubeCardItemHeight = 24.0 * 3;
   static const youtubeCardItemVerticalPadding = 4.0;
   static const youtubeCardItemExtent = youtubeCardItemHeight + tileBottomMargin + 2 * youtubeCardItemVerticalPadding;
+  static const youtubeThumbnailHeight = youtubeCardItemHeight - youtubeCardItemVerticalPadding;
+  static const youtubeThumbnailWidth = youtubeThumbnailHeight * 16 / 9;
 
   // -- Track Tile --
   double trackTileItemExtent = 0.0;

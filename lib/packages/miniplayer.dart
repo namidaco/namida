@@ -395,7 +395,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
               playlistName: '',
               openMenuOnLongPress: false,
               displayTimeAgo: false,
-              thumbnailHeight: Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding,
+              thumbnailHeight: Dimensions.youtubeThumbnailHeight,
               fromPlayerQueue: true,
               draggingEnabled: true,
               draggableThumbnail: true,

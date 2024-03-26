@@ -71,7 +71,7 @@ class YoutubeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const verticalPadding = 8.0;
 
-    final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding));
+    final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
     final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
 
     final channelThumbSize = 20.0 * thumbnailWidthPercentage;

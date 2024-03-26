@@ -111,8 +111,8 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
   @override
   Widget build(BuildContext context) {
-    const thumbnailHeight = 0.8 * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding);
-    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final channelID = _channelInfo?.id ?? ch.channelID;
     final avatarUrl = _channelInfo?.avatarUrl ?? _channelInfo?.thumbnailUrl ?? ch.channelID;

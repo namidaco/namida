@@ -158,8 +158,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   Widget build(BuildContext context) {
     const horizontalPadding = 6.0;
 
-    const thumbnailHeight = 0.8 * (Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding);
-    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
     final ch = channel;

@@ -84,8 +84,8 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     const space5sb = 8.0;
     const miniplayerHeight = kYoutubeMiniplayerHeight;
 
-    const relatedThumbnailHeight = Dimensions.youtubeCardItemHeight - Dimensions.youtubeCardItemVerticalPadding;
-    const relatedThumbnailWidth = relatedThumbnailHeight * 16 / 9;
+    const relatedThumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const relatedThumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const relatedThumbnailItemExtent = relatedThumbnailHeight + 8.0 * 2;
 
     final miniplayerBGColor = Color.alphaBlend(context.theme.secondaryHeaderColor.withOpacity(0.25), context.theme.scaffoldBackgroundColor);
