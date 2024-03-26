@@ -123,37 +123,40 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
           final videoDislikeCount = videoInfo?.dislikeCount ?? Player.inst.currentVideoInfo?.dislikeCount;
           final videoViewCount = videoInfo?.viewCount ?? Player.inst.currentVideoInfo?.viewCount;
 
-          final descriptionWidget = videoInfo == null
+          final description = videoInfo?.description;
+          final descriptionWidget = description == null || description == ''
               ? null
-              : Html(
-                  data: videoInfo.description ?? '',
-                  style: {
-                    '*': Style.fromTextStyle(
-                      context.textTheme.displayMedium!.copyWith(
-                        fontSize: 14.0.multipliedFontScale,
+              : SelectionArea(
+                  child: Html(
+                    data: description,
+                    style: {
+                      '*': Style.fromTextStyle(
+                        context.textTheme.displayMedium!.copyWith(
+                          fontSize: 14.0.multipliedFontScale,
+                        ),
                       ),
-                    ),
-                    'a': Style.fromTextStyle(
-                      context.textTheme.displayMedium!.copyWith(
-                        color: context.theme.colorScheme.primary.withAlpha(210),
-                        fontSize: 13.5.multipliedFontScale,
-                      ),
-                    )
-                  },
-                  onLinkTap: (url, attributes, element) async {
-                    if (url != null) {
-                      final partsDur = url.split("$currentId&t=");
-                      if (partsDur.length > 1) {
-                        try {
-                          await Player.inst.seek(Duration(seconds: int.parse(partsDur.last)));
-                        } catch (e) {
-                          snackyy(title: lang.ERROR, message: e.toString(), isError: true, top: false);
+                      'a': Style.fromTextStyle(
+                        context.textTheme.displayMedium!.copyWith(
+                          color: context.theme.colorScheme.primary.withAlpha(210),
+                          fontSize: 13.5.multipliedFontScale,
+                        ),
+                      )
+                    },
+                    onLinkTap: (url, attributes, element) async {
+                      if (url != null) {
+                        final partsDur = url.split("$currentId&t=");
+                        if (partsDur.length > 1) {
+                          try {
+                            await Player.inst.seek(Duration(seconds: int.parse(partsDur.last)));
+                          } catch (e) {
+                            snackyy(title: lang.ERROR, message: e.toString(), isError: true, top: false);
+                          }
+                        } else {
+                          await NamidaLinkUtils.openLink(url);
                         }
-                      } else {
-                        await NamidaLinkUtils.openLink(url);
                       }
-                    }
-                  },
+                    },
+                  ),
                 );
 
           YoutubeController.inst.downloadedFilesMap; // for refreshing.
