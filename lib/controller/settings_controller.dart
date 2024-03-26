@@ -123,6 +123,7 @@ class SettingsController with SettingsFileWriter {
   ].obs;
   final RxBool enableVideoPlayback = true.obs;
   final RxBool enableLyrics = false.obs;
+  final Rx<LyricsSource> lyricsSource = LyricsSource.auto.obs;
   final Rx<VideoPlaybackSource> videoPlaybackSource = VideoPlaybackSource.auto.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
   final RxDouble animatingThumbnailScaleMultiplier = 1.0.obs;
@@ -379,6 +380,7 @@ class SettingsController with SettingsFileWriter {
       backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
+      lyricsSource.value = LyricsSource.values.getEnum(json['lyricsSource']) ?? lyricsSource.value;
       videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['videoPlaybackSource']) ?? videoPlaybackSource.value;
       youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
 
@@ -564,6 +566,7 @@ class SettingsController with SettingsFileWriter {
         'backupItemslist': backupItemslist.toList(),
         'enableVideoPlayback': enableVideoPlayback.value,
         'enableLyrics': enableLyrics.value,
+        'lyricsSource': lyricsSource.value.convertToString,
         'videoPlaybackSource': videoPlaybackSource.value.convertToString,
         'youtubeVideoQualities': youtubeVideoQualities.toList(),
         'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
@@ -726,6 +729,7 @@ class SettingsController with SettingsFileWriter {
     List<String>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
+    LyricsSource? lyricsSource,
     VideoPlaybackSource? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
     double? animatingThumbnailScaleMultiplier,
@@ -942,6 +946,7 @@ class SettingsController with SettingsFileWriter {
     }
     if (enableVideoPlayback != null) this.enableVideoPlayback.value = enableVideoPlayback;
     if (enableLyrics != null) this.enableLyrics.value = enableLyrics;
+    if (lyricsSource != null) this.lyricsSource.value = lyricsSource;
     if (videoPlaybackSource != null) this.videoPlaybackSource.value = videoPlaybackSource;
     if (animatingThumbnailScaleMultiplier != null) this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;
     if (animatingThumbnailIntensity != null) this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;

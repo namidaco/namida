@@ -100,14 +100,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.scroll,
             trailingText: settings.videoPlaybackSource.value.toText(),
             onTap: () {
-              bool isEnabled(VideoPlaybackSource val) {
-                return settings.videoPlaybackSource.value == val;
-              }
-
-              void tileOnTap(VideoPlaybackSource val) {
-                settings.save(videoPlaybackSource: val);
-              }
-
+              bool isEnabled(VideoPlaybackSource val) => settings.videoPlaybackSource.value == val;
+              void tileOnTap(VideoPlaybackSource val) => settings.save(videoPlaybackSource: val);
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: lang.VIDEO_PLAYBACK_SOURCE,

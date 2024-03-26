@@ -331,6 +331,7 @@ abstract class LanguageKeys {
   String get LOUDNESS_ENHANCER => _getKey('LOUDNESS_ENHANCER');
   String get LYRICIST => _getKey('LYRICIST');
   String get LYRICS => _getKey('LYRICS');
+  String get LYRICS_SOURCE => _getKey('LYRICS_SOURCE');
   String get M3U_PLAYLIST => _getKey('M3U_PLAYLIST');
   String get MAKE_YOUR_FIRST_LISTEN => _getKey('MAKE_YOUR_FIRST_LISTEN');
   String get MANUAL_BACKUP_SUBTITLE => _getKey('MANUAL_BACKUP_SUBTITLE');

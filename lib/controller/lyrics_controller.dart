@@ -16,6 +16,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 
@@ -33,13 +34,17 @@ class Lyrics {
 
   Track? _currentTrack;
 
+  bool get _lyricsEnabled => settings.enableLyrics.value;
+  bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
+  LyricsSource get _lyricsSource => settings.lyricsSource.value;
+
   void _updateWidgets(Lrc? lrc) {
     WakelockController.inst.updateLRCStatus(lrc != null);
     lrcViewKey?.currentState?.fillLists(lrc);
     lrcViewKeyFullscreen.currentState?.fillLists(lrc);
   }
 
-  Future<void> updateLyrics(Track track, {bool preferEmbedded = false}) async {
+  Future<void> updateLyrics(Track track) async {
     _currentTrack = track;
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
@@ -47,11 +52,11 @@ class Lyrics {
     lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
 
     lyricsCanBeAvailable.value = true;
-    if (!settings.enableLyrics.value) return;
+    if (!_lyricsEnabled) return;
 
     final embedded = track.lyrics;
 
-    if (settings.prioritizeEmbeddedLyrics.value && embedded != '') {
+    if (_lyricsPrioritizeEmbedded && embedded != '') {
       final lrc = embedded.parseLRC();
       if (lrc != null) {
         currentLyricsLRC.value = lrc;
@@ -66,7 +71,7 @@ class Lyrics {
     /// 2. cached lrc
     /// 3. track embedded lrc
     /// 4. database.
-    final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded);
+    final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
 
     if (lrcLyrics != null) {
       if (_currentTrack == track) {
@@ -77,7 +82,7 @@ class Lyrics {
       /// 1. cached txt lyrics
       /// 2. track embedded txt
       /// 3. google search
-      final textLyrics = await _fetchTextBasedLyrics(track, embedded);
+      final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
       if (textLyrics != '') {
         if (_currentTrack == track) {
           currentLyricsText.value = textLyrics;
@@ -94,12 +99,15 @@ class Lyrics {
 
   File lyricsFileText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
   File lyricsFileCache(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
-  List<File> lyricsFilesDevice(Track tr) => [
-        File(p.join(tr.path.getDirectoryPath, "${tr.filename}.lrc")),
-        File(p.join(tr.path.getDirectoryPath, "${tr.filenameWOExt}.lrc")),
-        File(p.join(tr.path.getDirectoryPath, "${tr.filename}.LRC")),
-        File(p.join(tr.path.getDirectoryPath, "${tr.filenameWOExt}.LRC")),
-      ];
+  List<File> lyricsFilesDevice(Track tr) {
+    final dirPath = tr.path.getDirectoryPath;
+    return [
+      File(p.join(dirPath, "${tr.filename}.lrc")),
+      File(p.join(dirPath, "${tr.filenameWOExt}.lrc")),
+      File(p.join(dirPath, "${tr.filename}.LRC")),
+      File(p.join(dirPath, "${tr.filenameWOExt}.LRC")),
+    ];
+  }
 
   Future<void> saveLyricsToCache(Track track, String lyricsText, bool isSynced) async {
     final fc = isSynced ? lyricsFileCache(track) : lyricsFileText(track);
@@ -107,9 +115,8 @@ class Lyrics {
     await fc.writeAsString(lyricsText);
   }
 
-  Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics) async {
+  Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
     final fc = lyricsFileCache(track);
-    final lyricsFilesLocal = lyricsFilesDevice(track);
 
     Future<Lrc?> parseLRCFile(File file) async {
       final content = await file.readAsString();
@@ -121,22 +128,25 @@ class Lyrics {
     /// 1. device lrc
     /// 2. cached lrc
     /// 3. track embedded
-    for (final lf in lyricsFilesLocal) {
-      if (await lf.existsAndValid()) {
-        lrc = await parseLRCFile(lf);
-        break;
+    if (source != LyricsSource.internet) {
+      final lyricsFilesLocal = lyricsFilesDevice(track);
+      for (final lf in lyricsFilesLocal) {
+        if (await lf.existsAndValid()) {
+          lrc = await parseLRCFile(lf);
+          break;
+        }
       }
-    }
-    if (lrc == null) {
-      if (await fc.existsAndValid()) {
-        lrc = await parseLRCFile(fc);
-      } else if (trackLyrics != '') {
-        lrc = trackLyrics.parseLRC();
+      if (lrc == null) {
+        if (await fc.existsAndValid()) {
+          lrc = await parseLRCFile(fc);
+        } else if (trackLyrics != '') {
+          lrc = trackLyrics.parseLRC();
+        }
       }
     }
 
     /// 4. if still null, fetch from database.
-    if (lrc == null) {
+    if (source != LyricsSource.local && lrc == null) {
       final tries = <(String, String, String)>[]; // title, artist, album
       tries.addAll([
         (track.title, track.originalArtist, ''),
@@ -239,18 +249,18 @@ class Lyrics {
     return [];
   }
 
-  Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics) async {
+  Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
     final lyricsFile = lyricsFileText(track);
 
     /// get from storage
-    if (await lyricsFile.existsAndValid()) {
+    if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
       return await lyricsFile.readAsString();
-    } else if (trackLyrics != '') {
+    } else if (source != LyricsSource.internet && trackLyrics != '') {
       return trackLyrics;
     }
 
     /// download lyrics
-    else {
+    else if (source != LyricsSource.local) {
       final lyrics = await _fetchLyricsGoogle(artist: track.artistsList.first, title: track.title);
       final regex = RegExp(r'<[^>]*>');
       if (lyrics != '') {

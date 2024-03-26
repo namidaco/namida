@@ -30,6 +30,7 @@ enum _ExtraSettingsKeys {
   filterTracksBy,
   searchCleanup,
   prioritizeEmbeddedLyrics,
+  lyricsSource,
   immersiveMode,
   swipeToOpenDrawer,
   enableClipboardMonitoring,
@@ -54,6 +55,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
         _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
         _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
+        _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
         _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
         _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
@@ -303,6 +305,58 @@ class ExtrasSettings extends SettingSubpageProvider {
                 title: lang.PRIORITIZE_EMBEDDED_LYRICS,
                 value: settings.prioritizeEmbeddedLyrics.value,
                 onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.lyricsSource,
+            child: Obx(
+              () => CustomListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
+                enabled: settings.enableLyrics.value,
+                title: lang.LYRICS_SOURCE,
+                leading: const StackedIcon(
+                  baseIcon: Broken.mobile_programming,
+                  secondaryIcon: Broken.cpu_setting,
+                ),
+                trailingText: settings.lyricsSource.value.toText(),
+                onTap: () {
+                  bool isEnabled(LyricsSource val) => settings.lyricsSource.value == val;
+                  void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      title: lang.LYRICS_SOURCE,
+                      actions: [
+                        IconButton(
+                          onPressed: () => tileOnTap(LyricsSource.auto),
+                          icon: const Icon(Broken.refresh),
+                        ),
+                        NamidaButton(
+                          text: lang.DONE,
+                          onPressed: NamidaNavigator.inst.closeDialog,
+                        ),
+                      ],
+                      child: Obx(
+                        () => ListView(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          children: [
+                            ...LyricsSource.values.map(
+                              (e) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: ListTileWithCheckMark(
+                                  active: isEnabled(e),
+                                  title: e.toText(),
+                                  onTap: () => tileOnTap(e),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

@@ -241,6 +241,12 @@ enum VideoPlaybackSource {
   youtube,
 }
 
+enum LyricsSource {
+  auto,
+  local,
+  internet,
+}
+
 enum QueueInsertionType {
   moreAlbum,
   moreArtist,

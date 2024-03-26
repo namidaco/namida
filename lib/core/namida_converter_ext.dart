@@ -340,6 +340,10 @@ extension VideoSource on VideoPlaybackSource {
   String? toSubtitle() => _NamidaConverters.inst.getSubtitle(this);
 }
 
+extension LyricsSourceUtils on LyricsSource {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension TrackItemSubstring on TrackTileItem {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -1350,6 +1354,11 @@ class _NamidaConverters {
         VideoPlaybackSource.auto: lang.AUTO,
         VideoPlaybackSource.youtube: lang.VIDEO_PLAYBACK_SOURCE_YOUTUBE,
         VideoPlaybackSource.local: lang.VIDEO_PLAYBACK_SOURCE_LOCAL,
+      },
+      LyricsSource: {
+        LyricsSource.auto: lang.AUTO,
+        LyricsSource.local: lang.LOCAL,
+        LyricsSource.internet: lang.DATABASE,
       },
       WakelockMode: {
         WakelockMode.none: lang.KEEP_SCREEN_AWAKE_NONE,
