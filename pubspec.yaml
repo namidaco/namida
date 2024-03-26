@@ -26,7 +26,7 @@ dependency_overrides:
   queue_manager:
     git:
       url: https://github.com/namidaco/queue_manager
-      ref: f279d07854f5dc701245c2ef31b2c4eb5bed7495
+      ref: 9f9f27937713fb87d1b7c8909e3e162d7a805a93
   archive: ^3.3.8
   intl: ^0.18.0
   device_info_plus: ^9.0.2
