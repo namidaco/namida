@@ -17,12 +17,12 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: 267e146029eeee4c3376d41f75d6da0ae4ad5960
+      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
-      ref: 267e146029eeee4c3376d41f75d6da0ae4ad5960
+      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
   queue_manager:
     git:
       url: https://github.com/namidaco/queue_manager
@@ -86,7 +86,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: 267e146029eeee4c3376d41f75d6da0ae4ad5960
+      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
