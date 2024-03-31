@@ -900,7 +900,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         try {
           info = await YoutubeController.inst.fetchVideoDetails(item.id);
           audiostreams = await YoutubeController.inst.getAvailableAudioOnlyStreams(item.id);
-          videoStreams = await YoutubeController.inst.getAvailableVideoStreamsOnly(item.id);
+          if (!isAudioOnlyPlayback) videoStreams = await YoutubeController.inst.getAvailableVideoStreamsOnly(item.id);
         } catch (e) {
           snackyy(message: 'Error getting streams', top: false, isError: true);
         }
@@ -911,8 +911,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         YoutubeController.inst.currentYTAudioStreams.value = audiostreams;
         currentVideoInfo.value = info;
         if (checkInterrupted()) return;
-        final allVideoStream = isAudioOnlyPlayback || videoStreams.isEmpty ? null : YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
-        final prefferedVideoStream = allVideoStream;
+        final prefferedVideoStream = isAudioOnlyPlayback || videoStreams.isEmpty ? null : YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
         final prefferedAudioStream = audiostreams.firstWhereEff((e) => e.formatSuffix != 'webm' && e.language == 'en') ??
             audiostreams.firstWhereEff((e) => e.formatSuffix != 'webm') ??
             audiostreams.firstOrNull;

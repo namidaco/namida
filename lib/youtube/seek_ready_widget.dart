@@ -162,6 +162,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   if (!_canDragToSeekLatest) return;
                   if (!_isMiniplayerExpanded) return;
                   if (_dragUpToCancel > _dragUpToCancelMax) {
+                    _canDragToSeekLatest = false;
                     setState(() {
                       _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm.."].random;
                       _dragToSeek = false;
@@ -175,6 +176,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 },
                 onPointerUp: (_) {
                   _dragToSeek = true;
+                  _canDragToSeekLatest = true;
                 },
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
