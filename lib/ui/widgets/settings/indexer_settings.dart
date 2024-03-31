@@ -348,24 +348,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          Obx(
-            () {
-              final paths = FAudioTaggerController.inst.currentPathsBeingExtracted.values;
-              return paths.isEmpty
-                  ? const SizedBox()
-                  : Column(
-                      children: paths
-                          .map((e) => Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
-                                child: Text(
-                                  e,
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
-                                ),
-                              ))
-                          .toList(),
-                    );
-            },
-          ),
+          const _ExtractingPathsWidget(itemPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0)),
           getItemWrapper(
             key: _IndexerSettingsKeys.preventDuplicatedTracks,
             child: Obx(
@@ -945,6 +928,46 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
       child: Icon(
         Broken.refresh_2,
         color: context.defaultIconColor(),
+      ),
+    );
+  }
+}
+
+class _ExtractingPathsWidget extends StatefulWidget {
+  final EdgeInsetsGeometry itemPadding;
+  const _ExtractingPathsWidget({required this.itemPadding});
+
+  @override
+  State<_ExtractingPathsWidget> createState() => __ExtractingPathsWidgetState();
+}
+
+class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
+  bool _isPathsExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaInkWell(
+      onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
+      child: Obx(
+        () {
+          final paths = FAudioTaggerController.inst.currentPathsBeingExtracted.values;
+          return paths.isEmpty
+              ? const SizedBox()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: paths
+                      .map((e) => Padding(
+                            padding: widget.itemPadding,
+                            child: Text(
+                              e,
+                              maxLines: _isPathsExpanded ? null : 1,
+                              overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                            ),
+                          ))
+                      .toList(),
+                );
+        },
       ),
     );
   }
