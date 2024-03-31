@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
@@ -28,6 +29,7 @@ class CurrentColor {
   static final CurrentColor _instance = CurrentColor._internal();
   CurrentColor._internal();
 
+  bool get _canAutoUpdateColor => settings.autoColor.value || settings.forceMiniplayerTrackColor.value;
   Color get miniplayerColor => settings.forceMiniplayerTrackColor.value ? _namidaColorMiniplayer.value ?? color : color;
   Color get color => _namidaColor.value.color;
   List<Color> get palette => _namidaColor.value.palette;
@@ -79,6 +81,13 @@ class CurrentColor {
         paletteSecondHalf.insertSafe(0, lastItem2);
       }
     });
+  }
+
+  void initialize() {
+    if (_canAutoUpdateColor) return;
+    final mode = settings.themeMode.value;
+    final isDarkMode = mode == ThemeMode.dark || (mode == ThemeMode.system && SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+    updatePlayerColorFromColor(isDarkMode ? playerStaticColorDark : playerStaticColorLight);
   }
 
   void updateColorAfterThemeModeChange() {
@@ -186,7 +195,7 @@ class CurrentColor {
     required Future<NamidaColor?> Function() getColorPalette,
     required bool Function() stillPlaying,
   }) async {
-    if (settings.autoColor.value || settings.forceMiniplayerTrackColor.value) {
+    if (_canAutoUpdateColor) {
       NamidaColor? namidaColor;
 
       final trColors = await getColorPalette();
