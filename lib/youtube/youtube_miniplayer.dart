@@ -728,6 +728,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                 transparent: false,
                                                 shimmerEnabled: true,
                                                 child: ListView.builder(
+                                                  padding: EdgeInsets.zero,
                                                   key: Key("${currentId}_feedlist_shimmer"),
                                                   physics: const NeverScrollableScrollPhysics(),
                                                   itemCount: feed.length,
@@ -1163,7 +1164,9 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                       }
                                     },
                                     onPointerUp: (event) {
-                                      _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
+                                      if (YoutubeController.inst.scrollController.hasClients && YoutubeController.inst.scrollController.position.pixels <= 0) {
+                                        _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
+                                      }
                                       _mpState?.updatePercentageMultiplier(false);
                                     },
                                   ),

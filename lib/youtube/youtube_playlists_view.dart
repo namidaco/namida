@@ -170,7 +170,7 @@ class YoutubePlaylistsView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             NamidaPopupWrapper(
-                              useRootNavigator: false,
+                              useRootNavigator: true,
                               children: () => [
                                 Obx(
                                   () {

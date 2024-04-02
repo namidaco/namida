@@ -840,7 +840,7 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          if (settings.enableMiniplayerParticles.value && Player.inst.nowPlayingTrack != kDummyTrack)
+          if (settings.enableMiniplayerParticles.value && Player.inst.isPlaying)
             Obx(
               () {
                 final bpmb = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
