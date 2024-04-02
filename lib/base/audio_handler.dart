@@ -542,7 +542,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               _playErrorRemainingSecondsToSkip.value--;
               if (_playErrorRemainingSecondsToSkip.value <= 0) {
                 NamidaNavigator.inst.closeDialog();
-                skipItem();
+                if (currentQueue.length > 1) skipItem();
                 timer.cancel();
               }
             },
@@ -786,7 +786,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetAudioCache = null;
 
     if (item.id == '' || item.id == 'null') {
-      skipItem();
+      if (currentQueue.length > 1) skipItem();
       return;
     }
 
@@ -873,7 +873,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (!ConnectivityController.inst.hasConnection && playedFromCacheDetails.audio == null) {
       // -- if no connection and couldnt play from cache, we skip
-      skipItem();
+      if (currentQueue.length > 1) skipItem();
       return;
     }
 
@@ -901,7 +901,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         try {
           info = await YoutubeController.inst.fetchVideoDetails(item.id);
           audiostreams = await YoutubeController.inst.getAvailableAudioOnlyStreams(item.id);
-          if (!isAudioOnlyPlayback) videoStreams = await YoutubeController.inst.getAvailableVideoStreamsOnly(item.id);
+          if (isAudioOnlyPlayback) {
+            // -- await video streams only if not audio playback
+            YoutubeController.inst.getAvailableVideoStreamsOnly(item.id).then((value) => videoStreams = value);
+          } else {
+            videoStreams = await YoutubeController.inst.getAvailableVideoStreamsOnly(item.id);
+          }
         } catch (e) {
           snackyy(message: 'Error getting streams', top: false, isError: true);
         }
