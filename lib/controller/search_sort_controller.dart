@@ -299,8 +299,7 @@ class SearchSortController {
     final scomment = tsfMap[TrackSearchFilter.comment] ?? false;
     final syear = tsfMap[TrackSearchFilter.year] ?? false;
 
-    final function = _functionOfCleanup(cleanup);
-    String textCleanedForSearch(String textToClean) => function(textToClean);
+    final textCleanedForSearch = _functionOfCleanup(cleanup);
 
     Iterable<String> splitThis(String? property, bool split) => !split || property == null ? [] : property.split(' ').map((e) => textCleanedForSearch(e));
 
@@ -475,8 +474,7 @@ class SearchSortController {
       ));
     }
 
-    final function = _functionOfCleanup(cleanup);
-    String textCleanedForSearch(String textToClean) => function(textToClean);
+    final textCleanedForSearch = _functionOfCleanup(cleanup);
 
     final psfMap = <String, bool>{};
     psf.loop((f, _) => psfMap[f] = true);
