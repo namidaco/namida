@@ -9,31 +9,14 @@ environment:
 
 dependency_overrides:
   win32: ^3.0.0
-  dart_extensions:
-    git:
-      url: https://github.com/MSOB7YY/dart_extensions
-      ref: 4bdeef5f1ba5c9be527d338a45b92859d127669b
-  just_audio:
-    git:
-      url: https://github.com/MSOB7YY/just_audio
-      path: just_audio/
-      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
-      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
-  queue_manager:
-    git:
-      url: https://github.com/namidaco/queue_manager
-      ref: 9f9f27937713fb87d1b7c8909e3e162d7a805a93
+      ref: video
   archive: ^3.3.8
   intl: ^0.18.0
   device_info_plus: ^9.0.2
-  get:
-    git:
-      url: https://github.com/MSOB7YY/getx
-      ref: 8a7a6a840f31b1a76877710a38da2211f5cd8f5b
 
 dependencies:
   flutter:
@@ -43,7 +26,6 @@ dependencies:
   get:
     git:
       url: https://github.com/MSOB7YY/getx
-      ref: 8a7a6a840f31b1a76877710a38da2211f5cd8f5b
   permission_handler: ^11.0.1
   intl: ^0.18.0
   flutter_archive: ^5.0.0
@@ -57,7 +39,6 @@ dependencies:
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
-      ref: a6a9f135a64cbf3599e1333fd37e6b7eb249bbb9
   catcher:
     git:
       url: https://github.com/MSOB7YY/catcher
@@ -66,11 +47,9 @@ dependencies:
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager
-      ref: 842f31410c98b0699918ee277622a49382784825
   history_manager:
     git:
       url: https://github.com/namidaco/history_manager
-      ref: 13e28da62591b71a399add45b9c5dfaf831e8fc8
   flutter_html:
     git:
       url: https://github.com/zhourengui/flutter_html
@@ -86,29 +65,25 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio/
-      ref: 59ee34b7ab6628131b7263aad80dfc5d768ea284
+      ref: video
   audio_service:
     git:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
-      ref: e576b78b5b67f9ac750d8223096fbd5ed5503d17
   waveform_extractor: ^1.0.3
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
-      ref: 1fdde302c39052a327f8a345f4cb84b87e2850d4
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
       path: packages/on_audio_query
-      ref: 69c7653e4b04ff24e657bee7b8706838e93303d7
 
   # ---- Video Indexing & Playback ----
   ffmpeg_kit_flutter_min: "5.1.0-LTS"
   newpipeextractor_dart:
     git:
       url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
-      ref: 183f75193c02555971713557e956e453c4b6be4f
 
   # ---- Image Utilities ----
   palette_generator: ^0.3.3+2
@@ -122,7 +97,6 @@ dependencies:
   known_extents_list_view_builder:
     git:
       url: https://github.com/MSOB7YY/known_extents_listview_fancy
-      ref: 95d9e56403b03f2f176bdceb269119d11cf7a4ef
   flutter_animate: ^4.2.0+1
   dynamic_color: ^1.6.7
   scrollable_positioned_list: ^0.3.8
@@ -135,7 +109,6 @@ dependencies:
   flutter_scrollbar_modified:
     git:
       url: https://github.com/MSOB7YY/flutter_scrollbar_modified
-      ref: b0330b60368c1cf2b196532646e9c23f8dc8f789
   sticky_headers: ^0.3.0+2
   flutter_sticky_header: ^0.6.5
   focused_menu: ^1.0.5
