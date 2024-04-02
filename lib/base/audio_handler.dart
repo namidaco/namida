@@ -445,15 +445,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> onItemPlay(Q item, int index, bool Function() startPlaying) async {
+  Future<void> onItemPlay(Q item, int index, bool Function() startPlaying, Function skipItem) async {
     _currentItemDuration.value = null;
 
     await item._execute(
       selectable: (finalItem) async {
-        await onItemPlaySelectable(item, finalItem, index, startPlaying);
+        await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
       },
       youtubeID: (finalItem) async {
-        await onItemPlayYoutubeID(item, finalItem, index, startPlaying);
+        await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
       },
     );
     MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
@@ -468,7 +468,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _playErrorRemainingSecondsToSkip.value = 0;
   }
 
-  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying) async {
+  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
     WaveformController.inst.resetWaveform();
@@ -542,7 +542,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               _playErrorRemainingSecondsToSkip.value--;
               if (_playErrorRemainingSecondsToSkip.value <= 0) {
                 NamidaNavigator.inst.closeDialog();
-                skipToNext();
+                skipItem();
                 timer.cancel();
               }
             },
@@ -761,7 +761,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Q pi,
     YoutubeID item,
     int index,
-    bool Function() startPlaying, {
+    bool Function() startPlaying,
+    Function skipItem, {
     bool? canPlayAudioOnlyFromCache,
   }) async {
     canPlayAudioOnlyFromCache ??= (isAudioOnlyPlayback || !ConnectivityController.inst.hasConnection);
@@ -785,7 +786,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetAudioCache = null;
 
     if (item.id == '' || item.id == 'null') {
-      await skipToNext(startPlaying());
+      skipItem();
       return;
     }
 
@@ -872,7 +873,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (!ConnectivityController.inst.hasConnection && playedFromCacheDetails.audio == null) {
       // -- if no connection and couldnt play from cache, we skip
-      skipToNext(startPlaying());
+      skipItem();
       return;
     }
 
@@ -1296,7 +1297,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
 
   @override
-  bool get defaultShouldStartPlaying => (settings.player.playOnNextPrev.value || isPlaying);
+  bool get defaultShouldStartPlayingWhenPaused => settings.player.playOnNextPrev.value;
 
   @override
   bool get enableVolumeFadeOnPlayPause => settings.player.enableVolumeFadeOnPlayPause.value;
