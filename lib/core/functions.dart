@@ -1453,3 +1453,72 @@ class TracksAddOnTap {
     );
   }
 }
+
+class SussyBaka {
+  static void monetize({required void Function() onEnable}) {
+    if (settings.didSupportNamida) return onEnable();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: 'uwu',
+        actions: const [NamidaSupportButton()],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DoubleTapDetector(
+              onDoubleTap: () => settings.save(didSupportNamida: true),
+              child: const Text('a- ano...'),
+            ),
+            const Text(
+              'this one is actually supposed to be for supporters, if you don\'t mind u can support namida and get the power to unleash this cool feature',
+            ),
+            TapDetector(
+              onTap: () {
+                NamidaNavigator.inst.closeDialog();
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    normalTitleStyle: true,
+                    title: '!!',
+                    bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
+                    actions: [
+                      NamidaSupportButton(title: lang.YES),
+                      NamidaButton(
+                        text: lang.NO,
+                        onPressed: () {
+                          NamidaNavigator.inst.closeDialog();
+                          NamidaNavigator.inst.navigateDialog(
+                            dialog: CustomBlurryDialog(
+                              title: 'kechi',
+                              bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
+                              actions: [
+                                NamidaButton(
+                                  text: lang.UNLOCK.toUpperCase(),
+                                  onPressed: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    onEnable();
+                                  },
+                                ),
+                                NamidaButton(
+                                  text: lang.SUPPORT.toUpperCase(),
+                                  onPressed: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text('or you just wanna use it like that? mattaku'),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}

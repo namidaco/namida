@@ -11,6 +11,7 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -393,8 +394,9 @@ class PlaybackSettings extends SettingSubpageProvider {
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
           titleText: lang.ENABLE_CROSSFADE_EFFECT,
-          onExpansionChanged: (value) {
-            settings.player.save(enableCrossFade: value);
+          onExpansionChanged: (wasCollapsed) {
+            if (!wasCollapsed) return settings.player.save(enableCrossFade: false);
+            SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
           },
           trailing: Obx(() => CustomSwitch(active: settings.player.enableCrossFade.value)),
           children: [

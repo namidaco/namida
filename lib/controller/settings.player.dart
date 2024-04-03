@@ -28,7 +28,7 @@ class PlayerSettings with SettingsFileWriter {
   final minTrackDurationToRestoreLastPosInMinutes = 5.obs;
   final interruptionResumeThresholdMin = 2.obs;
   final volume0ResumeThresholdMin = 5.obs;
-  final enableCrossFade = true.obs;
+  final enableCrossFade = false.obs;
   final crossFadeDurationMS = 500.obs;
   final crossFadeAutoTriggerSeconds = 5.obs;
   final playOnNextPrev = true.obs;
