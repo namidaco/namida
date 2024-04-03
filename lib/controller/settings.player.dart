@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member
+
 import 'package:get/get.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 
@@ -17,6 +19,8 @@ class PlayerSettings with SettingsFileWriter {
   final volume = 1.0.obs;
   final speed = 1.0.obs;
   final pitch = 1.0.obs;
+
+  var speeds = <double>[0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
 
   final seekDurationInSeconds = 5.obs;
   final seekDurationInPercentage = 2.obs;
@@ -59,6 +63,7 @@ class PlayerSettings with SettingsFileWriter {
     double? volume,
     double? speed,
     double? pitch,
+    List<double>? speeds,
     int? seekDurationInSeconds,
     int? seekDurationInPercentage,
     bool? isSeekDurationPercentage,
@@ -88,6 +93,7 @@ class PlayerSettings with SettingsFileWriter {
     if (volume != null) this.volume.value = volume;
     if (speed != null) this.speed.value = speed;
     if (pitch != null) this.pitch.value = pitch;
+    if (speeds != null) this.speeds = speeds;
     if (seekDurationInSeconds != null) this.seekDurationInSeconds.value = seekDurationInSeconds;
     if (seekDurationInPercentage != null) this.seekDurationInPercentage.value = seekDurationInPercentage;
     if (isSeekDurationPercentage != null) this.isSeekDurationPercentage.value = isSeekDurationPercentage;
@@ -130,6 +136,7 @@ class PlayerSettings with SettingsFileWriter {
       volume.value = json['volume'] ?? volume.value;
       speed.value = json['speed'] ?? speed.value;
       pitch.value = json['pitch'] ?? pitch.value;
+      speeds = (json['speeds'] as List?)?.cast<double>() ?? speeds;
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
       seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
       isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
@@ -177,6 +184,7 @@ class PlayerSettings with SettingsFileWriter {
         'volume': volume.value,
         'speed': speed.value,
         'pitch': pitch.value,
+        'speeds': speeds,
         'seekDurationInSeconds': seekDurationInSeconds.value,
         'seekDurationInPercentage': seekDurationInPercentage.value,
         'isSeekDurationPercentage': isSeekDurationPercentage.value,

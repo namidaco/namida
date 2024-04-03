@@ -36,8 +36,12 @@ mixin SettingsFileWriter {
 
   Future<void> _writeToStorageRaw() async {
     final path = filePath;
-    await File(path).writeAsJson(jsonToWrite);
-    printy("Setting File Write: ${path.getFilenameWOExt}");
+    try {
+      await File(path).writeAsJson(jsonToWrite);
+      printy("Setting file write: $path");
+    } catch (e) {
+      printy("Setting file write failed: ${path.getFilenameWOExt} => $e", isError: true);
+    }
   }
 
   Timer? _writeTimer;

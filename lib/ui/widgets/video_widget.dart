@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
-import 'package:namida/youtube/yt_utils.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
@@ -22,11 +21,13 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaVideoControls extends StatefulWidget {
   final bool showControls;
@@ -774,7 +775,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               setControlsVisibily(true);
                             },
                             children: () => [
-                              ...[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((speed) {
+                              ...settings.player.speeds.map((speed) {
                                 return Obx(
                                   () {
                                     final isSelected = Player.inst.currentSpeed == speed;
@@ -806,6 +807,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   },
                                 );
                               }).toList(),
+                              NamidaInkWell(
+                                onTap: () {
+                                  _startTimer();
+                                  Navigator.of(context).pop();
+                                  NamidaNavigator.inst.navigateDialog(dialog: const _SpeedsEditorDialog());
+                                },
+                                decoration: const BoxDecoration(),
+                                borderRadius: 6.0,
+                                bgColor: null,
+                                margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                padding: const EdgeInsets.all(6.0),
+                                child: Row(
+                                  children: [
+                                    const Icon(Broken.add_circle, size: 20.0),
+                                    const SizedBox(width: 12.0),
+                                    Text(
+                                      lang.ADD,
+                                      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                             child: Padding(
                               padding: const EdgeInsets.all(4.0),
@@ -1530,6 +1553,116 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ],
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SpeedsEditorDialog extends StatefulWidget {
+  const _SpeedsEditorDialog();
+
+  @override
+  State<_SpeedsEditorDialog> createState() => __SpeedsEditorDialogState();
+}
+
+class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
+  final speedsController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    speedsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: CustomBlurryDialog(
+        title: lang.CONFIGURE,
+        actions: [
+          TextButton(
+            onPressed: NamidaNavigator.inst.closeDialog,
+            child: Text(lang.DONE),
+          ),
+          NamidaButton(
+            text: lang.ADD,
+            onPressed: () {
+              formKey.currentState?.validate();
+            },
+          ),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Wrap(
+              children: settings.player.speeds
+                  .map(
+                    (e) => IgnorePointer(
+                      ignoring: e == 1.0,
+                      child: Opacity(
+                        opacity: e == 1.0 ? 0.5 : 1.0,
+                        child: Container(
+                          margin: const EdgeInsets.all(4.0),
+                          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+                          decoration: BoxDecoration(
+                            color: context.theme.cardTheme.color,
+                            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              if (e == 1.0) return snackyy(message: lang.ERROR);
+                              if (settings.player.speeds.length <= 4) return showMinimumItemsSnack(4);
+
+                              settings.player.speeds
+                                ..remove(e)
+                                ..sort();
+                              settings.player.save(speeds: settings.player.speeds);
+                              setState(() {});
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(e.toString()),
+                                const SizedBox(width: 6.0),
+                                const Icon(
+                                  Broken.close_circle,
+                                  size: 18.0,
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 14.0),
+              child: CustomTagTextField(
+                controller: speedsController,
+                hintText: lang.VALUE,
+                labelText: lang.SPEED,
+                isNumeric: true,
+                validator: (value) {
+                  value ??= '';
+                  if (value.isEmpty) return lang.EMPTY_VALUE;
+                  final sp = double.parse(speedsController.text);
+                  if (settings.player.speeds.contains(sp)) return lang.ERROR;
+                  settings.player.speeds
+                    ..add(sp)
+                    ..sort();
+                  settings.player.save(speeds: settings.player.speeds);
+                  speedsController.clear();
+                  setState(() {});
+                  return null;
+                },
+              ),
+            )
           ],
         ),
       ),
