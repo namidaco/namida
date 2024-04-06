@@ -117,29 +117,32 @@ class YoutubeImportController {
       return videos;
     }
 
-    /// Must be of length 7 or more.
-    _YTPlaylistDetails getPlaylistDetailsOld(List<String> split) {
+    _YTPlaylistDetails getPlaylistDetailsOld(List<String> header, List<String> split) {
+      final map = <String, String>{};
+      header.loop((part, index) => map[part.toLowerCase()] ??= split[index]);
+
       return (
-        playlistID: split[0],
-        channelID: split[1],
-        timeCreated: DateTime.tryParse(split[2]),
-        timeUpdated: DateTime.tryParse(split[3]),
-        name: split[4],
-        description: split[5],
-        visibility: _YTPlaylistVisibility.values.getEnumLoose(split[6]) ?? _YTPlaylistVisibility.unknown,
+        playlistID: map['playlist id'] ?? '',
+        channelID: map['channel id'] ?? '',
+        timeCreated: DateTime.tryParse(map['time created'] ?? ''),
+        timeUpdated: DateTime.tryParse(map['time updated'] ?? ''),
+        name: map['title'] ?? '',
+        description: map['description'] ?? '',
+        visibility: _YTPlaylistVisibility.values.getEnumLoose(map['visibility']) ?? _YTPlaylistVisibility.unknown,
       );
     }
 
-    /// Must be of length 25 or more.
-    _YTPlaylistDetails getPlaylistDetailsNew(List<String> split) {
+    _YTPlaylistDetails getPlaylistDetailsNew(List<String> header, List<String> split) {
+      final map = <String, String>{};
+      header.loop((part, index) => map[part.toLowerCase().split('playlist').last.split('(').first] ??= split[index]);
       return (
-        playlistID: split[0],
-        channelID: '',
-        description: split[2],
-        name: split[19],
-        timeCreated: DateTime.tryParse(split[21]),
-        timeUpdated: DateTime.tryParse(split[22]),
-        visibility: _YTPlaylistVisibility.values.getEnumLoose(split[24]) ?? _YTPlaylistVisibility.unknown,
+        playlistID: map['playlist id'] ?? '',
+        channelID: map['channel id'] ?? '',
+        timeCreated: DateTime.tryParse(map['create timestamp'] ?? ''),
+        timeUpdated: DateTime.tryParse(map['update timestamp'] ?? ''),
+        name: map['title'] ?? '',
+        description: map['description'] ?? '',
+        visibility: _YTPlaylistVisibility.values.getEnumLoose(map['visibility']) ?? _YTPlaylistVisibility.unknown,
       );
     }
 
@@ -153,13 +156,12 @@ class YoutubeImportController {
       files.removeAt(plMetaFileIndex);
       try {
         final plLines = plMetaFile.readAsLinesSync();
-        plLines.removeAt(0);
+        final header = plLines.removeAt(0);
+        final headerParts = header.split(',');
         plLines.loop((line, _) {
           final splitted = line.split(',');
-          if (splitted.length >= 25) {
-            final details = getPlaylistDetailsNew(splitted);
-            playlistsMetadata[details.name] = details;
-          }
+          final details = getPlaylistDetailsNew(headerParts, splitted);
+          playlistsMetadata[details.name] = details;
         });
       } catch (_) {}
     }
@@ -176,8 +178,11 @@ class YoutubeImportController {
             final splitted = header.split(',');
             if (header.startsWith('Playlist Id') && splitted.length >= 7) {
               // -- old method
-              final pld = getPlaylistDetailsOld(lines[1].split(','));
-              lines.removeRange(0, 8);
+              final header = lines.removeAt(0);
+              final headerParts = header.split(',');
+              final pld = getPlaylistDetailsOld(headerParts, lines[0].split(','));
+              final videosStartIndex = lines.indexWhere((element) => element.toLowerCase().startsWith('video id,time added'));
+              lines.removeRange(0, videosStartIndex + 1);
               playlists.add(((name: playlistName, details: pld), getVideos(lines)));
             } else {
               // -- new method, doesnt contain playlist header.
