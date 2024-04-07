@@ -67,7 +67,7 @@ class NamidaDeviceInfo {
         hours = int.parse("${yyMMddHHP[6]}${yyMMddHHP[7]}");
         minutes = (60 * double.parse("0.${yyMMddHHP[8]}")).round(); // 0.5, 0.8, 1.0, etc.
       } catch (_) {}
-      buildDate = DateTime.utc(year, month, day, hours - 2, minutes);
+      buildDate = DateTime.utc(year, month, day, hours, minutes);
     } catch (_) {}
   }
 }

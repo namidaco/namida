@@ -26,7 +26,7 @@ class AboutPage extends StatelessWidget {
   String _getDateDifferenceText() {
     final buildDate = NamidaDeviceInfo.buildDate;
     if (buildDate == null) return '';
-    final diff = DateTime.now().difference(buildDate.toLocal()).abs();
+    final diff = DateTime.now().toUtc().difference(buildDate).abs();
     final diffDays = diff.inDays;
     if (diffDays > 0) return "(${diffDays.displayDayKeyword})";
     final diffHours = diff.inHours;
