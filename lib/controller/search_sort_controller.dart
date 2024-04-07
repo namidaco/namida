@@ -31,6 +31,8 @@ class SearchSortController {
   bool get isSearching => (trackSearchTemp.isNotEmpty ||
       albumSearchTemp.isNotEmpty ||
       artistSearchTemp.isNotEmpty ||
+      albumArtistSearchTemp.isNotEmpty ||
+      composerSearchTemp.isNotEmpty ||
       genreSearchTemp.isNotEmpty ||
       playlistSearchTemp.isNotEmpty ||
       folderSearchTemp.isNotEmpty);
@@ -51,6 +53,8 @@ class SearchSortController {
   final _searchMapTemp = <MediaType, RxList<String>>{
     MediaType.album: <String>[].obs,
     MediaType.artist: <String>[].obs,
+    MediaType.albumArtist: <String>[].obs,
+    MediaType.composer: <String>[].obs,
     MediaType.genre: <String>[].obs,
     MediaType.folder: <String>[].obs,
   };
@@ -59,14 +63,12 @@ class SearchSortController {
   final playlistSearchTemp = <String>[].obs;
   RxList<String> get albumSearchTemp => _searchMapTemp[MediaType.album]!;
   RxList<String> get artistSearchTemp => _searchMapTemp[MediaType.artist]!;
+  RxList<String> get albumArtistSearchTemp => _searchMapTemp[MediaType.albumArtist]!;
+  RxList<String> get composerSearchTemp => _searchMapTemp[MediaType.composer]!;
   RxList<String> get genreSearchTemp => _searchMapTemp[MediaType.genre]!;
   RxList<String> get folderSearchTemp => _searchMapTemp[MediaType.folder]!;
 
   RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
-
-  Rx<Map<String, List<Track>>> get mainMapAlbums => Indexer.inst.mainMapAlbums;
-  Rx<Map<String, List<Track>>> get mainMapArtists => Indexer.inst.mainMapArtists;
-  Rx<Map<String, List<Track>>> get mainMapGenres => Indexer.inst.mainMapGenres;
   Map<String, List<Track>> get mainMapFolder {
     return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path.getDirectoryName, value));
   }
@@ -80,6 +82,8 @@ class SearchSortController {
     _searchTracks(text, temp: true);
     if (enabledSearches.contains(MediaType.album)) _searchMediaType(type: MediaType.album, text: text, temp: true);
     if (enabledSearches.contains(MediaType.artist)) _searchMediaType(type: MediaType.artist, text: text, temp: true);
+    if (enabledSearches.contains(MediaType.albumArtist)) _searchMediaType(type: MediaType.albumArtist, text: text, temp: true);
+    if (enabledSearches.contains(MediaType.composer)) _searchMediaType(type: MediaType.composer, text: text, temp: true);
     if (enabledSearches.contains(MediaType.genre)) _searchMediaType(type: MediaType.genre, text: text, temp: true);
     if (enabledSearches.contains(MediaType.playlist)) _searchPlaylists(text, temp: true);
     if (enabledSearches.contains(MediaType.folder)) _searchMediaType(type: MediaType.folder, text: text, temp: true);
@@ -94,8 +98,9 @@ class SearchSortController {
         _searchMediaType(type: MediaType.album, text: text);
         break;
       case MediaType.artist:
-        _searchMediaType(type: MediaType.artist, text: text);
-        break;
+      case MediaType.albumArtist:
+      case MediaType.composer:
+        _searchMediaType(type: settings.activeArtistType.value, text: text);
       case MediaType.genre:
         _searchMediaType(type: MediaType.genre, text: text);
         break;
@@ -144,11 +149,20 @@ class SearchSortController {
     final enabledSearches = <MediaType, bool>{};
     enabledSearchesList.loop((f, _) => enabledSearches[f] = true);
 
+    final mainMapArtists = Indexer.inst.mainMapArtists.value.keys;
+    final mainMapAA = Indexer.inst.mainMapAlbumArtists.value.keys;
+    final mainMapComposers = Indexer.inst.mainMapComposer.value.keys;
+
+    final mainMapAlbums = Indexer.inst.mainMapAlbums.value.keys;
+    final mainMapGenres = Indexer.inst.mainMapGenres.value.keys;
+
     await Future.wait([
       _prepareTracksPorts(),
-      if (enabledSearches[MediaType.album] ?? false) _prepareMediaPorts(mainMapAlbums.value.keys, MediaType.album) else SearchPortsProvider.inst.closePorts(MediaType.album),
-      if (enabledSearches[MediaType.artist] ?? false) _prepareMediaPorts(mainMapArtists.value.keys, MediaType.artist) else SearchPortsProvider.inst.closePorts(MediaType.artist),
-      if (enabledSearches[MediaType.genre] ?? false) _prepareMediaPorts(mainMapGenres.value.keys, MediaType.genre) else SearchPortsProvider.inst.closePorts(MediaType.genre),
+      if (enabledSearches[MediaType.album] ?? false) _prepareMediaPorts(mainMapAlbums, MediaType.album) else SearchPortsProvider.inst.closePorts(MediaType.album),
+      if (enabledSearches[MediaType.artist] ?? false) _prepareMediaPorts(mainMapArtists, MediaType.artist) else SearchPortsProvider.inst.closePorts(MediaType.artist),
+      if (enabledSearches[MediaType.albumArtist] ?? false) _prepareMediaPorts(mainMapAA, MediaType.albumArtist) else SearchPortsProvider.inst.closePorts(MediaType.albumArtist),
+      if (enabledSearches[MediaType.composer] ?? false) _prepareMediaPorts(mainMapComposers, MediaType.composer) else SearchPortsProvider.inst.closePorts(MediaType.composer),
+      if (enabledSearches[MediaType.genre] ?? false) _prepareMediaPorts(mainMapGenres, MediaType.genre) else SearchPortsProvider.inst.closePorts(MediaType.genre),
       if (enabledSearches[MediaType.playlist] ?? false) _preparePlaylistPorts() else SearchPortsProvider.inst.closePorts(MediaType.playlist),
       if (enabledSearches[MediaType.folder] ?? false) _prepareMediaPorts(mainMapFolder.keys, MediaType.folder) else SearchPortsProvider.inst.closePorts(MediaType.folder),
     ]);
@@ -162,13 +176,16 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.track,
       onResult: (result) {
-        final r = result as (List<Track>, bool);
+        final r = result as (List<Track>, bool, String);
         final isTemp = r.$2;
+        final fetchedQuery = r.$3;
         if (isTemp) {
-          trackSearchTemp.value = r.$1;
-          sortTracksSearch(canSkipSorting: true);
+          if (fetchedQuery == lastSearchText) {
+            trackSearchTemp.value = r.$1;
+            sortTracksSearch(canSkipSorting: true);
+          }
         } else {
-          trackSearchList.value = r.$1;
+          if (fetchedQuery == LibraryTab.tracks.textSearchController?.text) trackSearchList.value = r.$1;
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -202,12 +219,13 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.playlist,
       onResult: (result) {
-        final r = result as (List<String>, bool);
+        final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
+        final fetchedQuery = r.$3;
         if (isTemp) {
-          playlistSearchTemp.value = r.$1;
+          if (fetchedQuery == lastSearchText) playlistSearchTemp.value = r.$1;
         } else {
-          playlistSearchList.value = r.$1;
+          if (fetchedQuery == LibraryTab.playlists.textSearchController?.text) playlistSearchList.value = r.$1;
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -233,12 +251,14 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: type,
       onResult: (result) {
-        final r = result as (List<String>, bool);
+        final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
+        final fetchedQuery = r.$3;
         if (isTemp) {
-          _searchMapTemp[type]?.value = r.$1;
+          if (fetchedQuery == lastSearchText) _searchMapTemp[type]?.value = r.$1;
         } else {
-          _searchMap[type]?.value = r.$1;
+          final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
+          if (fetchedQuery == typeNomalize.toLibraryTab()?.textSearchController?.text) _searchMap[typeNomalize]?.value = r.$1;
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -381,7 +401,7 @@ class SearchSortController {
         }
       });
 
-      sendPort.send((result, temp));
+      sendPort.send((result, temp, text));
     });
   }
 
@@ -389,11 +409,15 @@ class SearchSortController {
     Iterable<String> keys = [];
     switch (type) {
       case MediaType.album:
-        keys = mainMapAlbums.value.keys;
+        keys = Indexer.inst.mainMapAlbums.value.keys;
       case MediaType.artist:
-        keys = mainMapArtists.value.keys;
+        keys = Indexer.inst.mainMapArtists.value.keys;
+      case MediaType.albumArtist:
+        keys = Indexer.inst.mainMapAlbumArtists.value.keys;
+      case MediaType.composer:
+        keys = Indexer.inst.mainMapComposer.value.keys;
       case MediaType.genre:
-        keys = mainMapGenres.value.keys;
+        keys = Indexer.inst.mainMapGenres.value.keys;
       case MediaType.folder:
         keys = mainMapFolder.keys;
       default:
@@ -404,8 +428,9 @@ class SearchSortController {
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
-        type.toLibraryTab()?.textSearchController?.clear();
-        _searchMap[type]?.value = keys.toList();
+        final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
+        typeNomalize.toLibraryTab()?.textSearchController?.clear();
+        _searchMap[typeNomalize]?.value = keys.toList();
       }
       return;
     }
@@ -511,14 +536,14 @@ class SearchSortController {
           results.add(playlistName);
         }
       });
-      sendPort.send((results, temp));
+      sendPort.send((results, temp, text));
     });
   }
 
   void sortAll() {
     _sortTracks();
     _sortAlbums();
-    _sortArtists();
+    _sortArtistsCurrent(artistType: settings.activeArtistType.value);
     _sortGenres();
     _sortPlaylists();
   }
@@ -532,7 +557,9 @@ class SearchSortController {
         _sortAlbums(sortBy: groupSortBy, reverse: reverse);
         break;
       case MediaType.artist:
-        _sortArtists(sortBy: groupSortBy, reverse: reverse);
+      case MediaType.albumArtist:
+      case MediaType.composer:
+        _sortArtistsCurrent(artistType: settings.activeArtistType.value, sortBy: groupSortBy, reverse: reverse);
         break;
       case MediaType.genre:
         _sortGenres(sortBy: groupSortBy, reverse: reverse);
@@ -686,7 +713,8 @@ class SearchSortController {
     sortBy ??= settings.albumSort.value;
     reverse ??= settings.albumSortReversed.value;
 
-    final albumsList = mainMapAlbums.value.entries.toList();
+    final finalMap = Indexer.inst.mainMapAlbums;
+    final albumsList = finalMap.value.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? albumsList.sortByReverse(comparable) : albumsList.sortBy(comparable);
 
     switch (sortBy) {
@@ -722,7 +750,7 @@ class SearchSortController {
         null;
     }
 
-    mainMapAlbums.value
+    finalMap.value
       ..clear()
       ..addEntries(albumsList);
 
@@ -732,31 +760,51 @@ class SearchSortController {
   }
 
   /// Sorts Artists and Saves automatically to settings
-  void _sortArtists({GroupSortType? sortBy, bool? reverse}) {
+  void _sortArtistsCurrent({required MediaType artistType, GroupSortType? sortBy, bool? reverse}) {
     sortBy ??= settings.artistSort.value;
     reverse ??= settings.artistSortReversed.value;
 
-    final artistsList = mainMapArtists.value.entries.toList();
+    final finalMap = switch (artistType) {
+      MediaType.artist => Indexer.inst.mainMapArtists,
+      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists,
+      MediaType.composer => Indexer.inst.mainMapComposer,
+      _ => Indexer.inst.mainMapArtists,
+    };
+    final artistsList = finalMap.value.entries.toList();
+
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? artistsList.sortByReverse(comparable) : artistsList.sortBy(comparable);
 
     switch (sortBy) {
-      case GroupSortType.album:
-        sortThis((e) => e.value.album.toLowerCase());
+      case GroupSortType.artistsList:
+        artistType == MediaType.artist
+            ? sortThis((e) => e.key.toLowerCase())
+            : sortThis((e) => e.value.firstWhereEff((e) => e.originalArtist != '')?.originalArtist.toLowerCase() ?? '');
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist.toLowerCase());
+        artistType == MediaType.albumArtist
+            ? sortThis((e) => e.key.toLowerCase())
+            : sortThis((e) => e.value.firstWhereEff((e) => e.albumArtist != '')?.albumArtist.toLowerCase() ?? '');
+        break;
+      case GroupSortType.composer:
+        artistType == MediaType.composer
+            ? sortThis((e) => e.key.toLowerCase()) //
+            : sortThis((e) => e.value.firstWhereEff((e) => e.composer != '')?.composer.toLowerCase() ?? '');
+        break;
+      case GroupSortType.albumsCount:
+        artistType == MediaType.albumArtist
+            ? sortThis((e) => e.key.getAlbumArtistTracks().toUniqueAlbums().length)
+            : artistType == MediaType.composer
+                ? sortThis((e) => e.key.getComposerTracks().toUniqueAlbums().length)
+                : sortThis((e) => e.key.getArtistTracks().toUniqueAlbums().length);
+        break;
+      case GroupSortType.album:
+        sortThis((e) => e.value.album.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
-      case GroupSortType.artistsList:
-        sortThis((e) => e.key.toLowerCase());
-        break;
       case GroupSortType.genresList:
         sortThis((e) => e.value[0].genresList.join().toLowerCase());
-        break;
-      case GroupSortType.composer:
-        sortThis((e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value[0].dateModified);
@@ -767,22 +815,19 @@ class SearchSortController {
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
         break;
-      case GroupSortType.albumsCount:
-        sortThis((e) => e.key.getArtistAlbums().length);
-        break;
       case GroupSortType.shuffle:
         artistsList.shuffle();
         break;
       default:
         null;
     }
-    mainMapArtists.value
+    finalMap.value
       ..clear()
       ..addEntries(artistsList);
 
     settings.save(artistSort: sortBy, artistSortReversed: reverse);
 
-    _searchMediaType(type: MediaType.artist, text: LibraryTab.artists.textSearchController?.text ?? '');
+    _searchMediaType(type: artistType, text: LibraryTab.artists.textSearchController?.text ?? '');
   }
 
   /// Sorts Genres and Saves automatically to settings
@@ -790,7 +835,8 @@ class SearchSortController {
     sortBy ??= settings.genreSort.value;
     reverse ??= settings.genreSortReversed.value;
 
-    final genresList = mainMapGenres.value.entries.toList();
+    final finalMap = Indexer.inst.mainMapGenres;
+    final genresList = finalMap.value.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? genresList.sortByReverse(comparable) : genresList.sortBy(comparable);
 
     switch (sortBy) {
@@ -828,7 +874,7 @@ class SearchSortController {
         null;
     }
 
-    mainMapGenres.value
+    finalMap.value
       ..clear()
       ..addEntries(genresList);
 
@@ -918,7 +964,7 @@ class SearchSortController {
           }
         });
       }
-      sendPort.send((results, temp));
+      sendPort.send((results, temp, text));
     });
   }
 

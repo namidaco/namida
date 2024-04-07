@@ -194,6 +194,8 @@ enum RouteType {
   SUBPAGE_recentlyAddedTracks,
   SUBPAGE_albumTracks,
   SUBPAGE_artistTracks,
+  SUBPAGE_albumArtistTracks,
+  SUBPAGE_composerTracks,
   SUBPAGE_genreTracks,
   SUBPAGE_playlistTracks,
   SUBPAGE_historyTracks,
@@ -228,6 +230,8 @@ enum MediaType {
   track,
   album,
   artist,
+  albumArtist,
+  composer,
   genre,
   playlist,
 

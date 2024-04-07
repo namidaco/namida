@@ -18,12 +18,14 @@ class ArtistTracksPage extends StatelessWidget {
   final String name;
   final List<Track> tracks;
   final Set<String> albumIdentifiers;
+  final MediaType type;
 
   const ArtistTracksPage({
     super.key,
     required this.name,
     required this.tracks,
     required this.albumIdentifiers,
+    required this.type,
   });
 
   @override
@@ -32,7 +34,14 @@ class ArtistTracksPage extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         () {
-          Indexer.inst.mainMapArtists.value; // to update after sorting
+          // to update after sorting
+          type == MediaType.artist
+              ? Indexer.inst.mainMapArtists.value
+              : type == MediaType.albumArtist
+                  ? Indexer.inst.mainMapAlbumArtists.value
+                  : type == MediaType.composer
+                      ? Indexer.inst.mainMapComposer.value
+                      : null;
           return NamidaTracksList(
             queueSource: QueueSource.artist,
             queueLength: tracks.length,
@@ -72,7 +81,7 @@ class ArtistTracksPage extends StatelessWidget {
                 NamidaExpansionTile(
                   icon: Broken.music_dashboard,
                   titleText: "${lang.ALBUMS} ${albumIdentifiers.length}",
-                  initiallyExpanded: true,
+                  initiallyExpanded: albumIdentifiers.isNotEmpty,
                   children: [
                     SizedBox(
                       height: 130.0 + 28.0,

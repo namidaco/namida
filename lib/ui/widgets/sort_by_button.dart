@@ -199,6 +199,7 @@ class SortByMenuArtists extends StatelessWidget {
     return Obx(
       () {
         final artistSort = settings.artistSort.value;
+        final artistType = settings.activeArtistType.value;
         return Column(
           children: [
             ListTileWithCheckMark(
@@ -206,14 +207,16 @@ class SortByMenuArtists extends StatelessWidget {
               onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !settings.artistSortReversed.value),
             ),
             ...[
-              GroupSortType.artistsList,
-              GroupSortType.composer,
+              artistType == MediaType.albumArtist
+                  ? GroupSortType.albumArtist
+                  : artistType == MediaType.composer
+                      ? GroupSortType.composer
+                      : GroupSortType.artistsList,
               GroupSortType.numberOfTracks,
               GroupSortType.albumsCount,
               GroupSortType.duration,
               GroupSortType.genresList,
               GroupSortType.album,
-              GroupSortType.albumArtist,
               GroupSortType.year,
               GroupSortType.dateModified,
               GroupSortType.shuffle,

@@ -948,7 +948,7 @@ Future<void> showGeneralPopupDialog(
                                 title: lang.GO_TO_ARTIST,
                                 subtitle: availableArtists.first,
                                 icon: Broken.microphone,
-                                onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first),
+                                onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first, MediaType.artist),
                                 trailing: IconButton(
                                   tooltip: lang.ADD_MORE_FROM_THIS_ARTIST,
                                   onPressed: () {
@@ -975,7 +975,7 @@ Future<void> showGeneralPopupDialog(
                                           padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
                                           child: NamidaInkWell(
                                             borderRadius: 0.0,
-                                            onTap: () => NamidaOnTaps.inst.onArtistTap(e),
+                                            onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
                                             child: Text(
                                               e,
                                               style: theme.textTheme.displaySmall?.copyWith(

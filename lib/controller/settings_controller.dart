@@ -247,6 +247,8 @@ class SettingsController with SettingsFileWriter {
     HomePageItems.recentArtists,
   ].obs;
 
+  final activeArtistType = MediaType.artist.obs;
+
   final activeSearchMediaTypes = <MediaType>[
     MediaType.track,
     MediaType.album,
@@ -299,6 +301,8 @@ class SettingsController with SettingsFileWriter {
       final homePageItemsFromStorage = List<String>.from(json['homePageItems'] ?? []);
       homePageItems.value =
           homePageItemsFromStorage.isNotEmpty ? List<HomePageItems>.from(homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e))) : homePageItems.toList();
+
+      activeArtistType.value = MediaType.values.getEnum(json['activeArtistType']) ?? activeArtistType.value;
 
       final activeSearchMediaTypesFromStorage = List<String>.from(json['activeSearchMediaTypes'] ?? []);
       activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.isNotEmpty
@@ -503,6 +507,7 @@ class SettingsController with SettingsFileWriter {
         'autoLibraryTab': autoLibraryTab.value,
         'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
         'homePageItems': homePageItems.mapped((element) => element.convertToString),
+        'activeArtistType': activeArtistType.value.convertToString,
         'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.convertToString),
         'albumIdentifiers': albumIdentifiers.mapped((element) => element.convertToString),
         'searchResultsPlayMode': searchResultsPlayMode.value,
@@ -665,6 +670,7 @@ class SettingsController with SettingsFileWriter {
     bool? autoLibraryTab,
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
+    MediaType? activeArtistType,
     List<MediaType>? activeSearchMediaTypes,
     List<AlbumIdentifier>? albumIdentifiers,
     double? borderRadiusMultiplier,
@@ -822,6 +828,7 @@ class SettingsController with SettingsFileWriter {
         }
       });
     }
+    if (activeArtistType != null) this.activeArtistType.value = activeArtistType;
     if (activeSearchMediaTypes != null) {
       activeSearchMediaTypes.loop((t, index) {
         if (!this.activeSearchMediaTypes.contains(t)) {

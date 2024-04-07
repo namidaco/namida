@@ -56,6 +56,49 @@ class SearchPage extends StatelessWidget {
     );
   }
 
+  List<Widget> _getArtistSection(
+      {required String title,
+      required IconData icon,
+      required List<String> list,
+      required MediaType type,
+      required List<Track> Function(String item) getTracks,
+      required (double, double, double) dimensions}) {
+    return [
+      SliverToBoxAdapter(
+        child: SearchPageTitleRow(
+          title: title,
+          icon: icon,
+          buttonIcon: Broken.category,
+          buttonText: lang.VIEW_ALL,
+          onPressed: () => NamidaNavigator.inst.navigateTo(
+            ArtistSearchResultsPage(
+              artists: list,
+              type: type,
+            ),
+          ),
+        ),
+      ),
+      _horizontalSliverList(
+        height: 100.0,
+        itemExtent: 82.0,
+        list: list,
+        builder: (itemName) {
+          final tracks = getTracks(itemName);
+          return Container(
+            width: 80.0,
+            margin: const EdgeInsets.only(left: 2.0),
+            child: ArtistCard(
+              dimensions: dimensions,
+              name: itemName,
+              artist: tracks,
+              type: type,
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
@@ -192,6 +235,8 @@ class SearchPage extends StatelessWidget {
 
                                   final albumSearchTemp = SearchSortController.inst.albumSearchTemp;
                                   final artistSearchTemp = SearchSortController.inst.artistSearchTemp;
+                                  final albumArtistSearchTemp = SearchSortController.inst.albumArtistSearchTemp;
+                                  final composerSearchTemp = SearchSortController.inst.composerSearchTemp;
                                   final genreSearchTemp = SearchSortController.inst.genreSearchTemp;
                                   final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp;
                                   final folderSearchTemp = SearchSortController.inst.folderSearchTemp.where((f) => Folder(f).tracks.isNotEmpty).toList();
@@ -231,34 +276,37 @@ class SearchPage extends StatelessWidget {
                                       ],
 
                                       // == Artists ==
-                                      if (activeList.contains(MediaType.artist) && artistSearchTemp.isNotEmpty) ...[
-                                        SliverToBoxAdapter(
-                                          child: SearchPageTitleRow(
-                                            title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
-                                            icon: Broken.profile_2user,
-                                            buttonIcon: Broken.category,
-                                            buttonText: lang.VIEW_ALL,
-                                            onPressed: () => NamidaNavigator.inst.navigateTo(const ArtistSearchResultsPage()),
-                                          ),
-                                        ),
-                                        _horizontalSliverList(
-                                          height: 100.0,
-                                          itemExtent: 82.0,
+                                      if (activeList.contains(MediaType.artist) && artistSearchTemp.isNotEmpty)
+                                        ..._getArtistSection(
+                                          title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
+                                          icon: Broken.user,
                                           list: artistSearchTemp,
-                                          builder: (item) {
-                                            final artistName = item;
-                                            return Container(
-                                              width: 80.0,
-                                              margin: const EdgeInsets.only(left: 2.0),
-                                              child: ArtistCard(
-                                                dimensions: artistDimensions,
-                                                name: artistName,
-                                                artist: artistName.getArtistTracks(),
-                                              ),
-                                            );
-                                          },
+                                          type: MediaType.artist,
+                                          getTracks: (item) => item.getArtistTracks(),
+                                          dimensions: artistDimensions,
                                         ),
-                                      ],
+
+                                      // == Album Artists ==
+                                      if (activeList.contains(MediaType.albumArtist) && albumArtistSearchTemp.isNotEmpty)
+                                        ..._getArtistSection(
+                                          title: '${lang.ALBUM_ARTISTS} • ${albumArtistSearchTemp.length}',
+                                          icon: Broken.user,
+                                          list: albumArtistSearchTemp,
+                                          type: MediaType.albumArtist,
+                                          getTracks: (item) => item.getAlbumArtistTracks(),
+                                          dimensions: artistDimensions,
+                                        ),
+
+                                      // == Composers ==
+                                      if (activeList.contains(MediaType.composer) && composerSearchTemp.isNotEmpty)
+                                        ..._getArtistSection(
+                                          title: '${lang.COMPOSER} • ${composerSearchTemp.length}',
+                                          icon: Broken.profile_2user,
+                                          list: composerSearchTemp,
+                                          type: MediaType.composer,
+                                          getTracks: (item) => item.getComposerTracks(),
+                                          dimensions: artistDimensions,
+                                        ),
 
                                       // == Genres ==
                                       if (activeList.contains(MediaType.genre) && genreSearchTemp.isNotEmpty) ...[

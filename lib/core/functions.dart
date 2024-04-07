@@ -46,16 +46,17 @@ class NamidaOnTaps {
   static final NamidaOnTaps _instance = NamidaOnTaps._internal();
   NamidaOnTaps._internal();
 
-  Future<void> onArtistTap(String name, [List<Track>? tracksPre]) async {
-    final tracks = tracksPre ?? name.getArtistTracks();
+  Future<void> onArtistTap(String name, MediaType type, [List<Track>? tracksPre]) async {
+    final tracks = tracksPre ?? name.getArtistTracksFor(type);
 
-    final albumIds = name.getArtistAlbums();
+    final albumIds = tracks.toUniqueAlbums();
 
     NamidaNavigator.inst.navigateTo(
       ArtistTracksPage(
         name: name,
         tracks: tracks,
         albumIdentifiers: albumIds,
+        type: type,
       ),
     );
   }

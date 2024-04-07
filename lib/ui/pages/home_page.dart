@@ -732,6 +732,7 @@ class _ArtistsList extends StatelessWidget {
             dimensions: artistDimensions,
             bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
             additionalHeroTag: "$title$index",
+            type: MediaType.artist,
           );
         },
       ),

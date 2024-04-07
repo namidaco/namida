@@ -19,6 +19,7 @@ class ArtistCard extends StatelessWidget {
   final String? bottomCenterText;
   final String additionalHeroTag;
   final HomePageItems? homepageItem;
+  final MediaType type;
 
   const ArtistCard({
     super.key,
@@ -29,6 +30,7 @@ class ArtistCard extends StatelessWidget {
     this.bottomCenterText,
     this.additionalHeroTag = '',
     this.homepageItem,
+    required this.type,
   });
 
   @override
@@ -39,8 +41,8 @@ class ArtistCard extends StatelessWidget {
     final hero = 'artist_$name$additionalHeroTag';
     return GridTile(
       child: NamidaInkWell(
-        onTap: () => NamidaOnTaps.inst.onArtistTap(name, artist),
-        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
+        onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, artist),
+        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
         child: Column(
           children: [
             Stack(

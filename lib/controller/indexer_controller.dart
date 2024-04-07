@@ -1,7 +1,6 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
@@ -12,6 +11,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -51,9 +51,11 @@ class Indexer {
   final RxInt artworksSizeInStorage = 0.obs;
   final RxInt videosSizeInStorage = 0.obs;
 
-  final Rx<Map<String, List<Track>>> mainMapAlbums = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
-  final Rx<Map<String, List<Track>>> mainMapArtists = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
-  final Rx<Map<String, List<Track>>> mainMapGenres = LinkedHashMap<String, List<Track>>(equals: (p0, p1) => p0.toLowerCase() == p1.toLowerCase()).obs;
+  final mainMapAlbums = LibraryItemMap();
+  final mainMapArtists = LibraryItemMap();
+  final mainMapAlbumArtists = LibraryItemMap();
+  final mainMapComposer = LibraryItemMap();
+  final mainMapGenres = LibraryItemMap();
   final RxMap<Folder, List<Track>> mainMapFolders = <Folder, List<Track>>{}.obs;
 
   final RxList<Track> tracksInfoList = <Track>[].obs;
@@ -204,6 +206,8 @@ class Indexer {
   void _afterIndexing() {
     mainMapAlbums.value.clear();
     mainMapArtists.value.clear();
+    mainMapAlbumArtists.value.clear();
+    mainMapComposer.value.clear();
     mainMapGenres.value.clear();
     mainMapFolders.clear();
 
@@ -218,6 +222,12 @@ class Indexer {
       trExt.artistsList.loop((artist, i) {
         mainMapArtists.value.addForce(artist, tr);
       });
+
+      // -- Assigning Album Artist
+      mainMapAlbumArtists.value.addForce(trExt.albumArtist, tr);
+
+      // -- Assigning Composer
+      mainMapComposer.value.addForce(trExt.composer, tr);
 
       // -- Assigning Genres
       trExt.genresList.loop((genre, i) {
@@ -257,6 +267,14 @@ class Indexer {
           sortPls(mainMapArtists.value.values, MediaType.artist);
           mainMapArtists.refresh();
           break;
+        case MediaType.albumArtist:
+          sortPls(mainMapAlbumArtists.value.values, MediaType.albumArtist);
+          mainMapAlbumArtists.refresh();
+          break;
+        case MediaType.composer:
+          sortPls(mainMapComposer.value.values, MediaType.composer);
+          mainMapComposer.refresh();
+          break;
         case MediaType.genre:
           sortPls(mainMapGenres.value.values, MediaType.genre);
           mainMapGenres.refresh();
@@ -282,6 +300,8 @@ class Indexer {
       trExt.artistsList.loop((artist, i) {
         mainMapArtists.value[artist]?.remove(tr);
       });
+      mainMapAlbumArtists.value[trExt.albumArtist]?.remove(tr);
+      mainMapComposer.value[trExt.composer]?.remove(tr);
       trExt.genresList.loop((genre, i) {
         mainMapGenres.value[genre]?.remove(tr);
       });
@@ -294,6 +314,8 @@ class Indexer {
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
     final List<String> addedAlbums = [];
     final List<String> addedArtists = [];
+    final List<String> addedAlbumArtists = [];
+    final List<String> addedComposers = [];
     final List<String> addedGenres = [];
     final List<Folder> addedFolders = [];
 
@@ -307,6 +329,8 @@ class Indexer {
       trExt.artistsList.loop((artist, i) {
         mainMapArtists.value.addNoDuplicatesForce(artist, tr);
       });
+      mainMapAlbumArtists.value.addNoDuplicatesForce(trExt.albumArtist, tr);
+      mainMapComposer.value.addNoDuplicatesForce(trExt.composer, tr);
 
       // -- Assigning Genres
       trExt.genresList.loop((genre, i) {
@@ -319,6 +343,8 @@ class Indexer {
       // --- Adding media that was affected
       addedAlbums.add(trExt.albumIdentifier);
       addedArtists.addAll(trExt.artistsList);
+      addedAlbumArtists.add(trExt.albumArtist);
+      addedComposers.add(trExt.composer);
       addedGenres.addAll(trExt.artistsList);
       addedFolders.add(tr.folder);
     });
@@ -336,6 +362,16 @@ class Indexer {
       ..removeDuplicates()
       ..loop((e, index) {
         mainMapArtists.value[e]?.sortByAlts(artistSorters);
+      });
+    addedAlbumArtists
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapAlbumArtists.value[e]?.sortByAlts(artistSorters);
+      });
+    addedComposers
+      ..removeDuplicates()
+      ..loop((e, index) {
+        mainMapComposer.value[e]?.sortByAlts(artistSorters);
       });
     addedGenres
       ..removeDuplicates()

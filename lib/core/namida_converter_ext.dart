@@ -731,8 +731,14 @@ extension WidgetsPagess on Widget {
         name = (this as AlbumTracksPage).albumIdentifier;
         break;
       case ArtistTracksPage:
-        route = RouteType.SUBPAGE_artistTracks;
-        name = (this as ArtistTracksPage).name;
+        final page = (this as ArtistTracksPage);
+        final type = page.type;
+        route = type == MediaType.albumArtist
+            ? RouteType.SUBPAGE_albumArtistTracks
+            : type == MediaType.composer
+                ? RouteType.SUBPAGE_composerTracks
+                : RouteType.SUBPAGE_artistTracks;
+        name = page.name;
         break;
       case GenreTracksPage:
         route = RouteType.SUBPAGE_genreTracks;
@@ -838,6 +844,12 @@ extension RouteUtils on NamidaRoute {
       case RouteType.SUBPAGE_artistTracks:
         tr.addAll(name.getArtistTracks());
         break;
+      case RouteType.SUBPAGE_albumArtistTracks:
+        tr.addAll(name.getAlbumArtistTracks());
+        break;
+      case RouteType.SUBPAGE_composerTracks:
+        tr.addAll(name.getComposerTracks());
+        break;
       case RouteType.SUBPAGE_genreTracks:
         tr.addAll(name.getGenresTracks());
         break;
@@ -863,18 +875,18 @@ extension RouteUtils on NamidaRoute {
     return tr;
   }
 
-  /// Currently Supports only [RouteType.SUBPAGE_albumTracks] & [RouteType.SUBPAGE_artistTracks].
+  /// Currently Supports only [RouteType.SUBPAGE_albumTracks], [RouteType.SUBPAGE_artistTracks],
+  /// [RouteType.SUBPAGE_albumArtistTracks] & [RouteType.SUBPAGE_composerTracks].
   Track? get trackOfColor {
-    if (route == RouteType.SUBPAGE_albumTracks) {
-      return name.getAlbumTracks().trackOfImage;
-    }
-    if (route == RouteType.SUBPAGE_artistTracks) {
-      return name.getArtistTracks().trackOfImage;
-    }
+    if (route == RouteType.SUBPAGE_albumTracks) return name.getAlbumTracks().trackOfImage;
+    if (route == RouteType.SUBPAGE_artistTracks) return name.getArtistTracks().trackOfImage;
+    if (route == RouteType.SUBPAGE_albumArtistTracks) return name.getAlbumArtistTracks().trackOfImage;
+    if (route == RouteType.SUBPAGE_composerTracks) return name.getComposerTracks().trackOfImage;
     return null;
   }
 
-  /// Currently Supports only [RouteType.SUBPAGE_albumTracks] & [RouteType.SUBPAGE_artistTracks].
+  /// Currently Supports only [RouteType.SUBPAGE_albumTracks], [RouteType.SUBPAGE_artistTracks],
+  /// [RouteType.SUBPAGE_albumArtistTracks] & [RouteType.SUBPAGE_composerTracks].
   Future<void> updateColorScheme() async {
     // a delay to prevent navigation glitches
     await Future.delayed(const Duration(milliseconds: 500));
@@ -947,6 +959,8 @@ extension RouteUtils on NamidaRoute {
         sortingTracksMediaType = MediaType.album;
         break;
       case RouteType.SUBPAGE_artistTracks:
+      case RouteType.SUBPAGE_albumArtistTracks:
+      case RouteType.SUBPAGE_composerTracks:
         sortingTracksMediaType = MediaType.artist;
         break;
       case RouteType.SUBPAGE_genreTracks:
@@ -1030,7 +1044,13 @@ extension RouteUtils on NamidaRoute {
               NamidaDialogs.inst.showAlbumDialog(name);
               break;
             case RouteType.SUBPAGE_artistTracks:
-              NamidaDialogs.inst.showArtistDialog(name);
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
+              break;
+            case RouteType.SUBPAGE_albumArtistTracks:
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.albumArtist);
+              break;
+            case RouteType.SUBPAGE_composerTracks:
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
               break;
             case RouteType.SUBPAGE_genreTracks:
               NamidaDialogs.inst.showGenreDialog(name);
@@ -1043,8 +1063,12 @@ extension RouteUtils on NamidaRoute {
               null;
           }
         }),
-        shouldShow:
-            route == RouteType.SUBPAGE_albumTracks || route == RouteType.SUBPAGE_artistTracks || route == RouteType.SUBPAGE_genreTracks || route == RouteType.SUBPAGE_queueTracks,
+        shouldShow: route == RouteType.SUBPAGE_albumTracks ||
+            route == RouteType.SUBPAGE_artistTracks ||
+            route == RouteType.SUBPAGE_albumArtistTracks ||
+            route == RouteType.SUBPAGE_composerTracks ||
+            route == RouteType.SUBPAGE_genreTracks ||
+            route == RouteType.SUBPAGE_queueTracks,
       ),
 
       getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: HistoryController.inst), shouldShow: route == RouteType.SUBPAGE_historyTracks),
@@ -1123,26 +1147,21 @@ extension RouteUtils on NamidaRoute {
 }
 
 extension TracksFromMaps on String {
-  List<Track> getAlbumTracks() {
-    return Indexer.inst.mainMapAlbums.value[this] ?? [];
+  List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this] ?? [];
+
+  List<Track> getArtistTracks() => Indexer.inst.mainMapArtists.value[this] ?? [];
+  List<Track> getArtistTracksFor(MediaType type) {
+    return switch (type) {
+      MediaType.artist => Indexer.inst.mainMapArtists.value[this] ?? [],
+      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.value[this] ?? [],
+      MediaType.composer => Indexer.inst.mainMapComposer.value[this] ?? [],
+      _ => Indexer.inst.mainMapArtists.value[this] ?? [],
+    };
   }
 
-  List<Track> getArtistTracks() {
-    return Indexer.inst.mainMapArtists.value[this] ?? [];
-  }
-
-  List<Track> getGenresTracks() {
-    return Indexer.inst.mainMapGenres.value[this] ?? [];
-  }
-
-  Set<String> getArtistAlbums() {
-    final tracks = getArtistTracks();
-    final albums = <String>{};
-    tracks.loop((t, i) {
-      albums.add(t.albumIdentifier);
-    });
-    return albums;
-  }
+  List<Track> getAlbumArtistTracks() => Indexer.inst.mainMapAlbumArtists.value[this] ?? [];
+  List<Track> getComposerTracks() => Indexer.inst.mainMapComposer.value[this] ?? [];
+  List<Track> getGenresTracks() => Indexer.inst.mainMapGenres.value[this] ?? [];
 
   Queue? getQueue() => QueueController.inst.queuesMap.value[int.tryParse(this)];
 }
@@ -1232,6 +1251,8 @@ class _NamidaConverters {
         MediaType.album: lang.ALBUMS,
         MediaType.track: lang.TRACKS,
         MediaType.artist: lang.ARTISTS,
+        MediaType.albumArtist: lang.ALBUM_ARTISTS,
+        MediaType.composer: lang.COMPOSER,
         MediaType.genre: lang.GENRES,
         MediaType.playlist: lang.PLAYLISTS,
         MediaType.folder: lang.FOLDERS,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -14,8 +15,15 @@ class ArtistTile extends StatelessWidget {
   final String name;
   final List<Track> tracks;
   final Set<String> albums;
+  final MediaType type;
 
-  const ArtistTile({super.key, required this.name, required this.tracks, required this.albums});
+  const ArtistTile({
+    super.key,
+    required this.name,
+    required this.tracks,
+    required this.albums,
+    required this.type,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +32,8 @@ class ArtistTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
       child: NamidaInkWell(
-        onTap: () => NamidaOnTaps.inst.onArtistTap(name, tracks),
-        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name),
+        onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, tracks),
+        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
         child: SizedBox(
           height: Dimensions.artistTileItemExtent,
           child: Padding(
@@ -84,7 +92,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 4.0),
                 MoreIcon(
-                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name),
+                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name, type),
                   padding: 6.0,
                 ),
               ],

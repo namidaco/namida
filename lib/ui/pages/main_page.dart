@@ -370,14 +370,17 @@ class AlbumSearchResultsPage extends StatelessWidget {
 }
 
 class ArtistSearchResultsPage extends StatelessWidget {
-  const ArtistSearchResultsPage({super.key});
+  final List<String> artists;
+  final MediaType type;
+  const ArtistSearchResultsPage({super.key, required this.artists, required this.type});
 
   @override
   Widget build(BuildContext context) {
     return ArtistsPage(
       enableHero: false,
-      artists: SearchSortController.inst.artistSearchTemp,
+      artists: artists,
       countPerRow: settings.artistGridCount.value,
+      customType: type,
     );
   }
 }

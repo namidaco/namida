@@ -57,6 +57,13 @@ extension TracksWithDatesUtils on List<TrackWithDate> {
 }
 
 extension TracksUtils on List<Track> {
+  Set<String> toUniqueAlbums() {
+    final tracks = this;
+    final albums = <String>{};
+    tracks.loop((t, _) => albums.add(t.albumIdentifier));
+    return albums;
+  }
+
   String get totalSizeFormatted {
     int size = 0;
     loop((t, index) {

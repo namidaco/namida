@@ -66,8 +66,8 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showArtistDialog(String name) async {
-    final tracks = name.getArtistTracks();
+  Future<void> showArtistDialog(String name, MediaType type) async {
+    final tracks = name.getArtistTracksFor(type);
     final albums = tracks.mappedUniqued((e) => e.album);
     await showGeneralPopupDialog(
       tracks,
