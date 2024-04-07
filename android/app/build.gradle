@@ -61,7 +61,7 @@ android {
         variant.outputs.all { output ->
             def abi = output.getFilter(com.android.build.OutputFile.ABI)
             def abiText = abi == null ? "" : "-$abi"
-            outputFileName = "namida-v${versionName}${abiText}-${variant.name}.apk"
+            outputFileName = "namida-v${versionName}${abiText}.apk"
         }
     }
 

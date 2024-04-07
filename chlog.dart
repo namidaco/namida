@@ -109,6 +109,7 @@ void main(List<String> argumentsPre) async {
   changelog.writeAsStringSync(finalString);
 
   final stringyFeat = (prettyMap['feat'] ?? []).reversed.map((e) => '   • $e').join('\n');
+  prettyMap.remove('feat');
   final stringyBugImpr = prettyMap.entries.map((e) => '- ${e.key}:\n${e.value.reversed.map((e) => '   • $e').join('\n')}\n');
 
   File('CHANGELOG_pretty.txt')

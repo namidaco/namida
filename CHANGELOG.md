@@ -1,6 +1,100 @@
 # Namida Changelog
 
+## 07/04/2024
+# v2.0.6
+### 🎉 New Features:
+   - 752c3b4: clear audio cache in advanced settings
+   - a3b2b58: allow deleting temp cache files
+   - 044f010: pinch in/out to scale lrc font size, ref #128
+   - a669ad4: use local track as a fallback youtube audio cache
+   - 966818d: parse yt comments duration text
+   - 15ec081: play youtube videos in local miniplayer option, closes #19
+   - 81929ab: toggle artwork on lockscreen
+   - d8d2a0f: broadcast session id for equalizer apps, closes #60
+   - 4c4104e: queues cleaner
+   - 00bd918: missing tracks page, closes #117
+   - 7555298: new yt miniplayer gesture, drag down from right side to enter fullscreen
+   - 39ec392: new in-app file picker with external picker logic rewrite
+   - 92ba4cd: diacritic support, improves search by normalizing accent characters, closes #73
+   - 9964839: lyrics source
+   - 0efb32e: custom speeds
+   - 9b8d27f: album artists & composers, closes #21
+
+### 🛠️ Bug fixes & Improvements:
+- core:
+   - 57b3cea: better player error handling
+   - 9261543: better video quality decisions
+   - 0a17af1: tagger logic complete rewrite
+   - 1285c2a: tagger fixes & improvements
+   - 18c9cf7: inner drawer re-implementation
+   - 5ee66a1: instant play/pause reflecting, this also prevents unwanted plays after pressing pause
+   - 831258a: disable yt video stream switching if cached version was playing
+   - 6a076fa: better playback decisions when played from cache
+   - 6d9f5c4: fallback for storage directories
+   - ab521f3: adaptive playlist csv import
+   - 939ec2a: better logging & versioning
+   - 1431cfa: fixes n tweaks
+   - 3265b52: bump version script
+- fix:
+   - 88ba1f9: playing files on some phones after equalizer implementation
+   - 7a8135a: pull to refresh in tracks page when no many tracks (no scroll notification)
+   - ef9fdc6: show video grey bar in fullscreen
+   - 250fb05: short loudness when preset is enabled
+   - bae60f8: white dialog when no track artists, closes #126
+   - 15de106: lrc controls overlapping in fullscreen, closes #128
+   - a81763d: prevent editing tags again while editing, this prevents corrupted audio file if user pressed save multiple times, closes #129
+   - 168d653: search matching for non-lowercase artists & genres
+   - 9a9b25c: tagger stuck in some scenarios & other tagger fixes
+   - 060dcb8: yt playlists/channels thumbnail not showing
+   - 864749a: scrolling in some app parts
+   - e97d7e0: applying default dark color on startup
+   - 5987f77: playback on some devices
+   - 8580464: searching letter l & I
+   - 5203cb9: video player padding insets
+- chore:
+   - 8c13c38: play option for floating action button
+   - 3c8bb30: video cache deleting tweakies
+   - 2ab36da: sleep icon in yt queue
+   - 613ff6e: fetch all channels videos since specific date
+   - eccec09: remove - topic from video artist download tags
+   - afa940b: ui fixes & others
+   - 7a614c8: ui sauce
+   - a6a3ebd: instant video controls showing, double tap to seek is detected only after second tap, instead of waiting
+   - 509dd88: various ui & other tweaks
+   - 04ee67a: lil bit faster startup
+   - 7423e49: drawer ui fixes
+   - 86edc2d: yt miniplayer drag tweaks
+   - a5aed68: few tweaks/fixes
+   - 3ad445e: use session id when opening system equalizer
+   - 13c374c: fixes/tweaks
+   - 1433488: tweaks/fixes + comment copy will parse html first + yt description duration tap will seek + smol tagger fallback issue + show buffering in miniplayer when not using yt-styled miniplayer + theme color dialog refreshing + perf app will not be painted when miniplayer expanded + fix queue item rebuild issue on reorder + drawer tweaks & others
+   - 2fa656a: accurate current items being extracted in indexer settings page
+   - 09301ec: various tweaks & fixes
+   - 828ce5f: many performance & ui tweaks
+   - 49a1aeb: pressing download item will open menu instead of playing
+   - 63515d4: yt miniplayer bottom empty space when app bottom nav bar is disabled
+   - 914e989: delete old auto backups (max 10 files) and fix empty auto backup file, ref #69
+   - af841de: refactor & tweaks
+   - b2c71ee: confirm before removing from yt playlist
+   - 267e1a3: various tweaks & fixes, ref #142
+   - a2dca2e: selectable video description
+   - 0a83e58: expandable extracting paths in indexer page
+   - 7d898e7: minor tweaks
+   - ea8ff84: skipping failed plays properly if previous button pressed, we skip to previous if failed
+   - 61ccf03: smol ui tweaks
+   - 654f06a: playback tweaks
+- build:
+   - b5e8bf4: dynamic package versions
+- code:
+   - d3cb34b: refactor regex & link handling
+   - 9e8b1da: refactor yt card dimensions
+- perf:
+   - 50163b1: ui refactor
+   - 7b81c7c: migrate to TapDetector & LongPressDetector
+
+
 ## 14/02/2024
+# v2.0.1
 ### 🎉 New Features:
 - feat:
    - 09e8c11162582814bea765687c981b211fa11f84: Equalizer
@@ -34,7 +128,7 @@
    - 7380108604faa702b7baef6d83d221737d105e22: yt local search ui tweaks
    - 1c2bb1741a10ba6da982844ee2c7e0dad8b2232e: monitor clipboard only when search is active
    - 298082798b07010d1bce192b55f3fef564ca1c1f: semi transparent system nav bars when tapping video in fullscreen
-   - 030f40b802c0df34fc25e5ac8b41759b301183d4: refactor miniplayer bottom row this allows for more icons without overlapping with text closes #50
+   - 030f40b802c0df34fc25e5ac8b41759b301183d4: refactor miniplayer bottom row this allows for more icons without overlapping with text, closes #50
    - 1b889efaa17607806156dc76fe70ab48725bbc9b: various tweaks & fixes
    - 20610805419de99cc91cb3a11dfadcdcf7224f55: miniplayer dimensions tweaks
    - 889061c1a910d6555bf4af23f615371304d4e2af: ui thingys
@@ -106,13 +200,13 @@
    - cc682302ac497173aa1a1515663a3e26c2b2dcf5: seamless transitioning when playing same item in another queue
    - 1528947573bf497f2fd8802eff0df9a7f90b3448: color palette for albums when groupArtworksByAlbum enabled
    - 7a4f21e743fb7ca1f56ec321d44d3a66b074ac43: sort yt playlists and smol fix while importing
-   - 30fb059071717d0d21c44259862bdeaab80f5cfe: sort by most played and recently played closes #90
+   - 30fb059071717d0d21c44259862bdeaab80f5cfe: sort by most played and recently played, closes #90
    - ec57c1738b8e53a026b6d4824e50b9fc7d24512a: swipe down to refresh library #78
    - db22eaa70fbcb87e221ce1aa0e5b95479634f3e3: channel subpage view #1
    - 386c83126b197c5a285d737d9402beb86ccbeda0: sort hosted yt playlist videos + button to load all
-   - 45c16d5976e1a41a80483aa9596467c24783b117: remove playlist duplicates closes #87
+   - 45c16d5976e1a41a80483aa9596467c24783b117: remove playlist duplicates, closes #87
    - 8b4c39524129bde1e2c6249e4d5e5701091285f7: restore latest yt queue on startup
-   - 31486500a3c06d04f95543d1db88205528e7fe5e: yt queue chip ref #1
+   - 31486500a3c06d04f95543d1db88205528e7fe5e: yt queue chip, ref #1
    - ef7ab43ee1384519ae021e21a8b76927f3f841e4: reorderable youtube playlist videos, closes #97
    - 5bcf95525da32b9fe31a3c5d4afe17e720631d57: watch later yt playlist #1
 
@@ -136,7 +230,7 @@
    - 2c67645729806098325dd40571a8da4e6f2f501c: run all searches on isolate #61
    - 0aaba54c2b69664510819d1195894e6ac8b42837: save yt videos & channel videos in memory
    - e10ee0fa66d942bddc1bf3a8f73bc8b53b7cd0f3: faster video assigning at startup by attempting to assign one before checking for deleted/new videos in cache
-   - a71db57b6f279dd44b4f47a123c0871ea2f9f7c5: home page & ytplaylistview improvements closes #56
+   - a71db57b6f279dd44b4f47a123c0871ea2f9f7c5: home page & ytplaylistview improvements, closes #56
 
 - chore:
    - f19e123f97b1179906699a057d743adca15ea9d7: always ask when opening external yt playlist
@@ -166,7 +260,7 @@
    - b1c9287163d3e28d3779496d324518090ecc0b73: allow separate listen time local tracks, youtube, local videos
    - 68a13953ff44506d1eae3265f4857f784ffaf726: restore yt active tab on startup
    - 12a6106b7f61cd0681613948985f4b26ccf44f73: go to channel button for video cards
-   - 53d8d03efd2a6ca2bb44d4ef47096f2f86077fdc: expose yt download location closes #93
+   - 53d8d03efd2a6ca2bb44d4ef47096f2f86077fdc: expose yt download location, closes #93
    - 3731eeedc1d1feb161390e0af529f412b33518d3: stuff & stuff
    - 1431c81af7cef89baaa3bc438589159b2ef52b85: more stuff
    - 68fdade6f8e9246b427b221b7c7de783f57b25f7: av sync improvements
@@ -193,7 +287,7 @@
    - 5dd1b5d3dc804ab17994b4ac22cf924aff366c12: save track info file after updating duration
    - de3ee38f938bd318e5397b857d2af0063c132005: hero animation for history tracks while opening dialog
    - cc61d731fb781c1d6d85ee165441944ba5e9d4cf: possible fix for fake error message, closes #86
-   - 9247543c6e455b039792738d6a410fcade102703: playback issues especially when failed to play files + properly kill service when stopping closes #71 ref #92
+   - 9247543c6e455b039792738d6a410fcade102703: playback issues especially when failed to play files + properly kill service when stopping, closes #71, ref #92
    - 9c9136191aae2c6dcb8e468600d038006ead8ebc: stopping player on queue emptied
    - 717de50aab1e2150d7f629db4643f6f2e586123c: minSdk 21 (Android 5.0) & fix desguaring issues desugaring disabled was causing crash in retrieving channel videos methods
 
