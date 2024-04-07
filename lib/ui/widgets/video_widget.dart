@@ -513,6 +513,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   bool get _canShowControls => widget.showControls && !NamidaChannel.inst.isInPip.value;
 
   EdgeInsets _deviceInsets = EdgeInsets.zero;
+  Orientation? _latestOrientation;
 
   @override
   Widget build(BuildContext context) {
@@ -575,17 +576,31 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         preferLowerRes: false,
       );
     });
+
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
-            ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 0.0) // lanscape videos
-            : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0) // vertical videos
-        : const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0);
+            ? EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // lanscape videos
+            : EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // vertical videos
+        : const EdgeInsets.symmetric(horizontal: 2.0);
+    final bottomPadding = widget.isFullScreen
+        ? inLandscape
+            ? 12.0 + _deviceInsets.bottom // lanscape videos
+            : 12.0 + 0.35 * _deviceInsets.bottom // vertical videos
+        : 2.0;
+    final topPadding = widget.isFullScreen
+        ? inLandscape
+            ? 12.0 + _deviceInsets.top // lanscape videos
+            : 12.0 + _deviceInsets.top // vertical videos
+        : 2.0;
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowSliders = _canShowControls && widget.isFullScreen;
     final shouldShowSeekBar = widget.isFullScreen;
     final view = View.of(context);
-    if (_deviceInsets == EdgeInsets.zero) {
-      _deviceInsets = MediaQuery.paddingOf(context);
+    final newDeviceInsets = MediaQuery.paddingOf(context);
+    final newOrientation = MediaQuery.orientationOf(context);
+    if (_latestOrientation != newOrientation || _deviceInsets.horizontal < newDeviceInsets.horizontal || _deviceInsets.vertical < newDeviceInsets.vertical) {
+      _deviceInsets = newDeviceInsets;
+      _latestOrientation = newOrientation;
     }
 
     return Listener(
@@ -690,14 +705,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
               // ---- Top Row ----
               Padding(
-                padding: horizontalControlsPadding +
-                    (widget.isFullScreen
-                        ? EdgeInsets.only(
-                            top: _deviceInsets.top,
-                            left: _deviceInsets.left,
-                            right: _deviceInsets.right,
-                          )
-                        : EdgeInsets.zero),
+                padding: horizontalControlsPadding + EdgeInsets.only(top: topPadding),
                 child: TapDetector(
                   onTap: () {},
                   child: Align(
@@ -1131,14 +1139,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               ),
               // ---- Bottom Row ----
               Padding(
-                padding: horizontalControlsPadding +
-                    (widget.isFullScreen
-                        ? EdgeInsets.only(
-                            bottom: _deviceInsets.bottom,
-                            left: _deviceInsets.left,
-                            right: _deviceInsets.right,
-                          )
-                        : EdgeInsets.zero),
+                padding: horizontalControlsPadding + EdgeInsets.only(bottom: bottomPadding),
                 child: TapDetector(
                   onTap: () {},
                   child: Align(
