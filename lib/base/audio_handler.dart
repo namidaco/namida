@@ -62,7 +62,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   AudioLoadConfiguration? get defaultAndroidLoadConfig {
     return AudioLoadConfiguration(
       androidLoadControl: AndroidLoadControl(
-        minBufferDuration: const Duration(seconds: 5),
+        minBufferDuration: const Duration(seconds: 50),
         maxBufferDuration: const Duration(minutes: 3),
       ),
     );
@@ -366,6 +366,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
   }) async {
     await beforeQueueAddOrInsert(queue);
+    if (startPlaying) setPlayWhenReady(true);
     await super.assignNewQueue(
       playAtIndex: playAtIndex,
       queue: queue,
@@ -595,6 +596,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     setAudioOnlyPlayback(false);
 
     currentVideoStream.value = stream;
+    currentCachedVideo.value = null;
 
     if (cachedFile != null && useCache) {
       currentCachedVideo.value = videoItem;
@@ -813,8 +815,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else {
       if (isPlaying) {
         // wait for pausing only if playing.
-        pause(pauseFadeMillis: 100).then((_) async {
-          if (item == currentVideo) await super.onDispose();
+        pauseAndDispose(fadeMS: 100, stillSameItem: () => item == currentVideo).then((_) {
           playerStoppingSeikoo.complete(true);
         });
       } else {

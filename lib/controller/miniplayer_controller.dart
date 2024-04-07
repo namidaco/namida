@@ -338,15 +338,13 @@ class MiniPlayerController {
 
   void _updateScrollPositionInQueue() {
     void updateIcon() {
-      final pixels = queueScrollController.position.pixels;
       final sizeInSettings = _currentItemExtent * Player.inst.currentIndex - Get.height * 0.3;
+      final pixels = queueScrollController.positions.lastOrNull?.pixels ?? sizeInSettings;
       if (pixels > sizeInSettings) {
         arrowIcon.value = Broken.arrow_up_1;
-      }
-      if (pixels < sizeInSettings) {
+      } else if (pixels < sizeInSettings) {
         arrowIcon.value = Broken.arrow_down;
-      }
-      if (pixels == sizeInSettings) {
+      } else if (pixels == sizeInSettings) {
         arrowIcon.value = Broken.cd;
       }
     }

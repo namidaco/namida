@@ -58,7 +58,7 @@ class Lyrics {
 
     if (_lyricsPrioritizeEmbedded && embedded != '') {
       final lrc = embedded.parseLRC();
-      if (lrc != null) {
+      if (lrc != null && lrc.lyrics.isNotEmpty) {
         currentLyricsLRC.value = lrc;
         _updateWidgets(lrc);
       } else {
@@ -151,8 +151,8 @@ class Lyrics {
       tries.addAll([
         (track.title, track.originalArtist, ''),
         (track.title, track.originalArtist, track.album),
-        (track.title, track.artistsList.first, ''),
-        (track.title, track.artistsList.first, track.album),
+        if (track.artistsList.isNotEmpty) (track.title, track.artistsList.first, ''),
+        if (track.artistsList.isNotEmpty) (track.title, track.artistsList.first, track.album),
       ]);
 
       final lyrics = <LyricsModel>[];
@@ -201,50 +201,48 @@ class Lyrics {
       final tail = customQuery == '' ? params : 'q=$customQuery';
       final urlPre = "https://lrclib.net/api/search?$tail";
       final url = Uri.parse(Uri.encodeFull(urlPre));
-      http.Response? req;
+
       try {
-        req = await http.get(url);
-      } catch (_) {
-        return [];
-      }
-      final fetched = <LyricsModel>[];
-      final jsonLists = (jsonDecode(req.body) as List<dynamic>?) ?? [];
-      for (final jsonRes in jsonLists) {
-        final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
-        final plain = jsonRes?["plainLyrics"] as String? ?? '';
-        if (syncedLyrics != '') {
-          // lrc
-          final lines = <String>[];
-          if (artist != '') lines.add('[ar:$artist]');
-          if (album != '') lines.add('[al:$album]');
-          if (title != '') lines.add('[ti:$title]');
-          if (durationInSeconds > 0) lines.add('[length:${formatTime(durationInSeconds)}]');
-          for (final l in syncedLyrics.split('\n')) {
-            lines.add(l);
+        final req = await http.get(url);
+        final fetched = <LyricsModel>[];
+        final jsonLists = (jsonDecode(req.body) as List<dynamic>?) ?? [];
+        for (final jsonRes in jsonLists) {
+          final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
+          final plain = jsonRes?["plainLyrics"] as String? ?? '';
+          if (syncedLyrics != '') {
+            // lrc
+            final lines = <String>[];
+            if (artist != '') lines.add('[ar:$artist]');
+            if (album != '') lines.add('[al:$album]');
+            if (title != '') lines.add('[ti:$title]');
+            if (durationInSeconds > 0) lines.add('[length:${formatTime(durationInSeconds)}]');
+            for (final l in syncedLyrics.split('\n')) {
+              lines.add(l);
+            }
+            final resultedLRC = lines.join('\n');
+            fetched.add(LyricsModel(
+              lyrics: resultedLRC,
+              isInCache: false,
+              fromInternet: true,
+              synced: true,
+              file: null,
+              isEmbedded: false,
+            ));
+          } else if (plain != '') {
+            // txt
+            fetched.add(LyricsModel(
+              lyrics: plain,
+              isInCache: false,
+              fromInternet: true,
+              synced: false,
+              file: null,
+              isEmbedded: false,
+            ));
           }
-          final resultedLRC = lines.join('\n');
-          fetched.add(LyricsModel(
-            lyrics: resultedLRC,
-            isInCache: false,
-            fromInternet: true,
-            synced: true,
-            file: null,
-            isEmbedded: false,
-          ));
-        } else if (plain != '') {
-          // txt
-          fetched.add(LyricsModel(
-            lyrics: plain,
-            isInCache: false,
-            fromInternet: true,
-            synced: false,
-            file: null,
-            isEmbedded: false,
-          ));
         }
-      }
-      fetched.removeDuplicates();
-      return fetched;
+        fetched.removeDuplicates();
+        return fetched;
+      } catch (_) {}
     }
     return [];
   }
@@ -261,7 +259,7 @@ class Lyrics {
 
     /// download lyrics
     else if (source != LyricsSource.local) {
-      final lyrics = await _fetchLyricsGoogle(artist: track.artistsList.first, title: track.title);
+      final lyrics = await _fetchLyricsGoogle(artist: track.artistsList.firstOrNull ?? '', title: track.title);
       final regex = RegExp(r'<[^>]*>');
       if (lyrics != '') {
         final formattedText = lyrics.replaceAll(regex, '');

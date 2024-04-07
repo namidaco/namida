@@ -224,7 +224,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   };
 
   void _sortItems(_SortType? type, bool? reversed, {bool refresh = true}) {
-    if (type == null && reversed == null) return;
     type ??= _sortType.value;
     reversed ??= _sortReversed.value;
 

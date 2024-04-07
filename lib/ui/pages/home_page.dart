@@ -74,8 +74,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   @override
   void initState() {
-    _fillLists();
     lostMemoriesScrollController = ScrollController();
+    _fillLists();
     super.initState();
   }
 

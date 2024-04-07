@@ -273,21 +273,14 @@ extension TRACKPLAYMODE on TrackPlayMode {
   List<Track> getQueue(Track trackPre, {List<Track>? searchQueue}) {
     List<Track> queue = [];
     final track = trackPre.toTrackExt();
-    if (this == TrackPlayMode.selectedTrack) {
-      queue = [trackPre];
-    }
-    if (this == TrackPlayMode.searchResults) {
-      queue = searchQueue ?? (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp : SearchSortController.inst.trackSearchList);
-    }
-    if (this == TrackPlayMode.trackAlbum) {
-      queue = track.albumIdentifier.getAlbumTracks();
-    }
-    if (this == TrackPlayMode.trackArtist) {
-      queue = track.artistsList.first.getArtistTracks();
-    }
-    if (this == TrackPlayMode.trackGenre) {
-      queue = track.artistsList.first.getGenresTracks();
-    }
+    queue = switch (this) {
+      TrackPlayMode.selectedTrack => [trackPre],
+      TrackPlayMode.searchResults =>
+        searchQueue ?? (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp : SearchSortController.inst.trackSearchList),
+      TrackPlayMode.trackAlbum => track.albumIdentifier.getAlbumTracks(),
+      TrackPlayMode.trackArtist => track.artistsList.first.getArtistTracks(),
+      TrackPlayMode.trackGenre => track.artistsList.first.getGenresTracks(),
+    };
     if (shouldBeIndex0) {
       queue.remove(trackPre);
       queue.insertSafe(0, trackPre);
