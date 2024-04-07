@@ -296,14 +296,14 @@ class PlaybackSettings extends SettingSubpageProvider {
             onChanged: (val) {
               settings.save(displayFavouriteButtonInNotification: !val);
               Player.inst.refreshNotification();
-              if (!val && kSdkVersion < 31) {
+              if (!val && NamidaDeviceInfo.sdkVersion < 31) {
                 snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
               }
             },
           ),
         ),
       ),
-      if (kSdkVersion < 33)
+      if (NamidaDeviceInfo.sdkVersion < 33)
         getItemWrapper(
           key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
           child: Obx(

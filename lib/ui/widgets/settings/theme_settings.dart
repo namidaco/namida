@@ -215,7 +215,7 @@ class ThemeSetting extends SettingSubpageProvider {
               ),
             ),
             // Android S/12+
-            if (kSdkVersion >= 31)
+            if (NamidaDeviceInfo.sdkVersion >= 31)
               getItemWrapper(
                 key: _ThemeSettingsKeys.wallpaperColors,
                 child: Obx(

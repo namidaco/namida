@@ -278,6 +278,7 @@ abstract class LanguageKeys {
   String get HISTORY_IMPORT_MISSING_ENTRIES_NOTE => _getKey('HISTORY_IMPORT_MISSING_ENTRIES_NOTE');
   String get HISTORY_LISTENS_REPLACE_WARNING => _getKey('HISTORY_LISTENS_REPLACE_WARNING');
   String get HOME => _getKey('HOME');
+  String get HOURS => _getKey('HOURS');
   String get HOUR_FORMAT_12 => _getKey('HOUR_FORMAT_12');
   String get IF_NOT_PLAYING => _getKey('IF_NOT_PLAYING');
   String get IGNORES => _getKey('IGNORES');

@@ -1,8 +1,11 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
+import 'dart:async';
 import 'dart:collection';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/lang.dart';
@@ -10,8 +13,64 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 
-///
-int kSdkVersion = 21;
+class NamidaDeviceInfo {
+  static int sdkVersion = 21;
+
+  static final androidInfoCompleter = Completer<AndroidDeviceInfo>();
+  static final packageInfoCompleter = Completer<PackageInfo>();
+
+  static AndroidDeviceInfo? androidInfo;
+  static PackageInfo? packageInfo;
+
+  static String? version;
+  static DateTime? buildDate;
+  static String? buildType;
+
+  static bool _fetchedAndroidInfo = false;
+  static bool _fetchedPackageInfo = false;
+
+  static Future<void> fetchAndroidInfo() async {
+    if (_fetchedAndroidInfo) return;
+    _fetchedAndroidInfo = true;
+    try {
+      final res = await DeviceInfoPlugin().androidInfo;
+      androidInfo = res;
+      androidInfoCompleter.complete(res);
+    } catch (_) {
+      _fetchedAndroidInfo = false;
+    }
+  }
+
+  static Future<void> fetchPackageInfo() async {
+    if (_fetchedPackageInfo) return;
+    _fetchedPackageInfo = true;
+    try {
+      final res = await PackageInfo.fromPlatform();
+      packageInfo = res;
+      version = res.version;
+      _parseBuildNumber(res.buildNumber);
+      packageInfoCompleter.complete(res);
+    } catch (_) {
+      _fetchedPackageInfo = false;
+    }
+  }
+
+  static void _parseBuildNumber(String buildNumber) {
+    try {
+      int hours = 0;
+      int minutes = 0;
+      final yyMMddHHP = buildNumber;
+      final year = 2000 + int.parse("${yyMMddHHP[0]}${yyMMddHHP[1]}");
+      final month = int.parse("${yyMMddHHP[2]}${yyMMddHHP[3]}");
+      final day = int.parse("${yyMMddHHP[4]}${yyMMddHHP[5]}");
+      try {
+        hours = int.parse("${yyMMddHHP[6]}${yyMMddHHP[7]}");
+        minutes = (60 * double.parse("0.${yyMMddHHP[8]}")).round(); // 0.5, 0.8, 1.0, etc.
+      } catch (_) {}
+      buildDate = DateTime.utc(year, month, day, hours - 2, minutes);
+    } catch (_) {}
+  }
+}
 
 final Set<String> kStoragePaths = {};
 final Set<String> kInitialDirectoriesToScan = {};
@@ -86,7 +145,7 @@ class NamidaLinkUtils {
 
 /// Files used by Namida
 class AppPaths {
-  static final _USER_DATA = AppDirs.USER_DATA;
+  static String get _USER_DATA => AppDirs.USER_DATA;
 
   // ================= User Data =================
   static final SETTINGS = '$_USER_DATA/namida_settings.json';
@@ -98,8 +157,20 @@ class AppPaths {
   static final TRACKS_STATS = '$_USER_DATA/tracks_stats.json';
   static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';
 
-  static final LOGS = '$_USER_DATA/logs.txt';
-  static final LOGS_TAGGER = '$_USER_DATA/tagger_logs.txt';
+  static String get LOGS => _getLogsFile('');
+  static String get LOGS_TAGGER => _getLogsFile('_tagger');
+  static String get LOGS_CLEAN => _getLogsFile('_clean');
+
+  static String _getLogsFile(String identifier) {
+    final suffix = getLogsSuffix() ?? '_unknown';
+    return '${AppDirs.LOGS_DIRECTORY}logs$identifier$suffix.txt';
+  }
+
+  static String? getLogsSuffix() {
+    final info = NamidaDeviceInfo.packageInfo;
+    if (info == null) return null;
+    return '_${info.version}_${info.buildNumber}';
+  }
 
   static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
   static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
@@ -128,6 +199,7 @@ class AppDirs {
   static final THUMBNAILS = '$USER_DATA/Thumbnails/'; // extracted video thumbnails
   static final LYRICS = '$USER_DATA/Lyrics/';
   static final M3UBackup = '$USER_DATA/M3U Backup/'; // backups m3u on first found
+  static String get LOGS_DIRECTORY => '$USER_DATA/Logs/';
 
   // ================= Internal Storage =================
   static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
@@ -166,6 +238,7 @@ class AppDirs {
     THUMBNAILS,
     LYRICS,
     M3UBackup,
+    LOGS_DIRECTORY,
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,
@@ -184,7 +257,6 @@ class AppDirs {
 }
 
 class AppSocial {
-  static const APP_VERSION = 'v2.0.1-release';
   static const DONATE_KOFI = 'https://ko-fi.com/namidaco';
   static const DONATE_BUY_ME_A_COFFEE = 'https://www.buymeacoffee.com/namidaco';
   static const GITHUB = 'https://github.com/namidaco/namida';

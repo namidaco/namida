@@ -23,11 +23,26 @@ import 'package:namida/ui/widgets/settings_card.dart';
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
+  String _getDateDifferenceText() {
+    final buildDate = NamidaDeviceInfo.buildDate;
+    if (buildDate == null) return '';
+    final diff = DateTime.now().difference(buildDate.toLocal()).abs();
+    final diffDays = diff.inDays;
+    if (diffDays > 0) return "(${diffDays.displayDayKeyword})";
+    final diffHours = diff.inHours;
+    if (diffHours > 0) return "($diffHours ${lang.HOURS})";
+    final diffMins = diff.inMinutes;
+    if (diffMins > 0) return "($diffMins ${lang.MINUTES})";
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageSize = context.width * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
+    final version = NamidaDeviceInfo.version ?? '';
+    final buildDateDiff = _getDateDifferenceText();
     return BackgroundWrapper(
       child: ListView(
         padding: kBottomPaddingInsets,
@@ -116,10 +131,16 @@ class AboutPage extends StatelessWidget {
                         "Namida",
                         style: context.textTheme.displayLarge,
                       ),
-                      Text(
-                        AppSocial.APP_VERSION,
-                        style: context.textTheme.displaySmall,
-                      ),
+                      if (version != '')
+                        Text(
+                          version,
+                          style: context.textTheme.displaySmall,
+                        ),
+                      if (buildDateDiff != '')
+                        Text(
+                          _getDateDifferenceText(),
+                          style: context.textTheme.displaySmall,
+                        ),
                     ],
                   ),
                 ),
@@ -273,14 +294,14 @@ class AboutPage extends StatelessWidget {
                     showLicensePage(
                       context: context,
                       useRootNavigator: true,
-                      applicationVersion: AppSocial.APP_VERSION,
+                      applicationVersion: version,
                     );
                   },
                 ),
-                const NamidaAboutListTile(
+                NamidaAboutListTile(
                   icon: Broken.cpu,
                   title: 'App Version',
-                  subtitle: AppSocial.APP_VERSION,
+                  subtitle: version,
                   link: AppSocial.GITHUB_RELEASES,
                 ),
                 NamidaAboutListTile(

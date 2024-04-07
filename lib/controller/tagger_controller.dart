@@ -17,8 +17,22 @@ import 'package:namida/core/namida_converter_ext.dart';
 
 class FAudioTaggerController {
   static final FAudioTaggerController inst = FAudioTaggerController._internal();
-  FAudioTaggerController._internal() {
-    _channel.invokeMethod("setLogFile", {"path": AppPaths.LOGS_TAGGER});
+  FAudioTaggerController._internal();
+
+  Timer? _logsSetTimer;
+  int _logsSetRetries = 5;
+  Future<void> updateLogsPath() async {
+    _logsSetTimer?.cancel();
+    _logsSetRetries = 5;
+    _logsSetTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      try {
+        await _channel.invokeMethod("setLogFile", {"path": AppPaths.LOGS_TAGGER});
+        timer.cancel();
+      } catch (e) {
+        _logsSetRetries--;
+      }
+      if (_logsSetRetries <= 0) timer.cancel();
+    });
   }
 
   late final MethodChannel _channel = const MethodChannel('faudiotagger');

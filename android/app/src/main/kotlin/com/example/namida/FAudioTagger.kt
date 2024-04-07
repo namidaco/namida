@@ -187,6 +187,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
         } else {
           logWriter = null
         }
+        result.success(true)
       }
       else -> {
         result.notImplemented()

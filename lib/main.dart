@@ -2,8 +2,10 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
 
-import 'package:catcher/catcher.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -23,6 +26,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -48,7 +52,14 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
-void main() async {
+void main() {
+  runZonedGuarded(
+    mainInitialization,
+    (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
+  );
+}
+
+void mainInitialization() async {
   WidgetsFlutterBinding.ensureInitialized();
   Paint.enableDithering = true; // for smooth gradient effect.
 
@@ -56,7 +67,13 @@ void main() async {
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
 
   /// Getting Device info
-  kSdkVersion = await NamidaChannel.inst.getPlatformSdk();
+  NamidaDeviceInfo.fetchAndroidInfo();
+  NamidaDeviceInfo.fetchPackageInfo().then((value) {
+    // -- in case full path was updated before fetching version
+    logger.updateLoggerPath();
+    FAudioTaggerController.inst.updateLogsPath();
+  });
+  NamidaDeviceInfo.sdkVersion = await NamidaChannel.inst.getPlatformSdk();
 
   /// if `true`:
   /// 1. onboarding screen will show
@@ -68,12 +85,20 @@ void main() async {
   }
 
   late final List<String> paths;
+  Future<void> fetchAppData() async {
+    final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
+    AppDirs.USER_DATA = appDatas.firstOrNull ?? '';
+    logger.updateLoggerPath();
+    FAudioTaggerController.inst.updateLogsPath();
+  }
 
   await Future.wait([
+    fetchAppData(),
     NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),
-    NamidaStorage.inst.getStorageDirectoriesAppData().then((value) => AppDirs.USER_DATA = value.firstOrNull ?? ''),
     NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
   ]);
+  _initErrorInterpreters();
+  _cleanOldLogs.thready({'dirPath': AppDirs.LOGS_DIRECTORY, 'fileSuffix': AppPaths.getLogsSuffix()});
 
   if (paths.isEmpty) paths.add('/storage/emulated/0');
 
@@ -155,13 +180,50 @@ void main() async {
   FlutterVolumeController.updateShowSystemUI(false);
   CurrentColor.inst.initialize();
 
-  // runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
-  _initializeCatcher(() => runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding)));
+  runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
 
   // CurrentColor.inst.generateAllColorPalettes();
   Folders.inst.onFirstLoad();
 
   _initLifeCycle();
+}
+
+void _cleanOldLogs(Map params) {
+  final dirPath = params['dirPath'] as String;
+  final fileSuffix = params['fileSuffix'] as String?;
+  Directory(dirPath).listSync().loop((e, _) {
+    if (e is File) {
+      final filename = e.path.getFilename;
+      if (filename.startsWith('logs_') && fileSuffix != null && !filename.endsWith("$fileSuffix.txt")) {
+        try {
+          e.deleteSync();
+        } catch (_) {}
+      }
+    }
+  });
+}
+
+void _initErrorInterpreters() {
+  Isolate.current.addErrorListener(
+    RawReceivePort((dynamic pair) async {
+      final isolateError = pair as List<dynamic>;
+      logger.error(
+        isolateError.first.runtimeType,
+        e: isolateError.first,
+        st: StackTrace.fromString(isolateError.last.toString()),
+      );
+    }).sendPort,
+  );
+
+  PlatformDispatcher.instance.onError = (e, st) {
+    logger.error(e.runtimeType, e: e, st: st);
+    return true;
+  };
+
+  FlutterError.onError = (details) {
+    final msg = details.toDiagnosticsNode().toDescription();
+    logger.error(msg, e: details.exception, st: details.stack);
+  };
 }
 
 void _initLifeCycle() {
@@ -176,16 +238,6 @@ void _initLifeCycle() {
   NamidaChannel.inst.addOnResume('main', () async {
     CurrentColor.inst.refreshColorsAfterResumeApp();
   });
-}
-
-void _initializeCatcher(void Function() runAppFunction) {
-  final options = CatcherOptions(SilentReportMode(), [FileHandler(File(AppPaths.LOGS), printLogs: true)]);
-
-  Catcher(
-    runAppFunction: runAppFunction,
-    debugConfig: options,
-    releaseConfig: options,
-  );
 }
 
 Future<void> _initializeIntenties() async {
@@ -337,7 +389,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
 
 Future<bool> requestManageStoragePermission() async {
   Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
-  if (kSdkVersion < 30) {
+  if (NamidaDeviceInfo.sdkVersion < 30) {
     await createDir();
     return true;
   }
