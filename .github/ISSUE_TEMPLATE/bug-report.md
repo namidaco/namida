@@ -1,13 +1,13 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: report a bug/issue in the app
 title: "[BUG] "
 labels: ''
 assignees: ''
 
 ---
 
-this template is **ONLY** used for reporting bugs, use other templates for other stuff
+<!--- this template is **ONLY** used for reporting bugs, use other templates for other stuff -->
 
 <!--- WHAT EXACTLY HAPPENED -->
 
@@ -24,8 +24,11 @@ this template is **ONLY** used for reporting bugs, use other templates for other
 3.
 4.
 
+## Screenshots
+<!--- upload any screenshot/video if u got, makes things easier-->
+
 ## Logs
-<!--- Go to settings > about > share logs-->
+<!--- Go to settings > about > share logs -->
 
 ## Possible Solution
 <!--- u know coding? any suggestions how could this be possibly fixed/implemented?-->
