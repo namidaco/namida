@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+<!--- this template is **ONLY** used for requesting features, use other templates for other stuff -->
+
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
