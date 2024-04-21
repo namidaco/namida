@@ -104,7 +104,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                     key: ValueKey(stc.selectedTracks[i]),
                                                     onDismissed: (direction) => stc.removeTrack(i),
                                                     child: TrackTile(
-                                                      key: Key('$i${stc.selectedTracks[i].track.path}'),
+                                                      key: Key('$i${stc.selectedTracks[i]}'),
                                                       index: i,
                                                       trackOrTwd: stc.selectedTracks[i],
                                                       displayRightDragHandler: true,

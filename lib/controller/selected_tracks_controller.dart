@@ -47,14 +47,15 @@ class SelectedTracksController {
   void selectOrUnselect(Selectable track, QueueSource queueSource, String? playlistName) {
     playlistName ??= '';
     final rawTrack = track.track;
-    final didRemove = _allTracksHashCodes.remove(rawTrack) ?? false;
-    if (didRemove) {
-      _tracksOrTwdList.remove(track);
-      selectedPlaylistsNames.remove(track);
+    if (isTrackSelected(track)) {
+      _allTracksHashCodes.remove(rawTrack);
+      final indexInList = _tracksOrTwdList.indexWhere((element) => element.track == rawTrack);
+      if (indexInList != -1) _tracksOrTwdList.removeAt(indexInList);
+      selectedPlaylistsNames.remove(rawTrack);
     } else {
-      _tracksOrTwdList.add(track);
       _allTracksHashCodes[rawTrack] = true;
-      selectedPlaylistsNames[track.track] = playlistName;
+      _tracksOrTwdList.add(track);
+      selectedPlaylistsNames[rawTrack] = playlistName;
     }
 
     bottomPadding.value = _tracksOrTwdList.isEmpty ? 0.0 : 102.0;
