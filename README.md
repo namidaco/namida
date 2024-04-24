@@ -12,6 +12,9 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 </a>
 <a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-Server-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT)
 </a>
+<a href="https://github.com/namidaco/namida/releases">
+![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
+</a>
 
 # Sections:
 
