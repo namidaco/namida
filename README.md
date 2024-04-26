@@ -15,6 +15,9 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 <a href="https://github.com/namidaco/namida/releases">
 ![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
 </a>
+<a href="https://translate.codeberg.org/engage/namida-translations/">
+<img src="https://translate.codeberg.org/widget/namida-translations/namicomp/svg-badge.svg" alt="Translation status" />
+</a>
 
 # Sections:
 
