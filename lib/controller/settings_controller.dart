@@ -274,6 +274,7 @@ class SettingsController with SettingsFileWriter {
   }.obs;
 
   double fontScaleLRC = 1.0;
+  double fontScaleLRCFull = 1.0;
 
   bool canAskForBatteryOptimizations = true;
   bool didSupportNamida = false;
@@ -487,6 +488,7 @@ class SettingsController with SettingsFileWriter {
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
 
       fontScaleLRC = json['fontScaleLRC'] ?? fontScaleLRC;
+      fontScaleLRCFull = json['fontScaleLRCFull'] ?? fontScaleLRC; // fallback to normal
 
       canAskForBatteryOptimizations = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations;
     } catch (e) {
@@ -648,6 +650,7 @@ class SettingsController with SettingsFileWriter {
         'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
 
         'fontScaleLRC': fontScaleLRC,
+        'fontScaleLRCFull': fontScaleLRCFull,
 
         'canAskForBatteryOptimizations': canAskForBatteryOptimizations,
       };
@@ -802,6 +805,7 @@ class SettingsController with SettingsFileWriter {
     DateRange? ytMostPlayedCustomDateRange,
     bool? ytMostPlayedCustomisStartOfDay,
     double? fontScaleLRC,
+    double? fontScaleLRCFull,
     bool? didSupportNamida,
     bool? canAskForBatteryOptimizations,
   }) {
@@ -1032,6 +1036,7 @@ class SettingsController with SettingsFileWriter {
     if (ytMostPlayedCustomisStartOfDay != null) this.ytMostPlayedCustomisStartOfDay.value = ytMostPlayedCustomisStartOfDay;
 
     if (fontScaleLRC != null) this.fontScaleLRC = fontScaleLRC;
+    if (fontScaleLRCFull != null) this.fontScaleLRCFull = fontScaleLRCFull;
 
     if (didSupportNamida != null) this.didSupportNamida = didSupportNamida;
     if (canAskForBatteryOptimizations != null) this.canAskForBatteryOptimizations = canAskForBatteryOptimizations;

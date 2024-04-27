@@ -160,8 +160,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   var lyrics = <LrcLine>[];
   final timestampsMap = <Duration, (int, LrcLine)>{};
 
-  double _previousFontMultiplier = settings.fontScaleLRC;
-  double _fontMultiplier = settings.fontScaleLRC;
+  late double _previousFontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
+  late double _fontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
 
   @override
   void dispose() {
@@ -424,7 +424,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           child: ScaleDetector(
             onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,
             onScaleUpdate: (details) => setState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clamp(0.5, 2.0)),
-            onScaleEnd: (details) => settings.save(fontScaleLRC: _fontMultiplier),
+            onScaleEnd: (details) => widget.isFullScreenView ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier),
           ),
         ),
       ],
