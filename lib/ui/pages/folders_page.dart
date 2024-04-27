@@ -92,9 +92,8 @@ class FoldersPage extends StatelessWidget {
                                 controller: scrollController,
                                 slivers: [
                                   if (Folders.inst.isHome.value)
-                                    SliverFixedExtentList.builder(
+                                    SliverList.builder(
                                       itemCount: kStoragePaths.length,
-                                      itemExtent: Dimensions.inst.trackTileItemExtent,
                                       itemBuilder: (context, i) {
                                         final p = kStoragePaths.elementAt(i);
                                         return FolderTile(
@@ -105,9 +104,8 @@ class FoldersPage extends StatelessWidget {
                                       },
                                     ),
                                   if (!Folders.inst.isHome.value) ...[
-                                    SliverFixedExtentList.builder(
+                                    SliverList.builder(
                                       itemCount: Folders.inst.currentFolderslist.length,
-                                      itemExtent: Dimensions.inst.trackTileItemExtent,
                                       itemBuilder: (context, i) {
                                         return FolderTile(
                                           folder: Folders.inst.currentFolderslist[i],
@@ -159,9 +157,8 @@ class FoldersPage extends StatelessWidget {
                                 controller: scrollController,
                                 slivers: [
                                   if (!Folders.inst.isInside.value)
-                                    SliverFixedExtentList.builder(
+                                    SliverList.builder(
                                       itemCount: Indexer.inst.mainMapFolders.length,
-                                      itemExtent: Dimensions.inst.trackTileItemExtent,
                                       itemBuilder: (context, i) {
                                         final folder = mainMapFoldersKeys[i];
                                         return FolderTile(
