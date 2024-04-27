@@ -624,13 +624,17 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       });
     } else if (excludeHidden) {
       items.loop((e, _) {
-        final filename = e.path.split(_pathSeparator).last;
-        if (!filename.startsWith('.')) onAdd(e);
+        final fileorDirName = e.path.split(_pathSeparator).last;
+        if (!fileorDirName.startsWith('.')) onAdd(e);
       });
     } else if (extensions.isNotEmpty) {
       items.loop((e, _) {
-        final filename = e.path.split(_pathSeparator).last;
-        if (extensions.any((ext) => filename.endsWith(ext))) onAdd(e);
+        if (e is File) {
+          final filename = e.path.split(_pathSeparator).last;
+          if (extensions.any((ext) => filename.endsWith(ext))) onAdd(e);
+        } else {
+          onAdd(e);
+        }
       });
     } else {
       items.loop((e, _) => onAdd(e));

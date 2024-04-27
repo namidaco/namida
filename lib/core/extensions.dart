@@ -31,14 +31,16 @@ extension TracksSelectableUtils on List<Selectable> {
     final l = <Track>[];
     String previousArtwork = '';
     bool sameArtwork = true;
-    for (final p in withLimit(limit)) {
-      final currentArtwork = p.track.pathToImage;
-      if (sameArtwork && previousArtwork != '' && currentArtwork != previousArtwork) {
-        sameArtwork = false;
+    try {
+      for (final Selectable p in withLimit(limit)) {
+        final currentArtwork = p.track.pathToImage;
+        if (sameArtwork && previousArtwork != '' && currentArtwork != previousArtwork) {
+          sameArtwork = false;
+        }
+        l.add(p.track);
+        previousArtwork = currentArtwork;
       }
-      l.add(p.track);
-      previousArtwork = currentArtwork;
-    }
+    } catch (_) {}
     if (l.isEmpty) return [];
     if (sameArtwork) return [l.first];
     return l;

@@ -56,7 +56,7 @@ void showAddToPlaylistSheet({
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Text(
-                lang.PLAYLISTS,
+                lang.ADD_TO_PLAYLIST,
                 style: context.textTheme.displayLarge,
               ),
             ),

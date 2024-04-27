@@ -70,8 +70,11 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     }
 
     fun _removeLogsUser() {
-      logWriter?.flush()
-      if (logWriterUsers <= 0) logWriter?.close()
+      logWriterUsers--
+      try {
+        logWriter?.flush()
+        if (logWriterUsers <= 0) logWriter?.close()
+      } catch (_: Exception) {}
     }
   }
 
@@ -180,8 +183,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       }
       "setLogFile" -> {
         logFilePath = call.argument<String?>("path")
-        logWriter?.flush()
-        logWriter?.close()
+        try {
+          logWriter?.flush()
+          logWriter?.close()
+        } catch (_: Exception) {}
         if (logFilePath != null) {
           logWriter = BufferedWriter(FileWriter(logFilePath))
         } else {
@@ -462,8 +467,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
-    logWriter?.flush()
-    logWriter?.close()
+    try {
+      logWriter?.flush()
+      logWriter?.close()
+    } catch (_: Exception) {}
     for (eventChannel in eventChannels.values) {
       eventChannel.endOfStream()
     }

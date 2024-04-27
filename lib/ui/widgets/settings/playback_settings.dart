@@ -753,7 +753,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
               trailing: NamidaWheelSlider<int>(
                 totalCount: max,
-                initValue: valInSet >= -1 ? max : valInSet,
+                initValue: valInSet <= -1 ? max : valInSet,
                 itemSize: 2,
                 squeeze: 0.4,
                 onValueChanged: (val) {

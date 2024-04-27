@@ -680,8 +680,10 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 ),
 
                 /// Destination selector
-                if (opacity > 0.0)
-                  NamidaOpacity(
+                Visibility(
+                  maintainState: true,
+                  visible: opacity > 0.0,
+                  child: NamidaOpacity(
                     opacity: opacity,
                     child: Transform.translate(
                       offset: Offset(0, -100 * ip),
@@ -967,6 +969,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                       ),
                     ),
                   ),
+                ),
 
                 /// Track Info
                 Material(
@@ -995,7 +998,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   ),
                                 ),
                               ),
-                            NamidaOpacity(
+                            Opacity(
                               opacity: 1 - sAnim.value.abs(),
                               child: Transform.translate(
                                 offset: Offset(
@@ -1067,7 +1070,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                 ),
                               ),
                             ),
-                          NamidaOpacity(
+                          Opacity(
                             opacity: 1 - sAnim.value.abs(),
                             child: Transform.translate(
                               offset: Offset(horizontalOffset, verticalOffset),
@@ -1108,8 +1111,10 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 ),
 
                 /// Slider
-                if (slowOpacity > 0.0)
-                  Opacity(
+                Visibility(
+                  maintainState: true,
+                  visible: slowOpacity > 0.0,
+                  child: Opacity(
                     opacity: slowOpacity,
                     child: Transform.translate(
                       offset: Offset(
@@ -1133,15 +1138,19 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                       ),
                     ),
                   ),
+                ),
 
-                if (qp > 0 && !bounceUp)
-                  Opacity(
+                Visibility(
+                  maintainState: true,
+                  visible: qp > 0 && !bounceUp,
+                  child: Opacity(
                     opacity: qp.clamp(0.0, 1.0),
                     child: Transform.translate(
                       offset: Offset(0, (1 - qp) * maxOffset * 0.8),
                       child: constantChild,
                     ),
                   ),
+                ),
               ],
             );
           },

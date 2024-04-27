@@ -234,6 +234,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         final text = Lyrics.inst.currentLyricsText.value;
                                         if (text != '') {
                                           return SingleChildScrollView(
+                                            controller: Lyrics.inst.textScrollController,
                                             child: Column(
                                               children: [
                                                 SizedBox(height: context.height * 0.3),

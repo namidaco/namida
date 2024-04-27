@@ -400,7 +400,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
               draggingEnabled: true,
               draggableThumbnail: true,
               showMoreIcon: true,
-              cardColorOpacity: 0.8,
+              cardColorOpacity: 0.5,
               fadeOpacity: i < currentIndex ? 0.3 : 0.0,
             ),
             key,
@@ -628,24 +628,21 @@ class _AnimatingTrackImage extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: videoInfo != null && videoInfo.isInitialized
-                          ? BorderRadiusClip(
-                              borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                              child: DoubleTapDetector(
-                                onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
-                                child: NamidaAspectRatio(
-                                  aspectRatio: videoInfo.aspectRatio,
-                                  child: Texture(textureId: videoInfo.textureId),
-                                ),
+                    videoInfo != null && videoInfo.isInitialized
+                        ? BorderRadiusClip(
+                            borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                            child: DoubleTapDetector(
+                              onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
+                              child: NamidaAspectRatio(
+                                aspectRatio: videoInfo.aspectRatio,
+                                child: Texture(textureId: videoInfo.textureId),
                               ),
-                            )
-                          : _TrackImage(
-                              track: track,
-                              cp: cp,
                             ),
-                    ),
+                          )
+                        : _TrackImage(
+                            track: track,
+                            cp: cp,
+                          ),
                     Obx(
                       () => AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
@@ -676,6 +673,7 @@ class _AnimatingTrackImage extends StatelessWidget {
                                             enabled: true,
                                             child: ShaderFadingWidget(
                                               child: SingleChildScrollView(
+                                                controller: Lyrics.inst.textScrollController,
                                                 child: Column(
                                                   children: [
                                                     const SizedBox(height: 48.0),
@@ -749,7 +747,7 @@ class _YoutubeIDImage extends StatelessWidget {
       key: Key(video.id),
       videoId: video.id,
       width: width,
-      height: settings.forceSquaredTrackThumbnail.value ? width : width * 9 / 16,
+      forceSquared: settings.forceSquaredTrackThumbnail.value,
       isImportantInCache: true,
       compressed: false,
       preferLowerRes: false,
@@ -786,24 +784,26 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
       return AnimatedScale(
         duration: const Duration(milliseconds: 100),
         scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: videoInfo != null && videoInfo.isInitialized
-              ? BorderRadiusClip(
-                  borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
-                  child: DoubleTapDetector(
-                    onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
-                    child: NamidaAspectRatio(
-                      aspectRatio: videoInfo.aspectRatio,
-                      child: Texture(textureId: videoInfo.textureId),
+        child: videoInfo != null && videoInfo.isInitialized
+            ? Stack(
+                alignment: Alignment.center,
+                children: [
+                  BorderRadiusClip(
+                    borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                    child: DoubleTapDetector(
+                      onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: true),
+                      child: NamidaAspectRatio(
+                        aspectRatio: videoInfo.aspectRatio,
+                        child: Texture(textureId: videoInfo.textureId),
+                      ),
                     ),
                   ),
-                )
-              : _YoutubeIDImage(
-                  video: video,
-                  cp: cp,
-                ),
-        ),
+                ],
+              )
+            : _YoutubeIDImage(
+                video: video,
+                cp: cp,
+              ),
       );
     });
   }

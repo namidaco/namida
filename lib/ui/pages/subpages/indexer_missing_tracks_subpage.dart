@@ -22,6 +22,18 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
+enum _LoadingProgress {
+  initializing('Initializing'),
+  preparingFiles('Preparing files'),
+  collectingPlaylistTracks('Collecting playlist tracks'),
+  fillingHistoryTracks('Filling history tracks'),
+  fillingLibraryTracks('Filling library tracks'),
+  fillingPlaylistTracks('Filling playlist tracks');
+
+  final String value;
+  const _LoadingProgress(this.value);
+}
+
 class IndexerMissingTracksSubpage extends StatefulWidget {
   const IndexerMissingTracksSubpage({super.key});
 
@@ -35,15 +47,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   final _selectedTracksToUpdate = <String, bool>{}.obs;
 
   bool _isLoading = false;
-  final _loadingCount = 0.obs;
-  final _loadingCountTotalSteps = 5;
-  final _loadingCountLookup = {
-    1: 'Preparing files',
-    2: 'Collecting playlist tracks',
-    3: 'Filling history tracks',
-    4: 'Filling library tracks',
-    5: 'Filling playlist tracks',
-  };
+  final _loadingProgress = _LoadingProgress.initializing.obs;
+  final _loadingCountTotalSteps = _LoadingProgress.values.length;
 
   bool _isUpdatingPaths = false;
 
@@ -65,7 +70,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     _missingTracksSuggestions.close();
     _selectedTracksToUpdate.close();
     _scrollController.dispose();
-    _loadingCount.close();
+    _loadingProgress.close();
     _stopPreviousIsolates();
     super.dispose();
   }
@@ -92,7 +97,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     setState(() => _isLoading = true);
     _stopPreviousIsolates();
 
-    _loadingCount.value = 1;
+    _loadingProgress.value = _LoadingProgress.preparingFiles;
 
     late final Set<String> audioFiles;
     await Future.wait([
@@ -103,32 +108,32 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       PlaylistController.inst.waitForM3UPlaylistsLoad,
     ]);
 
-    _loadingCount.value = 2;
+    _loadingProgress.value = _LoadingProgress.collectingPlaylistTracks;
 
     _resultPort = ReceivePort();
     _portLoadingProgress = ReceivePort();
 
     try {
       StreamSubscription? portLoadingProgressSub;
-      portLoadingProgressSub = _portLoadingProgress!.listen((stepCount) {
-        _loadingCount.value = (stepCount as int);
+      portLoadingProgressSub = _portLoadingProgress!.listen((stepProgress) {
+        _loadingProgress.value = stepProgress as _LoadingProgress;
       });
 
-      final indicesProgressMap = <int, int>{};
+      final indicesProgressMap = <int, _LoadingProgress>{};
       final allTracks = <String, bool>{};
-      indicesProgressMap[allTracks.length] = 3;
+      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingHistoryTracks;
 
       // -- history first to be sorted & has no duplicates
       for (final track in HistoryController.inst.topTracksMapListens.keys) {
         allTracks[track.path] = true;
       }
 
-      indicesProgressMap[allTracks.length] = 4;
+      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingLibraryTracks;
       for (final track in Indexer.inst.allTracksMappedByPath.keys) {
         allTracks[track.path] ??= true;
       }
 
-      indicesProgressMap[allTracks.length] = 5;
+      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingPlaylistTracks;
       for (final tracks in PlaylistController.inst.playlistsMap.values.map((e) => e.tracks)) {
         tracks.loop((e, _) {
           allTracks[e.track.path] ??= true;
@@ -150,7 +155,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     setState(() => _isLoading = false);
   }
 
-  static void _fetchMissingTracksIsolate((Set<String>, Map<String, bool>, Map<int, int>, SendPort, SendPort) params) {
+  static void _fetchMissingTracksIsolate((Set<String>, Map<String, bool>, Map<int, _LoadingProgress>, SendPort, SendPort) params) {
     final allAudioFiles = params.$1;
     final allTracks = params.$2;
     final indicesProgressMap = params.$3;
@@ -243,7 +248,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           ),
                           Obx(
                             () => Text(
-                              "${_loadingCount.value}/$_loadingCountTotalSteps",
+                              "${_loadingProgress.value.index + 1}/$_loadingCountTotalSteps",
                               style: context.textTheme.displayMedium,
                               textAlign: TextAlign.center,
                             ),
@@ -253,9 +258,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       const SizedBox(height: 12.0),
                       Obx(
                         () {
-                          final stepName = _loadingCountLookup[_loadingCount.value] ?? "";
                           return Text(
-                            "$stepName...",
+                            "${_loadingProgress.value.value}...",
                             style: context.textTheme.displayMedium,
                             textAlign: TextAlign.center,
                           );

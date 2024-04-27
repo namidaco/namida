@@ -13,15 +13,21 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TrackWithDate extends Selectable implements ItemWithDate {
+  @override
+  Track get track => _track;
+
+  @override
+  TrackWithDate? get trackWithDate => this;
+
   final int dateAdded;
-  final Track track;
+  final Track _track;
   final TrackSource source;
 
   const TrackWithDate({
     required this.dateAdded,
-    required this.track,
+    required Track track,
     required this.source,
-  });
+  }) : _track = track;
 
   factory TrackWithDate.fromJson(Map<String, dynamic> json) {
     return TrackWithDate(
@@ -34,7 +40,7 @@ class TrackWithDate extends Selectable implements ItemWithDate {
   Map<String, dynamic> toJson() {
     return {
       'dateAdded': dateAdded,
-      'track': track.path,
+      'track': _track.path,
       'source': source.convertToString,
     };
   }
@@ -113,6 +119,9 @@ abstract class Playable {
 abstract class Selectable extends Playable {
   const Selectable();
 
+  Track get track;
+  TrackWithDate? get trackWithDate;
+
   @override
   bool operator ==(other) {
     if (other is Selectable) {
@@ -125,24 +134,18 @@ abstract class Selectable extends Playable {
   int get hashCode => track.hashCode;
 }
 
-extension SelectableUtils on Selectable {
-  Track get track {
-    final tortwd = this;
-    return tortwd is TrackWithDate ? tortwd.track : tortwd as Track;
-  }
-
-  TrackWithDate? get trackWithDate {
-    final tortwd = this;
-    return tortwd is TrackWithDate ? tortwd : null;
-  }
-}
-
 extension SelectableListUtils on Iterable<Selectable> {
   Iterable<Track> get tracks => map((e) => e.track);
   Iterable<TrackWithDate> get tracksWithDates => whereType<TrackWithDate>();
 }
 
 class Track extends Selectable {
+  @override
+  Track get track => this;
+
+  @override
+  TrackWithDate? get trackWithDate => null;
+
   final String path;
   const Track(this.path);
 

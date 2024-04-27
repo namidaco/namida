@@ -3624,21 +3624,26 @@ class EqualizerIconButton extends StatelessWidget {
     final child = StreamBuilder<bool>(
       stream: Player.inst.equalizer.enabledStream,
       builder: (context, snapshot) {
-        final enabled = snapshot.data ?? false;
-        return enabled
-            ? StackedIcon(
-                baseIcon: Broken.sound,
-                secondaryIcon: Broken.tick_circle,
-                iconSize: 20.0,
-                secondaryIconSize: 10.0,
-                baseIconColor: iconColor,
-                secondaryIconColor: iconColor,
-              )
-            : Icon(
-                Broken.sound,
-                size: 20.0,
-                color: iconColor,
-              );
+        return Obx(
+          () {
+            final isSoundModified = settings.player.speed.value != 1.0 || settings.player.pitch.value != 1.0;
+            final enabled = isSoundModified || (snapshot.data ?? false);
+            return enabled
+                ? StackedIcon(
+                    baseIcon: Broken.sound,
+                    secondaryIcon: isSoundModified ? Broken.edit_2 : Broken.tick_circle,
+                    iconSize: 20.0,
+                    secondaryIconSize: 10.0,
+                    baseIconColor: iconColor,
+                    secondaryIconColor: iconColor,
+                  )
+                : Icon(
+                    Broken.sound,
+                    size: 20.0,
+                    color: iconColor,
+                  );
+          },
+        );
       },
     );
 

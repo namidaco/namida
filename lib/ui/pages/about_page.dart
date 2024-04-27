@@ -316,12 +316,12 @@ class AboutPage extends StatelessWidget {
                         body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
                         subject: 'Namida Logs Report',
                         recipients: [AppSocial.EMAIL],
-                        attachments: [AppPaths.LOGS, AppPaths.LOGS_TAGGER],
+                        attachments: [AppPaths.LOGS, AppPaths.LOGS_TAGGER, AppPaths.LOGS_CLEAN],
                       );
                       await FlutterMailer.send(mailOptions);
                     },
                   ),
-                  onTap: () => Share.shareXFiles([XFile(AppPaths.LOGS), XFile(AppPaths.LOGS_TAGGER)]),
+                  onTap: () => Share.shareXFiles([XFile(AppPaths.LOGS), XFile(AppPaths.LOGS_TAGGER), XFile(AppPaths.LOGS_CLEAN)]),
                 )
               ],
             ),

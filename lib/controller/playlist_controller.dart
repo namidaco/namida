@@ -291,38 +291,40 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
 
   Future<void> prepareM3UPlaylists({Set<String> forPaths = const {}}) async {
-    final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
+    try {
+      final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
 
-    late final Set<String> allPaths;
-    if (forPaths.isNotEmpty) {
-      allPaths = forPaths;
-    } else {
-      final parameters = {
-        'allAvailableDirectories': allAvailableDirectories,
-        'directoriesToExclude': <String>[],
-        'extensions': kM3UPlaylistsExtensions,
-        'respectNoMedia': false,
-      };
-      final mapResult = await getFilesTypeIsolate.thready(parameters);
-      allPaths = mapResult['allPaths'] as Set<String>;
-    }
+      late final Set<String> allPaths;
+      if (forPaths.isNotEmpty) {
+        allPaths = forPaths;
+      } else {
+        final parameters = {
+          'allAvailableDirectories': allAvailableDirectories,
+          'directoriesToExclude': <String>[],
+          'extensions': kM3UPlaylistsExtensions,
+          'respectNoMedia': false,
+        };
+        final mapResult = await getFilesTypeIsolate.thready(parameters);
+        allPaths = mapResult['allPaths'] as Set<String>;
+      }
 
-    final resBoth = await _parseM3UPlaylistFiles.thready({
-      'paths': allPaths,
-      'libraryTracks': allTracksInLibrary,
-      'backupDirPath': AppDirs.M3UBackup,
-    });
-    final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
-    final infoMap = resBoth['infoMap'] as Map<String, String?>;
+      final resBoth = await _parseM3UPlaylistFiles.thready({
+        'paths': allPaths,
+        'libraryTracks': allTracksInLibrary,
+        'backupDirPath': AppDirs.M3UBackup,
+      });
+      final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
+      final infoMap = resBoth['infoMap'] as Map<String, String?>;
 
-    for (final e in paths.entries) {
-      final plName = e.key;
-      final m3uPath = e.value.$1;
-      final trs = e.value.$2;
-      final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
-      PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
-    }
-    _pathsM3ULookup = infoMap;
+      for (final e in paths.entries) {
+        final plName = e.key;
+        final m3uPath = e.value.$1;
+        final trs = e.value.$2;
+        final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
+        PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
+      }
+      _pathsM3ULookup = infoMap;
+    } catch (_) {}
     if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
   }
 

@@ -597,14 +597,14 @@ extension PerformanceModeUtils on PerformanceMode {
           enableBlurEffect: false,
           enableGlowEffect: false,
           enableMiniplayerParallaxEffect: false,
-          artworkCacheHeightMultiplier: 0.6,
+          artworkCacheHeightMultiplier: 0.8,
         );
       case PerformanceMode.balanced:
         settings.save(
           enableBlurEffect: false,
           enableGlowEffect: false,
           enableMiniplayerParallaxEffect: true,
-          artworkCacheHeightMultiplier: 0.85,
+          artworkCacheHeightMultiplier: 0.9,
         );
       case PerformanceMode.goodLooking:
         settings.save(

@@ -238,8 +238,8 @@ class Indexer {
       mainMapFolders.addForce(tr.folder, tr);
     });
 
-    sortMediaTracksSubLists(MediaType.values);
     _sortAll();
+    sortMediaTracksSubLists(MediaType.values);
   }
 
   void sortMediaTracksSubLists(List<MediaType> medias) {

@@ -27,9 +27,10 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
-    if (!sc.hasClients) return;
-    final p = sc.position.pixels;
-    if (p <= 0 && event.delta.dx < 0.1) onVerticalDragUpdate(event.delta.dy);
+    final dy = event.delta.dy;
+    final canDragVertically = dy < 0 || (sc.hasClients && sc.position.pixels <= 0);
+    final horizontalAllowance = event.delta.dx < 0.1;
+    if (canDragVertically && horizontalAllowance) onVerticalDragUpdate(dy);
   }
 
   void onVerticalDragFinish() {

@@ -25,6 +25,8 @@ class Lyrics {
   static final Lyrics _instance = Lyrics._internal();
   Lyrics._internal();
 
+  final textScrollController = ScrollController(keepScrollOffset: true);
+
   GlobalKey<LyricsLRCParsedViewState>? lrcViewKey;
   final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();
 
@@ -49,6 +51,9 @@ class Lyrics {
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
     _updateWidgets(null);
+    try {
+      textScrollController.jumpTo(0);
+    } catch (_) {}
     lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
 
     lyricsCanBeAvailable.value = true;

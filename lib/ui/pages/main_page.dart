@@ -139,7 +139,8 @@ class MainPage extends StatelessWidget {
               return AnimatedPositioned(
                 key: const Key('fab_active'),
                 right: 12.0,
-                bottom: Dimensions.inst.globalBottomPaddingEffective,
+                bottom: (MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0)
+                    .withMinimum(Dimensions.inst.globalBottomPaddingEffective),
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.fastEaseInToSlowEaseOut,
                 child: AnimatedSwitcher(

@@ -483,6 +483,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                         height: Get.height * 0.61,
                         width: Get.width,
                         child: ListView(
+                          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom * 0.6),
                           children: [
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1184,9 +1185,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       autovalidateMode: widget.validatorMode,
       keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
       style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5.multipliedFontScale, fontWeight: FontWeight.w600),
-      onTapOutside: (event) {
-        FocusScope.of(context).unfocus();
-      },
+      // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
       onChanged: (value) {
         if (widget.onChanged != null) widget.onChanged!(value);
         final isDifferent = initialText != value;

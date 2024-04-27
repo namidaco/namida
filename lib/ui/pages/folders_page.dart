@@ -196,8 +196,8 @@ class FoldersPage extends StatelessWidget {
           Obx(
             () => Folders.inst.indexToScrollTo.value != null
                 ? Positioned(
-                    bottom: Dimensions.inst.globalBottomPaddingTotal + 4.0,
-                    right: 20.0,
+                    bottom: Dimensions.inst.globalBottomPaddingEffective + 8.0,
+                    right: kFABHeight + 12.0 + 8.0,
                     child: Container(
                       decoration: BoxDecoration(
                         color: context.theme.scaffoldBackgroundColor,
