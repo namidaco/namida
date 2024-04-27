@@ -208,6 +208,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   children: [
                     Expanded(
                       child: Stack(
+                        fit: StackFit.expand,
                         children: [
                           Listener(
                             onPointerMove: (event) {

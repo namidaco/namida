@@ -645,49 +645,15 @@ class _AnimatingTrackImage extends StatelessWidget {
                           ),
                     Obx(
                       () => AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: !settings.enableLyrics.value
-                            ? const IgnorePointer(key: Key('empty_lrc'), child: SizedBox())
-                            : Lyrics.inst.currentLyricsLRC.value != null
-                                ? LyricsLRCParsedView(
-                                    key: Lyrics.inst.lrcViewKey,
-                                    cp: cp,
-                                    lrc: Lyrics.inst.currentLyricsLRC.value,
-                                    videoOrImage: const SizedBox(),
-                                  )
-                                : Lyrics.inst.currentLyricsText.value != ''
-                                    ? Opacity(
-                                        opacity: cp,
-                                        child: Container(
-                                          clipBehavior: Clip.antiAlias,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                                            color: context.theme.scaffoldBackgroundColor.withAlpha(110),
-                                          ),
-                                          width: double.infinity,
-                                          height: double.infinity,
-                                          alignment: Alignment.center,
-                                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                          child: NamidaBgBlur(
-                                            blur: 12.0,
-                                            enabled: true,
-                                            child: ShaderFadingWidget(
-                                              child: SingleChildScrollView(
-                                                controller: Lyrics.inst.textScrollController,
-                                                child: Column(
-                                                  children: [
-                                                    const SizedBox(height: 48.0),
-                                                    Text(Lyrics.inst.currentLyricsText.value, style: context.textTheme.displayMedium),
-                                                    const SizedBox(height: 48.0),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    : const IgnorePointer(key: Key('empty_lrc_2'), child: SizedBox()),
-                      ),
+                          duration: const Duration(milliseconds: 300),
+                          child: !settings.enableLyrics.value
+                              ? const IgnorePointer(key: Key('empty_lrc'), child: SizedBox())
+                              : LyricsLRCParsedView(
+                                  key: Lyrics.inst.lrcViewKey,
+                                  cp: cp,
+                                  lrc: Lyrics.inst.currentLyricsLRC.value,
+                                  videoOrImage: const SizedBox(),
+                                )),
                     ),
                   ],
                 ),
