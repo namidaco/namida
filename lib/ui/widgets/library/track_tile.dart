@@ -165,6 +165,7 @@ class TrackTile extends StatelessWidget {
                       ? null
                       : () {
                           if (!isInSelectedTracksPreview) {
+                            ScrollSearchController.inst.unfocusKeyboard();
                             _selectTrack();
                           }
                         },

@@ -806,7 +806,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           const Icon(Broken.play_cricle, size: 20.0),
                                           const SizedBox(width: 12.0),
                                           Text(
-                                            "$speed",
+                                            "${speed}x",
                                             style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale),
                                           ),
                                         ],
@@ -860,7 +860,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           ),
                                           const SizedBox(width: 4.0).animateEntrance(showWhen: Player.inst.currentSpeed != 1.0, allCurves: Curves.easeInOutQuart),
                                           Text(
-                                            "${Player.inst.currentSpeed}",
+                                            "${Player.inst.currentSpeed}x",
                                             style: context.textTheme.displaySmall?.copyWith(
                                               color: itemsColor,
                                               fontSize: 12.0,

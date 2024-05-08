@@ -62,8 +62,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   Widget build(BuildContext context) {
     MiniPlayerController.inst.updateScreenValues(context); // useful for updating after split screen & if landscape ever got supported.
     return Obx(
-      () => AnimatedTheme(
-        duration: const Duration(milliseconds: 300),
+      () => Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
         child: Stack(
           children: [
@@ -645,15 +644,19 @@ class _AnimatingTrackImage extends StatelessWidget {
                           ),
                     Obx(
                       () => AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: !settings.enableLyrics.value
-                              ? const IgnorePointer(key: Key('empty_lrc'), child: SizedBox())
-                              : LyricsLRCParsedView(
-                                  key: Lyrics.inst.lrcViewKey,
-                                  cp: cp,
-                                  lrc: Lyrics.inst.currentLyricsLRC.value,
-                                  videoOrImage: const SizedBox(),
-                                )),
+                        duration: const Duration(milliseconds: 300),
+                        child: settings.enableLyrics.value && (Lyrics.inst.currentLyricsLRC.value != null || Lyrics.inst.currentLyricsText.value != '')
+                            ? LyricsLRCParsedView(
+                                key: Lyrics.inst.lrcViewKey,
+                                cp: cp,
+                                initialLrc: Lyrics.inst.currentLyricsLRC.value,
+                                videoOrImage: const SizedBox(),
+                              )
+                            : const IgnorePointer(
+                                key: Key('empty_lrc'),
+                                child: SizedBox(),
+                              ),
+                      ),
                     ),
                   ],
                 ),
@@ -806,29 +809,38 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          if (settings.enableMiniplayerParticles.value && Player.inst.isPlaying)
+          if (settings.enableMiniplayerParticles.value)
             Obx(
               () {
-                final bpmb = 2000 * WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-                final bpm = bpmb.withMinimum(0);
+                final playing = Player.inst.isPlaying;
                 return AnimatedOpacity(
                   duration: const Duration(seconds: 1),
-                  opacity: Player.inst.isPlaying ? 1 : 0,
-                  child: AnimatedBackground(
-                    vsync: this,
-                    behaviour: RandomParticleBehaviour(
-                      options: ParticleOptions(
-                        baseColor: context.theme.colorScheme.tertiary,
-                        spawnMaxRadius: 4,
-                        spawnMinRadius: 2,
-                        spawnMaxSpeed: 60 + bpm * 2,
-                        spawnMinSpeed: bpm,
-                        maxOpacity: widget.particleOpacity,
-                        minOpacity: 0,
-                        particleCount: 50,
-                      ),
-                    ),
-                    child: const SizedBox(),
+                  opacity: playing ? 1 : 0,
+                  child: Obx(
+                    () {
+                      final scale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+                      final bpm = (2000 * scale).withMinimum(0);
+                      return AnimatedScale(
+                        duration: const Duration(milliseconds: 300),
+                        scale: 1.0 + scale * 1.5,
+                        child: AnimatedBackground(
+                          vsync: this,
+                          behaviour: RandomParticleBehaviour(
+                            options: ParticleOptions(
+                              baseColor: context.theme.colorScheme.tertiary,
+                              spawnMaxRadius: 4,
+                              spawnMinRadius: 2,
+                              spawnMaxSpeed: 60 + bpm * 2,
+                              spawnMinSpeed: bpm,
+                              maxOpacity: widget.particleOpacity,
+                              minOpacity: 0,
+                              particleCount: 50,
+                            ),
+                          ),
+                          child: const SizedBox(),
+                        ),
+                      );
+                    },
                   ),
                 );
               },

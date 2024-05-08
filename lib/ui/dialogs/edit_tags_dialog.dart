@@ -627,7 +627,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       const SizedBox(height: 12.0),
       SizedBox(
         width: Get.width,
-        height: Get.height / 2,
+        height: Get.height * 0.5,
         child: ListView.builder(
           itemCount: tracks.length,
           itemBuilder: (context, index) {
@@ -969,6 +969,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                     height: Get.height * 0.7,
                     width: Get.width,
                     child: ListView(
+                      padding: Get.context == null ? null : EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(Get.context!).bottom * 0.6),
                       children: [
                         Row(
                           mainAxisSize: MainAxisSize.min,

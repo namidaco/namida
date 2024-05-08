@@ -17,14 +17,14 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
   final double cp;
-  final Lrc? lrc;
+  final Lrc? initialLrc;
   final Widget videoOrImage;
   final bool isFullScreenView;
 
   const LyricsLRCParsedView({
     super.key,
     required this.cp,
-    required this.lrc,
+    required this.initialLrc,
     required this.videoOrImage,
     this.isFullScreenView = false,
   });
@@ -41,7 +41,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           return LyricsLRCParsedView(
             key: Lyrics.inst.lrcViewKeyFullscreen,
             cp: widget.cp,
-            lrc: currentLRC,
+            initialLrc: currentLRC,
             videoOrImage: const SizedBox(),
             isFullScreenView: true,
           );
@@ -63,7 +63,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     bottomDummyItems = widget.isFullScreenView ? 32 : 12;
     controller = ItemScrollController();
     positionListener = ItemPositionsListener.create();
-    fillLists(widget.lrc);
+    fillLists(widget.initialLrc);
   }
 
   Lrc? currentLRC;
