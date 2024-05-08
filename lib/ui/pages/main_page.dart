@@ -91,108 +91,113 @@ class MainPage extends StatelessWidget {
           },
         ),
       ),
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          Obx(() {
-            return !settings.enableMiniplayerParallaxEffect.value
-                ? main
-                : AnimatedBuilder(
-                    animation: animation,
-                    child: main,
-                    builder: (context, child) {
-                      return Visibility(
-                        maintainState: true,
-                        visible: animation.value < 1, // not expanded/queue
-                        child: Transform.scale(
-                          scale: 1 - (animation.value * 0.05),
-                          child: child,
-                        ),
-                      );
-                    },
-                  );
-          }),
+      body: DefaultTextStyle(
+        style: const TextStyle(
+          fontFamilyFallback: ['sans-serif', 'Roboto'],
+        ),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Obx(() {
+              return !settings.enableMiniplayerParallaxEffect.value
+                  ? main
+                  : AnimatedBuilder(
+                      animation: animation,
+                      child: main,
+                      builder: (context, child) {
+                        return Visibility(
+                          maintainState: true,
+                          visible: animation.value < 1, // not expanded/queue
+                          child: Transform.scale(
+                            scale: 1 - (animation.value * 0.05),
+                            child: child,
+                          ),
+                        );
+                      },
+                    );
+            }),
 
-          /// Search Box
-          Positioned.fill(
-            child: Obx(
-              () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? const SearchPage() : null,
-              ),
-            ),
-          ),
-
-          // -- Settings Search Box
-          Positioned.fill(
-            child: Obx(
-              () => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                child: SettingsSearchController.inst.canShowSearch ? const SettingsSearchPage() : null,
-              ),
-            ),
-          ),
-
-          Obx(
-            () {
-              final shouldHide = Dimensions.inst.shouldHideFAB;
-              return AnimatedPositioned(
-                key: const Key('fab_active'),
-                right: 12.0,
-                bottom: (MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0)
-                    .withMinimum(Dimensions.inst.globalBottomPaddingEffective),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.fastEaseInToSlowEaseOut,
-                child: AnimatedSwitcher(
+            /// Search Box
+            Positioned.fill(
+              child: Obx(
+                () => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
-                  child: shouldHide
-                      ? const SizedBox(key: Key('fab_dummy'))
-                      : FloatingActionButton(
-                          tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
-                          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.7), context.theme.cardColor),
-                          onPressed: () {
-                            final fab = settings.floatingActionButton.value;
-                            final forceSearch = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-                            if (forceSearch || fab == FABType.search) {
-                              ScrollSearchController.inst.toggleSearchMenu();
-                              ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
-                            } else if (fab == FABType.shuffle || fab == FABType.play) {
-                              Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: fab == FABType.shuffle);
-                            }
-                          },
-                          child: Icon(
-                            ScrollSearchController.inst.isGlobalSearchMenuShown.value ? Broken.search_status_1 : settings.floatingActionButton.value.toIcon(),
-                            color: const Color.fromRGBO(255, 255, 255, 0.8),
-                          ),
-                        ),
+                  child: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? const SearchPage() : null,
                 ),
-              );
-            },
-          ),
-
-          /// Bottom Glow/Shadow
-          Obx(
-            () => AnimatedSwitcher(
-              duration: const Duration(milliseconds: 600),
-              child: Player.inst.currentQueue.isNotEmpty || (Player.inst.currentQueueYoutube.isNotEmpty && !settings.youtubeStyleMiniplayer.value)
-                  ? Container(
-                      key: const Key('actualglow'),
-                      height: 28.0,
-                      transform: Matrix4.translationValues(0, 8.0, 0),
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.theme.scaffoldBackgroundColor,
-                            spreadRadius: 4.0,
-                            blurRadius: 8.0,
-                          ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox(key: Key('emptyglow')),
+              ),
             ),
-          )
-        ],
+
+            // -- Settings Search Box
+            Positioned.fill(
+              child: Obx(
+                () => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  child: SettingsSearchController.inst.canShowSearch ? const SettingsSearchPage() : null,
+                ),
+              ),
+            ),
+
+            Obx(
+              () {
+                final shouldHide = Dimensions.inst.shouldHideFAB;
+                return AnimatedPositioned(
+                  key: const Key('fab_active'),
+                  right: 12.0,
+                  bottom: (MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0)
+                      .withMinimum(Dimensions.inst.globalBottomPaddingEffective),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.fastEaseInToSlowEaseOut,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: shouldHide
+                        ? const SizedBox(key: Key('fab_dummy'))
+                        : FloatingActionButton(
+                            tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
+                            backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.7), context.theme.cardColor),
+                            onPressed: () {
+                              final fab = settings.floatingActionButton.value;
+                              final forceSearch = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+                              if (forceSearch || fab == FABType.search) {
+                                ScrollSearchController.inst.toggleSearchMenu();
+                                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+                              } else if (fab == FABType.shuffle || fab == FABType.play) {
+                                Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: fab == FABType.shuffle);
+                              }
+                            },
+                            child: Icon(
+                              ScrollSearchController.inst.isGlobalSearchMenuShown.value ? Broken.search_status_1 : settings.floatingActionButton.value.toIcon(),
+                              color: const Color.fromRGBO(255, 255, 255, 0.8),
+                            ),
+                          ),
+                  ),
+                );
+              },
+            ),
+
+            /// Bottom Glow/Shadow
+            Obx(
+              () => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                child: Player.inst.currentQueue.isNotEmpty || (Player.inst.currentQueueYoutube.isNotEmpty && !settings.youtubeStyleMiniplayer.value)
+                    ? Container(
+                        key: const Key('actualglow'),
+                        height: 28.0,
+                        transform: Matrix4.translationValues(0, 8.0, 0),
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.theme.scaffoldBackgroundColor,
+                              spreadRadius: 4.0,
+                              blurRadius: 8.0,
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox(key: Key('emptyglow')),
+              ),
+            )
+          ],
+        ),
       ),
       bottomNavigationBar: Obx(
         () => !settings.enableBottomNavBar.value

@@ -39,6 +39,8 @@ class AppThemes {
       light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
     );
 
+    const fontFallback = ['sans-serif', 'Roboto'];
+
     return ThemeData(
       brightness: light ? Brightness.light : Brightness.dark,
       useMaterial3: true,
@@ -142,41 +144,50 @@ class AppThemes {
         bodyMedium: TextStyle(
           fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.normal,
+          fontFamilyFallback: fontFallback,
         ),
         bodySmall: TextStyle(
           fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.normal,
+          fontFamilyFallback: fontFallback,
         ),
         titleSmall: TextStyle(
           fontSize: 14.0.multipliedFontScale,
           fontWeight: FontWeight.w600,
+          fontFamilyFallback: fontFallback,
         ),
         titleLarge: TextStyle(
           fontSize: 20.0.multipliedFontScale,
           fontWeight: FontWeight.w600,
+          fontFamilyFallback: fontFallback,
         ),
         displayLarge: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 17.0.multipliedFontScale,
           color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
+          fontFamilyFallback: fontFallback,
         ),
         displayMedium: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 15.0.multipliedFontScale,
           color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
+          fontFamilyFallback: fontFallback,
         ),
         displaySmall: TextStyle(
           fontWeight: FontWeight.w400,
           fontSize: 13.0.multipliedFontScale,
           color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
+          fontFamilyFallback: fontFallback,
         ),
         headlineMedium: TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14.0.multipliedFontScale,
+          fontFamilyFallback: fontFallback,
         ),
         headlineSmall: TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14.0.multipliedFontScale,
+          fontFamilyFallback: fontFallback,
         ),
       ),
     );
