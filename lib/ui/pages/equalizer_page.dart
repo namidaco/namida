@@ -17,6 +17,97 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
+class EqualizerMainSlidersColumn extends StatelessWidget {
+  final double verticalInBetweenPadding;
+  final bool tapToUpdate;
+
+  const EqualizerMainSlidersColumn({
+    super.key,
+    required this.verticalInBetweenPadding,
+    required this.tapToUpdate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final verticalPadding = SizedBox(height: verticalInBetweenPadding);
+    final pitchKey = GlobalKey<_CuteSliderState>();
+    final speedKey = GlobalKey<_CuteSliderState>();
+    final volumeKey = GlobalKey<_CuteSliderState>();
+    return Column(
+      children: [
+        verticalPadding,
+        Obx(
+          () => _SliderTextWidget(
+            icon: Broken.airpods,
+            title: lang.PITCH,
+            value: settings.player.pitch.value,
+            restoreDefault: () {
+              Player.inst.setPlayerPitch(1.0);
+              settings.player.save(pitch: 1.0);
+              pitchKey.currentState?._updateVal(1.0);
+            },
+          ),
+        ),
+        _CuteSlider(
+          key: pitchKey,
+          initialValue: settings.player.pitch.value,
+          onChanged: (value) {
+            Player.inst.setPlayerPitch(value);
+            settings.player.save(pitch: value);
+          },
+          tapToUpdate: tapToUpdate,
+        ),
+        verticalPadding,
+        Obx(
+          () => _SliderTextWidget(
+            icon: Broken.forward,
+            title: lang.SPEED,
+            value: settings.player.speed.value,
+            restoreDefault: () {
+              Player.inst.setPlayerSpeed(1.0);
+              settings.player.save(speed: 1.0);
+              speedKey.currentState?._updateVal(1.0);
+            },
+            valToText: _SliderTextWidget.toXMultiplier,
+          ),
+        ),
+        _CuteSlider(
+          key: speedKey,
+          initialValue: settings.player.speed.value,
+          onChanged: (value) {
+            Player.inst.setPlayerSpeed(value);
+            settings.player.save(speed: value);
+          },
+          tapToUpdate: tapToUpdate,
+        ),
+        verticalPadding,
+        Obx(
+          () => _SliderTextWidget(
+            icon: settings.player.volume.value > 0 ? Broken.volume_up : Broken.volume_slash,
+            title: lang.VOLUME,
+            value: settings.player.volume.value,
+            restoreDefault: () {
+              Player.inst.setPlayerVolume(1.0);
+              settings.player.save(volume: 1.0);
+              volumeKey.currentState?._updateVal(1.0);
+            },
+          ),
+        ),
+        _CuteSlider(
+          key: volumeKey,
+          max: 1.0,
+          initialValue: settings.player.volume.value,
+          onChanged: (value) {
+            Player.inst.setPlayerVolume(value);
+            settings.player.save(volume: value);
+          },
+          tapToUpdate: tapToUpdate,
+        ),
+      ],
+    );
+  }
+}
+
 class EqualizerPage extends StatefulWidget {
   const EqualizerPage({Key? key}) : super(key: key);
 
@@ -24,13 +115,15 @@ class EqualizerPage extends StatefulWidget {
   EqualizerPageState createState() => EqualizerPageState();
 }
 
-class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserver {
+class EqualizerPageState extends State<EqualizerPage> {
   AndroidEqualizer get _equalizer => Player.inst.equalizer;
   AndroidLoudnessEnhancer get _loudnessEnhancer => Player.inst.loudnessEnhancer;
 
   final _equalizerPresets = <String>[];
   final _activePreset = ''.obs;
   final _activePresetCustom = false.obs;
+
+  final _loudnessKey = GlobalKey<_CuteSliderState>();
 
   @override
   void initState() {
@@ -74,6 +167,8 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
 
   @override
   Widget build(BuildContext context) {
+    const verticalInBetweenPaddingH = 18.0;
+    const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
     return BackgroundWrapper(
       child: SafeArea(
         child: Padding(
@@ -88,13 +183,35 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 12.0),
+                  verticalInBetweenPadding,
                   Row(
                     children: [
                       const SizedBox(width: 12.0),
                       const Icon(Broken.sound),
                       const SizedBox(width: 12.0),
-                      Text("${lang.CONFIGURE} (${lang.BETA})", style: context.textTheme.displayMedium),
+                      Expanded(
+                        child: Text(
+                          "${lang.CONFIGURE} (${lang.BETA})",
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
+                      NamidaIconButton(
+                        horizontalPadding: 0.0,
+                        tooltip: lang.TAP_TO_SEEK,
+                        icon: null,
+                        iconSize: 24.0,
+                        onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
+                        child: Obx(
+                          () => StackedIcon(
+                            baseIcon: Broken.mouse_1,
+                            secondaryIcon: settings.equalizer.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
+                            secondaryIconSize: 12.0,
+                            iconSize: 24.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12.0),
+                      const SizedBox(width: 8.0),
                     ],
                   ),
                   const SizedBox(height: 6.0),
@@ -116,22 +233,6 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                           trailing: Row(
                             children: [
                               const SizedBox(width: 4.0),
-                              NamidaIconButton(
-                                horizontalPadding: 0.0,
-                                tooltip: lang.TAP_TO_SEEK,
-                                icon: null,
-                                iconSize: 20.0,
-                                onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
-                                child: Obx(
-                                  () => StackedIcon(
-                                    baseIcon: Broken.mouse_1,
-                                    secondaryIcon: settings.equalizer.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
-                                    secondaryIconSize: 10.0,
-                                    iconSize: 20.0,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12.0),
                               NamidaIconButton(
                                 horizontalPadding: 0.0,
                                 tooltip: lang.OPEN_APP,
@@ -157,7 +258,7 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                     onGainSetCallback: _resetPreset,
                     tapToUpdate: () => settings.equalizer.uiTapToUpdate.value,
                   ),
-                  const SizedBox(height: 12.0),
+                  verticalInBetweenPadding,
                   if (_equalizerPresets.isNotEmpty) ...[
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -242,20 +343,26 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                                   restoreDefault: () {
                                     settings.equalizer.save(loudnessEnhancer: 0.0);
                                     _loudnessEnhancer.setTargetGain(0.0);
+                                    _loudnessKey.currentState?._updateVal(0.0);
                                   },
                                   trailing: CustomSwitch(
                                     active: enabled,
                                     passedColor: null,
                                   ),
                                 ),
-                                _CuteSlider(
-                                  value: targetGain + 1.0,
-                                  min: 0,
-                                  max: 2,
-                                  onChanged: (value) {
-                                    settings.equalizer.save(loudnessEnhancer: value - 1.0);
-                                    _loudnessEnhancer.setTargetGain(value - 1.0);
-                                  },
+                                Obx(
+                                  () => _CuteSlider(
+                                    key: _loudnessKey,
+                                    initialValue: targetGain + 1.0,
+                                    min: 0,
+                                    max: 2,
+                                    onChanged: (value) {
+                                      final newVal = value - 1.0;
+                                      settings.equalizer.save(loudnessEnhancer: newVal);
+                                      _loudnessEnhancer.setTargetGain(newVal);
+                                    },
+                                    tapToUpdate: settings.equalizer.uiTapToUpdate.value,
+                                  ),
                                 ),
                               ],
                             ),
@@ -264,71 +371,13 @@ class EqualizerPageState extends State<EqualizerPage> with WidgetsBindingObserve
                       );
                     },
                   ),
-                  const SizedBox(height: 12.0),
                   Obx(
-                    () => _SliderTextWidget(
-                      icon: Broken.airpods,
-                      title: lang.PITCH,
-                      value: settings.player.pitch.value,
-                      restoreDefault: () {
-                        Player.inst.setPlayerPitch(1.0);
-                        settings.player.save(pitch: 1.0);
-                      },
+                    () => EqualizerMainSlidersColumn(
+                      verticalInBetweenPadding: verticalInBetweenPaddingH,
+                      tapToUpdate: settings.equalizer.uiTapToUpdate.value,
                     ),
                   ),
-                  Obx(
-                    () => _CuteSlider(
-                      value: settings.player.pitch.value,
-                      onChanged: (value) {
-                        Player.inst.setPlayerPitch(value);
-                        settings.player.save(pitch: value);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  Obx(
-                    () => _SliderTextWidget(
-                      icon: Broken.forward,
-                      title: lang.SPEED,
-                      value: settings.player.speed.value,
-                      restoreDefault: () {
-                        Player.inst.setPlayerSpeed(1.0);
-                        settings.player.save(speed: 1.0);
-                      },
-                    ),
-                  ),
-                  Obx(
-                    () => _CuteSlider(
-                      value: settings.player.speed.value,
-                      onChanged: (value) {
-                        Player.inst.setPlayerSpeed(value);
-                        settings.player.save(speed: value);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  Obx(
-                    () => _SliderTextWidget(
-                      icon: settings.player.volume.value > 0 ? Broken.volume_up : Broken.volume_slash,
-                      title: lang.VOLUME,
-                      value: settings.player.volume.value,
-                      restoreDefault: () {
-                        Player.inst.setPlayerVolume(1.0);
-                        settings.player.save(volume: 1.0);
-                      },
-                    ),
-                  ),
-                  Obx(
-                    () => _CuteSlider(
-                      max: 1.0,
-                      value: settings.player.volume.value,
-                      onChanged: (value) {
-                        Player.inst.setPlayerVolume(value);
-                        settings.player.save(volume: value);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
+                  verticalInBetweenPadding,
                 ],
               ),
             ),
@@ -346,6 +395,7 @@ class _SliderTextWidget extends StatelessWidget {
   final VoidCallback? restoreDefault;
   final Widget? trailing;
   final bool displayValue;
+  final String Function(double val) valToText;
 
   const _SliderTextWidget({
     required this.icon,
@@ -354,9 +404,11 @@ class _SliderTextWidget extends StatelessWidget {
     this.restoreDefault,
     this.trailing,
     this.displayValue = true,
+    this.valToText = toPercentage,
   });
 
-  String _toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+  static String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+  static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
 
   @override
   Widget build(BuildContext context) {
@@ -373,7 +425,7 @@ class _SliderTextWidget extends StatelessWidget {
           const SizedBox(width: 8.0),
           if (displayValue)
             Text(
-              _toPercentage(value),
+              valToText(value),
               style: context.textTheme.displayMedium,
             ),
           const SizedBox(width: 8.0),
@@ -394,33 +446,99 @@ class _SliderTextWidget extends StatelessWidget {
   }
 }
 
-class _CuteSlider extends StatelessWidget {
+class _CuteSlider extends StatefulWidget {
   final double min;
   final double max;
-  final double value;
-  final void Function(double newValue)? onChanged;
+  final double initialValue;
+  final void Function(double newValue) onChanged;
+  final bool tapToUpdate;
 
   const _CuteSlider({
+    required super.key,
     this.min = 0.0,
     this.max = 2.0,
-    required this.value,
+    required this.initialValue,
     required this.onChanged,
+    required this.tapToUpdate,
   });
 
   @override
+  State<_CuteSlider> createState() => _CuteSliderState();
+}
+
+class _CuteSliderState extends State<_CuteSlider> {
+  late double _currentVal = widget.initialValue;
+
+  void _updateVal(double newVal) {
+    final finalVal = newVal.toPrecision(4);
+    if (finalVal != _currentVal) {
+      setState(() {
+        _currentVal = finalVal;
+        widget.onChanged(finalVal);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Slider.adaptive(
-      min: min,
-      max: max,
-      value: value,
-      onChanged: onChanged,
-      divisions: 200,
-      label: "${(value * 100).toStringAsFixed(0)}%",
+    const incremental = 0.01;
+    final interaction = widget.tapToUpdate ? SliderInteraction.tapAndSlide : SliderInteraction.slideOnly;
+    return Row(
+      children: [
+        const SizedBox(width: 16.0),
+        _getArrowIcon(
+          icon: Broken.arrow_left_2,
+          callback: () {
+            final newVal = (_currentVal - incremental).withMinimum(widget.min);
+            _updateVal(newVal);
+          },
+        ),
+        Expanded(
+          child: Slider.adaptive(
+            min: widget.min,
+            max: widget.max,
+            value: _currentVal,
+            onChanged: _updateVal,
+            divisions: 200,
+            label: "${(_currentVal * 100).toStringAsFixed(0)}%",
+            allowedInteraction: interaction,
+          ),
+        ),
+        _getArrowIcon(
+          icon: Broken.arrow_right_3,
+          callback: () {
+            final newVal = (_currentVal + incremental).withMaximum(widget.max);
+            _updateVal(newVal);
+          },
+        ),
+        const SizedBox(width: 16.0),
+      ],
     );
   }
 }
 
 Timer? _longPressTimer;
+
+Widget _getArrowIcon({required IconData icon, required VoidCallback callback}) {
+  return NamidaIconButton(
+    horizontalPadding: 0.0,
+    icon: icon,
+    iconSize: 20.0,
+    onPressed: () {
+      callback();
+    },
+    onLongPressStart: (_) {
+      callback();
+      _longPressTimer?.cancel();
+      _longPressTimer = Timer.periodic(const Duration(milliseconds: 100), (ticker) {
+        callback();
+      });
+    },
+    onLongPressFinish: () {
+      _longPressTimer?.cancel();
+    },
+  );
+}
 
 class EqualizerControls extends StatelessWidget {
   final AndroidEqualizer equalizer;
@@ -434,42 +552,23 @@ class EqualizerControls extends StatelessWidget {
     required this.tapToUpdate,
   }) : super(key: key);
 
-  Widget _getArrowIcon({required IconData icon, required VoidCallback callback}) {
-    return NamidaIconButton(
-      horizontalPadding: 0.0,
-      icon: icon,
-      iconSize: 20.0,
-      onPressed: () {
-        callback();
-      },
-      onLongPressStart: (_) {
-        callback();
-        _longPressTimer?.cancel();
-        _longPressTimer = Timer.periodic(const Duration(milliseconds: 100), (ticker) {
-          callback();
-        });
-      },
-      onLongPressFinish: () {
-        _longPressTimer?.cancel();
-      },
-    );
-  }
-
   void _onGainSet(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels);
+    final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels).toPrecision(4);
     settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newVal);
     onGainSetCallback();
   }
 
   void _onGainSetNoClamp(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newValue));
+    final newVal = newValue.toPrecision(4);
+    settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newValue);
     onGainSetCallback();
   }
 
   @override
   Widget build(BuildContext context) {
+    const incremental = 0.005;
     return StreamBuilder<AndroidEqualizerParameters>(
       stream: equalizer.parametersStream,
       builder: (context, snapshot) {
@@ -497,7 +596,7 @@ class EqualizerControls extends StatelessWidget {
                                   children: [
                                     _getArrowIcon(
                                       icon: Broken.arrow_up_3,
-                                      callback: () => _onGainSet(band, parameters, band.gain + 0.005),
+                                      callback: () => _onGainSet(band, parameters, band.gain + incremental),
                                     ),
                                     const SizedBox(height: 8.0),
                                     Expanded(
@@ -513,7 +612,7 @@ class EqualizerControls extends StatelessWidget {
                                     const SizedBox(height: 8.0),
                                     _getArrowIcon(
                                       icon: Broken.arrow_down_2,
-                                      callback: () => _onGainSet(band, parameters, band.gain - 0.005),
+                                      callback: () => _onGainSet(band, parameters, band.gain - incremental),
                                     ),
                                     const SizedBox(height: 12.0),
                                     FittedBox(

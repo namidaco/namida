@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
@@ -843,7 +844,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                                   max: max,
                                                                   value: value.clamp(min, max),
                                                                   onChanged: onChanged,
-                                                                  divisions: 100,
+                                                                  divisions: (max * 100).round(),
                                                                   label: "${(value * 100).toStringAsFixed(0)}%",
                                                                 );
                                                               }
@@ -851,6 +852,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                               NamidaNavigator.inst.navigateDialog(
                                                                 dialog: CustomBlurryDialog(
                                                                   title: lang.CONFIGURE,
+                                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
                                                                   actions: [
                                                                     NamidaIconButton(
                                                                       icon: Broken.refresh,
@@ -873,50 +875,9 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                                       },
                                                                     )
                                                                   ],
-                                                                  child: ListView(
-                                                                    padding: const EdgeInsets.all(12.0),
-                                                                    shrinkWrap: true,
-                                                                    children: [
-                                                                      Obx(() => getTextWidget(Broken.airpods, lang.PITCH, settings.player.pitch.value)),
-                                                                      Obx(
-                                                                        () => getSlider(
-                                                                          value: settings.player.pitch.value,
-                                                                          onChanged: (value) {
-                                                                            Player.inst.setPlayerPitch(value);
-                                                                            settings.player.save(pitch: value);
-                                                                          },
-                                                                        ),
-                                                                      ),
-                                                                      const SizedBox(height: 12.0),
-                                                                      Obx(
-                                                                        () => getTextWidget(Broken.forward, lang.SPEED, settings.player.speed.value),
-                                                                      ),
-                                                                      Obx(
-                                                                        () => getSlider(
-                                                                          value: settings.player.speed.value,
-                                                                          onChanged: (value) {
-                                                                            Player.inst.setPlayerSpeed(value);
-                                                                            settings.player.save(speed: value);
-                                                                          },
-                                                                        ),
-                                                                      ),
-                                                                      const SizedBox(height: 12.0),
-                                                                      Obx(
-                                                                        () => getTextWidget(settings.player.volume.value > 0 ? Broken.volume_high : Broken.volume_slash,
-                                                                            lang.VOLUME, settings.player.volume.value),
-                                                                      ),
-                                                                      Obx(
-                                                                        () => getSlider(
-                                                                          max: 1.0,
-                                                                          value: settings.player.volume.value,
-                                                                          onChanged: (value) {
-                                                                            Player.inst.setPlayerVolume(value);
-                                                                            settings.player.save(volume: value);
-                                                                          },
-                                                                        ),
-                                                                      ),
-                                                                      const SizedBox(height: 12.0),
-                                                                    ],
+                                                                  child: const EqualizerMainSlidersColumn(
+                                                                    verticalInBetweenPadding: 18.0,
+                                                                    tapToUpdate: false,
                                                                   ),
                                                                 ),
                                                               );
