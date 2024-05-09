@@ -292,23 +292,21 @@ class Indexer {
   void _sortAll() => SearchSortController.inst.sortAll();
 
   /// Removes Specific tracks from their corresponding media, useful when updating track metadata or reindexing a track.
-  void _removeTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
-    tracks.loop((tr, _) {
-      final trExt = tr.toTrackExt();
-      mainMapAlbums.value[trExt.albumIdentifier]?.remove(tr);
+  void _removeThisTrackFromAlbumGenreArtistEtc(Track tr) {
+    final trExt = tr.toTrackExt();
+    mainMapAlbums.value[trExt.albumIdentifier]?.remove(tr);
 
-      trExt.artistsList.loop((artist, i) {
-        mainMapArtists.value[artist]?.remove(tr);
-      });
-      mainMapAlbumArtists.value[trExt.albumArtist]?.remove(tr);
-      mainMapComposer.value[trExt.composer]?.remove(tr);
-      trExt.genresList.loop((genre, i) {
-        mainMapGenres.value[genre]?.remove(tr);
-      });
-      mainMapFolders[tr.folder]?.remove(tr);
-
-      _currentFileNamesMap.remove(tr.filename);
+    trExt.artistsList.loop((artist, i) {
+      mainMapArtists.value[artist]?.remove(tr);
     });
+    mainMapAlbumArtists.value[trExt.albumArtist]?.remove(tr);
+    mainMapComposer.value[trExt.composer]?.remove(tr);
+    trExt.genresList.loop((genre, i) {
+      mainMapGenres.value[genre]?.remove(tr);
+    });
+    mainMapFolders[tr.folder]?.remove(tr);
+
+    _currentFileNamesMap.remove(tr.filename);
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
@@ -624,7 +622,7 @@ class Indexer {
         tracksMissing.add(tr);
       }
     });
-    _removeTheseTracksToAlbumGenreArtistEtc(tracksReal);
+
     if (updateArtwork) {
       imageCache.clear();
       imageCache.clearLiveImages();
@@ -637,16 +635,25 @@ class Indexer {
       overrideArtwork: updateArtwork,
     );
     await for (final item in stream) {
+      final path = item.tags.path;
       final trext = _convertTagToTrack(
-        trackPath: item.tags.path,
+        trackPath: path,
         trackInfo: item,
         tryExtractingFromFilename: tryExtractingFromFilename,
         onMinDurTrigger: () => null,
         onMinSizeTrigger: () => null,
         onError: (_) => null,
       );
-      if (trext != null) _addTrackToLists(trext, false, item.tags.artwork);
-      onProgress(!item.hasError);
+      if (item.hasError) {
+        onProgress(false);
+      } else {
+        final tr = Track(path);
+        allTracksMappedByYTID.remove(tr.youtubeID);
+        _currentFileNamesMap.remove(path.getFilename);
+        _removeThisTrackFromAlbumGenreArtistEtc(tr);
+        if (trext != null) _addTrackToLists(trext, true, item.tags.artwork);
+        onProgress(true);
+      }
     }
 
     final finalTrack = <Track>[];
@@ -693,8 +700,7 @@ class Indexer {
         CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
     }
-
-    _removeTheseTracksToAlbumGenreArtistEtc(oldTracks);
+    oldTracks.loop((tr, index) => _removeThisTrackFromAlbumGenreArtistEtc(tr));
     _addTheseTracksToAlbumGenreArtistEtc(newTracks);
     await _sortAndSaveTracks();
   }
