@@ -10,6 +10,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/miniplayer_base.dart';
@@ -177,6 +178,67 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final initialFontSize = fullscreen ? 25.0 : 15.0;
     final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize.multipliedFontScale);
 
+    final bottomControlsChildren = fullscreen
+        ? [
+            WaveformMiniplayer(fixPadding: true, waveKey: WaveformController.inst.waveBarsAltKey),
+            const SizedBox(height: 8.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                NamidaHero(
+                  enabled: false,
+                  tag: 'MINIPLAYER_POSITION',
+                  child: Obx(
+                    () => Text(
+                      Player.inst.nowPlayingPosition.milliSecondsLabel,
+                      style: context.textTheme.displaySmall,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                NamidaIconButton(
+                  icon: Broken.previous,
+                  iconSize: 24.0,
+                  onPressed: () {
+                    Player.inst.previous();
+                  },
+                ),
+                Obx(
+                  () => NamidaIconButton(
+                    horizontalPadding: 18.0,
+                    icon: Player.inst.isPlaying ? Broken.pause : Broken.play,
+                    iconSize: 32.0,
+                    onPressed: () {
+                      Player.inst.togglePlayPause();
+                    },
+                  ),
+                ),
+                NamidaIconButton(
+                  icon: Broken.next,
+                  iconSize: 24.0,
+                  onPressed: () {
+                    Player.inst.next();
+                  },
+                ),
+                const Spacer(),
+                NamidaHero(
+                  enabled: false,
+                  tag: 'MINIPLAYER_DURATION',
+                  child: Obx(
+                    () => Text(
+                      Player.inst.nowPlayingTrack.duration.secondsLabel,
+                      style: context.textTheme.displaySmall,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 12.0),
+            SizedBox(height: MediaQuery.paddingOf(context).bottom),
+          ]
+        : [];
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -235,15 +297,16 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         final text = Lyrics.inst.currentLyricsText.value;
                                         if (text != '') {
                                           return SingleChildScrollView(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
                                             controller: Lyrics.inst.textScrollController,
                                             child: Column(
                                               children: [
-                                                SizedBox(height: context.height * 0.3),
+                                                const SizedBox(height: 48.0),
                                                 Text(
                                                   text,
                                                   style: normalTextStyle,
                                                 ),
-                                                SizedBox(height: context.height * 0.3),
+                                                const SizedBox(height: 48.0),
                                               ],
                                             ),
                                           );
@@ -355,65 +418,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         ],
                       ),
                     ),
-                    if (fullscreen) ...[
-                      const WaveformMiniplayer(fixPadding: true),
-                      const SizedBox(height: 8.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Spacer(),
-                          NamidaHero(
-                            enabled: false,
-                            tag: 'MINIPLAYER_POSITION',
-                            child: Obx(
-                              () => Text(
-                                Player.inst.nowPlayingPosition.milliSecondsLabel,
-                                style: context.textTheme.displaySmall,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          NamidaIconButton(
-                            icon: Broken.previous,
-                            iconSize: 24.0,
-                            onPressed: () {
-                              Player.inst.previous();
-                            },
-                          ),
-                          Obx(
-                            () => NamidaIconButton(
-                              horizontalPadding: 18.0,
-                              icon: Player.inst.isPlaying ? Broken.pause : Broken.play,
-                              iconSize: 32.0,
-                              onPressed: () {
-                                Player.inst.togglePlayPause();
-                              },
-                            ),
-                          ),
-                          NamidaIconButton(
-                            icon: Broken.next,
-                            iconSize: 24.0,
-                            onPressed: () {
-                              Player.inst.next();
-                            },
-                          ),
-                          const Spacer(),
-                          NamidaHero(
-                            enabled: false,
-                            tag: 'MINIPLAYER_DURATION',
-                            child: Obx(
-                              () => Text(
-                                Player.inst.nowPlayingTrack.duration.secondsLabel,
-                                style: context.textTheme.displaySmall,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
-                      const SizedBox(height: 12.0),
-                      SizedBox(height: MediaQuery.paddingOf(context).bottom),
-                    ]
+                    ...bottomControlsChildren,
                   ],
                 ),
               ),

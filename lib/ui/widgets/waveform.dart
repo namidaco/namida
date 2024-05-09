@@ -1,52 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/ui/widgets/animated_widgets.dart';
-
-bool themeCanRebuildWaveform = false;
 
 class WaveformComponent extends StatefulWidget {
   final int durationInMilliseconds;
-  final Color? color;
-  final Color? bgColor;
   final Curve curve;
-  final double? boxMaxHeight;
-  final double? boxMaxWidth;
   final double barsMinHeight;
   final double barsMaxHeight;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final BorderRadiusGeometry? borderRadius;
-  final Widget Function(NamidaWaveBars barsWidget)? widgetOnTop;
-  final Color? barsColorOnTop;
 
   const WaveformComponent({
     Key? key,
     this.durationInMilliseconds = 600,
-    this.color,
-    this.bgColor,
     this.curve = Curves.easeInOutQuart,
-    this.boxMaxHeight = 64.0,
-    this.boxMaxWidth,
     this.barsMinHeight = 3.0,
     this.barsMaxHeight = 64.0,
-    this.padding,
-    this.margin,
-    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
-    this.widgetOnTop,
-    this.barsColorOnTop,
   }) : super(key: key);
 
   @override
-  State<WaveformComponent> createState() => _WaveformComponentState();
+  State<WaveformComponent> createState() => WaveformComponentState();
 }
 
-class _WaveformComponentState extends State<WaveformComponent> {
-  late Widget _stockWidget;
-  Key? _lastKey;
+class WaveformComponentState extends State<WaveformComponent> with SingleTickerProviderStateMixin {
+  void setEnabled(bool enabled) {
+    if (enabled) {
+      setState(() {});
+      _animation.animateTo(1.0, curve: widget.curve);
+    } else {
+      _animation.animateTo(0.0, curve: widget.curve);
+    }
+  }
+
+  late final _animation = AnimationController(
+    vsync: this,
+    lowerBound: 0.0,
+    upperBound: 1.0,
+    value: 1.0,
+    duration: Duration(milliseconds: widget.durationInMilliseconds),
+    reverseDuration: Duration(milliseconds: widget.durationInMilliseconds),
+  );
+
+  int get _currentDurationInMS {
+    final totalDur = Player.inst.currentItemDuration ?? (Player.inst.currentQueue.isNotEmpty ? Player.inst.nowPlayingTrack.duration.seconds : Duration.zero);
+    return totalDur.inMilliseconds;
+  }
 
   @override
   void initState() {
@@ -59,85 +62,97 @@ class _WaveformComponentState extends State<WaveformComponent> {
   @override
   void dispose() {
     NamidaChannel.inst.removeOnResume('waveform');
+    _animation.dispose();
     super.dispose();
-  }
-
-  void _fillWidget(BuildContext context) {
-    _lastKey = widget.key;
-    final view = View.of(context);
-    _stockWidget = Container(
-      width: widget.boxMaxWidth,
-      height: widget.boxMaxHeight,
-      padding: widget.padding,
-      margin: widget.margin,
-      decoration: BoxDecoration(color: widget.bgColor, borderRadius: widget.borderRadius),
-      child: Obx(
-        () {
-          final downscaled = WaveformController.inst.currentWaveformUI;
-          final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
-          return Center(
-            child: Stack(
-              children: [
-                NamidaWaveBars(
-                  waveList: downscaled,
-                  color: widget.color,
-                  borderRadius: 5.0,
-                  barWidth: barWidth,
-                  barMinHeight: widget.barsMinHeight,
-                  barMaxHeight: widget.barsMaxHeight,
-                  animationDurationMS: widget.durationInMilliseconds,
-                  animationCurve: widget.curve,
-                ),
-                if (widget.widgetOnTop != null)
-                  widget.widgetOnTop!(
-                    NamidaWaveBars(
-                      waveList: downscaled,
-                      color: widget.barsColorOnTop,
-                      borderRadius: 5.0,
-                      barWidth: barWidth,
-                      barMinHeight: widget.barsMinHeight,
-                      barMaxHeight: widget.barsMaxHeight,
-                      animationDurationMS: widget.durationInMilliseconds,
-                      animationCurve: widget.curve,
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_lastKey == null || widget.key != _lastKey || themeCanRebuildWaveform) {
-      _fillWidget(context);
-    }
-    return _stockWidget;
+    final view = View.of(context);
+    final decorationBoxBehind = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+        color: context.theme.colorScheme.onBackground.withAlpha(40),
+      ),
+    );
+    final decorationBoxFront = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+        color: context.theme.colorScheme.onBackground.withAlpha(110),
+      ),
+    );
+    final downscaled = WaveformController.inst.currentWaveformUI;
+    final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
+    return Center(
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, _) => Stack(
+          children: [
+            NamidaWaveBarsNew(
+              heightPercentage: _animation.value,
+              decorationBox: decorationBoxBehind,
+              waveList: downscaled,
+              barWidth: barWidth,
+              barMinHeight: widget.barsMinHeight,
+              barMaxHeight: widget.barsMaxHeight,
+            ),
+            Obx(
+              () {
+                final seekValue = MiniPlayerController.inst.seekValue.value;
+                final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
+                final durInMs = _currentDurationInMS;
+                final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                return ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (Rect bounds) {
+                    return LinearGradient(
+                      tileMode: TileMode.decal,
+                      stops: [0.0, percentage, percentage + 0.005, 1.0],
+                      colors: [
+                        Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
+                        Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
+                        Colors.transparent,
+                        Colors.transparent,
+                      ],
+                    ).createShader(bounds);
+                  },
+                  child: SizedBox(
+                    width: Get.width - 16.0 / 2,
+                    child: NamidaWaveBarsNew(
+                      heightPercentage: _animation.value,
+                      decorationBox: decorationBoxFront,
+                      waveList: downscaled,
+                      barWidth: barWidth,
+                      barMinHeight: widget.barsMinHeight,
+                      barMaxHeight: widget.barsMaxHeight,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-class NamidaWaveBars extends StatelessWidget {
+class NamidaWaveBarsNew extends StatelessWidget {
   final List<double> waveList;
-  final Color? color;
-  final double borderRadius;
   final double barWidth;
   final double barMinHeight;
   final double barMaxHeight;
-  final Curve animationCurve;
-  final int animationDurationMS;
+  final Widget decorationBox;
+  final double heightPercentage;
 
-  const NamidaWaveBars({
+  const NamidaWaveBarsNew({
     super.key,
     required this.waveList,
-    required this.color,
-    this.borderRadius = 5.0,
     required this.barWidth,
     required this.barMinHeight,
     required this.barMaxHeight,
-    this.animationCurve = Curves.easeInOutQuart,
-    required this.animationDurationMS,
+    required this.decorationBox,
+    required this.heightPercentage,
   });
 
   @override
@@ -145,21 +160,15 @@ class NamidaWaveBars extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       mainAxisSize: MainAxisSize.max,
-      children: [
-        ...waveList.map(
-          (e) => AnimatedSizedBox(
-            duration: Duration(milliseconds: animationDurationMS),
-            height: e.clamp(barMinHeight, barMaxHeight),
-            width: barWidth,
-            animateWidth: false,
-            curve: animationCurve,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-              color: color,
+      children: waveList
+          .map(
+            (e) => SizedBox(
+              height: (heightPercentage * e).clamp(barMinHeight, barMaxHeight),
+              width: barWidth,
+              child: decorationBox,
             ),
-          ),
-        ),
-      ],
+          )
+          .toList(),
     );
   }
 }

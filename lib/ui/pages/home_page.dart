@@ -70,6 +70,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   final _mixes = <MapEntry<String, List<Track>>>[];
 
+  final _lostMemoriesYears = <int>[];
+
   int currentYearLostMemories = 0;
   late final ScrollController _scrollController;
   late final ScrollController _lostMemoriesScrollController;
@@ -172,6 +174,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       MapEntry(lang.FAVOURITES, favs.take(25).tracks.toList()),
       MapEntry(lang.RANDOM_PICKS, _randomTracks),
     ]);
+
+    final oldest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.oldestTrack?.dateAdded ?? 0);
+    final newest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.newestTrack?.dateAdded ?? 0);
+
+    final diff = (newest.year - oldest.year).abs();
+    for (int i = 1; i <= diff; i++) {
+      _lostMemoriesYears.add(newest.year - i);
+    }
 
     _isLoading = false;
 
@@ -439,17 +449,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       child: Padding(
                                         padding: const EdgeInsets.only(top: 4.0),
                                         child: Row(
-                                          children: [
-                                            ...() {
-                                              final oldest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.oldestTrack?.dateAdded ?? 0);
-                                              final newest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.newestTrack?.dateAdded ?? 0);
-
-                                              final years = <int>[];
-                                              final diff = (newest.year - oldest.year).abs();
-                                              for (int i = 1; i <= diff; i++) {
-                                                years.add(newest.year - i);
-                                              }
-                                              return years.map(
+                                          children: _lostMemoriesYears
+                                              .map(
                                                 (e) => Padding(
                                                   padding: const EdgeInsets.symmetric(horizontal: 2.0),
                                                   child: TapDetector(
@@ -476,9 +477,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            }()
-                                          ],
+                                              )
+                                              .toList(),
                                         ),
                                       ),
                                     ),
@@ -903,7 +903,7 @@ class _MixesCardState extends State<_MixesCard> {
                 borderRadius: 12.0,
                 margin: const EdgeInsets.all(12.0),
                 padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                bgColor: Color.alphaBlend(_cardColor?.withOpacity(0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor),
+                bgColor: Color.alphaBlend(_cardColor?.withOpacity(0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withOpacity(0.8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -928,7 +928,7 @@ class _MixesCardState extends State<_MixesCard> {
                       },
                       borderRadius: 8.0,
                       padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                      bgColor: context.theme.cardColor.withOpacity(0.8),
+                      bgColor: context.theme.cardColor.withOpacity(0.4),
                       child: Row(
                         children: [
                           const Icon(Broken.play_cricle, size: 20.0),

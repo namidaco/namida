@@ -353,11 +353,10 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 Obx(
                                   () => _CuteSlider(
                                     key: _loudnessKey,
-                                    initialValue: targetGain + 1.0,
-                                    min: 0,
-                                    max: 2,
-                                    onChanged: (value) {
-                                      final newVal = value - 1.0;
+                                    initialValue: targetGain,
+                                    min: -1,
+                                    max: 1,
+                                    onChanged: (newVal) {
                                       settings.equalizer.save(loudnessEnhancer: newVal);
                                       _loudnessEnhancer.setTargetGain(newVal);
                                     },

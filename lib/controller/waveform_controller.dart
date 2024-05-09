@@ -1,17 +1,22 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:waveform_extractor/waveform_extractor.dart';
 
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/waveform.dart';
 
 class WaveformController {
   static WaveformController get inst => _instance;
   static final WaveformController _instance = WaveformController._internal();
   WaveformController._internal();
 
-  List<double> _currentWaveform = [];
+  final waveBarsKey = GlobalKey<WaveformComponentState>();
+  final waveBarsAltKey = GlobalKey<WaveformComponentState>();
 
-  final currentWaveformUI = <double>[].obs;
+  List<double> currentWaveformUI = [];
+
+  List<double> _currentWaveform = [];
 
   final RxMap<int, double> _currentScaleMap = <int, double>{}.obs;
 
@@ -19,7 +24,8 @@ class WaveformController {
 
   void resetWaveform() {
     _currentWaveform = [];
-    currentWaveformUI.value = List.filled(settings.waveformTotalBars.value, 2.0);
+    waveBarsKey.currentState?.setEnabled(false);
+    waveBarsAltKey.currentState?.setEnabled(false);
   }
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
@@ -62,7 +68,9 @@ class WaveformController {
       targetSize: userBars,
       original: _currentWaveform,
     ));
-    currentWaveformUI.value = waveform;
+    currentWaveformUI = waveform;
+    waveBarsKey.currentState?.setEnabled(true);
+    waveBarsAltKey.currentState?.setEnabled(true);
   }
 
   static List<double> _calculateUIWaveformIsolate(({List<double> original, int targetSize}) params) {

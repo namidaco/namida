@@ -203,7 +203,7 @@ class SearchPage extends StatelessWidget {
               Expanded(
                 child: Obx(
                   () => AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
+                    duration: const Duration(milliseconds: 300),
                     child: !SearchSortController.inst.isSearching
                         ? Container(
                             key: const Key('emptysearch'),
@@ -215,7 +215,7 @@ class SearchPage extends StatelessWidget {
                               child: TweenAnimationBuilder(
                                 tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
                                 duration: const Duration(milliseconds: 500),
-                                child: Image.asset('assets/namida_icon.png'),
+                                child: Image.asset('assets/namida_icon.png', cacheHeight: 100, scale: 0.4),
                                 builder: (context, value, child) => ImageFiltered(
                                   imageFilter: ImageFilter.blur(
                                     sigmaX: value,

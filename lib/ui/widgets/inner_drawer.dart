@@ -79,16 +79,14 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilderMulti(
+    final drawerChild = widget.drawerChild;
+    final scaffoldBody = widget.child;
+    return AnimatedBuilder(
       animation: controller,
-      children: [
-        widget.drawerChild,
-        widget.child,
-      ],
-      builder: (context, children) {
+      builder: (context, _) {
         final child = Stack(
           children: [
-            children[1],
+            scaffoldBody,
             Positioned.fill(
               child: TapDetector(
                 onTap: controller.value == controller.lowerBound ? null : _closeDrawer,
@@ -142,7 +140,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 padding: EdgeInsets.only(right: context.width * (1 - controller.upperBound)),
                 child: Transform.translate(
                   offset: Offset(-((controller.upperBound - controller.value) * context.width * 0.5), 0),
-                  child: children[0],
+                  child: drawerChild,
                 ),
               ),
               // -- drawer dim

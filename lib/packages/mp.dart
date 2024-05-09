@@ -16,7 +16,7 @@ double _maxHeight = 0;
 
 class NamidaYTMiniplayer extends StatefulWidget {
   final double minHeight, maxHeight, bottomMargin;
-  final Widget Function(double height, double percentage, List<Widget> constantChildren) builder;
+  final Widget Function(double height, double percentage) builder;
   final Color bgColor;
   final void Function(double percentage)? onHeightChange;
   final void Function(double dismissPercentage)? onDismissing;
@@ -24,7 +24,6 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final Curve curve;
   final AnimationController? animationController;
   final void Function()? onDismiss;
-  final List<Widget> constantChildren;
   final bool displayBottomBGLayer;
   final void Function()? onAlternativePercentageExecute;
 
@@ -41,7 +40,6 @@ class NamidaYTMiniplayer extends StatefulWidget {
     this.curve = Curves.decelerate,
     this.animationController,
     this.onDismiss,
-    required this.constantChildren,
     this.displayBottomBGLayer = false,
     this.onAlternativePercentageExecute,
   });
@@ -188,62 +186,59 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    if (padding != _padding) {
-      _padding = padding;
-      animateToState(_wasExpanded);
-    }
+    _padding = padding;
+    animateToState(_wasExpanded);
+
     final maxWidth = context.width;
-    return AnimatedBuilderMulti(
-      animation: controller,
-      builder: (context, children) {
-        final percentage = this.percentage;
-        final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin);
-        return Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            if (widget.displayBottomBGLayer)
-              SizedBox(
-                height: totalBottomPadding,
-                width: maxWidth,
-                child: ColoredBox(color: widget.bgColor),
-              ),
-            Padding(
-              padding: EdgeInsets.only(
-                top: _padding.top,
-                bottom: totalBottomPadding,
-              ),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: GestureDetector(
-                  onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
-                  onVerticalDragStart: (details) {
-                    _isDragManagedInternally = !_alternativePercentage;
-                  },
-                  onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
-                  // onVerticalDragCancel: () => !_isDragManagedInternally ? null : animateToState(_wasExpanded),
-                  onVerticalDragEnd: (details) => !_isDragManagedInternally ? null : onVerticalDragEnd(details.velocity.pixelsPerSecond.dy),
-                  child: Material(
-                    clipBehavior: Clip.hardEdge,
-                    type: MaterialType.transparency,
-                    child: NamidaOpacity(
-                      enabled: controllerHeight < widget.minHeight,
-                      opacity: dismissPercentage,
-                      child: SizedBox(
-                        height: controllerHeight,
-                        child: ColoredBox(
-                          color: widget.bgColor,
-                          child: widget.builder(controllerHeight, percentage, children),
+    return AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          final percentage = this.percentage;
+          final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin);
+          return Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              if (widget.displayBottomBGLayer)
+                SizedBox(
+                  height: totalBottomPadding,
+                  width: maxWidth,
+                  child: ColoredBox(color: widget.bgColor),
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: _padding.top,
+                  bottom: totalBottomPadding,
+                ),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: GestureDetector(
+                    onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
+                    onVerticalDragStart: (details) {
+                      _isDragManagedInternally = !_alternativePercentage;
+                    },
+                    onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
+                    // onVerticalDragCancel: () => !_isDragManagedInternally ? null : animateToState(_wasExpanded),
+                    onVerticalDragEnd: (details) => !_isDragManagedInternally ? null : onVerticalDragEnd(details.velocity.pixelsPerSecond.dy),
+                    child: Material(
+                      clipBehavior: Clip.hardEdge,
+                      type: MaterialType.transparency,
+                      child: NamidaOpacity(
+                        enabled: controllerHeight < widget.minHeight,
+                        opacity: dismissPercentage,
+                        child: SizedBox(
+                          height: controllerHeight,
+                          child: ColoredBox(
+                            color: widget.bgColor,
+                            child: widget.builder(controllerHeight, percentage),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
-      children: widget.constantChildren,
-    );
+            ],
+          );
+        });
   }
 }

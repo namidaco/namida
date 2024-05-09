@@ -3360,52 +3360,6 @@ class _VisibilityDetectorState extends State<VisibilityDetector> {
   Widget build(BuildContext context) => widget.child;
 }
 
-class AnimatedBuilderMulti extends StatelessWidget {
-  final Listenable animation;
-  final List<Widget> children;
-  final Widget Function(BuildContext context, List<Widget> children) builder;
-
-  const AnimatedBuilderMulti({
-    super.key,
-    required this.animation,
-    required this.children,
-    required this.builder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      child: AnimatedBuilderChildren(items: children),
-      builder: (context, child) => builder(context, (child as AnimatedBuilderChildren).items),
-    );
-  }
-}
-
-class AnimatedBuilderChildren extends Widget {
-  final List<Widget> items;
-  const AnimatedBuilderChildren({super.key, required this.items});
-
-  @override
-  Element createElement() => _DummyElement(this);
-}
-
-class _DummyElement extends Element {
-  _DummyElement(super.widget);
-
-  @override
-  void mount(Element? parent, dynamic newSlot) {
-    super.mount(parent, newSlot);
-  }
-
-  @override
-  bool get debugDoingBuild => false;
-
-  @override
-  // ignore: must_call_super
-  void performRebuild() {}
-}
-
 class AnimatedEnabled extends StatelessWidget {
   final bool enabled;
   final double disabledOpacity;

@@ -21,7 +21,6 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/ui/widgets/waveform.dart';
 
 enum _ThemeSettingsKeys {
   themeMode,
@@ -372,10 +371,8 @@ class ToggleThemeModeContainer extends StatelessWidget {
   const ToggleThemeModeContainer({super.key, this.width, this.blurRadius = 6.0});
 
   void onThemeChangeTap(ThemeMode themeMode) async {
-    themeCanRebuildWaveform = true;
     settings.save(themeMode: themeMode);
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
-    themeCanRebuildWaveform = false;
     CurrentColor.inst.updateColorAfterThemeModeChange();
   }
 
