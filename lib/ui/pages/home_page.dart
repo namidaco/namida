@@ -45,6 +45,8 @@ extension _MapUtilsHomePage<K, V> on Map<K, V> {
   }
 }
 
+final int _lowestDateMSSEToDisplay = DateTime(1970).millisecondsSinceEpoch + 1;
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -496,9 +498,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   onTap: _navigateToRecentlyListened,
                                   topRightText: (track) {
                                     if (track == null) return null;
-                                    return Jiffy.parseFromMillisecondsSinceEpoch(track.track.dateAdded).fromNow(
-                                      withPrefixAndSuffix: false,
-                                    );
+                                    final creationDate = track.track.dateAdded;
+                                    if (creationDate > _lowestDateMSSEToDisplay) return Jiffy.parseFromMillisecondsSinceEpoch(creationDate).fromNow(withPrefixAndSuffix: false);
+                                    return null;
                                   },
                                 );
 
@@ -1380,9 +1382,12 @@ class RecentlyAddedTracksPage extends StatelessWidget {
         queueSource: QueueSource.recentlyAdded,
         queue: tracksSorted,
         thirdLineText: (track) {
-          final dateMS = track.track.dateAdded;
-          final ago = Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow(withPrefixAndSuffix: true);
-          return "${dateMS.dateAndClockFormattedOriginal} (~$ago)";
+          final creationDate = track.track.dateAdded;
+          if (creationDate > _lowestDateMSSEToDisplay) {
+            final ago = Jiffy.parseFromMillisecondsSinceEpoch(creationDate).fromNow(withPrefixAndSuffix: true);
+            return "${creationDate.dateAndClockFormattedOriginal} (~$ago)";
+          }
+          return '';
         },
       ),
     );

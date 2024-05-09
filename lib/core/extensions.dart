@@ -550,16 +550,20 @@ extension FileUtils on File {
   }
 }
 
+final _minimumDateMicro = DateTime(1970).microsecondsSinceEpoch + 1;
+
 extension FileStatsUtils on FileStat {
   DateTime get creationDate {
-    final minimumMicro = DateTime(1970).microsecondsSinceEpoch;
-    final dates = [
-      if (modified.microsecondsSinceEpoch > minimumMicro) modified,
-      if (changed.microsecondsSinceEpoch > minimumMicro) changed,
-      if (accessed.microsecondsSinceEpoch > minimumMicro) accessed,
-    ];
-    dates.sortBy((e) => e.microsecondsSinceEpoch);
-    return dates.firstOrNull ?? DateTime(1970);
+    int? finalDateMicro;
+    void tryAssign(int micros) {
+      if (micros > _minimumDateMicro && (finalDateMicro == null || micros < finalDateMicro!)) finalDateMicro = micros;
+    }
+
+    tryAssign(modified.microsecondsSinceEpoch);
+    tryAssign(changed.microsecondsSinceEpoch);
+    tryAssign(accessed.microsecondsSinceEpoch);
+
+    return finalDateMicro != null ? DateTime.fromMicrosecondsSinceEpoch(finalDateMicro!) : DateTime(1970);
   }
 }
 
