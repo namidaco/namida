@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
@@ -1275,8 +1276,8 @@ class YoutubeController {
     required bool merge,
     required bool keepCachedVersionsIfDownloaded,
     required bool deleteOldFile,
-    required void Function(List<int> downloadedBytes) videoDownloadingStream,
-    required void Function(List<int> downloadedBytes) audioDownloadingStream,
+    required void Function(int downloadedBytesLength) videoDownloadingStream,
+    required void Function(int downloadedBytesLength) audioDownloadingStream,
     required void Function(int initialFileSize) onInitialVideoFileSize,
     required void Function(int initialFileSize) onInitialAudioFileSize,
     required Future<void> Function(File videoFile) onVideoFileReady,
@@ -1360,9 +1361,9 @@ class YoutubeController {
               onInitialVideoFileSize(initialFileSize);
               bytesLength = initialFileSize;
             },
-            downloadingStream: (downloadedBytes) {
-              videoDownloadingStream(downloadedBytes);
-              bytesLength += downloadedBytes.length;
+            downloadingStream: (downloadedBytesLength) {
+              videoDownloadingStream(downloadedBytesLength);
+              bytesLength += downloadedBytesLength;
               downloadsVideoProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
                 totalProgress: videoStream.sizeInBytes ?? 0,
@@ -1414,9 +1415,9 @@ class YoutubeController {
               onInitialAudioFileSize(initialFileSize);
               bytesLength = initialFileSize;
             },
-            downloadingStream: (downloadedBytes) {
-              audioDownloadingStream(downloadedBytes);
-              bytesLength += downloadedBytes.length;
+            downloadingStream: (downloadedBytesLength) {
+              audioDownloadingStream(downloadedBytesLength);
+              bytesLength += downloadedBytesLength;
               downloadsAudioProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
                 totalProgress: audioStream.sizeInBytes ?? 0,
@@ -1516,7 +1517,7 @@ class YoutubeController {
     required String filename,
     required String destinationFilePath,
     required void Function(int initialFileSize) onInitialFileSize,
-    required void Function(List<int> downloadedBytes) downloadingStream,
+    required void Function(int downloadedBytesLength) downloadingStream,
   }) async {
     int downloadStartRange = 0;
 
@@ -1543,7 +1544,7 @@ class YoutubeController {
         final fileStream = file.openWrite(mode: FileMode.append);
         await for (final data in downloadStream.stream) {
           fileStream.add(data);
-          downloadingStream(data);
+          downloadingStream(data.length);
         }
         await fileStream.flush();
         await fileStream.close(); // closing file.
@@ -1554,13 +1555,13 @@ class YoutubeController {
     return File(destinationFilePath);
   }
 
-  Dio? _downloadClient;
+  SendPort? downloadDisposePort;
   Future<NamidaVideo?> downloadYoutubeVideo({
     required String id,
     VideoStream? stream,
     required void Function(List<VideoOnlyStream> availableStreams) onAvailableQualities,
     required void Function(VideoOnlyStream choosenStream) onChoosingQuality,
-    required void Function(List<int> downloadedBytes) downloadingStream,
+    required void Function(int downloadedBytesLength) downloadingStream,
     required void Function(int initialFileSize) onInitialFileSize,
     required bool Function() canStartDownloading,
   }) async {
@@ -1607,23 +1608,29 @@ class YoutubeController {
         if (!canStartDownloading()) return null;
         final downloadStartRange = initialFileSizeOnDisk;
 
-        _downloadClient = Dio(BaseOptions(headers: {HttpHeaders.rangeHeader: 'bytes=$downloadStartRange-'}));
-        final downloadStream = await _downloadClient!
-            .get<ResponseBody>(
-              erabaretaStream.url ?? '',
-              options: Options(responseType: ResponseType.stream),
-            )
-            .then((value) => value.data);
+        downloadDisposePort?.send(null); // disposing old download process
 
-        if (downloadStream != null) {
-          final fileStream = file.openWrite(mode: FileMode.append);
-          await for (final data in downloadStream.stream) {
-            fileStream.add(data);
-            downloadingStream(data);
+        final progressPort = ReceivePort();
+        final commPort = ReceivePort();
+        progressPort.listen((message) {
+          downloadingStream(message as int);
+        });
+        commPort.listen((message) {
+          if (message is SendPort) {
+            downloadDisposePort = message;
           }
-          await fileStream.flush();
-          await fileStream.close(); // closing file.
-        }
+        });
+
+        final downloaded = await _downloadStreamToFile.thready({
+          'url': erabaretaStream.url ?? '',
+          'file': file,
+          'downloadStartRange': downloadStartRange,
+          'commPort': commPort.sendPort,
+          'progressPort': progressPort.sendPort,
+        });
+        progressPort.close();
+        commPort.close();
+        if (!downloaded) return null;
       }
 
       // ------------------------------------
@@ -1653,10 +1660,46 @@ class YoutubeController {
     return dv;
   }
 
+  static Future<bool> _downloadStreamToFile(Map params) async {
+    final url = params['url'] as String;
+    final file = params['file'] as File;
+    final downloadStartRange = params['downloadStartRange'] as int;
+    final commPort = params['commPort'] as SendPort;
+    final progressPort = params['progressPort'] as SendPort;
+
+    final client = HttpClient();
+
+    final disposeReciever = ReceivePort();
+    disposeReciever.listen((message) {
+      client.close(force: true);
+      disposeReciever.close();
+    });
+    commPort.send(disposeReciever.sendPort);
+
+    try {
+      final request = await client.getUrl(Uri.parse(url));
+      request.headers.set('range', 'bytes=$downloadStartRange-');
+      final response = await request.close();
+      final downloadStream = response.asBroadcastStream();
+
+      final fileStream = file.openWrite(mode: FileMode.append);
+      await for (final data in downloadStream) {
+        fileStream.add(data);
+        progressPort.send(data.length);
+      }
+      await fileStream.flush();
+      await fileStream.close(); // closing file.
+      client.close(force: true);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void dispose({bool closeCurrentDownloadClient = true, bool closeAllClients = false}) {
     if (closeCurrentDownloadClient) {
-      _downloadClient?.close(force: true);
-      _downloadClient = null;
+      downloadDisposePort?.send(null);
+      downloadDisposePort = null;
     }
 
     if (closeAllClients) {

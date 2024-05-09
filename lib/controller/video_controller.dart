@@ -387,11 +387,12 @@ class VideoController {
     VideoStream? stream,
   }) async {
     if (id == null || id == '') return null;
+    _downloadTimerCancel();
+    currentDownloadedBytes.value = null;
 
     int downloaded = 0;
-    _downloadTimerCancel();
     void updateCurrentBytes() {
-      currentDownloadedBytes.value = downloaded == 0 ? null : downloaded;
+      if (downloaded > 0) currentDownloadedBytes.value = downloaded;
       printy('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
     }
 
@@ -425,12 +426,12 @@ class VideoController {
       onInitialFileSize: (initialFileSize) {
         updateValuesCT(() {
           downloaded = initialFileSize;
-          currentDownloadedBytes.value = initialFileSize;
+          updateCurrentBytes();
         });
       },
-      downloadingStream: (downloadedBytes) {
+      downloadingStream: (downloadedBytesLength) {
         updateValuesCT(() {
-          downloaded += downloadedBytes.length;
+          downloaded += downloadedBytesLength;
         });
       },
     );
