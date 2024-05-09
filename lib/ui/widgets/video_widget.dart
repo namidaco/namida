@@ -1273,6 +1273,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       child: Row(
                                         children: [
                                           const SizedBox(width: 2.0),
+                                          if (widget.isFullScreen)
+                                            // -- rotate screen button
+                                            NamidaIconButton(
+                                              horizontalPadding: 0.0,
+                                              padding: EdgeInsets.zero,
+                                              iconSize: 20.0,
+                                              icon: Broken.rotate_left_1,
+                                              iconColor: itemsColor,
+                                              onPressed: () {
+                                                _startTimer();
+                                                NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
+                                              },
+                                            ),
+                                          if (widget.isFullScreen) SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),
                                           RepeatModeIconButton(
                                             compact: true,
                                             color: itemsColor,

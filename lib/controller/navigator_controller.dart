@@ -155,7 +155,7 @@ class NamidaNavigator {
     );
   }
 
-  Future<void> _setOrientations(bool lanscape) async {
+  Future<void> setDeviceOrientations(bool lanscape) async {
     isInLanscape = lanscape;
     final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;
     await SystemChrome.setPreferredOrientations(orientations);
@@ -189,7 +189,7 @@ class NamidaNavigator {
 
     setDefaultSystemUIOverlayStyle(semiTransparent: true);
     await Future.wait([
-      if (setOrientations) _setOrientations(true),
+      if (setOrientations) setDeviceOrientations(true),
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
     ]);
   }
@@ -200,7 +200,7 @@ class NamidaNavigator {
 
     setDefaultSystemUIOverlayStyle();
     await Future.wait([
-      if (isInLanscape) _setOrientations(false),
+      if (isInLanscape) setDeviceOrientations(false),
       setDefaultSystemUI(),
     ]);
 
