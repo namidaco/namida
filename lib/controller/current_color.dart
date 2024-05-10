@@ -11,6 +11,7 @@ import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
 import 'package:namida/class/color_m.dart';
+import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -150,9 +151,9 @@ class CurrentColor {
     return null;
   }
 
-  Future<void> updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
+  void updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
     if (!updateIndexOnly && track != null) {
-      await _updatePlayerColorFromItem(
+      _updatePlayerColorFromItem(
         getColorPalette: () async => await getTrackColors(track.track),
         stillPlaying: () => track.track == Player.inst.nowPlayingTrack,
       );
@@ -166,14 +167,14 @@ class CurrentColor {
     }
   }
 
-  Future<void> updatePlayerColorFromYoutubeID(YoutubeID ytIdItem) async {
+  void updatePlayerColorFromYoutubeID(YoutubeID ytIdItem) async {
     final id = ytIdItem.id;
     if (id == '') return;
 
     // -- only extract if same item is still playing, i.e. user didn't skip.
     bool stillPlaying() => ytIdItem.id == Player.inst.nowPlayingVideoID?.id;
 
-    await _updatePlayerColorFromItem(
+    _updatePlayerColorFromItem(
       getColorPalette: () async {
         if (_colorsMapYTID[id] != null) return _colorsMapYTID[id]!;
 
@@ -191,30 +192,33 @@ class CurrentColor {
     );
   }
 
-  Future<void> _updatePlayerColorFromItem({
+  final _fnLimiter = FunctionExecuteLimiter();
+  void _updatePlayerColorFromItem({
     required Future<NamidaColor?> Function() getColorPalette,
     required bool Function() stillPlaying,
   }) async {
     if (_canAutoUpdateColor) {
-      NamidaColor? namidaColor;
+      _fnLimiter.execute(() async {
+        NamidaColor? namidaColor;
 
-      final trColors = await getColorPalette();
-      if (trColors == null || !stillPlaying()) return; // -- check current item
-      _namidaColorMiniplayer.value = trColors.color;
+        final trColors = await getColorPalette();
+        if (trColors == null || !stillPlaying()) return; // -- check current item
+        _namidaColorMiniplayer.value = trColors.color;
 
-      if (settings.autoColor.value) {
-        if (shouldUpdateFromDeviceWallpaper) {
-          namidaColor = await getPlayerColorFromDeviceWallpaper();
-        } else {
-          namidaColor = trColors;
+        if (settings.autoColor.value) {
+          if (shouldUpdateFromDeviceWallpaper) {
+            namidaColor = await getPlayerColorFromDeviceWallpaper();
+          } else {
+            namidaColor = trColors;
+          }
+          if (namidaColor != null) {
+            _namidaColor.value = namidaColor;
+            _updateCurrentPaletteHalfs(
+              settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
+            );
+          }
         }
-        if (namidaColor != null) {
-          _namidaColor.value = namidaColor;
-          _updateCurrentPaletteHalfs(
-            settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
-          );
-        }
-      }
+      });
     }
   }
 

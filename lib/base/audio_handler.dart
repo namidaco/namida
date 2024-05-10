@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/audio_cache_detail.dart';
+import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -191,14 +192,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onIndexChanged(int newIndex, Q newItem) async {
     refreshNotification(newItem);
-    await newItem._execute(
-      selectable: (finalItem) async {
+    newItem._execute(
+      selectable: (finalItem) {
         settings.player.save(lastPlayedIndices: {LibraryCategory.localTracks: newIndex});
-        await CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
+        CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
-      youtubeID: (finalItem) async {
+      youtubeID: (finalItem) {
         settings.player.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
-        await CurrentColor.inst.updatePlayerColorFromYoutubeID(finalItem);
+        CurrentColor.inst.updatePlayerColorFromYoutubeID(finalItem);
       },
     );
   }
@@ -445,18 +446,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  final _fnLimiter = FunctionExecuteLimiter(executeAfter: const Duration(milliseconds: 400));
   @override
   Future<void> onItemPlay(Q item, int index, bool Function() startPlaying, Function skipItem) async {
     _currentItemDuration.value = null;
+    await _fnLimiter.executeFuture(() async {
+      return await item._execute(
+        selectable: (finalItem) async {
+          await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
+        },
+        youtubeID: (finalItem) async {
+          await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
+        },
+      );
+    });
 
-    await item._execute(
-      selectable: (finalItem) async {
-        await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
-      },
-      youtubeID: (finalItem) async {
-        await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
-      },
-    );
     MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
