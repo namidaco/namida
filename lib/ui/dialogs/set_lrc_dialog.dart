@@ -23,7 +23,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showLRCSetDialog(Track track, Color colorScheme) async {
-  final fetchingFromInternet = false.obs;
+  final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
 
@@ -278,6 +278,8 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
 
   final searchController = TextEditingController();
 
+  final initialSearchTextHint = '${track.originalArtist} - ${track.title}';
+
   void onSearchTrigger([String? query]) async {
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
@@ -335,20 +337,46 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
         height: Get.height * 0.6,
         child: Column(
           children: [
-            CustomTagTextField(
-              borderRadius: 12.0,
-              controller: searchController,
-              hintText: '${track.originalArtist} - ${track.title}',
-              labelText: '',
-              onFieldSubmitted: (value) {
-                onSearchTrigger(value);
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTagTextField(
+                    borderRadius: 12.0,
+                    controller: searchController,
+                    hintText: initialSearchTextHint,
+                    keyboardType: TextInputType.text, // no next line
+                    labelText: '',
+                    onFieldSubmitted: (value) {
+                      onSearchTrigger(value);
+                    },
+                  ),
+                ),
+                NamidaIconButton(
+                  icon: Broken.received,
+                  iconSize: 22.0,
+                  onPressed: () {
+                    searchController.text = initialSearchTextHint;
+                  },
+                )
+              ],
             ),
             const SizedBox(height: 6.0),
             Expanded(
               child: Obx(
                 () {
+                  if (fetchingFromInternet.value == true) {
+                    return ThreeArchedCircle(
+                      color: Get.theme.cardColor,
+                      size: 58.0,
+                    );
+                  }
                   final both = [...availableLyrics, ...fetchedLyrics];
+                  if (both.isEmpty && fetchingFromInternet.value != null) {
+                    return const Icon(
+                      Broken.emoji_sad,
+                      size: 48.0,
+                    );
+                  }
                   return ListView.builder(
                     padding: EdgeInsets.zero,
                     itemCount: both.length,
@@ -493,14 +521,6 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                   );
                 },
               ),
-            ),
-            Obx(
-              () => fetchingFromInternet.value
-                  ? ThreeArchedCircle(
-                      color: Get.theme.cardColor,
-                      size: 58.0,
-                    )
-                  : const SizedBox(),
             ),
             const SizedBox(height: 8.0),
             Obx(
