@@ -23,7 +23,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   static final NamidaYTGenerator inst = NamidaYTGenerator._internal();
   NamidaYTGenerator._internal();
 
-  late final isPreparingResources = false.obs;
+  late final didPrepareResources = Rxn<bool>();
   Completer<void>? fillingCompleter;
 
   late final _operationsCompleter = <_GenerateOperation, Completer<Iterable<String>>>{};
@@ -74,15 +74,17 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       fillingCompleter.completeIfWasnt();
       fillingCompleter = null;
       await disposePort();
-      isPreparingResources.value = false;
+      didPrepareResources.value = null;
     });
   }
 
   Future<void> prepareResources() async {
     _cancelDisposingTimer();
-    if (isPreparingResources.value || fillingCompleter?.isCompleted == true) return;
 
-    isPreparingResources.value = true;
+    if (didPrepareResources.value == true || fillingCompleter?.isCompleted == true) return;
+    if (fillingCompleter != null) return fillingCompleter?.future;
+
+    didPrepareResources.value = false;
     fillingCompleter = Completer();
     await preparePortRaw(
       onResult: (result) {
@@ -116,7 +118,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       },
     );
     await fillingCompleter?.future;
-    isPreparingResources.value = false;
+    didPrepareResources.value = true;
   }
 
   static void _prepareResourcesAndListen(Map params) async {

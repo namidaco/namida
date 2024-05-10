@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:namida/core/extensions.dart';
 
 typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
@@ -13,6 +15,7 @@ mixin PortsProvider {
 
   static bool isDisposeMessage(dynamic message) => message == _PortsProviderDisposeMessage;
 
+  @protected
   Future<void> disposePort() async {
     final port = this.port;
     if (port != null) {
@@ -49,6 +52,7 @@ mixin PortsProvider {
 mixin PortsProviderBase {
   StreamSubscription? _streamSub;
 
+  @protected
   Future<void> disposePort(PortsComm port) async {
     port.items.close();
     _streamSub?.cancel();

@@ -1179,7 +1179,7 @@ class TracksAddOnTap {
         return [
           Obx(
             () {
-              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
+              final isLoading = NamidaYTGenerator.inst.didPrepareResources.value == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(
@@ -1231,7 +1231,7 @@ class TracksAddOnTap {
           const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
           Obx(
             () {
-              final isLoading = NamidaYTGenerator.inst.isPreparingResources.value;
+              final isLoading = NamidaYTGenerator.inst.didPrepareResources.value == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(

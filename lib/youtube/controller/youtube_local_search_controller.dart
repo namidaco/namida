@@ -23,7 +23,7 @@ class YTLocalSearchController with PortsProvider {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
   YTLocalSearchController._internal();
 
-  final isLoadingLookupLists = false.obs;
+  final didLoadLookupLists = Rxn<bool>();
   Completer<void>? fillingCompleter;
 
   bool enableFuzzySearch = true;
@@ -52,33 +52,36 @@ class YTLocalSearchController with PortsProvider {
 
   var searchResults = <StreamInfoItem>[];
 
-  void search(String text, {int? maxResults}) async {
+  void search(String text, {int? maxResults, required void Function() onStart}) async {
     // _latestSearch = text;
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
     if (text == '') return;
 
+    onStart();
     final possibleID = text.getYoutubeID;
     final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
     (await port?.search.future)?.send(p);
   }
 
-  Future<void> initializeLookupMap({required final void Function() onSearchDone}) async {
+  Future<void> initializeLookupMap({required final void Function(bool hasItems) onSearchDone}) async {
     _cancelDisposingTimer();
-    if (isLoadingLookupLists.value || fillingCompleter?.isCompleted == true) return;
+    if (didLoadLookupLists.value == true || fillingCompleter?.isCompleted == true) return;
+    if (fillingCompleter != null) return fillingCompleter?.future;
 
-    isLoadingLookupLists.value = true;
+    didLoadLookupLists.value = false;
     fillingCompleter = Completer<void>();
 
     await preparePortRaw(
       onResult: (result) {
         if (result is bool) {
           fillingCompleter.completeIfWasnt();
+          onSearchDone(false);
           return;
         }
         result as List<StreamInfoItem>;
         _sortStreams(result);
         searchResults = result;
-        onSearchDone();
+        onSearchDone(result.isNotEmpty);
       },
       isolateFunction: (itemsSendPort) async {
         final params = {
@@ -93,7 +96,7 @@ class YTLocalSearchController with PortsProvider {
       },
     );
     await fillingCompleter?.future;
-    isLoadingLookupLists.value = false;
+    didLoadLookupLists.value = true;
   }
 
   static void _prepareResourcesAndSearch(Map params) async {

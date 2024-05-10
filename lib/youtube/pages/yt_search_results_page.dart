@@ -43,17 +43,19 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
 
   int get _maxSearchResultsMini => 100;
 
+  final _offlineSearchPageKey = GlobalKey<YTLocalSearchResultsState>();
+
+  void _onSearchDone(bool hasItems) {
+    setState(() {});
+    _offlineSearchPageKey.currentState?.updateIsSearching(false);
+  }
+
   @override
   void initState() {
     super.initState();
     fetchSearch();
-    YTLocalSearchController.inst.initializeLookupMap(onSearchDone: () => setState(() {})).then((value) {
-      if (currentSearchText != '') {
-        YTLocalSearchController.inst.search(currentSearchText, maxResults: _maxSearchResultsMini);
-        if (NamidaNavigator.inst.isytLocalSearchInFullPage) {
-          NamidaNavigator.inst.ytLocalSearchNavigatorKey?.currentState?.setState(() {});
-        }
-      }
+    YTLocalSearchController.inst.initializeLookupMap(onSearchDone: _onSearchDone).then((value) {
+      fetchSearch(customText: currentSearchText);
     });
   }
 
@@ -66,7 +68,12 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   Future<void> fetchSearch({String customText = ''}) async {
     final newSearch = customText == '' ? widget.searchText : customText;
     _latestSearched = newSearch;
-    YTLocalSearchController.inst.search(newSearch, maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini);
+
+    YTLocalSearchController.inst.search(
+      newSearch,
+      maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini,
+      onStart: () => _offlineSearchPageKey.currentState?.updateIsSearching(true),
+    );
     _searchResult.clear();
     if (newSearch == '') return;
     if (!ConnectivityController.inst.hasConnection) return;
@@ -135,6 +142,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               GetPageRoute(
                                 transition: Transition.cupertino,
                                 page: () => YTLocalSearchResults(
+                                  key: _offlineSearchPageKey,
                                   initialSearch: currentSearchText,
                                   onVideoTap: widget.onVideoTap,
                                   onPopping: (didChangeSort) {
@@ -155,7 +163,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               const Spacer(),
                               const SizedBox(width: 6.0),
                               Obx(
-                                () => YTLocalSearchController.inst.isLoadingLookupLists.value ? const LoadingIndicator() : const SizedBox(),
+                                () => YTLocalSearchController.inst.didLoadLookupLists.value == false ? const LoadingIndicator() : const SizedBox(),
                               ),
                               const SizedBox(width: 6.0),
                               const Icon(Broken.arrow_right_3),
@@ -196,11 +204,11 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         ? const SliverToBoxAdapter()
                         : _loadingFirstResults == true
                             ? SliverToBoxAdapter(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Center(
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24.0),
                                     child: ThreeArchedCircle(
-                                      color: CurrentColor.inst.color,
+                                      color: CurrentColor.inst.color.withOpacity(0.6),
                                       size: context.width * 0.4,
                                     ),
                                   ),

@@ -28,12 +28,23 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
   void initState() {
     super.initState();
     YTLocalSearchController.inst.scrollController = ScrollController();
-    YTLocalSearchController.inst.search(widget.initialSearch, maxResults: null);
+    YTLocalSearchController.inst.search(
+      widget.initialSearch,
+      maxResults: null,
+      onStart: () => updateIsSearching(true),
+    );
+  }
+
+  void updateIsSearching(bool searching) {
+    setState(() {
+      _isSearching = searching;
+    });
   }
 
   List<StreamInfoItem> get _searchResultsLocal => YTLocalSearchController.inst.searchResults;
 
   bool _didChangeSort = false;
+  bool? _isSearching;
 
   Widget getChipButton({
     required BuildContext context,
@@ -105,7 +116,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                                 () => Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    if (YTLocalSearchController.inst.isLoadingLookupLists.value)
+                                    if (YTLocalSearchController.inst.didLoadLookupLists.value == false)
                                       IgnorePointer(
                                         child: NamidaOpacity(
                                           opacity: 0.3,
@@ -144,22 +155,48 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                 ),
               ),
             ),
-            SliverFixedExtentList.builder(
-              itemExtent: thumbnailItemExtent,
-              itemCount: _searchResultsLocal.length,
-              itemBuilder: (context, index) {
-                final item = _searchResultsLocal[index];
-                return YoutubeVideoCard(
-                  fontMultiplier: 0.9,
-                  thumbnailHeight: thumbnailHeight,
-                  thumbnailWidth: thumbnailWidth,
-                  isImageImportantInCache: false,
-                  video: item,
-                  playlistID: null,
-                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                );
-              },
-            ),
+            _isSearching == null
+                ? const SliverToBoxAdapter()
+                : _isSearching == true
+                    ? SliverToBoxAdapter(
+                        child: ShimmerWrapper(
+                          transparent: false,
+                          shimmerEnabled: true,
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 10,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return const YoutubeVideoCard(
+                                fontMultiplier: 0.9,
+                                thumbnailHeight: thumbnailHeight,
+                                thumbnailWidth: thumbnailWidth,
+                                isImageImportantInCache: false,
+                                video: null,
+                                playlistID: null,
+                                onTap: null,
+                              );
+                            },
+                          ),
+                        ),
+                      )
+                    : SliverFixedExtentList.builder(
+                        itemExtent: thumbnailItemExtent,
+                        itemCount: _searchResultsLocal.length,
+                        itemBuilder: (context, index) {
+                          final item = _searchResultsLocal[index];
+                          return YoutubeVideoCard(
+                            fontMultiplier: 0.9,
+                            thumbnailHeight: thumbnailHeight,
+                            thumbnailWidth: thumbnailWidth,
+                            isImageImportantInCache: false,
+                            video: item,
+                            playlistID: null,
+                            onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                          );
+                        },
+                      ),
             kBottomPaddingWidgetSliver,
           ],
         ),
