@@ -825,9 +825,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                 trailing: NamidaWheelSlider(
                   totalCount: 25,
                   initValue: settings.animatingThumbnailIntensity.value,
-                  itemSize: 6,
                   onValueChanged: (val) {
-                    settings.save(animatingThumbnailIntensity: val as int);
+                    settings.save(animatingThumbnailIntensity: val);
                   },
                   text: "${(settings.animatingThumbnailIntensity.value * 4).toStringAsFixed(0)}%",
                 ),
@@ -921,10 +920,9 @@ class CustomizationSettings extends SettingSubpageProvider {
                   width: 80,
                   child: Column(
                     children: [
-                      NamidaWheelSlider<int>(
+                      NamidaWheelSlider(
                         totalCount: 360,
                         initValue: settings.waveformTotalBars.value - 40,
-                        itemSize: 6,
                         onValueChanged: (val) {
                           final v = (val + 40);
                           settings.save(waveformTotalBars: v);

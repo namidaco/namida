@@ -527,11 +527,9 @@ class BackupAndRestore extends SettingSubpageProvider {
               trailing: Obx(
                 () {
                   final days = settings.autoBackupIntervalDays.value;
-                  return NamidaWheelSlider<int>(
+                  return NamidaWheelSlider(
                     totalCount: 14,
-                    squeeze: 1,
                     initValue: days,
-                    itemSize: 5,
                     onValueChanged: (val) {
                       settings.save(autoBackupIntervalDays: val);
                     },

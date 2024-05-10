@@ -133,7 +133,7 @@ class YTDownloadsPage extends StatelessWidget {
               icon: Broken.flash,
               title: lang.PARALLEL_DOWNLOADS,
               trailing: Obx(
-                () => NamidaWheelSlider<int>(
+                () => NamidaWheelSlider(
                   totalCount: 10,
                   initValue: tempCount.value,
                   onValueChanged: (val) => tempCount.value = val.withMinimum(1),

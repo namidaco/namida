@@ -511,11 +511,9 @@ class IndexerSettings extends SettingSubpageProvider {
                 trailing: NamidaWheelSlider(
                   width: 100.0,
                   totalCount: 1024,
-                  squeeze: 0.2,
                   initValue: settings.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
-                  itemSize: 1,
                   onValueChanged: (val) {
-                    final d = (val as int);
+                    final d = val;
                     settings.save(indexMinFileSizeInB: d * 1024 * 10);
                   },
                   text: settings.indexMinFileSizeInB.value.fileSizeFormatted,
@@ -535,9 +533,8 @@ class IndexerSettings extends SettingSubpageProvider {
                   width: 100.0,
                   totalCount: 180,
                   initValue: settings.indexMinDurationInSec.value,
-                  itemSize: 5,
                   onValueChanged: (val) {
-                    final d = (val as int);
+                    final d = val;
                     settings.save(indexMinDurationInSec: d);
                   },
                   text: "${settings.indexMinDurationInSec.value} s",

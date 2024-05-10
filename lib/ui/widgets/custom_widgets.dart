@@ -1273,7 +1273,7 @@ class ContainerWithBorder extends StatelessWidget {
   }
 }
 
-class NamidaWheelSlider<T> extends StatelessWidget {
+class NamidaWheelSlider extends StatelessWidget {
   final double width;
   final double perspective;
   final int totalCount;
@@ -1285,7 +1285,7 @@ class NamidaWheelSlider<T> extends StatelessWidget {
   final String? topText;
   final double? textPadding;
   final double? topTextPadding;
-  final void Function(T val) onValueChanged;
+  final void Function(int val) onValueChanged;
 
   const NamidaWheelSlider({
     super.key,
@@ -1293,15 +1293,14 @@ class NamidaWheelSlider<T> extends StatelessWidget {
     this.perspective = 0.01,
     required this.totalCount,
     required this.initValue,
-    this.itemSize = 5.0,
-    this.squeeze = 1.0,
     this.isInfinite = false,
     required this.onValueChanged,
     this.text,
     this.topText,
     this.textPadding = 2.0,
     this.topTextPadding = 12.0,
-  });
+  })  : itemSize = 8,
+        squeeze = 1.8;
 
   @override
   Widget build(BuildContext context) {
@@ -1329,7 +1328,7 @@ class NamidaWheelSlider<T> extends StatelessWidget {
             pointerColor: context.theme.listTileTheme.textColor!,
             pointerHeight: 38.0,
             horizontalListHeight: 38.0,
-            onValueChanged: (val) => onValueChanged(val as T),
+            onValueChanged: (val) => onValueChanged(val as int),
             hapticFeedbackType: HapticFeedbackType.lightImpact,
           ),
           if (text != null) ...[

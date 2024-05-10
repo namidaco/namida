@@ -139,10 +139,9 @@ class YoutubeSettings extends SettingSubpageProvider {
                   '_SECONDS_',
                   "${settings.ytMiniplayerDimAfterSeconds.value}",
                 ),
-                trailing: NamidaWheelSlider<int>(
+                trailing: NamidaWheelSlider(
                   totalCount: 120,
                   initValue: settings.ytMiniplayerDimAfterSeconds.value,
-                  itemSize: 4,
                   text: "${settings.ytMiniplayerDimAfterSeconds.value}s",
                   onValueChanged: (val) {
                     settings.save(ytMiniplayerDimAfterSeconds: val);
@@ -203,10 +202,9 @@ class YoutubeSettings extends SettingSubpageProvider {
                   ],
                 ),
                 title: lang.DIM_INTENSITY,
-                trailing: NamidaWheelSlider<int>(
+                trailing: NamidaWheelSlider(
                   totalCount: 100,
                   initValue: (settings.ytMiniplayerDimOpacity.value * 100).round(),
-                  itemSize: 4,
                   text: "${(settings.ytMiniplayerDimOpacity.value * 100).round()}%",
                   onValueChanged: (val) {
                     settings.save(ytMiniplayerDimOpacity: val / 100);

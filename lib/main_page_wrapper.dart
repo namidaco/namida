@@ -210,10 +210,9 @@ class NamidaDrawer extends StatelessWidget {
                         children: [
                           // minutes
                           Obx(
-                            () => NamidaWheelSlider<int>(
+                            () => NamidaWheelSlider(
                               totalCount: 180,
                               initValue: minutes.value,
-                              itemSize: 6,
                               onValueChanged: (val) => minutes.value = val,
                               text: "${minutes.value}m",
                               topText: lang.MINUTES.capitalizeFirst,
@@ -226,10 +225,9 @@ class NamidaDrawer extends StatelessWidget {
                           ),
                           // tracks
                           Obx(
-                            () => NamidaWheelSlider<int>(
+                            () => NamidaWheelSlider(
                               totalCount: kMaximumSleepTimerTracks,
                               initValue: tracks.value,
-                              itemSize: 6,
                               onValueChanged: (val) => tracks.value = val,
                               text: "${tracks.value} ${lang.TRACK}",
                               topText: lang.TRACKS,

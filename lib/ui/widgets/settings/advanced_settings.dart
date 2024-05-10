@@ -334,10 +334,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_IMAGE_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider<int>(
+                  () => NamidaWheelSlider(
                     totalCount: getValue(4 * 1024), // 4 GB
                     initValue: getValue(settings.imagesMaxCacheInMB.value),
-                    itemSize: 5,
+
                     text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
                     onValueChanged: (val) {
                       settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
@@ -362,10 +362,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_AUDIO_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider<int>(
+                  () => NamidaWheelSlider(
                     totalCount: getValue(4 * 1024), // 4 GB
                     initValue: getValue(settings.audiosMaxCacheInMB.value),
-                    itemSize: 5,
+
                     text: (settings.audiosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
                     onValueChanged: (val) {
                       settings.save(audiosMaxCacheInMB: minimumValue + (val * stepper));
@@ -390,10 +390,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_VIDEO_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider<int>(
+                  () => NamidaWheelSlider(
                     totalCount: getValue(10 * 1024), // 10 GB
                     initValue: getValue(settings.videosMaxCacheInMB.value),
-                    itemSize: 5,
+
                     text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
                     onValueChanged: (val) {
                       settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
@@ -947,11 +947,9 @@ class _CompressImagesListTile extends StatelessWidget {
                 () => NamidaWheelSlider(
                   totalCount: 100,
                   initValue: 50,
-                  itemSize: 2,
-                  squeeze: 0.4,
                   text: "${compPerc.value}%",
                   onValueChanged: (val) {
-                    compPerc.value = (val as int);
+                    compPerc.value = val;
                   },
                 ),
               ),

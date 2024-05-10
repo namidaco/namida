@@ -408,11 +408,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                   enabled: settings.player.enableCrossFade.value,
                   icon: Broken.blend_2,
                   title: lang.CROSSFADE_DURATION,
-                  trailing: NamidaWheelSlider<int>(
+                  trailing: NamidaWheelSlider(
                     totalCount: (10000 - minVal) ~/ stepper,
                     initValue: settings.player.crossFadeDurationMS.value ~/ stepper,
-                    itemSize: 5,
-                    squeeze: 1,
                     onValueChanged: (val) {
                       final v = (val * stepper + minVal);
                       settings.player.save(crossFadeDurationMS: v);
@@ -431,11 +429,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                   enabled: settings.player.enableCrossFade.value,
                   icon: Broken.blend,
                   title: val == 0 ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$val"),
-                  trailing: NamidaWheelSlider<int>(
+                  trailing: NamidaWheelSlider(
                     totalCount: 30,
                     initValue: val,
-                    itemSize: 7,
-                    squeeze: 1.4,
                     onValueChanged: (val) {
                       settings.player.save(crossFadeAutoTriggerSeconds: val);
                     },
@@ -472,11 +468,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                 enabled: settings.player.enableVolumeFadeOnPlayPause.value,
                 icon: Broken.play,
                 title: lang.PLAY_FADE_DURATION,
-                trailing: NamidaWheelSlider<int>(
+                trailing: NamidaWheelSlider(
                   totalCount: 1900 ~/ 50,
                   initValue: settings.player.playFadeDurInMilli.value ~/ 50,
-                  itemSize: 2,
-                  squeeze: 0.4,
                   onValueChanged: (val) {
                     final v = (val * 50 + 100);
                     settings.player.save(playFadeDurInMilli: v);
@@ -490,11 +484,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                 enabled: settings.player.enableVolumeFadeOnPlayPause.value,
                 icon: Broken.pause,
                 title: lang.PAUSE_FADE_DURATION,
-                trailing: NamidaWheelSlider<int>(
+                trailing: NamidaWheelSlider(
                   totalCount: 1900 ~/ 50,
                   initValue: settings.player.pauseFadeDurInMilli.value ~/ 50,
-                  itemSize: 2,
-                  squeeze: 0.4,
                   onValueChanged: (val) {
                     final v = (val * 50 + 100);
                     settings.player.save(pauseFadeDurInMilli: v);
@@ -563,11 +555,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       : valInSet == 0
                           ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
                           : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.value}"),
-                  trailing: NamidaWheelSlider<int>(
+                  trailing: NamidaWheelSlider(
                     totalCount: max,
                     initValue: valInSet,
-                    itemSize: 2,
-                    squeeze: 0.4,
                     onValueChanged: (val) {
                       if (val == max) {
                         settings.player.save(resumeAfterOnVolume0Pause: false);
@@ -652,11 +642,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       : valInSet == 0
                           ? lang.RESUME_IF_WAS_INTERRUPTED
                           : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.value}"),
-                  trailing: NamidaWheelSlider<int>(
+                  trailing: NamidaWheelSlider(
                     totalCount: max,
                     initValue: valInSet,
-                    itemSize: 2,
-                    squeeze: 0.4,
                     onValueChanged: (val) {
                       if (val == max) {
                         settings.player.save(resumeAfterWasInterrupted: false);
@@ -719,8 +707,6 @@ class PlaybackSettings extends SettingSubpageProvider {
                 ? NamidaWheelSlider(
                     totalCount: 50,
                     initValue: settings.player.seekDurationInPercentage.value,
-                    itemSize: 2,
-                    squeeze: 0.4,
                     onValueChanged: (val) {
                       final v = (val) as int;
                       settings.player.save(seekDurationInPercentage: v);
@@ -730,8 +716,6 @@ class PlaybackSettings extends SettingSubpageProvider {
                 : NamidaWheelSlider(
                     totalCount: 120,
                     initValue: settings.player.seekDurationInSeconds.value,
-                    itemSize: 2,
-                    squeeze: 0.4,
                     onValueChanged: (val) {
                       final v = (val) as int;
                       settings.player.save(seekDurationInSeconds: v);
@@ -751,11 +735,9 @@ class PlaybackSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
               icon: Broken.refresh_left_square,
               title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
-              trailing: NamidaWheelSlider<int>(
+              trailing: NamidaWheelSlider(
                 totalCount: max,
                 initValue: valInSet <= -1 ? max : valInSet,
-                itemSize: 2,
-                squeeze: 0.4,
                 onValueChanged: (val) {
                   settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val >= max ? -1 : val);
                 },
@@ -792,10 +774,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       () => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          NamidaWheelSlider<int>(
+                          NamidaWheelSlider(
                             totalCount: 160,
                             initValue: settings.isTrackPlayedSecondsCount.value - 20,
-                            itemSize: 6,
                             onValueChanged: (val) {
                               final v = (val + 20);
                               settings.save(isTrackPlayedSecondsCount: v);
@@ -808,10 +789,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                             lang.OR,
                             style: context.textTheme.displayMedium,
                           ),
-                          NamidaWheelSlider<int>(
+                          NamidaWheelSlider(
                             totalCount: 80,
                             initValue: settings.isTrackPlayedPercentageCount.value - 20,
-                            itemSize: 6,
                             onValueChanged: (val) {
                               final v = (val + 20);
                               settings.save(isTrackPlayedPercentageCount: v);

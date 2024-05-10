@@ -1071,11 +1071,9 @@ class TracksAddOnTap {
                             children: [
                               Text(lang.MINIMUM),
                               const SizedBox(height: 24.0),
-                              NamidaWheelSlider<int>(
+                              NamidaWheelSlider(
                                 totalCount: 100,
                                 initValue: minRating.value,
-                                itemSize: 1,
-                                squeeze: 0.3,
                                 onValueChanged: (val) {
                                   minRating.value = val;
                                 },
@@ -1093,11 +1091,9 @@ class TracksAddOnTap {
                             children: [
                               Text(lang.MAXIMUM),
                               const SizedBox(height: 24.0),
-                              NamidaWheelSlider<int>(
+                              NamidaWheelSlider(
                                 totalCount: 100,
                                 initValue: maxRating.value,
-                                itemSize: 1,
-                                squeeze: 0.3,
                                 onValueChanged: (val) {
                                   maxRating.value = val;
                                 },
@@ -1347,11 +1343,9 @@ class TracksAddOnTap {
                 title: lang.NUMBER_OF_TRACKS,
                 subtitle: "${lang.UNLIMITED}-$maxCount",
                 trailing: Obx(
-                  () => NamidaWheelSlider<int>(
+                  () => NamidaWheelSlider(
                     totalCount: maxCount,
                     initValue: tracksNo.value,
-                    itemSize: 1,
-                    squeeze: 0.3,
                     onValueChanged: (val) => tracksNo.value = val,
                     text: tracksNo.value == 0 ? lang.UNLIMITED : '${tracksNo.value}',
                   ),
