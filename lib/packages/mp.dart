@@ -218,7 +218,10 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                     },
                     onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
                     // onVerticalDragCancel: () => !_isDragManagedInternally ? null : animateToState(_wasExpanded),
-                    onVerticalDragEnd: (details) => !_isDragManagedInternally ? null : onVerticalDragEnd(details.velocity.pixelsPerSecond.dy),
+                    onVerticalDragEnd: (details) {
+                      if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
+                      _isDragManagedInternally = !_alternativePercentage;
+                    },
                     child: Material(
                       clipBehavior: Clip.hardEdge,
                       type: MaterialType.transparency,

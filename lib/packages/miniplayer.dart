@@ -148,8 +148,9 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         queue: Player.inst.currentQueue,
         queueItemExtent: Dimensions.inst.trackTileItemExtent,
         itemBuilder: (context, i, currentIndex) {
-          final track = Player.inst.currentQueue[i];
-          final key = Key("${i}_${track.track.path}");
+          final queue = Player.inst.currentQueue;
+          final track = queue[i];
+          final key = Key("${i}_${track.track.path}_${queue.length}"); // queue length only for when removing current item and next is the same.
           return (
             TrackTile(
               key: key,
@@ -382,8 +383,9 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         queue: Player.inst.currentQueueYoutube,
         queueItemExtent: Dimensions.youtubeCardItemExtent,
         itemBuilder: (context, i, currentIndex) {
-          final video = Player.inst.currentQueueYoutube[i];
-          final key = Key("${i}_${video.id}");
+          final queue = Player.inst.currentQueueYoutube;
+          final video = queue[i];
+          final key = Key("${i}_${video.id}_${queue.length}"); // queue length only for when removing current item and next is the same.
           return (
             YTHistoryVideoCard(
               key: key,

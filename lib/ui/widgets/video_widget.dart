@@ -286,14 +286,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       child: IgnorePointer(
         child: AnimatedBuilder(
           animation: controller,
+          child: SizedBox(
+            width: seekContainerSize,
+            height: seekContainerSize,
+          ),
           builder: (context, child) {
-            return Container(
+            return DecoratedBox(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity((controller.value / 3).clamp(0, 1)),
                 shape: BoxShape.circle,
               ),
-              width: seekContainerSize,
-              height: seekContainerSize,
+              child: child!,
             );
           },
         ),

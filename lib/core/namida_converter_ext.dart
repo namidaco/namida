@@ -899,8 +899,8 @@ extension RouteUtils on NamidaRoute {
     CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
   }
 
-  Widget? toTitle() {
-    Widget getTextWidget(String t) => Text(t);
+  Widget? toTitle(BuildContext context) {
+    Widget getTextWidget(String t) => Text(t, style: context.textTheme.titleLarge);
     Widget? finalWidget;
     switch (route) {
       case RouteType.SETTINGS_page:
