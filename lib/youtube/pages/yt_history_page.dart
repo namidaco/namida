@@ -125,6 +125,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> {
                                 day: day,
                                 playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                                 playlistName: k_PLAYLIST_NAME_HISTORY,
+                                isImportantInCache: false, // long old history is lowkey useless
                               );
                             },
                           ),

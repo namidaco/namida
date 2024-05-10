@@ -38,6 +38,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   final Widget Function(Widget draggingTrigger)? draggingThumbnailBuilder;
   final double cardColorOpacity;
   final double fadeOpacity;
+  final bool isImportantInCache;
 
   const YTHistoryVideoCard({
     super.key,
@@ -61,6 +62,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.draggingThumbnailBuilder,
     this.cardColorOpacity = 0.75,
     this.fadeOpacity = 0,
+    this.isImportantInCache = true,
   });
 
   @override
@@ -130,7 +132,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                   child: YoutubeThumbnail(
                     key: Key(video.id),
                     borderRadius: 8.0,
-                    isImportantInCache: true,
+                    isImportantInCache: isImportantInCache,
                     width: thumbWidth - 3.0,
                     height: thumbHeight - 3.0,
                     videoId: video.id,
