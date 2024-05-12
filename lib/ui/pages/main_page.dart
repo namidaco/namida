@@ -192,10 +192,16 @@ class MainPage extends StatelessWidget {
                             backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.7), context.theme.cardColor),
                             onPressed: () {
                               final fab = settings.floatingActionButton.value;
-                              final forceSearch = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-                              if (forceSearch || fab == FABType.search) {
-                                ScrollSearchController.inst.toggleSearchMenu();
-                                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+                              final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+                              if (fab == FABType.search || isMenuOpened) {
+                                final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
+                                if (isOpen && !isMenuOpened) {
+                                  ScrollSearchController.inst.showSearchMenu();
+                                  ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
+                                } else {
+                                  ScrollSearchController.inst.toggleSearchMenu();
+                                  ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+                                }
                               } else if (fab == FABType.shuffle || fab == FABType.play) {
                                 Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: fab == FABType.shuffle);
                               }

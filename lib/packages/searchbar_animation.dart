@@ -166,6 +166,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   bool _isAnimationOn = false;
   bool switcher = false;
 
+  bool get isOpen => switcher;
+
   final DecorationTween decorationTween = DecorationTween(
     begin: BoxDecoration(
       color: _SBColor.transparent,
@@ -428,7 +430,6 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
 
   /// This function is for the textFormField of searchbar.
   Widget _textFormField(BuildContext context, double rightPadding) {
-    MediaQuery.sizeOf(context).width;
     return Padding(
       padding: EdgeInsets.only(right: rightPadding),
       child: TextFormField(
