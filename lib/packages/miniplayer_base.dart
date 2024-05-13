@@ -1281,16 +1281,17 @@ class WaveformMiniplayer extends StatelessWidget {
       tag: 'MINIPLAYER_WAVEFORM',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          return GestureDetector(
-            onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
-            onTapUp: (details) => onSeekEnd(),
-            onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
-            onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
-            onHorizontalDragEnd: (details) => onSeekEnd(),
+          return SizedBox(
+            height: 64.0,
             child: Padding(
               padding: fixPadding ? const EdgeInsets.symmetric(horizontal: 16.0 / 2) : EdgeInsets.zero,
-              child: SizedBox(
-                height: 64.0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
+                onTapUp: (details) => onSeekEnd(),
+                onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
+                onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
+                onHorizontalDragEnd: (details) => onSeekEnd(),
                 child: WaveformComponent(
                   key: waveKey,
                 ),

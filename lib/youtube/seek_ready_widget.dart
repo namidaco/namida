@@ -145,6 +145,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const progressBarHeightExtraHeight = 2.0;
     const seekTextWidth = SeekReadyDimensions.seekTextWidth;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
+
+    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withOpacity(0.25), context.theme.scaffoldBackgroundColor);
+    final bufferColor = miniplayerBGColor.invert();
+
     return LayoutBuilder(
       builder: (context, c) {
         final maxWidth = c.maxWidth;
@@ -285,7 +289,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(fullscreen ? 0.3 : 0.2),
+                                color: bufferColor.withOpacity(fullscreen ? 0.3 : 0.2),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
@@ -299,7 +303,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(fullscreen ? 0.3 : 0.1),
+                              color: bufferColor.withOpacity(fullscreen ? 0.8 : 0.35),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 
@@ -143,8 +144,8 @@ class ScrollSearchController {
     SearchSortController.inst.searchAll('');
   }
 
-  void unfocusKeyboard() => Get.focusScope?.unfocus();
-  void focusKeyboard() => Get.focusScope?.requestFocus(focusNode);
+  void unfocusKeyboard() => SystemChannels.textInput.invokeMethod('TextInput.hide');
+  void focusKeyboard() => FocusManager.instance.rootScope.requestFocus(focusNode);
 
   void switchSearchBoxVisibilty(LibraryTab libraryTab) {
     textSearchControllers[libraryTab] ??= TextEditingController();

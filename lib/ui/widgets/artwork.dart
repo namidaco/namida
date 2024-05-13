@@ -156,7 +156,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   Widget build(BuildContext context) {
     final bytes = this.bytes;
     final key = Key("${widget.path}_${bytes?.length}");
-    final isValidBytes = bytes?.isNotEmpty == true;
+    final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final canDisplayImage = _imagePath != null || isValidBytes;
     final thereMightBeImageSoon = !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && !_imageObtainedBefore;
 

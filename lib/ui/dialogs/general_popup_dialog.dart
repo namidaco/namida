@@ -908,15 +908,10 @@ Future<void> showGeneralPopupDialog(
                                     alignment: WrapAlignment.start,
                                     children: [
                                       ...availableAlbums.map(
-                                        (e) => Padding(
-                                          padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
-                                          child: NamidaInkWell(
-                                              borderRadius: 0.0,
-                                              onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
-                                              child: Text(
-                                                e.$1,
-                                                style: theme.textTheme.displaySmall?.copyWith(decoration: TextDecoration.underline),
-                                              )),
+                                        (e) => _SmallUnderlinedChip(
+                                          text: e.$1,
+                                          textTheme: theme.textTheme,
+                                          onTap: () => () => NamidaOnTaps.inst.onAlbumTap(e.$2),
                                         ),
                                       ),
                                     ],
@@ -971,19 +966,10 @@ Future<void> showGeneralPopupDialog(
                                     alignment: WrapAlignment.start,
                                     children: [
                                       ...availableArtists.map(
-                                        (e) => Padding(
-                                          padding: const EdgeInsets.all(2.0).add(const EdgeInsets.only(right: 2.0)),
-                                          child: NamidaInkWell(
-                                            borderRadius: 0.0,
-                                            onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
-                                            child: Text(
-                                              e,
-                                              style: theme.textTheme.displaySmall?.copyWith(
-                                                decoration: TextDecoration.underline,
-                                                color: Color.alphaBlend(colorDelightened.value.withAlpha(40), theme.textTheme.displayMedium!.color!),
-                                              ),
-                                            ),
-                                          ),
+                                        (e) => _SmallUnderlinedChip(
+                                          text: e,
+                                          textTheme: theme.textTheme,
+                                          onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
                                         ),
                                       ),
                                     ],
@@ -1276,4 +1262,37 @@ Future<void> showGeneralPopupDialog(
       },
     ),
   );
+}
+
+class _SmallUnderlinedChip extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  final TextTheme textTheme;
+
+  const _SmallUnderlinedChip({
+    required this.text,
+    required this.onTap,
+    required this.textTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 1.0),
+      child: NamidaInkWell(
+        borderRadius: 6.0,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 3.0),
+          child: Text(
+            text,
+            style: textTheme.displaySmall?.copyWith(
+              decoration: TextDecoration.underline,
+              fontSize: 13.5.multipliedFontScale,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

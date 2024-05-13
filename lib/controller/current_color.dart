@@ -493,4 +493,9 @@ extension ColorUtils on Color {
     final modifiedColor = hslColor.withLightness(0.64).toColor();
     return modifiedColor;
   }
+
+  Color invert() {
+    final c = this;
+    return Color.fromARGB((c.opacity * 255).round(), 255 - c.red, 255 - c.green, 255 - c.blue);
+  }
 }

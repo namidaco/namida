@@ -3589,6 +3589,7 @@ class EqualizerIconButton extends StatelessWidget {
                     secondaryIconSize: 10.0,
                     baseIconColor: iconColor,
                     secondaryIconColor: iconColor,
+                    blurRadius: 12.0,
                   )
                 : Icon(
                     Broken.sound,

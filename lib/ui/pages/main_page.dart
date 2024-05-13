@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'package:namida/controller/clipboard_controller.dart';
@@ -32,6 +33,17 @@ import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 class MainPage extends StatelessWidget {
   final AnimationController animation;
   const MainPage({super.key, required this.animation});
+
+  SystemUiOverlayStyle _systemOverlayStyleForBrightness(Brightness brightness, [Color? backgroundColor]) {
+    final SystemUiOverlayStyle style = brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    // For backward compatibility, create an overlay style without system navigation bar settings.
+    return SystemUiOverlayStyle(
+      statusBarColor: backgroundColor,
+      statusBarBrightness: style.statusBarBrightness,
+      statusBarIconBrightness: style.statusBarIconBrightness,
+      systemStatusBarContrastEnforced: style.systemStatusBarContrastEnforced,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,30 +113,53 @@ class MainPage extends StatelessWidget {
       ),
     );
 
+    final appBarTheme = AppBarTheme.of(context);
+    final theme = context.theme;
+    final colorscheme = theme.colorScheme;
+    final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
+    final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
+    final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
+
+    final searchProgressColor = context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4);
+    final searchProgressWidget = CircularProgressIndicator(
+      strokeWidth: 2.0,
+      strokeCap: StrokeCap.round,
+      color: searchProgressColor,
+    );
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize: const Size(0, kToolbarHeight),
-        child: SafeArea(
-          bottom: false,
-          child: Obx(
-            () {
-              return !settings.enableMiniplayerParallaxEffect.value
-                  ? SizedBox(
-                      height: 56.0,
-                      child: appbar,
-                    )
-                  : AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, _) {
-                        if (animation.value > 1) return const SizedBox(); // expanded/queue
-                        return SizedBox(
-                          height: 56.0 * (1 - animation.value * 0.3),
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyle,
+          child: Material(
+            shadowColor: Colors.transparent,
+            type: MaterialType.canvas,
+            color: backgroundColor,
+            surfaceTintColor: surfaceTintColor,
+            child: SafeArea(
+              bottom: false,
+              child: Obx(
+                () {
+                  return !settings.enableMiniplayerParallaxEffect.value
+                      ? SizedBox(
+                          height: kToolbarHeight,
                           child: appbar,
+                        )
+                      : AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, _) {
+                            if (animation.value > 1) return const SizedBox(); // expanded/queue
+                            return SizedBox(
+                              height: kToolbarHeight * (1 - animation.value * 0.3),
+                              child: appbar,
+                            );
+                          },
                         );
-                      },
-                    );
-            },
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -188,6 +223,7 @@ class MainPage extends StatelessWidget {
                     child: shouldHide
                         ? const SizedBox(key: Key('fab_dummy'))
                         : FloatingActionButton(
+                            heroTag: 'main_page_fab_hero',
                             tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
                             backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.7), context.theme.cardColor),
                             onPressed: () {

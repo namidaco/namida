@@ -46,6 +46,7 @@ class AppThemes {
       useMaterial3: true,
       colorSchemeSeed: color,
       fontFamily: "LexendDeca",
+      fontFamilyFallback: fontFallback,
       scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,

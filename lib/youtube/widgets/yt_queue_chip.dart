@@ -177,6 +177,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         ? Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: FloatingActionButton(
+                              heroTag: 'yt_queue_fab_hero',
                               backgroundColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.9),
                               onPressed: () => _animateSmallToBig(),
                               child: const Icon(Broken.driver),

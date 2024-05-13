@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -207,7 +206,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   State<_NamidaFileBrowserBase> createState() => _NamidaFileBrowserState<T>();
 }
 
-class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaFileBrowserBase<T>> with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider {
+class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaFileBrowserBase<T>> with TickerProviderStateMixin, PullToRefreshMixin {
   final _mainStoragePaths = <String>{};
   String _currentFolderPath = '';
   var _currentFiles = <File>[];
@@ -678,7 +677,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   void dispose() {
     _stopMainIsolates();
     _stopInfoIsolates();
-    disposePort();
     _scrollController.dispose();
     _pathSplitsScrollController.dispose();
     _showHiddenFiles.close();
@@ -1304,6 +1302,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               )
                             : T == Directory && (_selectedFolders.isNotEmpty || !isPathRoot(_currentFolderPath))
                                 ? FloatingActionButton(
+                                    heroTag: 'file_browser_fab_hero',
                                     onPressed: () => _onSelectionComplete(
                                       _selectedFolders.isNotEmpty ? _selectedFolders as List<T> : [Directory(_currentFolderPath) as T],
                                     ),
