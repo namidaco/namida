@@ -242,10 +242,21 @@ class MainPage extends StatelessWidget {
                                 Player.inst.playOrPause(0, SelectedTracksController.inst.currentAllTracks, QueueSource.allTracks, shuffle: fab == FABType.shuffle);
                               }
                             },
-                            child: Icon(
-                              ScrollSearchController.inst.isGlobalSearchMenuShown.value ? Broken.search_status_1 : settings.floatingActionButton.value.toIcon(),
-                              color: const Color.fromRGBO(255, 255, 255, 0.8),
-                            ),
+                            child: ScrollSearchController.inst.isGlobalSearchMenuShown.value
+                                ? Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      const Icon(
+                                        Broken.search_status_1,
+                                        color: Color.fromRGBO(255, 255, 255, 0.8),
+                                      ),
+                                      if (SearchSortController.inst.hasRunningSearch) searchProgressWidget,
+                                    ],
+                                  )
+                                : Icon(
+                                    settings.floatingActionButton.value.toIcon(),
+                                    color: const Color.fromRGBO(255, 255, 255, 0.8),
+                                  ),
                           ),
                   ),
                 );

@@ -75,6 +75,10 @@ class SearchSortController {
 
   RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
+  bool get hasRunningSearch => _runningSearches.values.any((running) => running);
+
+  final _runningSearches = <MediaType, bool>{}.obs;
+
   void searchAll(String text) {
     lastSearchText = text;
     final enabledSearches = settings.activeSearchMediaTypes;
@@ -176,6 +180,7 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.track,
       onResult: (result) {
+        _runningSearches[MediaType.track] = false;
         final r = result as (List<Track>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -219,6 +224,8 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.playlist,
       onResult: (result) {
+        _runningSearches[MediaType.playlist] = false;
+
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -251,6 +258,7 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: type,
       onResult: (result) {
+        _runningSearches[type] = false;
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -286,7 +294,7 @@ class SearchSortController {
       }
       return;
     }
-
+    _runningSearches[MediaType.track] = true;
     final sp = await _prepareTracksPorts();
     sp.send({
       'text': text,
@@ -435,6 +443,7 @@ class SearchSortController {
       return;
     }
 
+    _runningSearches[type] = true;
     final sp = await _prepareMediaPorts(keys, type);
     sp.send({
       'text': text,
@@ -452,6 +461,7 @@ class SearchSortController {
       }
       return;
     }
+    _runningSearches[MediaType.playlist] = true;
     final sp = await _preparePlaylistPorts();
     sp.send({
       'text': text,
