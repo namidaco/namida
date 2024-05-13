@@ -1204,22 +1204,12 @@ class Indexer {
     return tracks;
   }
 
-  Future<void> updateImageSizeInStorage({String? newImagePath, File? oldDeletedFile}) async {
-    if (newImagePath != null || oldDeletedFile != null) {
-      if (oldDeletedFile != null) {
-        if (oldDeletedFile.existsSync()) {
-          artworksInStorage.value--;
-          artworksSizeInStorage.value -= oldDeletedFile.fileSizeSync() ?? 0;
-        }
-      }
-      if (newImagePath != null) {
-        artworksInStorage.value++;
-        artworksSizeInStorage.value += File(newImagePath).fileSizeSync() ?? 0;
-      }
+  void updateImageSizesInStorage({required int removedCount, required int removedSize}) {
+    artworksInStorage.value -= removedCount;
+    artworksSizeInStorage.value -= removedSize;
+  }
 
-      return;
-    }
-
+  Future<void> calculateAllImageSizesInStorage() async {
     final stats = await updateImageSizeInStorageIsolate.thready({
       "dirPath": AppDirs.ARTWORKS,
       "token": RootIsolateToken.instance,
@@ -1230,37 +1220,21 @@ class Indexer {
 
   static (int, int) updateImageSizeInStorageIsolate(Map p) {
     final dirPath = p["dirPath"] as String;
-    final newImagePath = p["newImagePath"] as String?;
-    final oldDeletedFile = p["oldDeletedFile"] as File?;
     final token = p["token"] as RootIsolateToken;
     BackgroundIsolateBinaryMessenger.ensureInitialized(token);
 
-    int initialCount = p["initialCount"] as int? ?? 0;
-    int initialSize = p["initialSize"] as int? ?? 0;
+    int totalCount = 0;
+    int totalSize = 0;
+    final dir = Directory(dirPath);
 
-    if (newImagePath != null || oldDeletedFile != null) {
-      if (oldDeletedFile != null) {
-        if (oldDeletedFile.existsSync()) {
-          initialCount--;
-          initialSize -= oldDeletedFile.fileSizeSync() ?? 0;
-        }
-      }
-      if (newImagePath != null) {
-        initialCount++;
-        initialSize += File(newImagePath).fileSizeSync() ?? 0;
-      }
-    } else {
-      final dir = Directory(dirPath);
-
-      for (final f in dir.listSyncSafe()) {
-        if (f is File) {
-          initialCount++;
-          initialSize += f.fileSizeSync() ?? 0;
-        }
-      }
+    for (final f in dir.listSyncSafe()) {
+      try {
+        totalSize += (f as File).lengthSync();
+        totalCount++;
+      } catch (_) {}
     }
 
-    return (initialCount, initialSize);
+    return (totalCount, totalSize);
   }
 
   Future<void> updateColorPalettesSizeInStorage({String? newPalettePath}) async {
@@ -1295,7 +1269,7 @@ class Indexer {
     await Directory(AppDirs.ARTWORKS).delete(recursive: true);
     await Directory(AppDirs.ARTWORKS).create();
     await _createDefaultNamidaArtwork();
-    updateImageSizeInStorage();
+    calculateAllImageSizesInStorage();
   }
 
   /// Deletes specific videos or the whole cache.

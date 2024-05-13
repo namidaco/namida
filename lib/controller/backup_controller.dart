@@ -262,7 +262,7 @@ class BackupController {
       }
     }
 
-    Indexer.inst.updateImageSizeInStorage();
+    Indexer.inst.calculateAllImageSizesInStorage();
     Indexer.inst.updateColorPalettesSizeInStorage();
     Indexer.inst.updateVideosSizeInStorage();
     await _readNewFiles();

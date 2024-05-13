@@ -130,7 +130,7 @@ void mainInitialization() async {
   NamidaChannel.inst.setCanEnterPip(settings.enablePip.value);
 
   /// updates values on startup
-  Indexer.inst.updateImageSizeInStorage();
+  Indexer.inst.calculateAllImageSizesInStorage();
   Indexer.inst.updateColorPalettesSizeInStorage();
   Indexer.inst.updateVideosSizeInStorage();
   if (!shouldShowOnBoarding && settings.refreshOnStartup.value) {

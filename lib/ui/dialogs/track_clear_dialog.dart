@@ -11,6 +11,9 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
   final tracks = tracksPre.uniqued((element) => element.track);
   final isSingle = tracks.length == 1;
+
+  final hasLRCLyricsCached = tracks.hasLRCLyricsCached;
+  final hasTXTLyricsCached = tracks.hasTXTLyricsCached;
   NamidaNavigator.inst.navigateDialog(
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
@@ -29,13 +32,17 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
                 NamidaNavigator.inst.closeDialog();
               },
             ),
-          if (tracks.hasLyricsCached)
+          if (hasLRCLyricsCached || hasTXTLyricsCached)
             CustomListTile(
               passedColor: colorScheme,
               title: lang.LYRICS,
               icon: Broken.document,
               onTap: () async {
-                await EditDeleteController.inst.deleteLyrics(tracks);
+                if (hasLRCLyricsCached) {
+                  await EditDeleteController.inst.deleteLRCLyrics(tracks);
+                } else if (hasTXTLyricsCached) {
+                  await EditDeleteController.inst.deleteTXTLyrics(tracks);
+                }
                 NamidaNavigator.inst.closeDialog();
               },
             ),
