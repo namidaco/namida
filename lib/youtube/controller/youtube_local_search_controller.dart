@@ -19,11 +19,11 @@ enum YTLocalSearchSortType {
   latestPlayed,
 }
 
-class YTLocalSearchController with PortsProvider {
+class YTLocalSearchController with PortsProvider<Map> {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
   YTLocalSearchController._internal();
 
-  final didLoadLookupLists = Rxn<bool>();
+  final didLoadLookupLists = false.obs;
   Completer<void>? fillingCompleter;
 
   bool enableFuzzySearch = true;
@@ -60,43 +60,38 @@ class YTLocalSearchController with PortsProvider {
     onStart();
     final possibleID = text.getYoutubeID;
     final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
-    (await port?.search.future)?.send(p);
+    await sendPort(p);
   }
 
-  Future<void> initializeLookupMap({required final void Function(bool hasItems) onSearchDone}) async {
+  @override
+  void onResult(dynamic result) {
+    result as List<StreamInfoItem>;
+    _sortStreams(result);
+    searchResults = result;
+  }
+
+  @override
+  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
+    final params = {
+      'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
+      'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
+      'dirVideoInfo': AppDirs.YT_METADATA,
+      'tempBackupYTVH': YoutubeController.inst.tempBackupVideoInfo,
+      'enableFuzzySearch': enableFuzzySearch,
+      'sendPort': port,
+    };
+    return IsolateFunctionReturnBuild(_prepareResourcesAndSearch, params);
+  }
+
+  @override
+  void onPreparing(bool prepared) {
+    didLoadLookupLists.value = prepared;
+  }
+
+  @override
+  Future<void> initialize() async {
     _cancelDisposingTimer();
-    if (didLoadLookupLists.value == true || fillingCompleter?.isCompleted == true) return;
-    if (fillingCompleter != null) return fillingCompleter?.future;
-
-    didLoadLookupLists.value = false;
-    fillingCompleter = Completer<void>();
-
-    await preparePortRaw(
-      onResult: (result) {
-        if (result is bool) {
-          fillingCompleter.completeIfWasnt();
-          onSearchDone(false);
-          return;
-        }
-        result as List<StreamInfoItem>;
-        _sortStreams(result);
-        searchResults = result;
-        onSearchDone(result.isNotEmpty);
-      },
-      isolateFunction: (itemsSendPort) async {
-        final params = {
-          'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
-          'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
-          'dirVideoInfo': AppDirs.YT_METADATA,
-          'tempBackupYTVH': YoutubeController.inst.tempBackupVideoInfo,
-          'enableFuzzySearch': enableFuzzySearch,
-          'sendPort': itemsSendPort,
-        };
-        await Isolate.spawn(_prepareResourcesAndSearch, params);
-      },
-    );
-    await fillingCompleter?.future;
-    didLoadLookupLists.value = true;
+    return super.initialize();
   }
 
   static void _prepareResourcesAndSearch(Map params) async {
@@ -283,7 +278,7 @@ class YTLocalSearchController with PortsProvider {
         lookupItemAvailable[id] = (list: 4, index: lookupListYTVH.length - 1);
       }
     }
-    sendPort.send(true); // finished filling
+    sendPort.send(null); // finished filling
 
     final durationTaken = start.difference(DateTime.now());
     printo('Initialized 4 Lists in $durationTaken');

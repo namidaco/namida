@@ -19,12 +19,11 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
-class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider {
+class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider<Map> {
   static final NamidaYTGenerator inst = NamidaYTGenerator._internal();
   NamidaYTGenerator._internal();
 
-  late final didPrepareResources = Rxn<bool>();
-  Completer<void>? fillingCompleter;
+  late final didPrepareResources = false.obs;
 
   late final _operationsCompleter = <_GenerateOperation, Completer<Iterable<String>>>{};
 
@@ -55,8 +54,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   Future<Iterable<String>> _onOperationExecution({required _GenerateOperation type, required Map parameters}) async {
     _operationsCompleter[type]?.completeIfWasnt([]);
     _operationsCompleter[type] = Completer();
-
-    (await port?.search.future)?.send(parameters);
+    await sendPort(parameters);
 
     return await _operationsCompleter[type]?.future ?? [];
   }
@@ -71,54 +69,48 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   void cleanResources({int afterSeconds = 5}) {
     _cancelDisposingTimer();
     _disposingTimer = Timer(Duration(seconds: afterSeconds), () async {
-      fillingCompleter.completeIfWasnt();
-      fillingCompleter = null;
       await disposePort();
-      didPrepareResources.value = null;
     });
   }
 
-  Future<void> prepareResources() async {
+  @override
+  void onPreparing(bool prepared) {
+    didPrepareResources.value = prepared;
+  }
+
+  @override
+  Future<void> initialize() async {
     _cancelDisposingTimer();
+    return super.initialize();
+  }
 
-    if (didPrepareResources.value == true || fillingCompleter?.isCompleted == true) return;
-    if (fillingCompleter != null) return fillingCompleter?.future;
+  @override
+  void onResult(dynamic result) {
+    if (result is Exception) {
+      snackyy(message: result.toString(), isError: true);
+      return;
+    }
+    result as Map;
+    final type = result['type'] as _GenerateOperation;
+    final videos = result['videos'] as Iterable<String>;
+    _operationsCompleter[type]?.completeIfWasnt(videos);
+  }
 
-    didPrepareResources.value = false;
-    fillingCompleter = Completer();
-    await preparePortRaw(
-      onResult: (result) {
-        if (result is bool) {
-          fillingCompleter.completeIfWasnt();
-          return;
-        }
-        if (result is Exception) {
-          snackyy(message: result.toString(), isError: true);
-          return;
-        }
-        result as Map;
-        final type = result['type'] as _GenerateOperation;
-        final videos = result['videos'] as Iterable<String>;
-        _operationsCompleter[type]?.completeIfWasnt(videos);
-      },
-      isolateFunction: (itemsSendPort) async {
-        final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.values) pl.name: pl.tracks};
-        final params = {
-          'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
-          'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
-          'dirVideoInfo': AppDirs.YT_METADATA,
-          'tempBackupYTVH': YoutubeController.inst.tempBackupVideoInfo,
-          'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.keys,
-          'favouritesPlaylist': YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
-          'playlists': playlists,
-          'sendPort': itemsSendPort,
-          'token': RootIsolateToken.instance!,
-        };
-        await Isolate.spawn(_prepareResourcesAndListen, params);
-      },
-    );
-    await fillingCompleter?.future;
-    didPrepareResources.value = true;
+  @override
+  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
+    final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.values) pl.name: pl.tracks};
+    final params = {
+      'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
+      'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
+      'dirVideoInfo': AppDirs.YT_METADATA,
+      'tempBackupYTVH': YoutubeController.inst.tempBackupVideoInfo,
+      'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.keys,
+      'favouritesPlaylist': YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
+      'playlists': playlists,
+      'sendPort': port,
+      'token': RootIsolateToken.instance!,
+    };
+    return IsolateFunctionReturnBuild(_prepareResourcesAndListen, params);
   }
 
   static void _prepareResourcesAndListen(Map params) async {
@@ -265,7 +257,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       });
     }
     // -- end filling from playlists
-    sendPort.send(true); // finished filling
+    sendPort.send(null); // finished filling
 
     final durationTaken = start.difference(DateTime.now());
     printo('Initialized 4 Lists in $durationTaken');

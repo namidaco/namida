@@ -1172,7 +1172,7 @@ class TracksAddOnTap {
     final currentVideoId = currentVideo.id;
     final currentVideoName = YoutubeController.inst.getVideoName(currentVideoId) ?? currentVideoId;
 
-    NamidaYTGenerator.inst.prepareResources();
+    NamidaYTGenerator.inst.initialize();
     showAddItemsToQueueDialog(
       context: context,
       tiles: (getAddTracksTile) {
