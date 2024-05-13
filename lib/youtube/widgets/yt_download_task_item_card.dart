@@ -109,8 +109,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     );
   }
 
-  void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig) {
-    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName);
+  void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, {bool keepInList = false}) {
+    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName, keepInList: keepInList);
   }
 
   void _showInfoDialog(
@@ -409,7 +409,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       initialItemConfig: config,
       confirmButtonText: lang.RESTART,
       onConfirmButtonTap: (groupName, newConfig) {
-        _onCancelDeleteDownloadTap([config]);
+        _onCancelDeleteDownloadTap([config], keepInList: true);
         _onResumeDownloadTap([newConfig], context);
         YTOnGoingFinishedDownloads.inst.refreshList();
         return true;
@@ -444,7 +444,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       },
       buttonText: lang.SAVE,
       onButtonTap: (text) async {
-        _onPauseDownloadTap([config]);
+        final wasDownloading = YoutubeController.inst.isDownloading[config.id]?[config.filename] ?? false;
+        if (wasDownloading) _onPauseDownloadTap([config]);
         await YoutubeController.inst.renameConfigFilename(
           config: config,
           videoID: config.id,
@@ -453,7 +454,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           renameCacheFiles: true,
         );
         // ignore: use_build_context_synchronously
-        _onResumeDownloadTap([config], context);
+        if (wasDownloading) _onResumeDownloadTap([config], context);
         return true;
       },
     );
@@ -640,8 +641,11 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                                 context: context,
                                                 operationTitle: lang.RESTART,
                                               );
-                                              // ignore: use_build_context_synchronously
-                                              if (confirmed) _onResumeDownloadTap([item], context);
+                                              if (confirmed) {
+                                                _onCancelDeleteDownloadTap([item], keepInList: true);
+                                                // ignore: use_build_context_synchronously
+                                                _onResumeDownloadTap([item], context);
+                                              }
                                             })
                                         : willBeDownloaded || isDownloading || isFetching
                                             ? _getChip(

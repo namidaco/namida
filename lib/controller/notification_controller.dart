@@ -111,6 +111,10 @@ class NotificationService {
     );
   }
 
+  Future<void> removeDownloadingYoutubeNotification({required String notificationID}) async {
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID);
+  }
+
   void doneDownloadingYoutubeNotification({
     required String notificationID,
     required String videoTitle,
