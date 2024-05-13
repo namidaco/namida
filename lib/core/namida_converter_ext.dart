@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:namida/youtube/yt_utils.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
 
@@ -70,6 +71,7 @@ import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
 
 extension LibraryTabToEnum on int {
   LibraryTab toEnum() => settings.libraryTabs.elementAt(this);
@@ -477,13 +479,22 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
 
     final streams = plInfo.streams;
 
+    final playlistId = playlist?.id == null ? null : PlaylistID(id: playlist!.id!);
+    Iterable<YoutubeID> getPlayables() => streams.map((e) => YoutubeID(id: e.id ?? '', playlistID: playlistId));
+
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
         plInfo.showPlaylistDownloadSheet(context: context?.mounted == true ? context : null);
       case OnYoutubeLinkOpenAction.addToPlaylist:
         showAddToPlaylistSheet(ids: streams.map((e) => e.id ?? ''), idsNamesLookup: {});
       case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, streams.map((e) => YoutubeID(id: e.id ?? '', playlistID: null)), QueueSource.others);
+        await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
+      case OnYoutubeLinkOpenAction.playNext:
+        await Player.inst.addToQueue(getPlayables(), insertNext: true);
+      case OnYoutubeLinkOpenAction.playLast:
+        await Player.inst.addToQueue(getPlayables(), insertNext: false);
+      case OnYoutubeLinkOpenAction.playAfter:
+        await Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
         _showAskDialog(
           (action) => action.executePlaylist(playlistUrl, context: context, playlist: plInfo),
@@ -497,6 +508,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   }
 
   Future<void> execute(Iterable<String> ids) async {
+    Iterable<YoutubeID> getPlayables() => ids.map((e) => YoutubeID(id: e, playlistID: null));
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
         if (ids.length == 1) {
@@ -513,7 +525,13 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       case OnYoutubeLinkOpenAction.addToPlaylist:
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
       case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, ids.map((e) => YoutubeID(id: e, playlistID: null)), QueueSource.others);
+        await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
+      case OnYoutubeLinkOpenAction.playNext:
+        await Player.inst.addToQueue(getPlayables(), insertNext: true);
+      case OnYoutubeLinkOpenAction.playLast:
+        await Player.inst.addToQueue(getPlayables(), insertNext: false);
+      case OnYoutubeLinkOpenAction.playAfter:
+        await Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
         _showAskDialog((action) => action.execute(ids));
 
@@ -523,9 +541,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   }
 
   void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutubePlaylist? playlistToOpen, YoutubePlaylist? playlistToAddAs}) {
-    final newVals = List<OnYoutubeLinkOpenAction>.from(OnYoutubeLinkOpenAction.values);
-    newVals.remove(OnYoutubeLinkOpenAction.alwaysAsk);
-
     String playlistNameToAddAs = playlistToAddAs?.name ?? '';
     String suffix = '';
     int suffixIndex = 1;
@@ -535,10 +550,24 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
     playlistNameToAddAs += suffix;
 
+    final didAddToPlaylist = false.obs;
+    final isItemEnabled = <OnYoutubeLinkOpenAction, bool>{
+      OnYoutubeLinkOpenAction.playNext: true,
+      OnYoutubeLinkOpenAction.playAfter: true,
+      OnYoutubeLinkOpenAction.playLast: true,
+    }.obs;
+
+    final playAfterVid = YTUtils.getPlayerAfterVideo();
+
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        didAddToPlaylist.close();
+        isItemEnabled.close();
+      },
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
         normalTitleStyle: true,
+        contentPadding: EdgeInsets.zero,
         actions: [
           NamidaButton(
             text: lang.DONE,
@@ -555,29 +584,51 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                   NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
                 },
               ),
-            ...newVals.map(
-              (e) => CustomListTile(
-                icon: e.toIcon(),
-                title: e.toText(),
-                onTap: () => onTap(e),
-              ),
+            ...[
+              OnYoutubeLinkOpenAction.showDownload,
+              OnYoutubeLinkOpenAction.play,
+              OnYoutubeLinkOpenAction.playNext,
+              if (playAfterVid != null) OnYoutubeLinkOpenAction.playAfter,
+              OnYoutubeLinkOpenAction.playLast,
+              OnYoutubeLinkOpenAction.addToPlaylist,
+            ].map(
+              (e) {
+                final isPlayAfter = e == OnYoutubeLinkOpenAction.playAfter && playAfterVid != null;
+                final extraTitle = isPlayAfter ? ": ${playAfterVid.diff.displayVideoKeyword}" : "";
+                String? subtitle = isPlayAfter ? playAfterVid.name : null;
+                if (subtitle == '') subtitle = null;
+                return Obx(
+                  () => CustomListTile(
+                    enabled: isItemEnabled[e] ?? true,
+                    icon: e.toIcon(),
+                    title: e.toText() + extraTitle,
+                    subtitle: subtitle,
+                    visualDensity: null,
+                    onTap: () {
+                      onTap(e);
+                      if (isItemEnabled[e] != null) {
+                        isItemEnabled[e] = false; // only disable existing item
+                      }
+                    },
+                  ),
+                );
+              },
             ),
             if (playlistNameToAddAs != '')
-              ObxValue<RxBool>(
-                (didAdd) => CustomListTile(
-                  enabled: !didAdd.value,
+              Obx(
+                () => CustomListTile(
+                  enabled: !didAddToPlaylist.value,
                   icon: Broken.add_square,
                   title: lang.ADD_AS_A_NEW_PLAYLIST,
                   subtitle: playlistNameToAddAs,
                   onTap: () {
-                    didAdd.value = true;
+                    didAddToPlaylist.value = true;
                     ytplc.YoutubePlaylistController.inst.addNewPlaylist(
                       playlistNameToAddAs,
                       videoIds: playlistToAddAs?.streams.map((e) => e.id ?? '') ?? [],
                     );
                   },
                 ),
-                false.obs,
               ),
           ],
         ),
@@ -1433,6 +1484,9 @@ class _NamidaConverters {
       OnYoutubeLinkOpenAction: {
         OnYoutubeLinkOpenAction.showDownload: lang.DOWNLOAD,
         OnYoutubeLinkOpenAction.play: lang.PLAY,
+        OnYoutubeLinkOpenAction.playNext: lang.PLAY_NEXT,
+        OnYoutubeLinkOpenAction.playAfter: lang.PLAY_AFTER,
+        OnYoutubeLinkOpenAction.playLast: lang.PLAY_LAST,
         OnYoutubeLinkOpenAction.addToPlaylist: lang.ADD_TO_PLAYLIST,
         OnYoutubeLinkOpenAction.alwaysAsk: lang.ALWAYS_ASK,
       },
@@ -1569,6 +1623,9 @@ class _NamidaConverters {
       OnYoutubeLinkOpenAction: {
         OnYoutubeLinkOpenAction.showDownload: Broken.import,
         OnYoutubeLinkOpenAction.play: Broken.play,
+        OnYoutubeLinkOpenAction.playNext: Broken.next,
+        OnYoutubeLinkOpenAction.playAfter: Broken.hierarchy_square,
+        OnYoutubeLinkOpenAction.playLast: Broken.play_cricle,
         OnYoutubeLinkOpenAction.addToPlaylist: Broken.music_library_2,
         OnYoutubeLinkOpenAction.alwaysAsk: Broken.message_question,
       },

@@ -315,6 +315,9 @@ enum AlbumIdentifier {
 enum OnYoutubeLinkOpenAction {
   showDownload,
   play,
+  playNext,
+  playAfter,
+  playLast,
   addToPlaylist,
   alwaysAsk,
 }
