@@ -210,17 +210,18 @@ class Lyrics {
       try {
         final req = await http.get(url);
         final fetched = <LyricsModel>[];
-        final jsonLists = (jsonDecode(req.body) as List<dynamic>?) ?? [];
+        final jsonLists = (jsonDecode(utf8.decode(req.bodyBytes)) as List<dynamic>?) ?? [];
         for (final jsonRes in jsonLists) {
           final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
           final plain = jsonRes?["plainLyrics"] as String? ?? '';
           if (syncedLyrics != '') {
             // lrc
             final lines = <String>[];
-            if (artist != '') lines.add('[ar:$artist]');
-            if (album != '') lines.add('[al:$album]');
-            if (title != '') lines.add('[ti:$title]');
-            if (durationInSeconds > 0) lines.add('[length:${formatTime(durationInSeconds)}]');
+            if (artist != '') lines.add('[ar:${jsonRes['artistName'] ?? artist}]');
+            if (album != '') lines.add('[al:${jsonRes['albumName'] ?? album}]');
+            if (title != '') lines.add('[ti:${jsonRes['trackName'] ?? title}]');
+            final dur = (jsonRes['duration'] as num?)?.toInt() ?? durationInSeconds;
+            if (dur > 0) lines.add('[length:${formatTime(dur)}]');
             for (final l in syncedLyrics.split('\n')) {
               lines.add(l);
             }
