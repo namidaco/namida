@@ -24,21 +24,31 @@ class YTLocalSearchResults extends StatefulWidget {
 }
 
 class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
+  final _searchListenerKey = "YTLocalSearchResultsState";
+
   @override
   void initState() {
     super.initState();
+    YTLocalSearchController.inst.addOnSearchStart(_searchListenerKey, () => _updateIsSearching(true));
+    YTLocalSearchController.inst.addOnSearchDone(_searchListenerKey, (_) => _updateIsSearching(false));
+
     YTLocalSearchController.inst.scrollController = ScrollController();
-    YTLocalSearchController.inst.search(
-      widget.initialSearch,
-      maxResults: null,
-      onStart: () => updateIsSearching(true),
-    );
+    YTLocalSearchController.inst.search(widget.initialSearch, maxResults: null);
   }
 
-  void updateIsSearching(bool searching) {
-    setState(() {
+  @override
+  void dispose() {
+    YTLocalSearchController.inst.removeOnSearchStart(_searchListenerKey);
+    YTLocalSearchController.inst.removeOnSearchDone(_searchListenerKey);
+    super.dispose();
+  }
+
+  void _updateIsSearching(bool searching) {
+    if (mounted) {
+      setState(() => _isSearching = searching);
+    } else {
       _isSearching = searching;
-    });
+    }
   }
 
   List<StreamInfoItem> get _searchResultsLocal => YTLocalSearchController.inst.searchResults;

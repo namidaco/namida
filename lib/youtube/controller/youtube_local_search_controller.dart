@@ -52,15 +52,36 @@ class YTLocalSearchController with PortsProvider<Map> {
 
   var searchResults = <StreamInfoItem>[];
 
-  void search(String text, {int? maxResults, required void Function() onStart}) async {
+  void search(String text, {int? maxResults}) async {
     // _latestSearch = text;
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
     if (text == '') return;
 
-    onStart();
+    for (final l in _onSearchStartListeners.entries) {
+      l.value();
+    }
     final possibleID = text.getYoutubeID;
     final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
     await sendPort(p);
+  }
+
+  final _onSearchDoneListeners = <String, void Function(bool hasItems)>{};
+  final _onSearchStartListeners = <String, void Function()>{};
+
+  void addOnSearchDone(String key, void Function(bool hasItems) onDone) {
+    _onSearchDoneListeners[key] = onDone;
+  }
+
+  void removeOnSearchDone(String key) {
+    _onSearchDoneListeners.remove(key);
+  }
+
+  void addOnSearchStart(String key, void Function() onStart) {
+    _onSearchStartListeners[key] = onStart;
+  }
+
+  void removeOnSearchStart(String key) {
+    _onSearchStartListeners.remove(key);
   }
 
   @override
@@ -68,6 +89,9 @@ class YTLocalSearchController with PortsProvider<Map> {
     result as List<StreamInfoItem>;
     _sortStreams(result);
     searchResults = result;
+    for (final l in _onSearchDoneListeners.entries) {
+      l.value(result.isNotEmpty);
+    }
   }
 
   @override

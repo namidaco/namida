@@ -46,15 +46,17 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   final _offlineSearchPageKey = GlobalKey<YTLocalSearchResultsState>();
 
   void _onSearchDone(bool hasItems) {
-    setState(() {});
-    _offlineSearchPageKey.currentState?.updateIsSearching(false);
+    if (mounted) setState(() {});
   }
+
+  final _searchListenerKey = "YoutubeSearchResultsPage";
 
   @override
   void initState() {
     super.initState();
     fetchSearch();
-    YTLocalSearchController.inst.initializeLookupMap(onSearchDone: _onSearchDone).then((value) {
+    YTLocalSearchController.inst.addOnSearchDone(_searchListenerKey, _onSearchDone);
+    YTLocalSearchController.inst.initialize().then((value) {
       fetchSearch(customText: currentSearchText);
     });
   }
@@ -62,6 +64,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   void dispose() {
     _isFetchingMoreResults.close();
+    YTLocalSearchController.inst.removeOnSearchDone(_searchListenerKey);
     super.dispose();
   }
 
@@ -72,7 +75,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     YTLocalSearchController.inst.search(
       newSearch,
       maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini,
-      onStart: () => _offlineSearchPageKey.currentState?.updateIsSearching(true),
     );
     _searchResult.clear();
     if (newSearch == '') return;
