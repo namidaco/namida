@@ -1170,7 +1170,7 @@ class Indexer {
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
-      final year = (map['year'] as String?).getIntValue();
+      final yearString = map['year'] as String?;
       final trext = TrackExtended(
         title: e.title,
         originalArtist: e.artist ?? UnknownTags.ARTIST,
@@ -1184,7 +1184,7 @@ class Indexer {
         composer: e.composer ?? '',
         trackNo: e.track ?? 0,
         duration: e.duration == null ? 0 : e.duration! ~/ 1000,
-        year: year ?? 0,
+        year: TrackExtended.enforceYearFormat(yearString) ?? 0,
         size: e.size,
         dateAdded: e.dateAdded ?? 0,
         dateModified: e.dateModified ?? 0,

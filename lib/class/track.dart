@@ -221,6 +221,20 @@ class TrackExtended {
     required this.lyrics,
   });
 
+  static String _padInt(int val) => val.toString().padLeft(2, '0');
+
+  static int? enforceYearFormat(String? fromYearString) {
+    final intVal = fromYearString.getIntValue();
+    if (intVal != null) return intVal;
+    if (fromYearString != null) {
+      try {
+        final yearDate = DateTime.parse(fromYearString.replaceAll(RegExp(r'[\s]'), '-'));
+        return int.parse("${yearDate.year}${_padInt(yearDate.month)}${_padInt(yearDate.day)}");
+      } catch (_) {}
+    }
+    return null;
+  }
+
   factory TrackExtended.fromJson(
     Map<String, dynamic> json, {
     required ArtistsSplitConfig artistsSplitConfig,
@@ -372,7 +386,7 @@ extension TrackExtUtils on TrackExtended {
       moodList: tag.mood != null ? [tag.mood!] : moodList,
       composer: tag.composer ?? composer,
       trackNo: tag.trackNumber.getIntValue() ?? trackNo,
-      year: tag.year.getIntValue() ?? year,
+      year: TrackExtended.enforceYearFormat(tag.year) ?? year,
       dateModified: dateModified ?? this.dateModified,
       path: path ?? this.path,
       comment: tag.comment ?? comment,
