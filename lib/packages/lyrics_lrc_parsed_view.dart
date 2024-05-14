@@ -54,14 +54,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   late final ItemScrollController controller;
   late final ItemPositionsListener positionListener;
 
-  late final int topDummyItems;
-  late final int bottomDummyItems;
+  late final double _paddingVertical = widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0;
+  int _currentIndex = -1;
 
   @override
   void initState() {
     super.initState();
-    topDummyItems = widget.isFullScreenView ? 32 : 12;
-    bottomDummyItems = widget.isFullScreenView ? 32 : 12;
     controller = ItemScrollController();
     positionListener = ItemPositionsListener.create();
     fillLists(widget.initialLrc);
@@ -125,25 +123,32 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void _updateHighlightedLine(Duration dur, {bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) {
-      return e.timestamp <= dur;
-    });
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp <= dur);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _latestUpdatedLine.value = lrcDur?.timestamp;
 
-      final newIndex = timestampsMap[_latestUpdatedLine.value]?.$1 ?? -1;
+      int newIndex = timestampsMap[_latestUpdatedLine.value]?.$1 ?? -1;
       _latestUpdatedLineIndex.value = newIndex;
+      if (newIndex + 1 == lyrics.length) {
+        final alreadyHighlightingLastLine = _currentIndex == newIndex;
+        if (alreadyHighlightingLastLine) {
+          return; // overscrolling
+        } else {
+          newIndex = lyrics.length - 1; // go to last line
+        }
+      }
 
       if ((_canAnimateScroll || forceAnimate) && controller.isAttached) {
-        final index = (newIndex + topDummyItems).toIf(0, -1);
+        if (newIndex < 0) newIndex = 0;
+        _currentIndex = newIndex;
         jump
             ? controller.jumpTo(
                 alignment: 0.4,
-                index: index,
+                index: newIndex,
               )
             : controller.scrollTo(
                 alignment: 0.4,
-                index: index,
+                index: newIndex,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
               );
@@ -261,8 +266,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           child: BorderRadiusClip(
             borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),
             child: NamidaBgBlur(
-              blur: fullscreen ? 0.0 : 14.0,
-              enabled: true,
+              blur: fullscreen ? 0.0 : 12.0,
+              enabled: !fullscreen,
               child: Container(
                 color: context.theme.scaffoldBackgroundColor.withOpacity(fullscreen ? 0.8 : 0.6),
                 alignment: Alignment.center,
@@ -319,15 +324,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                       return PageStorage(
                                         bucket: PageStorageBucket(),
                                         child: ScrollablePositionedList.builder(
-                                          key: PageStorageKey(widget.key),
-                                          // initialAlignment: 0.4,
+                                          padding: EdgeInsets.symmetric(vertical: _paddingVertical),
                                           itemScrollController: controller,
-                                          itemCount: lyrics.length + topDummyItems + bottomDummyItems,
-                                          itemBuilder: (context, indexBefore) {
-                                            if (indexBefore < topDummyItems) return const SizedBox(height: 12.0);
-                                            if (indexBefore >= (lyrics.length + topDummyItems)) return const SizedBox(height: 12.0);
-
-                                            final index = indexBefore - topDummyItems;
+                                          itemCount: lyrics.length,
+                                          itemBuilder: (context, index) {
                                             final lrc = lyrics[index];
                                             final selected = highlighted?.timestamp == lrc.timestamp;
                                             final text = lrc.lyrics;
