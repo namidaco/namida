@@ -84,10 +84,15 @@ class Lyrics {
     /// 4. database.
     final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
 
-    if (lrcLyrics != null) {
+    if (lrcLyrics.$1 != null) {
       if (_currentTrack == track) {
-        currentLyricsLRC.value = lrcLyrics;
-        _updateWidgets(lrcLyrics);
+        currentLyricsLRC.value = lrcLyrics.$1;
+        _updateWidgets(lrcLyrics.$1);
+      }
+    } else if (lrcLyrics.$2 != null) {
+      if (_currentTrack == track) {
+        currentLyricsText.value = lrcLyrics.$2 ?? '';
+        _updateWidgets(null);
       }
     } else {
       /// 1. cached txt lyrics
@@ -105,11 +110,11 @@ class Lyrics {
   }
 
   bool hasLyrics(Track tr) {
-    return tr.lyrics != '' || lyricsFileCache(tr).existsSync() || lyricsFilesDevice(tr).any((element) => element.existsSync()) || lyricsFileText(tr).existsSync();
+    return tr.lyrics != '' || lyricsFileCacheLRC(tr).existsSync() || lyricsFilesDevice(tr).any((element) => element.existsSync()) || lyricsFileCacheText(tr).existsSync();
   }
 
-  File lyricsFileText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
-  File lyricsFileCache(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
+  File lyricsFileCacheText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
+  File lyricsFileCacheLRC(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
   List<File> lyricsFilesDevice(Track tr) {
     final dirPath = tr.path.getDirectoryPath;
     return [
@@ -121,7 +126,7 @@ class Lyrics {
   }
 
   Future<void> saveLyricsToCache(Track track, String lyricsText, bool isSynced) async {
-    final fc = isSynced ? lyricsFileCache(track) : lyricsFileText(track);
+    final fc = isSynced ? lyricsFileCacheLRC(track) : lyricsFileCacheText(track);
     await fc.create();
     await fc.writeAsString(lyricsText);
   }
@@ -148,9 +153,7 @@ class Lyrics {
     );
   }
 
-  Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
-    final fc = lyricsFileCache(track);
-
+  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
     Future<Lrc?> parseLRCFile(File file) async {
       final content = await file.readAsString();
       return content.parseLRC();
@@ -170,8 +173,9 @@ class Lyrics {
         }
       }
       if (lrc == null) {
-        if (await fc.existsAndValid()) {
-          lrc = await parseLRCFile(fc);
+        final syncedInCache = lyricsFileCacheLRC(track);
+        if (await syncedInCache.existsAndValid()) {
+          lrc = await parseLRCFile(syncedInCache);
         } else if (trackLyrics != '') {
           lrc = trackLyrics.parseLRC();
         }
@@ -182,15 +186,25 @@ class Lyrics {
     if (source != LyricsSource.local && lrc == null) {
       final trackExt = track.toTrackExt();
       final lyrics = await searchLRCLyricsFromInternet(trackExt: trackExt);
-      final text = lyrics.firstOrNull?.lyrics;
-      if (text != null) await fc.writeAsString(text);
-      return text?.parseLRC();
+      final lyricsModelToUse = lyrics.firstOrNull;
+      if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
+        final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
+        if (parsedLrc != null) {
+          final syncedInCache = lyricsFileCacheLRC(track);
+          await syncedInCache.writeAsString(lyricsModelToUse.lyrics);
+          return (parsedLrc, null);
+        } else {
+          final plainInCache = lyricsFileCacheText(track);
+          await plainInCache.writeAsString(lyricsModelToUse.lyrics);
+          return (null, lyricsModelToUse.lyrics);
+        }
+      }
     }
-    return lrc;
+    return (lrc, null);
   }
 
   Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
-    final lyricsFile = lyricsFileText(track);
+    final lyricsFile = lyricsFileCacheText(track);
 
     /// get from storage
     if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
@@ -215,7 +229,7 @@ class Lyrics {
   Future<String> _fetchLyricsGoogle({String title = '', String artist = ''}) async {
     if (title == '' && artist == '') return '';
 
-    final possibleQueries = [
+    final possibleQueries = <String>[
       '$title by $artist lyrics',
       '${title.split("-").first} by $artist lyrics',
       '$title by $artist song lyrics',
@@ -224,30 +238,30 @@ class Lyrics {
     return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
   }
 
-  Future<String> _fetchLyricsGoogleIsolate(List<String> searches) async {
+  Future<String> _fetchLyricsGoogleIsolate(List searches) async {
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
     const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
 
     Future<String> requestQuery(String searchText) async {
-      http.Response? res;
       try {
-        res = await http.get(Uri.parse(Uri.encodeFull("$url$searchText"))).timeout(const Duration(seconds: 10));
-      } catch (_) {}
-      if (res == null) return '';
-      final body = res.body;
-      final lyricsRes = body.substring(body.indexOf(delimiter1) + delimiter1.length, body.lastIndexOf(delimiter2));
-      if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
-      if (lyricsRes.contains('please enable javascript on your web browser')) return '';
-      if (lyricsRes.contains('Error 500 (Server Error)')) return '';
-      if (lyricsRes.contains('systems have detected unusual traffic from your computer network')) return '';
-      return lyricsRes;
+        final res = await http.get(Uri.parse(Uri.encodeFull("$url$searchText"))).timeout(const Duration(seconds: 10));
+        final body = res.body;
+        final lyricsRes = body.substring(body.indexOf(delimiter1) + delimiter1.length, body.lastIndexOf(delimiter2));
+        if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
+        if (lyricsRes.contains('please enable javascript on your web browser')) return '';
+        if (lyricsRes.contains('Error 500 (Server Error)')) return '';
+        if (lyricsRes.contains('systems have detected unusual traffic from your computer network')) return '';
+        return lyricsRes;
+      } catch (_) {
+        return '';
+      }
     }
 
     String lyrics = '';
 
     for (final q in searches) {
-      lyrics = await requestQuery(q);
+      lyrics = await requestQuery(q as String);
       if (lyrics != '') break;
     }
 

@@ -29,8 +29,8 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
   final fetchedLyrics = <LyricsModel>[].obs;
 
   final embedded = track.lyrics;
-  final cachedTxt = Lyrics.inst.lyricsFileText(trackPre);
-  final cachedLRC = Lyrics.inst.lyricsFileCache(trackPre);
+  final cachedTxt = Lyrics.inst.lyricsFileCacheText(trackPre);
+  final cachedLRC = Lyrics.inst.lyricsFileCacheLRC(trackPre);
   final localLRCFiles = Lyrics.inst.lyricsFilesDevice(trackPre);
 
   if (embedded != '') {
