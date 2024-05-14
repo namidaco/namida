@@ -28,6 +28,7 @@ class StorageCacheManager {
   Future<void> trimExtraFiles() async {
     await Future.wait([
       _ImageTrimmer()._trimExcessImageCache(),
+      _ImageTrimmer()._trimExcessImageCacheTemp(),
       _AudioTrimmer()._trimExcessAudioCache(),
     ]);
   }
@@ -486,7 +487,13 @@ class _AudioTrimmer {
     final dirPath = map['dirPath'] as String;
 
     final audios = Directory(dirPath).listSyncSafe();
-    audios.sortBy((e) => e.statSync().accessed);
+    audios.sortBy((e) {
+      try {
+        return e.statSync().accessed;
+      } catch (_) {
+        return 0;
+      }
+    });
     return _Trimmer._trimExcessCache(audios, maxBytes);
   }
 
@@ -533,8 +540,63 @@ class _ImageTrimmer {
     final imagesChannels = Directory(dirPathChannel).listSyncSafe();
     final images = [...imagesVideos, ...imagesChannels];
 
-    images.sortBy((e) => e.statSync().accessed);
+    images.sortBy((e) {
+      try {
+        return e.statSync().accessed;
+      } catch (_) {
+        return 0;
+      }
+    });
     return _Trimmer._trimExcessCache(images, maxBytes);
+  }
+
+  Future<void> _trimExcessImageCacheTemp() async {
+    final dirPath = "${AppDirs.YT_THUMBNAILS}/temp";
+    if (!await Directory(dirPath).exists()) return;
+    return await _trimExcessImageCacheTempIsolate.thready(dirPath);
+  }
+
+  static void _trimExcessImageCacheTempIsolate(String dirPath) {
+    final images = Directory(dirPath).listSyncSafe();
+    int excess = images.length - 2000; // keeping it at max 2000 good files.
+    if (excess <= 0) return;
+
+    final partialFiles = <File>[];
+    final maxAccessed = DateTime.now();
+    images.sortBy((e) {
+      if (e is File) {
+        if (e.path.endsWith('.temp')) {
+          partialFiles.add(e);
+          return maxAccessed; // to put at the end
+        } else {
+          try {
+            return e.statSync().accessed;
+          } catch (_) {}
+        }
+      }
+      return 0;
+    });
+    for (int i = 0; i < partialFiles.length; i++) {
+      try {
+        partialFiles[i].deleteSync();
+      } catch (_) {}
+    }
+
+    // -- since we deleted partial files, we recalculate the excess
+    excess -= partialFiles.length;
+    if (excess <= 0) return;
+
+    for (int i = 0; i < excess; i++) {
+      final element = images[i];
+      if (element is File) {
+        try {
+          element.deleteSync();
+          continue;
+        } catch (_) {}
+      }
+      // if not continued safely, i-- indicating that we still need to delete more
+      i--;
+    }
   }
 }
 
