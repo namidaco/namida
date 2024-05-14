@@ -70,6 +70,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
       borderRadius: 42.0.multipliedRadius,
       drawerChild: const NamidaDrawer(),
       maxPercentage: 0.465.withMaximum(324.0 / context.width),
+      initiallySwipeable: settings.swipeableDrawer.value,
       child: const MainScreenStack(),
     );
   }

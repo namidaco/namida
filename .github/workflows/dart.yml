@@ -49,7 +49,7 @@ jobs:
         run: sed -i 's/applicationId "com.msob7y.namida"/applicationId "com.msob7y.namida.snapshot"/g' android/app/build.gradle
 
       - name: Build APKs
-        run: flutter build apk --target-platform android-arm,android-arm64 --release --split-per-abi -v
+        run: flutter build apk --target-platform android-arm64 --release -v
 
       # - name: Sign App Bundle
       #   uses: r0adkll/sign-android-release@v1

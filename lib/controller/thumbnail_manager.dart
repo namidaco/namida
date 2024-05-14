@@ -257,9 +257,9 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
     const bool deleteOldExtracted = true;
 
-    void updateLastAccessed(File file) {
+    void updateLastAccessed(File file) async {
       try {
-        file.setLastAccessed(DateTime.now());
+        await file.setLastAccessed(DateTime.now());
       } catch (_) {}
     }
 
@@ -316,6 +316,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                 await fileStream.flush();
                 await fileStream.close(); // closing file.
               } catch (_) {}
+              destinationFileTemp.delete().catchError((_) => File(''));
             }
 
             if (requester == null || requester.isClosed) {

@@ -238,7 +238,7 @@ class Lyrics {
     return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
   }
 
-  Future<String> _fetchLyricsGoogleIsolate(List searches) async {
+  static Future<String> _fetchLyricsGoogleIsolate(List<String> searches) async {
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
     const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
@@ -261,7 +261,7 @@ class Lyrics {
     String lyrics = '';
 
     for (final q in searches) {
-      lyrics = await requestQuery(q as String);
+      lyrics = await requestQuery(q);
       if (lyrics != '') break;
     }
 

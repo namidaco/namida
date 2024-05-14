@@ -459,6 +459,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
         },
       );
+    }, onRapidDetected: () {
+      if (isPlaying) pause();
     });
 
     MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();

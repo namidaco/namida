@@ -59,9 +59,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   String _currentLine = '';
 
   static const int _lrcOpacityDurationMS = 500;
-  bool? _isScrollingVertically;
-  final bool _updateOpacityForEmptyLines = true;
-  late bool _isCurrentLineEmpty = _checkIfTextEmpty(lyrics.firstOrNull?.lyrics ?? '');
+  late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView;
+  late bool _isCurrentLineEmpty = _updateOpacityForEmptyLines ? _checkIfTextEmpty(lyrics.firstOrNull?.lyrics ?? '') : false;
 
   final _emptyTextRegex = RegExp(r'[^\s]');
   bool _checkIfTextEmpty(String text) {
@@ -155,6 +154,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
       if ((_canAnimateScroll || forceAnimate) && controller.isAttached) {
         if (newIndex < 0) newIndex = 0;
+        if (_currentIndex == newIndex) return;
         _currentIndex = newIndex;
         jump
             ? controller.jumpTo(
@@ -320,19 +320,17 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           fit: StackFit.expand,
                           children: [
                             Listener(
+                              onPointerDown: (event) {
+                                if (_isCurrentLineEmpty) {
+                                  setState(() => _isCurrentLineEmpty = false);
+                                }
+                              },
                               onPointerMove: (event) {
                                 _scrollTimer?.cancel();
                                 _scrollTimer = null;
                                 _canAnimateScroll = false;
-                                _isScrollingVertically ??= event.delta.dy.abs() > 0.01;
-                                if (_isScrollingVertically == true) {
-                                  if (_isCurrentLineEmpty) {
-                                    setState(() => _isCurrentLineEmpty = false);
-                                  }
-                                }
                               },
                               onPointerUp: (event) {
-                                _isScrollingVertically = null;
                                 _scrollTimer = Timer(const Duration(seconds: 3), () {
                                   _canAnimateScroll = true;
                                   if (Player.inst.isPlaying) {
@@ -358,12 +356,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                               controller: Lyrics.inst.textScrollController,
                                               child: Column(
                                                 children: [
-                                                  const SizedBox(height: 48.0),
+                                                  SizedBox(height: _paddingVertical),
                                                   Text(
                                                     text,
                                                     style: normalTextStyle,
                                                   ),
-                                                  const SizedBox(height: 48.0),
+                                                  SizedBox(height: _paddingVertical),
                                                 ],
                                               ),
                                             );

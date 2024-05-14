@@ -15,7 +15,7 @@ class NamidaInnerDrawer extends StatefulWidget {
   final Curve curve;
   final double borderRadius;
   final double maxPercentage;
-  final bool swipeable;
+  final bool initiallySwipeable;
 
   const NamidaInnerDrawer({
     super.key,
@@ -26,7 +26,7 @@ class NamidaInnerDrawer extends StatefulWidget {
     this.curve = Curves.fastEaseInToSlowEaseOut,
     this.borderRadius = 0,
     this.maxPercentage = 0.472,
-    this.swipeable = true,
+    required this.initiallySwipeable,
   });
 
   @override
@@ -59,7 +59,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
     super.dispose();
   }
 
-  late bool _canSwipe = widget.swipeable;
+  late bool _canSwipe = widget.initiallySwipeable;
   bool _isOpened = false;
   double _distanceTraveled = 0;
 

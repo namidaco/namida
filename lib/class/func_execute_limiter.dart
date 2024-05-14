@@ -19,8 +19,9 @@ class FunctionExecuteLimiter<T> {
 
   Completer<T?>? _valueCompleter;
 
-  void execute(Function fn) {
+  void execute(Function fn, {void Function()? onRapidDetected}) {
     if (_isRapidlyCalling) {
+      if (onRapidDetected != null) onRapidDetected();
       _latestColorUpdate = DateTime.now();
       _isRapidlyCallingTimer?.cancel();
       _isRapidlyCallingTimer = Timer(_executeAfter, () {
@@ -32,8 +33,9 @@ class FunctionExecuteLimiter<T> {
     }
   }
 
-  Future<T?> executeFuture(Future<T?> Function() fn) async {
+  Future<T?> executeFuture(Future<T?> Function() fn, {void Function()? onRapidDetected}) async {
     if (_isRapidlyCalling) {
+      if (onRapidDetected != null) onRapidDetected();
       _latestColorUpdate = DateTime.now();
       _isRapidlyCallingTimer?.cancel();
       _valueCompleter?.completeIfWasnt(null);

@@ -138,7 +138,7 @@ class AboutPage extends StatelessWidget {
                         ),
                       if (buildDateDiff != '')
                         Text(
-                          _getDateDifferenceText(),
+                          buildDateDiff,
                           style: context.textTheme.displaySmall,
                         ),
                     ],
