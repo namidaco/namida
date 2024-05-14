@@ -2,8 +2,10 @@
 
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:lrc/lrc.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -39,6 +42,8 @@ class Lyrics {
   bool get _lyricsEnabled => settings.enableLyrics.value;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
+
+  final _lrcSearchManager = _LRCSearchManager();
 
   void _updateWidgets(Lrc? lrc) {
     WakelockController.inst.updateLRCStatus(lrc != null);
@@ -120,6 +125,28 @@ class Lyrics {
     await fc.writeAsString(lyricsText);
   }
 
+  Future<List<LyricsModel>> searchLRCLyricsFromInternet({
+    required TrackExtended? trackExt,
+    String customQuery = '',
+  }) async {
+    if (trackExt == null && customQuery == '') return [];
+    var searchTries = <_LRCSearchDetails>[];
+    if (trackExt != null) {
+      final durS = trackExt.duration;
+      searchTries = [
+        _LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: '', durationSeconds: durS),
+        _LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: trackExt.album, durationSeconds: durS),
+        if (trackExt.artistsList.isNotEmpty) _LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: '', durationSeconds: durS),
+        if (trackExt.artistsList.isNotEmpty) _LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: trackExt.album, durationSeconds: durS),
+      ];
+    }
+
+    return await _lrcSearchManager.search(
+      queries: searchTries,
+      customQuery: customQuery,
+    );
+  }
+
   Future<Lrc?> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
     final fc = lyricsFileCache(track);
 
@@ -152,105 +179,13 @@ class Lyrics {
 
     /// 4. if still null, fetch from database.
     if (source != LyricsSource.local && lrc == null) {
-      final tries = <(String, String, String)>[]; // title, artist, album
-      tries.addAll([
-        (track.title, track.originalArtist, ''),
-        (track.title, track.originalArtist, track.album),
-        if (track.artistsList.isNotEmpty) (track.title, track.artistsList.first, ''),
-        if (track.artistsList.isNotEmpty) (track.title, track.artistsList.first, track.album),
-      ]);
-
-      final lyrics = <LyricsModel>[];
-      for (final t in tries) {
-        lyrics.addAll(
-          await fetchLRCBasedLyricsFromInternet(
-            durationInSeconds: track.duration,
-            title: t.$1,
-            artist: t.$2,
-            album: t.$3,
-          ),
-        );
-        if (lyrics.isNotEmpty) break;
-      }
-
+      final trackExt = track.toTrackExt();
+      final lyrics = await searchLRCLyricsFromInternet(trackExt: trackExt);
       final text = lyrics.firstOrNull?.lyrics;
       if (text != null) await fc.writeAsString(text);
       return text?.parseLRC();
     }
     return lrc;
-  }
-
-  Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
-    String title = '',
-    String artist = '',
-    String album = '',
-    required int durationInSeconds,
-    String customQuery = '',
-  }) async {
-    String formatTime(int seconds) {
-      final duration = Duration(seconds: seconds);
-      final min = duration.inMinutes.remainder(60);
-      final sec = duration.inSeconds.remainder(60);
-      final ms = duration.inMilliseconds.remainder(1000);
-      String pad(int n) => n.toString().padLeft(2, '0');
-      final formattedTime = '${pad(min)}:${pad(sec)}.${pad(ms)}';
-      return formattedTime;
-    }
-
-    final params = [
-      if (title != '') 'track_name=$title',
-      if (artist != '') 'artist_name=${artist.split('(').first.split('[').first}',
-      if (album != '') 'album_name=$album',
-    ].join('&');
-    if (params.isNotEmpty || customQuery != '') {
-      final tail = customQuery == '' ? params : 'q=$customQuery';
-      final urlPre = "https://lrclib.net/api/search?$tail";
-      final url = Uri.parse(Uri.encodeFull(urlPre));
-
-      try {
-        final req = await http.get(url);
-        final fetched = <LyricsModel>[];
-        final jsonLists = (jsonDecode(utf8.decode(req.bodyBytes)) as List<dynamic>?) ?? [];
-        for (final jsonRes in jsonLists) {
-          final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
-          final plain = jsonRes?["plainLyrics"] as String? ?? '';
-          if (syncedLyrics != '') {
-            // lrc
-            final lines = <String>[];
-            if (artist != '') lines.add('[ar:${jsonRes['artistName'] ?? artist}]');
-            if (album != '') lines.add('[al:${jsonRes['albumName'] ?? album}]');
-            if (title != '') lines.add('[ti:${jsonRes['trackName'] ?? title}]');
-            final dur = (jsonRes['duration'] as num?)?.toInt() ?? durationInSeconds;
-            if (dur > 0) lines.add('[length:${formatTime(dur)}]');
-            for (final l in syncedLyrics.split('\n')) {
-              lines.add(l);
-            }
-            final resultedLRC = lines.join('\n');
-            fetched.add(LyricsModel(
-              lyrics: resultedLRC,
-              isInCache: false,
-              fromInternet: true,
-              synced: true,
-              file: null,
-              isEmbedded: false,
-            ));
-          } else if (plain != '') {
-            // txt
-            fetched.add(LyricsModel(
-              lyrics: plain,
-              isInCache: false,
-              fromInternet: true,
-              synced: false,
-              file: null,
-              isEmbedded: false,
-            ));
-          }
-        }
-        fetched.removeDuplicates();
-        return fetched;
-      } catch (_) {}
-    }
-    return [];
   }
 
   Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
@@ -279,6 +214,16 @@ class Lyrics {
   Future<String> _fetchLyricsGoogle({String title = '', String artist = ''}) async {
     if (title == '' && artist == '') return '';
 
+    final possibleQueries = [
+      '$title by $artist lyrics',
+      '${title.split("-").first} by $artist lyrics',
+      '$title by $artist song lyrics',
+    ];
+
+    return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
+  }
+
+  Future<String> _fetchLyricsGoogleIsolate(List<String> searches) async {
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
     const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
@@ -286,10 +231,11 @@ class Lyrics {
     Future<String> requestQuery(String searchText) async {
       http.Response? res;
       try {
-        res = await http.get(Uri.parse(Uri.encodeFull(searchText))).timeout(const Duration(seconds: 10));
+        res = await http.get(Uri.parse(Uri.encodeFull("$url$searchText"))).timeout(const Duration(seconds: 10));
       } catch (_) {}
       if (res == null) return '';
-      final lyricsRes = res.body.split(delimiter1).last.split(delimiter2).first;
+      final body = res.body;
+      final lyricsRes = body.substring(body.indexOf(delimiter1) + delimiter1.length, body.lastIndexOf(delimiter2));
       if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
       if (lyricsRes.contains('please enable javascript on your web browser')) return '';
       if (lyricsRes.contains('Error 500 (Server Error)')) return '';
@@ -299,12 +245,7 @@ class Lyrics {
 
     String lyrics = '';
 
-    final possibleQueries = [
-      '$url$title by $artist lyrics',
-      '$url${title.split("-").first} by $artist lyrics',
-      '$url$title by $artist song lyrics',
-    ];
-    for (final q in possibleQueries) {
+    for (final q in searches) {
       lyrics = await requestQuery(q);
       if (lyrics != '') break;
     }
@@ -316,5 +257,176 @@ class Lyrics {
     // }
     // return result.trim();
     return lyrics;
+  }
+}
+
+class _LRCSearchDetails {
+  final String title, artist, album;
+  final int durationSeconds;
+  const _LRCSearchDetails({required this.title, required this.artist, required this.album, required this.durationSeconds});
+}
+
+class _LRCSearchManager with PortsProvider<SendPort> {
+  _LRCSearchManager();
+
+  Completer<List<LyricsModel>>? _completer;
+
+  /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
+  Future<List<LyricsModel>> search({
+    required List<_LRCSearchDetails> queries,
+    String customQuery = '',
+  }) async {
+    _completer?.completeIfWasnt([]);
+    _completer = Completer<List<LyricsModel>>();
+
+    await initialize();
+    final p = customQuery != '' ? customQuery : queries;
+    await sendPort(p);
+    final res = await _completer?.future ?? [];
+    _completer = null;
+    return res;
+  }
+
+  @override
+  void onResult(dynamic result) {
+    _completer?.completeIfWasnt(result as List<LyricsModel>);
+    _completer = null;
+  }
+
+  @override
+  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
+    return IsolateFunctionReturnBuild(_prepareResourcesAndSearch, port);
+  }
+
+  static void _prepareResourcesAndSearch(SendPort sendPort) async {
+    final recievePort = ReceivePort();
+    sendPort.send(recievePort.sendPort);
+
+    HttpClient? client;
+
+    String substringArtist(String artist) {
+      int maxIndex = -1;
+      maxIndex = artist.indexOf('(');
+      if (maxIndex <= 0) maxIndex = artist.indexOf('[');
+      return maxIndex <= 0 ? artist : artist.substring(0, maxIndex);
+    }
+
+    Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
+      _LRCSearchDetails? details,
+      String customQuery = '',
+      required HttpClient customClient,
+    }) async {
+      if (customQuery == '' && details == null) return [];
+      String formatTime(int seconds) {
+        final duration = Duration(seconds: seconds);
+        final min = duration.inMinutes.remainder(60);
+        final sec = duration.inSeconds.remainder(60);
+        final ms = duration.inMilliseconds.remainder(1000);
+        String pad(int n) => n.toString().padLeft(2, '0');
+        final formattedTime = '${pad(min)}:${pad(sec)}.${pad(ms)}';
+        return formattedTime;
+      }
+
+      String tail = '';
+      if (customQuery != '') {
+        tail = 'q=$customQuery';
+      } else if (details != null) {
+        final params = [
+          if (details.title != '') 'track_name=${details.title}',
+          if (details.artist != '') 'artist_name=${substringArtist(details.artist)}',
+          if (details.album != '') 'album_name=${details.album}',
+        ].join('&');
+        tail = params;
+      }
+
+      if (tail != '') {
+        final urlPre = "https://lrclib.net/api/search?$tail";
+        final url = Uri.parse(Uri.encodeFull(urlPre));
+
+        try {
+          final request = await customClient.getUrl(url);
+          final response = await request.close();
+          final responseBody = await utf8.decodeStream(response.asBroadcastStream());
+          final fetched = <LyricsModel>[];
+          final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
+          for (final jsonRes in jsonLists) {
+            final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
+            final plain = jsonRes?["plainLyrics"] as String? ?? '';
+            if (syncedLyrics != '') {
+              // lrc
+              final lines = <String>[];
+              final artist = jsonRes['artistName'] ?? details?.artist ?? '';
+              final album = jsonRes['albumName'] ?? details?.album ?? '';
+              final title = jsonRes['trackName'] ?? details?.title ?? '';
+              final dur = (jsonRes['duration'] as num?)?.toInt() ?? details?.durationSeconds ?? 0;
+
+              if (artist != '') lines.add('[ar:$artist]');
+              if (album != '') lines.add('[al:$album]');
+              if (title != '') lines.add('[ti:$title]');
+              if (dur > 0) lines.add('[length:${formatTime(dur)}]');
+              for (final l in syncedLyrics.split('\n')) {
+                lines.add(l);
+              }
+              final resultedLRC = lines.join('\n');
+              fetched.add(LyricsModel(
+                lyrics: resultedLRC,
+                isInCache: false,
+                fromInternet: true,
+                synced: true,
+                file: null,
+                isEmbedded: false,
+              ));
+            } else if (plain != '') {
+              // txt
+              fetched.add(LyricsModel(
+                lyrics: plain,
+                isInCache: false,
+                fromInternet: true,
+                synced: false,
+                file: null,
+                isEmbedded: false,
+              ));
+            }
+          }
+          fetched.removeDuplicates();
+          return fetched;
+        } catch (_) {}
+      }
+      return [];
+    }
+
+    // -- start listening
+    StreamSubscription? streamSub;
+    streamSub = recievePort.listen((p) async {
+      if (PortsProvider.isDisposeMessage(p)) {
+        recievePort.close();
+        streamSub?.cancel();
+        return;
+      }
+
+      client?.close(force: true);
+      client = HttpClient();
+      final c = client!; // instance so it can be closed
+
+      var lyrics = <LyricsModel>[];
+      if (p is List<_LRCSearchDetails>) {
+        for (final details in p) {
+          lyrics = await fetchLRCBasedLyricsFromInternet(
+            details: details,
+            customClient: c,
+          );
+          if (lyrics.isNotEmpty) break;
+        }
+      } else if (p is String) {
+        lyrics = await fetchLRCBasedLyricsFromInternet(
+          details: null,
+          customQuery: p,
+          customClient: c,
+        );
+      }
+      sendPort.send(lyrics);
+    });
+
+    sendPort.send(null); // prepared
   }
 }

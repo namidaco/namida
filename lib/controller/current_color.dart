@@ -335,7 +335,7 @@ class CurrentColor {
         _printie("Color Read From File");
         return nc;
       } else {
-        await paletteFile.deleteIfExists();
+        await paletteFile.delete().catchError((_) => File(''));
       }
     }
 

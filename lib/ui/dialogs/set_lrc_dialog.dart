@@ -22,15 +22,16 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showLRCSetDialog(Track track, Color colorScheme) async {
+void showLRCSetDialog(Track trackPre, Color colorScheme) async {
+  final track = trackPre.toTrackExt();
   final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
 
   final embedded = track.lyrics;
-  final cachedTxt = Lyrics.inst.lyricsFileText(track);
-  final cachedLRC = Lyrics.inst.lyricsFileCache(track);
-  final localLRCFiles = Lyrics.inst.lyricsFilesDevice(track);
+  final cachedTxt = Lyrics.inst.lyricsFileText(trackPre);
+  final cachedLRC = Lyrics.inst.lyricsFileCache(trackPre);
+  final localLRCFiles = Lyrics.inst.lyricsFilesDevice(trackPre);
 
   if (embedded != '') {
     availableLyrics.add(
@@ -84,8 +85,8 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
   }
 
   void updateForCurrentTrack() {
-    if (track == Player.inst.nowPlayingTrack) {
-      Lyrics.inst.updateLyrics(track);
+    if (trackPre == Player.inst.nowPlayingTrack) {
+      Lyrics.inst.updateLyrics(trackPre);
     }
   }
 
@@ -195,7 +196,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
                   language: lrc.language,
                 );
                 final lyricsString = newLRC.format();
-                await Lyrics.inst.saveLyricsToCache(track, newLRC.format(), true);
+                await Lyrics.inst.saveLyricsToCache(trackPre, newLRC.format(), true);
                 availableLyrics.remove(l);
                 availableLyrics.add(
                   LyricsModel(
@@ -283,11 +284,8 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
   void onSearchTrigger([String? query]) async {
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
-    final lyrics = await Lyrics.inst.fetchLRCBasedLyricsFromInternet(
-      durationInSeconds: track.duration,
-      title: track.title,
-      artist: track.originalArtist,
-      album: track.album,
+    final lyrics = await Lyrics.inst.searchLRCLyricsFromInternet(
+      trackExt: track,
       customQuery: query ?? searchController.text,
     );
     if (lyrics.isNotEmpty) fetchedLyrics.addAll(lyrics);
@@ -323,7 +321,7 @@ void showLRCSetDialog(Track track, Color colorScheme) async {
               onPressed: () async {
                 final selected = selectedLyrics.value;
                 if (selected != null) {
-                  await Lyrics.inst.saveLyricsToCache(track, selected.lyrics, selected.synced);
+                  await Lyrics.inst.saveLyricsToCache(trackPre, selected.lyrics, selected.synced);
                   updateForCurrentTrack();
                 }
                 NamidaNavigator.inst.closeDialog();

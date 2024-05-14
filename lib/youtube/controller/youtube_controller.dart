@@ -1727,13 +1727,15 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
     final clients = <String, HttpClient?>{}; // filePath
 
-    recievePort.listen((p) async {
+    StreamSubscription? streamSub;
+    streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
         for (final client in clients.values) {
           client?.close(force: true);
         }
         clients.clear();
         recievePort.close();
+        streamSub?.cancel();
         return;
       } else {
         p as Map;

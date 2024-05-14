@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit_config.dart';
 import 'package:ffmpeg_kit_flutter_min/ffprobe_kit.dart';
@@ -253,7 +252,6 @@ class NamidaFFMPEG {
   Future<void> fixYTDLPBigThumbnailSize({required List<String> directoriesPaths, bool recursive = true}) async {
     if (!await requestManageStoragePermission()) return;
 
-    final dio = Dio();
     final allFiles = <FileSystemEntity>[];
     int remainingDirsLength = directoriesPaths.length;
     final completer = Completer<void>();
@@ -310,7 +308,6 @@ class NamidaFFMPEG {
         );
       }
     }
-    dio.close(force: true);
     currentOperations[OperationType.ytdlpThumbnailFix]!.value.currentFilePath = null;
   }
 
