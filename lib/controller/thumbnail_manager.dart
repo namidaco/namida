@@ -2,22 +2,26 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
-import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:html/parser.dart' as parser;
 import 'package:http/http.dart' as http;
 import 'package:newpipeextractor_dart/utils/httpClient.dart';
 import 'package:queue/queue.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class ThumbnailManager {
   static final ThumbnailManager inst = ThumbnailManager._internal();
   ThumbnailManager._internal();
+
+  final _thumbnailDownloader = _YTThumbnailDownloadManager();
 
   static String getPathToYTImage(String? id) {
     String getPath(String prefix) => "${AppDirs.YT_THUMBNAILS}$prefix$id.png";
@@ -33,6 +37,7 @@ class ThumbnailManager {
   File? imageUrlToCacheFile({
     required String? id,
     required String? url,
+    bool isTemp = false,
   }) {
     String? finalUrl = url;
     final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
@@ -42,11 +47,13 @@ class ThumbnailManager {
       if (finalUrl != null) finalUrl = '${finalUrl.split('/').last.split('=').first}.png';
     }
 
+    final dirPrefix = isTemp ? 'temp/' : '';
+
     final file = id != null && id != ''
-        ? File("${AppDirs.YT_THUMBNAILS}$id.png")
+        ? File("${AppDirs.YT_THUMBNAILS}$dirPrefix$id.png")
         : finalUrl == null
             ? null
-            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$finalUrl");
+            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix$finalUrl");
 
     return file;
   }
@@ -61,192 +68,356 @@ class ThumbnailManager {
     return s;
   }
 
-  File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl}) {
+  File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl, bool isTemp = false}) {
     if (id == null && channelUrl == null) return null;
 
-    final file = imageUrlToCacheFile(id: id, url: channelUrl);
+    final file = imageUrlToCacheFile(id: id, url: channelUrl, isTemp: isTemp);
 
     if (file != null && file.existsSync()) return file;
     return null;
   }
 
-  Future<File?> _saveChannelThumbnailToStorage({
-    required File file,
-    required Uint8List? bytes,
-  }) async {
-    if (bytes != null) await file.writeAsBytes(bytes);
-    return file;
-  }
-
-  Future<File?> saveThumbnailToStorage({
-    required Uint8List? bytes,
+  Future<File?> extractVideoThumbnailAndSave({
     required String? videoPath,
     required bool isLocal,
     required String idOrFileNameWOExt,
     required bool isExtracted, // set to false if its a youtube thumbnail.
   }) async {
-    if (bytes == null && videoPath == null) return null;
+    if (videoPath == null) return null;
 
     final prefix = !isLocal && isExtracted ? 'EXT_' : '';
     final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
     final file = File("$dir$prefix$idOrFileNameWOExt.png");
-    if (bytes != null) {
-      // if pure yt thumbnail delete the extracted version
-      if (!isExtracted) {
-        await File("${AppDirs.YT_THUMBNAILS}EXT_$idOrFileNameWOExt.png").deleteIfExists();
-      }
-      return await file.writeAsBytes(bytes);
-    } else if (videoPath != null) {
-      await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
-      final fileExists = await file.exists();
-      return fileExists ? file : null;
-    }
-    return null;
+    await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
+    final fileExists = await file.exists();
+    return fileExists ? file : null;
   }
 
   Future<File?> getYoutubeThumbnailAndCache({
     String? id,
     String? channelUrlOrID,
     bool isImportantInCache = true,
-    void Function(Uint8List? bytes)? bytesIfWontWriteToFile,
     bool hqChannelImage = false,
+    VoidCallback? onNotFound,
   }) async {
     if (id == null && channelUrlOrID == null) return null;
 
-    void updateLastAccessed(File? file) async {
-      await file?.setLastAccessed(DateTime.now()).catchError((_) {});
-    }
+    final isTemp = isImportantInCache ? false : true;
 
-    final file = imageUrlToCacheFile(id: id, url: channelUrlOrID);
+    final file = imageUrlToCacheFile(id: id, url: channelUrlOrID, isTemp: isTemp);
     if (file == null) return null;
-
-    if (file.existsSync() == true) {
-      _printie('Downloading Thumbnail Already Exists');
-      if (isImportantInCache) updateLastAccessed(file);
-      return file;
-    }
-
-    _printie('Downloading Thumbnail Started');
 
     if (channelUrlOrID != null && hqChannelImage) {
       final res = await _getChannelAvatarUrlIsolate.thready(channelUrlOrID);
       if (res != null) channelUrlOrID = res;
     }
 
-    final bytes = await getYoutubeThumbnailAsBytes(
-      youtubeId: id,
-      url: channelUrlOrID,
-      keepInMemory: isImportantInCache ? false : true, // important in cache will write to file so we dont need to keep in memory
+    final itemId = file.path.getFilenameWOExt;
+    final downloaded = await _getYoutubeThumbnail(
+      itemId: itemId,
+      urls: channelUrlOrID == null ? null : [channelUrlOrID],
+      isVideo: id != null,
+      isImportantInCache: isImportantInCache,
+      destinationFile: file,
+      isTemp: isTemp,
+      forceRequest: false,
+      lowerResYTID: false,
+      onNotFound: onNotFound,
     );
-    _printie('Downloading Thumbnail Finished with ${bytes?.length} bytes');
-    if (!isImportantInCache) {
-      bytesIfWontWriteToFile?.call(bytes);
+
+    return downloaded;
+  }
+
+  Future<File?> getLowResYoutubeVideoThumbnail(String? videoId, {bool useHighQualityIfEnoughListens = true, VoidCallback? onNotFound}) async {
+    if (videoId == null) return null;
+
+    bool isTemp = true;
+    if (useHighQualityIfEnoughListens) {
+      final listens = YoutubeHistoryController.inst.topTracksMapListens[videoId]?.length ?? 0;
+      if (listens >= 10) isTemp = false; // fetch full res if listens >= 10
+    }
+    final bool lowerResYTID = isTemp;
+
+    final file = imageUrlToCacheFile(id: videoId, url: null, isTemp: isTemp);
+    if (file == null) return null;
+    final downloaded = await _getYoutubeThumbnail(
+      itemId: videoId,
+      isVideo: true,
+      isImportantInCache: false,
+      destinationFile: file,
+      isTemp: isTemp,
+      forceRequest: false,
+      lowerResYTID: lowerResYTID,
+      onNotFound: onNotFound,
+    );
+
+    return downloaded;
+  }
+
+  void closeThumbnailClients(String itemId) {
+    _thumbnailDownloader.stopDownload(id: itemId);
+  }
+
+  Future<File?> _getYoutubeThumbnail({
+    required String itemId,
+    List<String>? urls,
+    required bool isVideo,
+    required bool lowerResYTID,
+    required bool isTemp,
+    required bool forceRequest,
+    required bool isImportantInCache,
+    required File destinationFile,
+    required VoidCallback? onNotFound,
+  }) async {
+    final links = <String>[];
+    if (isVideo && (urls == null || urls.isEmpty)) {
+      final yth = YTThumbnail(itemId);
+      if (lowerResYTID) {
+        links.addAll(yth.allQualitiesExceptHighest);
+      } else {
+        links.addAll(yth.allQualitiesByHighest);
+      }
+    }
+    if (urls != null) links.addAll(urls);
+    if (links.isEmpty) return null;
+
+    final downloaded = await _thumbnailDownloader.download(
+      urls: links,
+      id: itemId,
+      forceRequest: forceRequest,
+      isImportantInCache: isImportantInCache,
+      destinationFile: destinationFile,
+      isTemp: isTemp,
+      onNotFound: onNotFound,
+    );
+    return downloaded;
+  }
+}
+
+class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
+  final _downloadCompleters = <String, Completer<File?>?>{}; // item id
+  final _shouldRetry = <String, bool>{}; // item id
+  final _notFoundThumbnails = <String, bool?>{}; // item id
+
+  Future<File?> download({
+    required List<String> urls,
+    required String id,
+    bool forceRequest = false,
+    required bool isTemp,
+    required bool isImportantInCache,
+    required File destinationFile,
+    required VoidCallback? onNotFound,
+  }) async {
+    if (_notFoundThumbnails[id] == true) {
+      if (onNotFound != null) onNotFound();
       return null;
     }
-
-    final savedFileFuture = id != null
-        ? saveThumbnailToStorage(
-            videoPath: null,
-            bytes: bytes,
-            isLocal: false,
-            idOrFileNameWOExt: id,
-            isExtracted: false,
-          )
-        : _saveChannelThumbnailToStorage(
-            file: file,
-            bytes: bytes,
-          );
-
-    final savedFile = await savedFileFuture;
-    updateLastAccessed(savedFile);
-    return savedFile;
-  }
-
-  void closeThumbnailClients(List<String?> links) {
-    links.loop((link, _) {
-      _runningRequestsClients[link]?.close(force: true);
-      _runningRequestsClients.remove(link);
-    });
-  }
-
-  /// This prevents re-requesting the same url.
-  static final _runningRequestsClients = <String, Dio>{};
-  static final _runningRequestsMap = <String, Completer<Uint8List?>?>{};
-
-  final _thumbQueue = Queue(parallel: 4);
-  Future<Uint8List?> getYoutubeThumbnailAsBytes({
-    String? youtubeId,
-    String? url,
-    bool lowerResYTID = false,
-    required bool keepInMemory,
-  }) async {
-    if (youtubeId == null && url == null) return null;
-
-    final links = url != null
-        ? [url]
-        : lowerResYTID
-            ? [YTThumbnail(youtubeId!).mqdefault]
-            : YTThumbnail(youtubeId!).allQualitiesByHighest;
-
-    for (final link in links) {
-      if (_runningRequestsMap[link] != null) {
-        _printie('getYoutubeThumbnailAsBytes: Same link is being requested right now, ignoring');
-        return await _runningRequestsMap[link]!.future; // return and not continue, cuz if requesting hq image, continue will make it request lower one
-      }
-
-      _runningRequestsClients[link] = Dio();
-      (Uint8List, int)? requestRes;
-
-      // _runningRequestsMap.optimizedAdd([MapEntry(link, Completer<Uint8List?>())], 600); // most images are <~20kb so =12MB
-      _runningRequestsMap[link] ??= Completer<Uint8List?>(); // 600 - most images are <~20kb so =12MB
-
-      await _thumbQueue.add(() async {
-        try {
-          final client = _runningRequestsClients[link];
-          if (client != null) {
-            final res = await client.get<Uint8List?>(
-              link,
-              options: Options(responseType: ResponseType.bytes, validateStatus: (status) => true),
-            );
-            requestRes = (res.data ?? Uint8List.fromList([]), res.statusCode ?? 404);
-          }
-        } catch (e) {
-          _printie('getYoutubeThumbnailAsBytes: Error getting thumbnail at $link, trying again with lower quality.\n$e', isError: true);
-        }
-      });
-
-      // -- validation --
-      final req = requestRes;
-      if (req != null) {
-        final data = req.$1;
-        if (data.isNotEmpty && req.$2 != 404) {
-          _runningRequestsMap[link]?.completeIfWasnt(data);
-          if (!keepInMemory) _runningRequestsMap.remove(link);
-          closeThumbnailClients([link]);
-          return data;
-        } else {
-          _runningRequestsMap[link]?.completeIfWasnt(null);
-          _runningRequestsMap.remove(link); // removing since it failed
-          closeThumbnailClients([link]);
-          continue;
-        }
+    if (forceRequest == false && _downloadCompleters[id] != null) {
+      final res = await _downloadCompleters[id]!.future;
+      if (res != null || _shouldRetry[id] != true) {
+        return res;
       }
     }
-    return null;
+    _downloadCompleters[id]?.completeIfWasnt(null);
+    _downloadCompleters[id] = Completer<File?>();
+
+    final p = {
+      'urls': urls,
+      'id': id,
+      'forceRequest': forceRequest,
+      'isImportantInCache': isImportantInCache,
+      'isTemp': isTemp,
+      'destinationFile': destinationFile,
+    };
+    await initialize();
+    await sendPort(p);
+    final res = await _downloadCompleters[id]?.future;
+
+    if (_notFoundThumbnails[id] == true) {
+      if (onNotFound != null) onNotFound();
+      return null;
+    }
+    return res;
   }
 
-  // static Future<(Uint8List, int)> _httpGetIsolate(String link) async {
-  //   final requestRes = await http.get(Uri.parse(link));
-  //   return (requestRes.bodyBytes, requestRes.statusCode);
-  // }
-
-  void _printie(
-    dynamic message, {
-    bool isError = false,
-    bool dumpshit = false,
-  }) {
-    if (logsEnabled) printy(message, isError: isError, dumpshit: dumpshit);
+  Future<void> stopDownload({required String? id}) async {
+    if (id == null) return;
+    _onFileFinish(id, null, null, true);
+    final p = {'id': id, 'stop': true};
+    await sendPort(p);
   }
 
-  bool logsEnabled = false;
+  static Future<void> _prepareDownloadResources(SendPort sendPort) async {
+    final recievePort = ReceivePort();
+    sendPort.send(recievePort.sendPort);
+
+    final clients = <String, Map<String, HttpClient>?>{}; // itemId: {urlPath: httpClient}
+
+    final thumbQueue = Queue(parallel: 12); // queue not only handle performance, but also help preventing RST packets
+
+    const bool deleteOldExtracted = true;
+
+    void updateLastAccessed(File file) {
+      try {
+        file.setLastAccessed(DateTime.now());
+      } catch (_) {}
+    }
+
+    Future<void> onThumbRequest(Map p) async {
+      final stop = p['stop'] as bool?;
+      final id = p['id'] as String;
+
+      if (stop == true) {
+        final clientsForId = clients[id]?.values;
+        if (clientsForId != null) {
+          for (final client in clientsForId) {
+            client.close(force: true);
+          }
+          clients[id] = null;
+        }
+      } else {
+        final urls = p['urls'] as List<String>;
+        final forceRequest = p['forceRequest'] as bool? ?? false;
+        final isImportantInCache = p['isImportantInCache'] as bool? ?? false;
+        final isTemp = p['isTemp'] as bool? ?? false;
+        final destinationFile = p['destinationFile'] as File;
+
+        if (forceRequest == true && destinationFile.existsSync()) {
+          final res = _YTThumbnailDownloadResult(
+            url: null,
+            urlPath: null,
+            itemId: id,
+            file: destinationFile,
+            isTempFile: isTemp,
+            aborted: false,
+            notfound: false,
+          );
+          if (isImportantInCache) updateLastAccessed(destinationFile);
+          return sendPort.send(res);
+        }
+
+        clients[id] ??= {};
+        for (final url in urls) {
+          final urlPath = url.substring(url.lastIndexOf('/') + 1);
+          clients[id]?[urlPath] = HttpClient();
+
+          final destinationFileTemp = File("${destinationFile.path}.temp");
+          destinationFileTemp.createSync(recursive: true);
+          final fileStream = destinationFileTemp.openWrite(mode: FileMode.write);
+          final downloadedRes = await thumbQueue.add(() async {
+            final client = clients[id]?[urlPath];
+
+            Future<void> onDownloadFinish() async {
+              try {
+                client?.close(force: true);
+                clients[id] = null;
+              } catch (_) {}
+              try {
+                await fileStream.flush();
+                await fileStream.close(); // closing file.
+              } catch (_) {}
+            }
+
+            if (client == null) {
+              // -- client closed, return true to break the loop
+              onDownloadFinish();
+              final res = _YTThumbnailDownloadResult(url: url, urlPath: urlPath, itemId: id, file: destinationFile, isTempFile: isTemp, aborted: true, notfound: null);
+              return res;
+            }
+
+            try {
+              final request = await client.getUrl(Uri.parse(url));
+              final response = await request.close();
+              final bool notfound = response.statusCode == 404;
+              File? newFile;
+              if (!notfound) {
+                final downloadStream = response.asBroadcastStream();
+                await fileStream.addStream(downloadStream);
+                newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
+                if (deleteOldExtracted) {
+                  File("${destinationFile.parent}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
+                }
+              }
+
+              final res = _YTThumbnailDownloadResult(url: url, urlPath: urlPath, itemId: id, file: newFile, isTempFile: isTemp, aborted: false, notfound: notfound);
+              return res;
+            } catch (_) {
+              return null;
+            } finally {
+              onDownloadFinish();
+            }
+          });
+
+          if (downloadedRes != null) {
+            sendPort.send(downloadedRes); // break loop and return
+            return;
+          }
+        }
+
+        final res = _YTThumbnailDownloadResult(url: null, urlPath: null, itemId: id, file: null, isTempFile: isTemp, aborted: true, notfound: null);
+        sendPort.send(res); // if nothing succeeded, return the latest failed res
+      }
+    }
+
+    StreamSubscription? streamSub;
+    streamSub = recievePort.listen((p) {
+      if (PortsProvider.isDisposeMessage(p)) {
+        for (final clientsMap in clients.values) {
+          final clientsToClose = clientsMap?.values;
+          if (clientsToClose != null) {
+            for (final client in clientsToClose) {
+              client.close(force: true);
+            }
+          }
+        }
+        clients.clear();
+        recievePort.close();
+        streamSub?.cancel();
+        return;
+      } else {
+        onThumbRequest(p);
+      }
+    });
+
+    sendPort.send(null); // prepared
+  }
+
+  @override
+  void onResult(dynamic result) {
+    if (result is _YTThumbnailDownloadResult) {
+      _onFileFinish(result.itemId, result.file, result.notfound, result.aborted);
+    }
+  }
+
+  @override
+  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
+    return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
+  }
+
+  void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted) {
+    if (notfound != null) _notFoundThumbnails[itemId] = notfound;
+    _downloadCompleters[itemId].completeIfWasnt(downloadedFile);
+    _downloadCompleters[itemId] = null;
+    _shouldRetry[itemId] = aborted;
+  }
+}
+
+class _YTThumbnailDownloadResult {
+  final String? url;
+  final String? urlPath;
+  final String itemId;
+  final File? file;
+  final bool isTempFile;
+  final bool aborted;
+  final bool? notfound;
+
+  const _YTThumbnailDownloadResult({
+    required this.url,
+    required this.urlPath,
+    required this.itemId,
+    required this.file,
+    required this.isTempFile,
+    required this.aborted,
+    required this.notfound,
+  });
 }

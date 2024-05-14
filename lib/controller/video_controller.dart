@@ -521,9 +521,8 @@ class VideoController {
         try {
           final v = await NamidaFFMPEG.inst.extractMetadata(l);
           if (v != null) {
-            ThumbnailManager.inst.saveThumbnailToStorage(
+            ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: l,
-              bytes: null,
               isLocal: true,
               idOrFileNameWOExt: l.getFilenameWOExt,
               isExtracted: true,
@@ -778,9 +777,8 @@ class VideoController {
         try {
           final v = await NamidaFFMPEG.inst.extractMetadata(path);
           if (v != null) {
-            ThumbnailManager.inst.saveThumbnailToStorage(
+            ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: path,
-              bytes: null,
               isLocal: true,
               idOrFileNameWOExt: path.getFilenameWOExt,
               isExtracted: true,
@@ -812,8 +810,7 @@ class VideoController {
     required String? id,
     required String path,
   }) async {
-    ThumbnailManager.inst.saveThumbnailToStorage(
-      bytes: null,
+    ThumbnailManager.inst.extractVideoThumbnailAndSave(
       videoPath: path,
       isLocal: id == null,
       idOrFileNameWOExt: id ?? path.getFilenameWOExt,

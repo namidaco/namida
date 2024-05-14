@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,7 +14,6 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeThumbnail extends StatefulWidget {
   final String? channelUrl;
@@ -81,13 +79,12 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
   String? imagePath;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
+  final _thumbnailNotFound = false.obs;
 
   bool get canFetchYTImage => widget.videoId != null || widget.channelUrl != null;
   bool get canFetchImage => widget.localImagePath != null || canFetchYTImage;
 
   Timer? _dontTouchMeImFetchingThumbnail;
-
-  Uint8List? imageBytes;
 
   @override
   void initState() {
@@ -97,11 +94,11 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   @override
   void dispose() {
-    final allLinks = [widget.channelUrl];
-    if (widget.videoId != null) allLinks.addAll(YTThumbnail(widget.videoId!).allQualitiesByHighest);
-    ThumbnailManager.inst.closeThumbnailClients(allLinks);
+    if (widget.videoId != null) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!);
+    if (widget.channelUrl != null) ThumbnailManager.inst.closeThumbnailClients(widget.channelUrl!);
     _dontTouchMeImFetchingThumbnail?.cancel();
     _dontTouchMeImFetchingThumbnail = null;
+    _thumbnailNotFound.close();
     super.dispose();
   }
 
@@ -113,53 +110,52 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
     imagePath = widget.localImagePath;
 
+    void onThumbnailNotFound() => _thumbnailNotFound.value = true;
+
     if (imagePath == null) {
       final fetchHQChImg = widget.channelIDForHQImage != '';
       final finalChAvatarUrl = fetchHQChImg ? widget.channelIDForHQImage : widget.channelUrl;
+      final videoId = widget.videoId;
 
       File? res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
-        id: widget.videoId,
+        id: videoId,
         channelUrl: finalChAvatarUrl,
+        isTemp: false,
       );
-      imagePath = res?.path;
+      if (res == null && (!widget.isImportantInCache || widget.preferLowerRes)) {
+        res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
+          id: videoId,
+          channelUrl: finalChAvatarUrl,
+          isTemp: true,
+        );
+      }
 
       if (res == null) {
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems()) return;
-        if (widget.videoId != null) {
+        if (videoId != null) {
           // -- for video:
           // --- isImportantInCache -> fetch to file
-          // --- !isImportantInCache -> fetch lowres bytes only
-          if (widget.isImportantInCache) {
+          // --- !isImportantInCache -> fetch lowres temp file only
+          if (widget.isImportantInCache && !widget.preferLowerRes) {
             res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-              id: widget.videoId,
-              channelUrlOrID: finalChAvatarUrl,
+              id: videoId,
+              channelUrlOrID: null,
               hqChannelImage: fetchHQChImg,
               isImportantInCache: true,
-              bytesIfWontWriteToFile: (bytes) {
-                if (mounted) setState(() => imageBytes = bytes);
-              },
+              onNotFound: onThumbnailNotFound,
             );
           } else {
-            final lowerRes = await ThumbnailManager.inst.getYoutubeThumbnailAsBytes(
-              youtubeId: widget.videoId,
-              lowerResYTID: true,
-              keepInMemory: true,
-            );
-            if (lowerRes != null && lowerRes.isNotEmpty) {
-              if (mounted) setState(() => imageBytes = lowerRes);
-            }
+            res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId, onNotFound: onThumbnailNotFound);
           }
         } else {
           // for channels/playlists -> default
           res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-            id: widget.videoId,
+            id: null,
             channelUrlOrID: finalChAvatarUrl,
             hqChannelImage: fetchHQChImg,
             isImportantInCache: widget.isImportantInCache,
-            bytesIfWontWriteToFile: (bytes) {
-              if (mounted) setState(() => imageBytes = bytes);
-            },
+            onNotFound: onThumbnailNotFound,
           );
         }
       }
@@ -167,8 +163,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       widget.onImageReady?.call(res);
 
       // -- only put the image if bytes are NOT valid, or if specified by parent
-      if (imagePath == null && (!widget.preferLowerRes || (imageBytes?.isEmpty ?? true))) {
-        if (mounted) setState(() => imagePath = res?.path);
+      final newPath = res?.path;
+      if (imagePath != newPath) {
+        if (mounted) setState(() => imagePath = newPath);
       }
     }
 
@@ -184,7 +181,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     }
   }
 
-  Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${widget.channelIDForHQImage}${imageBytes?.length}$imagePath${widget.smallBoxText}");
+  Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.channelUrl}${widget.channelIDForHQImage}$imagePath${widget.smallBoxText}");
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +201,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
         fadeMilliSeconds: 300,
-        bytes: imageBytes,
         path: imagePath,
         height: widget.height,
         width: widget.width,
@@ -265,7 +261,29 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
                         ),
                 ),
               ),
-            )
+            ),
+          Obx(
+            () => _thumbnailNotFound.value
+                ? Positioned(
+                    top: 0.0,
+                    right: 0.0,
+                    child: Container(
+                      clipBehavior: Clip.hardEdge,
+                      margin: const EdgeInsets.all(2.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      child: Icon(
+                        Broken.danger,
+                        size: 12.0,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
+          )
         ],
         displayIcon: widget.displayFallbackIcon,
       ),
