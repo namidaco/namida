@@ -10,6 +10,8 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' hide EnumUtils;
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/http_manager.dart';
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -1725,15 +1727,17 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final clients = <String, HttpClient?>{}; // filePath
+    final httpManager = HttpMultiRequestManager();
+    final requesters = <String, HttpClientResponseWrapper?>{}; // filePath
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
-        for (final client in clients.values) {
-          client?.close(force: true);
+        for (final requester in requesters.values) {
+          requester?.close();
         }
-        clients.clear();
+        requesters.clear();
+        httpManager.closeClients();
         recievePort.close();
         streamSub?.cancel();
         return;
@@ -1745,8 +1749,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           if (files != null) {
             for (final file in files) {
               final path = file.path;
-              clients[path]?.close(force: true);
-              clients[path] = null;
+              requesters[path]?.close();
+              requesters[path] = null;
             }
           }
         } else {
@@ -1757,53 +1761,55 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
           final progressPort = p['progressPort'] as SendPort;
 
-          clients[filePath] = HttpClient();
-          final client = clients[filePath]!;
+          requesters[filePath] = httpManager.getWrapper();
           final file = File(filePath);
           file.createSync(recursive: true);
           final fileStream = file.openWrite(mode: FileMode.append);
-          try {
-            final request = await client.getUrl(Uri.parse(url));
-            request.headers.set('range', 'bytes=$downloadStartRange-');
-            final response = await request.close();
-            final downloadStream = response.asBroadcastStream();
+          await httpManager.execute(() async {
+            final requester = requesters[filePath];
+            if (requester == null) return; // always non null tho
+            try {
+              final headers = {'range': 'bytes=$downloadStartRange-'};
+              final response = await requester.getUrl(Uri.parse(url), headers: headers);
+              final downloadStream = response.asBroadcastStream();
 
-            await for (final data in downloadStream) {
-              fileStream.add(data);
-              progressPort.send(data.length);
-            }
-            if (moveTo != null && moveToRequiredBytes != null) {
-              try {
-                final fileStats = file.statSync();
-                const allowance = 1024; // 1KB allowance
-                if (fileStats.size >= moveToRequiredBytes - allowance) {
-                  File? newFile;
-                  try {
-                    newFile = file.renameSync(moveTo);
-                  } catch (_) {
+              await for (final data in downloadStream) {
+                fileStream.add(data);
+                progressPort.send(data.length);
+              }
+              if (moveTo != null && moveToRequiredBytes != null) {
+                try {
+                  final fileStats = file.statSync();
+                  const allowance = 1024; // 1KB allowance
+                  if (fileStats.size >= moveToRequiredBytes - allowance) {
+                    File? newFile;
                     try {
-                      newFile = file.copySync(moveTo);
-                      if (newFile.existsSync() && newFile.lengthSync() >= moveToRequiredBytes - allowance) {
-                        file.deleteSync();
-                      }
-                    } catch (_) {}
+                      newFile = file.renameSync(moveTo);
+                    } catch (_) {
+                      try {
+                        newFile = file.copySync(moveTo);
+                        if (newFile.existsSync() && newFile.lengthSync() >= moveToRequiredBytes - allowance) {
+                          file.deleteSync();
+                        }
+                      } catch (_) {}
+                    }
                   }
-                }
+                } catch (_) {}
+              }
+              return sendPort.send(MapEntry(filePath, true));
+            } catch (e) {
+              return sendPort.send(MapEntry(filePath, false));
+            } finally {
+              try {
+                requester.close();
+                requesters[filePath] = null;
+              } catch (_) {}
+              try {
+                await fileStream.flush();
+                await fileStream.close(); // closing file.
               } catch (_) {}
             }
-            return sendPort.send(MapEntry(filePath, true));
-          } catch (e) {
-            return sendPort.send(MapEntry(filePath, false));
-          } finally {
-            try {
-              client.close(force: true);
-              clients[filePath] = null;
-            } catch (_) {}
-            try {
-              await fileStream.flush();
-              await fileStream.close(); // closing file.
-            } catch (_) {}
-          }
+          });
         }
       }
     });

@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:html/parser.dart' as parser;
 import 'package:http/http.dart' as http;
 import 'package:newpipeextractor_dart/utils/httpClient.dart';
-import 'package:queue/queue.dart';
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/http_manager.dart';
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -251,9 +252,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final clients = <String, Map<String, HttpClient>?>{}; // itemId: {urlPath: httpClient}
-
-    final thumbQueue = Queue(parallel: 12); // queue not only handle performance, but also help preventing RST packets
+    final httpManager = HttpMultiRequestManager();
+    final requesters = <String, Map<String, HttpClientResponseWrapper>?>{}; // itemId: {urlPath: HttpClientResponseWrapper}
 
     const bool deleteOldExtracted = true;
 
@@ -268,12 +268,12 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       final id = p['id'] as String;
 
       if (stop == true) {
-        final clientsForId = clients[id]?.values;
-        if (clientsForId != null) {
-          for (final client in clientsForId) {
-            client.close(force: true);
+        final requestersForId = requesters[id]?.values;
+        if (requestersForId != null) {
+          for (final requester in requestersForId) {
+            requester.close();
           }
-          clients[id] = null;
+          requesters[id] = null;
         }
       } else {
         final urls = p['urls'] as List<String>;
@@ -296,21 +296,21 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
           return sendPort.send(res);
         }
 
-        clients[id] ??= {};
+        requesters[id] ??= {};
         for (final url in urls) {
           final urlPath = url.substring(url.lastIndexOf('/') + 1);
-          clients[id]?[urlPath] = HttpClient();
+          requesters[id]?[urlPath] = httpManager.getWrapper();
 
           final destinationFileTemp = File("${destinationFile.path}.temp");
           destinationFileTemp.createSync(recursive: true);
           final fileStream = destinationFileTemp.openWrite(mode: FileMode.write);
-          final downloadedRes = await thumbQueue.add(() async {
-            final client = clients[id]?[urlPath];
+          final downloadedRes = await httpManager.executeQueued(() async {
+            final requester = requesters[id]?[urlPath];
 
             Future<void> onDownloadFinish() async {
               try {
-                client?.close(force: true);
-                clients[id] = null;
+                requester?.close();
+                requesters[id] = null;
               } catch (_) {}
               try {
                 await fileStream.flush();
@@ -318,7 +318,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
               } catch (_) {}
             }
 
-            if (client == null) {
+            if (requester == null || requester.isClosed) {
               // -- client closed, return true to break the loop
               onDownloadFinish();
               final res = _YTThumbnailDownloadResult(url: url, urlPath: urlPath, itemId: id, file: destinationFile, isTempFile: isTemp, aborted: true, notfound: null);
@@ -326,8 +326,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
             }
 
             try {
-              final request = await client.getUrl(Uri.parse(url));
-              final response = await request.close();
+              final response = await requester.getUrl(Uri.parse(url));
               final bool notfound = response.statusCode == 404;
               File? newFile;
               if (!notfound) {
@@ -362,15 +361,16 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
-        for (final clientsMap in clients.values) {
-          final clientsToClose = clientsMap?.values;
-          if (clientsToClose != null) {
-            for (final client in clientsToClose) {
-              client.close(force: true);
+        for (final requestersMap in requesters.values) {
+          final requestersToClose = requestersMap?.values;
+          if (requestersToClose != null) {
+            for (final requester in requestersToClose) {
+              requester.close();
             }
           }
         }
-        clients.clear();
+        requesters.clear();
+        httpManager.closeClients();
         recievePort.close();
         streamSub?.cancel();
         return;

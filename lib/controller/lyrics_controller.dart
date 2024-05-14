@@ -14,6 +14,7 @@ import 'package:lrc/lrc.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -302,7 +303,9 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    HttpClient? client;
+    final mainClient = HttpClient();
+
+    HttpClientResponseWrapper? clientResponse;
 
     String substringArtist(String artist) {
       int maxIndex = -1;
@@ -314,7 +317,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
       _LRCSearchDetails? details,
       String customQuery = '',
-      required HttpClient customClient,
+      required HttpClientResponseWrapper requester,
     }) async {
       if (customQuery == '' && details == null) return [];
       String formatTime(int seconds) {
@@ -344,8 +347,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         final url = Uri.parse(Uri.encodeFull(urlPre));
 
         try {
-          final request = await customClient.getUrl(url);
-          final response = await request.close();
+          final response = await requester.getUrl(url);
           final responseBody = await utf8.decodeStream(response.asBroadcastStream());
           final fetched = <LyricsModel>[];
           final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
@@ -399,21 +401,21 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
+        mainClient.close(force: true);
         recievePort.close();
         streamSub?.cancel();
         return;
       }
-
-      client?.close(force: true);
-      client = HttpClient();
-      final c = client!; // instance so it can be closed
+      clientResponse?.close();
+      clientResponse = HttpClientResponseWrapper(mainClient);
+      final c = clientResponse!; // instance so it can be closed
 
       var lyrics = <LyricsModel>[];
       if (p is List<_LRCSearchDetails>) {
         for (final details in p) {
           lyrics = await fetchLRCBasedLyricsFromInternet(
             details: details,
-            customClient: c,
+            requester: c,
           );
           if (lyrics.isNotEmpty) break;
         }
@@ -421,7 +423,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         lyrics = await fetchLRCBasedLyricsFromInternet(
           details: null,
           customQuery: p,
-          customClient: c,
+          requester: c,
         );
       }
       sendPort.send(lyrics);
