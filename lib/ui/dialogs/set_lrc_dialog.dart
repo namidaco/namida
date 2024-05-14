@@ -465,20 +465,17 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                                     borderRadius: 8.0,
                                     bgColor: Get.theme.cardColor,
                                     padding: const EdgeInsets.all(8.0),
-                                    child: NamidaAnimatedSwitcher(
-                                      durationMS: 0,
-                                      showFirst: expandedLyrics.value == l,
-                                      firstChild: Text(
-                                        l.lyrics,
-                                        style: Get.textTheme.displaySmall,
-                                      ),
-                                      secondChild: Text(
-                                        l.lyrics,
-                                        maxLines: 12,
-                                        overflow: TextOverflow.fade,
-                                        style: Get.textTheme.displaySmall,
-                                      ),
-                                    ),
+                                    child: expandedLyrics.value == l
+                                        ? Text(
+                                            l.lyrics,
+                                            style: Get.textTheme.displaySmall,
+                                          )
+                                        : Text(
+                                            l.lyrics,
+                                            maxLines: 12,
+                                            overflow: TextOverflow.fade,
+                                            style: Get.textTheme.displaySmall,
+                                          ),
                                   ),
                                   Positioned(
                                     bottom: 4.0,

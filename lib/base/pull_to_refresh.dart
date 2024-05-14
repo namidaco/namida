@@ -12,11 +12,11 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   AnimationController get _animation2 => refreshAnimation ?? _animation2Backup!;
 
   final _minTrigger = 20;
-
   num get pullNormalizer => 100;
 
+  bool? _isDraggingVertically;
   double _distanceDragged = 0;
-  bool onVerticalDragUpdate(double dy) {
+  bool _onVerticalDragUpdate(double dy) {
     _distanceDragged -= dy;
     if (_distanceDragged < -_minTrigger) {
       animation.animateTo(((_distanceDragged + _minTrigger).abs() / pullNormalizer).clamp(0, 1));
@@ -28,14 +28,18 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
     final dy = event.delta.dy;
-    final canDragVertically = dy < 0 || (sc.hasClients && sc.position.pixels <= 0);
-    final horizontalAllowance = event.delta.dx < 0.1;
-    if (canDragVertically && horizontalAllowance) onVerticalDragUpdate(dy);
+    if (_isDraggingVertically == null) {
+      final canDragVertically = dy < 0 || (sc.hasClients && sc.position.pixels <= 0);
+      final horizontalAllowance = event.delta.dx < 0.1;
+      _isDraggingVertically = canDragVertically && horizontalAllowance;
+    }
+    if (_isDraggingVertically == true) _onVerticalDragUpdate(dy);
   }
 
   void onVerticalDragFinish() {
     animation.animateTo(0, duration: const Duration(milliseconds: 100));
     _distanceDragged = 0;
+    _isDraggingVertically = null;
   }
 
   bool _isRefreshing = false;

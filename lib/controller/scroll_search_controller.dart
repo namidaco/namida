@@ -144,8 +144,15 @@ class ScrollSearchController {
     SearchSortController.inst.searchAll('');
   }
 
-  void unfocusKeyboard() => SystemChannels.textInput.invokeMethod('TextInput.hide');
-  void focusKeyboard() => FocusManager.instance.rootScope.requestFocus(focusNode);
+  void unfocusKeyboard() {
+    // this causes issue on emulator when trying to edit textfield and yt miniplayer is shown,
+    // but removing it makes keyboard shows after closing dialog on all devices.
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
+  void focusKeyboard() => FocusManager.instance.primaryFocus?.requestFocus(focusNode);
 
   void switchSearchBoxVisibilty(LibraryTab libraryTab) {
     textSearchControllers[libraryTab] ??= TextEditingController();

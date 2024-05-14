@@ -152,6 +152,42 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     }
   }
 
+  Widget _getStockWidget({
+    Key? key,
+    required final double? boxWidth,
+    required final double? boxHeight,
+    final Color? bgc,
+    required final bool stackWithOnTopWidgets,
+    required final BoxShape shape,
+    required final BorderRadiusGeometry? borderRadius,
+  }) {
+    final icon = Icon(
+      widget.displayIcon ? widget.icon : null,
+      size: widget.iconSize ?? widget.thumbnailSize / 2,
+    );
+    return Container(
+      key: key,
+      width: boxWidth,
+      height: boxHeight,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+        borderRadius: borderRadius,
+        shape: shape,
+        boxShadow: widget.boxShadow,
+      ),
+      child: stackWithOnTopWidgets
+          ? Stack(
+              alignment: Alignment.center,
+              children: [
+                icon,
+                ...widget.onTopWidgets,
+              ],
+            )
+          : icon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bytes = this.bytes;
@@ -159,6 +195,18 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final canDisplayImage = _imagePath != null || isValidBytes;
     final thereMightBeImageSoon = !canDisplayImage && !widget.forceDummyArtwork && Indexer.inst.backupMediaStoreIDS[widget.path] != null && !_imageObtainedBefore;
+
+    final boxWidth = widget.width ?? widget.thumbnailSize;
+    final boxHeight = widget.height ?? widget.thumbnailSize;
+
+    // -- dont display stock widget if image can be obtained.
+    if (thereMightBeImageSoon) {
+      return SizedBox(
+        key: key,
+        width: widget.staggered ? null : boxWidth,
+        height: widget.staggered ? null : boxHeight,
+      );
+    }
 
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
@@ -172,50 +220,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
 
-    final boxWidth = widget.width ?? widget.thumbnailSize;
-    final boxHeight = widget.height ?? widget.thumbnailSize;
-
-    // -- dont display stock widget if image can be obtained.
-    if (thereMightBeImageSoon) {
-      return SizedBox(
-        key: key,
-        width: widget.staggered ? null : boxWidth,
-        height: widget.staggered ? null : boxHeight,
-      );
-    }
-    Widget getStockWidget({
-      final Color? bgc,
-      required final bool stackWithOnTopWidgets,
-    }) {
-      final icon = Icon(
-        widget.displayIcon ? widget.icon : null,
-        size: widget.iconSize ?? widget.thumbnailSize / 2,
-      );
-      return Container(
-        key: key,
-        width: boxWidth,
-        height: boxHeight,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
-          borderRadius: borderR,
-          shape: shape,
-          boxShadow: widget.boxShadow,
-        ),
-        child: stackWithOnTopWidgets
-            ? Stack(
-                alignment: Alignment.center,
-                children: [
-                  icon,
-                  ...widget.onTopWidgets,
-                ],
-              )
-            : icon,
-      );
-    }
-
     return !canDisplayImage || widget.forceDummyArtwork
-        ? getStockWidget(
+        ? _getStockWidget(
+            key: key,
+            boxWidth: boxWidth,
+            boxHeight: boxHeight,
+            borderRadius: borderR,
+            shape: shape,
             stackWithOnTopWidgets: true,
             bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
           )
@@ -287,7 +298,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                               }
                               widget.onError?.call();
                             }
-                            return getStockWidget(
+                            return _getStockWidget(
+                              key: key,
+                              boxWidth: boxWidth,
+                              boxHeight: boxHeight,
+                              borderRadius: borderR,
+                              shape: shape,
                               stackWithOnTopWidgets: false,
                             );
                           },

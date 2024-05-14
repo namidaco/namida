@@ -289,7 +289,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: bufferColor.withOpacity(fullscreen ? 0.3 : 0.2),
+                                color: bufferColor.withOpacity(fullscreen ? 0.3 : 0.1),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
@@ -303,7 +303,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: bufferColor.withOpacity(fullscreen ? 0.8 : 0.35),
+                              color: bufferColor.withOpacity(fullscreen ? 0.8 : 0.2),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),
