@@ -61,6 +61,24 @@ jobs:
       #     keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       #     keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
+      - name: "✏️ Generate release changelog"
+        id: generate_changelog
+        uses: heinrichreimer/action-github-changelog-generator@v2.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Creating Snapshot Release at namida-snapshots
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: namidaco/namida-snapshots
+          body: ${{ steps.generate_changelog.outputs.changelog }}
+          files: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk.sha1
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk.sha1
+          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v3
         with:
