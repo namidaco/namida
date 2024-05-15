@@ -67,10 +67,17 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
+          echo ::set-output name=version::"$VERSION"
+
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
         with:
           repository: namidaco/namida-snapshots
+          tag_name: ${{ steps.extract_version.outputs.version}}
           body: ${{ steps.generate_changelog.outputs.changelog }}
           files: |
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
