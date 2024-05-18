@@ -502,7 +502,7 @@ class Player {
             QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
           }
         }
-        QueueController.inst.updateLatestQueue(finalizedQueue);
+        QueueController.inst.updateLatestQueue(finalizedQueue, source: source, homePageItem: homePageItem);
       },
       onQueueEmpty: _audioHandler.togglePlayPause,
       startPlaying: startPlaying,

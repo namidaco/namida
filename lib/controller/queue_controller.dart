@@ -63,17 +63,20 @@ class QueueController {
   }
 
   Future<void> removeQueue(Queue queue) async {
-    if (queue.date == _latestAddedQueueDate) _latestAddedQueueDate = queuesMap.value.keys.lastOrNull ?? 0;
-
     queuesMap.value.remove(queue.date);
     queuesMap.refresh();
+    if (queue.date == _latestAddedQueueDate) _latestAddedQueueDate = 0;
     await _deleteQueueFromStorage(queue);
   }
 
   Future<void> removeQueues(List<int> queuesDates) async {
-    _latestAddedQueueDate = queuesMap.value.keys.lastOrNull ?? 0;
-    queuesDates.loop((date, _) => queuesMap.value.remove(date));
+    bool hasLatestAdded = false;
+    queuesDates.loop((date, _) {
+      queuesMap.value.remove(date);
+      if (date == _latestAddedQueueDate) hasLatestAdded = true;
+    });
     queuesMap.refresh();
+    if (hasLatestAdded) _latestAddedQueueDate = 0;
     await _deleteQueuesFromStorage(queuesDates);
   }
 
@@ -104,14 +107,20 @@ class QueueController {
     await _saveQueueToStorage(newQueue);
   }
 
-  Future<void> updateLatestQueue(List<Playable> items) async {
+  Future<void> updateLatestQueue(
+    List<Playable> items, {
+    required QueueSource source,
+    HomePageItems? homePageItem,
+  }) async {
     await _saveLatestQueueToStorage(items);
 
     // updating last queue inside queuesMap.
     if (items.firstOrNull is Track) {
       final latestQueueInsideMap = _latestQueueInMap;
       if (latestQueueInsideMap != null) {
-        updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: items.cast<Track>()));
+        await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: items.cast<Track>()));
+      } else {
+        await addNewQueue(tracks: items.cast<Track>(), source: source, homePageItem: homePageItem);
       }
     }
   }
@@ -175,21 +184,22 @@ class QueueController {
 
   ///
   Future<void> prepareAllQueuesFile() async {
-    final map = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
-    queuesMap.value = map;
-    _latestAddedQueueDate = map.keys.lastOrNull ?? 0;
+    final mapAndLatest = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
+    queuesMap.value = mapAndLatest.$1;
+    _latestAddedQueueDate = mapAndLatest.$2;
     _isLoadingQueues = false;
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
-      await _queuesToAddAfterAllQueuesLoad.loopFuture(
-        (q, index) async => await addNewQueue(source: q.source, homePageItem: q.homePageItem, date: q.date, tracks: q.tracks),
-      );
+      for (final q in _queuesToAddAfterAllQueuesLoad) {
+        await addNewQueue(source: q.source, homePageItem: q.homePageItem, date: q.date, tracks: q.tracks);
+      }
       printy("Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
       _queuesToAddAfterAllQueuesLoad.clear();
     }
   }
 
-  static Future<SplayTreeMap<int, Queue>> _readQueueFilesCompute(String path) async {
+  static (SplayTreeMap<int, Queue>, int) _readQueueFilesCompute(String path) {
+    int newestQueueDate = 0;
     final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
@@ -197,12 +207,13 @@ class QueueController {
           final response = f.readAsJsonSync();
           final q = Queue.fromJson(response);
           map[q.date] = q;
+          if (q.date > newestQueueDate) newestQueueDate = q.date;
         } catch (e) {
           continue;
         }
       }
     }
-    return map;
+    return (map, newestQueueDate);
   }
 
   Future<void> emptyLatestQueue() async {

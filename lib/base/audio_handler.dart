@@ -217,7 +217,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       ].execute();
     } else {
       refreshNotification(currentItem);
-      await QueueController.inst.updateLatestQueue(currentQueue);
+      await QueueController.inst.updateLatestQueue(currentQueue, source: QueueSource.playerQueue);
     }
   }
 
@@ -238,7 +238,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       youtubeID: (finalItem) {},
     );
 
-    await QueueController.inst.updateLatestQueue(currentQueue);
+    await QueueController.inst.updateLatestQueue(currentQueue, source: QueueSource.playerQueue);
   }
 
   @override
