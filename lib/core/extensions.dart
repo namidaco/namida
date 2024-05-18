@@ -548,6 +548,52 @@ extension FileUtils on File {
       await setLastAccessed(time);
     } catch (_) {}
   }
+
+  /// [goodBytesIfCopied] is checked to delete the old file if renaming failed.
+  File? moveSync(String newPath, {bool Function(int newFileLength)? goodBytesIfCopied}) {
+    File? newFile;
+    final file = this;
+    try {
+      newFile = file.renameSync(newPath);
+    } catch (_) {
+      try {
+        newFile = file.copySync(newPath);
+        if (newFile.existsSync()) {
+          if (goodBytesIfCopied != null) {
+            if (goodBytesIfCopied(newFile.lengthSync())) {
+              file.deleteSync();
+            }
+          } else {
+            file.deleteSync();
+          }
+        }
+      } catch (_) {}
+    }
+    return newFile;
+  }
+
+  /// [goodBytesIfCopied] is checked to delete the old file if renaming failed.
+  Future<File?> move(String newPath, {FutureOr<bool> Function(int newFileLength)? goodBytesIfCopied}) async {
+    File? newFile;
+    final file = this;
+    try {
+      newFile = await file.rename(newPath);
+    } catch (_) {
+      try {
+        newFile = await file.copy(newPath);
+        if (await newFile.exists()) {
+          if (goodBytesIfCopied != null) {
+            if (await goodBytesIfCopied(await newFile.length())) {
+              await file.delete();
+            }
+          } else {
+            await file.delete();
+          }
+        }
+      } catch (_) {}
+    }
+    return newFile;
+  }
 }
 
 final _minimumDateMicro = DateTime(1970).microsecondsSinceEpoch + 1;

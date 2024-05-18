@@ -10,7 +10,6 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' hide EnumUtils;
 
 import 'package:namida/base/ports_provider.dart';
-import 'package:namida/class/http_manager.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -47,6 +46,17 @@ class DownloadProgress {
     required this.progress,
     required this.totalProgress,
   });
+
+  double get percentage => progress / totalProgress;
+
+  String? percentageText({String? prefix}) {
+    final p = percentage;
+    if (p.isFinite) {
+      final String res = (percentage * 100).toStringAsFixed(0);
+      return prefix != null ? "$prefix $res%" : "$res%";
+    }
+    return null;
+  }
 }
 
 class YoutubeController {
@@ -383,9 +393,13 @@ class YoutubeController {
   }
 
   Future<List> searchForItems(String text) async {
-    final videos = await NewPipeExtractorDart.search.searchYoutube(text, []);
-    _fillTempVideoInfoMap(videos.searchVideos);
-    return videos.dynamicSearchResultsList;
+    try {
+      final videos = await NewPipeExtractorDart.search.searchYoutube(text, []);
+      _fillTempVideoInfoMap(videos.searchVideos);
+      return videos.dynamicSearchResultsList;
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List> searchNextPage() async {
@@ -1297,13 +1311,15 @@ class YoutubeController {
     if (filename.split('.').last != fileExtension) filename = "$filename.$fileExtension";
 
     final filenameClean = cleanupFilename(filename);
-    renameConfigFilename(
-      videoID: id,
-      groupName: groupName,
-      config: config,
-      newFilename: filenameClean,
-      renameCacheFiles: false, // no worries we still gonna do the job.
-    );
+    if (filenameClean != filename) {
+      renameConfigFilename(
+        videoID: id,
+        groupName: groupName,
+        config: config,
+        newFilename: filenameClean,
+        renameCacheFiles: false, // no worries we still gonna do the job.
+      );
+    }
 
     isDownloading[id] ??= <String, bool>{}.obs;
     isDownloading[id]![filenameClean] = true;
@@ -1610,15 +1626,25 @@ class YoutubeController {
         initialFileSizeOnDisk = await file.length(); // fetching current size to be used as a range bytes for download request
       } catch (_) {}
       onInitialFileSize(initialFileSizeOnDisk);
-      // only download if the download is incomplete, useful sometimes when file 'moving' fails.
-      if (initialFileSizeOnDisk < erabaretaStreamSizeInBytes) {
+
+      bool downloaded = false;
+      final newFilePath = getVPath(false);
+      if (initialFileSizeOnDisk >= erabaretaStreamSizeInBytes) {
+        try {
+          final movedFile = await file.move(
+            newFilePath,
+            goodBytesIfCopied: (newFileLength) async => (await file.length()) > newFileLength - 1024,
+          );
+          downloaded = movedFile != null;
+        } catch (_) {}
+      } else {
+        // only download if the download is incomplete, useful sometimes when file 'moving' fails.
         if (!canStartDownloading()) return null;
         final downloadStartRange = initialFileSizeOnDisk;
 
         _downloadManager.stopDownload(file: _latestSingleDownloadingFile); // disposing old download process
         _latestSingleDownloadingFile = file;
-        final newFilePath = getVPath(false);
-        final downloaded = await _downloadManager.download(
+        downloaded = await _downloadManager.download(
           url: erabaretaStream.url ?? '',
           file: file,
           downloadStartRange: downloadStartRange,
@@ -1626,20 +1652,21 @@ class YoutubeController {
           moveTo: newFilePath,
           moveToRequiredBytes: erabaretaStreamSizeInBytes,
         );
-        if (downloaded) {
-          dv = NamidaVideo(
-            path: newFilePath,
-            ytID: id,
-            nameInCache: newFilePath.getFilenameWOExt,
-            height: erabaretaStream.height ?? 0,
-            width: erabaretaStream.width ?? 0,
-            sizeInBytes: erabaretaStreamSizeInBytes,
-            frameratePrecise: erabaretaStream.fps?.toDouble() ?? 0.0,
-            creationTimeMS: 0, // TODO: get using metadata
-            durationMS: erabaretaStream.durationMS ?? 0,
-            bitrate: erabaretaStream.bitrate ?? 0,
-          );
-        }
+      }
+
+      if (downloaded) {
+        dv = NamidaVideo(
+          path: newFilePath,
+          ytID: id,
+          nameInCache: newFilePath.getFilenameWOExt,
+          height: erabaretaStream.height ?? 0,
+          width: erabaretaStream.width ?? 0,
+          sizeInBytes: erabaretaStreamSizeInBytes,
+          frameratePrecise: erabaretaStream.fps?.toDouble() ?? 0.0,
+          creationTimeMS: 0, // TODO: get using metadata
+          durationMS: erabaretaStream.durationMS ?? 0,
+          bitrate: erabaretaStream.bitrate ?? 0,
+        );
       }
     } catch (e) {
       printy('Error Downloading YT Video: $e', isError: true);
