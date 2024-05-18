@@ -14,10 +14,10 @@ class IndexingPercentage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => NamidaHero(
-        tag: 'indexingper',
-        child: NamidaCircularPercentage(
+    return NamidaHero(
+      tag: 'indexingper',
+      child: Obx(
+        () => NamidaCircularPercentage(
           percentage: Indexer.inst.tracksInfoList.length / Indexer.inst.allAudioFiles.length,
           size: size,
         ).animateEntrance(showWhen: Indexer.inst.isIndexing.value),

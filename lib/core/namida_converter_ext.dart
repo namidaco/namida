@@ -1000,7 +1000,7 @@ extension RouteUtils on NamidaRoute {
     }
 
     final shouldShowInitialActions = route != RouteType.PAGE_stats && route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
-    final shouldShowJsonParse = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
+    final shouldShowProgressPercentage = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
 
     final queue = route == RouteType.SUBPAGE_queueTracks ? name.getQueue() : null;
 
@@ -1051,7 +1051,10 @@ extension RouteUtils on NamidaRoute {
           shouldShow: shouldShowInitialActions),
 
       // -- Parsing Json Icon
-      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowJsonParse),
+      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+
+      // -- Indexer Icon
+      getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
 
       getAnimatedCrossFade(
         child: NamidaAppBarIcon(
