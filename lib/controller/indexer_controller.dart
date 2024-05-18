@@ -289,6 +289,17 @@ class Indexer {
     });
   }
 
+  /// re-sorts media subtracks that depend on history.
+  void sortMediaTracksSubListsAfterHistoryPrepared() {
+    final requiredToSort = <MediaType>[];
+    for (final e in settings.mediaItemsTrackSorting.entries) {
+      if (e.value.contains(SortType.mostPlayed)) {
+        requiredToSort.add(e.key);
+      }
+    }
+    sortMediaTracksSubLists(requiredToSort);
+  }
+
   void _sortAll() => SearchSortController.inst.sortAll();
 
   /// Removes Specific tracks from their corresponding media, useful when updating track metadata or reindexing a track.
