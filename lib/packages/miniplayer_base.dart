@@ -802,9 +802,10 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   NamidaIconButton(
                                     icon: Broken.previous,
                                     iconSize: 22.0 + 10 * rcp,
+                                    horizontalPadding: 12.0,
+                                    verticalPadding: 12.0,
                                     onPressed: MiniPlayerController.inst.snapToPrev,
                                   ),
-                                  SizedBox(width: 7 * rcp),
                                   SizedBox(
                                     key: const Key("playpause"),
                                     height: iconBoxSize,
@@ -894,10 +895,11 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 7 * rcp),
                                   NamidaIconButton(
                                     icon: Broken.next,
                                     iconSize: 22.0 + 10 * rcp,
+                                    horizontalPadding: 12.0,
+                                    verticalPadding: 12.0,
                                     onPressed: MiniPlayerController.inst.snapToNext,
                                   ),
                                 ],
