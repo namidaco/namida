@@ -182,7 +182,8 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
       ),
     );
     final all = await completer.future;
-    return all.firstOrNull;
+    if (all.isEmpty) return null;
+    return _fixSDCardDirectory(all[0]);
   }
 
   static Future<List<Directory>> pickDirectories({
@@ -199,7 +200,14 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
         allowMultiple: true,
       ),
     );
-    return completer.future;
+    final res = await completer.future;
+    return res.map((e) => _fixSDCardDirectory(e)).toList();
+  }
+
+  static final _sdDirRegex = RegExp(r'/tree/(\w{4}-\w{4}):');
+  static Directory _fixSDCardDirectory(Directory dir) {
+    final replaced = dir.path.replaceFirstMapped(_sdDirRegex, (match) => '/storage/${match.group(1)}/');
+    return Directory(replaced);
   }
 
   @override
