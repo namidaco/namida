@@ -28,12 +28,11 @@ class WaveformComponent extends StatefulWidget {
 }
 
 class WaveformComponentState extends State<WaveformComponent> with SingleTickerProviderStateMixin {
-  void setEnabled(bool enabled) {
+  void _updateAnimation(bool enabled) async {
     if (enabled) {
-      setState(() {});
-      _animation.animateTo(1.0, curve: widget.curve);
+      await _animation.animateTo(1.0, curve: widget.curve);
     } else {
-      _animation.animateTo(0.0, curve: widget.curve);
+      await _animation.animateBack(0.0, curve: widget.curve);
     }
   }
 
@@ -81,63 +80,67 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
         color: context.theme.colorScheme.onBackground.withAlpha(110),
       ),
     );
-    final downscaled = WaveformController.inst.currentWaveformUI;
-    final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
-    return Center(
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, _) => Stack(
-          children: [
-            NamidaWaveBarsNew(
-              heightPercentage: _animation.value,
-              decorationBox: decorationBoxBehind,
-              waveList: downscaled,
-              barWidth: barWidth,
-              barMinHeight: widget.barsMinHeight,
-              barMaxHeight: widget.barsMaxHeight,
-            ),
-            Obx(
-              () {
-                final seekValue = MiniPlayerController.inst.seekValue.value;
-                final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
-                final durInMs = _currentDurationInMS;
-                final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                return ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (Rect bounds) {
-                    return LinearGradient(
-                      tileMode: TileMode.decal,
-                      stops: [0.0, percentage, percentage + 0.005, 1.0],
-                      colors: [
-                        Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
-                        Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
-                        Colors.transparent,
-                        Colors.transparent,
-                      ],
-                    ).createShader(bounds);
-                  },
-                  child: SizedBox(
-                    width: Get.width - 16.0 / 2,
-                    child: NamidaWaveBarsNew(
-                      heightPercentage: _animation.value,
-                      decorationBox: decorationBoxFront,
-                      waveList: downscaled,
-                      barWidth: barWidth,
-                      barMinHeight: widget.barsMinHeight,
-                      barMaxHeight: widget.barsMaxHeight,
+    return Obx(() {
+      final enabled = WaveformController.inst.isWaveformUIEnabled.value;
+      _updateAnimation(enabled);
+      final downscaled = WaveformController.inst.currentWaveformUI;
+      final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
+      return Center(
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, _) => Stack(
+            children: [
+              NamidaWaveBars(
+                heightPercentage: _animation.value,
+                decorationBox: decorationBoxBehind,
+                waveList: downscaled,
+                barWidth: barWidth,
+                barMinHeight: widget.barsMinHeight,
+                barMaxHeight: widget.barsMaxHeight,
+              ),
+              Obx(
+                () {
+                  final seekValue = MiniPlayerController.inst.seekValue.value;
+                  final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPosition;
+                  final durInMs = _currentDurationInMS;
+                  final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                  return ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (Rect bounds) {
+                      return LinearGradient(
+                        tileMode: TileMode.decal,
+                        stops: [0.0, percentage, percentage + 0.005, 1.0],
+                        colors: [
+                          Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onBackground),
+                          Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onBackground),
+                          Colors.transparent,
+                          Colors.transparent,
+                        ],
+                      ).createShader(bounds);
+                    },
+                    child: SizedBox(
+                      width: Get.width - 16.0 / 2,
+                      child: NamidaWaveBars(
+                        heightPercentage: _animation.value,
+                        decorationBox: decorationBoxFront,
+                        waveList: downscaled,
+                        barWidth: barWidth,
+                        barMinHeight: widget.barsMinHeight,
+                        barMaxHeight: widget.barsMaxHeight,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
-class NamidaWaveBarsNew extends StatelessWidget {
+class NamidaWaveBars extends StatelessWidget {
   final List<double> waveList;
   final double barWidth;
   final double barMinHeight;
@@ -145,7 +148,7 @@ class NamidaWaveBarsNew extends StatelessWidget {
   final Widget decorationBox;
   final double heightPercentage;
 
-  const NamidaWaveBarsNew({
+  const NamidaWaveBars({
     super.key,
     required this.waveList,
     required this.barWidth,

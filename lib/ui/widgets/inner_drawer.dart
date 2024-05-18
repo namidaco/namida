@@ -4,7 +4,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaInnerDrawer extends StatefulWidget {
@@ -114,7 +116,8 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
             // -- bg
             if (controller.value > 0) ...[
               Positioned.fill(
-                child: ColoredBox(
+                child: AnimatedColor(
+                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                   color: context.theme.scaffoldBackgroundColor,
                 ),
               ),

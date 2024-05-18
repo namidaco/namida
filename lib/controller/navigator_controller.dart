@@ -155,6 +155,22 @@ class NamidaNavigator {
     );
   }
 
+  bool? _latestIsAppLight;
+
+  /// optimized to set only if its different from the previous value.
+  void setSystemUIOverlayStyleCustom(bool isAppLight) {
+    if (_latestIsAppLight == isAppLight) return;
+    _latestIsAppLight = isAppLight;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        systemNavigationBarContrastEnforced: false,
+        systemNavigationBarColor: const Color(0x00000000),
+        systemNavigationBarDividerColor: const Color(0x00000000),
+        systemNavigationBarIconBrightness: isAppLight ? Brightness.dark : Brightness.light,
+      ),
+    );
+  }
+
   Future<void> setDeviceOrientations(bool lanscape) async {
     isInLanscape = lanscape;
     final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;

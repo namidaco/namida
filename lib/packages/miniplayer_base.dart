@@ -17,7 +17,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -148,7 +148,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
   @override
   Widget build(BuildContext context) {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-    final waveformChild = WaveformMiniplayer(waveKey: WaveformController.inst.waveBarsKey);
+    const waveformChild = WaveformMiniplayer();
 
     return Obx(
       () {
@@ -671,58 +671,67 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                         color: Colors.transparent, // prevents scrolling gap
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 6 * (1 - cp * 10 + 9).clamp(0, 1), vertical: 12 * icp),
-                          child: Container(
+                          child: SizedBox(
                             height: velpy(a: 82.0, b: panelFinal, c: cp),
                             width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: context.theme.scaffoldBackgroundColor,
-                              borderRadius: borderRadius,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
-                                  blurRadius: 20.0,
-                                )
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.bottomLeft,
-                              children: [
-                                Container(
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    color: CurrentColor.inst.miniplayerColor,
-                                    borderRadius: borderRadius,
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.miniplayerColor)
-                                            .withOpacity(velpy(a: .38, b: .28, c: icp)),
-                                        Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                            .withOpacity(velpy(a: .1, b: .22, c: icp)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                /// Smol progress bar
-                                Obx(
-                                  () {
-                                    final w = currentDurationInMS == 0 ? 0 : Player.inst.nowPlayingPosition / currentDurationInMS;
-                                    return Container(
-                                      height: 2 * (1 - cp),
-                                      width: w > 0 ? ((Get.width * w) * 0.9) : 0,
-                                      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: AnimatedDecoration(
+                              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                              decoration: BoxDecoration(
+                                color: context.theme.scaffoldBackgroundColor,
+                                borderRadius: borderRadius,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
+                                    blurRadius: 20.0,
+                                  )
+                                ],
+                              ),
+                              child: Stack(
+                                alignment: Alignment.bottomLeft,
+                                children: [
+                                  Positioned.fill(
+                                    child: AnimatedDecoration(
+                                      duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                      // clipBehavior: Clip.antiAlias,
                                       decoration: BoxDecoration(
                                         color: CurrentColor.inst.miniplayerColor,
-                                        borderRadius: BorderRadius.circular(50),
-                                        //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                        //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
+                                        borderRadius: borderRadius,
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.miniplayerColor)
+                                                .withOpacity(velpy(a: .38, b: .28, c: icp)),
+                                            Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                                .withOpacity(velpy(a: .1, b: .22, c: icp)),
+                                          ],
+                                        ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ],
+                                    ),
+                                  ),
+
+                                  /// Smol progress bar
+                                  Obx(
+                                    () {
+                                      final w = currentDurationInMS == 0 ? 0 : Player.inst.nowPlayingPosition / currentDurationInMS;
+                                      return Container(
+                                        height: 2 * (1 - cp),
+                                        width: w > 0 ? ((Get.width * w) * 0.9) : 0,
+                                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                                        child: AnimatedDecoration(
+                                          duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                          decoration: BoxDecoration(
+                                            color: CurrentColor.inst.miniplayerColor,
+                                            borderRadius: BorderRadius.circular(50),
+                                            //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                            //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -1060,7 +1069,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
 
                 /// Slider
                 Visibility(
-                  maintainState: true,
+                  maintainState: false,
                   visible: slowOpacity > 0.0,
                   child: Opacity(
                     opacity: slowOpacity,
@@ -1077,10 +1086,10 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                           : 0.0)) *
                                       0.4)) -
                               (navBarHeight * cp)),
-                      child: Align(
+                      child: const Align(
                         alignment: Alignment.bottomLeft,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
                           child: waveformChild,
                         ),
                       ),
@@ -1255,8 +1264,7 @@ class _TrackInfo extends StatelessWidget {
 
 class WaveformMiniplayer extends StatelessWidget {
   final bool fixPadding;
-  final GlobalKey<WaveformComponentState> waveKey;
-  const WaveformMiniplayer({super.key, this.fixPadding = false, required this.waveKey});
+  const WaveformMiniplayer({super.key, this.fixPadding = false});
 
   int get _currentDurationInMS {
     final totalDur = Player.inst.currentItemDuration ?? (Player.inst.currentQueue.isNotEmpty ? Player.inst.nowPlayingTrack.duration.seconds : Duration.zero);
@@ -1292,9 +1300,7 @@ class WaveformMiniplayer extends StatelessWidget {
                 onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
                 onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
                 onHorizontalDragEnd: (details) => onSeekEnd(),
-                child: WaveformComponent(
-                  key: waveKey,
-                ),
+                child: const WaveformComponent(),
               ),
             ),
           );

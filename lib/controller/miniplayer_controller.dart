@@ -118,7 +118,7 @@ class MiniPlayerController {
   late double bottomInset;
   late double maxOffset;
   final _velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
-  final Cubic _bouncingCurve = const Cubic(0.175, 0.885, 0.32, 1.125);
+  final Cubic _bouncingCurve = const Cubic(0.175, 0.9, 0.32, 1.1);
   double _offset = 0.0;
   double _prevOffset = 0.0;
 
@@ -324,7 +324,7 @@ class MiniPlayerController {
     _offset = maxOffset;
     if (_prevOffset < maxOffset) bounceUp = true;
     if (_prevOffset > maxOffset) bounceDown = true;
-    _snap(haptic: haptic);
+    _snap(haptic: haptic, curve: Curves.fastEaseInToSlowEaseOut);
     if (_maintainStatusBarShowing) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
@@ -382,10 +382,10 @@ class MiniPlayerController {
     VideoController.inst.updateShouldShowControls(animation.value);
   }
 
-  Future<void> _snap({bool haptic = true}) async {
+  Future<void> _snap({bool haptic = true, Curve? curve}) async {
     await animateMiniplayer(
       _offset / maxOffset,
-      curve: _bouncingCurve,
+      curve: curve ?? _bouncingCurve,
       duration: const Duration(milliseconds: 300),
     );
     bounceUp = false;
@@ -395,13 +395,12 @@ class MiniPlayerController {
   Future<void> snapToPrev() async {
     if (Player.inst.canJumpToPrevious) {
       _sOffset = -sMaxOffset;
-      Player.inst.previous();
-      // await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-
       _sOffset = 0;
-      await sAnim.animateTo(0.0, duration: Duration.zero);
+      // await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+      sAnim.animateTo(0.0, duration: Duration.zero);
 
       if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      Player.inst.previous();
     }
   }
 
@@ -414,13 +413,12 @@ class MiniPlayerController {
   Future<void> snapToNext() async {
     if (Player.inst.canJumpToNext) {
       _sOffset = sMaxOffset;
-      Player.inst.next();
-      // await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-
       _sOffset = 0;
-      await sAnim.animateTo(0.0, duration: Duration.zero);
+      // await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+      sAnim.animateTo(0.0, duration: Duration.zero);
 
       if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      Player.inst.next();
     }
   }
 }
