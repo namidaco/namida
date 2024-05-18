@@ -446,22 +446,40 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
-  final _fnLimiter = FunctionExecuteLimiter(executeAfter: const Duration(milliseconds: 400));
+  final _fnLimiter = FunctionExecuteLimiter(
+    considerRapid: const Duration(milliseconds: 500),
+    executeAfter: const Duration(milliseconds: 300),
+    considerRapidAfterNExecutions: 3,
+  );
+  bool? _pausedTemporarily;
+
   @override
   Future<void> onItemPlay(Q item, int index, bool Function() startPlaying, Function skipItem) async {
     _currentItemDuration.value = null;
-    await _fnLimiter.executeFuture(() async {
-      return await item._execute(
-        selectable: (finalItem) async {
-          await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
-        },
-        youtubeID: (finalItem) async {
-          await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
-        },
-      );
-    }, onRapidDetected: () {
-      if (isPlaying) pause();
-    });
+    await _fnLimiter.executeFuture(
+      () async {
+        return await item._execute(
+          selectable: (finalItem) async {
+            await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
+          },
+          youtubeID: (finalItem) async {
+            await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
+          },
+        );
+      },
+      onRapidDetected: () {
+        if (isPlaying) {
+          _pausedTemporarily = true;
+          pause();
+        }
+      },
+      onReExecute: () {
+        if (_pausedTemporarily == true) {
+          _pausedTemporarily = null;
+          play();
+        }
+      },
+    );
 
     MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
