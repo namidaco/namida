@@ -590,6 +590,10 @@ class _AnimatingTrackImage extends StatelessWidget {
                   Lyrics.inst.updateLyrics(track);
                 }
               : null,
+          child: GestureDetector(
+            onLongPress: () {
+              Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen();
+            },
           onScaleStart: (details) {
             final lrcState = Lyrics.inst.lrcViewKey?.currentState;
             final lrcVisible = lrcState != null;
