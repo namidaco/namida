@@ -253,7 +253,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     sendPort.send(recievePort.sendPort);
 
     final httpManager = HttpMultiRequestManager();
-    final requesters = <String, Map<String, HttpClientResponseWrapper>?>{}; // itemId: {urlPath: HttpClientResponseWrapper}
+    final requesters = <String, Map<String, HttpClientWrapper>?>{}; // itemId: {urlPath: HttpClientWrapper}
 
     const bool deleteOldExtracted = true;
 
@@ -299,7 +299,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         requesters[id] ??= {};
         for (final url in urls) {
           final urlPath = url.substring(url.lastIndexOf('/') + 1);
-          requesters[id]?[urlPath] = httpManager.getWrapper();
+          requesters[id]?[urlPath] = HttpClientWrapper();
 
           final destinationFileTemp = File("${destinationFile.path}.temp");
           destinationFileTemp.createSync(recursive: true);

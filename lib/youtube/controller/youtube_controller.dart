@@ -1727,8 +1727,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final httpManager = HttpMultiRequestManager();
-    final requesters = <String, HttpClientResponseWrapper?>{}; // filePath
+    final requesters = <String, HttpClientWrapper?>{}; // filePath
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
@@ -1737,7 +1736,6 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           requester?.close();
         }
         requesters.clear();
-        httpManager.closeClients();
         recievePort.close();
         streamSub?.cancel();
         return;
@@ -1761,55 +1759,50 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
           final progressPort = p['progressPort'] as SendPort;
 
-          requesters[filePath] = httpManager.getWrapper();
+          requesters[filePath] = HttpClientWrapper();
           final file = File(filePath);
           file.createSync(recursive: true);
           final fileStream = file.openWrite(mode: FileMode.append);
-          await httpManager.execute(() async {
-            final requester = requesters[filePath];
-            if (requester == null) return; // always non null tho
-            try {
-              final headers = {'range': 'bytes=$downloadStartRange-'};
-              final response = await requester.getUrl(Uri.parse(url), headers: headers);
-              final downloadStream = response.asBroadcastStream();
 
-              await for (final data in downloadStream) {
-                fileStream.add(data);
-                progressPort.send(data.length);
-              }
-              if (moveTo != null && moveToRequiredBytes != null) {
-                try {
-                  final fileStats = file.statSync();
-                  const allowance = 1024; // 1KB allowance
-                  if (fileStats.size >= moveToRequiredBytes - allowance) {
-                    File? newFile;
-                    try {
-                      newFile = file.renameSync(moveTo);
-                    } catch (_) {
-                      try {
-                        newFile = file.copySync(moveTo);
-                        if (newFile.existsSync() && newFile.lengthSync() >= moveToRequiredBytes - allowance) {
-                          file.deleteSync();
-                        }
-                      } catch (_) {}
-                    }
-                  }
-                } catch (_) {}
-              }
-              return sendPort.send(MapEntry(filePath, true));
-            } catch (e) {
-              return sendPort.send(MapEntry(filePath, false));
-            } finally {
+          final requester = requesters[filePath];
+          if (requester == null) return; // always non null tho
+          try {
+            final headers = {'range': 'bytes=$downloadStartRange-'};
+            final response = await requester.getUrlWithHeaders(Uri.parse(url), headers);
+            final downloadStream = response.asBroadcastStream();
+
+            await for (final data in downloadStream) {
+              fileStream.add(data);
+              progressPort.send(data.length);
+            }
+            bool? movedSuccessfully;
+            if (moveTo != null && moveToRequiredBytes != null) {
               try {
-                requester.close();
-                requesters[filePath] = null;
-              } catch (_) {}
-              try {
-                await fileStream.flush();
-                await fileStream.close(); // closing file.
+                final fileStats = file.statSync();
+                const allowance = 1024; // 1KB allowance
+                if (fileStats.size >= moveToRequiredBytes - allowance) {
+                  final movedFile = file.moveSync(
+                    moveTo,
+                    goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,
+                  );
+                  if (movedFile == null) movedSuccessfully = false;
+                }
               } catch (_) {}
             }
-          });
+            return sendPort.send(MapEntry(filePath, movedSuccessfully ?? true));
+          } catch (_) {
+            // client force closed
+            return sendPort.send(MapEntry(filePath, false));
+          } finally {
+            try {
+              final req = requesters.remove(filePath);
+              await req?.close();
+            } catch (_) {}
+            try {
+              await fileStream.flush();
+              await fileStream.close(); // closing file.
+            } catch (_) {}
+          }
         }
       }
     });

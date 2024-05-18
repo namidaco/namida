@@ -317,9 +317,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final mainClient = HttpClient();
-
-    HttpClientResponseWrapper? clientResponse;
+    HttpClientWrapper? mainRequester;
 
     String substringArtist(String artist) {
       int maxIndex = -1;
@@ -331,7 +329,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
       _LRCSearchDetails? details,
       String customQuery = '',
-      required HttpClientResponseWrapper requester,
+      required HttpClientWrapper requester,
     }) async {
       if (customQuery == '' && details == null) return [];
       String formatTime(int seconds) {
@@ -415,14 +413,13 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
-        mainClient.close(force: true);
         recievePort.close();
         streamSub?.cancel();
         return;
       }
-      clientResponse?.close();
-      clientResponse = HttpClientResponseWrapper(mainClient);
-      final c = clientResponse!; // instance so it can be closed
+      mainRequester?.close();
+      mainRequester = HttpClientWrapper();
+      final c = mainRequester!; // instance so it can be closed
 
       var lyrics = <LyricsModel>[];
       if (p is List<_LRCSearchDetails>) {

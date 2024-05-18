@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:queue/queue.dart';
 
-import 'package:namida/class/http_response_wrapper.dart';
-
 class HttpMultiRequestManager {
   HttpMultiRequestManager({this.listsMaxItems = 2});
   final int listsMaxItems;
@@ -21,12 +19,6 @@ class HttpMultiRequestManager {
     }
 
     return minimum;
-  }
-
-  HttpClientResponseWrapper getWrapper() {
-    final int listsIndex = _getEffectiveIndex();
-    final client = _mainClients[listsIndex];
-    return HttpClientResponseWrapper(client);
   }
 
   Future<T> execute<T>(Future<T> Function() closure) async {

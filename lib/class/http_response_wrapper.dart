@@ -1,48 +1,49 @@
 import 'dart:io';
 
-class HttpClientResponseWrapper {
-  HttpClientResponseWrapper(this.client);
+class HttpClientWrapper {
+  HttpClientWrapper() : _client = HttpClient();
 
   bool get isClosed => _closed;
 
-  final HttpClient client;
   bool _closed = false;
 
-  HttpClientRequest? _request;
-  HttpClientResponse? _response;
+  final HttpClient _client;
 
   Future<HttpClientResponse?> getUrlNullable(Uri url, {Map<String, String>? headers}) async {
-    if (_closed) return null;
     try {
-      _request = await client.getUrl(url);
-      if (headers != null) {
-        for (final h in headers.entries) {
-          _request!.headers.set(h.key, h.value);
-        }
-      }
-      _response = await _request!.close();
-      return _response!;
+      return await getUrl(url);
     } catch (_) {
       return null;
     }
   }
 
-  Future<HttpClientResponse> getUrl(Uri url, {Map<String, String>? headers}) async {
-    if (_closed) throw Exception('socket is closed');
-    _request = await client.getUrl(url);
+  Future<HttpClientResponse?> getUrlWithHeadersNullable(Uri url, {Map<String, String>? headers}) async {
+    try {
+      return await getUrlWithHeaders(url, headers);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<HttpClientResponse> getUrl(Uri url) async {
+    if (_closed) throw Exception('client is closed');
+    final request = await _client.getUrl(url);
+    return await request.close();
+  }
+
+  Future<HttpClientResponse> getUrlWithHeaders(Uri url, Map<String, String>? headers) async {
+    if (_closed) throw Exception('client is closed');
+    final request = await _client.getUrl(url);
     if (headers != null) {
       for (final h in headers.entries) {
-        _request!.headers.set(h.key, h.value);
+        request.headers.set(h.key, h.value);
       }
     }
-    _response = await _request!.close();
-    return _response!;
+    return await request.close();
   }
 
   Future<void> close() async {
-    final socket = await _response?.detachSocket();
-    await socket?.close();
-    _request?.abort();
     _closed = true;
+    _client.close(force: true);
   }
 }
