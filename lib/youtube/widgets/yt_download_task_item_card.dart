@@ -44,6 +44,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   Widget _getChip({
     required BuildContext context,
     required IconData icon,
+    Color? iconColor,
     required String title,
     String betweenBrackets = '',
     bool displayTitle = false,
@@ -72,7 +73,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            iconWidget?.call(iconSize) ?? Icon(icon, size: iconSize),
+            iconWidget?.call(iconSize) ?? Icon(icon, size: iconSize, color: iconColor),
             if (displayTitle) ...[
               const SizedBox(width: 4.0),
               textWidget,
@@ -535,7 +536,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 final cp = videoP?.progress ?? audioP?.progress ?? 0;
                 final ctp = videoP?.totalProgress ?? audioP?.totalProgress ?? 0;
                 final speedText = speedB == null ? '' : ' (${speedB.fileSizeFormatted}/s)';
-                final downloadInfoText = "${cp.fileSizeFormatted}/${ctp.fileSizeFormatted}$speedText";
+                final downloadInfoText = "${cp.fileSizeFormatted}/${ctp == 0 ? '?' : ctp.fileSizeFormatted}$speedText";
                 final canDisplayPercentage = audioPerc != null || videoPerc != null;
 
                 final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
@@ -652,12 +653,15 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                                 context: context,
                                                 title: lang.PAUSE,
                                                 icon: Broken.pause,
-                                                iconWidget: (size) => StackedIcon(
-                                                  baseIcon: Broken.pause,
-                                                  secondaryIcon: Broken.timer,
-                                                  iconSize: size,
-                                                  secondaryIconSize: 10.0,
-                                                ),
+                                                iconColor: context.defaultIconColor(),
+                                                iconWidget: isDownloading
+                                                    ? null
+                                                    : (size) => StackedIcon(
+                                                          baseIcon: Broken.pause,
+                                                          secondaryIcon: Broken.timer,
+                                                          iconSize: size,
+                                                          secondaryIconSize: 10.0,
+                                                        ),
                                                 onTap: () => _onPauseDownloadTap([item]),
                                               )
                                             : _getChip(

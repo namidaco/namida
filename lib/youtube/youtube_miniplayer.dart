@@ -442,17 +442,13 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                             Obx(
                                               () {
                                                 final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
-                                                final audioPerc = audioProgress == null
-                                                    ? null
-                                                    : "${lang.AUDIO} ${(audioProgress.progress / audioProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
                                                 final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId]?.values.firstOrNull;
-                                                final videoPerc = videoProgress == null
-                                                    ? null
-                                                    : "${lang.VIDEO} ${(videoProgress.progress / videoProgress.totalProgress * 100).toStringAsFixed(0)}%";
+                                                final videoPercText = videoProgress?.percentageText(prefix: lang.VIDEO);
 
                                                 final isDownloading = YoutubeController.inst.isDownloading[currentId]?.values.any((element) => element) == true;
 
-                                                final wasDownloading = videoPerc != null || audioPerc != null;
+                                                final wasDownloading = videoProgress != null || audioProgress != null;
                                                 final icon = (wasDownloading && !isDownloading)
                                                     ? Broken.play_circle
                                                     : wasDownloading
@@ -461,8 +457,8 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             ? Broken.tick_circle
                                                             : Broken.import;
                                                 return SmallYTActionButton(
-                                                  titleWidget: videoPerc == null && audioPerc == null && isDownloading ? const LoadingIndicator() : null,
-                                                  title: videoPerc ?? audioPerc ?? lang.DOWNLOAD,
+                                                  titleWidget: videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
+                                                  title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
                                                   icon: icon,
                                                   onLongPress: () async => await showDownloadVideoBottomSheet(videoId: currentId),
                                                   onPressed: () async {
@@ -1045,6 +1041,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                 behavior: HitTestBehavior.translucent,
                 onPointerDown: (event) {
                   _mpState?.updatePercentageMultiplier(true);
+                  _mpState?.saveDragHeightStart();
                   _velocity.addPosition(event.timeStamp, event.position);
                 },
                 onPointerMove: (event) {

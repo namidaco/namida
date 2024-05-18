@@ -205,7 +205,9 @@ class YTHistoryVideoCard extends StatelessWidget {
             },
             height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
             margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
-            bgColor: isCurrentlyPlaying ? CurrentColor.inst.color.withAlpha(140) : (hightlightedColor ?? context.theme.cardColor.withOpacity(cardColorOpacity)),
+            bgColor: isCurrentlyPlaying
+                ? (fromPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.color).withAlpha(140)
+                : (hightlightedColor ?? context.theme.cardColor.withOpacity(cardColorOpacity)),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             ),

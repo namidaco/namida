@@ -56,6 +56,11 @@ class ScrollSearchController {
     final w = tab.toWidget();
     hideSearchMenu();
 
+    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      ScrollSearchController.inst.hideSearchMenu();
+      return;
+    }
+
     if (w.toNamidaRoute() == NamidaNavigator.inst.currentRoute) {
       if (scrollController.hasClients) {
         MiniPlayerController.inst.snapToMini();

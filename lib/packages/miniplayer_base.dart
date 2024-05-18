@@ -277,7 +277,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                         final seek = MiniPlayerController.inst.seekValue.value;
                         final diffInMs = seek - Player.inst.nowPlayingPosition;
                         final plusOrMinus = diffInMs < 0 ? '' : '+';
-                        final seekText = seek == 0 ? '00:00' : diffInMs.abs().milliSecondsLabel;
+                        final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
                         return Text(
                           "$plusOrMinus$seekText",
                           style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),

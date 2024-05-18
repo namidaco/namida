@@ -97,6 +97,12 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _alternativePercentage = alt;
   }
 
+  void saveDragHeightStart() {
+    _startedDragAtHeight = _dragheight;
+  }
+
+  double? _startedDragAtHeight;
+
   @override
   void dispose() {
     controller.dispose();
@@ -146,6 +152,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   void _resetValues() {
     _isDragManagedInternally = false;
     _alternativePercentage = false;
+    _startedDragAtHeight = null;
   }
 
   void onVerticalDragEnd(double v) {
@@ -174,7 +181,8 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       animateToState(true);
     } else {
       if (_alternativePercentage) {
-        widget.onAlternativePercentageExecute?.call();
+        final didDragDownwards = _startedDragAtHeight != null && _startedDragAtHeight! > _dragheight;
+        if (didDragDownwards) widget.onAlternativePercentageExecute?.call();
         animateToState(_wasExpanded);
       } else {
         animateToState(false);

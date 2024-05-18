@@ -500,7 +500,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     WaveformController.inst.generateWaveform(
       path: tr.path,
       duration: Duration(seconds: tr.duration),
-      stillPlaying: (path) => currentItem is Track && path == (currentItem as Track).path,
+      stillPlaying: (path) => currentItem is Selectable && path == (currentItem as Selectable).track.path,
     );
     final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
 

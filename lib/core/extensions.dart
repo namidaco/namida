@@ -697,3 +697,16 @@ extension ExecuteDelayedMinUtils<T> on Future<T> {
     return v;
   }
 }
+
+extension StatefulWUtils<T extends StatefulWidget> on State<T> {
+  void refreshState([void Function()? fn]) {
+    if (mounted) {
+      // ignore: invalid_use_of_protected_member
+      setState(() {
+        if (fn != null) fn();
+      });
+    } else {
+      if (fn != null) fn();
+    }
+  }
+}

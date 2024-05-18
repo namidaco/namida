@@ -10,7 +10,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/packages/miniplayer_base.dart';
@@ -84,7 +83,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       timestampsMap.clear();
       lyrics.clear();
       if (_isCurrentLineEmpty && !_checkIfTextEmpty(Lyrics.inst.currentLyricsText.value)) {
-        setState(() => _isCurrentLineEmpty = false);
+        refreshState(() => _isCurrentLineEmpty = false);
       }
       return;
     }
@@ -185,7 +184,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             if (butIsItWorth) {
               Timer(Duration(milliseconds: timeToWaitMS), () {
                 if (line == _currentLine) {
-                  setState(() => _isCurrentLineEmpty = emptyLine);
+                  refreshState(() => _isCurrentLineEmpty = emptyLine);
                 }
               });
             }
@@ -224,7 +223,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
     final bottomControlsChildren = fullscreen
         ? [
-            WaveformMiniplayer(fixPadding: true, waveKey: WaveformController.inst.waveBarsAltKey),
+            const WaveformMiniplayer(fixPadding: true),
             const SizedBox(height: 8.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -321,14 +320,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           children: [
                             Listener(
                               onPointerDown: (event) {
-                                if (_isCurrentLineEmpty) {
-                                  setState(() => _isCurrentLineEmpty = false);
-                                }
-                              },
-                              onPointerMove: (event) {
                                 _scrollTimer?.cancel();
                                 _scrollTimer = null;
                                 _canAnimateScroll = false;
+                                if (_isCurrentLineEmpty) {
+                                  refreshState(() => _isCurrentLineEmpty = false);
+                                }
                               },
                               onPointerUp: (event) {
                                 _scrollTimer = Timer(const Duration(seconds: 3), () {
@@ -336,8 +333,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   if (Player.inst.isPlaying) {
                                     _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, forceAnimate: true);
                                   }
-                                  if (currentLRC != null && _checkIfTextEmpty(_currentLine)) {
-                                    setState(() => _isCurrentLineEmpty = true);
+                                  if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
+                                    refreshState(() => _isCurrentLineEmpty = true);
                                   }
                                 });
                               },
@@ -482,7 +479,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         Positioned.fill(
           child: ScaleDetector(
             onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,
-            onScaleUpdate: (details) => setState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clamp(0.5, 2.0)),
+            onScaleUpdate: (details) => refreshState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clamp(0.5, 2.0)),
             onScaleEnd: (details) => widget.isFullScreenView ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier),
           ),
         ),

@@ -96,3 +96,37 @@ class DoubleTween extends Tween<double?> {
   @override
   double? lerp(double t) => ui.lerpDouble(begin, end, t);
 }
+
+class AnimatedColor extends ImplicitlyAnimatedWidget {
+  final Widget? child;
+  final Color? color;
+
+  const AnimatedColor({
+    super.key,
+    this.color,
+    this.child,
+    super.curve,
+    required super.duration,
+    super.onEnd,
+  });
+
+  @override
+  AnimatedWidgetBaseState<AnimatedColor> createState() => __AnimatedColorState();
+}
+
+class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> {
+  ColorTween? _colorTween;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _colorTween = visitor(_colorTween, widget.color, (dynamic value) => ColorTween(begin: value as Color)) as ColorTween?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: _colorTween?.evaluate(animation) ?? Colors.transparent,
+      child: widget.child,
+    );
+  }
+}

@@ -148,7 +148,10 @@ class SearchSortController {
     return l;
   }
 
+  bool? _preparedResources;
   Future<void> prepareResources() async {
+    if (_preparedResources == true) return;
+    _preparedResources = true;
     final enabledSearchesList = settings.activeSearchMediaTypes;
     final enabledSearches = <MediaType, bool>{};
     enabledSearchesList.loop((f, _) => enabledSearches[f] = true);
@@ -173,6 +176,7 @@ class SearchSortController {
   }
 
   void disposeResources() {
+    _preparedResources = false;
     SearchPortsProvider.inst.disposeAll();
   }
 
