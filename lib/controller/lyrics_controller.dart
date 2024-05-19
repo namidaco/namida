@@ -52,11 +52,18 @@ class Lyrics {
     lrcViewKeyFullscreen.currentState?.fillLists(lrc);
   }
 
-  Future<void> updateLyrics(Track track) async {
-    _currentTrack = track;
+  void resetLyrics() {
+    _currentTrack = null;
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
     _updateWidgets(null);
+  }
+
+  Future<void> updateLyrics(Track track) async {
+    resetLyrics();
+    _currentTrack = track;
+    bool checkInterrupted() => _currentTrack != track;
+
     try {
       textScrollController.jumpTo(0);
     } catch (_) {}
@@ -84,28 +91,31 @@ class Lyrics {
     /// 4. database.
     final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
 
+    if (checkInterrupted()) return;
+
     if (lrcLyrics.$1 != null) {
-      if (_currentTrack == track) {
-        currentLyricsLRC.value = lrcLyrics.$1;
-        _updateWidgets(lrcLyrics.$1);
-      }
+      currentLyricsLRC.value = lrcLyrics.$1;
+      _updateWidgets(lrcLyrics.$1);
+      return;
     } else if (lrcLyrics.$2 != null) {
-      if (_currentTrack == track) {
-        currentLyricsText.value = lrcLyrics.$2 ?? '';
-        _updateWidgets(null);
-      }
+      currentLyricsText.value = lrcLyrics.$2 ?? '';
+      _updateWidgets(null);
+      return;
+    }
+
+    if (checkInterrupted()) return;
+
+    /// 1. cached txt lyrics
+    /// 2. track embedded txt
+    /// 3. google search
+    final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
+
+    if (checkInterrupted()) return;
+
+    if (textLyrics != '') {
+      currentLyricsText.value = textLyrics;
     } else {
-      /// 1. cached txt lyrics
-      /// 2. track embedded txt
-      /// 3. google search
-      final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
-      if (textLyrics != '') {
-        if (_currentTrack == track) {
-          currentLyricsText.value = textLyrics;
-        }
-      } else {
-        lyricsCanBeAvailable.value = false;
-      }
+      lyricsCanBeAvailable.value = false;
     }
   }
 
@@ -154,12 +164,7 @@ class Lyrics {
   }
 
   Future<(Lrc?, String?)> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
-    Future<Lrc?> parseLRCFile(File file) async {
-      final content = await file.readAsString();
-      return content.parseLRC();
-    }
-
-    Lrc? lrc;
+    String? lrcContent;
 
     /// 1. device lrc
     /// 2. cached lrc
@@ -168,22 +173,22 @@ class Lyrics {
       final lyricsFilesLocal = lyricsFilesDevice(track);
       for (final lf in lyricsFilesLocal) {
         if (await lf.existsAndValid()) {
-          lrc = await parseLRCFile(lf);
+          lrcContent = await lf.readAsString();
           break;
         }
       }
-      if (lrc == null) {
+      if (lrcContent == null) {
         final syncedInCache = lyricsFileCacheLRC(track);
         if (await syncedInCache.existsAndValid()) {
-          lrc = await parseLRCFile(syncedInCache);
+          lrcContent = await syncedInCache.readAsString();
         } else if (trackLyrics != '') {
-          lrc = trackLyrics.parseLRC();
+          lrcContent = trackLyrics;
         }
       }
     }
 
     /// 4. if still null, fetch from database.
-    if (source != LyricsSource.local && lrc == null) {
+    if (source != LyricsSource.local && lrcContent == null) {
       final trackExt = track.toTrackExt();
       final lyrics = await searchLRCLyricsFromInternet(trackExt: trackExt);
       final lyricsModelToUse = lyrics.firstOrNull;
@@ -200,7 +205,13 @@ class Lyrics {
         }
       }
     }
-    return (lrc, null);
+
+    final lrc = lrcContent?.parseLRC();
+    if (lrc != null && lrc.lyrics.isNotEmpty) {
+      return (lrc, null);
+    } else {
+      return (null, lrcContent);
+    }
   }
 
   Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {

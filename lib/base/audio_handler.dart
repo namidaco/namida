@@ -499,6 +499,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
+    Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
     WaveformController.inst.generateWaveform(
       path: tr.path,
