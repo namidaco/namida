@@ -30,9 +30,11 @@ class WaveformComponent extends StatefulWidget {
 class WaveformComponentState extends State<WaveformComponent> with SingleTickerProviderStateMixin {
   void _updateAnimation(bool enabled) async {
     if (enabled) {
-      await _animation.animateTo(1.0, curve: widget.curve);
+      final alreadygoing = _animation.status == AnimationStatus.forward || _animation.status == AnimationStatus.completed;
+      if (!alreadygoing) await _animation.animateTo(1.0, curve: widget.curve);
     } else {
-      await _animation.animateBack(0.0, curve: widget.curve);
+      final alreadygoing = _animation.status == AnimationStatus.reverse || _animation.status == AnimationStatus.dismissed;
+      if (!alreadygoing) await _animation.animateBack(0.0, curve: widget.curve);
     }
   }
 

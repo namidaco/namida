@@ -264,47 +264,49 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
         final positionDurationRowChild = Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            GestureDetector(
+            TapDetector(
               onTap: () => Player.inst.seekSecondsBackward(),
-              onLongPress: () => Player.inst.seek(Duration.zero),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(
-                      () {
-                        final seek = MiniPlayerController.inst.seekValue.value;
-                        final diffInMs = seek - Player.inst.nowPlayingPosition;
-                        final plusOrMinus = diffInMs < 0 ? '' : '+';
-                        final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
-                        return Text(
-                          "$plusOrMinus$seekText",
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
-                        ).animateEntrance(
-                          showWhen: seek != 0,
-                          durationMS: 700,
-                          allCurves: Curves.easeInOutQuart,
-                        );
-                      },
-                    ),
-                    NamidaHero(
-                      tag: 'MINIPLAYER_POSITION',
-                      child: Obx(
-                        () => Text(
-                          Player.inst.nowPlayingPosition.milliSecondsLabel,
-                          style: context.textTheme.displaySmall,
+              child: LongPressDetector(
+                onLongPress: () => Player.inst.seek(Duration.zero),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Obx(
+                        () {
+                          final seek = MiniPlayerController.inst.seekValue.value;
+                          final diffInMs = seek - Player.inst.nowPlayingPosition;
+                          final plusOrMinus = diffInMs < 0 ? '' : '+';
+                          final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
+                          return Text(
+                            "$plusOrMinus$seekText",
+                            style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
+                          ).animateEntrance(
+                            showWhen: seek != 0,
+                            durationMS: 700,
+                            allCurves: Curves.easeInOutQuart,
+                          );
+                        },
+                      ),
+                      NamidaHero(
+                        tag: 'MINIPLAYER_POSITION',
+                        child: Obx(
+                          () => Text(
+                            Player.inst.nowPlayingPosition.milliSecondsLabel,
+                            style: context.textTheme.displaySmall,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-            GestureDetector(
+            TapDetector(
               onTap: () => Player.inst.seekSecondsForward(),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
                 child: NamidaHero(
                   tag: 'MINIPLAYER_DURATION',
                   child: Obx(
@@ -814,11 +816,15 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                       child: Obx(
                                         () {
                                           final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
-                                          return GestureDetector(
-                                            onTapDown: (value) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true,
-                                            onTapUp: (value) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false,
-                                            onTapCancel: () =>
-                                                MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value,
+                                          return TapDetector(
+                                            onTap: null,
+                                            initializer: (instance) {
+                                              instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
+                                              instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
+                                              instance.onTapCancel = () =>
+                                                  MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+                                              instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+                                            },
                                             child: AnimatedScale(
                                               duration: const Duration(milliseconds: 400),
                                               scale: isButtonHighlighed ? 0.97 : 1.0,

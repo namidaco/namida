@@ -19,9 +19,7 @@ import 'package:namida/youtube/pages/yt_search_results_page.dart';
 class ScrollSearchController {
   static ScrollSearchController get inst => _instance;
   static final ScrollSearchController _instance = ScrollSearchController._internal();
-  ScrollSearchController._internal() {
-    searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
-  }
+  ScrollSearchController._internal();
 
   final ytSearchKey = GlobalKey<YoutubeSearchResultsPageState>();
   final currentSearchType = SearchType.localTracks.obs;
@@ -41,7 +39,7 @@ class ScrollSearchController {
 
   final searchBarKey = GlobalKey<SearchBarAnimationState>();
 
-  late final NamidaSearchBar searchBarWidget;
+  late final NamidaSearchBar searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
 
   void animatePageController(LibraryTab tab) async {
     if (tab == LibraryTab.search) {

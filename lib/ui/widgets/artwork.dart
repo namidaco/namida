@@ -411,7 +411,8 @@ class MultiArtworks extends StatelessWidget {
                         compressed: false,
                         width: c.maxWidth,
                         height: c.maxHeight,
-                        fallbackToFolderCover: fallbackToFolderCover)
+                        fallbackToFolderCover: fallbackToFolderCover,
+                      )
                     : tracks.length == 2
                         ? Row(
                             children: [
@@ -427,7 +428,7 @@ class MultiArtworks extends StatelessWidget {
                                 width: c.maxWidth / 2,
                                 height: c.maxHeight,
                                 fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 80 : 100,
+                                cacheHeight: reduceQuality ? 60 : 80,
                               ),
                               ArtworkWidget(
                                 key: Key("1_${tracks[1].pathToImage}"),
@@ -441,7 +442,7 @@ class MultiArtworks extends StatelessWidget {
                                 width: c.maxWidth / 2,
                                 height: c.maxHeight,
                                 fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 80 : 100,
+                                cacheHeight: reduceQuality ? 60 : 80,
                               ),
                             ],
                           )
@@ -462,7 +463,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                       ArtworkWidget(
                                         key: Key("1_${tracks[1].pathToImage}"),
@@ -476,7 +477,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                     ],
                                   ),
@@ -492,7 +493,7 @@ class MultiArtworks extends StatelessWidget {
                                     width: c.maxWidth / 2,
                                     height: c.maxHeight,
                                     fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 80 : 100,
+                                    cacheHeight: reduceQuality ? 40 : 80,
                                   ),
                                 ],
                               )
@@ -512,7 +513,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                       ArtworkWidget(
                                         key: Key("1_${tracks[1].pathToImage}"),
@@ -526,7 +527,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                     ],
                                   ),
@@ -544,7 +545,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                       ArtworkWidget(
                                         key: Key("3_${tracks[3].pathToImage}"),
@@ -558,7 +559,7 @@ class MultiArtworks extends StatelessWidget {
                                         width: c.maxWidth / 2,
                                         height: c.maxHeight / 2,
                                         fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 60 : 100,
+                                        cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                     ],
                                   ),

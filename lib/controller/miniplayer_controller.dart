@@ -118,7 +118,8 @@ class MiniPlayerController {
   late double bottomInset;
   late double maxOffset;
   final _velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
-  final Cubic _bouncingCurve = const Cubic(0.175, 0.9, 0.32, 1.1);
+  static const _bouncingCurve = Cubic(0.175, 0.885, 0.32, 1.125);
+  static const _bouncingCurveSoft = Cubic(0.150, 0.96, 0.28, 1.04);
   double _offset = 0.0;
   double _prevOffset = 0.0;
 
@@ -332,14 +333,19 @@ class MiniPlayerController {
     WakelockController.inst.updateMiniplayerStatus(false);
     _offset = 0;
     bounceDown = false;
-    _snap(haptic: haptic);
+    _snap(haptic: haptic, curve: _bouncingCurve);
     if (_maintainStatusBarShowing) NamidaNavigator.inst.setDefaultSystemUI();
   }
 
   void _updateScrollPositionInQueue() {
     void updateIcon() {
-      final sizeInSettings = _currentItemExtent * Player.inst.currentIndex - Get.height * 0.3;
-      final pixels = queueScrollController.positions.lastOrNull?.pixels ?? sizeInSettings;
+      final sizeInSettings = _currentItemExtent * Player.inst.currentIndex - maxOffset * 0.3;
+      double pixels;
+      try {
+        pixels = queueScrollController.position.pixels;
+      } catch (_) {
+        pixels = sizeInSettings;
+      }
       if (pixels > sizeInSettings) {
         arrowIcon.value = Broken.arrow_up_1;
       } else if (pixels < sizeInSettings) {
@@ -366,7 +372,7 @@ class MiniPlayerController {
         _updateScrollPositionInQueue();
       });
     }
-    await _snap(haptic: haptic);
+    await _snap(haptic: haptic, curve: _bouncingCurveSoft);
   }
 
   Future<void> animateMiniplayer(
@@ -382,10 +388,10 @@ class MiniPlayerController {
     VideoController.inst.updateShouldShowControls(animation.value);
   }
 
-  Future<void> _snap({bool haptic = true, Curve? curve}) async {
+  Future<void> _snap({bool haptic = true, required Curve curve}) async {
     await animateMiniplayer(
       _offset / maxOffset,
-      curve: curve ?? _bouncingCurve,
+      curve: curve,
       duration: const Duration(milliseconds: 300),
     );
     bounceUp = false;
