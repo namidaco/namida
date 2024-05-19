@@ -1,5 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages, implementation_imports
 
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
@@ -20,8 +22,25 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-class AboutPage extends StatelessWidget {
+String? _latestCheckedVersion;
+
+class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
+
+  @override
+  State<AboutPage> createState() => _AboutPageState();
+}
+
+class _AboutPageState extends State<AboutPage> {
+  @override
+  void initState() {
+    super.initState();
+    if (_latestCheckedVersion == null && NamidaDeviceInfo.version != null) {
+      _checkNewVersion(NamidaDeviceInfo.version!).then((value) {
+        if (value != null) refreshState(() => _latestCheckedVersion = value);
+      });
+    }
+  }
 
   String _getDateDifferenceText() {
     final buildDate = NamidaDeviceInfo.buildDate;
@@ -36,6 +55,20 @@ class AboutPage extends StatelessWidget {
     return '';
   }
 
+  Future<String?> _checkNewVersion(String current) async {
+    try {
+      final response = await http.get(Uri(scheme: 'https', host: 'api.github.com', path: '/repos/namidaco/namida/releases/latest'));
+      final resMap = jsonDecode(response.body) as Map;
+      String? latestRelease = resMap['name'] as String?;
+      if (latestRelease == null) return null;
+      if (latestRelease.startsWith('v')) latestRelease = latestRelease.substring(1);
+      if (current.startsWith('v')) current = current.substring(1);
+      if (latestRelease == current) return null;
+      return latestRelease;
+    } catch (_) {}
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageSize = context.width * 0.25;
@@ -43,6 +76,15 @@ class AboutPage extends StatelessWidget {
     const textTopPadding = 28.0 * 2;
     final version = NamidaDeviceInfo.version ?? '';
     final buildDateDiff = _getDateDifferenceText();
+    String latestVersion = _latestCheckedVersion ?? '';
+    if (latestVersion != '') {
+      if (version.endsWith('beta') ^ latestVersion.endsWith('beta')) {
+        latestVersion = ''; // both should end with/without beta
+      } else {
+        if (!latestVersion.startsWith('v')) latestVersion = "v$latestVersion";
+      }
+    }
+
     return BackgroundWrapper(
       child: ListView(
         padding: kBottomPaddingInsets,
@@ -303,6 +345,27 @@ class AboutPage extends StatelessWidget {
                   title: 'App Version',
                   subtitle: version,
                   link: AppSocial.GITHUB_RELEASES,
+                  trailing: latestVersion == ''
+                      ? null
+                      : NamidaInkWell(
+                          borderRadius: 8.0,
+                          bgColor: context.theme.cardColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                latestVersion,
+                                style: context.textTheme.displaySmall,
+                              ),
+                              const SizedBox(width: 4.0),
+                              const Icon(
+                                Broken.arrow_up_1,
+                                size: 14.0,
+                              )
+                            ],
+                          ),
+                        ),
                 ),
                 NamidaAboutListTile(
                   icon: Broken.clipboard_text,
