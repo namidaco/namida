@@ -487,7 +487,7 @@ class Player {
     HomePageItems? homePageItem,
     bool shuffle = false,
     bool startPlaying = true,
-    bool addAsNewQueue = true,
+    bool updateQueue = true,
     void Function(Playable currentItem)? onAssigningCurrentItem,
   }) async {
     await _audioHandler.assignNewQueue(
@@ -496,13 +496,13 @@ class Player {
       maximumItems: 1000,
       onIndexAndQueueSame: _audioHandler.togglePlayPause,
       onQueueDifferent: (finalizedQueue) {
-        if (queue.firstOrNull is Selectable) {
-          if (addAsNewQueue) {
+        if (updateQueue) {
+          if (queue.firstOrNull is Selectable) {
             final trs = finalizedQueue.cast<Selectable>().tracks.toList();
             QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
           }
+          QueueController.inst.updateLatestQueue(finalizedQueue);
         }
-        QueueController.inst.updateLatestQueue(finalizedQueue, source: source, homePageItem: homePageItem);
       },
       onQueueEmpty: _audioHandler.togglePlayPause,
       startPlaying: startPlaying,

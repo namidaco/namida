@@ -43,6 +43,8 @@ class ScrollSearchController {
 
   void animatePageController(LibraryTab tab) async {
     if (tab == LibraryTab.search) {
+      MiniPlayerController.inst.snapToMini();
+      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
       ScrollSearchController.inst.toggleSearchMenu();
       await Future.delayed(const Duration(milliseconds: 100));
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {

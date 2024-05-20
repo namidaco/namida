@@ -331,44 +331,46 @@ class EqualizerPageState extends State<EqualizerPage> {
                           stream: _loudnessEnhancer.targetGainStream,
                           builder: (context, snapshot) {
                             final targetGain = snapshot.data ?? 0.0;
-                            return NamidaInkWell(
-                              onTap: () {
-                                settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
-                                _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
-                              },
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(height: 12.0),
-                                  _SliderTextWidget(
-                                    icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
-                                    title: lang.LOUDNESS_ENHANCER,
-                                    value: targetGain,
-                                    restoreDefault: () {
-                                      settings.equalizer.save(loudnessEnhancer: 0.0);
-                                      _loudnessEnhancer.setTargetGain(0.0);
-                                      _loudnessKey.currentState?._updateVal(0.0);
-                                    },
-                                    trailing: CustomSwitch(
-                                      active: enabled,
-                                      passedColor: null,
-                                    ),
-                                  ),
-                                  Obx(
-                                    () => _CuteSlider(
-                                      key: _loudnessKey,
-                                      initialValue: targetGain,
-                                      min: -1,
-                                      max: 1,
-                                      onChanged: (newVal) {
-                                        settings.equalizer.save(loudnessEnhancer: newVal);
-                                        _loudnessEnhancer.setTargetGain(newVal);
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                NamidaInkWell(
+                                  onTap: () {
+                                    settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
+                                    _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                    child: _SliderTextWidget(
+                                      icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
+                                      title: lang.LOUDNESS_ENHANCER,
+                                      value: targetGain,
+                                      restoreDefault: () {
+                                        settings.equalizer.save(loudnessEnhancer: 0.0);
+                                        _loudnessEnhancer.setTargetGain(0.0);
+                                        _loudnessKey.currentState?._updateVal(0.0);
                                       },
-                                      tapToUpdate: settings.equalizer.uiTapToUpdate.value,
+                                      trailing: CustomSwitch(
+                                        active: enabled,
+                                        passedColor: null,
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                                Obx(
+                                  () => _CuteSlider(
+                                    key: _loudnessKey,
+                                    initialValue: targetGain,
+                                    min: -1,
+                                    max: 1,
+                                    onChanged: (newVal) {
+                                      settings.equalizer.save(loudnessEnhancer: newVal);
+                                      _loudnessEnhancer.setTargetGain(newVal);
+                                    },
+                                    tapToUpdate: settings.equalizer.uiTapToUpdate.value,
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         );

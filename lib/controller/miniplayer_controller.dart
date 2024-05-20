@@ -162,14 +162,12 @@ class MiniPlayerController {
 
   Future<bool> onWillPop() async {
     bool val = true;
-    // final isMini = maxOffset == 0;
-    final isExpanded = _offset == maxOffset;
-    final isQueue = _offset > maxOffset;
-    if (isQueue) {
+    if (_offset > maxOffset) {
+      // -- isQueue
       snapToExpanded();
       val = false;
-    }
-    if (isExpanded) {
+    } else if (_offset == maxOffset) {
+      // -- isExpanded
       snapToMini();
       val = false;
     }

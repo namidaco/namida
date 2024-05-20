@@ -107,22 +107,21 @@ class QueueController {
     await _saveQueueToStorage(newQueue);
   }
 
-  Future<void> updateLatestQueue(
-    List<Playable> items, {
-    required QueueSource source,
-    HomePageItems? homePageItem,
-  }) async {
-    await _saveLatestQueueToStorage(items);
-
-    // updating last queue inside queuesMap.
-    if (items.firstOrNull is Track) {
-      final latestQueueInsideMap = _latestQueueInMap;
-      if (latestQueueInsideMap != null) {
-        await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: items.cast<Track>()));
-      } else {
-        await addNewQueue(tracks: items.cast<Track>(), source: source, homePageItem: homePageItem);
-      }
-    }
+  Future<void> updateLatestQueue(List<Playable> items) async {
+    await Future.wait([
+      _saveLatestQueueToStorage(items),
+      () async {
+        // updating last queue inside queuesMap.
+        final firstItem = items.firstOrNull;
+        if (firstItem is Selectable) {
+          final latestQueueInsideMap = _latestQueueInMap;
+          final tracks = items.cast<Selectable>().tracks.toList();
+          if (latestQueueInsideMap != null) {
+            await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
+          }
+        }
+      }(),
+    ]);
   }
 
   Future<void> insertTracksQueue(Queue queue, List<Track> tracks, int index) async {
@@ -252,7 +251,7 @@ class QueueController {
       latestQueue,
       QueueSource.playerQueue,
       startPlaying: false,
-      addAsNewQueue: false,
+      updateQueue: false,
     );
   }
 

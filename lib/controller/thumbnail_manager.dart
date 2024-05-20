@@ -62,11 +62,16 @@ class ThumbnailManager {
   static Future<String?> _getChannelAvatarUrlIsolate(String channelId) async {
     final url = 'https://www.youtube.com/channel/$channelId?hl=en';
     final client = http.Client();
-    final response = await client.get(Uri.parse(url), headers: ExtractorHttpClient.defaultHeaders);
-    final raw = response.body;
-    final s = parser.parse(raw).querySelector('meta[property="og:image"]')?.attributes['content'];
-    client.close();
-    return s;
+    try {
+      final response = await client.get(Uri.parse(url), headers: ExtractorHttpClient.defaultHeaders);
+      final raw = response.body;
+      final s = parser.parse(raw).querySelector('meta[property="og:image"]')?.attributes['content'];
+      return s;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
+    }
   }
 
   File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl, bool isTemp = false}) {

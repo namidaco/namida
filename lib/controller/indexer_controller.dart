@@ -492,7 +492,7 @@ class Indexer {
           composer: doMagic(tags.composer),
           trackNo: trackInfo.tags.trackNumber.getIntValue(),
           duration: durationInSeconds,
-          year: tags.year.getIntValue(),
+          year: TrackExtended.enforceYearFormat(tags.year),
           comment: tags.comment,
           bitrate: trackInfo.bitRate,
           sampleRate: trackInfo.sampleRate,
