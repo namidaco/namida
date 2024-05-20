@@ -660,6 +660,12 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
             final currentImage = widget.currentImageBuilder(currentItem, bcp);
             final iconBoxSize = (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp;
             final iconSize = (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp;
+
+            final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
+            final nextPrevIconSize = 21.0 + 11.0 * nextprevmultiplier;
+            final nextPrevIconPadding = 8.0 + 4.0 * nextprevmultiplier;
+            final nextPrevOpacity = (nextprevmultiplier + 1).clamp(0.0, 1.0);
+
             return Stack(
               children: [
                 /// MiniPlayer Body
@@ -801,12 +807,18 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  NamidaIconButton(
-                                    icon: Broken.previous,
-                                    iconSize: 22.0 + 10 * rcp,
-                                    horizontalPadding: 12.0,
-                                    verticalPadding: 12.0,
-                                    onPressed: MiniPlayerController.inst.snapToPrev,
+                                  Opacity(
+                                    opacity: nextPrevOpacity,
+                                    child: IgnorePointer(
+                                      ignoring: nextPrevOpacity == 0.0,
+                                      child: NamidaIconButton(
+                                        icon: Broken.previous,
+                                        iconSize: nextPrevIconSize,
+                                        horizontalPadding: nextPrevIconPadding,
+                                        verticalPadding: nextPrevIconPadding,
+                                        onPressed: MiniPlayerController.inst.snapToPrev,
+                                      ),
+                                    ),
                                   ),
                                   SizedBox(
                                     key: const Key("playpause"),
@@ -901,12 +913,18 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                       ),
                                     ),
                                   ),
-                                  NamidaIconButton(
-                                    icon: Broken.next,
-                                    iconSize: 22.0 + 10 * rcp,
-                                    horizontalPadding: 12.0,
-                                    verticalPadding: 12.0,
-                                    onPressed: MiniPlayerController.inst.snapToNext,
+                                  Opacity(
+                                    opacity: nextPrevOpacity,
+                                    child: IgnorePointer(
+                                      ignoring: nextPrevOpacity == 0.0,
+                                      child: NamidaIconButton(
+                                        icon: Broken.next,
+                                        iconSize: nextPrevIconSize,
+                                        horizontalPadding: nextPrevIconPadding,
+                                        verticalPadding: nextPrevIconPadding,
+                                        onPressed: MiniPlayerController.inst.snapToNext,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -956,6 +974,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   child: _TrackInfo(
                                     textData: prevText,
                                     p: bp,
+                                    qp: qp,
                                     cp: bcp,
                                     bottomOffset: bottomOffset,
                                     maxOffset: maxOffset,
@@ -977,6 +996,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                 child: _TrackInfo(
                                   textData: currentText,
                                   p: bp,
+                                  qp: qp,
                                   cp: bcp,
                                   bottomOffset: bottomOffset,
                                   maxOffset: maxOffset,
@@ -992,6 +1012,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   child: _TrackInfo(
                                     textData: nextText,
                                     p: bp,
+                                    qp: qp,
                                     cp: bcp,
                                     bottomOffset: bottomOffset,
                                     maxOffset: maxOffset,
@@ -1169,6 +1190,7 @@ class _RawImageContainer extends StatelessWidget {
 class _TrackInfo extends StatelessWidget {
   final MiniplayerTextData textData;
   final double cp;
+  final double qp;
   final double p;
   final Size screenSize;
   final double bottomOffset;
@@ -1178,6 +1200,7 @@ class _TrackInfo extends StatelessWidget {
     Key? key,
     required this.textData,
     required this.cp,
+    required this.qp,
     required this.p,
     required this.screenSize,
     required this.bottomOffset,
@@ -1207,7 +1230,7 @@ class _TrackInfo extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Padding(
-                            padding: EdgeInsets.only(right: 22.0 + 92 * (1 - cp)),
+                            padding: EdgeInsets.only(right: 26.0 + (82 * (1 - cp) * (1 - qp)) + (60 * qp)),
                             child: InkWell(
                               onTapUp: cp == 1 ? textData.onMenuOpen : null,
                               highlightColor: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
