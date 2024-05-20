@@ -57,7 +57,9 @@ class _AboutPageState extends State<AboutPage> {
 
   Future<String?> _checkNewVersion(String current) async {
     try {
-      final response = await http.get(Uri(scheme: 'https', host: 'api.github.com', path: '/repos/namidaco/namida/releases/latest'));
+      final isBeta = current.endsWith('beta');
+      final repoName = isBeta ? 'namida-snapshots' : 'namida';
+      final response = await http.get(Uri(scheme: 'https', host: 'api.github.com', path: '/repos/namidaco/$repoName/releases/latest'));
       final resMap = jsonDecode(response.body) as Map;
       String? latestRelease = resMap['name'] as String?;
       if (latestRelease == null) return null;
@@ -69,21 +71,29 @@ class _AboutPageState extends State<AboutPage> {
     return null;
   }
 
+  String? _prettyVersion(String? v) {
+    if (v == null) return null;
+    if (!v.startsWith('v')) v = "v$v";
+    return v;
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageSize = context.width * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
-    final version = NamidaDeviceInfo.version ?? '';
+    final version = _prettyVersion(NamidaDeviceInfo.version) ?? '';
     final buildDateDiff = _getDateDifferenceText();
-    String latestVersion = _latestCheckedVersion ?? '';
-    if (latestVersion != '') {
-      if (version.endsWith('beta') ^ latestVersion.endsWith('beta')) {
-        latestVersion = ''; // both should end with/without beta
-      } else {
-        if (!latestVersion.startsWith('v')) latestVersion = "v$latestVersion";
-      }
-    }
+    final latestVersion = _prettyVersion(_latestCheckedVersion)?.split('+').first;
+
+    final fallbackAvatar = SizedBox(
+      width: 48.0,
+      height: 48.0,
+      child: Icon(
+        Broken.user,
+        color: Colors.white.withOpacity(0.8),
+      ),
+    );
 
     return BackgroundWrapper(
       child: ListView(
@@ -108,35 +118,25 @@ class _AboutPageState extends State<AboutPage> {
                       child: NamidaAboutListTile(
                         visualDensity: VisualDensity.compact,
                         trailing: const Icon(Broken.code_circle),
-                        leading: () {
-                          final ic = SizedBox(
+                        leading: Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color.fromRGBO(25, 25, 25, 0.8),
+                          ),
+                          child: Image.network(
+                            'https://avatars.githubusercontent.com/u/85245079',
                             width: 48.0,
                             height: 48.0,
-                            child: Icon(
-                              Broken.user,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          );
-                          return Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color.fromRGBO(25, 25, 25, 0.8),
-                            ),
-                            child: Image.network(
-                              'https://avatars.githubusercontent.com/u/85245079',
-                              width: 48.0,
-                              height: 48.0,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
-                                  return child;
-                                }
-                                return ic;
-                              },
-                              errorBuilder: (context, error, stackTrace) => ic,
-                            ),
-                          );
-                        }(),
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
+                                return child;
+                              }
+                              return fallbackAvatar;
+                            },
+                            errorBuilder: (context, error, stackTrace) => fallbackAvatar,
+                          ),
+                        ),
                         title: 'Developer',
                         subtitle: 'MSOB7YY',
                         link: 'https://github.com/MSOB7YY',
@@ -174,10 +174,25 @@ class _AboutPageState extends State<AboutPage> {
                         style: context.textTheme.displayLarge,
                       ),
                       if (version != '')
-                        Text(
-                          version,
-                          style: context.textTheme.displaySmall,
-                        ),
+                        latestVersion != null && latestVersion != version
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    version,
+                                    style: context.textTheme.displaySmall,
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Icon(
+                                    Broken.arrow_up_1,
+                                    size: 14.0,
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                version,
+                                style: context.textTheme.displaySmall,
+                              ),
                       if (buildDateDiff != '')
                         Text(
                           buildDateDiff,
@@ -345,27 +360,39 @@ class _AboutPageState extends State<AboutPage> {
                   title: 'App Version',
                   subtitle: version,
                   link: AppSocial.GITHUB_RELEASES,
-                  trailing: latestVersion == ''
-                      ? null
-                      : NamidaInkWell(
-                          borderRadius: 8.0,
-                          bgColor: context.theme.cardColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
+                  trailing: NamidaInkWell(
+                    borderRadius: 8.0,
+                    bgColor: context.theme.cardColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: latestVersion == null
+                          ? [
                               Text(
-                                latestVersion,
+                                '?',
                                 style: context.textTheme.displaySmall,
                               ),
-                              const SizedBox(width: 4.0),
-                              const Icon(
-                                Broken.arrow_up_1,
-                                size: 14.0,
-                              )
-                            ],
-                          ),
-                        ),
+                            ]
+                          : latestVersion != version
+                              ? [
+                                  Text(
+                                    latestVersion,
+                                    style: context.textTheme.displaySmall,
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Icon(
+                                    Broken.arrow_up_1,
+                                    size: 14.0,
+                                  ),
+                                ]
+                              : [
+                                  const Icon(
+                                    Broken.tick_circle,
+                                    size: 14.0,
+                                  ),
+                                ],
+                    ),
+                  ),
                 ),
                 NamidaAboutListTile(
                   icon: Broken.clipboard_text,
