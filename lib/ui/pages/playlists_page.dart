@@ -56,7 +56,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final isInsideDialog = widget.tracksToAdd != null;
+    final tracksToAdd = widget.tracksToAdd;
+    final isInsideDialog = tracksToAdd != null;
     final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
     final defaultCardHorizontalPadding = context.width * 0.045;
     final defaultCardHorizontalPaddingCenter = context.width * 0.035;
@@ -238,6 +239,24 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 ),
                               ),
                             const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
+                            if (isInsideDialog)
+                              SliverToBoxAdapter(
+                                child: PlaylistTile(
+                                  playlistName: k_PLAYLIST_NAME_FAV,
+                                  onTap: () => PlaylistController.inst.addTracksToPlaylist(
+                                    PlaylistController.inst.favouritesPlaylist.value,
+                                    tracksToAdd,
+                                    duplicationActions: [
+                                      PlaylistAddDuplicateAction.addAllAndRemoveOldOnes,
+                                      PlaylistAddDuplicateAction.addOnlyMissing,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            if (isInsideDialog)
+                              const SliverToBoxAdapter(
+                                child: NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)),
+                              ),
                             if (widget.countPerRow == 1)
                               SliverFixedExtentList.builder(
                                 itemCount: SearchSortController.inst.playlistSearchList.length,
@@ -250,14 +269,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     shouldAnimate: _shouldAnimate,
                                     child: PlaylistTile(
                                       playlistName: key,
-                                      onTap: widget.tracksToAdd != null
-                                          ? () => PlaylistController.inst.addTracksToPlaylist(playlist, widget.tracksToAdd!)
+                                      onTap: tracksToAdd != null
+                                          ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd)
                                           : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
                                     ),
                                   );
                                 },
-                              ),
-                            if (widget.countPerRow > 1)
+                              )
+                            else if (widget.countPerRow > 1)
                               SliverGrid.builder(
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: widget.countPerRow,

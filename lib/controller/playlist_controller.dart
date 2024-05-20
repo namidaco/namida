@@ -55,7 +55,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     );
   }
 
-  void addTracksToPlaylist(Playlist playlist, List<Track> tracks, {TrackSource source = TrackSource.local}) async {
+  void addTracksToPlaylist(
+    Playlist playlist,
+    List<Track> tracks, {
+    TrackSource source = TrackSource.local,
+    List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.values,
+  }) async {
     Iterable<TrackWithDate> convertTracks(List<Track> trs) => trs.map((e) => TrackWithDate(
           dateAdded: currentTimeMS,
           track: e,
@@ -70,7 +75,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
             track: e,
             source: source,
           );
-      final action = await _showDuplicatedDialogAction();
+      final action = await _showDuplicatedDialogAction(duplicationActions);
       switch (action) {
         case PlaylistAddDuplicateAction.justAddEverything:
           playlist.tracks.addAll(convertTracks(tracks));
@@ -126,7 +131,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
   }
 
-  Future<PlaylistAddDuplicateAction?> _showDuplicatedDialogAction() async {
+  Future<PlaylistAddDuplicateAction?> _showDuplicatedDialogAction(List<PlaylistAddDuplicateAction> duplicationActions) async {
     final action = Rxn<PlaylistAddDuplicateAction>();
     await NamidaNavigator.inst.navigateDialog(
       onDismissing: () {
@@ -162,7 +167,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
               ),
               const SizedBox(height: 12.0),
               Column(
-                children: PlaylistAddDuplicateAction.values
+                children: duplicationActions
                     .map(
                       (e) => Padding(
                         padding: const EdgeInsets.all(3.0),
@@ -543,7 +548,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   static Future<Playlist?> _prepareFavouritesFile(String path) async {
     try {
       final response = File(path).readAsJsonSync();
-      return Playlist.fromJson(response, (itemJson) => TrackWithDate.fromJson(itemJson));
+      return Playlist.fromJson(response, TrackWithDate.fromJson);
     } catch (_) {}
     return null;
   }
@@ -554,7 +559,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
-          final pl = Playlist.fromJson(response, (itemJson) => TrackWithDate.fromJson(itemJson));
+          final pl = Playlist.fromJson(response, TrackWithDate.fromJson);
           map[pl.name] = pl;
         } catch (e) {
           continue;
