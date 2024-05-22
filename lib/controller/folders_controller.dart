@@ -29,7 +29,7 @@ class Folders {
   /// Highlights the track that is meant to be navigated to after calling [goToFolder].
   final RxnInt indexToScrollTo = RxnInt();
 
-  double _latestScrollOffset = 0;
+  final _latestScrollOffset = <Folder?, double>{};
 
   /// Indicates wether the navigator can go back at this point.
   /// Returns true only if at home, otherwise will call [stepOut] and return false.
@@ -53,7 +53,7 @@ class Folders {
     if (isHome.value != false) isHome.value = false;
     if (isInside.value != true) isInside.value = true;
 
-    _saveScrollOffset();
+    _saveScrollOffset(currentFolder.value);
 
     final dirInside = folder.getDirectoriesInside();
 
@@ -72,7 +72,7 @@ class Folders {
       folder = currentFolder.value?.getParentFolder();
     }
     indexToScrollTo.value = null;
-    stepIn(folder, jumpTo: _latestScrollOffset);
+    stepIn(folder, jumpTo: _latestScrollOffset[folder] ?? 0);
   }
 
   void onFirstLoad() {
@@ -87,11 +87,12 @@ class Folders {
     Folders.inst.isInside.value = false;
   }
 
-  void _saveScrollOffset() {
+  void _saveScrollOffset(Folder? folder) {
+    if (folder == null) return;
     try {
-      _latestScrollOffset = LibraryTab.folders.scrollController.offset;
+      _latestScrollOffset[folder] = LibraryTab.folders.scrollController.offset;
     } catch (_) {
-      _latestScrollOffset = 0;
+      _latestScrollOffset[folder] = 0;
     }
   }
 

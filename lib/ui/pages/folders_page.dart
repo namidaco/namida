@@ -163,7 +163,7 @@ class FoldersPage extends StatelessWidget {
                                         if (folder.tracks.isEmpty) return const SizedBox();
                                         return FolderTile(
                                           folder: folder,
-                                          subtitle: folder.hasSimilarFolderNames ? folder.parentPath.formatPath() : null,
+                                          subtitle: folder.hasSimilarFolderNames ? folder.parent.path.formatPath() : null,
                                         );
                                       },
                                     ),

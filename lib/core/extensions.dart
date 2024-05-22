@@ -718,7 +718,11 @@ extension StringPathUtils on String {
     String extension = ''; // represents the latest part
     final path = this;
     int latestIndex = path.length - 1;
-    if (latestIndex >= 0 && path[latestIndex] == until) latestIndex - 1;
+
+    // -- skipping separator at the end.
+    while (latestIndex > 0 && path[latestIndex] == until) {
+      latestIndex--;
+    }
 
     while (latestIndex > 0) {
       final char = path[latestIndex];

@@ -85,6 +85,7 @@ class _AboutPageState extends State<AboutPage> {
     final version = _prettyVersion(NamidaDeviceInfo.version) ?? '';
     final buildDateDiff = _getDateDifferenceText();
     final latestVersion = _prettyVersion(_latestCheckedVersion)?.split('+').first;
+    final isBeta = version.endsWith('beta');
 
     final fallbackAvatar = SizedBox(
       width: 48.0,
@@ -359,7 +360,7 @@ class _AboutPageState extends State<AboutPage> {
                   icon: Broken.cpu,
                   title: 'App Version',
                   subtitle: version,
-                  link: AppSocial.GITHUB_RELEASES,
+                  link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
                   trailing: NamidaInkWell(
                     borderRadius: 8.0,
                     bgColor: context.theme.cardColor,

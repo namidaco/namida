@@ -473,6 +473,7 @@ class _CustomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomNavBar = NavigationBarTheme(
       data: NavigationBarThemeData(
+        backgroundColor: context.theme.navigationBarTheme.backgroundColor,
         indicatorColor: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(20), context.theme.colorScheme.secondaryContainer),
         labelTextStyle: MaterialStatePropertyAll(
           TextStyle(

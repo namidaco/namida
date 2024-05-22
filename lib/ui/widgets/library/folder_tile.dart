@@ -113,7 +113,7 @@ class FolderTile extends StatelessWidget {
               ),
               MoreIcon(
                 padding: 6.0,
-                onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
+                onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: tracks.isEmpty ? true : false),
                 onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
               ),
               const SizedBox(
