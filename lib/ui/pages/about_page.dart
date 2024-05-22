@@ -185,7 +185,7 @@ class _AboutPageState extends State<AboutPage> {
                                   const SizedBox(width: 4.0),
                                   const Icon(
                                     Broken.arrow_up_1,
-                                    size: 14.0,
+                                    size: 8.0,
                                   ),
                                 ],
                               )

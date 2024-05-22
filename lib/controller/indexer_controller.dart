@@ -775,6 +775,7 @@ class Indexer {
     tracksInfoList.clear();
     allTracksMappedByPath.clear();
     allTracksMappedByYTID.clear();
+    _currentFileNamesMap.clear();
     SearchSortController.inst.sortMedia(MediaType.track);
   }
 

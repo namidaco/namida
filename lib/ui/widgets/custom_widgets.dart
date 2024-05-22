@@ -1861,16 +1861,19 @@ class NamidaDrawerListTile extends StatelessWidget {
                 color: enabled ? Colors.white.withAlpha(200) : null,
                 size: iconSize,
               ),
-              if (title != '') ...[
-                const SizedBox(width: 12.0),
-                Text(
-                  title,
-                  style: context.textTheme.displayMedium?.copyWith(
-                    color: enabled ? Colors.white.withAlpha(200) : null,
-                    fontSize: 15.0.multipliedFontScale,
+              if (title != '') const SizedBox(width: 12.0),
+              if (title != '')
+                Expanded(
+                  child: Text(
+                    title,
+                    style: context.textTheme.displayMedium?.copyWith(
+                      color: enabled ? Colors.white.withAlpha(200) : null,
+                      fontSize: 15.0.multipliedFontScale,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ],
             ],
           ),
         ),

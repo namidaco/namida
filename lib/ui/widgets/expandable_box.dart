@@ -58,17 +58,24 @@ class ExpandableBox extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(width: 18.0),
-                  Row(
-                    children: [
-                      if (leftWidgets != null) ...leftWidgets!,
-                      Text(
-                        leftText,
-                        style: context.textTheme.displayMedium,
-                      ),
-                      if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
-                    ],
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (leftWidgets != null) ...leftWidgets!,
+                        Expanded(
+                          child: Text(
+                            leftText,
+                            style: context.textTheme.displayMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
+                      ],
+                    ),
                   ),
-                  const Spacer(),
+                  // const Spacer(),
                   if (gridWidget != null) gridWidget!,
                   // Sort By Menu
                   const SizedBox(width: 4.0),

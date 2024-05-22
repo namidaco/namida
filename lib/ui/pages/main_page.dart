@@ -471,25 +471,36 @@ class _CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomNavBar = Obx(
-      () => NavigationBar(
-        animationDuration: const Duration(seconds: 1),
-        elevation: 22,
-        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        height: 64.0,
-        onDestinationSelected: (value) async {
-          final tab = value.toEnum();
-          ScrollSearchController.inst.animatePageController(tab);
-        },
-        selectedIndex: settings.selectedLibraryTab.value.toInt().toIf(0, -1),
-        destinations: [
-          ...settings.libraryTabs.map(
-            (e) => NavigationDestination(
-              icon: Icon(e.toIcon()),
-              label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
-            ),
+    final bottomNavBar = NavigationBarTheme(
+      data: NavigationBarThemeData(
+        indicatorColor: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(20), context.theme.colorScheme.secondaryContainer),
+        labelTextStyle: MaterialStatePropertyAll(
+          TextStyle(
+            overflow: TextOverflow.ellipsis,
+            fontSize: 13.0.multipliedFontScale,
           ),
-        ],
+        ),
+      ),
+      child: Obx(
+        () => NavigationBar(
+          animationDuration: const Duration(seconds: 1),
+          elevation: 22,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          height: 64.0,
+          onDestinationSelected: (value) async {
+            final tab = value.toEnum();
+            ScrollSearchController.inst.animatePageController(tab);
+          },
+          selectedIndex: settings.selectedLibraryTab.value.toInt().toIf(0, -1),
+          destinations: [
+            ...settings.libraryTabs.map(
+              (e) => NavigationDestination(
+                icon: Icon(e.toIcon()),
+                label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
