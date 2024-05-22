@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -11,8 +13,10 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -514,8 +518,10 @@ void showLibraryTracksChooseDialog({
   String trackName = '',
   Color? colorScheme,
 }) async {
-  final allTracksList = List<Track>.from(allTracksInLibrary).obs;
+  final allTracksListBase = List<Track>.from(allTracksInLibrary);
+  final allTracksList = allTracksListBase.obs;
   final selectedTrack = Rxn<Track>();
+  final isSearching = false.obs;
   void onTrackTap(Track tr) {
     if (selectedTrack.value == tr) {
       selectedTrack.value = null;
@@ -525,14 +531,24 @@ void showLibraryTracksChooseDialog({
   }
 
   final searchController = TextEditingController();
+  final scrollController = ScrollController();
   final focusNode = FocusNode();
+  final searchManager = _TracksSearchTemp(
+    (tracks) {
+      allTracksList.value = tracks;
+      isSearching.value = false;
+    },
+  );
 
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       allTracksList.close();
       selectedTrack.close();
+      isSearching.close();
       searchController.dispose();
+      scrollController.dispose();
       focusNode.dispose();
+      searchManager.dispose();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
@@ -552,7 +568,7 @@ void showLibraryTracksChooseDialog({
       ],
       child: SizedBox(
         width: Get.width,
-        height: Get.height * 0.6,
+        height: Get.height * 0.7,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -567,59 +583,75 @@ void showLibraryTracksChooseDialog({
                       textFieldController: searchController,
                       textFieldHintText: lang.SEARCH,
                       onTextFieldValueChanged: (value) {
-                        final matched = allTracksInLibrary.where((element) {
-                          final titleMatch = element.title.cleanUpForComparison.contains(value);
-                          final artistMatch = element.originalArtist.cleanUpForComparison.contains(value);
-                          final albumMatch = element.album.cleanUpForComparison.contains(value);
-                          return titleMatch || artistMatch || albumMatch;
-                        });
-                        allTracksList.value = matched.toList();
+                        if (value.isEmpty) {
+                          allTracksList.value = allTracksListBase;
+                        } else {
+                          isSearching.value = true;
+                          searchManager.search(value);
+                        }
                       },
                     ),
                   ),
                   const SizedBox(width: 8.0),
-                  NamidaIconButton(
-                    icon: Broken.close_circle,
-                    onPressed: () {
-                      allTracksList
-                        ..clear()
-                        ..addAll(allTracksInLibrary);
-                      searchController.clear();
-                    },
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      NamidaIconButton(
+                        icon: Broken.close_circle,
+                        onPressed: () {
+                          allTracksList.value = allTracksListBase;
+                          searchController.clear();
+                        },
+                      ),
+                      Obx(
+                        () => isSearching.value
+                            ? const CircularProgressIndicator.adaptive(
+                                strokeWidth: 2.0,
+                                strokeCap: StrokeCap.round,
+                              )
+                            : const SizedBox(),
+                      ),
+                    ],
                   )
                 ],
               ),
             ),
             const SizedBox(height: 8.0),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                trackName,
-                style: Get.textTheme.displayMedium,
+            if (trackName != '')
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  trackName,
+                  style: Get.textTheme.displayMedium,
+                ),
               ),
-            ),
-            const SizedBox(height: 8.0),
+            if (trackName != '') const SizedBox(height: 8.0),
             Expanded(
-              child: Obx(
-                () => ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: allTracksList.length,
-                  itemBuilder: (context, i) {
-                    final tr = allTracksList[i];
-                    return Obx(
-                      () => TrackTile(
-                        trackOrTwd: tr,
-                        index: i,
-                        queueSource: QueueSource.playlist,
-                        onTap: () => onTrackTap(tr),
-                        onRightAreaTap: () => onTrackTap(tr),
-                        trailingWidget: NamidaCheckMark(
-                          size: 22.0,
-                          active: selectedTrack.value == tr,
+              child: NamidaScrollbar(
+                controller: scrollController,
+                child: Obx(
+                  () => ListView.builder(
+                    controller: scrollController,
+                    padding: EdgeInsets.zero,
+                    itemCount: allTracksList.length,
+                    itemExtent: Dimensions.inst.trackTileItemExtent,
+                    itemBuilder: (context, i) {
+                      final tr = allTracksList[i];
+                      return Obx(
+                        () => TrackTile(
+                          trackOrTwd: tr,
+                          index: i,
+                          queueSource: QueueSource.playlist,
+                          onTap: () => onTrackTap(tr),
+                          onRightAreaTap: () => onTrackTap(tr),
+                          trailingWidget: NamidaCheckMark(
+                            size: 22.0,
+                            active: selectedTrack.value == tr,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -628,4 +660,29 @@ void showLibraryTracksChooseDialog({
       ),
     ),
   );
+}
+
+class _TracksSearchTemp with PortsProvider<Map> {
+  final void Function(List<Track> tracks) _onResult;
+  _TracksSearchTemp(this._onResult);
+
+  void search(String text) async {
+    await initialize();
+    final p = {'text': text, 'temp': true};
+    await sendPort(p);
+  }
+
+  @override
+  void onResult(dynamic result) {
+    final r = result as (List<Track>, bool, String);
+    _onResult(r.$1);
+  }
+
+  @override
+  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
+    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, sendPrepared: true);
+    return IsolateFunctionReturnBuild(SearchSortController.searchTracksIsolate, params);
+  }
+
+  Future<void> dispose() async => await disposePort();
 }

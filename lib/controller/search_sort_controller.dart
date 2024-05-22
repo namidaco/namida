@@ -198,30 +198,36 @@ class SearchSortController {
         }
       },
       isolateFunction: (itemsSendPort) async {
-        final params = {
-          'tracks': Indexer.inst.allTracksMappedByPath.values
-              .map((e) => {
-                    'title': e.title,
-                    'artist': e.originalArtist,
-                    'album': e.album,
-                    'albumArtist': e.albumArtist,
-                    'genre': e.originalGenre,
-                    'composer': e.composer,
-                    'year': e.year,
-                    'comment': e.comment,
-                    'path': e.path,
-                  })
-              .toList(),
-          'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-          'genresSplitConfig': GenresSplitConfig.settings().toMap(),
-          'filters': settings.trackSearchFilter.cast<TrackSearchFilter>(),
-          'cleanup': _shouldCleanup,
-          'sendPort': itemsSendPort,
-        };
-
-        await Isolate.spawn(_searchTracksIsolate, params);
+        final params = generateTrackSearchIsolateParams(itemsSendPort);
+        await Isolate.spawn(searchTracksIsolate, params);
       },
     );
+  }
+
+  Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort, {bool sendPrepared = false}) {
+    final params = {
+      'tracks': Indexer.inst.allTracksMappedByPath.values
+          .map((e) => {
+                'title': e.title,
+                'artist': e.originalArtist,
+                'album': e.album,
+                'albumArtist': e.albumArtist,
+                'genre': e.originalGenre,
+                'composer': e.composer,
+                'year': e.year,
+                'comment': e.comment,
+                'path': e.path,
+              })
+          .toList(),
+      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
+      'genresSplitConfig': GenresSplitConfig.settings().toMap(),
+      // ignore: invalid_use_of_protected_member
+      'filters': settings.trackSearchFilter.value,
+      'cleanup': _shouldCleanup,
+      'sendPrepared': sendPrepared,
+      'sendPort': sendPort,
+    };
+    return params;
   }
 
   Future<SendPort> _preparePlaylistPorts() async {
@@ -306,12 +312,13 @@ class SearchSortController {
     });
   }
 
-  static void _searchTracksIsolate(Map params) {
+  static void searchTracksIsolate(Map params) {
     final tracks = params['tracks'] as List<Map>;
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
     final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
     final tsf = params['filters'] as List<TrackSearchFilter>;
     final cleanup = params['cleanup'] as bool;
+    final sendPrepared = params['sendPrepared'] as bool?;
     final sendPort = params['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
@@ -415,6 +422,7 @@ class SearchSortController {
 
       sendPort.send((result, temp, text));
     });
+    if (sendPrepared == true) sendPort.send(null);
   }
 
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
