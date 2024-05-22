@@ -29,13 +29,15 @@ class FolderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks;
+    final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value);
+    final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5);
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
         onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
-        onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
+        onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
           child: Row(
@@ -51,20 +53,25 @@ class FolderTile extends StatelessWidget {
                       children: [
                         Icon(
                           Broken.folder,
-                          size: (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value),
+                          size: iconSize,
                         ),
                         Positioned(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: ArtworkWidget(
-                              key: ValueKey(tracks.firstOrNull),
-                              track: tracks.firstOrNull,
-                              blur: 0,
-                              borderRadius: 6,
-                              thumbnailSize: (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5),
-                              path: tracks.firstOrNull?.pathToImage,
-                              forceSquared: true,
-                            ),
+                            child: tracks.isEmpty && dirInside.isNotEmpty
+                                ? Icon(
+                                    Broken.folder_open,
+                                    size: thumbSize,
+                                  )
+                                : ArtworkWidget(
+                                    key: ValueKey(tracks.firstOrNull),
+                                    track: tracks.firstOrNull,
+                                    blur: 0,
+                                    borderRadius: 6,
+                                    thumbnailSize: thumbSize,
+                                    path: tracks.firstOrNull?.pathToImage,
+                                    forceSquared: true,
+                                  ),
                           ),
                         ),
                       ],
@@ -106,7 +113,8 @@ class FolderTile extends StatelessWidget {
               ),
               MoreIcon(
                 padding: 6.0,
-                onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
+                onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
+                onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
               ),
               const SizedBox(
                 width: 4.0,

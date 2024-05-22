@@ -43,7 +43,7 @@ class FoldersPage extends StatelessWidget {
               final mainMapFoldersKeys = Indexer.inst.mainMapFolders.keys.toList();
               return settings.enableFoldersHierarchy.value
 
-                  /// Folders in heirarchy
+                  // == Folders in heirarchy
                   ? Column(
                       children: [
                         Padding(
@@ -98,8 +98,7 @@ class FoldersPage extends StatelessWidget {
                                         final p = kStoragePaths.elementAt(i);
                                         return FolderTile(
                                           folder: Folder(p),
-                                          dummyTracks:
-                                              Indexer.inst.mainMapFolders.entries.where((element) => element.key.path.startsWith(p)).expand((element) => element.value).toList(),
+                                          dummyTracks: Folder(p).tracksRecusive.toList(),
                                         );
                                       },
                                     ),
@@ -134,7 +133,7 @@ class FoldersPage extends StatelessWidget {
                       ],
                     )
 
-                  /// All Folders
+                  // == All Folders
                   : Column(
                       children: [
                         ListTile(
@@ -161,6 +160,7 @@ class FoldersPage extends StatelessWidget {
                                       itemCount: Indexer.inst.mainMapFolders.length,
                                       itemBuilder: (context, i) {
                                         final folder = mainMapFoldersKeys[i];
+                                        if (folder.tracks.isEmpty) return const SizedBox();
                                         return FolderTile(
                                           folder: folder,
                                           subtitle: folder.hasSimilarFolderNames ? folder.parentPath.formatPath() : null,

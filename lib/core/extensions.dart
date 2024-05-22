@@ -710,3 +710,22 @@ extension StatefulWUtils<T extends StatefulWidget> on State<T> {
     }
   }
 }
+
+extension StringPathUtils on String {
+  /// keeps reverse collecting string until [until] is matched.
+  /// useful to exract extensions or filenames.
+  String pathReverseSplitter(String until) {
+    String extension = ''; // represents the latest part
+    final path = this;
+    int latestIndex = path.length - 1;
+    if (latestIndex >= 0 && path[latestIndex] == until) latestIndex - 1;
+
+    while (latestIndex > 0) {
+      final char = path[latestIndex];
+      if (char == until) break;
+      extension = char + extension;
+      latestIndex--;
+    }
+    return extension;
+  }
+}

@@ -62,6 +62,7 @@ Future<void> showGeneralPopupDialog(
   (String, String)? albumToAddFrom,
   String? heroTag,
   String? additionalHero,
+  IconData trailingIcon = Broken.arrow_right_3,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -740,15 +741,9 @@ Future<void> showGeneralPopupDialog(
                               ],
                             ),
                           ),
-                          const SizedBox(
-                            width: 16.0,
-                          ),
-                          const Icon(
-                            Broken.arrow_right_3,
-                          ),
-                          const SizedBox(
-                            width: 16.0,
-                          ),
+                          const SizedBox(width: 16.0),
+                          Icon(trailingIcon),
+                          const SizedBox(width: 16.0),
                         ],
                       ),
                     ),

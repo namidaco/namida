@@ -16,6 +16,7 @@ import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -38,7 +39,6 @@ class Indexer {
 
   final RxBool isIndexing = false.obs;
 
-  final currentTracksPathsBeingExtracted = <String>[].obs;
   final RxSet<String> allAudioFiles = <String>{}.obs;
   final RxInt filteredForSizeDurationTracks = 0.obs;
   final RxInt duplicatedTracksLength = 0.obs;
@@ -56,7 +56,7 @@ class Indexer {
   final mainMapAlbumArtists = LibraryItemMap();
   final mainMapComposer = LibraryItemMap();
   final mainMapGenres = LibraryItemMap();
-  final RxMap<Folder, List<Track>> mainMapFolders = <Folder, List<Track>>{}.obs;
+  final mainMapFolders = <Folder, List<Track>>{}.obs;
 
   final RxList<Track> tracksInfoList = <Track>[].obs;
 
@@ -238,6 +238,7 @@ class Indexer {
       mainMapFolders.addForce(tr.folder, tr);
     });
 
+    Folders.inst.onMapChanged(mainMapFolders);
     _sortAll();
     sortMediaTracksSubLists(MediaType.values);
   }
@@ -393,6 +394,7 @@ class Indexer {
         mainMapFolders[e]?.sortByAlts(folderSorters);
       });
 
+    Folders.inst.onMapChanged(mainMapFolders);
     _sortAll();
   }
 

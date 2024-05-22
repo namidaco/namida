@@ -269,25 +269,12 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   late final _scrollController = ScrollController();
   late final _pathSplitsScrollController = ScrollController();
 
-  static String _pathReverseSplitter(String path, String until) {
-    String extension = ''; // represents the latest part
-    int latestIndex = path.length - 1;
-
-    while (latestIndex > 0) {
-      final char = path[latestIndex];
-      if (char == until) break;
-      extension = char + extension;
-      latestIndex--;
-    }
-    return extension;
-  }
-
   static String _pathToName(String path) {
-    return _pathReverseSplitter(path, _pathSeparator);
+    return path.pathReverseSplitter(_pathSeparator);
   }
 
   static String _pathToExtension(String path) {
-    return _pathReverseSplitter(path, '.').toLowerCase();
+    return path.pathReverseSplitter('.').toLowerCase();
   }
 
   Isolate? _isolate;

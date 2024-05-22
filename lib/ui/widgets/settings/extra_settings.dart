@@ -117,8 +117,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableFoldersHierarchy.value,
                 onChanged: (p0) {
                   settings.save(enableFoldersHierarchy: !p0);
-                  Folders.inst.isHome.value = true;
-                  Folders.inst.isInside.value = false;
+                  Folders.inst.onFoldersHierarchyChanged(!p0);
                 },
               ),
             ),

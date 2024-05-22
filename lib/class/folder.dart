@@ -1,14 +1,18 @@
+// ignore_for_file: unnecessary_this
+
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+
+final _pathSeparator = Platform.pathSeparator;
 
 class Folder {
   final String path;
+  late final String folderName;
 
-  const Folder(this.path);
+  Folder(this.path) : folderName = path.pathReverseSplitter(_pathSeparator);
 
   @override
   bool operator ==(other) {
@@ -27,95 +31,59 @@ class Folder {
 
 extension FolderUtils on Folder {
   String get parentPath => path.withoutLast(Platform.pathSeparator);
-  String get folderNameRaw => path.split(Platform.pathSeparator).last;
 
   /// Checks if any other folders inside library have the same name.
   ///
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
-    return Indexer.inst.mainMapFolders.keys.where((element) => element.folderNameRaw == folderNameRaw).length > 1;
-  }
-
-  String get folderName {
-    if (kStoragePaths.contains(path)) {
-      return path.formatPath();
-    }
-
-    final parentFolder = getParentFolder()?.path;
-    if (parentFolder != null) {
-      final parts = path.replaceFirst(parentFolder, '').split(Platform.pathSeparator);
-      parts.removeWhere((element) => element == '');
-      final isNested = parts.length > 1;
-      if (isNested) {
-        final nestedPath = parts.join(Platform.pathSeparator);
-        return nestedPath.formatPath();
+    int count = 0;
+    for (final k in Indexer.inst.mainMapFolders.keys) {
+      if (k.folderName == folderName) {
+        count++;
+        if (count > 1) return true;
       }
     }
-
-    return folderNameRaw;
+    return false;
   }
 
   List<Track> get tracks => Indexer.inst.mainMapFolders[this] ?? [];
-
-  /// [fullyFunctional] returns the first parent folder that has different subfolders obtained by [getDirectoriesInside].
-  ///
-  /// Otherwise, it checks for the first parent folder that exists in [Indexer.inst.mainMapFolders].
-  /// less accurate but more performant, since its being used by [folderName].
-  Folder? getParentFolder({bool fullyFunctional = false}) {
-    final parts = path.split(Platform.pathSeparator);
-
-    while (parts.isNotEmpty) {
-      parts.removeLast();
-      final f = Folder(parts.join(Platform.pathSeparator));
-      if (f.tracks.isNotEmpty) return f;
-    }
-    if (fullyFunctional) {
-      if (!kStoragePaths.contains(path)) {
-        if (Folder(parentPath).getDirectoriesInside().length > 1) {
-          return Folder(parentPath);
-        }
+  Iterable<Track> get tracksRecusive sync* {
+    for (final e in Indexer.inst.mainMapFolders.entries) {
+      if (e.key.path.startsWith(this.path)) {
+        yield* e.value;
       }
     }
+  }
 
-    // if (fullyFunctional) {
-    //   final newParts = path.split(Platform.pathSeparator);
-    //   final currentDirs = getDirectoriesInside();
+  /// checks for the first parent folder that exists in [Indexer.mainMapFolders].
+  Folder? getParentFolder() {
+    final parts = path.split(Platform.pathSeparator);
+    parts.removeLast();
 
-    //   while (newParts.isNotEmpty) {
-    //     newParts.removeLast();
-    //     final f = Folder(newParts.join(Platform.pathSeparator));
-
-    //     if (!f.getDirectoriesInside().isEqualTo(currentDirs)) {
-    //       return f;
-    //     }
-    //   }
-    // }
+    while (parts.isNotEmpty) {
+      final f = Folder(parts.join(Platform.pathSeparator));
+      if (Indexer.inst.mainMapFolders[f] != null) return f;
+      parts.removeLast();
+    }
 
     return null;
   }
 
   /// Gets directories inside [this] folder, automatically handles nested folders.
   List<Folder> getDirectoriesInside() {
-    final allFolders = Indexer.inst.mainMapFolders.keys;
+    final foldersMap = Indexer.inst.mainMapFolders;
     final allInside = <Folder>[];
 
-    allInside.addAll(
-      allFolders.where((key) {
-        final f = key.path.split(Platform.pathSeparator);
-        f.removeLast();
-        String newPath() => f.join(Platform.pathSeparator);
-        bool isSamePath() => newPath() == path;
+    final splitsCount = this.path.split(Platform.pathSeparator).length;
 
-        /// maintains nested loops (folder doesnt exist in library but subfolder exists).
-        while (f.isNotEmpty && !isSamePath() && Folder(newPath()).tracks.isEmpty) {
-          f.removeLast();
+    for (final folder in foldersMap.keys) {
+      if (folder.path.startsWith(this.path)) {
+        final folderSplitsCount = folder.path.split(Platform.pathSeparator).length;
+        if (folderSplitsCount == splitsCount + 1) {
+          allInside.add(folder);
         }
-
-        return isSamePath();
-      }),
-    );
-
-    allInside.sortBy((e) => e.folderName.toLowerCase());
+      }
+    }
 
     return allInside;
   }

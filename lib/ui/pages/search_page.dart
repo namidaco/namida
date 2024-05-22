@@ -392,7 +392,7 @@ class SearchPage extends StatelessWidget {
                                               margin: const EdgeInsets.only(left: 6.0),
                                               padding: const EdgeInsets.symmetric(vertical: 4.0),
                                               onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
-                                              onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, tracks: tracks),
+                                              onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
                                               borderRadius: 8.0,
                                               bgColor: context.theme.colorScheme.secondary.withOpacity(0.12),
                                               child: Row(

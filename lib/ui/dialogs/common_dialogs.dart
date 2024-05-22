@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
@@ -9,6 +10,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
@@ -192,8 +194,10 @@ class NamidaDialogs {
 
   Future<void> showFolderDialog({
     required Folder folder,
-    required List<Track> tracks,
+    required bool recursiveTracks,
   }) async {
+    if (recursiveTracks) Vibration.vibrate(duration: 20, amplitude: 50);
+    final tracks = recursiveTracks ? folder.tracksRecusive.toList() : folder.tracks;
     await showGeneralPopupDialog(
       tracks,
       folder.folderName,
@@ -203,6 +207,7 @@ class NamidaDialogs {
       ].join(' • '),
       QueueSource.folder,
       thirdLineText: tracks.totalSizeFormatted,
+      trailingIcon: recursiveTracks ? Broken.cards : Broken.card,
     );
   }
 }
