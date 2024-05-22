@@ -1,5 +1,84 @@
 # Namida Changelog
 
+## 22/05/2024
+# v2.5.6
+### 🎉 New Features:
+   - 9b8d27f: album artists & composers closes #21
+   - a58231b: show loading circle while searching local tracks
+   - 931c82d: play next/after/last when opening external yt link
+   - 8426584: dynamic lyrics view, hides lyrics temprarily for empty lines
+   - bb1dc7d: long press lyrics to enter fullscreen ref #171
+   - c838173: allow adding not found tracks as dummy tracks after importing lastfm/yt history
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - db055a4: various fixes, tweaks & ui changes ref #158 #176 #134 #132
+   - 9a22c6f: home screen pull to refresh
+   - 409d464: dynamic folders tile height ref #152
+   - 2010c46: allow plain text lyrics to open in fullscreen ref #175
+   - d7afa9a: separate lrc font size for miniplayer & fullscreen
+   - c71ac05: various tweaks + close keyboard on long pressing (selecting) track tile (useful in search) + fix multi tags dialog keyboard padding + ui size-animating particles based on sound peaks + code miniplayer AnimtedTheme() -> Theme() + ui display `x` beside speed in video screen + ui fix empty lrc screen when lrc enabled but not available
+   - 7b811ed: buttons for sound control sliders (pitch/speed/volume)
+   - f77ec3f: button to rotate screen while in video fullscreen
+   - 874d06c: more stable wheel slider
+   - 116a093: ui improvements & fixes + empty tile while removing current track from queue and next is the same track + app bar redundant rebuilds + yt miniplayer sometimes stuck
+   - 32a5c3a: improvements for yt offline search ui
+   - ae6c2c3: stop saving history thumbnails to cache
+   - bb27bf3: lyrics search improvements ref #174
+   - bf11761: various ui improvements + slightly bigger go_to_artist buttons + buffer color for yt seek bar + keyboard show/hide loop when yt miniplayer is active & trying to edit text field + other smol fixes
+   - 502bda8: ui tweaks + pull to refresh + buffer bar color + smol refactor
+   - 9eecbcb: few various fixes ref #184
+   - d3de40b: increase touch area of prev/next button ref #81
+   - 6861861: add indexing percentage in app bar
+   - 3070cbc: yt download minor improvements
+   - cadde11: general ui tweaks
+   - 0b65560: lyrics improvements
+   - a1ec555: general ui tweaks
+   - 2e6b377: display if there is a new version available in about page this might be an entry for in-app-update
+   - e2601dc: allow adding multiple tracks to favourite playlist
+   - 698ef61: some tweaks
+   - 535a476: more informative version section in about page
+   - a7a7bd4: hide next/prev while queue is expanded
+   - 6b4c591: better search for track replace dialog after importing lastfm/yt history & when replacing history track
+   - 73b4236: few ui tweaks + bottom nav bar text overflow & indicator color + drawer tile text overflow + general pages expandable container text overflow + core clear filenames map properly
+   - 5aede6e: few fixes
+- core:
+   - 939ec2a: better logging & versioning
+   - 1431cfa: fixes n tweaks
+   - 3265b52: bump version script
+   - 17879c1: bump version script more feats
+   - 6b27657: enhance extracted year tag
+   - f8a3947: improvements for yt offline search
+   - 18671d5: massive improvements & fixes for youtube downloads
+   - f8892cf: delete excess temp yt thumbnails
+   - 67f11e5: revert 1fbea99 & use clients was too unstable and same client couldnt be used again
+   - 22f2e7e: improvements for playback execution limit
+   - 1f63d95: playback improvements for crossfade
+   - a8932c0: folders logic rewrite + deep directories extraction is now dropped, more convenient + pressing folder menu will show dialog with direct tracks only + long pressing folder tile or menu will show dialog with recursive tracks ref #151
+- fix:
+   - 5203cb9: video player padding insets
+   - 56b1471: selecting duplicated tracks in playlists, history, queues, etc
+   - 4af9640: unknown font glyph boxes by setting global and per-style fallback closes #183
+   - 196cd59: duplicated tracks after advanced reindex
+   - ff64248: displaying track added date as 1970
+   - b51c302: mismatch between search menu & search bar after going to a page while search bar is opened
+   - 47c2351: lyrics decoding for non-latin chars ref #188
+   - 060ccef: lyrics view silliness
+   - f59f23f: lyrics empty screen in some cases due to plain text recognized as synced
+   - ca68161: resorting media tracks after history is prepared
+   - 0b00181: fallback for faulty sd card path ref #199
+   - 87c59b0: queue related activity ref #163
+- perf:
+   - 2fcfd1e: run auto-fetching-video download in isolate the video fetched for local tracks
+   - 6c041c0: miniplayer & others ui performance/tweaks
+   - 14a5fdf: limit color & audio playback rapid executions
+   - e4c4583: improvements for deleting cached data
+   - bd3bf05: run thumbnail downloading in isolate and generally improved api
+   - 7a63a6e: run lyrics search and parsing in isolate + dio is now dropped
+   - 1fbea99: use requests instead of clients to manager force aborting
+   - 58ddd21: massive ui performance improvement by abandoning animatedtheme at top level and manually toggle animated depending on miniplayer animation
+
+
 ## 07/04/2024
 # v2.0.6
 ### 🎉 New Features:
