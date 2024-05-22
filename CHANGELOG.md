@@ -3,7 +3,6 @@
 ## 22/05/2024
 # v2.5.6
 ### 🎉 New Features:
-   - 9b8d27f: album artists & composers closes #21
    - a58231b: show loading circle while searching local tracks
    - 931c82d: play next/after/last when opening external yt link
    - 8426584: dynamic lyrics view, hides lyrics temprarily for empty lines
@@ -42,10 +41,8 @@
    - 6b4c591: better search for track replace dialog after importing lastfm/yt history & when replacing history track
    - 73b4236: few ui tweaks + bottom nav bar text overflow & indicator color + drawer tile text overflow + general pages expandable container text overflow + core clear filenames map properly
    - 5aede6e: few fixes
+
 - core:
-   - 939ec2a: better logging & versioning
-   - 1431cfa: fixes n tweaks
-   - 3265b52: bump version script
    - 17879c1: bump version script more feats
    - 6b27657: enhance extracted year tag
    - f8a3947: improvements for yt offline search
@@ -55,8 +52,8 @@
    - 22f2e7e: improvements for playback execution limit
    - 1f63d95: playback improvements for crossfade
    - a8932c0: folders logic rewrite + deep directories extraction is now dropped, more convenient + pressing folder menu will show dialog with direct tracks only + long pressing folder tile or menu will show dialog with recursive tracks ref #151
+
 - fix:
-   - 5203cb9: video player padding insets
    - 56b1471: selecting duplicated tracks in playlists, history, queues, etc
    - 4af9640: unknown font glyph boxes by setting global and per-style fallback closes #183
    - 196cd59: duplicated tracks after advanced reindex
@@ -68,6 +65,7 @@
    - ca68161: resorting media tracks after history is prepared
    - 0b00181: fallback for faulty sd card path ref #199
    - 87c59b0: queue related activity ref #163
+
 - perf:
    - 2fcfd1e: run auto-fetching-video download in isolate the video fetched for local tracks
    - 6c041c0: miniplayer & others ui performance/tweaks
