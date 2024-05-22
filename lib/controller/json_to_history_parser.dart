@@ -121,28 +121,117 @@ class JsonToHistoryParser {
   void showMissingEntriesDialog() {
     if (_latestMissingMap.isEmpty) return;
 
-    void onTrackChoose(MapEntry<_MissingListenEntry, List<int>> entry) {
+    Future<void> addTrackToHistory(MapEntry<_MissingListenEntry, List<int>> entry, Track choosen) async {
+      final twds = entry.value.map(
+        (e) => TrackWithDate(
+          dateAdded: e,
+          track: choosen,
+          source: entry.key.source,
+        ),
+      );
+      await HistoryController.inst.addTracksToHistory(twds.toList());
+      _latestMissingMapAddedStatus[entry.key] = choosen;
+    }
+
+    List<int> addTrackToHistoryOnly(MapEntry<_MissingListenEntry, List<int>> entry, Track choosen) {
+      final twds = entry.value.map(
+        (e) => TrackWithDate(
+          dateAdded: e,
+          track: choosen,
+          source: entry.key.source,
+        ),
+      );
+      final days = HistoryController.inst.addTracksToHistoryOnly(twds.toList());
+      _latestMissingMapAddedStatus[entry.key] = choosen;
+      return days;
+    }
+
+    void pickTrack(MapEntry<_MissingListenEntry, List<int>> entry) {
       showLibraryTracksChooseDialog(
         trackName: "${entry.key.artistOrChannel} - ${entry.key.title}",
         onChoose: (choosenTrack) async {
-          final twds = entry.value.map(
-            (e) => TrackWithDate(
-              dateAdded: e,
-              track: choosenTrack,
-              source: entry.key.source,
-            ),
-          );
-          await HistoryController.inst.addTracksToHistory(twds.toList());
+          await addTrackToHistory(entry, choosenTrack);
           NamidaNavigator.inst.closeDialog();
-          _latestMissingMapAddedStatus[entry.key] = choosenTrack;
         },
       );
     }
 
+    Track getDummyTrack(_MissingListenEntry missingListen) {
+      return Track('namida_dummy/${missingListen.source.name}/${missingListen.artistOrChannel} - ${missingListen.title}');
+    }
+
+    void confirmAddAsDummy({required String confirmMessage, required Future<void> Function() onConfirm}) {
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          normalTitleStyle: true,
+          isWarning: true,
+          title: lang.CONFIRM,
+          bodyText: confirmMessage,
+          actions: [
+            const CancelButton(),
+            const SizedBox(width: 6.0),
+            NamidaButton(
+              onPressed: () async {
+                await onConfirm();
+                NamidaNavigator.inst.closeDialog();
+              },
+              text: lang.CONFIRM,
+            )
+          ],
+        ),
+      );
+    }
+
+    final showAddAsDummyIcon = false.obs;
+
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        showAddAsDummyIcon.close();
+      },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
         title: lang.MISSING_ENTRIES,
+        trailingWidgets: [
+          const SizedBox(width: 8.0),
+          Obx(
+            () => NamidaIconButton(
+              horizontalPadding: 0.0,
+              icon: Broken.command_square,
+              iconSize: 24.0,
+              onPressed: () async {
+                confirmAddAsDummy(
+                  confirmMessage: 'Add ${_latestMissingMap.entries.length} as dummy tracks?',
+                  onConfirm: () async {
+                    final historyDays = <int>[];
+                    final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
+                    for (final e in missing) {
+                      final replacedWithTrack = _latestMissingMapAddedStatus[e.key];
+                      if (replacedWithTrack == null) {
+                        historyDays.addAll(addTrackToHistoryOnly(e, getDummyTrack(e.key)));
+                      }
+                    }
+
+                    HistoryController.inst.removeDuplicatedItems(historyDays);
+                    HistoryController.inst.sortHistoryTracks(historyDays);
+                    await HistoryController.inst.saveHistoryToStorage(historyDays);
+                    HistoryController.inst.updateMostPlayedPlaylist();
+
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                );
+              },
+            ).animateEntrance(showWhen: showAddAsDummyIcon.value),
+          ),
+          const SizedBox(width: 8.0),
+          NamidaIconButton(
+            horizontalPadding: 0.0,
+            icon: Broken.eye,
+            onPressed: () {
+              showAddAsDummyIcon.value = !showAddAsDummyIcon.value;
+            },
+          ),
+          const SizedBox(width: 8.0),
+        ],
         child: SizedBox(
           width: Get.width,
           height: Get.height * 0.6,
@@ -176,7 +265,7 @@ class JsonToHistoryParser {
                                   duration: const Duration(milliseconds: 200),
                                   opacity: replacedWithTrack != null ? 0.6 : 1.0,
                                   child: NamidaInkWell(
-                                    onTap: () => onTrackChoose(entry),
+                                    onTap: () => pickTrack(entry),
                                     bgColor: Get.theme.cardTheme.color,
                                     borderRadius: 12.0,
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
@@ -222,10 +311,24 @@ class JsonToHistoryParser {
                                         ),
                                         const SizedBox(width: 8.0),
                                         NamidaIconButton(
+                                          horizontalPadding: 0.0,
                                           icon: Broken.repeat_circle,
                                           iconSize: 24.0,
-                                          onPressed: () => onTrackChoose(entry),
+                                          onPressed: () => pickTrack(entry),
                                         ),
+                                        const SizedBox(width: 4.0),
+                                        Obx(
+                                          () => NamidaIconButton(
+                                            horizontalPadding: 0.0,
+                                            icon: Broken.command,
+                                            iconSize: 20.0,
+                                            onPressed: () => confirmAddAsDummy(
+                                              confirmMessage: 'Add "${entry.key.artistOrChannel} - ${entry.key.title}" as dummy track?',
+                                              onConfirm: () async => await addTrackToHistory(entry, getDummyTrack(entry.key)),
+                                            ),
+                                          ).animateEntrance(showWhen: showAddAsDummyIcon.value),
+                                        ),
+                                        const SizedBox(width: 4.0),
                                       ],
                                     ),
                                   ),
