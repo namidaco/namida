@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -30,7 +30,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
             ),
             Text(
               lang.ADD_TO_PLAYLIST,
-              style: Get.theme.textTheme.displayMedium,
+              style: namida.theme.textTheme.displayMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -40,7 +40,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       leftAction: Obx(
         () => Text(
           "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${lang.PLAYLISTS}",
-          style: Get.theme.textTheme.displayMedium,
+          style: namida.theme.textTheme.displayMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -52,8 +52,8 @@ void showAddToPlaylistDialog(List<Track> tracks) {
         ),
       ],
       child: SizedBox(
-        height: Get.height * 0.7,
-        width: Get.width,
+        height: namida.height * 0.7,
+        width: namida.width,
         child: PlaylistsPage(
           enableHero: true,
           tracksToAdd: tracks,

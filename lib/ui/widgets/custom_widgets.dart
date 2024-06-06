@@ -3,14 +3,11 @@ import 'dart:ui';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide ReorderableDragStartListener;
+import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:known_extents_list_view_builder/known_extents_reorderable_list_view_builder.dart';
-import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:like_button/like_button.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -18,7 +15,6 @@ import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -32,6 +28,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
@@ -40,40 +37,15 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
-class CustomReorderableDelayedDragStartListener extends ReorderableDragStartListener {
-  final Duration delay;
-
-  const CustomReorderableDelayedDragStartListener({
-    this.delay = const Duration(milliseconds: 20),
-    Key? key,
-    required Widget child,
-    required int index,
-    PointerDownEventListener? onDragStart,
-    PointerUpEventListener? onDragEnd,
-  }) : super(
-          key: key,
-          child: child,
-          index: index,
-          onDragStart: onDragStart,
-          onDragEnd: onDragEnd,
-        );
-
-  @override
-  MultiDragGestureRecognizer createRecognizer() {
-    return DelayedMultiDragGestureRecognizer(delay: delay, debugOwner: this);
-  }
-}
+import 'custom_reorderable_list.dart';
 
 class NamidaReordererableListener extends StatelessWidget {
-  /// Will disable miniplayer listener when dragging.
-  final bool isInQueue;
   final int index;
   final int durationMs;
   final Widget child;
 
   const NamidaReordererableListener({
     super.key,
-    required this.isInQueue,
     required this.index,
     this.durationMs = 50,
     required this.child,
@@ -81,15 +53,7 @@ class NamidaReordererableListener extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomReorderableDelayedDragStartListener(
-      onDragStart: (event) {
-        if (isInQueue) {
-          MiniPlayerController.inst.invokeStartReordering();
-        }
-      },
-      onDragEnd: (event) {
-        MiniPlayerController.inst.invokeDoneReordering();
-      },
+    return ReorderableDelayedDragStartListener(
       index: index,
       delay: Duration(milliseconds: durationMs),
       child: child,
@@ -129,7 +93,7 @@ class CustomSwitch extends StatelessWidget {
         duration: Duration(milliseconds: durationInMillisecond),
         decoration: BoxDecoration(
           color: (active
-              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background).withAlpha(140)
+              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface).withAlpha(140)
               // : context.theme.scaffoldBackgroundColor.withAlpha(34)
               : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
           borderRadius: BorderRadius.circular(30.0.multipliedRadius),
@@ -138,7 +102,7 @@ class CustomSwitch extends StatelessWidget {
               offset: const Offset(0, 2),
               blurRadius: active ? 8 : 2,
               spreadRadius: 0,
-              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.background)).withOpacity(active ? 0.8 : 0.3),
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface)).withOpacity(active ? 0.8 : 0.3),
             ),
           ],
         ),
@@ -183,7 +147,7 @@ class CustomSwitchListTile extends StatelessWidget {
   final Color? bgColor;
 
   const CustomSwitchListTile({
-    Key? key,
+    super.key,
     required this.value,
     required this.onChanged,
     required this.title,
@@ -197,7 +161,7 @@ class CustomSwitchListTile extends StatelessWidget {
     this.maxSubtitleLines = 8,
     this.visualDensity,
     this.bgColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +214,7 @@ class CustomListTile extends StatelessWidget {
   final Color? bgColor;
 
   const CustomListTile({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.trailing,
@@ -268,7 +232,7 @@ class CustomListTile extends StatelessWidget {
     this.titleStyle,
     this.borderR = 20.0,
     this.bgColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +290,7 @@ class CustomListTile extends StatelessWidget {
                       child: trailingText != null
                           ? Text(
                               trailingText!,
-                              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+                              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
                             )
                           : trailing,
                     ),
@@ -522,6 +486,16 @@ class CustomBlurryDialog extends StatelessWidget {
   }
 }
 
+class NamidaButtonText extends Text {
+  const NamidaButtonText(
+    super.data, {
+    super.key,
+    TextStyle? style,
+    super.softWrap,
+    super.overflow,
+  }) : super(style: style ?? const TextStyle(fontSize: 15.0));
+}
+
 class NamidaButton extends StatelessWidget {
   final IconData? icon;
   final double? iconSize;
@@ -579,7 +553,7 @@ class NamidaButton extends StatelessWidget {
     }
 
     final iconChild = Icon(icon, size: iconSize);
-    final textChild = Text(
+    final textChild = NamidaButtonText(
       text ?? '',
       softWrap: false,
       overflow: TextOverflow.ellipsis,
@@ -780,6 +754,7 @@ class SmallListTile extends StatelessWidget {
 
 class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
+  final RxBase<bool>? activeRx;
   final void Function()? onTap;
   final String? title;
   final String subtitle;
@@ -792,7 +767,8 @@ class ListTileWithCheckMark extends StatelessWidget {
 
   const ListTileWithCheckMark({
     super.key,
-    required this.active,
+    this.active = false,
+    this.activeRx,
     this.onTap,
     this.title,
     this.subtitle = '',
@@ -809,9 +785,10 @@ class ListTileWithCheckMark extends StatelessWidget {
     final tileAlpha = context.isDarkMode ? 5 : 20;
     return Material(
       borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(tileAlpha), context.theme.cardTheme.color!),
+      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(tileAlpha), context.theme.cardTheme.color!),
       child: ListTile(
         horizontalTitleGap: dense ? 10.0 : 14.0,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0.multipliedRadius)),
         leading: leading ??
             Icon(
@@ -829,10 +806,18 @@ class ListTileWithCheckMark extends StatelessWidget {
                 style: context.textTheme.displaySmall,
               )
             : null,
-        trailing: NamidaCheckMark(
-          size: 18.0,
-          active: active,
-        ),
+        trailing: activeRx != null
+            ? ObxO(
+                rx: activeRx!,
+                builder: (active) => NamidaCheckMark(
+                  size: 18.0,
+                  active: active,
+                ),
+              )
+            : NamidaCheckMark(
+                size: 18.0,
+                active: active,
+              ),
         // visualDensity: VisualDensity.compact,
         visualDensity: const VisualDensity(horizontal: -2.8, vertical: -2.8),
         onTap: onTap,
@@ -1146,7 +1131,7 @@ class CancelButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed ?? () => NamidaNavigator.inst.closeDialog(),
-      child: Text(lang.CANCEL),
+      child: NamidaButtonText(lang.CANCEL),
     );
   }
 }
@@ -1157,12 +1142,14 @@ class CollapsedSettingTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => CustomSwitchListTile(
+    Localizations.localeOf(context);
+    return ObxO(
+      rx: settings.useSettingCollapsedTiles,
+      builder: (useSettingCollapsedTiles) => CustomSwitchListTile(
         bgColor: bgColor,
         icon: Broken.archive,
         title: lang.USE_COLLAPSED_SETTING_TILES,
-        value: settings.useSettingCollapsedTiles.value,
+        value: useSettingCollapsedTiles,
         onChanged: (isTrue) async {
           settings.save(useSettingCollapsedTiles: !isTrue);
           await NamidaNavigator.inst.popPage();
@@ -1178,17 +1165,13 @@ class AboutPageTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        settings.selectedLanguage.value;
-        return CustomCollapsedListTile(
-          title: lang.ABOUT,
-          subtitle: null,
-          icon: Broken.info_circle,
-          rawPage: true,
-          page: const AboutPage(),
-        );
-      },
+    Localizations.localeOf(context);
+    return CustomCollapsedListTile(
+      title: lang.ABOUT,
+      subtitle: null,
+      icon: Broken.info_circle,
+      rawPage: true,
+      page: const AboutPage(),
     );
   }
 }
@@ -1324,7 +1307,7 @@ class NamidaWheelSlider extends StatelessWidget {
             itemSize: itemSize,
             squeeze: squeeze,
             isInfinite: isInfinite,
-            lineColor: Get.iconColor,
+            lineColor: context.theme.iconTheme.color,
             pointerColor: context.theme.listTileTheme.textColor!,
             pointerHeight: 38.0,
             horizontalListHeight: 38.0,
@@ -1409,7 +1392,7 @@ class NamidaLikeButton extends StatelessWidget {
       size: size,
       enabledColor: color,
       disabledColor: color,
-      isLiked: track?.isFavourite,
+      isLiked: track?.isFavouriteR,
       onTap: (isLiked) async {
         if (track != null) {
           PlaylistController.inst.favouriteButtonOnPressed(track!);
@@ -1525,9 +1508,10 @@ class NamidaPartyContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!settings.enablePartyModeColorSwap.value) {
-      return Obx(
-        () {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
+      return ObxO(
+        rx: Player.inst.nowPlayingPosition,
+        builder: (nowPlayingPosition) {
+          final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
           return AnimatedSizedBox(
             duration: const Duration(milliseconds: 400),
             height: height ?? context.height,
@@ -1545,51 +1529,56 @@ class NamidaPartyContainer extends StatelessWidget {
         },
       );
     } else {
-      return Obx(
-        () {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition);
-          final firstHalf = CurrentColor.inst.paletteFirstHalf;
-          final secondHalf = CurrentColor.inst.paletteSecondHalf;
+      return ObxO(
+        rx: Player.inst.nowPlayingPosition,
+        builder: (nowPlayingPosition) {
+          final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
           return height != null
-              ? Row(
-                  children: [
-                    ...firstHalf.map(
-                      (e) => AnimatedSizedBox(
-                        duration: const Duration(milliseconds: 400),
-                        height: height,
-                        width: width ?? context.width / firstHalf.length,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: e.withAlpha(150),
-                              spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                              blurRadius: 10 + (200 * finalScale),
-                            ),
-                          ],
+              ? ObxO(
+                  rx: CurrentColor.inst.paletteFirstHalf,
+                  builder: (firstHalf) => Row(
+                    children: [
+                      ...firstHalf.map(
+                        (e) => AnimatedSizedBox(
+                          duration: const Duration(milliseconds: 400),
+                          height: height,
+                          width: width ?? context.width / firstHalf.length,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: e.withAlpha(150),
+                                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
+                                blurRadius: 10 + (200 * finalScale),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 )
-              : Column(
-                  children: [
-                    ...secondHalf.map(
-                      (e) => AnimatedSizedBox(
-                        duration: const Duration(milliseconds: 400),
-                        height: height ?? context.height / secondHalf.length,
-                        width: width,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: e.withAlpha(150),
-                              spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
-                              blurRadius: 10 + (200 * finalScale),
-                            ),
-                          ],
+              : ObxO(
+                  rx: CurrentColor.inst.paletteSecondHalf,
+                  builder: (secondHalf) => Column(
+                    children: [
+                      ...secondHalf.map(
+                        (e) => AnimatedSizedBox(
+                          duration: const Duration(milliseconds: 400),
+                          height: height ?? context.height / secondHalf.length,
+                          width: width,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: e.withAlpha(150),
+                                spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
+                                blurRadius: 10 + (200 * finalScale),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
         },
       );
@@ -1605,7 +1594,7 @@ class SubpagesTopContainer extends StatelessWidget {
   final double topPadding;
   final double bottomPadding;
   final Widget imageWidget;
-  final List<Selectable> tracks;
+  final Iterable<Selectable> Function() tracksFn;
   final QueueSource source;
   final String heroTag;
   final Widget? bottomWidget;
@@ -1616,7 +1605,7 @@ class SubpagesTopContainer extends StatelessWidget {
     this.thirdLineText = '',
     this.height,
     required this.imageWidget,
-    required this.tracks,
+    required this.tracksFn,
     this.topPadding = 16.0,
     this.bottomPadding = 16.0,
     required this.source,
@@ -1674,7 +1663,7 @@ class SubpagesTopContainer extends StatelessWidget {
                                 subtitle,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
-                                style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                                style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
                               ),
                             ),
                           ),
@@ -1690,7 +1679,7 @@ class SubpagesTopContainer extends StatelessWidget {
                                   thirdLineText,
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
                                 ),
                               ),
                             ),
@@ -1709,7 +1698,7 @@ class SubpagesTopContainer extends StatelessWidget {
                                   icon: Broken.shuffle,
                                   onPressed: () => Player.inst.playOrPause(
                                     0,
-                                    tracks,
+                                    tracksFn(),
                                     source,
                                     shuffle: true,
                                   ),
@@ -1718,7 +1707,7 @@ class SubpagesTopContainer extends StatelessWidget {
                               const SizedBox(width: 6.0),
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  onPressed: () => Player.inst.addToQueue(tracks),
+                                  onPressed: () => Player.inst.addToQueue(tracksFn()),
                                   icon: const StackedIcon(
                                     disableColor: true,
                                     baseIcon: Broken.play,
@@ -1728,7 +1717,7 @@ class SubpagesTopContainer extends StatelessWidget {
                                     lang.PLAY_LAST,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0).multipliedFontScale),
+                                    style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0)),
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     fixedSize: const Size(0.0, 0.0),
@@ -1758,18 +1747,27 @@ class AnimatingTile extends StatelessWidget {
   final int position;
   final Widget child;
   final bool shouldAnimate;
-  const AnimatingTile({super.key, required this.position, required this.child, this.shouldAnimate = true});
+  final Duration duration;
+
+  const AnimatingTile({
+    super.key,
+    required this.position,
+    required this.child,
+    this.duration = const Duration(milliseconds: 400),
+    this.shouldAnimate = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return shouldAnimate
         ? AnimationConfiguration.staggeredList(
             position: position,
-            duration: const Duration(milliseconds: 400),
+            duration: duration,
+            delay: const Duration(milliseconds: 50),
             child: SlideAnimation(
               verticalOffset: 25.0,
               child: FadeInAnimation(
-                duration: const Duration(milliseconds: 400),
+                duration: duration,
                 child: child,
               ),
             ),
@@ -1783,7 +1781,14 @@ class AnimatingGrid extends StatelessWidget {
   final int columnCount;
   final Widget child;
   final bool shouldAnimate;
-  const AnimatingGrid({super.key, required this.position, required this.columnCount, required this.child, this.shouldAnimate = true});
+
+  const AnimatingGrid({
+    super.key,
+    required this.position,
+    required this.columnCount,
+    required this.child,
+    this.shouldAnimate = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1868,7 +1873,7 @@ class NamidaDrawerListTile extends StatelessWidget {
                     title,
                     style: context.textTheme.displayMedium?.copyWith(
                       color: enabled ? Colors.white.withAlpha(200) : null,
-                      fontSize: 15.0.multipliedFontScale,
+                      fontSize: 15.0,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1917,7 +1922,7 @@ class SearchPageTitleRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5.multipliedFontScale),
+                  style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5),
                 ),
                 if (subtitleWidget != null) subtitleWidget!,
                 if (subtitle != '')
@@ -1934,7 +1939,7 @@ class SearchPageTitleRow extends StatelessWidget {
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: context.theme.listTileTheme.iconColor),
               icon: Icon(buttonIcon, size: 20.0),
-              label: Text(buttonText ?? ''),
+              label: NamidaButtonText(buttonText ?? ''),
               onPressed: onPressed,
             ),
         const SizedBox(width: 8.0),
@@ -1989,7 +1994,7 @@ class NamidaLogoContainer extends StatelessWidget {
                 'Namida',
                 style: context.textTheme.displayLarge?.copyWith(
                   color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
-                  fontSize: 17.5.multipliedFontScale,
+                  fontSize: 17.5,
                 ),
               ),
             ],
@@ -2023,7 +2028,7 @@ class NamidaContainerDivider extends StatelessWidget {
       width: width,
       margin: margin,
       decoration: BoxDecoration(
-        color: colorForce ?? (color ?? context.theme.dividerColor).withAlpha(Get.isDarkMode ? 100 : 20),
+        color: colorForce ?? (color ?? context.theme.dividerColor).withAlpha(namida.isDarkMode ? 100 : 20),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
     );
@@ -2032,44 +2037,163 @@ class NamidaContainerDivider extends StatelessWidget {
 
 class FadeDismissible extends StatefulWidget {
   final Widget child;
-  final void Function(DismissDirection onDismissed)? onDismissed;
-  final void Function(DismissUpdateDetails detailts)? onUpdate;
+  final void Function(DismissDirection onDismissed) onDismissed;
+  final void Function(DragStartDetails details)? onDismissStart;
+  final void Function(DragEndDetails details)? onDismissEnd;
   final DismissDirection direction;
+  final Duration dismissDuration;
+  final Duration settleDuration;
+  final double dismissThreshold;
+  final double dismissRangeStart;
+  final double dismissRangeEnd;
+  final Curve dismissCurve;
+  final Curve settleCurve;
+  final bool Function()? draggable;
+  final RxBase<bool>? draggableRx;
+  final Widget? onTopWidget;
 
   const FadeDismissible({
-    required super.key,
+    required Key key,
     required this.child,
-    this.onDismissed,
-    this.onUpdate,
+    required this.onDismissed,
+    this.onDismissStart,
+    this.onDismissEnd,
     this.direction = DismissDirection.horizontal,
-  });
+    this.dismissDuration = const Duration(milliseconds: 300),
+    this.settleDuration = const Duration(milliseconds: 300),
+    this.dismissThreshold = 0.8,
+    this.dismissRangeStart = 0.1,
+    this.dismissRangeEnd = 0.9,
+    this.dismissCurve = Curves.fastOutSlowIn,
+    this.settleCurve = Curves.easeOutQuart,
+    this.draggable,
+    this.draggableRx,
+    this.onTopWidget,
+  }) : super(key: key);
 
   @override
   State<FadeDismissible> createState() => _FadeDismissibleState();
 }
 
-class _FadeDismissibleState extends State<FadeDismissible> {
-  final fadeOpacity = ValueNotifier(0.0);
+class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProviderStateMixin {
+  double get progress => _animation.value.abs();
+
+  late final _animation = AnimationController(
+    vsync: this,
+    lowerBound: -1,
+    upperBound: 1,
+    value: 0,
+  );
+
+  @override
+  void dispose() {
+    _animation.dispose();
+    super.dispose();
+  }
+
+  double _dragged = 0;
+
+  bool _draggable = true;
+  bool _inDismissRange = true;
+
+  void calculateInDismissRange(double positionDx, double maxWidth) {
+    final percentage = positionDx / maxWidth;
+    _inDismissRange = percentage >= widget.dismissRangeStart && percentage <= widget.dismissRangeEnd;
+  }
+
+  Future<void> _animateDismiss(double to, {required bool faster}) async {
+    await _animation.animateTo(to, duration: faster ? widget.dismissDuration * 0.5 : widget.dismissDuration, curve: faster ? Curves.linear : widget.dismissCurve);
+  }
+
+  Future<void> _dismissToRight(DragEndDetails d, {bool faster = false}) async {
+    await _animateDismiss(1, faster: faster);
+    widget.onDismissed(DismissDirection.horizontal);
+    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
+    _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+  }
+
+  Future<void> _dismissToLeft(DragEndDetails d, {bool faster = false}) async {
+    await _animateDismiss(-1, faster: faster);
+    widget.onDismissed(DismissDirection.horizontal);
+    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
+    _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+  }
+
+  Future<void> _resetToMiddle(DragEndDetails d) async {
+    await _animation.animateTo(0, duration: widget.settleDuration, curve: widget.settleCurve);
+    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
+  }
+
+  Widget buildChild(bool draggable, Widget child, double maxWidth) {
+    return HorizontalDragDetector(
+      onStart: !draggable
+          ? null
+          : (d) {
+              if (widget.onDismissStart != null) widget.onDismissStart!(d);
+              calculateInDismissRange(d.localPosition.dx, maxWidth);
+              if (widget.draggable != null) _draggable = widget.draggable!();
+            },
+      onUpdate: !draggable
+          ? null
+          : (d) {
+              if (!_draggable) return;
+              if (!_inDismissRange) return;
+              _dragged += d.delta.dx;
+              _animation.animateTo(_dragged / maxWidth, duration: Duration.zero);
+            },
+      onEnd: !draggable
+          ? null
+          : (d) {
+              final velocity = d.velocity.pixelsPerSecond.dx;
+              if (velocity > 800) {
+                _dismissToRight(d, faster: true);
+              } else if (velocity < -800) {
+                _dismissToLeft(d, faster: true);
+              } else if (progress > widget.dismissThreshold) {
+                if (_animation.value < 0) {
+                  _dismissToLeft(d);
+                } else {
+                  _dismissToRight(d);
+                }
+              } else {
+                _resetToMiddle(d);
+              }
+              _dragged = 0;
+            },
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, _) {
+          final p = _animation.value;
+          if (p == 0) return child;
+          return Transform.translate(
+            offset: Offset(p * maxWidth, 0),
+            child: Opacity(
+              opacity: 1 - p.abs(),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Dismissible(
-      key: widget.key!,
-      onDismissed: widget.onDismissed,
-      onUpdate: (details) {
-        fadeOpacity.value = details.progress;
-        if (widget.onUpdate != null) widget.onUpdate!(details);
-      },
-      direction: widget.direction,
-      child: ValueListenableBuilder(
-        valueListenable: fadeOpacity,
-        child: widget.child,
-        builder: (context, value, child) => NamidaOpacity(
-          opacity: 1 - fadeOpacity.value,
-          child: child!,
-        ),
-      ),
-    );
+    final maxWidth = context.width;
+    final child = widget.onTopWidget != null
+        ? Stack(
+            children: [
+              widget.child,
+              widget.onTopWidget!,
+            ],
+          )
+        : widget.child;
+    return widget.draggableRx != null
+        ? ObxO(
+            rx: widget.draggableRx!,
+            builder: (value) => buildChild(value && widget.direction != DismissDirection.none, child, maxWidth),
+          )
+        : buildChild(_draggable && widget.direction != DismissDirection.none, child, maxWidth);
   }
 }
 
@@ -2081,15 +2205,15 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectableAutoLinkText(
       text,
-      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5.multipliedFontScale),
+      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
       linkStyle: context.textTheme.displayMedium?.copyWith(
         color: context.theme.colorScheme.primary.withAlpha(210),
-        fontSize: 13.5.multipliedFontScale,
+        fontSize: 13.5,
       ),
       highlightedLinkStyle: TextStyle(
         color: context.theme.colorScheme.primary.withAlpha(220),
-        backgroundColor: context.theme.colorScheme.onBackground.withAlpha(40),
-        fontSize: 13.5.multipliedFontScale,
+        backgroundColor: context.theme.colorScheme.onSurface.withAlpha(40),
+        fontSize: 13.5,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
       onTap: (url) async => await NamidaLinkUtils.openLink(url),
@@ -2156,34 +2280,44 @@ class DefaultPlaylistCard extends StatelessWidget {
 class NamidaCircularPercentage extends StatelessWidget {
   final double size;
   final double percentage;
-  const NamidaCircularPercentage({super.key, this.size = 48.0, required this.percentage});
+  final String heroTag;
+
+  const NamidaCircularPercentage({
+    super.key,
+    this.size = 48.0,
+    required this.percentage,
+    required this.heroTag,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       alignment: Alignment.center,
       children: [
-        SleekCircularSlider(
-          appearance: CircularSliderAppearance(
-            customWidths: CustomSliderWidths(
-              trackWidth: size / 24,
-              progressBarWidth: size / 12,
+        Hero(
+          tag: heroTag,
+          child: SleekCircularSlider(
+            appearance: CircularSliderAppearance(
+              customWidths: CustomSliderWidths(
+                trackWidth: size / 24,
+                progressBarWidth: size / 12,
+              ),
+              customColors: CustomSliderColors(
+                dotColor: Colors.transparent,
+                trackColor: context.theme.cardTheme.color,
+                dynamicGradient: true,
+                progressBarColors: [
+                  context.theme.colorScheme.primary.withAlpha(100),
+                  Colors.transparent,
+                  context.theme.colorScheme.secondary.withAlpha(100),
+                  Colors.transparent,
+                  context.theme.colorScheme.primary.withAlpha(100),
+                ],
+                hideShadow: true,
+              ),
+              size: size,
+              spinnerMode: true,
             ),
-            customColors: CustomSliderColors(
-              dotColor: Colors.transparent,
-              trackColor: context.theme.cardTheme.color,
-              dynamicGradient: true,
-              progressBarColors: [
-                context.theme.colorScheme.primary.withAlpha(100),
-                Colors.transparent,
-                context.theme.colorScheme.secondary.withAlpha(100),
-                Colors.transparent,
-                context.theme.colorScheme.primary.withAlpha(100),
-              ],
-              hideShadow: true,
-            ),
-            size: size,
-            spinnerMode: true,
           ),
         ),
         if (percentage.isFinite)
@@ -2204,10 +2338,9 @@ class NamidaListView extends StatelessWidget {
   final Widget? header;
   final List<Widget>? widgetsInColumn;
   final EdgeInsets? padding;
-  final List<double>? itemExtents;
+  final double? itemExtent;
   final ScrollController? scrollController;
   final int itemCount;
-  final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
   final Map<String, int> scrollConfig;
 
@@ -2219,9 +2352,8 @@ class NamidaListView extends StatelessWidget {
     this.onReorder,
     required this.itemBuilder,
     required this.itemCount,
-    required this.itemExtents,
+    required this.itemExtent,
     this.scrollController,
-    this.buildDefaultDragHandles = true,
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
@@ -2234,16 +2366,17 @@ class NamidaListView extends StatelessWidget {
       scrollController: scrollController,
       scrollConfig: scrollConfig,
       header: header,
-      listBuilder: (list) => Column(
-        children: [
-          if (widgetsInColumn != null) ...widgetsInColumn!,
-          Expanded(child: list),
-        ],
-      ),
+      listBuilder: (list) => widgetsInColumn != null
+          ? Column(
+              children: [
+                ...widgetsInColumn!,
+                Expanded(child: list),
+              ],
+            )
+          : list,
       itemBuilder: itemBuilder,
       itemCount: itemCount,
-      buildDefaultDragHandles: buildDefaultDragHandles,
-      itemExtents: itemExtents,
+      itemExtent: itemExtent,
       onReorder: onReorder,
       onReorderStart: onReorderStart,
       onReorderEnd: onReorderEnd,
@@ -2260,14 +2393,16 @@ class NamidaListViewRaw extends StatelessWidget {
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
+  final Widget? footer;
   final EdgeInsets? padding;
-  final List<double>? itemExtents;
+  final double? itemExtent;
   final ScrollController? scrollController;
   final int itemCount;
-  final bool buildDefaultDragHandles;
   final ScrollPhysics? physics;
   final Map<String, int> scrollConfig;
   final double scrollStep;
+  final Axis scrollDirection;
+  final bool reverse;
 
   const NamidaListViewRaw({
     super.key,
@@ -2277,53 +2412,122 @@ class NamidaListViewRaw extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.header,
+    this.footer,
     this.padding,
-    this.itemExtents,
+    this.itemExtent,
     this.scrollController,
     required this.itemCount,
-    this.buildDefaultDragHandles = true,
     this.physics,
     this.scrollConfig = const {},
     this.scrollStep = 0,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final listW = itemExtents != null
-        ? KnownExtentsReorderableListView.builder(
-            itemExtents: itemExtents!,
-            scrollController: scrollController,
-            padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
-            itemBuilder: itemBuilder,
-            itemCount: itemCount,
-            onReorder: onReorder ?? (oldIndex, newIndex) {},
-            proxyDecorator: (child, index, animation) => child,
-            header: header,
-            buildDefaultDragHandles: buildDefaultDragHandles,
-            physics: physics,
-            onReorderStart: onReorderStart,
-            onReorderEnd: onReorderEnd,
-          )
-        : ReorderableListView.builder(
-            itemExtent: itemExtents?.firstOrNull,
-            scrollController: scrollController,
-            padding: padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
-            itemBuilder: itemBuilder,
-            itemCount: itemCount,
-            onReorder: onReorder ?? (oldIndex, newIndex) {},
-            proxyDecorator: (child, index, animation) => child,
-            onReorderStart: onReorderStart,
-            onReorderEnd: onReorderEnd,
-            header: header,
-            buildDefaultDragHandles: onReorder != null,
-            physics: physics,
-          );
-    return AnimationLimiter(
-      child: NamidaScrollbar(
-        controller: scrollController,
-        scrollStep: scrollStep,
-        child: listBuilder(listW),
-      ),
+    double? start = header == null ? null : 0.0;
+    double? end = footer == null ? null : 0.0;
+    if (reverse) {
+      (start, end) = (end, start);
+    }
+
+    final padding = this.padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
+    final EdgeInsets startPadding, endPadding, listPadding;
+    (startPadding, endPadding, listPadding) = switch (scrollDirection) {
+      Axis.horizontal || Axis.vertical when (start ?? end) == null => (EdgeInsets.zero, EdgeInsets.zero, padding),
+      Axis.horizontal => (padding.copyWith(left: 0), padding.copyWith(right: 0), padding.copyWith(left: start, right: end)),
+      Axis.vertical => (padding.copyWith(top: 0), padding.copyWith(bottom: 0), padding.copyWith(top: start, bottom: end)),
+    };
+    final (EdgeInsets headerPadding, EdgeInsets footerPadding) = reverse ? (startPadding, endPadding) : (endPadding, startPadding);
+
+    final listW = CustomScrollView(
+      scrollDirection: scrollDirection,
+      controller: scrollController,
+      physics: physics,
+      reverse: reverse,
+      slivers: <Widget>[
+        if (header != null)
+          SliverPadding(
+            padding: headerPadding,
+            sliver: SliverToBoxAdapter(child: header),
+          ),
+        SliverPadding(
+          padding: listPadding,
+          sliver: onReorder != null
+              ? NamidaSliverReorderableList(
+                  itemExtent: itemExtent,
+                  itemBuilder: itemBuilder,
+                  itemCount: itemCount,
+                  onReorder: onReorder!,
+                  onReorderStart: onReorderStart,
+                  onReorderEnd: onReorderEnd,
+                )
+              : itemExtent != null
+                  ? SliverFixedExtentList.builder(
+                      itemExtent: itemExtent!,
+                      itemBuilder: itemBuilder,
+                      itemCount: itemCount,
+                    )
+                  : SliverList.builder(
+                      itemBuilder: itemBuilder,
+                      itemCount: itemCount,
+                    ),
+        ),
+        if (footer != null)
+          SliverPadding(
+            padding: footerPadding,
+            sliver: SliverToBoxAdapter(child: footer),
+          ),
+      ],
+    );
+    return NamidaScrollbar(
+      controller: scrollController,
+      scrollStep: scrollStep,
+      child: listBuilder(listW),
+    );
+  }
+}
+
+class NamidaSliverReorderableList extends StatelessWidget {
+  final Widget Function(BuildContext context, int i) itemBuilder;
+  final void Function(int oldIndex, int newIndex)? onReorder;
+  final void Function(int index)? onReorderStart;
+  final void Function(int index)? onReorderEnd;
+  final double? itemExtent;
+  final int itemCount;
+
+  const NamidaSliverReorderableList({
+    super.key,
+    required this.itemBuilder,
+    this.onReorder,
+    this.onReorderStart,
+    this.onReorderEnd,
+    this.itemExtent,
+    required this.itemCount,
+  });
+
+  Widget _reorderableItemBuilder(BuildContext context, int index) {
+    final Widget item = itemBuilder(context, index);
+    return ReorderableDelayedDragStartListener(
+      delay: kLongPressTimeout,
+      key: item.key!,
+      index: index,
+      child: item,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverReorderableList(
+      itemExtent: itemExtent,
+      itemBuilder: _reorderableItemBuilder,
+      itemCount: itemCount,
+      onReorder: onReorder!,
+      proxyDecorator: (child, index, animation) => child,
+      onReorderStart: onReorderStart,
+      onReorderEnd: onReorderEnd,
+      autoScrollerVelocityScalar: 600,
     );
   }
 }
@@ -2338,7 +2542,7 @@ class NamidaTracksList extends StatelessWidget {
   final EdgeInsetsGeometry? paddingAfterHeader;
   final ScrollController? scrollController;
   final EdgeInsets? padding;
-  final bool isTrackSelectable;
+  final bool Function()? isTrackSelectable;
   final ScrollPhysics? physics;
   final QueueSource queueSource;
   final bool displayTrackNumber;
@@ -2357,7 +2561,7 @@ class NamidaTracksList extends StatelessWidget {
     this.scrollController,
     this.padding,
     required this.queueLength,
-    this.isTrackSelectable = true,
+    this.isTrackSelectable,
     this.physics,
     required this.queueSource,
     this.displayTrackNumber = false,
@@ -2368,36 +2572,38 @@ class NamidaTracksList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaListView(
-      header: header,
-      widgetsInColumn: widgetsInColumn,
-      scrollController: scrollController,
-      itemCount: queueLength,
-      itemExtents: List<double>.filled(queueLength, Dimensions.inst.trackTileItemExtent),
-      padding: padding,
-      physics: physics,
-      scrollConfig: scrollConfig,
-      itemBuilder: itemBuilder ??
-          (context, i) {
-            if (queue != null) {
-              final track = queue![i];
-              return AnimatingTile(
-                key: ValueKey(i),
-                position: i,
-                shouldAnimate: shouldAnimate,
-                child: TrackTile(
-                  index: i,
-                  trackOrTwd: track,
-                  draggableThumbnail: false,
-                  selectable: isTrackSelectable,
-                  queueSource: queueSource,
-                  displayTrackNumber: displayTrackNumber,
-                  thirdLineText: thirdLineText == null ? '' : thirdLineText!(track),
-                ),
-              );
-            }
-            return const Text('PASS A QUEUE OR USE ITEM BUILDER');
-          },
+    return AnimationLimiter(
+      child: NamidaListView(
+        header: header,
+        widgetsInColumn: widgetsInColumn,
+        scrollController: scrollController,
+        itemCount: queueLength,
+        itemExtent: Dimensions.inst.trackTileItemExtent,
+        padding: padding,
+        physics: physics,
+        scrollConfig: scrollConfig,
+        itemBuilder: itemBuilder ??
+            (context, i) {
+              if (queue != null) {
+                final track = queue![i];
+                return AnimatingTile(
+                  key: ValueKey(i),
+                  position: i,
+                  shouldAnimate: shouldAnimate,
+                  child: TrackTile(
+                    index: i,
+                    trackOrTwd: track,
+                    draggableThumbnail: false,
+                    selectable: isTrackSelectable,
+                    queueSource: queueSource,
+                    displayTrackNumber: displayTrackNumber,
+                    thirdLineText: thirdLineText == null ? '' : thirdLineText!(track),
+                  ),
+                );
+              }
+              return const Text('PASS A QUEUE OR USE ITEM BUILDER');
+            },
+      ),
     );
   }
 }
@@ -2531,7 +2737,7 @@ class NamidaInkWellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsColor = context.theme.colorScheme.onBackground.withOpacity(0.8);
+    final itemsColor = context.theme.colorScheme.onSurface.withOpacity(0.8);
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
       child: AnimatedOpacity(
@@ -2561,7 +2767,7 @@ class NamidaInkWellButton extends StatelessWidget {
                 text,
                 style: context.textTheme.displayMedium?.copyWith(
                   color: itemsColor,
-                  fontSize: (15.0 * sizeMultiplier).multipliedFontScale,
+                  fontSize: (15.0 * sizeMultiplier),
                 ),
               ),
               const SizedBox(width: 4.0),
@@ -2594,12 +2800,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
             final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
             final days = controller.historyDays.toList();
             days.removeWhere((element) => element <= dayToScrollTo);
-            controller.canUpdateAllItemsExtentsInHistory = true;
-            controller.calculateAllItemsExtentsInHistory();
-            final itemExtents = controller.allItemsExtentsHistory;
-            controller.canUpdateAllItemsExtentsInHistory = false;
-            double totalScrollOffset = 0;
-            days.loop((e, index) => totalScrollOffset += itemExtents[index]);
+            double totalScrollOffset = controller.daysToSectionExtent(days);
             controller.scrollController.jumpTo(totalScrollOffset + 100.0);
           },
         );
@@ -2661,13 +2862,13 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
                     textWidget,
                     const SizedBox(width: 6.0),
                     if (widget.tracksLength != 0)
-                      Text(
+                      NamidaButtonText(
                         "(${widget.tracksLength.displayTrackKeyword})",
                         style: context.textTheme.displaySmall,
                       ),
                   ],
                 ),
-                Text(
+                NamidaButtonText(
                   "${oldestDate?.millisecondsSinceEpoch.dateFormattedOriginal} → ${newestDate?.millisecondsSinceEpoch.dateFormattedOriginal}",
                   style: context.textTheme.displaySmall,
                 ),
@@ -2679,7 +2880,7 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
 
 /// Obx(() => showIf.value ? child : const SizedBox());
 class ObxShow extends StatelessWidget {
-  final RxBool showIf;
+  final RxBase<bool> showIf;
   final Widget child;
 
   const ObxShow({
@@ -2689,7 +2890,12 @@ class ObxShow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Obx(() => showIf.value ? child : const SizedBox());
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: showIf,
+      builder: (show) => show ? child : const SizedBox(),
+    );
+  }
 }
 
 class NamidaHero extends StatelessWidget {
@@ -2971,12 +3177,9 @@ class NamidaPopupWrapper extends StatelessWidget {
       Offset.zero & overlay.size,
     );
     await NamidaNavigator.inst.showMenu(
-      showMenu(
-        useRootNavigator: useRootNavigator,
-        context: context,
-        position: position,
-        items: convertItems(context),
-      ),
+      context: context,
+      position: position,
+      items: convertItems(context),
     );
     if (context.mounted) {
       popMenu(handleClosing: false);
@@ -2985,17 +3188,19 @@ class NamidaPopupWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapDetector(
       onTap: () {
         if (onTap != null) onTap!();
         if (openOnTap) {
           _showPopupMenu(context);
         }
       },
-      onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
-      child: ColoredBox(
-        color: Colors.transparent,
-        child: child,
+      child: LongPressDetector(
+        onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
+        child: ColoredBox(
+          color: Colors.transparent,
+          child: child,
+        ),
       ),
     );
   }
@@ -3294,11 +3499,11 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
         Obx(
           () => Positioned(
             right: 14.0,
-            top: _selectedChar.value.$1 * columnHeight,
+            top: _selectedChar.valueR.$1 * columnHeight,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
               decoration: BoxDecoration(shape: BoxShape.circle, color: context.theme.cardColor),
-              child: Text(_selectedChar.value.$2),
+              child: Text(_selectedChar.valueR.$2),
             ),
           ),
         ),
@@ -3412,7 +3617,7 @@ class QueueUtilsRow extends StatelessWidget {
         const SizedBox(width: 6.0),
         NamidaButton(
           tooltip: lang.REMOVE_DUPLICATES,
-          icon: Broken.trash,
+          icon: Broken.broom,
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
             snackyy(
@@ -3432,7 +3637,28 @@ class QueueUtilsRow extends StatelessWidget {
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
-            void saveSetting(bool shuffleAll) => settings.player.save(shuffleAllTracks: shuffleAll);
+            Widget buildButton(String title, IconData icon, bool isShuffleAll) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: tileVPadding),
+                child: ObxO(
+                  rx: settings.player.shuffleAllTracks,
+                  builder: (shuffleAllTracks) => SizedBox(
+                    height: tileHeight,
+                    child: ListTileWithCheckMark(
+                      active: shuffleAllTracks == isShuffleAll,
+                      leading: StackedIcon(
+                        baseIcon: Broken.shuffle,
+                        secondaryIcon: icon,
+                        blurRadius: 8.0,
+                      ),
+                      title: title,
+                      onTap: () => settings.player.save(shuffleAllTracks: isShuffleAll),
+                    ),
+                  ),
+                ),
+              );
+            }
+
             await showMenu(
               context: context,
               position: RelativeRect.fromLTRB(
@@ -3442,38 +3668,11 @@ class QueueUtilsRow extends StatelessWidget {
                 details.globalPosition.dy,
               ),
               items: [
-                ...[
-                  (
-                    lang.SHUFFLE_NEXT,
-                    Broken.forward,
-                    false,
-                  ),
-                  (
-                    lang.SHUFFLE_ALL,
-                    Broken.task,
-                    true,
-                  ),
-                ].map(
-                  (e) => PopupMenuItem(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: tileVPadding),
-                      child: Obx(
-                        () => SizedBox(
-                          height: tileHeight,
-                          child: ListTileWithCheckMark(
-                            active: settings.player.shuffleAllTracks.value == e.$3,
-                            leading: StackedIcon(
-                              baseIcon: Broken.shuffle,
-                              secondaryIcon: e.$2,
-                              blurRadius: 8.0,
-                            ),
-                            title: e.$1,
-                            onTap: () => saveSetting(e.$3),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                PopupMenuItem(
+                  child: buildButton(lang.SHUFFLE_NEXT, Broken.forward, false),
+                ),
+                PopupMenuItem(
+                  child: buildButton(lang.SHUFFLE_ALL, Broken.task, true),
                 ),
               ],
             );
@@ -3510,48 +3709,64 @@ class RepeatModeIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
-    return Obx(
-      () {
-        final tooltip = settings.player.repeatMode.value.toText().replaceFirst('_NUM_', Player.inst.numberOfRepeats.toString());
-        final child = Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(
-              settings.player.repeatMode.value.toIcon(),
-              size: 20.0,
-              color: iconColor,
-            ),
-            if (settings.player.repeatMode.value == RepeatMode.forNtimes)
-              Text(
-                Player.inst.numberOfRepeats.toString(),
-                style: context.textTheme.displaySmall?.copyWith(color: iconColor),
-              ),
-          ],
+
+    return ObxO(
+      rx: settings.player.repeatMode,
+      builder: (repeatMode) {
+        final icon = repeatMode.toIcon();
+        String tooltip = repeatMode.toText();
+
+        return ObxO(
+          rx: Player.inst.numberOfRepeats,
+          builder: (numberOfRepeats) {
+            String? numberOfRepeatsText;
+            if (repeatMode == RepeatMode.forNtimes) {
+              numberOfRepeatsText = numberOfRepeats.toString();
+              tooltip = tooltip.replaceFirst('_NUM_', numberOfRepeatsText);
+            }
+
+            final child = Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 20.0,
+                  color: iconColor,
+                ),
+                if (numberOfRepeatsText != null)
+                  Text(
+                    numberOfRepeatsText,
+                    style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+                  ),
+              ],
+            );
+
+            return compact
+                ? NamidaIconButton(
+                    tooltip: tooltip,
+                    icon: null,
+                    horizontalPadding: 0.0,
+                    padding: EdgeInsets.zero,
+                    iconSize: 20.0,
+                    onPressed: () {
+                      onPressed?.call();
+                      _switchMode();
+                    },
+                    child: child,
+                  )
+                : IconButton(
+                    visualDensity: VisualDensity.compact,
+                    style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                    padding: const EdgeInsets.all(2.0),
+                    tooltip: tooltip,
+                    onPressed: () {
+                      onPressed?.call();
+                      _switchMode();
+                    },
+                    icon: child,
+                  );
+          },
         );
-        return compact
-            ? NamidaIconButton(
-                tooltip: tooltip,
-                icon: null,
-                horizontalPadding: 0.0,
-                padding: EdgeInsets.zero,
-                iconSize: 20.0,
-                onPressed: () {
-                  onPressed?.call();
-                  _switchMode();
-                },
-                child: child,
-              )
-            : IconButton(
-                visualDensity: VisualDensity.compact,
-                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                padding: const EdgeInsets.all(2.0),
-                tooltip: tooltip,
-                onPressed: () {
-                  onPressed?.call();
-                  _switchMode();
-                },
-                icon: child,
-              );
       },
     );
   }
@@ -3582,7 +3797,7 @@ class EqualizerIconButton extends StatelessWidget {
       builder: (context, snapshot) {
         return Obx(
           () {
-            final isSoundModified = settings.player.speed.value != 1.0 || settings.player.pitch.value != 1.0;
+            final isSoundModified = settings.player.speed.valueR != 1.0 || settings.player.pitch.valueR != 1.0;
             final enabled = isSoundModified || (snapshot.data ?? false);
             return enabled
                 ? StackedIcon(
@@ -3774,6 +3989,50 @@ class ScaleDetector extends StatelessWidget {
   }
 }
 
+class HorizontalDragDetector extends StatelessWidget {
+  final GestureDragStartCallback? onStart;
+  final GestureDragDownCallback? onDown;
+  final GestureDragUpdateCallback? onUpdate;
+  final GestureDragEndCallback? onEnd;
+  final void Function(HorizontalDragGestureRecognizer instance)? initializer;
+  final Widget? child;
+  final HitTestBehavior? behavior;
+
+  const HorizontalDragDetector({
+    super.key,
+    this.initializer,
+    this.child,
+    this.behavior,
+    this.onStart,
+    this.onDown,
+    this.onUpdate,
+    this.onEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[HorizontalDragGestureRecognizer] = GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
+      () => HorizontalDragGestureRecognizer(debugOwner: this),
+      initializer ??
+          (HorizontalDragGestureRecognizer instance) {
+            instance
+              ..onStart = onStart
+              ..onDown = onDown
+              ..onUpdate = onUpdate
+              ..onEnd = onEnd
+              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          },
+    );
+
+    return RawGestureDetector(
+      behavior: behavior,
+      gestures: gestures,
+      child: child,
+    );
+  }
+}
+
 class DecorationClipper extends CustomClipper<Path> {
   const DecorationClipper({
     this.textDirection = TextDirection.ltr,
@@ -3816,6 +4075,65 @@ class BorderRadiusClip extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+}
+
+class NamidaHistoryDayHeaderBox extends StatelessWidget {
+  final double height;
+  final String title;
+  final Widget menu;
+  final Color bgColor;
+  final Color sideColor;
+  final Color shadowColor;
+
+  const NamidaHistoryDayHeaderBox({
+    super.key,
+    required this.height,
+    required this.title,
+    required this.menu,
+    required this.sideColor,
+    required this.bgColor,
+    required this.shadowColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border(
+          left: BorderSide(
+            color: sideColor,
+            width: 4.0,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 2.0),
+            blurRadius: 4.0,
+            color: shadowColor,
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: context.width,
+        height: height,
+        child: Row(
+          children: [
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Text(
+                title,
+                style: context.textTheme.displayMedium,
+              ),
+            ),
+            const SizedBox(width: 4.0),
+            menu,
+            const SizedBox(width: 4.0),
+          ],
+        ),
+      ),
     );
   }
 }

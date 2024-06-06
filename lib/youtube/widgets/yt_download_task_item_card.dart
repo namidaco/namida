@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -17,6 +16,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -51,14 +51,14 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     void Function()? onTap,
     Widget? Function(double size)? iconWidget,
   }) {
-    final textWidget = RichText(
-      text: TextSpan(
+    final textWidget = Text.rich(
+      TextSpan(
         children: [
-          TextSpan(text: title, style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale)),
+          TextSpan(text: title, style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0)),
           if (betweenBrackets != '')
             TextSpan(
               text: " ($betweenBrackets)",
-              style: Get.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+              style: namida.textTheme.displaySmall?.copyWith(fontSize: 11.0),
             ),
         ],
       ),
@@ -133,13 +133,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             style: {
               '*': Style.fromTextStyle(
                 context.textTheme.displaySmall!.copyWith(
-                  fontSize: 13.0.multipliedFontScale,
+                  fontSize: 13.0,
                 ),
               ),
               'a': Style.fromTextStyle(
                 context.textTheme.displaySmall!.copyWith(
                   color: context.theme.colorScheme.primary.withAlpha(210),
-                  fontSize: 12.5.multipliedFontScale,
+                  fontSize: 12.5,
                 ),
               )
             },
@@ -261,7 +261,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                         .addSeparators(
                           separator: NamidaContainerDivider(
                             height: 1.5,
-                            colorForce: context.theme.colorScheme.onBackground.withOpacity(0.2),
+                            colorForce: context.theme.colorScheme.onSurface.withOpacity(0.2),
                           ),
                           skipFirst: 1,
                         )
@@ -309,7 +309,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           Expanded(
             child: Text(
               texts.joinText(),
-              style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale),
+              style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
             ),
           ),
         ],
@@ -381,8 +381,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12.0),
-              RichText(
-                text: TextSpan(
+              Text.rich(
+                TextSpan(
                   children: [
                     TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
                     TextSpan(
@@ -611,7 +611,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                       const SizedBox(height: 4.0),
                       Text(
                         [percentageText, downloadInfoText].joinText(),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
                       ),
                     ],
                     const SizedBox(height: 4.0),
@@ -735,7 +735,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                 item.videoStream?.resolution,
                                 downloadedFile.fileSizeFormatted(),
                               ].joinText(),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
                             ),
                             const SizedBox(width: 4.0),
                             if (itemIcon != null)

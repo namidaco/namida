@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -26,7 +25,6 @@ class YoutubeCard extends StatelessWidget {
   final double thumbnailWidthPercentage;
   final IconData? smallBoxIcon;
   final bool extractColor;
-  final List<Widget> Function()? menuChildren;
   final List<NamidaPopupItem> Function()? menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
@@ -56,7 +54,6 @@ class YoutubeCard extends StatelessWidget {
     this.thumbnailWidthPercentage = 1.0,
     this.smallBoxIcon,
     this.extractColor = false,
-    this.menuChildren,
     this.menuChildrenDefault,
     this.isCircle = false,
     this.bottomRightWidgets = const [],
@@ -123,7 +120,7 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0.multipliedFontScale * fontMultiplier),
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -138,7 +135,7 @@ class YoutubeCard extends StatelessWidget {
                           subtitle,
                           style: context.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w400,
-                            fontSize: 13.0.multipliedFontScale * fontMultiplier,
+                            fontSize: 13.0 * fontMultiplier,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -180,7 +177,7 @@ class YoutubeCard extends StatelessWidget {
                                       thirdLineText,
                                       style: context.textTheme.displaySmall?.copyWith(
                                         fontWeight: FontWeight.w400,
-                                        fontSize: 11.0.multipliedFontScale * fontMultiplier,
+                                        fontSize: 11.0 * fontMultiplier,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -212,12 +209,11 @@ class YoutubeCard extends StatelessWidget {
                 children: bottomRightWidgets,
               ),
             ),
-          if (!shimmerEnabled && ((menuChildren?.call().isNotEmpty ?? false) || (menuChildrenDefault?.call().isNotEmpty ?? false)))
+          if (!shimmerEnabled && menuChildrenDefault != null)
             Positioned(
               top: 0.0,
               right: 0.0,
               child: NamidaPopupWrapper(
-                children: menuChildren,
                 childrenDefault: menuChildrenDefault,
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),

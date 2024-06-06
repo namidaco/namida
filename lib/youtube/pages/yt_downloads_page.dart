@@ -1,5 +1,5 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -8,6 +8,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
@@ -27,7 +28,7 @@ class YTDownloadsPage extends StatelessWidget {
   }) {
     return Obx(
       () {
-        final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value;
+        final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
         final color = enabled ? Colors.white.withOpacity(0.7) : null;
         return NamidaInkWell(
           bgColor: enabled ? CurrentColor.inst.color : context.theme.cardColor,
@@ -84,8 +85,8 @@ class YTDownloadsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12.0),
-              RichText(
-                text: TextSpan(
+              Text.rich(
+                TextSpan(
                   children: [
                     TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
                     TextSpan(
@@ -133,12 +134,15 @@ class YTDownloadsPage extends StatelessWidget {
               icon: Broken.flash,
               title: lang.PARALLEL_DOWNLOADS,
               trailing: Obx(
-                () => NamidaWheelSlider(
-                  totalCount: 10,
-                  initValue: tempCount.value,
-                  onValueChanged: (val) => tempCount.value = val.withMinimum(1),
-                  text: tempCount.value.toString(),
-                ),
+                () {
+                  final temp = tempCount.valueR;
+                  return NamidaWheelSlider(
+                    totalCount: 10,
+                    initValue: temp,
+                    onValueChanged: (val) => tempCount.value = val.withMinimum(1),
+                    text: temp.toString(),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 12.0),
@@ -148,7 +152,7 @@ class YTDownloadsPage extends StatelessWidget {
     );
   }
 
-  bool? get _isOnGoingSelected => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value;
+  bool? get _isOnGoingSelectedR => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
   set _isOnGoingSelected(bool? val) => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value = val;
   void _updateTempList(bool? forIsGoing) => YTOnGoingFinishedDownloads.inst.updateTempList(forIsGoing);
   void _refreshTempList() => YTOnGoingFinishedDownloads.inst.refreshList();
@@ -217,7 +221,7 @@ class YTDownloadsPage extends StatelessWidget {
             ),
           ),
           Obx(
-            () => _isOnGoingSelected != null
+            () => _isOnGoingSelectedR != null
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Row(
@@ -225,15 +229,15 @@ class YTDownloadsPage extends StatelessWidget {
                         const SizedBox(width: 24.0),
                         Text(
                           _downloadTasksTempList.length.displayVideoKeyword,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 20.0.multipliedFontScale),
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: 20.0),
                         ),
-                        if (_isOnGoingSelected == true) ...[
+                        if (_isOnGoingSelectedR == true) ...[
                           const Spacer(),
                           NamidaIconButton(
                             icon: Broken.play,
                             iconSize: 24.0,
                             onPressed: () {
-                              _downloadTasksTempList.loop((e, index) {
+                              _downloadTasksTempList.loop((e) {
                                 YoutubeController.inst.resumeDownloadTasks(groupName: e.$1, itemsConfig: [e.$2]);
                               });
                             },
@@ -242,7 +246,7 @@ class YTDownloadsPage extends StatelessWidget {
                             icon: Broken.pause,
                             iconSize: 24.0,
                             onPressed: () {
-                              _downloadTasksTempList.loop((e, index) {
+                              _downloadTasksTempList.loop((e) {
                                 YoutubeController.inst.pauseDownloadTask(
                                   itemsConfig: [e.$2],
                                   groupName: e.$1,
@@ -261,7 +265,7 @@ class YTDownloadsPage extends StatelessWidget {
                                 itemsLength: _downloadTasksTempList.length,
                               );
                               if (confirmed) {
-                                _downloadTasksTempList.loop((e, index) {
+                                _downloadTasksTempList.loop((e) {
                                   YoutubeController.inst.cancelDownloadTask(
                                     itemsConfig: [e.$2],
                                     groupName: e.$1,
@@ -286,7 +290,7 @@ class YTDownloadsPage extends StatelessWidget {
                   return CustomScrollView(
                     controller: sc,
                     slivers: [
-                      _isOnGoingSelected == null
+                      _isOnGoingSelectedR == null
                           ? SliverList.builder(
                               itemCount: keys.length,
                               itemBuilder: (context, index) {
@@ -371,17 +375,20 @@ class YTDownloadsPage extends StatelessWidget {
                               },
                             )
                           : Obx(
-                              () => SliverList.builder(
-                                itemCount: _downloadTasksTempList.length,
-                                itemBuilder: (context, index) {
-                                  final groupNameAndItem = _downloadTasksTempList[index];
-                                  return YTDownloadTaskItemCard(
-                                    videos: _downloadTasksTempList.map((e) => e.$2).toList(),
-                                    index: index,
-                                    groupName: groupNameAndItem.$1,
-                                  );
-                                },
-                              ),
+                              () {
+                                final videos = _downloadTasksTempList.valueR.map((e) => e.$2).toList();
+                                return SliverList.builder(
+                                  itemCount: _downloadTasksTempList.length,
+                                  itemBuilder: (context, index) {
+                                    final groupNameAndItem = _downloadTasksTempList[index];
+                                    return YTDownloadTaskItemCard(
+                                      videos: videos,
+                                      index: index,
+                                      groupName: groupNameAndItem.$1,
+                                    );
+                                  },
+                                );
+                              },
                             ),
                       kBottomPaddingWidgetSliver,
                     ],

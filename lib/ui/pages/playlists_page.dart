@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/track.dart';
@@ -87,24 +87,24 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     gridWidget: isInsideDialog
                         ? null
                         : ChangeGridCountWidget(
-                            currentCount: settings.playlistGridCount.value,
+                            currentCount: settings.playlistGridCount.valueR,
                             onTap: () {
                               final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, widget.countPerRow);
                               settings.save(playlistGridCount: newCount);
                             },
                           ),
-                    isBarVisible: LibraryTab.playlists.isBarVisible,
-                    showSearchBox: LibraryTab.playlists.isSearchBoxVisible,
+                    isBarVisible: LibraryTab.playlists.isBarVisible.valueR,
+                    showSearchBox: LibraryTab.playlists.isSearchBoxVisible.valueR,
                     leftText: SearchSortController.inst.playlistSearchList.length.displayPlaylistKeyword,
                     onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                     sortByMenuWidget: SortByMenu(
-                      title: settings.playlistSort.value.toText(),
+                      title: settings.playlistSort.valueR.toText(),
                       popupMenuChild: () => const SortByMenuPlaylist(),
-                      isCurrentlyReversed: settings.playlistSortReversed.value,
+                      isCurrentlyReversed: settings.playlistSortReversed.valueR,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                     ),
-                    textField: CustomTextFiled(
+                    textField: () => CustomTextFiled(
                       textFieldController: LibraryTab.playlists.textSearchController,
                       textFieldHintText: lang.FILTER_PLAYLISTS,
                       onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
@@ -165,13 +165,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           Expanded(
                                             child: NamidaHero(
                                               tag: 'DPC_history',
-                                              child: Obx(
-                                                () => DefaultPlaylistCard(
+                                              child: ObxO(
+                                                rx: HistoryController.inst.totalHistoryItemsCount,
+                                                builder: (count) => DefaultPlaylistCard(
                                                   colorScheme: Colors.grey,
                                                   icon: Broken.refresh,
                                                   title: lang.HISTORY,
-                                                  displayLoadingIndicator: HistoryController.inst.isLoadingHistory,
-                                                  text: HistoryController.inst.historyTracksLength.formatDecimal(),
+                                                  displayLoadingIndicator: count == -1,
+                                                  text: count.formatDecimal(),
                                                   onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
                                                 ),
                                               ),
@@ -186,7 +187,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   colorScheme: Colors.green,
                                                   icon: Broken.award,
                                                   title: lang.MOST_PLAYED,
-                                                  displayLoadingIndicator: HistoryController.inst.isLoadingHistory,
+                                                  displayLoadingIndicator: HistoryController.inst.isLoadingHistoryR,
                                                   text: HistoryController.inst.topTracksMapListens.length.formatDecimal(),
                                                   onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
                                                 ),
@@ -208,7 +209,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   colorScheme: Colors.red,
                                                   icon: Broken.heart,
                                                   title: lang.FAVOURITES,
-                                                  text: PlaylistController.inst.favouritesPlaylist.value.tracks.length.formatDecimal(),
+                                                  text: PlaylistController.inst.favouritesPlaylist.valueR.tracks.length.formatDecimal(),
                                                   onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
                                                 ),
                                               ),
@@ -224,7 +225,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   icon: Broken.driver,
                                                   title: lang.QUEUES,
                                                   displayLoadingIndicator: QueueController.inst.isLoadingQueues,
-                                                  text: QueueController.inst.queuesMap.value.length.formatDecimal(),
+                                                  text: QueueController.inst.queuesMap.valueR.length.formatDecimal(),
                                                   onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
                                                 ),
                                               ),

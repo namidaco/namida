@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/connectivity.dart';
@@ -9,6 +8,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -140,18 +140,16 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                           onTap: () {
                             // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
                             NamidaNavigator.inst.isytLocalSearchInFullPage = true;
-                            NamidaNavigator.inst.ytLocalSearchNavigatorKey?.currentState?.push(
-                              GetPageRoute(
-                                transition: Transition.cupertino,
-                                page: () => YTLocalSearchResults(
-                                  key: _offlineSearchPageKey,
-                                  initialSearch: currentSearchText,
-                                  onVideoTap: widget.onVideoTap,
-                                  onPopping: (didChangeSort) {
-                                    if (didChangeSort) setState(() {});
-                                  },
-                                ),
+                            NamidaNavigator.inst.ytLocalSearchNavigatorKey.currentState?.pushPage(
+                              YTLocalSearchResults(
+                                key: _offlineSearchPageKey,
+                                initialSearch: currentSearchText,
+                                onVideoTap: widget.onVideoTap,
+                                onPopping: (didChangeSort) {
+                                  if (didChangeSort) setState(() {});
+                                },
                               ),
+                              maintainState: false,
                             );
                           },
                           child: Row(
@@ -164,8 +162,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               ),
                               const Spacer(),
                               const SizedBox(width: 6.0),
-                              Obx(
-                                () => YTLocalSearchController.inst.didLoadLookupLists.value == false ? const LoadingIndicator() : const SizedBox(),
+                              ObxO(
+                                rx: YTLocalSearchController.inst.didLoadLookupLists,
+                                builder: (didLoadLookupLists) => didLoadLookupLists == false ? const LoadingIndicator() : const SizedBox(),
                               ),
                               const SizedBox(width: 6.0),
                               const Icon(Broken.arrow_right_3),
@@ -222,7 +221,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                 itemBuilder: (context, index) {
                                   final item = _searchResult[index];
                                   switch (item.runtimeType) {
-                                    case StreamInfoItem:
+                                    case const (StreamInfoItem):
                                       return YoutubeVideoCard(
                                         thumbnailHeight: thumbnailHeight,
                                         thumbnailWidth: thumbnailWidth,
@@ -231,13 +230,14 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                         playlistID: null,
                                         onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item as StreamInfoItem),
                                       );
-                                    case YoutubePlaylist:
+                                    case const (YoutubePlaylist):
                                       return YoutubePlaylistCard(
                                         playlist: item,
+                                        playOnTap: false,
                                         thumbnailHeight: thumbnailHeight,
                                         thumbnailWidth: thumbnailWidth,
                                       );
-                                    case YoutubeChannel:
+                                    case const (YoutubeChannel):
                                       return YoutubeChannelCard(
                                         channel: item,
                                         thumbnailSize: context.width * 0.18,
@@ -248,7 +248,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               ),
                     SliverToBoxAdapter(
                       child: Obx(
-                        () => _isFetchingMoreResults.value
+                        () => _isFetchingMoreResults.valueR
                             ? const Padding(
                                 padding: EdgeInsets.all(8.0),
                                 child: Stack(

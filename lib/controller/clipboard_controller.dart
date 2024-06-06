@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 class ClipboardController {
   static ClipboardController get inst => _instance;
@@ -39,12 +39,12 @@ class ClipboardController {
     _textInControllerEmpty.value = empty;
   }
 
-  bool get textInControllerEmpty => _textInControllerEmpty.value;
+  RxBaseCore<bool> get textInControllerEmpty => _textInControllerEmpty;
   final _textInControllerEmpty = true.obs;
 
-  String get lastCopyUsed => _lastCopyUsed.value;
+  RxBaseCore<String> get lastCopyUsed => _lastCopyUsed;
   final _lastCopyUsed = ''.obs;
 
-  String get clipboardText => _clipboardText.value;
+  RxBaseCore<String> get clipboardText => _clipboardText;
   final _clipboardText = ''.obs;
 }

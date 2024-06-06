@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
@@ -33,7 +33,7 @@ class MultiArtworkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thumbnailSize = dimensions.$1;
-    final fontSize = dimensions.$2.multipliedFontScale;
+    final fontSize = dimensions.$2;
 
     return GridTile(
       child: Container(

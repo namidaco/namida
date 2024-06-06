@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class AppThemes {
   static AppThemes get inst => _instance;
@@ -13,7 +12,7 @@ class AppThemes {
 
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
-    light ??= Get.theme.brightness == Brightness.light;
+    light ??= namida.theme.brightness == Brightness.light;
 
     final shouldUseAMOLED = !light && settings.pitchBlack.value;
     final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;
@@ -142,52 +141,52 @@ class AppThemes {
         color: light ? Color.alphaBlend(cardColor.withAlpha(180), Colors.white) : Color.alphaBlend(cardColor.withAlpha(180), Colors.black),
       ),
       textTheme: TextTheme(
-        bodyMedium: TextStyle(
-          fontSize: 14.0.multipliedFontScale,
+        bodyMedium: const TextStyle(
+          fontSize: 14.0,
           fontWeight: FontWeight.normal,
           fontFamilyFallback: fontFallback,
         ),
-        bodySmall: TextStyle(
-          fontSize: 14.0.multipliedFontScale,
+        bodySmall: const TextStyle(
+          fontSize: 14.0,
           fontWeight: FontWeight.normal,
           fontFamilyFallback: fontFallback,
         ),
-        titleSmall: TextStyle(
-          fontSize: 14.0.multipliedFontScale,
+        titleSmall: const TextStyle(
+          fontSize: 14.0,
           fontWeight: FontWeight.w600,
           fontFamilyFallback: fontFallback,
         ),
-        titleLarge: TextStyle(
-          fontSize: 20.0.multipliedFontScale,
+        titleLarge: const TextStyle(
+          fontSize: 20.0,
           fontWeight: FontWeight.w600,
           fontFamilyFallback: fontFallback,
         ),
         displayLarge: TextStyle(
           fontWeight: FontWeight.w700,
-          fontSize: 17.0.multipliedFontScale,
+          fontSize: 17.0,
           color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
           fontFamilyFallback: fontFallback,
         ),
         displayMedium: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 15.0.multipliedFontScale,
+          fontSize: 15.0,
           color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
           fontFamilyFallback: fontFallback,
         ),
         displaySmall: TextStyle(
           fontWeight: FontWeight.w400,
-          fontSize: 13.0.multipliedFontScale,
+          fontSize: 13.0,
           color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
           fontFamilyFallback: fontFallback,
         ),
-        headlineMedium: TextStyle(
+        headlineMedium: const TextStyle(
           fontWeight: FontWeight.normal,
-          fontSize: 14.0.multipliedFontScale,
+          fontSize: 14.0,
           fontFamilyFallback: fontFallback,
         ),
-        headlineSmall: TextStyle(
+        headlineSmall: const TextStyle(
           fontWeight: FontWeight.normal,
-          fontSize: 14.0.multipliedFontScale,
+          fontSize: 14.0,
           fontFamilyFallback: fontFallback,
         ),
       ),

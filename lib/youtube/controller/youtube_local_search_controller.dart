@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -11,6 +10,7 @@ import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
@@ -264,7 +264,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     final completer2 = Completer<void>();
 
     Directory(dirStreamInfo).listAllIsolate().then((value) {
-      value.loop((file, _) {
+      value.loop((file) {
         try {
           final res = (file as File).readAsJsonSync();
           if (res != null) {
@@ -279,7 +279,7 @@ class YTLocalSearchController with PortsProvider<Map> {
       completer1.complete();
     });
     Directory(dirVideoInfo).listAllIsolate().then((value) {
-      value.loop((file, _) {
+      value.loop((file) {
         try {
           final res = (file as File).readAsJsonSync();
           if (res != null) {
@@ -348,7 +348,7 @@ class YTLocalSearchController with PortsProvider<Map> {
   void cleanResources({int afterSeconds = 10}) {
     _cancelDisposingTimer();
     _disposingTimer = Timer(Duration(seconds: afterSeconds), () {
-      fillingCompleter.completeIfWasnt();
+      fillingCompleter?.completeIfWasnt();
       fillingCompleter = null;
       disposePort();
       searchResults.clear();

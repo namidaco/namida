@@ -24,7 +24,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 export 'package:dart_extensions/dart_extensions.dart';
 
-extension TracksSelectableUtils on List<Selectable> {
+extension TracksSelectableUtils on Iterable<Selectable> {
   String get displayTrackKeyword => length.displayTrackKeyword;
 
   List<Track> toImageTracks([int? limit = 4]) {
@@ -62,15 +62,13 @@ extension TracksUtils on List<Track> {
   Set<String> toUniqueAlbums() {
     final tracks = this;
     final albums = <String>{};
-    tracks.loop((t, _) => albums.add(t.albumIdentifier));
+    tracks.loop((t) => albums.add(t.albumIdentifier));
     return albums;
   }
 
   String get totalSizeFormatted {
     int size = 0;
-    loop((t, index) {
-      size += t.size;
-    });
+    loop((t) => size += t.size);
     return size.fileSizeFormatted;
   }
 
@@ -184,9 +182,9 @@ extension DisplayKeywords on int {
 extension YearDateFormatted on int {
   String get formattedTime => getTimeFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
 
-  String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value);
+  String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value); // non reactive
 
-  String get dateFormatted => formatTimeFromMSSE(settings.dateTimeFormat.value);
+  String get dateFormatted => formatTimeFromMSSE(settings.dateTimeFormat.value); // non reactive
 
   String get dateFormattedOriginal {
     final valInSetting = settings.dateTimeFormat.value;
@@ -229,12 +227,6 @@ extension BorderRadiusSetting on double {
   }
 }
 
-extension FontScaleSetting on double {
-  double get multipliedFontScale {
-    return this * settings.fontScaleFactor.value;
-  }
-}
-
 extension TrackItemSubstring on TrackTileItem {
   String get label => convertToString;
 }
@@ -259,6 +251,11 @@ extension FavouriteTrack on Track {
   bool get isFavourite {
     return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.track == this) != null;
   }
+
+  bool get isFavouriteR {
+    // ignore: avoid_rx_value_getter_outside_obx
+    return PlaylistController.inst.favouritesPlaylist.valueR.tracks.firstWhereEff((element) => element.track == this) != null;
+  }
 }
 
 extension PLNAME on String {
@@ -279,29 +276,31 @@ extension EnumUtils<E extends Enum> on E {
 extension TRACKPLAYMODE on TrackPlayMode {
   bool get shouldBeIndex0 => this == TrackPlayMode.selectedTrack || this == TrackPlayMode.trackAlbum || this == TrackPlayMode.trackArtist || this == TrackPlayMode.trackGenre;
 
-  List<Track> getQueue(Track trackPre, {List<Track>? searchQueue}) {
-    List<Track> queue = [];
+  List<Track> generateQueue(Track trackPre, {List<Track>? searchQueue}) {
     final track = trackPre.toTrackExt();
-    queue = switch (this) {
-      TrackPlayMode.selectedTrack => [trackPre],
-      TrackPlayMode.searchResults =>
-        searchQueue ?? (SearchSortController.inst.trackSearchTemp.isNotEmpty ? SearchSortController.inst.trackSearchTemp : SearchSortController.inst.trackSearchList),
-      TrackPlayMode.trackAlbum => track.albumIdentifier.getAlbumTracks(),
-      TrackPlayMode.trackArtist => track.artistsList.first.getArtistTracks(),
-      TrackPlayMode.trackGenre => track.artistsList.first.getGenresTracks(),
-    };
+    final queue = switch (this) {
+          TrackPlayMode.selectedTrack => [trackPre],
+          TrackPlayMode.searchResults => searchQueue ??
+              (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
+          TrackPlayMode.trackAlbum => track.albumIdentifier.getAlbumTracks(),
+          TrackPlayMode.trackArtist => track.artistsList.firstOrNull?.getArtistTracks(),
+          TrackPlayMode.trackGenre => track.artistsList.firstOrNull?.getGenresTracks(),
+        } ??
+        [trackPre];
+
+    final newQueue = List<Track>.from(queue);
     if (shouldBeIndex0) {
-      queue.remove(trackPre);
-      queue.insertSafe(0, trackPre);
+      newQueue.remove(trackPre);
+      newQueue.insertSafe(0, trackPre);
     }
-    return queue;
+    return newQueue;
   }
 }
 
 extension ConvertPathToTrack on String {
   Future<TrackExtended?> removeTrackThenExtract({bool onlyIfNewFileExists = true}) async {
     if (onlyIfNewFileExists && !await File(this).exists()) return null;
-    Indexer.inst.allTracksMappedByPath.remove(Track(this));
+    Indexer.inst.allTracksMappedByPath.value.remove(Track(this));
     return await Indexer.inst.extractTrackInfo(
       trackPath: this,
       onMinDurTrigger: () => null,
@@ -516,7 +515,7 @@ int _getDirSizeIsolate(Map params) {
   final recursive = params['recursive'] as bool;
   final followLinks = params['followLinks'] as bool;
   int size = 0;
-  Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks).loop((e, index) {
+  Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks).loop((e) {
     size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
   });
   return size;
@@ -613,15 +612,13 @@ extension FileStatsUtils on FileStat {
   }
 }
 
-extension CompleterCompleter<T> on Completer<T>? {
-  void completeIfWasnt([FutureOr<T>? value]) async {
-    final c = this;
-    if (c?.isCompleted == false) c?.complete(value);
+extension CompleterCompleter<T> on Completer<T> {
+  void completeIfWasnt([FutureOr<T>? value]) {
+    if (isCompleted == false) complete(value);
   }
 
-  void completeErrorIfWasnt(Object error, [StackTrace? stackTrace]) async {
-    final c = this;
-    if (c?.isCompleted == false) c?.completeError(error, stackTrace);
+  void completeErrorIfWasnt(Object error, [StackTrace? stackTrace]) {
+    if (isCompleted == false) completeError(error, stackTrace);
   }
 }
 
@@ -635,23 +632,26 @@ extension ScrollerPerf on ScrollController {
     required Curve curve,
     final double jumpitator = 800.0,
   }) async {
-    final diff = offset - this.offset;
+    try {
+      final diff = offset - this.positions.last.pixels;
 
-    if (diff > jumpitator) {
-      // -- is now above the target, so we jump offset-jumpitator
-      jumpTo(offset - jumpitator);
-    } else if (diff < -jumpitator) {
-      // -- is now under the target, so we jump offset+jumpitator
-      jumpTo(offset + jumpitator);
-    }
+      if (diff > jumpitator) {
+        // -- is now above the target, so we jump offset-jumpitator
+        jumpTo(offset - jumpitator);
+      } else if (diff < -jumpitator) {
+        // -- is now under the target, so we jump offset+jumpitator
+        jumpTo(offset + jumpitator);
+      }
+    } catch (_) {}
+
     await animateTo(offset, duration: duration, curve: curve);
   }
 }
 
-extension NavigatorUtils on BuildContext? {
+extension NavigatorUtils on BuildContext {
   void safePop({bool rootNavigator = false}) {
     final context = this;
-    if (context != null && context.mounted) Navigator.of(context, rootNavigator: rootNavigator).pop();
+    if (context.mounted) Navigator.of(context, rootNavigator: rootNavigator).pop();
   }
 }
 

@@ -15,7 +15,7 @@ import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/class/yt_thumbnail_wrapper.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class ThumbnailManager {
@@ -402,7 +402,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
   void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted) {
     if (notfound != null) _notFoundThumbnails[itemId] = notfound;
-    _downloadCompleters[itemId].completeIfWasnt(downloadedFile);
+    _downloadCompleters[itemId]?.completeIfWasnt(downloadedFile);
     _downloadCompleters[itemId] = null;
     _shouldRetry[itemId] = aborted;
   }

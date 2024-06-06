@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:newpipeextractor_dart/utils/stringChecker.dart';
@@ -14,6 +13,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -98,7 +98,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
 
   @override
   IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
-    final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.values) pl.name: pl.tracks};
+    final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.value.values) pl.name: pl.tracks};
     final params = {
       'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
       'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
@@ -159,7 +159,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
           final results = <String>[];
           final daysRange = p['daysRange'] as int;
           final videoToRemove = p['videoToRemove'] as String?;
-          allIds.loop((id, _) {
+          allIds.loop((id) {
             final dt = releaseDateMap[id];
             if (dt != null && (dt.difference(dateReleased).inDays).abs() <= daysRange) {
               results.add(id);
@@ -193,7 +193,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final completer2 = Completer<void>();
 
     Directory(dirStreamInfo).listAllIsolate().then((value) {
-      value.loop((file, _) {
+      value.loop((file) {
         try {
           final res = (file as File).readAsJsonSync();
           if (res != null) {
@@ -209,7 +209,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       completer1.complete();
     });
     Directory(dirVideoInfo).listAllIsolate().then((value) {
-      value.loop((file, _) {
+      value.loop((file) {
         try {
           final res = (file as File).readAsJsonSync();
           if (res != null) {
@@ -241,7 +241,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
         allIds.add(id);
       }
     }
-    favouritesPlaylist.loop((v, _) {
+    favouritesPlaylist.loop((v) {
       final id = v.id;
       if (allIdsAdded[id] == null) {
         allIds.add(id);
@@ -249,7 +249,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     });
 
     for (final pl in playlists.values) {
-      pl.loop((v, index) {
+      pl.loop((v) {
         final id = v.id;
         if (allIdsAdded[id] == null) {
           allIds.add(id);

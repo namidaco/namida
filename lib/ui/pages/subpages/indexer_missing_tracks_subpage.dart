@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/track.dart';
@@ -135,7 +135,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 
       indicesProgressMap[allTracks.length] = _LoadingProgress.fillingPlaylistTracks;
       for (final tracks in PlaylistController.inst.playlistsMap.values.map((e) => e.tracks)) {
-        tracks.loop((e, _) {
+        tracks.loop((e) {
           allTracks[e.track.path] ??= true;
         });
       }
@@ -246,9 +246,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             size: 56.0,
                             color: context.theme.colorScheme.secondary,
                           ),
-                          Obx(
-                            () => Text(
-                              "${_loadingProgress.value.index + 1}/$_loadingCountTotalSteps",
+                          ObxO(
+                            rx: _loadingProgress,
+                            builder: (progress) => Text(
+                              "${progress.index + 1}/$_loadingCountTotalSteps",
                               style: context.textTheme.displayMedium,
                               textAlign: TextAlign.center,
                             ),
@@ -256,14 +257,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                         ],
                       ),
                       const SizedBox(height: 12.0),
-                      Obx(
-                        () {
-                          return Text(
-                            "${_loadingProgress.value.value}...",
-                            style: context.textTheme.displayMedium,
-                            textAlign: TextAlign.center,
-                          );
-                        },
+                      ObxO(
+                        rx: _loadingProgress,
+                        builder: (progress) => Text(
+                          "${progress.value}...",
+                          style: context.textTheme.displayMedium,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ],
                   ),
@@ -285,7 +285,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       enabled: !_isUpdatingPaths,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingEffective + 56.0 + 4.0),
+                        padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 56.0 + 4.0),
                         itemCount: _missingTracksPaths.length,
                         itemBuilder: (context, index) {
                           final path = _missingTracksPaths[index];
@@ -403,7 +403,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                 ),
           pullToRefreshWidget,
           Positioned(
-            bottom: Dimensions.inst.globalBottomPaddingTotal,
+            bottom: Dimensions.inst.globalBottomPaddingTotalR,
             right: 12.0,
             child: _isUpdatingPaths
                 ? DecoratedBox(
@@ -445,7 +445,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               if (allSelected) {
                                 _selectedTracksToUpdate.clear();
                               } else {
-                                _missingTracksPaths.loop((e, index) {
+                                _missingTracksPaths.loop((e) {
                                   if (_missingTracksSuggestions[e] != null) _selectedTracksToUpdate[e] = true;
                                 });
                               }

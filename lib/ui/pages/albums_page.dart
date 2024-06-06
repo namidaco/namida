@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -36,7 +36,7 @@ class AlbumsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalAlbums = albumIdentifiers ?? SearchSortController.inst.albumSearchList;
+    final finalAlbums = albumIdentifiers ?? SearchSortController.inst.albumSearchList.value;
     final scrollController = LibraryTab.albums.scrollController;
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
 
@@ -51,24 +51,24 @@ class AlbumsPage extends StatelessWidget {
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: countPerRow,
-                    forStaggered: settings.useAlbumStaggeredGridView.value,
+                    forStaggered: settings.useAlbumStaggeredGridView.valueR,
                     onTap: () {
                       final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
                       settings.save(albumGridCount: newCount);
                     },
                   ),
-                  isBarVisible: LibraryTab.albums.isBarVisible,
-                  showSearchBox: LibraryTab.albums.isSearchBoxVisible,
+                  isBarVisible: LibraryTab.albums.isBarVisible.valueR,
+                  showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
                   leftText: finalAlbums.length.displayAlbumKeyword,
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                   sortByMenuWidget: SortByMenu(
-                    title: settings.albumSort.value.toText(),
+                    title: settings.albumSort.valueR.toText(),
                     popupMenuChild: () => const SortByMenuAlbums(),
-                    isCurrentlyReversed: settings.albumSortReversed.value,
+                    isCurrentlyReversed: settings.albumSortReversed.valueR,
                     onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                   ),
-                  textField: CustomTextFiled(
+                  textField: () => CustomTextFiled(
                     textFieldController: LibraryTab.albums.textSearchController,
                     textFieldHintText: lang.FILTER_ALBUMS,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
@@ -77,13 +77,13 @@ class AlbumsPage extends StatelessWidget {
               ),
               Obx(
                 () {
-                  settings.albumListTileHeight.value;
+                  settings.albumListTileHeight.valueR;
                   return countPerRow == 1
                       ? Expanded(
                           child: ListView.builder(
                             controller: scrollController,
                             itemCount: finalAlbums.length,
-                            itemExtent: settings.albumListTileHeight.value + 4.0 * 5,
+                            itemExtent: settings.albumListTileHeight.valueR + 4.0 * 5,
                             padding: kBottomPaddingInsets,
                             itemBuilder: (BuildContext context, int i) {
                               final albumId = finalAlbums[i];
@@ -98,7 +98,7 @@ class AlbumsPage extends StatelessWidget {
                             },
                           ),
                         )
-                      : settings.useAlbumStaggeredGridView.value
+                      : settings.useAlbumStaggeredGridView.valueR
                           ? Expanded(
                               child: MasonryGridView.builder(
                                 controller: scrollController,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -53,12 +53,9 @@ class QueueTile extends StatelessWidget {
                 title: lang.UNDO_CHANGES,
                 message: lang.UNDO_CHANGES_DELETED_QUEUE,
                 displaySeconds: 3,
-                button: TextButton(
-                  onPressed: () {
-                    QueueController.inst.reAddQueue(oldQueue);
-                    Get.closeAllSnackbars();
-                  },
-                  child: Text(lang.UNDO),
+                button: (
+                  lang.UNDO,
+                  () async => await QueueController.inst.reAddQueue(oldQueue),
                 ),
               );
             },
@@ -89,7 +86,7 @@ class QueueTile extends StatelessWidget {
                         child: Text(
                           queue.date.dateAndClockFormattedOriginal,
                           style: context.textTheme.displayMedium?.copyWith(
-                            fontSize: 14.0.multipliedFontScale,
+                            fontSize: 14.0,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -112,7 +109,7 @@ class QueueTile extends StatelessWidget {
                     queue.tracks.totalDurationFormatted,
                     style: context.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w500,
-                      fontSize: 12.5.multipliedFontScale,
+                      fontSize: 12.5,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

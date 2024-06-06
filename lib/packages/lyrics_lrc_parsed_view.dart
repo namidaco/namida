@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:lrc/lrc.dart';
+import 'package:namida/core/constants.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:namida/class/track.dart';
@@ -12,6 +12,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -98,41 +99,37 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           seconds: int.parse(parts[1]),
           milliseconds: int.parse("${parts[2]}0"), // aditional 0 to convert to millis
         );
-        final totalDur = Player.inst.currentItemDuration ?? Player.inst.nowPlayingTrack.duration.seconds;
-        cal = totalDur.inMicroseconds / lyricsDuration.inMicroseconds;
+        final totalDurSeconds = Player.inst.currentItemDuration.value?.inSeconds ?? Player.inst.currentTrack?.track.duration ?? 0;
+        final totalDurMicro = totalDurSeconds * 1000 * 1000;
+        cal = totalDurMicro / lyricsDuration.inMicroseconds;
       } catch (_) {}
     }
 
-    timestampsMap
-      ..clear()
-      ..addEntries(
-        lrc.lyrics.asMap().entries.map(
-          (e) {
-            final lineTimeStamp = e.value.timestamp + Duration(milliseconds: lrc.offset ?? 0);
-            final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
-            final newLrcLine = LrcLine(
-              timestamp: calculatedForSpedUpVersions,
-              lyrics: e.value.lyrics,
-              type: e.value.type,
-              args: e.value.args,
-            );
-            return MapEntry(
-              calculatedForSpedUpVersions,
-              (e.key, newLrcLine),
-            );
-          },
-        ),
-      );
+    timestampsMap.assignAllEntries(
+      lrc.lyrics.asMap().entries.map(
+        (e) {
+          final lineTimeStamp = e.value.timestamp + Duration(milliseconds: lrc.offset ?? 0);
+          final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
+          final newLrcLine = LrcLine(
+            timestamp: calculatedForSpedUpVersions,
+            lyrics: e.value.lyrics,
+            type: e.value.type,
+            args: e.value.args,
+          );
+          return MapEntry(
+            calculatedForSpedUpVersions,
+            (e.key, newLrcLine),
+          );
+        },
+      ),
+    );
     lyrics = timestampsMap.values.map((e) => e.$2).toList();
     _listenForPosition();
-    _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, jump: true);
+    _updateHighlightedLine(Player.inst.nowPlayingPosition.value.milliseconds, jump: true);
   }
 
-  StreamSubscription? _streamSub;
   void _listenForPosition() {
-    _streamSub = Player.inst.positionStream.asBroadcastStream().listen((ms) {
-      _updateHighlightedLine(ms.milliseconds);
-    });
+    Player.inst.setPositionListener((ms) => _updateHighlightedLine(ms.milliseconds));
   }
 
   void _updateHighlightedLine(Duration dur, {bool forceAnimate = false, bool jump = false}) {
@@ -211,7 +208,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void dispose() {
     _latestUpdatedLineIndex.close();
     _latestUpdatedLine.close();
-    _streamSub?.cancel();
+    Player.inst.setPositionListener(null);
     super.dispose();
   }
 
@@ -219,7 +216,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   Widget build(BuildContext context) {
     final fullscreen = widget.isFullScreenView;
     final initialFontSize = fullscreen ? 25.0 : 15.0;
-    final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize.multipliedFontScale);
+    final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
 
     final bottomControlsChildren = fullscreen
         ? [
@@ -234,7 +231,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   tag: 'MINIPLAYER_POSITION',
                   child: Obx(
                     () => Text(
-                      Player.inst.nowPlayingPosition.milliSecondsLabel,
+                      Player.inst.nowPlayingPositionR.milliSecondsLabel,
                       style: context.textTheme.displaySmall,
                     ),
                   ),
@@ -247,14 +244,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     Player.inst.previous();
                   },
                 ),
-                Obx(
-                  () => NamidaIconButton(
+                ObxO(
+                  rx: Player.inst.isPlaying,
+                  builder: (isPlaying) => NamidaIconButton(
                     horizontalPadding: 18.0,
-                    icon: Player.inst.isPlaying ? Broken.pause : Broken.play,
+                    icon: isPlaying ? Broken.pause : Broken.play,
                     iconSize: 32.0,
-                    onPressed: () {
-                      Player.inst.togglePlayPause();
-                    },
+                    onPressed: Player.inst.togglePlayPause,
                   ),
                 ),
                 NamidaIconButton(
@@ -268,11 +264,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 NamidaHero(
                   enabled: false,
                   tag: 'MINIPLAYER_DURATION',
-                  child: Obx(
-                    () => Text(
-                      Player.inst.nowPlayingTrack.duration.secondsLabel,
-                      style: context.textTheme.displaySmall,
-                    ),
+                  child: ObxO(
+                    rx: Player.inst.currentItem,
+                    builder: (item) {
+                      final track = item is Selectable ? item.track : kDummyTrack;
+                      return Text(
+                        track.duration.secondsLabel,
+                        style: context.textTheme.displaySmall,
+                      );
+                    },
                   ),
                 ),
                 const Spacer(),
@@ -330,8 +330,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               onPointerUp: (event) {
                                 _scrollTimer = Timer(const Duration(seconds: 3), () {
                                   _canAnimateScroll = true;
-                                  if (Player.inst.isPlaying) {
-                                    _updateHighlightedLine(Player.inst.nowPlayingPosition.milliseconds, forceAnimate: true);
+                                  if (Player.inst.isPlaying.value) {
+                                    _updateHighlightedLine(Player.inst.nowPlayingPosition.value.milliseconds, forceAnimate: true);
                                   }
                                   if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
                                     refreshState(() => _isCurrentLineEmpty = true);
@@ -344,9 +344,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   builder: (context) {
                                     return Obx(
                                       () {
-                                        final lrc = Lyrics.inst.currentLyricsLRC.value;
+                                        final lrc = Lyrics.inst.currentLyricsLRC.valueR;
                                         if (lrc == null) {
-                                          final text = Lyrics.inst.currentLyricsText.value;
+                                          final text = Lyrics.inst.currentLyricsText.valueR;
                                           if (!_checkIfTextEmpty(text)) {
                                             return SingleChildScrollView(
                                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -367,7 +367,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         }
 
                                         final color = CurrentColor.inst.miniplayerColor;
-                                        final highlighted = timestampsMap[_latestUpdatedLine.value]?.$2;
+                                        final highlighted = timestampsMap[_latestUpdatedLine.valueR]?.$2;
                                         return PageStorage(
                                           bucket: PageStorageBucket(),
                                           child: ScrollablePositionedList.builder(
@@ -448,7 +448,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   boxShadow: [
                                     BoxShadow(
                                       blurRadius: 8.0,
-                                      color: Get.theme.scaffoldBackgroundColor.withOpacity(0.7),
+                                      color: context.theme.scaffoldBackgroundColor.withOpacity(0.7),
                                     ),
                                   ],
                                 ),

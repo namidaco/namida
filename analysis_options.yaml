@@ -7,6 +7,15 @@
 
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
+analyzer:
+  plugins:
+    - custom_lint
+  errors:
+    unnecessary_this: ignore
+    use_string_in_part_of_directives: ignore
+
+custom_lint:
+
 include: package:flutter_lints/flutter.yaml
 
 linter:
@@ -24,6 +33,5 @@ linter:
   rules:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
-
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

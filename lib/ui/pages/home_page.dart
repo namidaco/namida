@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:jiffy/jiffy.dart';
 
@@ -137,9 +137,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
 
     // -- Lost Memories --
-    final oldestYear = HistoryController.inst.oldestTrack?.dateAdded.milliSecondsSinceEpoch?.year;
-    final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear ?? 0);
+    final newestDaySinceEpoch = HistoryController.inst.historyMap.value.keys.firstOrNull;
+    final oldestDaySinceEpoch = HistoryController.inst.historyMap.value.keys.lastOrNull;
+    final newestYear = newestDaySinceEpoch == null ? 0 : DateTime.fromMillisecondsSinceEpoch(newestDaySinceEpoch * 24 * 60 * 60 * 1000).year;
+    final oldestYear = oldestDaySinceEpoch == null ? 0 : DateTime.fromMillisecondsSinceEpoch(oldestDaySinceEpoch * 24 * 60 * 60 * 1000).year;
+
+    final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
+
+    // -- Lost Memories Years
+    final diff = (newestYear - oldestYear).abs();
+    for (int i = 1; i <= diff; i++) {
+      _lostMemoriesYears.add(newestYear - i);
+    }
 
     // -- Recent Albums --
     _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));
@@ -147,12 +157,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     // -- Recent Artists --
     _recentArtists.addAllIfEmpty(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
 
-    _topRecentListened.loop((e, _) {
+    _topRecentListened.loop((e) {
       // -- Top Recent Albums --
       _topRecentAlbums.update(e.key.albumIdentifier, (value) => value + 1, ifAbsent: () => 1);
 
       // -- Top Recent Artists --
-      e.key.artistsList.loop((e, _) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
+      e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
     });
     _topRecentAlbums.sortByReverse((e) => e.value);
     _topRecentArtists.sortByReverse((e) => e.value);
@@ -166,24 +176,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     favs.shuffle();
 
     // -- supermacy
-    final ct = Player.inst.nowPlayingTrack;
-    final maxCount = settings.queueInsertion[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
-    final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
-
+    final ct = Player.inst.currentTrack?.track;
+    final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
+    MapEntry<String, List<Track>>? supremacyEntry;
+    if (ct != null) {
+      final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
+      if (sameAsCurrent.isNotEmpty) {
+        final supremacy = [ct, ...sameAsCurrent];
+        supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
+      }
+    }
     _mixes.addAllIfEmpty([
       MapEntry(lang.TOP_RECENTS, _topRecentListened.map((e) => e.key).toList()),
-      if (sameAsCurrent.isNotEmpty) MapEntry('"${ct.title}" ${lang.SUPREMACY}', [ct, ...sameAsCurrent]),
+      if (supremacyEntry != null) supremacyEntry,
       MapEntry(lang.FAVOURITES, favs.take(25).tracks.toList()),
       MapEntry(lang.RANDOM_PICKS, _randomTracks),
     ]);
-
-    final oldest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.oldestTrack?.dateAdded ?? 0);
-    final newest = DateTime.fromMillisecondsSinceEpoch(HistoryController.inst.newestTrack?.dateAdded ?? 0);
-
-    final diff = (newest.year - oldest.year).abs();
-    for (int i = 1; i <= diff; i++) {
-      _lostMemoriesYears.add(newest.year - i);
-    }
 
     _isLoading = false;
 
@@ -209,7 +217,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   void showReorderHomeItemsDialog() async {
     final subList = <HomePageItems>[].obs;
-    HomePageItems.values.loop((e, index) {
+    HomePageItems.values.loop((e) {
       if (!settings.homePageItems.contains(e)) {
         subList.add(e);
       }
@@ -217,7 +225,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     final mainListController = ScrollController();
     void jumpToLast() {
       mainListController.animateTo(
-        mainListController.position.maxScrollExtent,
+        mainListController.positions.first.maxScrollExtent,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
       );
@@ -228,6 +236,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     });
 
     await NamidaNavigator.inst.navigateDialog(
+      scale: 1.0,
       onDisposing: () {
         subList.close();
         mainListController.dispose();
@@ -241,48 +250,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
           ),
         ],
         child: SizedBox(
-          width: Get.width,
-          height: Get.height * 0.5,
+          width: namida.width,
+          height: namida.height * 0.5,
           child: Obx(
             () => Column(
               children: [
                 Expanded(
                   flex: 6,
-                  child: ReorderableListView.builder(
-                    scrollController: mainListController,
-                    itemCount: settings.homePageItems.length,
-                    proxyDecorator: (child, index, animation) => child,
-                    itemBuilder: (context, index) {
-                      final item = settings.homePageItems[index];
-                      return Material(
-                        key: ValueKey(index),
-                        type: MaterialType.transparency,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: ListTileWithCheckMark(
-                            active: true,
-                            icon: Broken.recovery_convert,
-                            title: item.toText(),
-                            onTap: () {
-                              if (settings.homePageItems.length <= 3) {
-                                showMinimumItemsSnack(3);
-                                return;
-                              }
-                              subList.add(item);
-                              settings.removeFromList(homePageItem1: item);
-                            },
+                  child: Builder(builder: (context) {
+                    return NamidaListView(
+                      itemExtent: null,
+                      scrollController: mainListController,
+                      itemCount: settings.homePageItems.length,
+                      itemBuilder: (context, index) {
+                        final item = settings.homePageItems[index];
+                        return Material(
+                          key: ValueKey(index),
+                          type: MaterialType.transparency,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: ListTileWithCheckMark(
+                              active: true,
+                              icon: Broken.recovery_convert,
+                              title: item.toText(),
+                              onTap: () {
+                                if (settings.homePageItems.length <= 3) {
+                                  showMinimumItemsSnack(3);
+                                  return;
+                                }
+                                subList.add(item);
+                                settings.removeFromList(homePageItem1: item);
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    onReorder: (oldIndex, newIndex) {
-                      if (newIndex > oldIndex) newIndex -= 1;
-
-                      final item = settings.homePageItems.elementAt(oldIndex);
-                      settings.removeFromList(homePageItem1: item);
-                      settings.insertInList(newIndex, homePageItem1: item);
-                    },
-                  ),
+                        );
+                      },
+                      onReorder: (oldIndex, newIndex) {
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        final item = settings.homePageItems.value.elementAt(oldIndex);
+                        settings.removeFromList(homePageItem1: item);
+                        settings.insertInList(newIndex, homePageItem1: item);
+                      },
+                    );
+                  }),
                 ),
                 const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
                 if (subList.isNotEmpty)
@@ -351,10 +361,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                 shimmerDelayMS: 250,
                 shimmerEnabled: _isLoading,
                 child: AnimationLimiter(
-                  child: StreamBuilder<List<HomePageItems>>(
-                    initialData: settings.homePageItems,
-                    stream: settings.homePageItems.stream,
-                    builder: (context, homePageItems) => CustomScrollView(
+                  child: ObxO(
+                    rx: settings.homePageItems,
+                    builder: (homePageItems) => CustomScrollView(
                       controller: _scrollController,
                       slivers: [
                         const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
@@ -365,7 +374,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                               children: [
                                 Text(
                                   'Namida',
-                                  style: context.textTheme.displayLarge?.copyWith(fontSize: 32.0.multipliedFontScale),
+                                  style: context.textTheme.displayLarge?.copyWith(fontSize: 32.0),
                                 ),
                                 const Spacer(),
                                 NamidaIconButton(
@@ -376,7 +385,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                             ),
                           ),
                         ),
-                        ...homePageItems.data!.map(
+                        ...homePageItems.map(
                           (element) {
                             switch (element) {
                               case HomePageItems.mixes:
@@ -914,7 +923,7 @@ class _MixesCardState extends State<_MixesCard> {
                     Expanded(
                       child: Text(
                         widget.title,
-                        style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
+                        style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -937,7 +946,7 @@ class _MixesCardState extends State<_MixesCard> {
                           const SizedBox(width: 4.0),
                           Text(
                             "${widget.tracks.length}",
-                            style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0.multipliedFontScale),
+                            style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
                           ),
                         ],
                       ),
@@ -1054,7 +1063,7 @@ class _MixesCardState extends State<_MixesCard> {
                 clipBehavior: Clip.hardEdge,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: context.theme.colorScheme.background.withAlpha(50),
+                  color: context.theme.colorScheme.surface.withAlpha(50),
                 ),
                 child: NamidaBgBlur(
                   blur: 2.0,
@@ -1062,7 +1071,7 @@ class _MixesCardState extends State<_MixesCard> {
                     padding: const EdgeInsets.all(2.0),
                     child: NamidaIconButton(
                       icon: Broken.arrow_left_2,
-                      iconColor: context.theme.colorScheme.onBackground.withAlpha(160),
+                      iconColor: context.theme.colorScheme.onSurface.withAlpha(160),
                       onPressed: NamidaNavigator.inst.closeDialog,
                     ),
                   ),
@@ -1092,7 +1101,7 @@ class _MixesCardState extends State<_MixesCard> {
                     const SizedBox(width: 4.0),
                     Text(
                       "${widget.tracks.length}",
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 15.0.multipliedFontScale),
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 15.0),
                     ),
                   ],
                 ),
@@ -1159,7 +1168,7 @@ class _MixesCardState extends State<_MixesCard> {
                     ),
                     Text(
                       widget.tracks.take(5).map((e) => e.title).join(', '),
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1298,7 +1307,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                       child: Text(
                         widget.topRightText!,
                         style: context.textTheme.displaySmall?.copyWith(
-                          fontSize: 10.5.multipliedFontScale,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
@@ -1331,13 +1340,13 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                 children: [
                   Text(
                     track.title,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0.multipliedFontScale, fontWeight: FontWeight.w500),
+                    style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     track.originalArtist,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale, fontWeight: FontWeight.w400),
+                    style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1372,13 +1381,12 @@ class RecentlyAddedTracksPage extends StatelessWidget {
               const SizedBox(width: 12.0),
               Text(
                 lang.RECENTLY_ADDED,
-                style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0.multipliedFontScale),
+                style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0),
               )
             ],
           ),
         ),
         queueLength: tracksSorted.length,
-        isTrackSelectable: true,
         queueSource: QueueSource.recentlyAdded,
         queue: tracksSorted,
         thirdLineText: (track) {

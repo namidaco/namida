@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -10,12 +9,12 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -94,7 +93,7 @@ class IndexerSettings extends SettingSubpageProvider {
           icon: Broken.airdrop,
           title: lang.USE_MEDIA_STORE,
           subtitle: lang.USE_MEDIA_STORE_SUBTITLE,
-          value: settings.useMediaStore.value,
+          value: settings.useMediaStore.valueR,
           onChanged: (isTrue) {
             settings.save(useMediaStore: !isTrue);
             showRefreshPromptDialog(false);
@@ -113,7 +112,7 @@ class IndexerSettings extends SettingSubpageProvider {
           icon: Broken.backward_item,
           title: lang.GROUP_ARTWORKS_BY_ALBUM,
           subtitle: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
-          value: settings.groupArtworksByAlbum.value,
+          value: settings.groupArtworksByAlbum.valueR,
           onChanged: (isTrue) {
             settings.save(groupArtworksByAlbum: !isTrue);
             _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
@@ -132,7 +131,7 @@ class IndexerSettings extends SettingSubpageProvider {
       child: Obx(
         () => AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: settings.useMediaStore.value ? 0.5 : 1.0,
+          opacity: settings.useMediaStore.valueR ? 0.5 : 1.0,
           child: NamidaExpansionTile(
             bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
             initiallyExpanded: initiallyExpanded,
@@ -143,7 +142,7 @@ class IndexerSettings extends SettingSubpageProvider {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IgnorePointer(
-                  ignoring: settings.useMediaStore.value,
+                  ignoring: settings.useMediaStore.valueR,
                   child: addFolderButton((dirsPath) {
                     settings.save(directoriesToScan: dirsPath);
                   }),
@@ -153,7 +152,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ],
             ),
             children: [
-              ...settings.directoriesToScan.map(
+              ...settings.directoriesToScan.valueR.map(
                 (e) => IgnorePointer(
                   ignoring: settings.useMediaStore.value,
                   child: ListTile(
@@ -190,7 +189,10 @@ class IndexerSettings extends SettingSubpageProvider {
                           );
                         }
                       },
-                      child: Text(lang.REMOVE.toUpperCase()),
+                      child: NamidaButtonText(
+                        lang.REMOVE.toUpperCase(),
+                        style: const TextStyle(fontSize: 14.0),
+                      ),
                     ),
                   ),
                 ),
@@ -208,8 +210,9 @@ class IndexerSettings extends SettingSubpageProvider {
   }) {
     return getItemWrapper(
       key: _IndexerSettingsKeys.foldersToExclude,
-      child: Obx(
-        () => NamidaExpansionTile(
+      child: ObxO(
+        rx: settings.directoriesToExclude,
+        builder: (directoriesToExclude) => NamidaExpansionTile(
           bgColor: getBgColor(_IndexerSettingsKeys.foldersToExclude),
           initiallyExpanded: initiallyExpanded,
           icon: Broken.folder_minus,
@@ -225,7 +228,7 @@ class IndexerSettings extends SettingSubpageProvider {
               const Icon(Broken.arrow_down_2),
             ],
           ),
-          children: settings.directoriesToExclude.isEmpty
+          children: directoriesToExclude.isEmpty
               ? [
                   ListTile(
                     title: Text(
@@ -235,7 +238,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   ),
                 ]
               : [
-                  ...settings.directoriesToExclude.map(
+                  ...directoriesToExclude.map(
                     (e) => ListTile(
                       title: Text(
                         e,
@@ -246,7 +249,10 @@ class IndexerSettings extends SettingSubpageProvider {
                           settings.removeFromList(directoriesToExclude1: e);
                           showRefreshPromptDialog(true);
                         },
-                        child: Text(lang.REMOVE.toUpperCase()),
+                        child: NamidaButtonText(
+                          lang.REMOVE.toUpperCase(),
+                          style: const TextStyle(fontSize: 14.0),
+                        ),
                       ),
                     ),
                   ),
@@ -309,26 +315,31 @@ class IndexerSettings extends SettingSubpageProvider {
           SizedBox(
             height: 50,
             child: FittedBox(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Obx(
-                    () => StatsContainer(
-                      icon: Broken.info_circle,
-                      title: '${lang.TRACKS_INFO} :',
-                      value: allTracksInLibrary.length.formatDecimal(),
-                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
+              child: ObxO(
+                rx: Indexer.inst.allAudioFiles,
+                builder: (allAudioFiles) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ObxO(
+                      rx: Indexer.inst.tracksInfoList,
+                      builder: (tracksInfoList) => StatsContainer(
+                        icon: Broken.info_circle,
+                        title: '${lang.TRACKS_INFO} :',
+                        value: tracksInfoList.length.formatDecimal(),
+                        total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
+                      ),
                     ),
-                  ),
-                  Obx(
-                    () => StatsContainer(
-                      icon: Broken.image,
-                      title: '${lang.ARTWORKS} :',
-                      value: Indexer.inst.artworksInStorage.value.formatDecimal(),
-                      total: Indexer.inst.allAudioFiles.isEmpty ? null : Indexer.inst.allAudioFiles.length.formatDecimal(),
+                    ObxO(
+                      rx: Indexer.inst.artworksInStorage,
+                      builder: (artworksInStorage) => StatsContainer(
+                        icon: Broken.image,
+                        title: '${lang.ARTWORKS} :',
+                        value: artworksInStorage.formatDecimal(),
+                        total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -343,7 +354,7 @@ class IndexerSettings extends SettingSubpageProvider {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
             child: Obx(
               () => Text(
-                '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.value}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.value}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.value}',
+                '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.valueR}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.valueR}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.valueR}',
                 style: context.textTheme.displaySmall,
               ),
             ),
@@ -358,7 +369,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 title: lang.PREVENT_DUPLICATED_TRACKS,
                 subtitle: "${lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
                 onChanged: (isTrue) => settings.save(preventDuplicatedTracks: !isTrue),
-                value: settings.preventDuplicatedTracks.value,
+                value: settings.preventDuplicatedTracks.valueR,
               ),
             ),
           ),
@@ -367,12 +378,12 @@ class IndexerSettings extends SettingSubpageProvider {
             child: Obx(
               () => CustomSwitchListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.respectNoMedia),
-                enabled: !settings.useMediaStore.value,
+                enabled: !settings.useMediaStore.valueR,
                 icon: Broken.cd,
                 title: lang.RESPECT_NO_MEDIA,
                 subtitle: "${lang.RESPECT_NO_MEDIA_SUBTITLE}. ${lang.INDEX_REFRESH_REQUIRED}",
                 onChanged: (isTrue) => settings.save(respectNoMedia: !isTrue),
-                value: settings.useMediaStore.value ? false : settings.respectNoMedia.value,
+                value: settings.useMediaStore.valueR ? false : settings.respectNoMedia.valueR,
               ),
             ),
           ),
@@ -388,7 +399,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   settings.save(extractFeatArtistFromTitle: !isTrue);
                   await Indexer.inst.prepareTracksFile();
                 },
-                value: settings.extractFeatArtistFromTitle.value,
+                value: settings.extractFeatArtistFromTitle.valueR,
               ),
             ),
           ),
@@ -402,7 +413,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 title: lang.ALBUM_IDENTIFIERS,
                 trailingText: settings.albumIdentifiers.length.toString(),
                 onTap: () {
-                  final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers).obs;
+                  final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers.value).obs;
                   NamidaNavigator.inst.navigateDialog(
                     onDisposing: () {
                       tempList.close();
@@ -415,13 +426,13 @@ class IndexerSettings extends SettingSubpageProvider {
                         Obx(
                           () {
                             return NamidaButton(
-                              enabled: settings.albumIdentifiers.any((element) => !tempList.contains(element)) ||
-                                  tempList.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
+                              enabled: settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
+                                  tempList.valueR.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
                               text: lang.SAVE,
                               onPressed: () async {
                                 NamidaNavigator.inst.closeDialog();
                                 settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
-                                settings.save(albumIdentifiers: tempList);
+                                settings.save(albumIdentifiers: tempList.value);
 
                                 Indexer.inst.prepareTracksFile();
 
@@ -511,12 +522,12 @@ class IndexerSettings extends SettingSubpageProvider {
                 trailing: NamidaWheelSlider(
                   width: 100.0,
                   totalCount: 1024,
-                  initValue: settings.indexMinFileSizeInB.value.toInt() / 1024 ~/ 10,
+                  initValue: settings.indexMinFileSizeInB.valueR.toInt() / 1024 ~/ 10,
                   onValueChanged: (val) {
                     final d = val;
                     settings.save(indexMinFileSizeInB: d * 1024 * 10);
                   },
-                  text: settings.indexMinFileSizeInB.value.fileSizeFormatted,
+                  text: settings.indexMinFileSizeInB.valueR.fileSizeFormatted,
                 ),
               ),
             ),
@@ -532,12 +543,12 @@ class IndexerSettings extends SettingSubpageProvider {
                 trailing: NamidaWheelSlider(
                   width: 100.0,
                   totalCount: 180,
-                  initValue: settings.indexMinDurationInSec.value,
+                  initValue: settings.indexMinDurationInSec.valueR,
                   onValueChanged: (val) {
                     final d = val;
                     settings.save(indexMinDurationInSec: d);
                   },
-                  text: "${settings.indexMinDurationInSec.value} s",
+                  text: "${settings.indexMinDurationInSec.valueR} s",
                 ),
               ),
             ),
@@ -550,7 +561,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_IndexerSettingsKeys.refreshOnStartup),
                 icon: Broken.d_rotate,
                 title: lang.REFRESH_ON_STARTUP,
-                value: settings.refreshOnStartup.value,
+                value: settings.refreshOnStartup.valueR,
                 onChanged: (isTrue) => settings.save(refreshOnStartup: !isTrue),
               ),
             ),
@@ -605,14 +616,18 @@ class IndexerSettings extends SettingSubpageProvider {
                             style: context.textTheme.displayMedium,
                           ),
                           const SizedBox(height: 16.0),
-                          Obx(
-                            () => ListTileWithCheckMark(
-                              dense: true,
-                              icon: Broken.trash,
-                              title: lang.CLEAR_IMAGE_CACHE,
-                              subtitle: Indexer.inst.artworksSizeInStorage.value.fileSizeFormatted,
-                              active: clearArtworks.value,
-                              onTap: () => clearArtworks.value = !clearArtworks.value,
+                          ObxO(
+                            rx: Indexer.inst.artworksSizeInStorage,
+                            builder: (artworksSizeInStorage) => ObxO(
+                              rx: clearArtworks,
+                              builder: (active) => ListTileWithCheckMark(
+                                dense: true,
+                                icon: Broken.trash,
+                                title: lang.CLEAR_IMAGE_CACHE,
+                                subtitle: artworksSizeInStorage.fileSizeFormatted,
+                                active: active,
+                                onTap: clearArtworks.toggle,
+                              ),
                             ),
                           ),
                         ],
@@ -653,7 +668,7 @@ class IndexerSettings extends SettingSubpageProvider {
     final TextEditingController separatorsController = TextEditingController();
     final isBlackListDialog = trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist;
 
-    final RxBool updatingLibrary = false.obs;
+    final updatingLibrary = false.obs;
 
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
@@ -696,7 +711,7 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           if (isBlackListDialog) const CancelButton(),
           Obx(
-            () => updatingLibrary.value
+            () => updatingLibrary.valueR
                 ? const LoadingIndicator()
                 : NamidaButton(
                     text: lang.ADD,
@@ -727,7 +742,7 @@ class IndexerSettings extends SettingSubpageProvider {
           children: [
             Text(
               isBlackListDialog ? lang.SEPARATORS_BLACKLIST_SUBTITLE : lang.SEPARATORS_MESSAGE,
-              style: Get.textTheme.displaySmall,
+              style: namida.textTheme.displaySmall,
             ),
             const SizedBox(
               height: 12.0,
@@ -735,12 +750,12 @@ class IndexerSettings extends SettingSubpageProvider {
             Obx(
               () => Wrap(
                 children: [
-                  ...itemsList.map(
+                  ...itemsList.valueR.map(
                     (e) => Container(
                       margin: const EdgeInsets.all(4.0),
                       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
                       decoration: BoxDecoration(
-                        color: Get.theme.cardTheme.color,
+                        color: namida.theme.cardTheme.color,
                         borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                       ),
                       child: InkWell(
@@ -783,17 +798,17 @@ class IndexerSettings extends SettingSubpageProvider {
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: TextField(
-                style: Get.textTheme.displaySmall?.copyWith(fontSize: 16.0.multipliedFontScale, fontWeight: FontWeight.w500),
+                style: namida.textTheme.displaySmall?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w500),
                 decoration: InputDecoration(
                   errorMaxLines: 3,
                   isDense: true,
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
                   ),
                   hintText: lang.VALUE,
                 ),
@@ -959,7 +974,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
                               e,
                               maxLines: _isPathsExpanded ? null : 1,
                               overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0.multipliedFontScale),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
                             ),
                           ))
                       .toList(),

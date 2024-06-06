@@ -3,11 +3,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:namida/youtube/yt_utils.dart';
+import 'package:namida/class/folder.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
+import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/lang.dart';
@@ -31,12 +31,12 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/albums_page.dart';
@@ -71,11 +71,7 @@ import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
-import 'package:playlist_manager/module/playlist_id.dart';
-
-extension LibraryTabToEnum on int {
-  LibraryTab toEnum() => settings.libraryTabs.elementAt(this);
-}
+import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
   LibraryTab? toLibraryTab() {
@@ -107,6 +103,8 @@ extension LibraryTabUtils on LibraryTab {
         return MediaType.artist;
       case LibraryTab.genres:
         return MediaType.genre;
+      case LibraryTab.playlists:
+        return MediaType.playlist;
       case LibraryTab.folders:
         return MediaType.folder;
       default:
@@ -114,7 +112,7 @@ extension LibraryTabUtils on LibraryTab {
     }
   }
 
-  int toInt() => settings.libraryTabs.indexOf(this);
+  int toInt() => settings.libraryTabs.value.indexOf(this);
 
   Widget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
     Widget page = const SizedBox();
@@ -366,38 +364,34 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
     void addThese(Iterable<Selectable> tracks) => trs.addAll(tracks.withLimit(limit));
     switch (this) {
       case QueueSource.allTracks:
-        addThese(SearchSortController.inst.trackSearchList);
+        addThese(SearchSortController.inst.trackSearchList.value);
         break;
       case QueueSource.search:
-        addThese(SearchSortController.inst.trackSearchTemp);
+        addThese(SearchSortController.inst.trackSearchTemp.value);
         break;
       case QueueSource.mostPlayed:
         addThese(HistoryController.inst.currentMostPlayedTracks);
         break;
       case QueueSource.history:
-        dayOfHistory != null
-            ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? [])
-            : addThese(
-                HistoryController.inst.historyTracks.withLimit(limit),
-              );
+        dayOfHistory != null ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? []) : addThese(HistoryController.inst.historyTracks);
         break;
       case QueueSource.favourites:
         addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
         break;
       case QueueSource.queuePage:
-        addThese(SelectedTracksController.inst.currentAllTracks);
+        addThese(SelectedTracksController.inst.getCurrentAllTracks());
         break;
       case QueueSource.selectedTracks:
-        addThese(SelectedTracksController.inst.selectedTracks);
+        addThese(SelectedTracksController.inst.selectedTracks.value);
         break;
       case QueueSource.playerQueue:
-        addThese(Player.inst.currentQueue);
+        addThese(Player.inst.currentQueue.value.mapAs<Selectable>());
         break;
       case QueueSource.recentlyAdded:
         addThese(Indexer.inst.recentlyAddedTracks);
         break;
       default:
-        addThese(SelectedTracksController.inst.currentAllTracks);
+        addThese(SelectedTracksController.inst.getCurrentAllTracks());
     }
 
     return trs;
@@ -567,7 +561,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
         normalTitleStyle: true,
-        contentPadding: EdgeInsets.zero,
         actions: [
           NamidaButton(
             text: lang.DONE,
@@ -617,7 +610,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
             if (playlistNameToAddAs != '')
               Obx(
                 () => CustomListTile(
-                  enabled: !didAddToPlaylist.value,
+                  enabled: !didAddToPlaylist.valueR,
                   icon: Broken.add_square,
                   title: lang.ADD_AS_A_NEW_PLAYLIST,
                   subtitle: playlistNameToAddAs,
@@ -748,40 +741,40 @@ extension WidgetsPagess on Widget {
     RouteType route = RouteType.UNKNOWN;
     switch (runtimeType) {
       // ----- Pages -----
-      case TracksPage:
+      case const (TracksPage):
         route = RouteType.PAGE_allTracks;
         break;
-      case AlbumsPage:
+      case const (AlbumsPage):
         route = RouteType.PAGE_albums;
         break;
-      case ArtistsPage:
+      case const (ArtistsPage):
         route = RouteType.PAGE_artists;
         break;
-      case GenresPage:
+      case const (GenresPage):
         route = RouteType.PAGE_genres;
         break;
-      case PlaylistsPage:
+      case const (PlaylistsPage):
         route = RouteType.PAGE_playlists;
         break;
-      case FoldersPage:
+      case const (FoldersPage):
         route = RouteType.PAGE_folders;
         break;
-      case QueuesPage:
+      case const (QueuesPage):
         route = RouteType.PAGE_queue;
         break;
-      case AboutPage:
+      case const (AboutPage):
         route = RouteType.PAGE_about;
         break;
 
       // ----- Subpages -----
-      case RecentlyAddedTracksPage:
+      case const (RecentlyAddedTracksPage):
         route = RouteType.SUBPAGE_recentlyAddedTracks;
         break;
-      case AlbumTracksPage:
+      case const (AlbumTracksPage):
         route = RouteType.SUBPAGE_albumTracks;
         name = (this as AlbumTracksPage).albumIdentifier;
         break;
-      case ArtistTracksPage:
+      case const (ArtistTracksPage):
         final page = (this as ArtistTracksPage);
         final type = page.type;
         route = type == MediaType.albumArtist
@@ -791,72 +784,72 @@ extension WidgetsPagess on Widget {
                 : RouteType.SUBPAGE_artistTracks;
         name = page.name;
         break;
-      case GenreTracksPage:
+      case const (GenreTracksPage):
         route = RouteType.SUBPAGE_genreTracks;
         name = (this as GenreTracksPage).name;
         break;
-      case NormalPlaylistTracksPage:
+      case const (NormalPlaylistTracksPage):
         route = RouteType.SUBPAGE_playlistTracks;
         name = (this as NormalPlaylistTracksPage).playlistName;
         break;
-      case HistoryTracksPage:
+      case const (HistoryTracksPage):
         route = RouteType.SUBPAGE_historyTracks;
         name = k_PLAYLIST_NAME_HISTORY;
         break;
-      case MostPlayedTracksPage:
+      case const (MostPlayedTracksPage):
         route = RouteType.SUBPAGE_mostPlayedTracks;
         name = k_PLAYLIST_NAME_MOST_PLAYED;
         break;
-      case QueueTracksPage:
+      case const (QueueTracksPage):
         route = RouteType.SUBPAGE_queueTracks;
         name = (this as QueueTracksPage).queue.date.toString();
         break;
-      case IndexerMissingTracksSubpage:
+      case const (IndexerMissingTracksSubpage):
         route = RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS;
         break;
 
       // ----- Search Results -----
-      case AlbumSearchResultsPage:
+      case const (AlbumSearchResultsPage):
         route = RouteType.SEARCH_albumResults;
         break;
-      case ArtistSearchResultsPage:
+      case const (ArtistSearchResultsPage):
         route = RouteType.SEARCH_artistResults;
         break;
 
       // ----- Settings -----
-      case SettingsPage:
+      case const (SettingsPage):
         route = RouteType.SETTINGS_page;
         break;
-      case SettingsSubPage:
+      case const (SettingsSubPage):
         route = RouteType.SETTINGS_subpage;
         name = (this as SettingsSubPage).title;
         break;
 
-      case YouTubeHomeView:
+      case const (YouTubeHomeView):
         route = RouteType.YOUTUBE_HOME;
         break;
-      case YoutubePlaylistsView:
+      case const (YoutubePlaylistsView):
         route = RouteType.YOUTUBE_PLAYLISTS;
         break;
-      case YTNormalPlaylistSubpage:
+      case const (YTNormalPlaylistSubpage):
         route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
         name = (this as YTNormalPlaylistSubpage).playlistName;
         break;
-      case YTHostedPlaylistSubpage:
+      case const (YTHostedPlaylistSubpage):
         route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
         name = (this as YTHostedPlaylistSubpage).playlist.name ?? '';
         break;
-      case YTPlaylistDownloadPage:
+      case const (YTPlaylistDownloadPage):
         route = RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE;
         name = (this as YTPlaylistDownloadPage).playlistName;
         break;
-      case YoutubeHistoryPage:
+      case const (YoutubeHistoryPage):
         route = RouteType.YOUTUBE_HISTORY_SUBPAGE;
         break;
-      case YTMostPlayedVideosPage:
+      case const (YTMostPlayedVideosPage):
         route = RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE;
         break;
-      case YTLikedVideosPage:
+      case const (YTLikedVideosPage):
         route = RouteType.YOUTUBE_LIKED_SUBPAGE;
         break;
     }
@@ -866,64 +859,31 @@ extension WidgetsPagess on Widget {
 }
 
 extension RouteUtils on NamidaRoute {
-  /// Mainly used for sending to [generalPopupDialog] and use these tracks to remove from playlist.
-  Iterable<TrackWithDate>? get tracksWithDateInside {
-    switch (route) {
-      case RouteType.SUBPAGE_playlistTracks:
-        return PlaylistController.inst.getPlaylist(name)?.tracks;
-      case RouteType.SUBPAGE_historyTracks:
-        return HistoryController.inst.historyTracks;
-
-      default:
-        null;
-    }
-    return null;
+  List<Selectable> tracksListInside() {
+    final iter = tracksInside();
+    return iter is List ? iter as List<Selectable> : iter.toList();
   }
 
-  List<Selectable> get tracksInside {
-    final tr = <Selectable>[];
-    switch (route) {
-      case RouteType.PAGE_allTracks:
-        tr.addAll(SearchSortController.inst.trackSearchList);
-        break;
-      case RouteType.PAGE_folders:
-        tr.addAll(Folders.inst.currentTracks);
-        break;
-      case RouteType.SUBPAGE_albumTracks:
-        tr.addAll(name.getAlbumTracks());
-        break;
-      case RouteType.SUBPAGE_artistTracks:
-        tr.addAll(name.getArtistTracks());
-        break;
-      case RouteType.SUBPAGE_albumArtistTracks:
-        tr.addAll(name.getAlbumArtistTracks());
-        break;
-      case RouteType.SUBPAGE_composerTracks:
-        tr.addAll(name.getComposerTracks());
-        break;
-      case RouteType.SUBPAGE_genreTracks:
-        tr.addAll(name.getGenresTracks());
-        break;
-      case RouteType.SUBPAGE_queueTracks:
-        tr.addAll(name.getQueue()?.tracks ?? []);
-        break;
-      case RouteType.SUBPAGE_playlistTracks:
-        tr.addAll(PlaylistController.inst.getPlaylist(name)?.tracks ?? []);
-        break;
-      case RouteType.SUBPAGE_historyTracks:
-        tr.addAll(HistoryController.inst.historyTracks);
-        break;
-      case RouteType.SUBPAGE_mostPlayedTracks:
-        tr.addAll(HistoryController.inst.currentMostPlayedTracks);
-        break;
-      case RouteType.SUBPAGE_recentlyAddedTracks:
-        tr.addAll(Indexer.inst.recentlyAddedTracks);
-        break;
+  bool hasTracksInside() => tracksInside().isNotEmpty;
 
-      default:
-        null;
-    }
-    return tr;
+  /// NOTE: any modification done to this will be reflected in the original list.
+  Iterable<Selectable> tracksInside() {
+    return switch (route) {
+          RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
+          RouteType.PAGE_folders => Folders.inst.currentFolder.value?.tracks(),
+          RouteType.SUBPAGE_albumTracks => name.getAlbumTracks(),
+          RouteType.SUBPAGE_artistTracks => name.getArtistTracks(),
+          RouteType.SUBPAGE_albumArtistTracks => name.getAlbumArtistTracks(),
+          RouteType.SUBPAGE_composerTracks => name.getComposerTracks(),
+          RouteType.SUBPAGE_genreTracks => name.getGenresTracks(),
+          RouteType.SUBPAGE_queueTracks => name.getQueue()?.tracks,
+          RouteType.SUBPAGE_playlistTracks => PlaylistController.inst.getPlaylist(name)?.tracks,
+          RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
+          RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
+          RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracks,
+          _ => [],
+        } ??
+        [];
   }
 
   /// Currently Supports only [RouteType.SUBPAGE_albumTracks], [RouteType.SUBPAGE_artistTracks],
@@ -967,7 +927,10 @@ extension RouteUtils on NamidaRoute {
         finalWidget = getTextWidget(lang.ARTISTS);
         break;
       case RouteType.PAGE_queue:
-        finalWidget = Obx(() => getTextWidget("${lang.QUEUES} • ${QueueController.inst.queuesMap.value.length}"));
+        finalWidget = ObxO(
+          rx: QueueController.inst.queuesMap,
+          builder: (qmap) => getTextWidget("${lang.QUEUES} • ${qmap.length}"),
+        );
         break;
       default:
         null;
@@ -1131,15 +1094,13 @@ extension RouteUtils on NamidaRoute {
 
       // ---- Playlist Tracks ----
       getAnimatedCrossFade(
-        child: Obx(
-          () {
-            final reorderable = PlaylistController.inst.canReorderTracks.value;
-            return NamidaAppBarIcon(
-              tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
-              icon: reorderable ? Broken.forward_item : Broken.lock_1,
-              onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
-            );
-          },
+        child: ObxO(
+          rx: PlaylistController.inst.canReorderTracks,
+          builder: (reorderable) => NamidaAppBarIcon(
+            tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+            icon: reorderable ? Broken.forward_item : Broken.lock_1,
+            onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
+          ),
         ),
         shouldShow: route == RouteType.SUBPAGE_playlistTracks,
       ),
@@ -1151,15 +1112,13 @@ extension RouteUtils on NamidaRoute {
       ),
 
       getAnimatedCrossFade(
-        child: Obx(
-          () {
-            final reorderable = ytplc.YoutubePlaylistController.inst.canReorderVideos.value;
-            return NamidaAppBarIcon(
-              tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
-              icon: reorderable ? Broken.forward_item : Broken.lock_1,
-              onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,
-            );
-          },
+        child: ObxO(
+          rx: ytplc.YoutubePlaylistController.inst.canReorderVideos,
+          builder: (reorderable) => NamidaAppBarIcon(
+            tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+            icon: reorderable ? Broken.forward_item : Broken.lock_1,
+            onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,
+          ),
         ),
         shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
       ),
@@ -1224,14 +1183,10 @@ extension QueueFromMap on int {
   Queue? getQueue() => QueueController.inst.queuesMap.value[this];
 }
 
-extension TrackTileItemExtentExt on Iterable {
-  List<double>? toTrackItemExtents() => length == 0 ? null : List.filled(length, Dimensions.inst.trackTileItemExtent);
-}
-
 extension ThemeDefaultColors on BuildContext {
   Color defaultIconColor([Color? mainColor, Color? secondaryColor]) => Color.alphaBlend(
         (mainColor ?? CurrentColor.inst.color).withAlpha(120),
-        secondaryColor ?? theme.colorScheme.onBackground,
+        secondaryColor ?? theme.colorScheme.onSurface,
       );
 }
 

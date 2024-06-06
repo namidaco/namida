@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
@@ -22,15 +22,15 @@ class SettingsController with SettingsFileWriter {
   EqualizerSettings get equalizer => EqualizerSettings.inst;
   PlayerSettings get player => PlayerSettings.inst;
 
-  final Rx<NamidaLanguage> selectedLanguage = kDefaultLang.obs;
-  final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
-  final RxBool pitchBlack = false.obs;
-  final RxBool autoColor = true.obs;
-  final RxInt staticColor = kMainColorLight.value.obs;
-  final RxInt staticColorDark = kMainColorDark.value.obs;
-  final Rx<LibraryTab> selectedLibraryTab = LibraryTab.tracks.obs;
-  final Rx<LibraryTab> staticLibraryTab = LibraryTab.tracks.obs;
-  final RxBool autoLibraryTab = true.obs;
+  final selectedLanguage = kDefaultLang.obs;
+  final themeMode = ThemeMode.system.obs;
+  final pitchBlack = false.obs;
+  final autoColor = true.obs;
+  final staticColor = kMainColorLight.value.obs;
+  final staticColorDark = kMainColorDark.value.obs;
+  final selectedLibraryTab = LibraryTab.tracks.obs;
+  final staticLibraryTab = LibraryTab.tracks.obs;
+  final autoLibraryTab = true.obs;
   final RxList<LibraryTab> libraryTabs = [
     LibraryTab.home,
     LibraryTab.tracks,
@@ -39,69 +39,69 @@ class SettingsController with SettingsFileWriter {
     LibraryTab.folders,
     LibraryTab.youtube,
   ].obs;
-  final RxInt searchResultsPlayMode = 1.obs;
-  final RxDouble borderRadiusMultiplier = 1.0.obs;
-  final RxDouble fontScaleFactor = 0.9.obs;
-  final RxDouble artworkCacheHeightMultiplier = 0.8.obs;
-  final RxDouble trackThumbnailSizeinList = 70.0.obs;
-  final RxDouble trackListTileHeight = 70.0.obs;
-  final RxDouble albumThumbnailSizeinList = 90.0.obs;
-  final RxDouble albumListTileHeight = 90.0.obs;
+  final searchResultsPlayMode = 1.obs;
+  final borderRadiusMultiplier = 1.0.obs;
+  final fontScaleFactor = 0.9.obs;
+  final artworkCacheHeightMultiplier = 0.8.obs;
+  final trackThumbnailSizeinList = 70.0.obs;
+  final trackListTileHeight = 70.0.obs;
+  final albumThumbnailSizeinList = 90.0.obs;
+  final albumListTileHeight = 90.0.obs;
 
-  final RxBool useMediaStore = false.obs;
-  final RxBool displayTrackNumberinAlbumPage = true.obs;
-  final RxBool albumCardTopRightDate = true.obs;
-  final RxBool forceSquaredTrackThumbnail = false.obs;
-  final RxBool forceSquaredAlbumThumbnail = false.obs;
-  final RxBool useAlbumStaggeredGridView = false.obs;
-  final RxBool useSettingCollapsedTiles = true.obs;
-  final RxInt albumGridCount = 2.obs;
-  final RxInt artistGridCount = 3.obs;
-  final RxInt genreGridCount = 2.obs;
-  final RxInt playlistGridCount = 1.obs;
-  final RxBool enableBlurEffect = false.obs;
-  final RxBool enableGlowEffect = false.obs;
-  final RxBool hourFormat12 = true.obs;
-  final RxString dateTimeFormat = 'MMM yyyy'.obs;
+  final useMediaStore = false.obs;
+  final displayTrackNumberinAlbumPage = true.obs;
+  final albumCardTopRightDate = true.obs;
+  final forceSquaredTrackThumbnail = false.obs;
+  final forceSquaredAlbumThumbnail = false.obs;
+  final useAlbumStaggeredGridView = false.obs;
+  final useSettingCollapsedTiles = true.obs;
+  final albumGridCount = 2.obs;
+  final artistGridCount = 3.obs;
+  final genreGridCount = 2.obs;
+  final playlistGridCount = 1.obs;
+  final enableBlurEffect = false.obs;
+  final enableGlowEffect = false.obs;
+  final hourFormat12 = true.obs;
+  final dateTimeFormat = 'MMM yyyy'.obs;
   final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//', ' ft. ', ' x '].obs;
   final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//', ' x '].obs;
   final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
-  final Rx<SortType> tracksSort = SortType.title.obs;
-  final RxBool tracksSortReversed = false.obs;
-  final Rx<SortType> tracksSortSearch = SortType.title.obs;
-  final RxBool tracksSortSearchReversed = false.obs;
-  final RxBool tracksSortSearchIsAuto = true.obs;
-  final Rx<GroupSortType> albumSort = GroupSortType.album.obs;
-  final RxBool albumSortReversed = false.obs;
-  final Rx<GroupSortType> artistSort = GroupSortType.artistsList.obs;
-  final RxBool artistSortReversed = false.obs;
-  final Rx<GroupSortType> genreSort = GroupSortType.genresList.obs;
-  final RxBool genreSortReversed = false.obs;
-  final Rx<GroupSortType> playlistSort = GroupSortType.dateModified.obs;
-  final RxBool playlistSortReversed = false.obs;
-  final Rx<GroupSortType> ytPlaylistSort = GroupSortType.dateModified.obs;
-  final RxBool ytPlaylistSortReversed = true.obs;
-  final RxInt indexMinDurationInSec = 5.obs;
-  final RxInt indexMinFileSizeInB = (100 * 1024).obs;
+  final tracksSort = SortType.title.obs;
+  final tracksSortReversed = false.obs;
+  final tracksSortSearch = SortType.title.obs;
+  final tracksSortSearchReversed = false.obs;
+  final tracksSortSearchIsAuto = true.obs;
+  final albumSort = GroupSortType.album.obs;
+  final albumSortReversed = false.obs;
+  final artistSort = GroupSortType.artistsList.obs;
+  final artistSortReversed = false.obs;
+  final genreSort = GroupSortType.genresList.obs;
+  final genreSortReversed = false.obs;
+  final playlistSort = GroupSortType.dateModified.obs;
+  final playlistSortReversed = false.obs;
+  final ytPlaylistSort = GroupSortType.dateModified.obs;
+  final ytPlaylistSortReversed = true.obs;
+  final indexMinDurationInSec = 5.obs;
+  final indexMinFileSizeInB = (100 * 1024).obs;
   final RxList<TrackSearchFilter> trackSearchFilter = [
     TrackSearchFilter.filename,
     TrackSearchFilter.title,
     TrackSearchFilter.artist,
     TrackSearchFilter.album,
   ].obs;
-  final RxList<String> playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
-  final RxList<String> directoriesToScan = kInitialDirectoriesToScan.toList().obs;
-  final RxList<String> directoriesToExclude = <String>[].obs;
-  final RxBool preventDuplicatedTracks = false.obs;
-  final RxBool respectNoMedia = false.obs;
-  final RxString defaultBackupLocation = AppDirs.BACKUPS.obs;
-  final RxInt autoBackupIntervalDays = 2.obs;
-  final RxString defaultFolderStartupLocation = kStoragePaths.first.obs;
-  final RxString ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
-  final RxBool enableFoldersHierarchy = true.obs;
-  final RxBool displayArtistBeforeTitle = true.obs;
-  final RxBool heatmapListensView = false.obs;
+  final playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
+  final directoriesToScan = kInitialDirectoriesToScan.toList().obs;
+  final directoriesToExclude = <String>[].obs;
+  final preventDuplicatedTracks = false.obs;
+  final respectNoMedia = false.obs;
+  final defaultBackupLocation = AppDirs.BACKUPS.obs;
+  final autoBackupIntervalDays = 2.obs;
+  final defaultFolderStartupLocation = kStoragePaths.first.obs;
+  final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
+  final enableFoldersHierarchy = true.obs;
+  final displayArtistBeforeTitle = true.obs;
+  final heatmapListensView = false.obs;
   final RxList<String> backupItemslist = [
     AppPaths.TRACKS,
     AppPaths.TRACKS_STATS,
@@ -121,50 +121,50 @@ class SettingsController with SettingsFileWriter {
     AppDirs.YT_HISTORY_PLAYLIST,
     AppPaths.YT_LIKES_PLAYLIST,
   ].obs;
-  final RxBool enableVideoPlayback = true.obs;
-  final RxBool enableLyrics = false.obs;
-  final Rx<LyricsSource> lyricsSource = LyricsSource.auto.obs;
-  final Rx<VideoPlaybackSource> videoPlaybackSource = VideoPlaybackSource.auto.obs;
+  final enableVideoPlayback = true.obs;
+  final enableLyrics = false.obs;
+  final lyricsSource = LyricsSource.auto.obs;
+  final videoPlaybackSource = VideoPlaybackSource.auto.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
-  final RxDouble animatingThumbnailScaleMultiplier = 1.0.obs;
-  final RxInt animatingThumbnailIntensity = 25.obs;
-  final RxBool animatingThumbnailInversed = false.obs;
-  final RxBool enablePartyModeInMiniplayer = false.obs;
-  final RxBool enablePartyModeColorSwap = true.obs;
-  final RxBool enableMiniplayerParticles = true.obs;
-  final RxBool enableMiniplayerParallaxEffect = true.obs;
-  final RxBool forceMiniplayerTrackColor = false.obs;
-  final RxInt isTrackPlayedSecondsCount = 40.obs;
-  final RxInt isTrackPlayedPercentageCount = 40.obs;
-  final RxInt waveformTotalBars = 140.obs;
-  final RxInt videosMaxCacheInMB = (2 * 1024).obs; // 2GB
-  final RxInt audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
-  final RxInt imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
-  final RxInt ytMiniplayerDimAfterSeconds = 15.obs;
-  final RxDouble ytMiniplayerDimOpacity = 0.5.obs;
-  final RxBool youtubeStyleMiniplayer = true.obs;
-  final RxBool hideStatusBarInExpandedMiniplayer = false.obs;
-  final RxBool displayFavouriteButtonInNotification = false.obs;
-  final RxBool enableSearchCleanup = true.obs;
-  final RxBool enableBottomNavBar = true.obs;
-  final RxBool ytPreferNewComments = false.obs;
-  final RxBool ytAutoExtractVideoTagsFromInfo = true.obs;
-  final RxBool displayAudioInfoMiniplayer = false.obs;
-  final RxBool showUnknownFieldsInTrackInfoDialog = true.obs;
-  final RxBool extractFeatArtistFromTitle = true.obs;
-  final RxBool groupArtworksByAlbum = false.obs;
-  final RxBool enableM3USync = false.obs;
-  final RxBool prioritizeEmbeddedLyrics = true.obs;
-  final RxBool swipeableDrawer = true.obs;
-  final RxBool dismissibleMiniplayer = false.obs;
-  final RxBool enableClipboardMonitoring = false.obs;
-  final RxBool ytIsAudioOnlyMode = false.obs;
-  final RxBool ytRememberAudioOnly = false.obs;
-  final RxBool ytTopComments = true.obs;
-  final RxBool artworkGestureScale = false.obs;
-  final RxBool artworkGestureDoubleTapLRC = true.obs;
-  final RxBool previousButtonReplays = false.obs;
-  final RxBool refreshOnStartup = false.obs;
+  final animatingThumbnailScaleMultiplier = 1.0.obs;
+  final animatingThumbnailIntensity = 25.obs;
+  final animatingThumbnailInversed = false.obs;
+  final enablePartyModeInMiniplayer = false.obs;
+  final enablePartyModeColorSwap = true.obs;
+  final enableMiniplayerParticles = true.obs;
+  final enableMiniplayerParallaxEffect = true.obs;
+  final forceMiniplayerTrackColor = false.obs;
+  final isTrackPlayedSecondsCount = 40.obs;
+  final isTrackPlayedPercentageCount = 40.obs;
+  final waveformTotalBars = 140.obs;
+  final videosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
+  final ytMiniplayerDimAfterSeconds = 15.obs;
+  final ytMiniplayerDimOpacity = 0.5.obs;
+  final youtubeStyleMiniplayer = true.obs;
+  final hideStatusBarInExpandedMiniplayer = false.obs;
+  final displayFavouriteButtonInNotification = false.obs;
+  final enableSearchCleanup = true.obs;
+  final enableBottomNavBar = true.obs;
+  final ytPreferNewComments = false.obs;
+  final ytAutoExtractVideoTagsFromInfo = true.obs;
+  final displayAudioInfoMiniplayer = false.obs;
+  final showUnknownFieldsInTrackInfoDialog = true.obs;
+  final extractFeatArtistFromTitle = true.obs;
+  final groupArtworksByAlbum = false.obs;
+  final enableM3USync = false.obs;
+  final prioritizeEmbeddedLyrics = true.obs;
+  final swipeableDrawer = true.obs;
+  final dismissibleMiniplayer = false.obs;
+  final enableClipboardMonitoring = false.obs;
+  final ytIsAudioOnlyMode = false.obs;
+  final ytRememberAudioOnly = false.obs;
+  final ytTopComments = true.obs;
+  final artworkGestureScale = false.obs;
+  final artworkGestureDoubleTapLRC = true.obs;
+  final previousButtonReplays = false.obs;
+  final refreshOnStartup = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -178,12 +178,12 @@ class SettingsController with SettingsFileWriter {
     TagField.lyrics,
   ].obs;
 
-  final Rx<WakelockMode> wakelockMode = WakelockMode.expandedAndVideo.obs;
+  final wakelockMode = WakelockMode.expandedAndVideo.obs;
 
-  final Rx<LocalVideoMatchingType> localVideoMatchingType = LocalVideoMatchingType.auto.obs;
-  final RxBool localVideoMatchingCheckSameDir = false.obs;
+  final localVideoMatchingType = LocalVideoMatchingType.auto.obs;
+  final localVideoMatchingCheckSameDir = false.obs;
 
-  final Rx<TrackPlayMode> trackPlayMode = TrackPlayMode.searchResults.obs;
+  final trackPlayMode = TrackPlayMode.searchResults.obs;
 
   final mostPlayedTimeRange = MostPlayedTimeRange.allTime.obs;
   final mostPlayedCustomDateRange = DateRange.dummy().obs;
@@ -194,15 +194,15 @@ class SettingsController with SettingsFileWriter {
   final ytMostPlayedCustomisStartOfDay = true.obs;
 
   /// Track Items
-  final RxBool displayThirdRow = true.obs;
-  final RxBool displayThirdItemInEachRow = false.obs;
-  final RxString trackTileSeparator = '•'.obs;
-  final RxBool displayFavouriteIconInListTile = true.obs;
-  final RxBool editTagsKeepFileDates = true.obs;
-  final RxBool downloadFilesWriteUploadDate = true.obs;
-  final RxBool downloadFilesKeepCachedVersions = true.obs;
-  final RxBool enablePip = true.obs;
-  final RxBool pickColorsFromDeviceWallpaper = false.obs;
+  final displayThirdRow = true.obs;
+  final displayThirdItemInEachRow = false.obs;
+  final trackTileSeparator = '•'.obs;
+  final displayFavouriteIconInListTile = true.obs;
+  final editTagsKeepFileDates = true.obs;
+  final downloadFilesWriteUploadDate = true.obs;
+  final downloadFilesKeepCachedVersions = true.obs;
+  final enablePip = true.obs;
+  final pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
@@ -211,7 +211,7 @@ class SettingsController with SettingsFileWriter {
   final ytTapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final ytDragToSeek = YTSeekActionMode.all.obs;
 
-  final RxMap<TrackTilePosition, TrackTileItem> trackItem = {
+  final trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
     TrackTilePosition.row1Item2: TrackTileItem.none,
     TrackTilePosition.row1Item3: TrackTileItem.none,
@@ -245,7 +245,7 @@ class SettingsController with SettingsFileWriter {
     HomePageItems.recentlyAdded,
     HomePageItems.recentAlbums,
     HomePageItems.recentArtists,
-  ].obs;
+  ].obso;
 
   final activeArtistType = MediaType.artist.obs;
 
@@ -296,24 +296,19 @@ class SettingsController with SettingsFileWriter {
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
-      final libraryListFromStorage = List<String>.from(json['libraryTabs'] ?? []);
-      libraryTabs.value = libraryListFromStorage.isNotEmpty ? List<LibraryTab>.from(libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e))) : libraryTabs.toList();
+      final libraryListFromStorage = json['libraryTabs'];
+      if (libraryListFromStorage is List) libraryTabs.value = libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toListy();
 
-      final homePageItemsFromStorage = List<String>.from(json['homePageItems'] ?? []);
-      homePageItems.value =
-          homePageItemsFromStorage.isNotEmpty ? List<HomePageItems>.from(homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e))) : homePageItems.toList();
+      final homePageItemsFromStorage = json['homePageItems'];
+      if (homePageItemsFromStorage is List) homePageItems.value = homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();
 
       activeArtistType.value = MediaType.values.getEnum(json['activeArtistType']) ?? activeArtistType.value;
 
-      final activeSearchMediaTypesFromStorage = List<String>.from(json['activeSearchMediaTypes'] ?? []);
-      activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.isNotEmpty
-          ? List<MediaType>.from(activeSearchMediaTypesFromStorage.map((e) => MediaType.values.getEnum(e)))
-          : activeSearchMediaTypes.toList();
+      final activeSearchMediaTypesFromStorage = json['activeSearchMediaTypes'];
+      if (activeSearchMediaTypesFromStorage is List) activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.map((e) => MediaType.values.getEnum(e)).toListy();
 
-      final albumIdentifiersFromStorage = List<String>.from(json['albumIdentifiers'] ?? []);
-      albumIdentifiers.value = albumIdentifiersFromStorage.isNotEmpty
-          ? List<AlbumIdentifier>.from(albumIdentifiersFromStorage.map((e) => AlbumIdentifier.values.getEnum(e)))
-          : albumIdentifiers.toList();
+      final albumIdentifiersFromStorage = json['albumIdentifiers'];
+      if (albumIdentifiersFromStorage is List) albumIdentifiers.value = albumIdentifiersFromStorage.map((e) => AlbumIdentifier.values.getEnum(e)).toListy();
 
       searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
@@ -340,10 +335,10 @@ class SettingsController with SettingsFileWriter {
       hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
       dateTimeFormat.value = json['dateTimeFormat'] ?? dateTimeFormat.value;
 
-      trackArtistsSeparators.value = List<String>.from(json['trackArtistsSeparators'] ?? trackArtistsSeparators);
-      trackGenresSeparators.value = List<String>.from(json['trackGenresSeparators'] ?? trackGenresSeparators);
-      trackArtistsSeparatorsBlacklist.value = List<String>.from(json['trackArtistsSeparatorsBlacklist'] ?? trackArtistsSeparatorsBlacklist);
-      trackGenresSeparatorsBlacklist.value = List<String>.from(json['trackGenresSeparatorsBlacklist'] ?? trackGenresSeparatorsBlacklist);
+      if (json['trackArtistsSeparators'] is List) trackArtistsSeparators.value = (json['trackArtistsSeparators'] as List).cast<String>();
+      if (json['trackGenresSeparators'] is List) trackGenresSeparators.value = (json['trackGenresSeparators'] as List).cast<String>();
+      if (json['trackArtistsSeparatorsBlacklist'] is List) trackArtistsSeparatorsBlacklist.value = (json['trackArtistsSeparatorsBlacklist'] as List).cast<String>();
+      if (json['trackGenresSeparatorsBlacklist'] is List) trackGenresSeparatorsBlacklist.value = (json['trackGenresSeparatorsBlacklist'] as List).cast<String>();
       tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
       tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
       tracksSortSearch.value = SortType.values.getEnum(json['tracksSortSearch']) ?? tracksSortSearch.value;
@@ -364,15 +359,15 @@ class SettingsController with SettingsFileWriter {
 
       try {
         // -- backward compability, since the previous type was String
-        final trackSearchFilterInStorage = List<String>.from(json['trackSearchFilter'] ?? []);
-        if (trackSearchFilterInStorage.isNotEmpty) {
-          trackSearchFilter.value = List<TrackSearchFilter>.from(trackSearchFilterInStorage.map((e) => TrackSearchFilter.values.getEnum(e)));
+        final trackSearchFilterInStorage = json['trackSearchFilter'];
+        if (trackSearchFilterInStorage is List) {
+          trackSearchFilter.value = trackSearchFilterInStorage.map((e) => TrackSearchFilter.values.getEnum(e)).toListy();
         }
       } catch (_) {}
 
-      playlistSearchFilter.value = List<String>.from(json['playlistSearchFilter'] ?? playlistSearchFilter);
-      directoriesToScan.value = List<String>.from(json['directoriesToScan'] ?? directoriesToScan);
-      directoriesToExclude.value = List<String>.from(json['directoriesToExclude'] ?? directoriesToExclude);
+      if (json['playlistSearchFilter'] is List) playlistSearchFilter.value = (json['playlistSearchFilter'] as List).cast<String>();
+      if (json['directoriesToScan'] is List) directoriesToScan.value = (json['directoriesToScan'] as List).cast<String>();
+      if (json['directoriesToExclude'] is List) directoriesToExclude.value = (json['directoriesToExclude'] as List).cast<String>();
       preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
@@ -382,12 +377,12 @@ class SettingsController with SettingsFileWriter {
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
-      backupItemslist.value = List<String>.from(json['backupItemslist'] ?? backupItemslist);
+      if (json['backupItemslist'] is List) backupItemslist.value = (json['backupItemslist'] as List).cast<String>();
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
       lyricsSource.value = LyricsSource.values.getEnum(json['lyricsSource']) ?? lyricsSource.value;
       videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['videoPlaybackSource']) ?? videoPlaybackSource.value;
-      youtubeVideoQualities.value = List<String>.from(json['youtubeVideoQualities'] ?? youtubeVideoQualities);
+      if (json['youtubeVideoQualities'] is List) youtubeVideoQualities.value = (json['youtubeVideoQualities'] as List).cast<String>();
 
       animatingThumbnailScaleMultiplier.value = json['animatingThumbnailScaleMultiplier'] ?? animatingThumbnailScaleMultiplier.value;
       animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
@@ -429,8 +424,10 @@ class SettingsController with SettingsFileWriter {
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
 
-      final listFromStorage = List<String>.from(json['tagFieldsToEdit'] ?? []);
-      tagFieldsToEdit.value = listFromStorage.isNotEmpty ? List<TagField>.from(listFromStorage.map((e) => TagField.values.getEnum(e))) : tagFieldsToEdit;
+      final tagFieldsToEditStorage = json['tagFieldsToEdit'];
+      if (tagFieldsToEditStorage is List) {
+        tagFieldsToEdit.value = tagFieldsToEditStorage.map((e) => TagField.values.getEnum(e as String)).toListy<TagField>();
+      }
 
       wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
 
@@ -472,12 +469,12 @@ class SettingsController with SettingsFileWriter {
             TrackTileItem.values,
             TrackTileItem.none,
           ) ??
-          trackItem.map((key, value) => MapEntry(key, value));
+          trackItem.value.map((key, value) => MapEntry(key, value));
 
       queueInsertion.value = ((json["queueInsertion"] as Map?)?.map(
             (key, value) => MapEntry(QueueInsertionType.values.getEnum(key) ?? QueueInsertionType.moreAlbum, QueueInsertion.fromJson(value)),
           )) ??
-          queueInsertion.map((key, value) => MapEntry(key, value));
+          queueInsertion.value.map((key, value) => MapEntry(key, value));
 
       final mediaItemsTrackSortingInStorage = json["mediaItemsTrackSorting"] as Map? ?? {};
       mediaItemsTrackSorting.value = {
@@ -498,7 +495,7 @@ class SettingsController with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => {
-        'selectedLanguage': selectedLanguage.toJson(),
+        'selectedLanguage': selectedLanguage.value.toJson(),
         'themeMode': themeMode.value.convertToString,
         'pitchBlack': pitchBlack.value,
         'autoColor': autoColor.value,
@@ -536,10 +533,10 @@ class SettingsController with SettingsFileWriter {
         'enableGlowEffect': enableGlowEffect.value,
         'hourFormat12': hourFormat12.value,
         'dateTimeFormat': dateTimeFormat.value,
-        'trackArtistsSeparators': trackArtistsSeparators.toList(),
-        'trackGenresSeparators': trackGenresSeparators.toList(),
-        'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.toList(),
-        'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.toList(),
+        'trackArtistsSeparators': trackArtistsSeparators.value,
+        'trackGenresSeparators': trackGenresSeparators.value,
+        'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.value,
+        'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.value,
         'tracksSort': tracksSort.value.convertToString,
         'tracksSortReversed': tracksSortReversed.value,
         'tracksSortSearch': tracksSortSearch.value.convertToString,
@@ -558,9 +555,9 @@ class SettingsController with SettingsFileWriter {
         'indexMinDurationInSec': indexMinDurationInSec.value,
         'indexMinFileSizeInB': indexMinFileSizeInB.value,
         'trackSearchFilter': trackSearchFilter.mapped((e) => e.convertToString),
-        'playlistSearchFilter': playlistSearchFilter.toList(),
-        'directoriesToScan': directoriesToScan.toList(),
-        'directoriesToExclude': directoriesToExclude.toList(),
+        'playlistSearchFilter': playlistSearchFilter.value,
+        'directoriesToScan': directoriesToScan.value,
+        'directoriesToExclude': directoriesToExclude.value,
         'preventDuplicatedTracks': preventDuplicatedTracks.value,
         'respectNoMedia': respectNoMedia.value,
         'defaultBackupLocation': defaultBackupLocation.value,
@@ -570,12 +567,12 @@ class SettingsController with SettingsFileWriter {
         'enableFoldersHierarchy': enableFoldersHierarchy.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
-        'backupItemslist': backupItemslist.toList(),
+        'backupItemslist': backupItemslist.value,
         'enableVideoPlayback': enableVideoPlayback.value,
         'enableLyrics': enableLyrics.value,
         'lyricsSource': lyricsSource.value.convertToString,
         'videoPlaybackSource': videoPlaybackSource.value.convertToString,
-        'youtubeVideoQualities': youtubeVideoQualities.toList(),
+        'youtubeVideoQualities': youtubeVideoQualities.value,
         'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
         'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
         'animatingThumbnailInversed': animatingThumbnailInversed.value,
@@ -644,10 +641,10 @@ class SettingsController with SettingsFileWriter {
         'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
         'enablePip': enablePip.value,
         'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
-        'trackItem': trackItem.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-        'queueInsertion': queueInsertion.map((key, value) => MapEntry(key.convertToString, value.toJson())),
-        'mediaItemsTrackSorting': mediaItemsTrackSorting.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
-        'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.map((key, value) => MapEntry(key.convertToString, value)),
+        'trackItem': trackItem.value.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+        'queueInsertion': queueInsertion.value.map((key, value) => MapEntry(key.convertToString, value.toJson())),
+        'mediaItemsTrackSorting': mediaItemsTrackSorting.value.map((key, value) => MapEntry(key.convertToString, value.map((e) => e.convertToString).toList())),
+        'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.value.map((key, value) => MapEntry(key.convertToString, value)),
 
         'fontScaleLRC': fontScaleLRC,
         'fontScaleLRCFull': fontScaleLRCFull,
@@ -819,14 +816,14 @@ class SettingsController with SettingsFileWriter {
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (libraryTabs != null) {
-      libraryTabs.loop((t, index) {
+      libraryTabs.loop((t) {
         if (!this.libraryTabs.contains(t)) {
           this.libraryTabs.add(t);
         }
       });
     }
     if (homePageItems != null) {
-      homePageItems.loop((t, index) {
+      homePageItems.loop((t) {
         if (!this.homePageItems.contains(t)) {
           this.homePageItems.add(t);
         }
@@ -834,14 +831,14 @@ class SettingsController with SettingsFileWriter {
     }
     if (activeArtistType != null) this.activeArtistType.value = activeArtistType;
     if (activeSearchMediaTypes != null) {
-      activeSearchMediaTypes.loop((t, index) {
+      activeSearchMediaTypes.loop((t) {
         if (!this.activeSearchMediaTypes.contains(t)) {
           this.activeSearchMediaTypes.add(t);
         }
       });
     }
     if (albumIdentifiers != null) {
-      albumIdentifiers.loop((t, index) {
+      albumIdentifiers.loop((t) {
         if (!this.albumIdentifiers.contains(t)) {
           this.albumIdentifiers.add(t);
         }
@@ -905,28 +902,28 @@ class SettingsController with SettingsFileWriter {
     if (indexMinDurationInSec != null) this.indexMinDurationInSec.value = indexMinDurationInSec;
     if (indexMinFileSizeInB != null) this.indexMinFileSizeInB.value = indexMinFileSizeInB;
     if (trackSearchFilter != null) {
-      trackSearchFilter.loop((f, index) {
+      trackSearchFilter.loop((f) {
         if (!this.trackSearchFilter.contains(f)) {
           this.trackSearchFilter.add(f);
         }
       });
     }
     if (playlistSearchFilter != null) {
-      playlistSearchFilter.loop((f, index) {
+      playlistSearchFilter.loop((f) {
         if (!this.playlistSearchFilter.contains(f)) {
           this.playlistSearchFilter.add(f);
         }
       });
     }
     if (directoriesToScan != null) {
-      directoriesToScan.loop((d, index) {
+      directoriesToScan.loop((d) {
         if (!this.directoriesToScan.contains(d)) {
           this.directoriesToScan.add(d);
         }
       });
     }
     if (directoriesToExclude != null) {
-      directoriesToExclude.loop((d, index) {
+      directoriesToExclude.loop((d) {
         if (!this.directoriesToExclude.contains(d)) {
           this.directoriesToExclude.add(d);
         }
@@ -942,14 +939,14 @@ class SettingsController with SettingsFileWriter {
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
     if (backupItemslist != null) {
-      backupItemslist.loop((d, index) {
+      backupItemslist.loop((d) {
         if (!this.backupItemslist.contains(d)) {
           this.backupItemslist.add(d);
         }
       });
     }
     if (youtubeVideoQualities != null) {
-      youtubeVideoQualities.loop((q, index) {
+      youtubeVideoQualities.loop((q) {
         if (!this.youtubeVideoQualities.contains(q)) {
           this.youtubeVideoQualities.add(q);
         }
@@ -1009,7 +1006,7 @@ class SettingsController with SettingsFileWriter {
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
     if (tagFieldsToEdit != null) {
-      tagFieldsToEdit.loop((d, index) {
+      tagFieldsToEdit.loop((d) {
         if (!this.tagFieldsToEdit.contains(d)) {
           this.tagFieldsToEdit.add(d);
         }
@@ -1090,28 +1087,28 @@ class SettingsController with SettingsFileWriter {
     if (trackArtistsSeparatorsBlacklist1 != null) trackArtistsSeparatorsBlacklist.remove(trackArtistsSeparatorsBlacklist1);
     if (trackGenresSeparatorsBlacklist1 != null) trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
     if (trackSearchFilter1 != null) trackSearchFilter.remove(trackSearchFilter1);
-    if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f, index) => trackSearchFilter.remove(f));
+    if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f) => trackSearchFilter.remove(f));
     if (playlistSearchFilter1 != null) playlistSearchFilter.remove(playlistSearchFilter1);
     if (playlistSearchFilterAll != null) {
-      playlistSearchFilterAll.loop((f, index) => playlistSearchFilter.remove(f));
+      playlistSearchFilterAll.loop((f) => playlistSearchFilter.remove(f));
     }
     if (directoriesToScan1 != null) directoriesToScan.remove(directoriesToScan1);
-    if (directoriesToScanAll != null) directoriesToScanAll.loop((f, index) => directoriesToScan.remove(f));
+    if (directoriesToScanAll != null) directoriesToScanAll.loop((f) => directoriesToScan.remove(f));
     if (directoriesToExclude1 != null) directoriesToExclude.remove(directoriesToExclude1);
-    if (directoriesToExcludeAll != null) directoriesToExcludeAll.loop((f, index) => directoriesToExclude.remove(f));
+    if (directoriesToExcludeAll != null) directoriesToExcludeAll.loop((f) => directoriesToExclude.remove(f));
     if (libraryTab1 != null) libraryTabs.remove(libraryTab1);
-    if (libraryTabsAll != null) libraryTabsAll.loop((t, index) => libraryTabs.remove(t));
+    if (libraryTabsAll != null) libraryTabsAll.loop((t) => libraryTabs.remove(t));
     if (homePageItem1 != null) homePageItems.remove(homePageItem1);
-    if (homePageItemsAll != null) homePageItemsAll.loop((t, index) => homePageItems.remove(t));
+    if (homePageItemsAll != null) homePageItemsAll.loop((t) => homePageItems.remove(t));
     if (activeSearchMediaTypes1 != null) activeSearchMediaTypes.remove(activeSearchMediaTypes1);
     if (albumIdentifiers1 != null) albumIdentifiers.remove(albumIdentifiers1);
-    if (albumIdentifiersAll != null) albumIdentifiersAll.loop((t, index) => albumIdentifiers.remove(t));
+    if (albumIdentifiersAll != null) albumIdentifiersAll.loop((t) => albumIdentifiers.remove(t));
     if (backupItemslist1 != null) backupItemslist.remove(backupItemslist1);
-    if (backupItemslistAll != null) backupItemslistAll.loop((t, index) => backupItemslist.remove(t));
+    if (backupItemslistAll != null) backupItemslistAll.loop((t) => backupItemslist.remove(t));
     if (youtubeVideoQualities1 != null) youtubeVideoQualities.remove(youtubeVideoQualities1);
-    if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t, index) => youtubeVideoQualities.remove(t));
+    if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t) => youtubeVideoQualities.remove(t));
     if (tagFieldsToEdit1 != null) tagFieldsToEdit.remove(tagFieldsToEdit1);
-    if (tagFieldsToEditAll != null) tagFieldsToEditAll.loop((t, index) => tagFieldsToEdit.remove(t));
+    if (tagFieldsToEditAll != null) tagFieldsToEditAll.loop((t) => tagFieldsToEdit.remove(t));
 
     _writeToStorage();
   }
@@ -1138,4 +1135,8 @@ class SettingsController with SettingsFileWriter {
 
   @override
   String get filePath => AppPaths.SETTINGS;
+}
+
+extension _ListieMapper on Iterable<dynamic> {
+  List<T> toListy<T>() => whereType<T>().toList();
 }

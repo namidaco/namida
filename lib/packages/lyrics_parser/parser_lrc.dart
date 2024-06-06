@@ -8,7 +8,7 @@ class LRCParserLrc extends LyricsParse {
   ///eg:[00:03.47] -> 00:03.47
   RegExp valuePattern = RegExp(r"\[(\d{2}:\d{2}.\d{2,3})\]");
 
-  LRCParserLrc(String lyric) : super(lyric);
+  LRCParserLrc(super.lyric);
 
   @override
   List<LyricsLineModel> parseLines({bool isMain = true}) {

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:nampack/reactive/reactive.dart';
 import 'package:queue/queue.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -38,7 +38,7 @@ class FAudioTaggerController {
   late final MethodChannel _channel = const MethodChannel('faudiotagger');
 
   bool get _defaultGroupArtworksByAlbum => settings.groupArtworksByAlbum.value;
-  List<AlbumIdentifier> get _defaultAlbumIdentifier => settings.albumIdentifiers;
+  List<AlbumIdentifier> get _defaultAlbumIdentifier => settings.albumIdentifiers.value;
   bool get _defaultKeepFileDates => settings.editTagsKeepFileDates.value;
 
   Future<FAudioModel> _readAllData({
@@ -422,7 +422,7 @@ class FAudioTaggerController {
 
   Map<AlbumIdentifier, bool> _getIdentifiersMap() {
     final map = <AlbumIdentifier, bool>{};
-    _defaultAlbumIdentifier.loop((e, _) => map[e] = true);
+    _defaultAlbumIdentifier.loop((e) => map[e] = true);
     return map;
   }
 }

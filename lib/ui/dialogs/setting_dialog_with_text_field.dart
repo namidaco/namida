@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -10,13 +8,13 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 Future<void> showSettingDialogWithTextField({
   Widget? topWidget,
   String title = '',
-  Widget? iconWidgets,
   IconData? icon,
   bool trackThumbnailSizeinList = false,
   bool trackListTileHeight = false,
@@ -38,14 +36,12 @@ Future<void> showSettingDialogWithTextField({
     String message, {
     String? title,
     Duration? duration,
-    Widget? iconWidget,
   }) {
     snackyy(
       title: title ?? '',
       message: "${lang.RESET_TO_DEFAULT}: $message",
       animationDurationMS: 400,
       icon: icon,
-      iconWidget: iconWidget,
     );
   }
 
@@ -167,7 +163,7 @@ Future<void> showSettingDialogWithTextField({
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: TextFormField(
-                style: Get.textTheme.displaySmall?.copyWith(fontSize: 16.0.multipliedFontScale, fontWeight: FontWeight.w600),
+                style: namida.textTheme.displaySmall?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w600),
                 autofocus: true,
                 keyboardType: dateTimeFormat || trackTileSeparator || addNewPlaylist ? TextInputType.text : TextInputType.number,
                 controller: controller,
@@ -177,11 +173,11 @@ Future<void> showSettingDialogWithTextField({
                   errorMaxLines: 3,
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 2.0),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                    borderSide: BorderSide(color: Get.theme.colorScheme.onBackground.withAlpha(100), width: 1.0),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.0.multipliedRadius),

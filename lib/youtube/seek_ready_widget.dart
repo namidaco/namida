@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class SeekReadyDimensions {
   static const barHeight = 32.0;
@@ -74,11 +74,11 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     _seekPercentage.value = percentageSwiped;
   }
 
-  Duration get _currentDuration => Player.inst.getCurrentVideoDuration;
+  Duration get _currentDurationR => Player.inst.getCurrentVideoDurationR;
 
   void _onSeekEnd() async {
     widget.onDraggingChange?.call(false);
-    final newSeek = _seekPercentage.value * (_currentDuration.inMilliseconds);
+    final newSeek = _seekPercentage.value * (Player.inst.getCurrentVideoDuration.inMilliseconds);
     await Player.inst.seek(Duration(milliseconds: newSeek.round()));
   }
 
@@ -168,7 +168,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   if (_dragUpToCancel > _dragUpToCancelMax) {
                     _canDragToSeekLatest = false;
                     setState(() {
-                      _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm.."].random;
+                      _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
                       _dragToSeek = false;
                     });
                     Vibration.vibrate(duration: 20, amplitude: 80);
@@ -228,13 +228,13 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- current seek
             Obx(
               () {
-                final currentPositionMS = Player.inst.nowPlayingPosition;
-                final seekTo = _seekPercentage.value * _currentDuration.inMilliseconds;
+                final currentPositionMS = Player.inst.nowPlayingPositionR;
+                final seekTo = _seekPercentage.valueR * _currentDurationR.inMilliseconds;
                 final seekToDiff = seekTo - currentPositionMS;
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
                 final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";
                 return Transform.translate(
-                  offset: Offset((maxWidth * _seekPercentage.value - seekTextWidth * 0.5).clamp(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
+                  offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clamp(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(
                     animation: _animation,
                     child: Container(
@@ -272,11 +272,11 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
               child: AnimatedBuilder(
                 animation: _animation,
                 child: Obx(() {
-                  final durMS = Player.inst.getCurrentVideoDuration.inMilliseconds;
-                  final currentPositionMS = Player.inst.nowPlayingPosition;
-                  final buffered = Player.inst.buffered;
-                  final videoCached = Player.inst.currentCachedVideo != null;
-                  final audioCached = widget.isLocal || Player.inst.currentCachedAudio != null;
+                  final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                  final currentPositionMS = Player.inst.nowPlayingPositionR;
+                  final buffered = Player.inst.buffered.valueR;
+                  final videoCached = Player.inst.currentCachedVideo.valueR != null;
+                  final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
                   return SizedBox(
                     width: maxWidth,
                     child: Stack(
@@ -310,7 +310,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             ),
                             child: SizedBox(
                               width: maxWidth *
-                                  ((videoCached && audioCached) || (audioCached && Player.inst.isAudioOnlyPlayback)
+                                  ((videoCached && audioCached) || (audioCached && settings.ytIsAudioOnlyMode.valueR)
                                       ? 1.0
                                       : buffered > Duration.zero && durMS > 0
                                           ? buffered.inMilliseconds / durMS
@@ -352,8 +352,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 animation: _animation,
                 child: Obx(
                   () {
-                    final durMS = Player.inst.getCurrentVideoDuration.inMilliseconds;
-                    final currentPositionMS = Player.inst.nowPlayingPosition;
+                    final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                    final currentPositionMS = Player.inst.nowPlayingPositionR;
                     final pos = durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS));
                     final clampedEdge = clampCircleEdges ? halfCircle / 2 : 0;
                     return Transform.translate(
@@ -388,8 +388,9 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             Obx(
               () {
                 final clampedEdge = clampCircleEdges ? circleWidth / 2 : 0;
+                final seekP = _seekPercentage.valueR;
                 return Transform.translate(
-                  offset: Offset(-halfCircle + (maxWidth * _seekPercentage.value).clamp(clampedEdge, maxWidth - clampedEdge), barHeight / 4),
+                  offset: Offset(-halfCircle + (maxWidth * seekP).clamp(clampedEdge, maxWidth - clampedEdge), barHeight / 4),
                   child: AnimatedBuilder(
                     animation: _animation,
                     child: Container(

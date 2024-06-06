@@ -1,4 +1,5 @@
 /// copyright: google search request is originally from [@netlob](https://github.com/netlob/dart-lyrics), edited to fit Namida.
+library;
 
 // ignore_for_file: depend_on_referenced_packages
 
@@ -8,9 +9,10 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:lrc/lrc.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/base/ports_provider.dart';
@@ -38,7 +40,7 @@ class Lyrics {
   final currentLyricsLRC = Rxn<Lrc>();
   final lyricsCanBeAvailable = true.obs;
 
-  Track? _currentTrack;
+  Playable? _currentItem;
 
   bool get _lyricsEnabled => settings.enableLyrics.value;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
@@ -53,16 +55,16 @@ class Lyrics {
   }
 
   void resetLyrics() {
-    _currentTrack = null;
+    _currentItem = null;
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
     _updateWidgets(null);
   }
 
-  Future<void> updateLyrics(Track track) async {
+  Future<void> updateLyrics(Playable item) async {
     resetLyrics();
-    _currentTrack = track;
-    bool checkInterrupted() => _currentTrack != track;
+    _currentItem = item;
+    bool checkInterrupted() => _currentItem != item;
 
     try {
       textScrollController.jumpTo(0);
@@ -72,50 +74,56 @@ class Lyrics {
     lyricsCanBeAvailable.value = true;
     if (!_lyricsEnabled) return;
 
-    final embedded = track.lyrics;
+    if (item is YoutubeID) {
+      // TODO: allow lyrics for youtube videos
+    } else if (item is Selectable) {
+      final track = item.track;
 
-    if (_lyricsPrioritizeEmbedded && embedded != '') {
-      final lrc = embedded.parseLRC();
-      if (lrc != null && lrc.lyrics.isNotEmpty) {
-        currentLyricsLRC.value = lrc;
-        _updateWidgets(lrc);
-      } else {
-        currentLyricsText.value = embedded;
+      final embedded = track.lyrics;
+
+      if (_lyricsPrioritizeEmbedded && embedded != '') {
+        final lrc = embedded.parseLRC();
+        if (lrc != null && lrc.lyrics.isNotEmpty) {
+          currentLyricsLRC.value = lrc;
+          _updateWidgets(lrc);
+        } else {
+          currentLyricsText.value = embedded;
+        }
+        return;
       }
-      return;
-    }
 
-    /// 1. device lrc
-    /// 2. cached lrc
-    /// 3. track embedded lrc
-    /// 4. database.
-    final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
+      /// 1. device lrc
+      /// 2. cached lrc
+      /// 3. track embedded lrc
+      /// 4. database.
+      final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
 
-    if (checkInterrupted()) return;
+      if (checkInterrupted()) return;
 
-    if (lrcLyrics.$1 != null) {
-      currentLyricsLRC.value = lrcLyrics.$1;
-      _updateWidgets(lrcLyrics.$1);
-      return;
-    } else if (lrcLyrics.$2 != null) {
-      currentLyricsText.value = lrcLyrics.$2 ?? '';
-      _updateWidgets(null);
-      return;
-    }
+      if (lrcLyrics.$1 != null) {
+        currentLyricsLRC.value = lrcLyrics.$1;
+        _updateWidgets(lrcLyrics.$1);
+        return;
+      } else if (lrcLyrics.$2 != null) {
+        currentLyricsText.value = lrcLyrics.$2 ?? '';
+        _updateWidgets(null);
+        return;
+      }
 
-    if (checkInterrupted()) return;
+      if (checkInterrupted()) return;
 
-    /// 1. cached txt lyrics
-    /// 2. track embedded txt
-    /// 3. google search
-    final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
+      /// 1. cached txt lyrics
+      /// 2. track embedded txt
+      /// 3. google search
+      final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
 
-    if (checkInterrupted()) return;
+      if (checkInterrupted()) return;
 
-    if (textLyrics != '') {
-      currentLyricsText.value = textLyrics;
-    } else {
-      lyricsCanBeAvailable.value = false;
+      if (textLyrics != '') {
+        currentLyricsText.value = textLyrics;
+      } else {
+        lyricsCanBeAvailable.value = false;
+      }
     }
   }
 

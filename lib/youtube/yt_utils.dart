@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -11,8 +10,8 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -24,6 +23,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -171,9 +171,10 @@ class YTUtils {
     required Map<String, String?> idsNamesLookup,
     String playlistName = '',
     YoutubeID? videoYTID,
+    bool copyUrl = false,
   }) {
     final playAfterVid = getPlayerAfterVideo();
-    final isCurrentlyPlaying = Player.inst.nowPlayingVideoID != null && videoId == Player.inst.getCurrentVideoId;
+    final isCurrentlyPlaying = Player.inst.currentVideo != null && videoId == Player.inst.getCurrentVideoId;
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -197,13 +198,19 @@ class YTUtils {
           title: lang.SHARE,
           onTap: () => Share.share(url),
         ),
+      if (copyUrl)
+        NamidaPopupItem(
+          icon: Broken.copy,
+          title: lang.COPY,
+          onTap: () => YTUtils().copyCurrentVideoUrl(videoId),
+        ),
       isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,
               title: lang.STOP_AFTER_THIS_VIDEO,
-              enabled: Player.inst.sleepAfterTracks != 1,
+              enabled: Player.inst.sleepTimerConfig.value.sleepAfterItems != 1,
               onTap: () {
-                Player.inst.updateSleepTimerValues(enableSleepAfterTracks: true, sleepAfterTracks: 1);
+                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
               },
             )
           : NamidaPopupItem(
@@ -259,11 +266,13 @@ class YTUtils {
 
   static ({YoutubeID video, int diff, String name})? getPlayerAfterVideo() {
     final player = Player.inst;
-    if (player.currentQueueYoutube.isNotEmpty && player.latestInsertedIndex != player.currentIndex) {
-      final playAfterVideo = player.currentQueueYoutube[player.latestInsertedIndex];
-      final diff = player.latestInsertedIndex - player.currentIndex;
-      final name = YoutubeController.inst.getVideoName(playAfterVideo.id) ?? '';
-      return (video: playAfterVideo, diff: diff, name: name);
+    if (player.currentItem.value is YoutubeID && player.latestInsertedIndex != player.currentIndex.value) {
+      try {
+        final playAfterVideo = player.currentQueue.value[player.latestInsertedIndex] as YoutubeID;
+        final diff = player.latestInsertedIndex - player.currentIndex.value;
+        final name = YoutubeController.inst.getVideoName(playAfterVideo.id) ?? '';
+        return (video: playAfterVideo, diff: diff, name: name);
+      } catch (_) {}
     }
     return null;
   }
@@ -354,13 +363,7 @@ class YTUtils {
         title: lang.UNDO_CHANGES,
         message: lang.UNDO_CHANGES_DELETED_TRACK,
         displaySeconds: 3,
-        button: TextButton(
-          onPressed: () {
-            Get.closeCurrentSnackbar();
-            whatDoYouWant();
-          },
-          child: Text(lang.UNDO),
-        ),
+        button: (lang.UNDO, whatDoYouWant),
       );
     }
 
@@ -380,7 +383,7 @@ class YTUtils {
       if (playlist == null) return;
 
       final Map<YoutubeID, int> twdAndIndexes = {};
-      videosToDelete.loop((twd, index) {
+      videosToDelete.loop((twd) {
         twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
       });
 
@@ -406,13 +409,13 @@ class YTUtils {
     int videosSize = 0;
     int audiosSize = 0;
 
-    audiosCached.loop((e, _) {
+    audiosCached.loop((e) {
       final s = e.file.sizeInBytesSync();
       audiosSize += s;
       fileSizeLookup[e.file.path] = s;
       fileTypeLookup[e.file.path] = 0;
     });
-    videosCached.loop((e, _) {
+    videosCached.loop((e) {
       final s = e.sizeInBytes;
       videosSize += s;
       fileSizeLookup[e.path] = s;
@@ -471,7 +474,7 @@ class YTUtils {
       required ({String title, String subtitle, String path}) Function(T item) itemBuilder,
       required int Function(T item) itemSize,
       required RxMap<File, int> tempFilesSize,
-      required RxBool tempFilesDelete,
+      required Rx<bool> tempFilesDelete,
     }) {
       return NamidaExpansionTile(
         initiallyExpanded: true,
@@ -553,7 +556,7 @@ class YTUtils {
                 trailing: Obx(
                   () => NamidaCheckMark(
                     size: 16.0,
-                    active: tempFilesDelete.value,
+                    active: tempFilesDelete.valueR,
                   ),
                 ),
               );
@@ -586,12 +589,12 @@ class YTUtils {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4.0.multipliedRadius),
               ),
-              value: allSelected.value,
-              onChanged: (value) {
-                allSelected.value = !allSelected.value;
-                if (allSelected.value == true) {
-                  audiosCached.loop((e, _) => pathsToDelete[e.file.path] = true);
-                  videosCached.loop((e, _) => pathsToDelete[e.path] = true);
+              value: allSelected.valueR,
+              onChanged: (_) {
+                final newVal = allSelected.toggle();
+                if (newVal == true) {
+                  audiosCached.loop((e) => pathsToDelete[e.file.path] = true);
+                  videosCached.loop((e) => pathsToDelete[e.path] = true);
                   deleteTempAudio.value = true;
                   deleteTempVideo.value = true;
                 } else {
@@ -608,8 +611,8 @@ class YTUtils {
           const CancelButton(),
           Obx(
             () => NamidaButton(
-              enabled: deleteTempAudio.value || deleteTempVideo.value || pathsToDelete.values.any((element) => element),
-              text: "${lang.DELETE} (${totalSizeToDelete.value.fileSizeFormatted})",
+              enabled: deleteTempAudio.valueR || deleteTempVideo.valueR || pathsToDelete.values.any((element) => element),
+              text: "${lang.DELETE} (${totalSizeToDelete.valueR.fileSizeFormatted})",
               onPressed: () async {
                 await Future.wait([
                   deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true)),
@@ -663,9 +666,9 @@ class YTUtils {
     );
   }
 
-  void copyVideoUrl(String videoId) {
+  void copyCurrentVideoUrl(String videoId) {
     if (videoId != '') {
-      final atSeconds = Player.inst.nowPlayingPosition ~/ 1000;
+      final atSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
       final timeStamp = atSeconds > 0 ? '?t=$atSeconds' : '';
       final finalUrl = "https://www.youtube.com/watch?v=$videoId$timeStamp";
       Clipboard.setData(ClipboardData(text: finalUrl));

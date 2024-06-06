@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/lyrics.dart';
@@ -18,11 +17,17 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
-void showLRCSetDialog(Track trackPre, Color colorScheme) async {
+void showLRCSetDialog(Playable item, Color colorScheme) async {
+  if (item is YoutubeID) return; // TODO: allow lyrics for youtube videos
+  if (item is! Selectable) return;
+
+  final trackPre = item.track;
   final track = trackPre.toTrackExt();
   final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
@@ -85,7 +90,7 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
   }
 
   void updateForCurrentTrack() {
-    if (trackPre == Player.inst.nowPlayingTrack) {
+    if (trackPre == Player.inst.currentItem.value) {
       Lyrics.inst.updateLyrics(trackPre);
     }
   }
@@ -229,16 +234,16 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                     children: [
                       Text(
                         lang.OFFSET,
-                        style: Get.textTheme.displayMedium,
+                        style: namida.textTheme.displayMedium,
                       ),
                       Obx(
                         () {
-                          final ms = newOffset.value.remainder(1000).abs().toString();
+                          final ms = newOffset.valueR.remainder(1000).abs().toString();
                           final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
-                          final off = newOffset.value;
+                          final off = newOffset.valueR;
                           return Text(
                             "${off.milliSecondsLabel}.$msText",
-                            style: Get.textTheme.displaySmall,
+                            style: namida.textTheme.displaySmall,
                           );
                         },
                       ),
@@ -250,8 +255,8 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                   const SizedBox(width: 8.0),
                   Obx(
                     () => Text(
-                      "${newOffset.value}ms",
-                      style: Get.textTheme.displayMedium,
+                      "${newOffset.valueR}ms",
+                      style: namida.textTheme.displayMedium,
                     ),
                   ),
                   const SizedBox(width: 8.0),
@@ -314,7 +319,7 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
         const SizedBox(width: 6.0),
         Obx(
           () {
-            final selected = selectedLyrics.value;
+            final selected = selectedLyrics.valueR;
             return NamidaButton(
               enabled: selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */,
               text: lang.SAVE,
@@ -331,8 +336,8 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
         )
       ],
       child: SizedBox(
-        width: Get.width,
-        height: Get.height * 0.6,
+        width: namida.width,
+        height: namida.height * 0.6,
         child: Column(
           children: [
             Row(
@@ -362,14 +367,14 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
             Expanded(
               child: Obx(
                 () {
-                  if (fetchingFromInternet.value == true) {
+                  if (fetchingFromInternet.valueR == true) {
                     return ThreeArchedCircle(
-                      color: Get.theme.cardColor,
+                      color: namida.theme.cardColor,
                       size: 58.0,
                     );
                   }
-                  final both = [...availableLyrics, ...fetchedLyrics];
-                  if (both.isEmpty && fetchingFromInternet.value != null) {
+                  final both = [...availableLyrics.valueR, ...fetchedLyrics.valueR];
+                  if (both.isEmpty && fetchingFromInternet.valueR != null) {
                     return const Icon(
                       Broken.emoji_sad,
                       size: 48.0,
@@ -391,9 +396,9 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                           borderRadius: 12.0,
                           animationDurationMS: 200,
                           onTap: () => selectedLyrics.value = l,
-                          bgColor: Get.theme.cardColor.withOpacity(0.4),
+                          bgColor: namida.theme.cardColor.withOpacity(0.4),
                           decoration: BoxDecoration(
-                            border: selectedLyrics.value == l
+                            border: selectedLyrics.valueR == l
                                 ? Border.all(
                                     width: 2.0,
                                     color: colorScheme,
@@ -412,7 +417,7 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                                   Expanded(
                                     child: Text(
                                       cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
-                                      style: Get.textTheme.displayMedium,
+                                      style: namida.textTheme.displayMedium,
                                     ),
                                   ),
                                   NamidaIconButton(
@@ -463,18 +468,18 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                                 children: [
                                   NamidaInkWell(
                                     borderRadius: 8.0,
-                                    bgColor: Get.theme.cardColor,
+                                    bgColor: namida.theme.cardColor,
                                     padding: const EdgeInsets.all(8.0),
-                                    child: expandedLyrics.value == l
+                                    child: expandedLyrics.valueR == l
                                         ? Text(
                                             l.lyrics,
-                                            style: Get.textTheme.displaySmall,
+                                            style: namida.textTheme.displaySmall,
                                           )
                                         : Text(
                                             l.lyrics,
                                             maxLines: 12,
                                             overflow: TextOverflow.fade,
-                                            style: Get.textTheme.displaySmall,
+                                            style: namida.textTheme.displaySmall,
                                           ),
                                   ),
                                   Positioned(
@@ -488,7 +493,7 @@ void showLRCSetDialog(Track trackPre, Color colorScheme) async {
                                         boxShadow: [
                                           BoxShadow(
                                             blurRadius: 4.0,
-                                            color: Get.theme.scaffoldBackgroundColor,
+                                            color: namida.theme.scaffoldBackgroundColor,
                                           ),
                                         ],
                                       ),

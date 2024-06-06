@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
@@ -32,6 +32,8 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  late final _loadingChangelog = false.obso;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +42,12 @@ class _AboutPageState extends State<AboutPage> {
         if (value != null) refreshState(() => _latestCheckedVersion = value);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _loadingChangelog.close();
+    super.dispose();
   }
 
   String _getDateDifferenceText() {
@@ -65,7 +73,6 @@ class _AboutPageState extends State<AboutPage> {
       if (latestRelease == null) return null;
       if (latestRelease.startsWith('v')) latestRelease = latestRelease.substring(1);
       if (current.startsWith('v')) current = current.substring(1);
-      if (latestRelease == current) return null;
       return latestRelease;
     } catch (_) {}
     return null;
@@ -247,22 +254,23 @@ class _AboutPageState extends State<AboutPage> {
                   subtitle: 'Have an issue or suggestion? open an issue on GitHub',
                   link: AppSocial.GITHUB_ISSUES,
                 ),
-                ObxValue<RxBool>(
-                  (isLoading) => NamidaAboutListTile(
+                ObxO(
+                  rx: _loadingChangelog,
+                  builder: (isLoading) => NamidaAboutListTile(
                     icon: Broken.activity,
                     title: lang.CHANGELOG,
                     subtitle: 'See what\'s newly added/fixed inside Namida',
-                    trailing: isLoading.value ? const LoadingIndicator() : null,
+                    trailing: isLoading ? const LoadingIndicator() : null,
                     onTap: () async {
-                      isLoading.value = true;
+                      _loadingChangelog.value = true;
                       final stringy = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
-                      isLoading.value = false;
+                      _loadingChangelog.value = false;
                       await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-                      // ignore: use_build_context_synchronously
                       showModalBottomSheet(
                         showDragHandle: true,
                         useRootNavigator: true,
                         isScrollControlled: true,
+                        // ignore: use_build_context_synchronously
                         context: context,
                         builder: (context) {
                           return SizedBox(
@@ -290,7 +298,6 @@ class _AboutPageState extends State<AboutPage> {
                       );
                     },
                   ),
-                  false.obs,
                 ),
                 NamidaAboutListTile(
                   icon: Broken.language_circle,
@@ -435,18 +442,18 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
             NamidaLinkUtils.openLink(url);
           }
         },
-        bgColor: Get.theme.cardTheme.color?.withOpacity(0.8),
+        bgColor: namida.theme.cardTheme.color?.withOpacity(0.8),
         borderRadius: 18.0,
         decoration: BoxDecoration(
           border: Border.all(
             width: 1.5,
-            color: Get.theme.colorScheme.primary.withOpacity(0.5),
+            color: namida.theme.colorScheme.primary.withOpacity(0.5),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
         child: Text(
           text.text,
-          style: Get.textTheme.displayMedium,
+          style: namida.textTheme.displayMedium,
         ),
       ),
     );
@@ -467,20 +474,20 @@ class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
     final url = "${AppSocial.GITHUB}/commit/$longHash";
     final textWithoutCommit = longHash == null ? text.text : text.text.replaceFirst(regex, '');
     final commit = shortenLongHash(longHash);
-    return RichText(
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         text: commit == null ? '' : "#$commit:",
-        style: Get.textTheme.displayMedium?.copyWith(
-          fontSize: 13.5.multipliedFontScale,
-          color: Get.theme.colorScheme.secondary,
+        style: namida.textTheme.displayMedium?.copyWith(
+          fontSize: 13.5,
+          color: namida.theme.colorScheme.secondary,
         ),
         recognizer: TapGestureRecognizer()..onTap = () => NamidaLinkUtils.openLink(url),
         children: [
           TextSpan(
             text: textWithoutCommit,
-            style: Get.textTheme.displaySmall?.copyWith(
+            style: namida.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.w400,
-              fontSize: 13.0.multipliedFontScale,
+              fontSize: 13.0,
             ),
           ),
         ],

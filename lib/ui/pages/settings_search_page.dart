@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/dimensions.dart';

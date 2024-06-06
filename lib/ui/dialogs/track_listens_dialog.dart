@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:paged_vertical_calendar/paged_vertical_calendar.dart';
 
@@ -17,6 +15,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) async {
@@ -47,7 +46,7 @@ void showListensDialog({
   if (datesOfListen.isEmpty) return;
   datesOfListen.sortByReverse((e) => e);
 
-  final color = (colorScheme ?? CurrentColor.inst.color).obs;
+  final color = (colorScheme ?? CurrentColor.inst.color).obso;
 
   if (colorScheme == null && colorSchemeFunction != null) {
     colorSchemeFunction().executeWithMinDelay(delayMS: 100).then((c) {
@@ -73,11 +72,10 @@ void showListensDialog({
       color.close();
     },
     lighterDialogColor: false,
-    dialog: StreamBuilder(
-        initialData: color.value,
-        stream: color.stream,
-        builder: (context, snapshot) {
-          final theme = AppThemes.inst.getAppTheme(snapshot.data, null, false);
+    dialog: ObxO(
+        rx: color,
+        builder: (dialogColor) {
+          final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
           return AnimatedTheme(
             data: theme,
             child: CustomBlurryDialog(
@@ -90,19 +88,21 @@ void showListensDialog({
                   style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 8.0),
-                Obx(
-                  () => NamidaIconButton(
-                    icon: settings.heatmapListensView.value ? Broken.row_vertical : Broken.calendar_1,
-                    iconSize: settings.heatmapListensView.value ? 18.0 : 20.0,
+                ObxO(
+                  rx: settings.heatmapListensView,
+                  builder: (heatmapListensView) => NamidaIconButton(
+                    icon: heatmapListensView ? Broken.row_vertical : Broken.calendar_1,
+                    iconSize: heatmapListensView ? 18.0 : 20.0,
                     onPressed: () => settings.save(heatmapListensView: !settings.heatmapListensView.value),
                   ),
                 ),
               ],
               child: SizedBox(
-                height: Get.height * 0.5,
-                width: Get.width,
-                child: Obx(
-                  () => settings.heatmapListensView.value
+                height: namida.height * 0.5,
+                width: namida.width,
+                child: ObxO(
+                  rx: settings.heatmapListensView,
+                  builder: (heatmapListensView) => heatmapListensView
                       ? Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: PagedVerticalCalendar(
@@ -132,7 +132,7 @@ void showListensDialog({
                                           Padding(
                                             padding: const EdgeInsets.all(2.0),
                                             child: CircleAvatar(
-                                              backgroundColor: color.value,
+                                              backgroundColor: dialogColor,
                                               maxRadius: 5.0,
                                               minRadius: 2.0,
                                             ),
@@ -156,9 +156,9 @@ void showListensDialog({
                               final isToday = date.toDaysSince1970() == DateTime.now().toDaysSince1970();
                               final listens = datesMapByDay[date]?.length ?? 0;
                               return NamidaInkWell(
-                                decoration: BoxDecoration(border: isToday ? Border.all(color: color.value) : null),
+                                decoration: BoxDecoration(border: isToday ? Border.all(color: dialogColor) : null),
                                 margin: const EdgeInsets.all(2.0),
-                                bgColor: color.value.withAlpha((listens * 5).clamp(0, 255)), // *5 since 50 listens a days is already a lot
+                                bgColor: dialogColor.withAlpha((listens * 5).clamp(0, 255)), // *5 since 50 listens a days is already a lot
                                 borderRadius: 6.0,
                                 onTap: datesMapByDay[date] == null ? null : () => onListenTap(date.millisecondsSinceEpoch),
                                 child: Column(
@@ -167,7 +167,7 @@ void showListensDialog({
                                     Text("${date.day}", style: theme.textTheme.displaySmall),
                                     if (listens > 0) ...[
                                       const SizedBox(height: 2.0),
-                                      Text("$listens", style: theme.textTheme.displaySmall?.copyWith(fontSize: 9.0.multipliedFontScale)),
+                                      Text("$listens", style: theme.textTheme.displaySmall?.copyWith(fontSize: 9.0)),
                                     ]
                                   ],
                                 ),
@@ -194,7 +194,7 @@ void showListensDialog({
                             );
                           },
                           itemCount: datesOfListen.length,
-                          itemExtents: null,
+                          itemExtent: null,
                         ),
                 ),
               ),

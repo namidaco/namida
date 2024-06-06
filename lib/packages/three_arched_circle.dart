@@ -1,4 +1,5 @@
 /// source: https://github.com/watery-desert/loading_animation_widget
+library;
 
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
@@ -10,10 +11,10 @@ class ThreeArchedCircle extends StatefulWidget {
   final double size;
   final Color color;
   const ThreeArchedCircle({
-    Key? key,
+    super.key,
     required this.color,
     required this.size,
-  }) : super(key: key);
+  });
 
   @override
   State<ThreeArchedCircle> createState() => _ThreeArchedCircleState();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -44,8 +44,8 @@ class AlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // final d = Dimensions.inst.albumCardDimensions;
     final thumbnailSize = dimensions.$1;
-    final fontSize = dimensions.$2.multipliedFontScale;
-    final fontSizeBigger = topRightText == null ? null : (dimensions.$2 + (topRightText != null ? 3.0 : 0.0)).multipliedFontScale;
+    final fontSize = dimensions.$2;
+    final fontSizeBigger = topRightText == null ? null : (dimensions.$2 + (topRightText != null ? 3.0 : 0.0));
     final sizeAlternative = dimensions.$3;
 
     final finalYear = album.year.yearFormatted;

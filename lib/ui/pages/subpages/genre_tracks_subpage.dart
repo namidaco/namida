@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -22,7 +22,7 @@ class GenreTracksPage extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         () {
-          Indexer.inst.mainMapGenres.value; // to update after sorting
+          Indexer.inst.mainMapGenres.valueR; // to update after sorting
           return NamidaTracksList(
             queueSource: QueueSource.genre,
             queueLength: tracks.length,
@@ -33,11 +33,11 @@ class GenreTracksPage extends StatelessWidget {
               subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
               heroTag: 'genre_$name',
               imageWidget: MultiArtworkContainer(
-                size: Get.width * 0.35,
+                size: namida.width * 0.35,
                 heroTag: 'genre_$name',
                 tracks: tracks.toImageTracks(),
               ),
-              tracks: tracks,
+              tracksFn: () => tracks,
             ),
           );
         },

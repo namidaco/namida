@@ -1,6 +1,5 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
@@ -12,6 +11,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -150,7 +150,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   }
 
   static const _thumbSize = 48.0;
-  double get _listBottomPadding => Dimensions.inst.globalBottomPaddingEffective - 6.0;
+  double get _listBottomPadding => Dimensions.inst.globalBottomPaddingEffectiveR - 6.0;
   final _listTopPadding = 6.0;
   double get listHeight => _thumbSize + 12 * 2 + _listBottomPadding + _listTopPadding;
 
@@ -230,7 +230,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                             child: Obx(
                               () {
-                                final oldestDate = allChannelFetchOldestDate.value;
+                                final oldestDate = allChannelFetchOldestDate.valueR;
                                 return Text(
                                   "${oldestDate.millisecondsSinceEpoch.dateFormattedOriginal} - ${Jiffy.parseFromDateTime(oldestDate).fromNow()}",
                                   style: context.textTheme.displayMedium,
@@ -279,7 +279,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   if (ch.subscribed ?? false)
                                     Text(
                                       lang.SUBSCRIBED,
-                                      style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
+                                      style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                 ],
@@ -297,7 +297,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       () => NamidaInkWellButton(
                         icon: Broken.add_circle,
                         text: lang.IMPORT,
-                        enabled: !YoutubeImportController.inst.isImportingSubscriptions.value,
+                        enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                         onTap: _onSubscriptionFileImportTap,
                       ),
                     ),
@@ -314,7 +314,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           sizeMultiplier: 2.0,
                           icon: Broken.add_circle,
                           text: lang.IMPORT,
-                          enabled: !YoutubeImportController.inst.isImportingSubscriptions.value,
+                          enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                           onTap: _onSubscriptionFileImportTap,
                         ),
                       ),
@@ -369,7 +369,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                 ),
         ),
         Obx(
-          () => isLoadingMoreUploads.value
+          () => isLoadingMoreUploads.valueR
               ? const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Stack(
@@ -427,7 +427,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   child: FittedBox(
                                     child: Obx(
                                       () => CircularProgressIndicator(
-                                        value: _allChannelsStreamsLoading.value && _allChannelsStreamsProgress.value <= 0 ? null : _allChannelsStreamsProgress.value,
+                                        value: _allChannelsStreamsLoading.valueR && _allChannelsStreamsProgress.valueR <= 0 ? null : _allChannelsStreamsProgress.valueR,
                                         strokeWidth: 2.0,
                                       ),
                                     ),
@@ -447,7 +447,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       Expanded(
                         child: ListView.builder(
                           controller: _horizontalListController,
-                          padding: EdgeInsets.only(right: Dimensions.inst.globalBottomPaddingFAB + 12.0),
+                          padding: EdgeInsets.only(right: Dimensions.inst.globalBottomPaddingFABR + 12.0),
                           scrollDirection: Axis.horizontal,
                           itemCount: totalIDsLength,
                           itemExtent: _thumbSize + horizontalPadding * 2,

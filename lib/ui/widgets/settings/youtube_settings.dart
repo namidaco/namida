@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -10,6 +9,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -62,10 +62,10 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
                 icon: Broken.video_octagon,
                 title: lang.YOUTUBE_STYLE_MINIPLAYER,
-                value: settings.youtubeStyleMiniplayer.value,
+                value: settings.youtubeStyleMiniplayer.valueR,
                 onChanged: (isTrue) {
                   settings.save(youtubeStyleMiniplayer: !isTrue);
-                  Player.inst.tryGenerateWaveform(Player.inst.nowPlayingVideoID);
+                  Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
                 },
               ),
             ),
@@ -77,7 +77,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.rememberAudioOnly),
                 icon: Broken.musicnote,
                 title: lang.REMEMBER_AUDIO_ONLY_MODE,
-                value: settings.ytRememberAudioOnly.value,
+                value: settings.ytRememberAudioOnly.valueR,
                 onChanged: (isTrue) => settings.save(ytRememberAudioOnly: !isTrue),
               ),
             ),
@@ -94,14 +94,14 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.TOP_COMMENTS,
                 subtitle: lang.TOP_COMMENTS_SUBTITLE,
-                value: settings.ytTopComments.value,
+                value: settings.ytTopComments.valueR,
                 onChanged: (isTrue) {
                   settings.save(ytTopComments: !isTrue);
                   YoutubeController.inst.resetGlowUnderVideo();
 
                   // -- pop comments subpage in case was inside.
                   if (settings.ytTopComments.value == false) {
-                    NamidaNavigator.inst.ytMiniplayerCommentsPageKey?.currentState?.pop();
+                    NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
                     NamidaNavigator.inst.isInYTCommentsSubpage = false;
                   }
                 },
@@ -120,15 +120,16 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.YT_PREFER_NEW_COMMENTS,
                 subtitle: lang.YT_PREFER_NEW_COMMENTS_SUBTITLE,
-                value: settings.ytPreferNewComments.value,
+                value: settings.ytPreferNewComments.valueR,
                 onChanged: (isTrue) => settings.save(ytPreferNewComments: !isTrue),
               ),
             ),
           ),
           getItemWrapper(
             key: _YoutubeSettingKeys.dimMiniplayerAfter,
-            child: Obx(
-              () => CustomListTile(
+            child: ObxO(
+              rx: settings.ytMiniplayerDimAfterSeconds,
+              builder: (ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
                 leading: const StackedIcon(
                   baseIcon: Broken.moon,
@@ -137,12 +138,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.DIM_MINIPLAYER_AFTER_SECONDS.replaceFirst(
                   '_SECONDS_',
-                  "${settings.ytMiniplayerDimAfterSeconds.value}",
+                  "$ytMiniplayerDimAfterSeconds",
                 ),
                 trailing: NamidaWheelSlider(
                   totalCount: 120,
-                  initValue: settings.ytMiniplayerDimAfterSeconds.value,
-                  text: "${settings.ytMiniplayerDimAfterSeconds.value}s",
+                  initValue: ytMiniplayerDimAfterSeconds,
+                  text: "${ytMiniplayerDimAfterSeconds}s",
                   onValueChanged: (val) {
                     settings.save(ytMiniplayerDimAfterSeconds: val);
                   },
@@ -155,7 +156,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             child: Obx(
               () => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimIntensity),
-                enabled: settings.ytMiniplayerDimAfterSeconds.value > 0,
+                enabled: settings.ytMiniplayerDimAfterSeconds.valueR > 0,
                 leading: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -187,7 +188,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         const origin = height / 2;
                         return Transform.rotate(
                           origin: const Offset(0, origin),
-                          angle: (settings.ytMiniplayerDimOpacity.value * multiplier) - minus,
+                          angle: (settings.ytMiniplayerDimOpacity.valueR * multiplier) - minus,
                           child: Container(
                             width: 2.0,
                             height: height,
@@ -204,8 +205,8 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.DIM_INTENSITY,
                 trailing: NamidaWheelSlider(
                   totalCount: 100,
-                  initValue: (settings.ytMiniplayerDimOpacity.value * 100).round(),
-                  text: "${(settings.ytMiniplayerDimOpacity.value * 100).round()}%",
+                  initValue: (settings.ytMiniplayerDimOpacity.valueR * 100).round(),
+                  text: "${(settings.ytMiniplayerDimOpacity.valueR * 100).round()}%",
                   onValueChanged: (val) {
                     settings.save(ytMiniplayerDimOpacity: val / 100);
                   },
@@ -239,7 +240,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         .toList(),
                     child: Obx(
                       () => Text(
-                        settings.ytTapToSeek.value.toText(),
+                        settings.ytTapToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
                     ),
@@ -262,7 +263,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         .toList(),
                     child: Obx(
                       () => Text(
-                        settings.ytDragToSeek.value.toText(),
+                        settings.ytDragToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
                     ),
@@ -283,7 +284,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.DOWNLOADS_METADATA_TAGS,
                 subtitle: lang.DOWNLOADS_METADATA_TAGS_SUBTITLE,
-                value: settings.ytAutoExtractVideoTagsFromInfo.value,
+                value: settings.ytAutoExtractVideoTagsFromInfo.valueR,
                 onChanged: (isTrue) => settings.save(ytAutoExtractVideoTagsFromInfo: !isTrue),
               ),
             ),
@@ -295,7 +296,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.downloadLocation),
                 title: lang.DEFAULT_DOWNLOAD_LOCATION,
                 icon: Broken.folder_favorite,
-                subtitle: settings.ytDownloadLocation.value,
+                subtitle: settings.ytDownloadLocation.valueR,
                 onTap: () async {
                   final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_DOWNLOAD_LOCATION);
                   if (path != null) settings.save(ytDownloadLocation: path);
@@ -310,7 +311,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.onOpeningYTLink),
                 icon: Broken.import_1,
                 title: lang.ON_OPENING_YOUTUBE_LINK,
-                trailingText: settings.onYoutubeLinkOpen.value.toText(),
+                trailingText: settings.onYoutubeLinkOpen.valueR.toText(),
                 onTap: () {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
@@ -326,11 +327,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                           ...OnYoutubeLinkOpenAction.values.map(
                             (e) => Padding(
                               padding: const EdgeInsets.all(6.0),
-                              child: Obx(
-                                () => ListTileWithCheckMark(
+                              child: ObxO(
+                                rx: settings.onYoutubeLinkOpen,
+                                builder: (onYoutubeLinkOpen) => ListTileWithCheckMark(
                                   icon: e.toIcon(),
                                   title: e.toText(),
-                                  active: settings.onYoutubeLinkOpen.value == e,
+                                  active: onYoutubeLinkOpen == e,
                                   onTap: () {
                                     settings.save(onYoutubeLinkOpen: e);
                                   },

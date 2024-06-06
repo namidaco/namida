@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -47,24 +47,24 @@ class GenresPage extends StatelessWidget {
                 ExpandableBox(
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
-                    currentCount: settings.genreGridCount.value,
+                    currentCount: settings.genreGridCount.valueR,
                     onTap: () {
                       final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, countPerRow, minimum: 2);
                       settings.save(genreGridCount: newCount);
                     },
                   ),
-                  isBarVisible: LibraryTab.genres.isBarVisible,
-                  showSearchBox: LibraryTab.genres.isSearchBoxVisible,
+                  isBarVisible: LibraryTab.genres.isBarVisible.valueR,
+                  showSearchBox: LibraryTab.genres.isSearchBoxVisible.valueR,
                   leftText: SearchSortController.inst.genreSearchList.length.displayGenreKeyword,
                   onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                   sortByMenuWidget: SortByMenu(
-                    title: settings.genreSort.value.toText(),
+                    title: settings.genreSort.valueR.toText(),
                     popupMenuChild: () => const SortByMenuGenres(),
-                    isCurrentlyReversed: settings.genreSortReversed.value,
+                    isCurrentlyReversed: settings.genreSortReversed.valueR,
                     onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
                   ),
-                  textField: CustomTextFiled(
+                  textField: () => CustomTextFiled(
                     textFieldController: LibraryTab.genres.textSearchController,
                     textFieldHintText: lang.FILTER_GENRES,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.genre),

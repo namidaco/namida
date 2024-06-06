@@ -12,7 +12,7 @@ import 'package:namida/youtube/yt_utils.dart';
 
 void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [], Color? colorScheme}) async {
   showListensDialog(
-    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [],
+    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
       final image = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId);

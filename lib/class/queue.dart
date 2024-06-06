@@ -1,8 +1,6 @@
 import 'package:namida/class/track.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 
 class Queue {
   final QueueSource source;
@@ -19,15 +17,10 @@ class Queue {
     required this.tracks,
   });
 
-  /// Converts empty queue to AllTracksList.
+  /// // Converts empty queue to AllTracksList.
+  /// BREAKING(>v2.5.6): no longer reads empty queue as allTracks.
   factory Queue.fromJson(Map<String, dynamic> json) {
-    final res = (json['tracks'] as List? ?? []).mapped((e) => (e as String).toTrack());
-    final finalTracks = <Track>[];
-    if (res.isEmpty) {
-      finalTracks.addAll(allTracksInLibrary);
-    } else {
-      finalTracks.addAll(res);
-    }
+    final finalTracks = (json['tracks'] as List? ?? []).mapped((e) => (e as String).toTrack());
     return Queue(
       source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
@@ -37,16 +30,16 @@ class Queue {
     );
   }
 
-  /// Saves an empty queue in case its the same as the AllTracksList.
-  /// this should lower startup time and increase performance.
+  /// // Saves an empty queue in case its the same as the AllTracksList.
+  /// // this should lower startup time and increase performance.
+  /// BREAKING(>v2.5.6): no longer saving allTracks as empty queue.
   Map<String, dynamic> toJson() {
-    final finalTracks = checkIfQueueSameAsAllTracks(tracks) ? <Track>[] : tracks;
     return {
       'source': source.convertToString,
       'homePageItem': homePageItem?.convertToString,
       'date': date,
       'isFav': isFav,
-      'tracks': finalTracks.mapped((e) => e.path),
+      'tracks': tracks.mapped((e) => e.path),
     };
   }
 

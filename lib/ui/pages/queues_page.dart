@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -10,18 +10,19 @@ import 'package:namida/ui/widgets/library/queue_tile.dart';
 
 class QueuesPage extends StatelessWidget {
   const QueuesPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return AnimationLimiter(
-      child: BackgroundWrapper(
-        child: NamidaScrollbarWithController(
-          child: (sc) => CustomScrollView(
+    return BackgroundWrapper(
+      child: NamidaScrollbarWithController(
+        child: (sc) => AnimationLimiter(
+          child: CustomScrollView(
             controller: sc,
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               Obx(
                 () {
-                  final queuesKeys = QueueController.inst.queuesMap.value.keys.toList();
+                  final queuesKeys = QueueController.inst.queuesMap.valueR.keys.toList();
                   final queuesLength = queuesKeys.length;
                   return SliverFixedExtentList.builder(
                     itemCount: queuesLength,

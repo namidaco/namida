@@ -16,8 +16,8 @@ class ArtistsSplitConfig extends _SplitterConfig {
   }) {
     return ArtistsSplitConfig(
       addFeatArtist: addFeatArtist ?? settings.extractFeatArtistFromTitle.value,
-      separators: separators ?? settings.trackArtistsSeparators.toList(),
-      separatorsBlacklist: separatorsBlacklist ?? settings.trackArtistsSeparatorsBlacklist.toList(),
+      separators: separators ?? settings.trackArtistsSeparators.value,
+      separatorsBlacklist: separatorsBlacklist ?? settings.trackArtistsSeparatorsBlacklist.value,
     );
   }
 
@@ -49,8 +49,8 @@ class GenresSplitConfig extends _SplitterConfig {
     final List<String>? separatorsBlacklist,
   }) {
     return GenresSplitConfig(
-      separators: separators ?? settings.trackGenresSeparators.toList(),
-      separatorsBlacklist: separatorsBlacklist ?? settings.trackGenresSeparatorsBlacklist.toList(),
+      separators: separators ?? settings.trackGenresSeparators.value,
+      separatorsBlacklist: separatorsBlacklist ?? settings.trackGenresSeparatorsBlacklist.value,
     );
   }
 

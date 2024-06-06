@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 enum YTVideosSorting {
@@ -51,15 +51,16 @@ mixin YoutubeStreamsManager {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         enabled
-                            ? Obx(
-                                () => StackedIcon(
+                            ? ObxO(
+                                rx: sortingByTop,
+                                builder: (sortingByTop) => StackedIcon(
                                   baseIcon: details.$2,
-                                  secondaryIcon: sortingByTop.value ? Broken.arrow_down_2 : Broken.arrow_up_3,
+                                  secondaryIcon: sortingByTop ? Broken.arrow_down_2 : Broken.arrow_up_3,
                                   iconSize: 20.0,
                                   secondaryIconSize: 10.0,
                                   blurRadius: 4.0,
                                   baseIconColor: itemsColor,
-                                  // secondaryIconColor: enabled ? context.theme.colorScheme.background : null,
+                                  // secondaryIconColor: enabled ? context.theme.colorScheme.surface : null,
                                 ),
                               )
                             : Icon(
@@ -121,9 +122,7 @@ mixin YoutubeStreamsManager {
       case YTVideosSorting.date:
         return (lang.DATE, Broken.calendar);
       case YTVideosSorting.views:
-        final word = lang.VIEWS;
-        final finalw = word.length > 1 ? "${word[0].toUpperCase()}${word.substring(1)}" : word;
-        return (finalw, Broken.eye);
+        return (lang.VIEWS.capitalizeFirst(), Broken.eye);
       case YTVideosSorting.duration:
         return (lang.DURATION, Broken.timer_1);
     }

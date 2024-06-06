@@ -97,7 +97,7 @@ class YTVideosActionBar extends StatelessWidget {
   void _onAddToPlaylist() {
     final ids = <String>[];
     final info = <String, String?>{};
-    videos.loop((e, index) {
+    videos.loop((e) {
       final id = e.id;
       ids.add(id);
       info[id] = infoLookup[id]?.name;

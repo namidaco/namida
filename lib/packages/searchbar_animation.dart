@@ -114,6 +114,7 @@ class SearchBarAnimation extends StatefulWidget {
   final Radius? cursorRadius;
 
   const SearchBarAnimation({
+    super.key,
     required this.textEditingController,
     required this.isOriginalAnimation,
     required this.trailingWidget,
@@ -151,10 +152,9 @@ class SearchBarAnimation extends StatefulWidget {
     this.inputFormatters,
     this.onTap,
     this.onTapOutside,
-    Key? key,
     this.cursorHeight,
     this.cursorRadius,
-  }) : super(key: key);
+  });
 
   @override
   SearchBarAnimationState createState() => SearchBarAnimationState();

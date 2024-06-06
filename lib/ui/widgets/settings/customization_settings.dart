@@ -1,7 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/track.dart';
@@ -16,6 +15,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -129,7 +129,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     performanceMode: PerformanceMode.custom,
                   );
                 },
-                value: settings.enableBlurEffect.value,
+                value: settings.enableBlurEffect.valueR,
               ),
             ),
           ),
@@ -147,7 +147,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     performanceMode: PerformanceMode.custom,
                   );
                 },
-                value: settings.enableGlowEffect.value,
+                value: settings.enableGlowEffect.valueR,
               ),
             ),
           ),
@@ -163,7 +163,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   enableMiniplayerParallaxEffect: !isTrue,
                   performanceMode: PerformanceMode.custom,
                 ),
-                value: settings.enableMiniplayerParallaxEffect.value,
+                value: settings.enableMiniplayerParallaxEffect.valueR,
               ),
             ),
           ),
@@ -175,7 +175,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.timer,
                 title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
                 onChanged: (isTrue) => settings.player.save(displayRemainingDurInsteadOfTotal: !isTrue),
-                value: settings.player.displayRemainingDurInsteadOfTotal.value,
+                value: settings.player.displayRemainingDurInsteadOfTotal.valueR,
               ),
             ),
           ),
@@ -186,7 +186,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.brMultiplier),
                 icon: Broken.rotate_left_1,
                 title: lang.BORDER_RADIUS_MULTIPLIER,
-                trailingText: "${settings.borderRadiusMultiplier.value}",
+                trailingText: "${settings.borderRadiusMultiplier.valueR}",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.BORDER_RADIUS_MULTIPLIER,
@@ -204,7 +204,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.fontScale),
                 icon: Broken.text,
                 title: lang.FONT_SCALE,
-                trailingText: "${(settings.fontScaleFactor.value * 100).toInt()}%",
+                trailingText: "${(settings.fontScaleFactor.valueR * 100).toInt()}%",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.FONT_SCALE,
@@ -225,7 +225,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 onChanged: (p0) {
                   settings.save(hourFormat12: !p0);
                 },
-                value: settings.hourFormat12.value,
+                value: settings.hourFormat12.valueR,
               ),
             ),
           ),
@@ -236,7 +236,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.dateTimeFormat),
                 icon: Broken.calendar_edit,
                 title: lang.DATE_TIME_FORMAT,
-                trailingText: "${settings.dateTimeFormat}",
+                trailingText: settings.dateTimeFormat.valueR,
                 onTap: () async {
                   final scrollController = ScrollController();
 
@@ -245,7 +245,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     icon: Broken.calendar_edit,
                     dateTimeFormat: true,
                     topWidget: SizedBox(
-                      height: Get.height * 0.4,
+                      height: namida.height * 0.4,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 58.0),
                         child: Stack(
@@ -273,7 +273,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                               right: 0,
                               child: Container(
                                 padding: const EdgeInsets.all(8.0),
-                                decoration: BoxDecoration(color: Get.theme.cardTheme.color, shape: BoxShape.circle),
+                                decoration: BoxDecoration(color: namida.theme.cardTheme.color, shape: BoxShape.circle),
                                 child: NamidaIconButton(
                                   icon: Broken.arrow_circle_down,
                                   onPressed: () {
@@ -325,7 +325,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.card_remove,
                 title: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE,
                 subtitle: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE,
-                value: settings.displayTrackNumberinAlbumPage.value,
+                value: settings.displayTrackNumberinAlbumPage.valueR,
                 onChanged: (p0) => settings.save(displayTrackNumberinAlbumPage: !p0),
               ),
             ),
@@ -341,7 +341,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE,
                 subtitle: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE,
                 onChanged: (p0) => settings.save(albumCardTopRightDate: !p0),
-                value: settings.albumCardTopRightDate.value,
+                value: settings.albumCardTopRightDate.valueR,
               ),
             ),
           ),
@@ -354,10 +354,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredAlbumThumb),
                 icon: Broken.crop,
                 title: lang.FORCE_SQUARED_ALBUM_THUMBNAIL,
-                value: settings.forceSquaredAlbumThumbnail.value,
+                value: settings.forceSquaredAlbumThumbnail.valueR,
                 onChanged: (p0) {
                   settings.save(forceSquaredAlbumThumbnail: !p0);
-                  if (!p0 && settings.albumThumbnailSizeinList.toInt() != settings.albumListTileHeight.toInt()) {
+                  if (!p0 && settings.albumThumbnailSizeinList.value.toInt() != settings.albumListTileHeight.value.toInt()) {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
@@ -389,7 +389,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.staggeredAlbumGridview),
                 icon: Broken.element_4,
                 title: lang.STAGGERED_ALBUM_GRID_VIEW,
-                value: settings.useAlbumStaggeredGridView.value,
+                value: settings.useAlbumStaggeredGridView.valueR,
                 onChanged: (p0) => settings.save(useAlbumStaggeredGridView: !p0),
               ),
             ),
@@ -403,7 +403,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfAlbumThumb),
                 icon: Broken.maximize_3,
                 title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
-                trailingText: "${settings.albumThumbnailSizeinList.toInt()}",
+                trailingText: "${settings.albumThumbnailSizeinList.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
@@ -423,7 +423,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfAlbumTile),
                 icon: Broken.pharagraphspacing,
                 title: lang.HEIGHT_OF_ALBUM_TILE,
-                trailingText: "${settings.albumListTileHeight.toInt()}",
+                trailingText: "${settings.albumListTileHeight.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.HEIGHT_OF_ALBUM_TILE,
@@ -448,8 +448,8 @@ class CustomizationSettings extends SettingSubpageProvider {
         normalTitleStyle: true,
         insetPadding: const EdgeInsets.all(64.0),
         child: SizedBox(
-          height: Get.height * 0.5,
-          width: Get.width,
+          height: namida.height * 0.5,
+          width: namida.width,
           child: NamidaListView(
             padding: EdgeInsets.zero,
             itemBuilder: (context, i) {
@@ -466,7 +466,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               );
             },
             itemCount: TrackTileItem.values.length,
-            itemExtents: null,
+            itemExtent: null,
           ),
         ),
       ),
@@ -492,12 +492,12 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredTrackThumb),
                 icon: Broken.crop,
                 title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
-                value: settings.forceSquaredTrackThumbnail.value,
+                value: settings.forceSquaredTrackThumbnail.valueR,
                 onChanged: (value) {
                   settings.save(forceSquaredTrackThumbnail: !value);
                   Player.inst.refreshRxVariables();
                   _onSettingsChanged();
-                  if (!value && settings.trackThumbnailSizeinList.toInt() != settings.trackListTileHeight.toInt()) {
+                  if (!value && settings.trackThumbnailSizeinList.value.toInt() != settings.trackListTileHeight.value.toInt()) {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
@@ -527,7 +527,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfTrackThumb),
                 icon: Broken.maximize_3,
                 title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
-                trailingText: "${settings.trackThumbnailSizeinList.toInt()}",
+                trailingText: "${settings.trackThumbnailSizeinList.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
@@ -545,7 +545,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfTrackTile),
                 icon: Broken.pharagraphspacing,
                 title: lang.HEIGHT_OF_TRACK_TILE,
-                trailingText: "${settings.trackListTileHeight.toInt()}",
+                trailingText: "${settings.trackListTileHeight.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
                     title: lang.HEIGHT_OF_TRACK_TILE,
@@ -568,7 +568,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   settings.save(displayThirdRow: !isTrue);
                   _onSettingsChanged();
                 },
-                value: settings.displayThirdRow.value,
+                value: settings.displayThirdRow.valueR,
               ),
             ),
           ),
@@ -584,7 +584,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   settings.save(displayThirdItemInEachRow: !isTrue);
                   _onSettingsChanged();
                 },
-                value: settings.displayThirdItemInEachRow.value,
+                value: settings.displayThirdItemInEachRow.valueR,
               ),
             ),
           ),
@@ -599,7 +599,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   settings.save(displayFavouriteIconInListTile: !isTrue);
                   _onSettingsChanged();
                 },
-                value: settings.displayFavouriteIconInListTile.value,
+                value: settings.displayFavouriteIconInListTile.valueR,
               ),
             ),
           ),
@@ -610,7 +610,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.itemsSeparator),
                 icon: Broken.minus_square,
                 title: lang.TRACK_TILE_ITEMS_SEPARATOR,
-                trailingText: settings.trackTileSeparator.value,
+                trailingText: settings.trackTileSeparator.valueR,
                 onTap: () => showSettingDialogWithTextField(
                   title: lang.TRACK_TILE_ITEMS_SEPARATOR,
                   trackTileSeparator: true,
@@ -623,7 +623,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             () => Container(
               color: context.theme.cardTheme.color,
               width: context.width,
-              height: settings.trackListTileHeight * 1.5,
+              height: settings.trackListTileHeight.valueR * 1.5,
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(vertical: 7.0),
               child: Row(
@@ -637,14 +637,14 @@ class CustomizationSettings extends SettingSubpageProvider {
                     margin: const EdgeInsets.symmetric(
                       horizontal: 0.0,
                     ),
-                    width: settings.trackThumbnailSizeinList.value,
-                    height: settings.trackThumbnailSizeinList.value,
+                    width: settings.trackThumbnailSizeinList.valueR,
+                    height: settings.trackThumbnailSizeinList.valueR,
                     child: ArtworkWidget(
                       track: allTracksInLibrary.firstOrNull,
                       key: Key(allTracksInLibrary.firstOrNull?.pathToImage ?? ''),
-                      thumbnailSize: settings.trackThumbnailSizeinList.value,
+                      thumbnailSize: settings.trackThumbnailSizeinList.valueR,
                       path: allTracksInLibrary.firstOrNull?.pathToImage,
-                      forceSquared: settings.forceSquaredTrackThumbnail.value,
+                      forceSquared: settings.forceSquaredTrackThumbnail.valueR,
                     ),
                   ),
                   const SizedBox(
@@ -662,7 +662,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                             children: [
                               TrackTilePosition.row1Item1,
                               TrackTilePosition.row1Item2,
-                              if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row1Item3,
+                              if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row1Item3,
                             ]
                                 .map(
                                   (e) => TrackItemSmallBox(
@@ -682,7 +682,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                             children: [
                               TrackTilePosition.row2Item1,
                               TrackTilePosition.row2Item2,
-                              if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row2Item3,
+                              if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row2Item3,
                             ]
                                 .map(
                                   (e) => TrackItemSmallBox(
@@ -697,13 +697,13 @@ class CustomizationSettings extends SettingSubpageProvider {
                         const SizedBox(
                           height: 4.0,
                         ),
-                        if (settings.displayThirdRow.value)
+                        if (settings.displayThirdRow.valueR)
                           FittedBox(
                             child: Row(
                               children: [
                                 TrackTilePosition.row3Item1,
                                 TrackTilePosition.row3Item2,
-                                if (settings.displayThirdItemInEachRow.value) TrackTilePosition.row3Item3,
+                                if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row3Item3,
                               ]
                                   .map(
                                     (e) => TrackItemSmallBox(
@@ -735,9 +735,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                               onTap: () => _showTrackItemsDialog(e),
                             ),
                           )
-                          .addSeparators(separator: const SizedBox(height: 3.0))
-                          .toList(),
-                      if (settings.displayFavouriteIconInListTile.value) ...[
+                          .addSeparators(separator: const SizedBox(height: 3.0)),
+                      if (settings.displayFavouriteIconInListTile.valueR) ...[
                         const SizedBox(height: 3.0),
                         const NamidaLikeButton(
                           track: null,
@@ -784,7 +783,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   if (value) return settings.save(enablePartyModeInMiniplayer: false);
                   SussyBaka.monetize(onEnable: () => settings.save(enablePartyModeInMiniplayer: true));
                 },
-                value: settings.enablePartyModeInMiniplayer.value,
+                value: settings.enablePartyModeInMiniplayer.valueR,
               ),
             ),
           ),
@@ -793,13 +792,13 @@ class CustomizationSettings extends SettingSubpageProvider {
             child: Obx(
               () => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.edgeColorsSwitching),
-                enabled: settings.enablePartyModeInMiniplayer.value,
+                enabled: settings.enablePartyModeInMiniplayer.valueR,
                 icon: Broken.colors_square,
                 title: lang.EDGE_COLORS_SWITCHING,
                 onChanged: (value) {
                   settings.save(enablePartyModeColorSwap: !value);
                 },
-                value: settings.enablePartyModeColorSwap.value,
+                value: settings.enablePartyModeColorSwap.valueR,
               ),
             ),
           ),
@@ -811,7 +810,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.buy_crypto,
                 title: lang.ENABLE_MINIPLAYER_PARTICLES,
                 onChanged: (value) => settings.save(enableMiniplayerParticles: !value),
-                value: settings.enableMiniplayerParticles.value,
+                value: settings.enableMiniplayerParticles.valueR,
               ),
             ),
           ),
@@ -824,11 +823,11 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.ANIMATING_THUMBNAIL_INTENSITY,
                 trailing: NamidaWheelSlider(
                   totalCount: 25,
-                  initValue: settings.animatingThumbnailIntensity.value,
+                  initValue: settings.animatingThumbnailIntensity.valueR,
                   onValueChanged: (val) {
                     settings.save(animatingThumbnailIntensity: val);
                   },
-                  text: "${(settings.animatingThumbnailIntensity.value * 4).toStringAsFixed(0)}%",
+                  text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
                 ),
               ),
             ),
@@ -844,7 +843,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 onChanged: (value) {
                   settings.save(animatingThumbnailInversed: !value);
                 },
-                value: settings.animatingThumbnailInversed.value,
+                value: settings.animatingThumbnailInversed.valueR,
               ),
             ),
           ),
@@ -882,8 +881,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                     visualDensity: VisualDensity.compact,
                     icon: Broken.maximize,
                     title: lang.SCALE_MULTIPLIER,
-                    subtitle: "${(settings.animatingThumbnailScaleMultiplier.value * 100).round()}%",
-                    value: settings.artworkGestureScale.value,
+                    subtitle: "${(settings.animatingThumbnailScaleMultiplier.valueR * 100).round()}%",
+                    value: settings.artworkGestureScale.valueR,
                     onChanged: (value) {
                       settings.save(artworkGestureScale: !value);
                     },
@@ -898,7 +897,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       secondaryIconSize: 12.0,
                     ),
                     title: lang.DOUBLE_TAP_TO_TOGGLE_LYRICS,
-                    value: settings.artworkGestureDoubleTapLRC.value,
+                    value: settings.artworkGestureDoubleTapLRC.valueR,
                     onChanged: (value) {
                       settings.save(artworkGestureDoubleTapLRC: !value);
                     },
@@ -922,13 +921,13 @@ class CustomizationSettings extends SettingSubpageProvider {
                     children: [
                       NamidaWheelSlider(
                         totalCount: 360,
-                        initValue: settings.waveformTotalBars.value - 40,
+                        initValue: settings.waveformTotalBars.valueR - 40,
                         onValueChanged: (val) {
                           final v = (val + 40);
                           settings.save(waveformTotalBars: v);
                           WaveformController.inst.calculateUIWaveform();
                         },
-                        text: settings.waveformTotalBars.value.toString(),
+                        text: settings.waveformTotalBars.valueR.toString(),
                       ),
                     ],
                   ),
@@ -944,7 +943,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.text_block,
                 title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
                 onChanged: (value) => settings.save(displayAudioInfoMiniplayer: !value),
-                value: settings.displayAudioInfoMiniplayer.value,
+                value: settings.displayAudioInfoMiniplayer.valueR,
               ),
             ),
           ),
@@ -959,7 +958,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   settings.save(displayArtistBeforeTitle: !value);
                   Player.inst.refreshRxVariables();
                 },
-                value: settings.displayArtistBeforeTitle.value,
+                value: settings.displayArtistBeforeTitle.valueR,
               ),
             ),
           ),
@@ -978,7 +977,7 @@ class TrackItemSmallBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaInkWell(
-      bgColor: context.theme.colorScheme.background.withAlpha(160),
+      bgColor: context.theme.colorScheme.surface.withAlpha(160),
       onTap: onTap,
       borderRadius: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),

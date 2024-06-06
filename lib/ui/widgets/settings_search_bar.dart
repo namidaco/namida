@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/controller/settings_search_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -61,12 +60,12 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           enableBoxShadow: false,
           buttonShadowColour: Colors.transparent,
           hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
-            fontSize: 17.0.multipliedFontScale,
+            fontSize: 17.0,
             height: height * 1.1,
           ),
           searchBoxColour: context.theme.cardColor.withAlpha(200),
           enteredTextStyle: context.theme.textTheme.displayMedium,
-          cursorColour: context.theme.colorScheme.onBackground,
+          cursorColour: context.theme.colorScheme.onSurface,
           buttonBorderColour: Colors.black45,
           cursorRadius: const Radius.circular(12.0),
           buttonWidget: const IgnorePointer(

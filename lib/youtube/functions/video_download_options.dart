@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -11,6 +10,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -55,9 +55,9 @@ Future<void> showVideoDownloadOptionsSheet({
   }
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-  // ignore: use_build_context_synchronously
   await showModalBottomSheet(
     isScrollControlled: true,
+    // ignore: use_build_context_synchronously
     context: context,
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
@@ -92,7 +92,7 @@ Future<void> showVideoDownloadOptionsSheet({
                           icon: Broken.document_code,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                           title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
-                          value: settings.downloadFilesWriteUploadDate.value,
+                          value: settings.downloadFilesWriteUploadDate.valueR,
                           onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
                         ),
                       ),
@@ -101,7 +101,7 @@ Future<void> showVideoDownloadOptionsSheet({
                           icon: Broken.tick_circle,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                           title: lang.KEEP_CACHED_VERSIONS,
-                          value: settings.downloadFilesKeepCachedVersions.value,
+                          value: settings.downloadFilesKeepCachedVersions.valueR,
                           onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
                         ),
                       ),
@@ -193,7 +193,7 @@ Future<void> showVideoDownloadOptionsSheet({
                       },
                       child: Text(
                         lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
-                        style: Get.textTheme.displaySmall?.copyWith(
+                        style: namida.textTheme.displaySmall?.copyWith(
                           decoration: TextDecoration.underline,
                           decorationStyle: TextDecorationStyle.dashed,
                         ),
@@ -371,17 +371,18 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
         ],
         child: Obx(
           () {
-            final title = groupName.value == '' ? lang.DEFAULT : groupName.value;
-            final count = availableDirectoriesNames[groupName.value];
+            final groupName = this.groupName.valueR;
+            final title = groupName == '' ? lang.DEFAULT : groupName;
+            final count = availableDirectoriesNames[groupName];
             final countText = count == null || count == 0 ? '' : " ($count)";
             return Row(
               mainAxisAlignment: MainAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                    groupName.value == widget.playlistName
+                    groupName == widget.playlistName
                         ? Broken.music_playlist
-                        : groupName.value == ''
+                        : groupName == ''
                             ? Broken.folder_2
                             : Broken.folder,
                     size: 18.0),

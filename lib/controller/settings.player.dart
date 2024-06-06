@@ -1,7 +1,6 @@
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'package:get/get.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/core/constants.dart';
@@ -170,8 +169,7 @@ class PlayerSettings with SettingsFileWriter {
           onInterrupted.map((key, value) => MapEntry(key, value));
       final lpi = json['lastPlayedIndices'];
       if (lpi is Map) {
-        lastPlayedIndices.clear();
-        lastPlayedIndices.addAll(lpi.cast());
+        lastPlayedIndices.assignAll(lpi.cast());
       }
     } catch (e) {
       printy(e, isError: true);

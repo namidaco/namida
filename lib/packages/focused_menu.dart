@@ -36,7 +36,7 @@ class FocusedMenuHolder extends StatefulWidget {
   final Alignment menuOpenAlignment;
 
   const FocusedMenuHolder({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.menuItems = const <FocusedMenuItem>[],
@@ -61,7 +61,7 @@ class FocusedMenuHolder extends StatefulWidget {
     this.enableBackgroundEffects = false,
     this.menuHeight,
     this.menuOpenAlignment = Alignment.center,
-  }) : super(key: key);
+  });
 
   @override
   State<FocusedMenuHolder> createState() => _FocusedMenuHolderState();
@@ -173,7 +173,7 @@ class FocusedMenuDetails extends StatelessWidget {
   final Alignment menuOpenAlignment;
 
   const FocusedMenuDetails({
-    Key? key,
+    super.key,
     required this.menuItems,
     required this.child,
     required this.childOffset,
@@ -197,7 +197,7 @@ class FocusedMenuDetails extends StatelessWidget {
     required this.enableBackgroundEffects,
     required this.menuHeightPre,
     required this.menuOpenAlignment,
-  }) : super(key: key);
+  });
 
   void _onDismiss(BuildContext context) {
     onMenuClose?.call();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -79,7 +79,7 @@ class ArtistsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalArtists = artists ?? SearchSortController.inst.artistSearchList;
+    final finalArtists = artists ?? SearchSortController.inst.artistSearchList.value;
     final scrollController = LibraryTab.artists.scrollController;
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(countPerRow);
 
@@ -90,7 +90,7 @@ class ArtistsPage extends StatelessWidget {
         child: AnimationLimiter(
           child: Obx(
             () {
-              final artistTypeSettings = settings.activeArtistType.value;
+              final artistTypeSettings = settings.activeArtistType.valueR;
               final artistType = customType ?? artistTypeSettings;
               final artistTypeText = artistType.toText();
               final artistLeftText = finalArtists.length.displayKeyword(artistTypeText, artistTypeText);
@@ -99,14 +99,14 @@ class ArtistsPage extends StatelessWidget {
                   ExpandableBox(
                     enableHero: enableHero,
                     gridWidget: ChangeGridCountWidget(
-                      currentCount: settings.artistGridCount.value,
+                      currentCount: settings.artistGridCount.valueR,
                       onTap: () {
                         final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
                         settings.save(artistGridCount: newCount);
                       },
                     ),
-                    isBarVisible: LibraryTab.artists.isBarVisible,
-                    showSearchBox: LibraryTab.artists.isSearchBoxVisible,
+                    isBarVisible: LibraryTab.artists.isBarVisible.valueR,
+                    showSearchBox: LibraryTab.artists.isSearchBoxVisible.valueR,
                     leftText: customType != null ? artistLeftText : '',
                     leftWidgets: customType != null
                         ? []
@@ -135,12 +135,12 @@ class ArtistsPage extends StatelessWidget {
                     onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                     sortByMenuWidget: SortByMenu(
-                      title: settings.artistSort.value.toText(),
+                      title: settings.artistSort.valueR.toText(),
                       popupMenuChild: () => const SortByMenuArtists(),
-                      isCurrentlyReversed: settings.artistSortReversed.value,
+                      isCurrentlyReversed: settings.artistSortReversed.valueR,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
                     ),
-                    textField: CustomTextFiled(
+                    textField: () => CustomTextFiled(
                       textFieldController: LibraryTab.artists.textSearchController,
                       textFieldHintText: lang.FILTER_ARTISTS,
                       onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeArtistType.value),

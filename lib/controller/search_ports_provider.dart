@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 
 class SearchPortsProvider with PortsProviderBase {
   static final SearchPortsProvider inst = SearchPortsProvider._internal();
@@ -11,10 +12,9 @@ class SearchPortsProvider with PortsProviderBase {
   final _ports = <MediaType, PortsComm?>{};
 
   void disposeAll() {
-    for (final p in _ports.values) {
-      if (p != null) disposePort(p);
-    }
+    final ports = _ports.values.whereType<PortsComm>().toList();
     _ports.clear();
+    ports.loop(disposePort);
   }
 
   Future<void> closePorts(MediaType type) async {

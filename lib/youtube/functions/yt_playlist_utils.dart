@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
@@ -11,6 +10,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -95,14 +95,14 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
 
     if (context != null) {
       await Future.delayed(Duration.zero);
-      // ignore: use_build_context_synchronously
       showModalBottomSheet(
+        // ignore: use_build_context_synchronously
         context: context,
         useRootNavigator: true,
         isDismissible: false,
         builder: (context) {
           final iconSize = context.width * 0.5;
-          final iconColor = context.theme.colorScheme.onBackground.withOpacity(0.6);
+          final iconColor = context.theme.colorScheme.onSurface.withOpacity(0.6);
           return SizedBox(
             width: context.width,
             child: Padding(
@@ -114,7 +114,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
                     () => AnimatedSwitcher(
                       key: const Key('circle_switch'),
                       duration: switchAnimationDurHalf,
-                      child: currentCount.value < totalCount.value || isTotalCountNull()
+                      child: currentCount.valueR < totalCount.valueR || isTotalCountNull()
                           ? ThreeArchedCircle(
                               size: iconSize,
                               color: iconColor,
@@ -135,7 +135,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
                   const SizedBox(height: 8.0),
                   Obx(
                     () => Text(
-                      '${currentCount.value.formatDecimal()}/${isTotalCountNull() ? '?' : totalCount.value.formatDecimal()}',
+                      '${currentCount.valueR.formatDecimal()}/${isTotalCountNull() ? '?' : totalCount.valueR.formatDecimal()}',
                       style: context.textTheme.displayLarge,
                     ),
                   ),
@@ -155,9 +155,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
       totalCount.value = playlist.streamCount < 0 ? playlist.streams.length : playlist.streamCount;
     }
 
-    void plsPop() {
-      if (context?.mounted ?? false) context.safePop();
-    }
+    void plsPop() => context?.safePop();
 
     void closeRxStreams() {
       onEnd?.call();
@@ -217,7 +215,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
 
     final playlist = this;
     final infoLookup = <String, yt.StreamInfoItem>{};
-    playlist.streams.loop((e, index) {
+    playlist.streams.loop((e) {
       infoLookup[e.id ?? ''] = e;
     });
     NamidaNavigator.inst.navigateTo(
@@ -249,7 +247,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
 
           final ids = <String>[];
           final info = <String, String?>{};
-          playlist.streams.loop((e, index) {
+          playlist.streams.loop((e) {
             final id = e.id;
             if (id != null) {
               ids.add(id);

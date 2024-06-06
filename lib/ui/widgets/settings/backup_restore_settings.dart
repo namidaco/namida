@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/backup_controller.dart';
@@ -15,6 +14,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -128,7 +128,7 @@ class BackupAndRestore extends SettingSubpageProvider {
           bgColor: getBgColor(_BackupAndRestoreKeys.defaultLocation),
           title: lang.DEFAULT_BACKUP_LOCATION,
           icon: Broken.direct_inbox,
-          subtitle: settings.defaultBackupLocation.value,
+          subtitle: settings.defaultBackupLocation.valueR,
           onTap: () async {
             final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_BACKUP_LOCATION);
 
@@ -230,7 +230,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                 (int, bool) getItemsSize(List<String> items, Map<String, int> map) {
                   int s = 0;
                   bool hasUnknown = false;
-                  items.loop((e, _) {
+                  items.loop((e) {
                     if (map[e] == null) {
                       hasUnknown = true;
                     } else {
@@ -250,8 +250,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                 }) {
                   return Obx(
                     () {
-                      final localRes = getItemsSize(items, sizesMap);
-                      final ytRes = getItemsSize(youtubeItems, sizesMap);
+                      final localRes = getItemsSize(items, sizesMap.valueR);
+                      final ytRes = getItemsSize(youtubeItems, sizesMap.valueR);
                       final localSize = localRes.$1;
                       final ytSize = ytRes.$1;
                       final localUnknown = localRes.$2;
@@ -347,13 +347,13 @@ class BackupAndRestore extends SettingSubpageProvider {
                         onPressed: () {
                           if (settings.backupItemslist.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
-                            BackupController.inst.createBackupFile(settings.backupItemslist);
+                            BackupController.inst.createBackupFile(settings.backupItemslist.value);
                           }
                         },
                       ),
                     ],
                     child: SizedBox(
-                      height: Get.height / 2,
+                      height: namida.height / 2,
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
@@ -526,7 +526,7 @@ class BackupAndRestore extends SettingSubpageProvider {
               icon: Broken.timer,
               trailing: Obx(
                 () {
-                  final days = settings.autoBackupIntervalDays.value;
+                  final days = settings.autoBackupIntervalDays.valueR;
                   return NamidaWheelSlider(
                     totalCount: 14,
                     initValue: days,
@@ -580,16 +580,16 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                           Widget getTitleText(String text) => Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
-                                child: Text("- $text", style: Get.textTheme.displayLarge),
+                                child: Text("- $text", style: namida.textTheme.displayLarge),
                               );
 
                           final jsonfile = await NamidaFileBrowser.pickFile(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: ['json', 'JSON']);
                           if (jsonfile != null) {
-                            final RxBool isMatchingTypeLink = true.obs;
-                            final RxBool isMatchingTypeTitleAndArtist = false.obs;
-                            final RxBool matchYT = true.obs;
-                            final RxBool matchYTMusic = true.obs;
-                            final RxBool matchAll = false.obs;
+                            final isMatchingTypeLink = true.obs;
+                            final isMatchingTypeTitleAndArtist = false.obs;
+                            final matchYT = true.obs;
+                            final matchYTMusic = true.obs;
+                            final matchAll = false.obs;
                             final oldestDate = Rxn<DateTime>();
                             DateTime? newestDate;
                             NamidaNavigator.inst.navigateDialog(
@@ -606,8 +606,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 actions: [
                                   Obx(
                                     () => NamidaButton(
-                                      enabled: isMatchingTypeLink.value || isMatchingTypeTitleAndArtist.value,
-                                      textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                                      enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
+                                      textWidget: Obx(() => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                       onPressed: () async {
                                         NamidaNavigator.inst.closeDialog();
                                         await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -629,44 +629,36 @@ class BackupAndRestore extends SettingSubpageProvider {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     getTitleText(lang.SOURCE),
-                                    Obx(
-                                      () => ListTileWithCheckMark(
-                                        active: matchYT.value,
-                                        title: lang.YOUTUBE,
-                                        onTap: () => matchYT.value = !matchYT.value,
-                                      ),
+                                    ListTileWithCheckMark(
+                                      activeRx: matchYT,
+                                      title: lang.YOUTUBE,
+                                      onTap: matchYT.toggle,
                                     ),
                                     const SizedBox(height: 8.0),
-                                    Obx(
-                                      () => ListTileWithCheckMark(
-                                        active: matchYTMusic.value,
-                                        title: lang.YOUTUBE_MUSIC,
-                                        onTap: () => matchYTMusic.value = !matchYTMusic.value,
-                                      ),
+                                    ListTileWithCheckMark(
+                                      activeRx: matchYTMusic,
+                                      title: lang.YOUTUBE_MUSIC,
+                                      onTap: matchYTMusic.toggle,
                                     ),
                                     getDivider(),
                                     getTitleText(lang.MATCHING_TYPE),
-                                    Obx(
-                                      () => ListTileWithCheckMark(
-                                        active: isMatchingTypeLink.value,
-                                        title: lang.LINK,
-                                        onTap: () => isMatchingTypeLink.value = !isMatchingTypeLink.value,
-                                      ),
+                                    ListTileWithCheckMark(
+                                      activeRx: isMatchingTypeLink,
+                                      title: lang.LINK,
+                                      onTap: isMatchingTypeLink.toggle,
                                     ),
                                     const SizedBox(height: 8.0),
-                                    Obx(
-                                      () => ListTileWithCheckMark(
-                                        active: isMatchingTypeTitleAndArtist.value,
-                                        title: [lang.TITLE, lang.ARTIST].join(' & '),
-                                        onTap: () => isMatchingTypeTitleAndArtist.value = !isMatchingTypeTitleAndArtist.value,
-                                      ),
+                                    ListTileWithCheckMark(
+                                      activeRx: isMatchingTypeTitleAndArtist,
+                                      title: [lang.TITLE, lang.ARTIST].join(' & '),
+                                      onTap: isMatchingTypeTitleAndArtist.toggle,
                                     ),
                                     getDivider(),
                                     Obx(
                                       () => matchAllTracksListTile(
-                                        active: matchAll.value,
-                                        onTap: () => matchAll.value = !matchAll.value,
-                                        displayPerfWarning: isMatchingTypeTitleAndArtist.value, // link matching wont result in perf issue
+                                        active: matchAll.valueR,
+                                        onTap: matchAll.toggle,
+                                        displayPerfWarning: isMatchingTypeTitleAndArtist.valueR, // link matching wont result in perf issue
                                       ),
                                     ),
                                     getDivider(),
@@ -751,7 +743,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 actions: [
                                   const CancelButton(),
                                   NamidaButton(
-                                    textWidget: Obx(() => Text(oldestDate.value != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                                    textWidget: Obx(() => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                     onPressed: () async {
                                       NamidaNavigator.inst.closeDialog();
                                       await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -769,8 +761,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                   children: [
                                     Obx(
                                       () => matchAllTracksListTile(
-                                        active: matchAll.value,
-                                        onTap: () => matchAll.value = !matchAll.value,
+                                        active: matchAll.valueR,
+                                        onTap: matchAll.toggle,
                                         displayPerfWarning: true,
                                       ),
                                     ),

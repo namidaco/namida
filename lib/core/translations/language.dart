@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -21,7 +21,7 @@ class Language extends LanguageKeys {
   static final Rx<NamidaLanguage> _currentLanguage = kDefaultLang.obs;
 
   /// Currently Selected & Set Language.
-  NamidaLanguage get currentLanguage => _currentLanguage.value;
+  RxBaseCore<NamidaLanguage> get currentLanguage => _currentLanguage;
 
   /// All Available Languages fetched from `'/assets/language/translations/'`
   static var availableLanguages = <NamidaLanguage>[];

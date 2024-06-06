@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:get/get.dart';
-import 'package:known_extents_list_view_builder/known_extents_sliver_reorderable_list.dart';
 import 'package:newpipeextractor_dart/models/stream_info_item.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
 
+import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -17,6 +16,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -25,7 +25,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -45,7 +44,7 @@ class YTMostPlayedVideosPage extends StatelessWidget {
         )
         .toList();
     return MostPlayedItemsPage(
-      itemExtents: List.filled(videos.length, Dimensions.youtubeCardItemExtent),
+      itemExtent: Dimensions.youtubeCardItemExtent,
       historyController: YoutubeHistoryController.inst,
       customDateRange: settings.ytMostPlayedCustomDateRange,
       isTimeRangeChipEnabled: (type) => type == settings.ytMostPlayedTimeRange.value,
@@ -133,6 +132,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
     final bigThumbWidth = context.width - horizontalBigThumbPadding * 2;
+    Color? threeCColor;
+    late final threeC = ObxO(
+      rx: YoutubePlaylistController.inst.canReorderVideos,
+      builder: (canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
+    );
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
@@ -140,6 +144,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
         child: NamidaScrollbarWithController(
           child: (sc) => Obx(
             () {
+              YoutubePlaylistController.inst.playlistsMap.valueR;
               final playlist = YoutubePlaylistController.inst.getPlaylist(playlistCurrentName);
               if (playlist == null) return const SizedBox();
               final firstID = playlist.tracks.firstOrNull?.id;
@@ -285,33 +290,38 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     ),
                   ),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
-                  SliverKnownExtentsReorderableList(
-                    overlayOffset: Offset.zero,
-                    onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
-                    itemExtents: List.filled(playlist.tracks.length, Dimensions.youtubeCardItemExtent),
-                    itemCount: playlist.tracks.length,
-                    itemBuilder: (context, index) {
-                      return YTHistoryVideoCard(
-                        key: Key("$index"),
-                        videos: playlist.tracks,
-                        index: index,
-                        reversedList: widget.reversedList,
-                        day: null,
-                        playlistID: playlist.playlistID,
-                        playlistName: playlistCurrentName,
-                        draggingEnabled: YoutubePlaylistController.inst.canReorderVideos.value,
-                        draggableThumbnail: true,
-                        showMoreIcon: true,
-                        draggingBarsBuilder: (color) {
-                          return Obx(
-                            () => ThreeLineSmallContainers(enabled: YoutubePlaylistController.inst.canReorderVideos.value, color: color),
-                          );
-                        },
-                        draggingThumbnailBuilder: (draggingTrigger) {
-                          return Obx(() => YoutubePlaylistController.inst.canReorderVideos.value ? draggingTrigger : const SizedBox());
-                        },
-                      );
-                    },
+                  ObxO(
+                    rx: YoutubePlaylistController.inst.canReorderVideos,
+                    builder: (canReorderVideos) => NamidaSliverReorderableList(
+                      onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                      itemExtent: Dimensions.youtubeCardItemExtent,
+                      itemCount: playlist.tracks.length,
+                      itemBuilder: (context, index) {
+                        return YTHistoryVideoCard(
+                          key: ValueKey(index),
+                          videos: playlist.tracks,
+                          index: index,
+                          reversedList: widget.reversedList,
+                          day: null,
+                          playlistID: playlist.playlistID,
+                          playlistName: playlistCurrentName,
+                          draggingEnabled: YoutubePlaylistController.inst.canReorderVideos.value,
+                          openMenuOnLongPress: !canReorderVideos,
+                          draggableThumbnail: true,
+                          showMoreIcon: true,
+                          draggingBarsBuilder: (color) {
+                            threeCColor ??= color;
+                            return threeC;
+                          },
+                          draggingThumbnailBuilder: (draggingTrigger) {
+                            return ObxO(
+                              rx: YoutubePlaylistController.inst.canReorderVideos,
+                              builder: (canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                   kBottomPaddingWidgetSliver,
                 ],
@@ -575,7 +585,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             borderRadius: 8.0,
                             icon: Broken.task_square,
                             text: lang.LOAD_ALL,
-                            enabled: !_isLoadingMoreItems.value && hasMoreStreamsLeft,
+                            enabled: !_isLoadingMoreItems.valueR && hasMoreStreamsLeft,
                             disableWhenLoading: false,
                             showLoadingWhenDisabled: hasMoreStreamsLeft,
                             onTap: () async {
@@ -612,7 +622,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
               ),
               SliverToBoxAdapter(
                 child: Obx(
-                  () => _isLoadingMoreItems.value
+                  () => _isLoadingMoreItems.valueR
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Stack(

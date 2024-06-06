@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';

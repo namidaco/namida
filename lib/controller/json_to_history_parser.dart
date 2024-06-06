@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -5,7 +6,6 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/class/split_config.dart';
@@ -20,6 +20,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -31,22 +32,22 @@ class JsonToHistoryParser {
   static final JsonToHistoryParser _instance = JsonToHistoryParser._internal();
   JsonToHistoryParser._internal();
 
-  final RxInt parsedHistoryJson = 0.obs;
-  final RxInt totalJsonToParse = 0.obs;
-  final RxInt addedHistoryJsonToPlaylist = 0.obs;
-  final RxBool isParsing = false.obs;
-  final RxBool isLoadingFile = false.obs;
-  final RxInt _updatingYoutubeStatsDirectoryProgress = 0.obs;
-  final RxInt _updatingYoutubeStatsDirectoryTotal = 0.obs;
+  final parsedHistoryJson = 0.obs;
+  final totalJsonToParse = 0.obs;
+  final addedHistoryJsonToPlaylist = 0.obs;
+  final isParsing = false.obs;
+  final isLoadingFile = false.obs;
+  final _updatingYoutubeStatsDirectoryProgress = 0.obs;
+  final _updatingYoutubeStatsDirectoryTotal = 0.obs;
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
   final _currentOldestDate = Rxn<DateTime>();
   final _currentNewestDate = Rxn<DateTime>();
 
-  String get parsedProgress => '${parsedHistoryJson.value.formatDecimal()} / ${totalJsonToParse.value.formatDecimal()}';
-  String get parsedProgressPercentage => '${(_percentage * 100).round()}%';
-  String get addedHistoryJson => addedHistoryJsonToPlaylist.value.formatDecimal();
-  double get _percentage {
-    final p = parsedHistoryJson.value / totalJsonToParse.value;
+  String get _parsedProgressR => '${parsedHistoryJson.valueR.formatDecimal()} / ${totalJsonToParse.valueR.formatDecimal()}';
+  String get _parsedProgressPercentageR => '${(_percentageR * 100).round()}%';
+  String get _addedHistoryJsonR => addedHistoryJsonToPlaylist.valueR.formatDecimal();
+  double get _percentageR {
+    final p = parsedHistoryJson.valueR / totalJsonToParse.valueR;
     return p.isFinite ? p : 0;
   }
 
@@ -57,7 +58,7 @@ class JsonToHistoryParser {
   void showParsingProgressDialog() {
     if (_isShowingParsingMenu) return;
     Widget getTextWidget(String text, {TextStyle? style}) {
-      return Text(text, style: style ?? Get.textTheme.displayMedium);
+      return Text(text, style: style ?? namida.textTheme.displayMedium);
     }
 
     _isShowingParsingMenu = true;
@@ -71,16 +72,16 @@ class JsonToHistoryParser {
         normalTitleStyle: true,
         titleWidgetInPadding: Obx(
           () {
-            final title = '${isParsing.value ? lang.EXTRACTING_INFO : lang.DONE} ($parsedProgressPercentage)';
+            final title = '${isParsing.valueR ? lang.EXTRACTING_INFO : lang.DONE} ($_parsedProgressPercentageR)';
             return Text(
-              "$title ${isParsing.value ? '' : ' ✓'}",
-              style: Get.textTheme.displayLarge,
+              "$title ${isParsing.valueR ? '' : ' ✓'}",
+              style: namida.textTheme.displayLarge,
             );
           },
         ),
         actions: [
           TextButton(
-            child: Text(lang.CONFIRM),
+            child: NamidaButtonText(lang.CONFIRM),
             onPressed: () {
               _hideParsingDialog();
               NamidaNavigator.inst.closeDialog();
@@ -92,20 +93,22 @@ class JsonToHistoryParser {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx(() => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.value ? '' : lang.DONE}')),
+              Obx(() => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.valueR ? '' : lang.DONE}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$parsedProgress ${lang.PARSED}')),
+              Obx(() => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$addedHistoryJson ${lang.ADDED}')),
+              Obx(() => getTextWidget('$_addedHistoryJsonR ${lang.ADDED}')),
               const SizedBox(height: 4.0),
               if (dateText != '') ...[
-                getTextWidget(dateText, style: Get.textTheme.displaySmall),
+                getTextWidget(dateText, style: namida.textTheme.displaySmall),
                 const SizedBox(height: 4.0),
               ],
               const SizedBox(height: 4.0),
               Obx(() {
-                final shouldShow = currentParsingSource.value == TrackSource.youtube || currentParsingSource.value == TrackSource.youtubeMusic;
-                return shouldShow ? getTextWidget('${lang.STATS}: ${_updatingYoutubeStatsDirectoryProgress.value}/${_updatingYoutubeStatsDirectoryTotal.value}') : const SizedBox();
+                final shouldShow = currentParsingSource.valueR == TrackSource.youtube || currentParsingSource.valueR == TrackSource.youtubeMusic;
+                return shouldShow
+                    ? getTextWidget('${lang.STATS}: ${_updatingYoutubeStatsDirectoryProgress.valueR}/${_updatingYoutubeStatsDirectoryTotal.valueR}')
+                    : const SizedBox();
               }),
             ],
           ),
@@ -114,12 +117,12 @@ class JsonToHistoryParser {
     );
   }
 
-  bool get shouldShowMissingEntriesDialog => _latestMissingMap.isNotEmpty && _latestMissingMap.length != _latestMissingMapAddedStatus.length;
+  bool get shouldShowMissingEntriesDialog => _latestMissingMap.valueR.isNotEmpty && _latestMissingMap.length != _latestMissingMapAddedStatus.length;
   final _latestMissingMap = <_MissingListenEntry, List<int>>{}.obs;
   final _latestMissingMapAddedStatus = <_MissingListenEntry, Track>{}.obs;
 
   void showMissingEntriesDialog() {
-    if (_latestMissingMap.isEmpty) return;
+    if (_latestMissingMap.value.isEmpty) return;
 
     Future<void> addTrackToHistory(MapEntry<_MissingListenEntry, List<int>> entry, Track choosen) async {
       final twds = entry.value.map(
@@ -200,10 +203,10 @@ class JsonToHistoryParser {
               iconSize: 24.0,
               onPressed: () async {
                 confirmAddAsDummy(
-                  confirmMessage: 'Add ${_latestMissingMap.entries.length} as dummy tracks?',
+                  confirmMessage: 'Add ${_latestMissingMap.value.entries.length} as dummy tracks?',
                   onConfirm: () async {
                     final historyDays = <int>[];
-                    final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
+                    final missing = _latestMissingMap.value.entries.toList()..sortByReverse((e) => e.value.length);
                     for (final e in missing) {
                       final replacedWithTrack = _latestMissingMapAddedStatus[e.key];
                       if (replacedWithTrack == null) {
@@ -220,21 +223,21 @@ class JsonToHistoryParser {
                   },
                 );
               },
-            ).animateEntrance(showWhen: showAddAsDummyIcon.value),
+            ).animateEntrance(showWhen: showAddAsDummyIcon.valueR),
           ),
           const SizedBox(width: 8.0),
           NamidaIconButton(
             horizontalPadding: 0.0,
             icon: Broken.eye,
             onPressed: () {
-              showAddAsDummyIcon.value = !showAddAsDummyIcon.value;
+              showAddAsDummyIcon.toggle();
             },
           ),
           const SizedBox(width: 8.0),
         ],
         child: SizedBox(
-          width: Get.width,
-          height: Get.height * 0.6,
+          width: namida.width,
+          height: namida.height * 0.6,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -242,13 +245,13 @@ class JsonToHistoryParser {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   lang.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
-                  style: Get.textTheme.displaySmall,
+                  style: namida.textTheme.displaySmall,
                 ),
               ),
               Expanded(
                 child: Obx(
                   () {
-                    final missing = _latestMissingMap.entries.toList()..sortByReverse((e) => e.value.length);
+                    final missing = _latestMissingMap.valueR.entries.toList()..sortByReverse((e) => e.value.length);
                     return NamidaScrollbarWithController(
                       child: (sc) => ListView.separated(
                         controller: sc,
@@ -266,19 +269,19 @@ class JsonToHistoryParser {
                                   opacity: replacedWithTrack != null ? 0.6 : 1.0,
                                   child: NamidaInkWell(
                                     onTap: () => pickTrack(entry),
-                                    bgColor: Get.theme.cardTheme.color,
+                                    bgColor: namida.theme.cardTheme.color,
                                     borderRadius: 12.0,
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         NamidaInkWell(
-                                          bgColor: Get.theme.cardTheme.color,
+                                          bgColor: namida.theme.cardTheme.color,
                                           borderRadius: 42.0,
                                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                                           child: Text(
                                             entry.value.length.formatDecimal(),
-                                            style: Get.textTheme.displaySmall,
+                                            style: namida.textTheme.displaySmall,
                                           ),
                                         ),
                                         const SizedBox(width: 12.0),
@@ -289,14 +292,14 @@ class JsonToHistoryParser {
                                             children: [
                                               Text(
                                                 entry.key.title,
-                                                style: Get.textTheme.displayMedium,
+                                                style: namida.textTheme.displayMedium,
                                               ),
                                               Text(
                                                 "${entry.key.artistOrChannel} - ${entry.key.source.convertToString}",
                                                 maxLines: 1,
                                                 softWrap: false,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: Get.textTheme.displaySmall,
+                                                style: namida.textTheme.displaySmall,
                                               ),
                                               if (replacedWithTrack != null)
                                                 Text(
@@ -304,7 +307,7 @@ class JsonToHistoryParser {
                                                   maxLines: 2,
                                                   softWrap: false,
                                                   overflow: TextOverflow.ellipsis,
-                                                  style: Get.textTheme.displaySmall?.copyWith(fontSize: 11.5.multipliedFontScale),
+                                                  style: namida.textTheme.displaySmall?.copyWith(fontSize: 11.5),
                                                 ),
                                             ],
                                           ),
@@ -326,7 +329,7 @@ class JsonToHistoryParser {
                                               confirmMessage: 'Add "${entry.key.artistOrChannel} - ${entry.key.title}" as dummy track?',
                                               onConfirm: () async => await addTrackToHistory(entry, getDummyTrack(entry.key)),
                                             ),
-                                          ).animateEntrance(showWhen: showAddAsDummyIcon.value),
+                                          ).animateEntrance(showWhen: showAddAsDummyIcon.valueR),
                                         ),
                                         const SizedBox(width: 4.0),
                                       ],
@@ -464,7 +467,7 @@ class JsonToHistoryParser {
     final portLoadingProgress = ReceivePort();
 
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
+      'tracks': Indexer.inst.allTracksMappedByPath.value.values
           .map((e) => {
                 'title': e.title,
                 'album': e.album,
@@ -548,8 +551,6 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  ///
-  /// The first one is for normal history, the second is for youtube history.
   static ({
     Map<String, YoutubeVideoHistory>? affectedIds,
     List<int> daysToSaveLocal,
@@ -579,7 +580,7 @@ class JsonToHistoryParser {
     Map<String, List<Track>>? tracksIdsMap;
     if (isMatchingTypeLink) {
       tracksIdsMap = <String, List<Track>>{};
-      allTracks.loop((trMap, index) {
+      allTracks.loop((trMap) {
         final comment = trMap['comment'] as String;
         final filename = trMap['filename'] as String;
         String? link = comment.isEmpty ? null : NamidaLinkRegex.youtubeLinkRegex.firstMatch(comment)?[0];
@@ -643,19 +644,19 @@ class JsonToHistoryParser {
           matchAll: matchAll,
           tracksIdsMap: tracksIdsMap,
           matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
-          onMissingEntries: (e) => e.loop((e, index) => missingEntries.addForce(e, e.dateMSSE)),
+          onMissingEntries: (e) => e.loop((e) => missingEntries.addForce(e, e.dateMSSE)),
           allTracks: allTracks,
           artistsSplitConfig: artistsSplitConfig,
         );
         totalAdded += tracks.length;
-        tracks.loop((item, _) {
+        tracks.loop((item) {
           final day = item.dateTimeAdded.toDaysSince1970();
           daysToSaveLocal.add(day);
           localHistory.insertForce(0, day, item);
         });
 
         // -- youtube history --
-        yth.watches.loop((w, index) {
+        yth.watches.loop((w) {
           final canAdd = _canSafelyAddToYTHistory(
             watch: w,
             matchYT: matchYT,
@@ -775,7 +776,7 @@ class JsonToHistoryParser {
 
     final tracksToAdd = <TrackWithDate>[];
     if (tracks.isNotEmpty) {
-      vh.watches.loop((d, index) {
+      vh.watches.loop((d) {
         final canAdd = _canSafelyAddToYTHistory(
           watch: d,
           matchYT: matchYT,
@@ -821,7 +822,7 @@ class JsonToHistoryParser {
     final portLoadingProgress = ReceivePort();
 
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
+      'tracks': Indexer.inst.allTracksMappedByPath.value.values
           .map((e) => {
                 'title': e.title,
                 'artist': e.originalArtist,

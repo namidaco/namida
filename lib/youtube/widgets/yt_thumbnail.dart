@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/color_m.dart';
@@ -263,7 +263,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
               ),
             ),
           Obx(
-            () => _thumbnailNotFound.value
+            () => _thumbnailNotFound.valueR
                 ? Positioned(
                     top: 0.0,
                     right: 0.0,

@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
@@ -71,7 +71,7 @@ class QueueController {
 
   Future<void> removeQueues(List<int> queuesDates) async {
     bool hasLatestAdded = false;
-    queuesDates.loop((date, _) {
+    queuesDates.loop((date) {
       queuesMap.value.remove(date);
       if (date == _latestAddedQueueDate) hasLatestAdded = true;
     });
@@ -141,7 +141,7 @@ class QueueController {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
 
     final queuesToSave = <Queue>{};
-    queuesMap.value.entries.toList().loop((entry, index) {
+    queuesMap.value.entries.toList().loop((entry) {
       final q = entry.value;
       q.tracks.replaceWhere(
         (e) {
@@ -165,7 +165,7 @@ class QueueController {
 
   Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
     final queuesToSave = <Queue>[];
-    queuesMap.value.entries.toList().loop((entry, index) {
+    queuesMap.value.entries.toList().loop((entry) {
       final q = entry.value;
       for (final e in oldNewTrack.entries) {
         q.tracks.replaceItems(
@@ -233,10 +233,10 @@ class QueueController {
         index = settings.player.lastPlayedIndices[t] ?? 0;
         switch (t) {
           case LibraryCategory.localTracks:
-            items.loop((e, _) => latestQueue.add(Track(e)));
+            items.loop((e) => latestQueue.add(Track(e)));
             break;
           case LibraryCategory.youtube:
-            items.loop((e, _) => latestQueue.add(YoutubeID.fromJson(e)));
+            items.loop((e) => latestQueue.add(YoutubeID.fromJson(e)));
             break;
           // case LibraryCategory.localVideos:
           // break;
@@ -263,17 +263,17 @@ class QueueController {
     String type = '';
     final queue = <Object>[];
     switch (items.firstOrNull.runtimeType) {
-      case Track:
+      case const (Track):
         type = LibraryCategory.localTracks;
-        (items.cast<Track>()).loop((e, _) => queue.add(e.path));
+        (items.cast<Track>()).loop((e) => queue.add(e.path));
         break;
-      case TrackWithDate:
+      case const (TrackWithDate):
         type = LibraryCategory.localTracks;
-        (items.cast<TrackWithDate>()).loop((e, _) => queue.add(e.track.path));
+        (items.cast<TrackWithDate>()).loop((e) => queue.add(e.track.path));
         break;
-      case YoutubeID:
+      case const (YoutubeID):
         type = LibraryCategory.youtube;
-        (items.cast<YoutubeID>()).loop((e, _) => queue.add(e.toJson()));
+        (items.cast<YoutubeID>()).loop((e) => queue.add(e.toJson()));
         break;
     }
     final map = {
@@ -292,7 +292,7 @@ class QueueController {
   }
 
   static void _deleteQueuesFromStorageIsolate((String, List<int>) pathAndDates) async {
-    pathAndDates.$2.loop((date, _) {
+    pathAndDates.$2.loop((date) {
       try {
         File('${pathAndDates.$1}$date.json').deleteSync();
       } catch (_) {}

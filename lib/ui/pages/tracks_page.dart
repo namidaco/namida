@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -59,59 +60,61 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
           onRefresh(() async => await showRefreshPromptDialog(false));
         },
         onPointerCancel: (event) => onVerticalDragFinish(),
-        child: Obx(
-          () {
-            settings.trackListTileHeight.value;
-            return Column(
-              children: [
-                ExpandableBox(
-                  enableHero: false,
-                  isBarVisible: LibraryTab.tracks.isBarVisible,
-                  showSearchBox: LibraryTab.tracks.isSearchBoxVisible,
-                  displayloadingIndicator: Indexer.inst.isIndexing.value,
-                  leftWidgets: [
-                    NamidaIconButton(
-                      icon: Broken.shuffle,
-                      onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList, QueueSource.allTracks, shuffle: true),
-                      iconSize: 18.0,
-                      horizontalPadding: 0,
-                    ),
-                    const SizedBox(width: 12.0),
-                    NamidaIconButton(
-                      icon: Broken.play,
-                      onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList, QueueSource.allTracks),
-                      iconSize: 18.0,
-                      horizontalPadding: 0,
-                    ),
-                    const SizedBox(width: 12.0),
-                  ],
-                  leftText: SearchSortController.inst.trackSearchList.displayTrackKeyword,
-                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
-                  onCloseButtonPressed: () {
-                    ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
+        child: Column(
+          children: [
+            Obx(
+              () => ExpandableBox(
+                enableHero: false,
+                isBarVisible: LibraryTab.tracks.isBarVisible.valueR,
+                showSearchBox: LibraryTab.tracks.isSearchBoxVisible.valueR,
+                displayloadingIndicator: Indexer.inst.isIndexing.valueR,
+                leftWidgets: [
+                  NamidaIconButton(
+                    icon: Broken.shuffle,
+                    onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks, shuffle: true),
+                    iconSize: 18.0,
+                    horizontalPadding: 0,
+                  ),
+                  const SizedBox(width: 12.0),
+                  NamidaIconButton(
+                    icon: Broken.play,
+                    onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks),
+                    iconSize: 18.0,
+                    horizontalPadding: 0,
+                  ),
+                  const SizedBox(width: 12.0),
+                ],
+                leftText: SearchSortController.inst.trackSearchList.valueR.displayTrackKeyword,
+                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
+                onCloseButtonPressed: () {
+                  ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
+                },
+                sortByMenuWidget: SortByMenu(
+                  title: settings.tracksSort.valueR.toText(),
+                  popupMenuChild: () => const SortByMenuTracks(),
+                  isCurrentlyReversed: settings.tracksSortReversed.valueR,
+                  onReverseIconTap: () {
+                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value);
                   },
-                  sortByMenuWidget: SortByMenu(
-                    title: settings.tracksSort.value.toText(),
-                    popupMenuChild: () => const SortByMenuTracks(),
-                    isCurrentlyReversed: settings.tracksSortReversed.value,
-                    onReverseIconTap: () {
-                      SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value);
-                    },
-                  ),
-                  textField: CustomTextFiled(
-                    textFieldController: LibraryTab.tracks.textSearchController,
-                    textFieldHintText: lang.FILTER_TRACKS,
-                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
-                  ),
                 ),
-                Expanded(
-                  child: NamidaListViewRaw(
-                    itemExtents: List.filled(SearchSortController.inst.trackSearchList.length, Dimensions.inst.trackTileItemExtent),
-                    itemCount: SearchSortController.inst.trackSearchList.length,
+                textField: () => CustomTextFiled(
+                  textFieldController: LibraryTab.tracks.textSearchController,
+                  textFieldHintText: lang.FILTER_TRACKS,
+                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
+                ),
+              ),
+            ),
+            Expanded(
+              child: AnimationLimiter(
+                child: ObxO(
+                  rx: SearchSortController.inst.trackSearchList,
+                  builder: (trackSearchList) => NamidaListViewRaw(
+                    itemExtent: Dimensions.inst.trackTileItemExtent,
+                    itemCount: trackSearchList.length,
                     scrollController: LibraryTab.tracks.scrollController,
                     scrollStep: Dimensions.inst.trackTileItemExtent,
                     itemBuilder: (context, i) {
-                      final track = SearchSortController.inst.trackSearchList[i];
+                      final track = trackSearchList[i];
                       return AnimatingTile(
                         key: Key("$i${track.path}"),
                         position: i,
@@ -134,9 +137,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                     },
                   ),
                 ),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         ),
       ),
     );

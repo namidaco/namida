@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -37,19 +37,19 @@ class Indexer {
 
   bool get _defaultUseMediaStore => settings.useMediaStore.value;
 
-  final RxBool isIndexing = false.obs;
+  final isIndexing = false.obs;
 
-  final RxSet<String> allAudioFiles = <String>{}.obs;
-  final RxInt filteredForSizeDurationTracks = 0.obs;
-  final RxInt duplicatedTracksLength = 0.obs;
-  final RxInt tracksExcludedByNoMedia = 0.obs;
+  final allAudioFiles = <String>{}.obs;
+  final filteredForSizeDurationTracks = 0.obs;
+  final duplicatedTracksLength = 0.obs;
+  final tracksExcludedByNoMedia = 0.obs;
 
-  final RxInt artworksInStorage = 0.obs;
-  final RxInt colorPalettesInStorage = 0.obs;
-  final RxInt videosInStorage = 0.obs;
+  final artworksInStorage = 0.obs;
+  final colorPalettesInStorage = 0.obs;
+  final videosInStorage = 0.obs;
 
-  final RxInt artworksSizeInStorage = 0.obs;
-  final RxInt videosSizeInStorage = 0.obs;
+  final artworksSizeInStorage = 0.obs;
+  final videosSizeInStorage = 0.obs;
 
   final mainMapAlbums = LibraryItemMap();
   final mainMapArtists = LibraryItemMap();
@@ -73,7 +73,7 @@ class Indexer {
   late final _audioQuery = OnAudioQuery();
 
   List<Track> get recentlyAddedTracks {
-    final alltracks = List<Track>.from(tracksInfoList);
+    final alltracks = List<Track>.from(tracksInfoList.value);
     alltracks.sortByReverseAlt((e) => e.dateModified, (e) => e.dateAdded);
     return alltracks;
   }
@@ -204,39 +204,53 @@ class Indexer {
   /// Adds all tracks inside [tracksInfoList] to their respective album, artist, etc..
   /// & sorts all media.
   void _afterIndexing() {
-    mainMapAlbums.value.clear();
-    mainMapArtists.value.clear();
-    mainMapAlbumArtists.value.clear();
-    mainMapComposer.value.clear();
-    mainMapGenres.value.clear();
-    mainMapFolders.clear();
+    this.mainMapAlbums.clear();
+    this.mainMapArtists.clear();
+    this.mainMapAlbumArtists.clear();
+    this.mainMapComposer.clear();
+    this.mainMapGenres.clear();
+    this.mainMapFolders.clear();
+
+    final mainMapAlbums = this.mainMapAlbums.value;
+    final mainMapArtists = this.mainMapArtists.value;
+    final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
+    final mainMapComposer = this.mainMapComposer.value;
+    final mainMapGenres = this.mainMapGenres.value;
+    final mainMapFolders = this.mainMapFolders.value;
 
     // --- Sorting All Sublists ---
-    tracksInfoList.loop((tr, i) {
+    tracksInfoList.loop((tr) {
       final trExt = tr.toTrackExt();
 
       // -- Assigning Albums
-      mainMapAlbums.value.addForce(trExt.albumIdentifier, tr);
+      mainMapAlbums.addForce(trExt.albumIdentifier, tr);
 
       // -- Assigning Artists
-      trExt.artistsList.loop((artist, i) {
-        mainMapArtists.value.addForce(artist, tr);
+      trExt.artistsList.loop((artist) {
+        mainMapArtists.addForce(artist, tr);
       });
 
       // -- Assigning Album Artist
-      mainMapAlbumArtists.value.addForce(trExt.albumArtist, tr);
+      mainMapAlbumArtists.addForce(trExt.albumArtist, tr);
 
       // -- Assigning Composer
-      mainMapComposer.value.addForce(trExt.composer, tr);
+      mainMapComposer.addForce(trExt.composer, tr);
 
       // -- Assigning Genres
-      trExt.genresList.loop((genre, i) {
-        mainMapGenres.value.addForce(genre, tr);
+      trExt.genresList.loop((genre) {
+        mainMapGenres.addForce(genre, tr);
       });
 
       // -- Assigning Folders
       mainMapFolders.addForce(tr.folder, tr);
     });
+
+    this.mainMapAlbums.refresh();
+    this.mainMapArtists.refresh();
+    this.mainMapAlbumArtists.refresh();
+    this.mainMapComposer.refresh();
+    this.mainMapGenres.refresh();
+    this.mainMapFolders.refresh();
 
     Folders.inst.onMapChanged(mainMapFolders);
     _sortAll();
@@ -244,10 +258,10 @@ class Indexer {
   }
 
   void sortMediaTracksSubLists(List<MediaType> medias) {
-    medias.loop((e, index) {
+    medias.loop((e) {
       final sorters = SearchSortController.inst.getMediaTracksSortingComparables(e);
       void sortPls(Iterable<List<Track>> trs, MediaType type) {
-        final reverse = settings.mediaItemsTrackSortingReverse[type] ?? false;
+        final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
         if (reverse) {
           for (final e in trs) {
             e.sortByReverseAlts(sorters);
@@ -308,12 +322,12 @@ class Indexer {
     final trExt = tr.toTrackExt();
     mainMapAlbums.value[trExt.albumIdentifier]?.remove(tr);
 
-    trExt.artistsList.loop((artist, i) {
+    trExt.artistsList.loop((artist) {
       mainMapArtists.value[artist]?.remove(tr);
     });
     mainMapAlbumArtists.value[trExt.albumArtist]?.remove(tr);
     mainMapComposer.value[trExt.composer]?.remove(tr);
-    trExt.genresList.loop((genre, i) {
+    trExt.genresList.loop((genre) {
       mainMapGenres.value[genre]?.remove(tr);
     });
     mainMapFolders[tr.folder]?.remove(tr);
@@ -322,6 +336,13 @@ class Indexer {
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
+    final mainMapAlbums = this.mainMapAlbums.value;
+    final mainMapArtists = this.mainMapArtists.value;
+    final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
+    final mainMapComposer = this.mainMapComposer.value;
+    final mainMapGenres = this.mainMapGenres.value;
+    final mainMapFolders = this.mainMapFolders.value;
+
     final List<String> addedAlbums = [];
     final List<String> addedArtists = [];
     final List<String> addedAlbumArtists = [];
@@ -329,22 +350,22 @@ class Indexer {
     final List<String> addedGenres = [];
     final List<Folder> addedFolders = [];
 
-    tracks.loop((tr, _) {
+    tracks.loop((tr) {
       final trExt = tr.toTrackExt();
 
       // -- Assigning Albums
-      mainMapAlbums.value.addNoDuplicatesForce(trExt.albumIdentifier, tr);
+      mainMapAlbums.addNoDuplicatesForce(trExt.albumIdentifier, tr);
 
       // -- Assigning Artists
-      trExt.artistsList.loop((artist, i) {
-        mainMapArtists.value.addNoDuplicatesForce(artist, tr);
+      trExt.artistsList.loop((artist) {
+        mainMapArtists.addNoDuplicatesForce(artist, tr);
       });
-      mainMapAlbumArtists.value.addNoDuplicatesForce(trExt.albumArtist, tr);
-      mainMapComposer.value.addNoDuplicatesForce(trExt.composer, tr);
+      mainMapAlbumArtists.addNoDuplicatesForce(trExt.albumArtist, tr);
+      mainMapComposer.addNoDuplicatesForce(trExt.composer, tr);
 
       // -- Assigning Genres
-      trExt.genresList.loop((genre, i) {
-        mainMapGenres.value.addNoDuplicatesForce(genre, tr);
+      trExt.genresList.loop((genre) {
+        mainMapGenres.addNoDuplicatesForce(genre, tr);
       });
 
       // -- Assigning Folders
@@ -363,36 +384,26 @@ class Indexer {
     final artistSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist);
     final genreSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.genre);
     final folderSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder);
-    addedAlbums
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapAlbums.value[e]?.sortByAlts(albumSorters);
-      });
-    addedArtists
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapArtists.value[e]?.sortByAlts(artistSorters);
-      });
-    addedAlbumArtists
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapAlbumArtists.value[e]?.sortByAlts(artistSorters);
-      });
-    addedComposers
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapComposer.value[e]?.sortByAlts(artistSorters);
-      });
-    addedGenres
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapGenres.value[e]?.sortByAlts(genreSorters);
-      });
-    addedFolders
-      ..removeDuplicates()
-      ..loop((e, index) {
-        mainMapFolders[e]?.sortByAlts(folderSorters);
-      });
+
+    void cleanyLoopy<T, E>(MediaType type, List<E> added, Map<E, List<T>> map, List<Comparable<dynamic> Function(T tr)> sorters) {
+      if (added.isEmpty) return;
+      added.removeDuplicates();
+      if (added.isEmpty) return;
+
+      final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
+      if (reverse) {
+        added.loop((e) => map[e]?.sortByReverseAlts(sorters));
+      } else {
+        added.loop((e) => map[e]?.sortByAlts(sorters));
+      }
+    }
+
+    cleanyLoopy(MediaType.album, addedAlbums, mainMapAlbums, albumSorters);
+    cleanyLoopy(MediaType.artist, addedArtists, mainMapArtists, artistSorters);
+    cleanyLoopy(MediaType.albumArtist, addedAlbumArtists, mainMapAlbumArtists, artistSorters);
+    cleanyLoopy(MediaType.composer, addedComposers, mainMapComposer, artistSorters);
+    cleanyLoopy(MediaType.genre, addedGenres, mainMapGenres, genreSorters);
+    cleanyLoopy(MediaType.folder, addedFolders, mainMapFolders, folderSorters);
 
     Folders.inst.onMapChanged(mainMapFolders);
     _sortAll();
@@ -623,10 +634,10 @@ class Indexer {
     final tracksReal = <Track>[];
     final tracksRealPaths = <String>[];
     final tracksMissing = <Track>[];
-    await tracks.loopFuture((tr, index) async {
+    tracks.loop((tr) {
       bool exists = false;
       try {
-        exists = await File(tr.path).exists();
+        exists = File(tr.path).existsSync();
       } catch (_) {}
       if (exists) {
         tracksReal.add(tr);
@@ -641,7 +652,7 @@ class Indexer {
       imageCache.clearLiveImages();
     }
 
-    tracksMissing.loop((e, _) => onProgress(false));
+    tracksMissing.loop((e) => onProgress(false));
 
     final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
       paths: tracksRealPaths,
@@ -670,7 +681,7 @@ class Indexer {
     }
 
     final finalTrack = <Track>[];
-    tracksReal.loop((p, index) {
+    tracksReal.loop((p) {
       final tr = p.path.toTrackOrNull();
       if (tr != null) finalTrack.add(tr);
     });
@@ -713,7 +724,7 @@ class Indexer {
         CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
     }
-    oldTracks.loop((tr, index) => _removeThisTrackFromAlbumGenreArtistEtc(tr));
+    oldTracks.loop((tr) => _removeThisTrackFromAlbumGenreArtistEtc(tr));
     _addTheseTracksToAlbumGenreArtistEtc(newTracks);
     await _sortAndSaveTracks();
   }
@@ -820,7 +831,7 @@ class Indexer {
       allTracksMappedByPath.clear();
       allTracksMappedByYTID.clear();
       _currentFileNamesMap.clear();
-      trs.loop((e, _) => _addTrackToLists(e.$1, false, null));
+      trs.loop((e) => _addTrackToLists(e.$1, false, null));
     } else {
       FAudioTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
@@ -858,7 +869,7 @@ class Indexer {
         );
       }
 
-      audioFilesParts.loop((part, partIndex) {
+      audioFilesParts.loopAdv((part, partIndex) {
         extractFunction(part).then((value) => audioFilesCompleters[partIndex].complete());
       });
       await Future.wait(audioFilesCompleters.map((e) => e.future).toList());
@@ -881,7 +892,7 @@ class Indexer {
 
   Future<void> _saveTrackFileToStorage() async {
     TrackTileManager.onTrackItemPropChange();
-    await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
+    await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.value.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
   }
 
   Future<void> updateTrackDuration(Track track, Duration? dur) async {
@@ -983,8 +994,8 @@ class Indexer {
   static List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
     final List<String> finalStrings = <String>[];
     final List<String> pre = string?.trimAll().multiSplit(separators, blacklist) ?? [fallback];
-    pre.loop((e, index) {
-      finalStrings.addIf(e != '', e.trimAll());
+    pre.loop((e) {
+      if (e != '') finalStrings.add(e.trimAll());
     });
     return finalStrings;
   }
@@ -1058,8 +1069,8 @@ class Indexer {
     return (cleanedUpTitle, cleanedUpArtist);
   }
 
-  Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(tracksInfoList.map((t) => t.path)));
-  Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(tracksInfoList.map((t) => t.path)).difference(currentFiles);
+  Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(tracksInfoList.value.map((t) => t.path)));
+  Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(tracksInfoList.value.map((t) => t.path)).difference(currentFiles);
 
   /// [strictNoMedia] forces all subdirectories to follow the same result of the parent.
   ///
@@ -1071,7 +1082,7 @@ class Indexer {
 
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
-      'directoriesToExclude': settings.directoriesToExclude.toList(),
+      'directoriesToExclude': settings.directoriesToExclude.value,
       'extensions': kAudioFileExtensions,
       'imageExtensions': kImageFilesExtensions,
     };
@@ -1102,7 +1113,7 @@ class Indexer {
     _lastAvailableDirectories = null; // for when forceReCheck enabled.
     _lastAvailableDirectories = Completer<Map<Directory, bool>>();
     final parameters = {
-      'directoriesToScan': settings.directoriesToScan.toList(),
+      'directoriesToScan': settings.directoriesToScan.value,
       'respectNoMedia': settings.respectNoMedia.value,
       'strictNoMedia': strictNoMedia, // TODO: expose [strictNoMedia] in settings?
     };
@@ -1155,10 +1166,10 @@ class Indexer {
   Future<List<(TrackExtended, int)>> _fetchMediaStoreTracks() async {
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [settings.useMediaStore.value] is enabled.
-    allMusic.retainWhere(
-        (element) => settings.directoriesToExclude.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
+    allMusic.retainWhere((element) =>
+        settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
     final tracks = <(TrackExtended, int)>[];
-    allMusic.loop((e, _) {
+    allMusic.loop((e) {
       final map = e.getMap;
       final artist = e.artist;
       final artists = artist == null
@@ -1263,7 +1274,7 @@ class Indexer {
     await _updateDirectoryStats(AppDirs.VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
   }
 
-  Future<void> _updateDirectoryStats(String dirPath, RxInt? filesCountVariable, RxInt? filesSizeVariable) async {
+  Future<void> _updateDirectoryStats(String dirPath, Rx<int>? filesCountVariable, Rx<int>? filesSizeVariable) async {
     // resets values
     filesCountVariable?.value = 0;
     filesSizeVariable?.value = 0;

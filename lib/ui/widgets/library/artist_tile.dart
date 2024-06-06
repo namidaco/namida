@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
@@ -76,7 +76,7 @@ class ArtistTile extends StatelessWidget {
                             tracks.displayTrackKeyword,
                             albums.length.displayAlbumKeyword,
                           ].join(' & '),
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0.multipliedFontScale),
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

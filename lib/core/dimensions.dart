@@ -1,13 +1,15 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/class/track.dart';
 
-import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 
 class Dimensions {
@@ -17,43 +19,48 @@ class Dimensions {
 
   final _kMiniplayerBottomPadding = 90.0;
 
-  bool get shouldHideFAB {
-    final fab = settings.floatingActionButton.value;
-    final route = NamidaNavigator.inst.currentRoute?.route;
-    final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.value
+  bool get shouldHideFABR {
+    final fab = settings.floatingActionButton.valueR;
+    final currentRoute = NamidaNavigator.inst.currentRouteR;
+    final route = currentRoute?.route;
+    final shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.valueR
         ? false
         : fab == FABType.none ||
             route == RouteType.SETTINGS_page || // bcz no search
             route == RouteType.SETTINGS_subpage || // bcz no search
             route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
             route == RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS || // bcz has fab
-            ((fab == FABType.shuffle || fab == FABType.play) && SelectedTracksController.inst.currentAllTracks.isEmpty) ||
-            (settings.selectedLibraryTab.value == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
+            ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInside() != true) ||
+            (settings.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
     return shouldHide;
   }
 
   /// + active miniplayer padding
-  double get globalBottomPaddingEffective {
-    return (Player.inst.currentQueueYoutube.isNotEmpty
-            ? settings.youtubeStyleMiniplayer.value
+  double get globalBottomPaddingEffectiveR {
+    final currentItem = Player.inst.currentItem.valueR;
+    return (currentItem is YoutubeID
+            ? settings.youtubeStyleMiniplayer.valueR
                 ? kYoutubeMiniplayerHeight
                 : _kMiniplayerBottomPadding
-            : Player.inst.currentQueue.isNotEmpty
+            : currentItem is Selectable
                 ? _kMiniplayerBottomPadding
                 : 0.0) +
         12.0;
   }
 
   /// + floating action button padding
-  double get globalBottomPaddingFAB {
-    return shouldHideFAB ? 0.0 : kFABHeight;
+  double get globalBottomPaddingFABR {
+    return shouldHideFABR ? 0.0 : kFABHeight;
   }
 
   /// + active miniplayer padding
   /// + floating action button padding
-  double get globalBottomPaddingTotal {
-    return globalBottomPaddingFAB + globalBottomPaddingEffective;
+  double get globalBottomPaddingTotalR {
+    return globalBottomPaddingFABR + globalBottomPaddingEffectiveR;
   }
+
+  bool get shouldAlbumBeSquared =>
+      (settings.albumGridCount.value > 1 && !settings.useAlbumStaggeredGridView.value) || (settings.albumGridCount.value == 1 && settings.forceSquaredAlbumThumbnail.value);
 
   static const tileBottomMargin = 4.0;
   static const tileBottomMargin6 = 6.0;
@@ -119,7 +126,6 @@ class Dimensions {
 
   void updateTrackTileDimensions() {
     trackTileItemExtent = settings.trackListTileHeight.value + totalVerticalDistance;
-    HistoryController.inst.calculateAllItemsExtentsInHistory();
   }
 
   void updateAlbumTileDimensions() {
@@ -129,7 +135,7 @@ class Dimensions {
   (double, double, double) _getSizes(int gridCount, bool biggerFont) {
     final inverseGrid = 4 - gridCount;
     final fontSize = biggerFont ? (18.0 - (gridCount * 1.7)) : (16.0 - (gridCount * 1.8));
-    final thumbnailSize = (Get.width / gridCount) - gridHorizontalPadding * 2;
+    final thumbnailSize = (namida.width / gridCount) - gridHorizontalPadding * 2;
     return (thumbnailSize, fontSize, 2.0 * inverseGrid);
   }
 
@@ -140,8 +146,8 @@ class Dimensions {
   /// {@endtemplate}
 }
 
-EdgeInsets get kBottomPaddingInsets => EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal);
-SizedBox get kBottomPaddingWidget => SizedBox(height: Dimensions.inst.globalBottomPaddingTotal);
+EdgeInsets get kBottomPaddingInsets => EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
+SizedBox get kBottomPaddingWidget => SizedBox(height: Dimensions.inst.globalBottomPaddingTotalR);
 SliverPadding get kBottomPaddingWidgetSliver => SliverPadding(padding: kBottomPaddingInsets);
 
 // ---- Constant Values ----

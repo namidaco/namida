@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -21,6 +20,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef Playlist = GeneralPlaylist<TrackWithDate>;
@@ -30,7 +30,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   static final PlaylistController _instance = PlaylistController._internal();
   PlaylistController._internal();
 
-  final RxBool canReorderTracks = false.obs;
+  final canReorderTracks = false.obs;
+  void resetCanReorder() => canReorderTracks.value = false;
 
   void addNewPlaylist(
     String name, {
@@ -82,10 +83,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
           break;
         case PlaylistAddDuplicateAction.addAllAndRemoveOldOnes:
           final currentTracks = <Track, List<int>>{};
-          playlist.tracks.loop((e, index) => currentTracks.addForce(e.track, index));
+          playlist.tracks.loopAdv((e, index) => currentTracks.addForce(e.track, index));
 
           final indicesToRemove = <int>[];
-          tracks.loop((e, _) {
+          tracks.loop((e) {
             // -- removing same tracks existing in playlist
             final indexesInPlaylist = currentTracks[e];
             if (indexesInPlaylist != null) {
@@ -93,13 +94,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
             }
           });
           indicesToRemove.sortByReverse((e) => e);
-          indicesToRemove.loop((indexToRemove, _) => playlist.tracks.removeAt(indexToRemove));
+          indicesToRemove.loop((indexToRemove) => playlist.tracks.removeAt(indexToRemove));
           playlist.tracks.addAll(convertTracks(tracks));
           break;
         case PlaylistAddDuplicateAction.addOnlyMissing:
           final currentTracks = <Track, int>{};
-          playlist.tracks.loop((e, index) => currentTracks[e.track] = index);
-          tracks.loop((e, _) {
+          playlist.tracks.loopAdv((e, index) => currentTracks[e.track] = index);
+          tracks.loop((e) {
             if (currentTracks[e] == null) {
               playlist.tracks.add(convertTrack(e));
             } else {
@@ -119,13 +120,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     snackyy(
       message: "${lang.ADDED} ${addedTracksLength.displayTrackKeyword}",
       displaySeconds: 2,
-      button: TextButton(
-        onPressed: () async {
-          updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: currentTimeMS);
-          Get.closeAllSnackbars();
-        },
-        child: Text(lang.UNDO),
-      ),
+      button: addedTracksLength > 0
+          ? (
+              lang.UNDO,
+              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: currentTimeMS),
+            )
+          : null,
     );
 
     super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
@@ -146,11 +146,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
               action.value = null;
               NamidaNavigator.inst.closeDialog();
             },
-            child: Text(lang.CANCEL),
+            child: NamidaButtonText(lang.CANCEL),
           ),
-          Obx(
-            () => NamidaButton(
-              enabled: action.value != null,
+          ObxO(
+            rx: action,
+            builder: (action) => NamidaButton(
+              enabled: action != null,
               text: lang.CONFIRM,
               onPressed: NamidaNavigator.inst.closeDialog,
             ),
@@ -163,7 +164,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
             children: [
               Text(
                 lang.DUPLICATED_ITEMS_ADDING,
-                style: Get.textTheme.displayMedium,
+                style: namida.textTheme.displayMedium,
               ),
               const SizedBox(height: 12.0),
               Column(
@@ -171,9 +172,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
                     .map(
                       (e) => Padding(
                         padding: const EdgeInsets.all(3.0),
-                        child: Obx(
-                          () => ListTileWithCheckMark(
-                            active: action.value == e,
+                        child: ObxO(
+                          rx: action,
+                          builder: (act) => ListTileWithCheckMark(
+                            active: act == e,
                             title: e.toText(),
                             onTap: () => action.value = e,
                           ),
@@ -244,6 +246,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       );
     }
     await replaceTheseTracksInPlaylistsBulk(fnList);
+  }
+
+  @override
+  Future<bool> renamePlaylist(String playlistName, String newName) async {
+    final didRename = await super.renamePlaylist(playlistName, newName);
+    if (didRename) _popPageIfCurrent(() => playlistName);
+    return didRename;
   }
 
   /// Returns number of generated tracks.
@@ -426,9 +435,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
         actions: [
           const CancelButton(),
           const SizedBox(width: 8.0),
-          Obx(
-            () => NamidaButton(
-              enabled: didRead.value,
+          ObxO(
+            rx: didRead,
+            builder: (didRead) => NamidaButton(
+              enabled: didRead,
               text: lang.CONFIRM,
               onPressed: () {
                 settings.save(enableM3USync: true);
@@ -442,16 +452,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
           children: [
             Text(
               '${lang.ENABLE_M3U_SYNC}?\n\n${lang.ENABLE_M3U_SYNC_NOTE_1}\n\n${lang.ENABLE_M3U_SYNC_NOTE_2.replaceFirst('_PLAYLISTS_BACKUP_PATH_', AppDirs.M3UBackup)}\n\n${lang.WARNING.toUpperCase()}: ${lang.ENABLE_M3U_SYNC_SUBTITLE}',
-              style: Get.textTheme.displayMedium,
+              style: namida.textTheme.displayMedium,
             ),
             const SizedBox(height: 12.0),
-            Obx(
-              () => ListTileWithCheckMark(
-                icon: Broken.info_circle,
-                active: didRead.value,
-                title: lang.I_READ_AND_AGREE,
-                onTap: () => didRead.value = !didRead.value,
-              ),
+            ListTileWithCheckMark(
+              activeRx: didRead,
+              icon: Broken.info_circle,
+              title: lang.I_READ_AND_AGREE,
+              onTap: didRead.toggle,
             ),
           ],
         ),
@@ -525,14 +533,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
 
   @override
   FutureOr<bool> canRemovePlaylist(GeneralPlaylist<TrackWithDate> playlist) {
-    // navigate back in case the current route is this playlist
+    _popPageIfCurrent(() => playlist.name);
+    return true;
+  }
+
+  /// Navigate back in case the current route is this playlist.
+  void _popPageIfCurrent(String Function() playlistName) {
     final lastPage = NamidaNavigator.inst.currentRoute;
     if (lastPage?.route == RouteType.SUBPAGE_playlistTracks) {
-      if (lastPage?.name == playlist.name) {
+      if (lastPage?.name == playlistName()) {
         NamidaNavigator.inst.popPage();
       }
     }
-    return true;
   }
 
   @override

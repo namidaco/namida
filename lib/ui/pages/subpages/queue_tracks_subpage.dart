@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/core/enums.dart';
@@ -29,11 +29,11 @@ class QueueTracksPage extends StatelessWidget {
           ].join(' - '),
           heroTag: 'queue_${queue.date}',
           imageWidget: MultiArtworkContainer(
-            size: Get.width * 0.35,
+            size: namida.width * 0.35,
             heroTag: 'queue_${queue.date}',
             tracks: queue.tracks.toImageTracks(),
           ),
-          tracks: queue.tracks,
+          tracksFn: () => queue.tracks,
         ),
       ),
     );

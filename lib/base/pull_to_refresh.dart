@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 
 mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements TickerProvider {
+  bool enablePullToRefresh = true;
+
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   late final animation = AnimationController(vsync: this, duration: Duration.zero);
 
@@ -27,11 +29,14 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
+    if (!enablePullToRefresh) return;
     final dy = event.delta.dy;
     if (_isDraggingVertically == null) {
-      final canDragVertically = dy < 0 || (sc.hasClients && sc.position.pixels <= 0);
-      final horizontalAllowance = event.delta.dx.abs() < 0.1;
-      _isDraggingVertically = canDragVertically && horizontalAllowance;
+      try {
+        final canDragVertically = dy < 0 || (sc.hasClients && sc.positions.first.pixels <= 0);
+        final horizontalAllowance = event.delta.dx.abs() < 0.1;
+        _isDraggingVertically = canDragVertically && horizontalAllowance;
+      } catch (_) {}
     }
     if (_isDraggingVertically == true) _onVerticalDragUpdate(dy);
   }
@@ -44,6 +49,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   bool _isRefreshing = false;
   Future<void> onRefresh(Future<void> Function() execute) async {
+    if (!enablePullToRefresh) return;
     onVerticalDragFinish();
     if (animation.value != 1 || _isRefreshing) return;
     _isRefreshing = true;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -106,68 +106,64 @@ class CollapsedSettingTiles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        settings.selectedLanguage.value;
-        return ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          children: [
-            CustomCollapsedListTile(
-              title: lang.THEME_SETTINGS,
-              subtitle: lang.THEME_SETTINGS_SUBTITLE,
-              icon: Broken.brush_2,
-              page: const ThemeSetting(),
-            ),
-            CustomCollapsedListTile(
-              title: lang.INDEXER,
-              subtitle: lang.INDEXER_SUBTITLE,
-              icon: Broken.component,
-              page: const IndexerSettings(),
-              trailing: const IndexingPercentage(size: 32.0),
-            ),
-            CustomCollapsedListTile(
-              title: lang.PLAYBACK_SETTING,
-              subtitle: lang.PLAYBACK_SETTING_SUBTITLE,
-              icon: Broken.play_cricle,
-              page: const PlaybackSettings(),
-            ),
-            CustomCollapsedListTile(
-              title: lang.CUSTOMIZATIONS,
-              subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
-              icon: Broken.brush_1,
-              page: const CustomizationSettings(),
-            ),
-            CustomCollapsedListTile(
-              title: lang.YOUTUBE,
-              subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
-              icon: Broken.video,
-              page: const YoutubeSettings(),
-            ),
-            CustomCollapsedListTile(
-              title: lang.EXTRAS,
-              subtitle: lang.EXTRAS_SUBTITLE,
-              icon: Broken.command_square,
-              page: const ExtrasSettings(),
-            ),
-            CustomCollapsedListTile(
-              title: lang.BACKUP_AND_RESTORE,
-              subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
-              icon: Broken.refresh_circle,
-              page: const BackupAndRestore(),
-              trailing: const ParsingJsonPercentage(size: 32.0),
-            ),
-            CustomCollapsedListTile(
-              title: lang.ADVANCED_SETTINGS,
-              subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
-              icon: Broken.hierarchy_3,
-              page: const AdvancedSettings(),
-            ),
-            const AboutPageTileWidget(),
-            const CollapsedSettingTileWidget(),
-            kBottomPaddingWidget,
-          ],
-        );
-      },
+    Localizations.localeOf(context);
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      children: [
+        CustomCollapsedListTile(
+          title: lang.THEME_SETTINGS,
+          subtitle: lang.THEME_SETTINGS_SUBTITLE,
+          icon: Broken.brush_2,
+          page: const ThemeSetting(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.INDEXER,
+          subtitle: lang.INDEXER_SUBTITLE,
+          icon: Broken.component,
+          page: const IndexerSettings(),
+          trailing: const IndexingPercentage(size: 32.0),
+        ),
+        CustomCollapsedListTile(
+          title: lang.PLAYBACK_SETTING,
+          subtitle: lang.PLAYBACK_SETTING_SUBTITLE,
+          icon: Broken.play_cricle,
+          page: const PlaybackSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.CUSTOMIZATIONS,
+          subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
+          icon: Broken.brush_1,
+          page: const CustomizationSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.YOUTUBE,
+          subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
+          icon: Broken.video,
+          page: const YoutubeSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.EXTRAS,
+          subtitle: lang.EXTRAS_SUBTITLE,
+          icon: Broken.command_square,
+          page: const ExtrasSettings(),
+        ),
+        CustomCollapsedListTile(
+          title: lang.BACKUP_AND_RESTORE,
+          subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
+          icon: Broken.refresh_circle,
+          page: const BackupAndRestore(),
+          trailing: const ParsingJsonPercentage(size: 32.0),
+        ),
+        CustomCollapsedListTile(
+          title: lang.ADVANCED_SETTINGS,
+          subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
+          icon: Broken.hierarchy_3,
+          page: const AdvancedSettings(),
+        ),
+        const AboutPageTileWidget(),
+        const CollapsedSettingTileWidget(),
+        kBottomPaddingWidget,
+      ],
     );
   }
 }

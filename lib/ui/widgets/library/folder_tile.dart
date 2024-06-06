@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
@@ -28,7 +28,7 @@ class FolderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dirInside = folder.getDirectoriesInside();
-    final tracks = dummyTracks ?? folder.tracks;
+    final tracks = dummyTracks ?? folder.tracks();
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5);
     return Padding(

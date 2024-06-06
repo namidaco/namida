@@ -46,7 +46,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
 
     // -- [yyyy] year format.
     if (yearTimeStamp.toString().length == 4) {
-      allTracksInLibrary.loop((e, index) {
+      allTracksInLibrary.loop((e) {
         if (e.year != 0) {
           // -- if the track also has [yyyy]
           if (e.year.toString().length == 4) {
@@ -69,7 +69,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
       final dateParsed = DateTime.tryParse(yearTimeStamp.toString());
       if (dateParsed == null) return [];
 
-      allTracksInLibrary.loop((e, index) {
+      allTracksInLibrary.loop((e) {
         if (e.year != 0) {
           final dt = DateTime.tryParse(e.year.toString());
           if (dt != null && (dt.difference(dateParsed).inDays).abs() <= daysRange) {
@@ -87,7 +87,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
     int maxRating,
   ) {
     final finalTracks = <Track>[];
-    Indexer.inst.trackStatsMap.forEach((key, value) {
+    Indexer.inst.trackStatsMap.value.forEach((key, value) {
       if (value.rating >= minRating && value.rating <= maxRating) {
         finalTracks.add(key);
       }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -140,9 +140,9 @@ class SearchSortController {
   };
 
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
-    final sorts = settings.mediaItemsTrackSorting[media] ?? <SortType>[SortType.title];
+    final sorts = settings.mediaItemsTrackSorting.value[media] ?? <SortType>[SortType.title];
     final l = <Comparable Function(Track e)>[];
-    sorts.loop((e, index) {
+    sorts.loop((e) {
       if (_mediaTracksSortingComparables[e] != null) l.add(_mediaTracksSortingComparables[e]!);
     });
     return l;
@@ -154,7 +154,7 @@ class SearchSortController {
     _preparedResources = true;
     final enabledSearchesList = settings.activeSearchMediaTypes;
     final enabledSearches = <MediaType, bool>{};
-    enabledSearchesList.loop((f, _) => enabledSearches[f] = true);
+    enabledSearchesList.loop((f) => enabledSearches[f] = true);
 
     final mainMapArtists = Indexer.inst.mainMapArtists.value.keys;
     final mainMapAA = Indexer.inst.mainMapAlbumArtists.value.keys;
@@ -206,7 +206,7 @@ class SearchSortController {
 
   Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort, {bool sendPrepared = false}) {
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
+      'tracks': Indexer.inst.allTracksMappedByPath.value.values
           .map((e) => {
                 'title': e.title,
                 'artist': e.originalArtist,
@@ -247,14 +247,14 @@ class SearchSortController {
       },
       isolateFunction: (itemsSendPort) async {
         final params = {
-          'playlists': playlistsMap.values.map((e) => e.toJson((item) => item.toJson())).toList(),
+          'playlists': playlistsMap.value.values.map((e) => e.toJson((item) => item.toJson())).toList(),
           'translations': {
             'k_PLAYLIST_NAME_AUTO_GENERATED': lang.AUTO_GENERATED,
             'k_PLAYLIST_NAME_FAV': lang.FAVOURITES,
             'k_PLAYLIST_NAME_HISTORY': lang.HISTORY,
             'k_PLAYLIST_NAME_MOST_PLAYED': lang.MOST_PLAYED,
           },
-          'filters': settings.playlistSearchFilter.cast<String>(),
+          'filters': settings.playlistSearchFilter.value,
           'cleanup': _shouldCleanup,
           'sendPort': itemsSendPort,
         };
@@ -298,9 +298,7 @@ class SearchSortController {
         trackSearchTemp.clear();
       } else {
         LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList
-          ..clear()
-          ..addAll(tracksInfoList);
+        trackSearchList.assignAll(tracksInfoList.value);
       }
       return;
     }
@@ -326,7 +324,7 @@ class SearchSortController {
     sendPort.send(receivePort.sendPort);
 
     final tsfMap = <TrackSearchFilter, bool>{};
-    tsf.loop((f, _) => tsfMap[f] = true);
+    tsf.loop((f) => tsfMap[f] = true);
 
     final stitle = tsfMap[TrackSearchFilter.title] ?? true;
     final sfilename = tsfMap[TrackSearchFilter.filename] ?? true;
@@ -406,7 +404,7 @@ class SearchSortController {
       }
 
       final result = <Track>[];
-      tracksExtended.loop((trExt, index) {
+      tracksExtended.loop((trExt) {
         if ((stitle && isMatch(trExt.splitTitle)) ||
             (sfilename && isMatch(trExt.splitFilename)) ||
             (salbum && isMatch(trExt.splitAlbum)) ||
@@ -524,7 +522,7 @@ class SearchSortController {
     final textCleanedForSearch = _functionOfCleanup(cleanup);
 
     final psfMap = <String, bool>{};
-    psf.loop((f, _) => psfMap[f] = true);
+    psf.loop((f) => psfMap[f] = true);
 
     final sTitle = psfMap['name'] ?? true;
     final sCreationDate = psfMap['creationDate'] ?? false;
@@ -546,7 +544,7 @@ class SearchSortController {
       final lctext = textCleanedForSearch(text);
 
       final results = <String>[];
-      playlists.loop((itemInfo, _) {
+      playlists.loop((itemInfo) {
         final item = itemInfo.pl;
         final playlistName = item.name;
 
@@ -600,7 +598,7 @@ class SearchSortController {
     _sortTracksRaw(
       sortBy: sortBy ?? settings.tracksSort.value,
       reverse: reverse ?? settings.tracksSortReversed.value,
-      list: tracksInfoList,
+      list: tracksInfoList.value,
       onDone: (sortType, isReverse) {
         settings.save(tracksSort: sortType, tracksSortReversed: isReverse);
         _searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
@@ -622,7 +620,7 @@ class SearchSortController {
     _sortTracksRaw(
       sortBy: sortBy,
       reverse: reverse,
-      list: trackSearchTemp,
+      list: trackSearchTemp.value,
       onDone: (sortType, isReverse) {
         if (!isAuto) {
           settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
@@ -772,9 +770,7 @@ class SearchSortController {
         null;
     }
 
-    finalMap.value
-      ..clear()
-      ..addEntries(albumsList);
+    finalMap.value.assignAllEntries(albumsList);
 
     settings.save(albumSort: sortBy, albumSortReversed: reverse);
 
@@ -843,9 +839,7 @@ class SearchSortController {
       default:
         null;
     }
-    finalMap.value
-      ..clear()
-      ..addEntries(artistsList);
+    finalMap.value.assignAllEntries(artistsList);
 
     settings.save(artistSort: sortBy, artistSortReversed: reverse);
 
@@ -896,9 +890,7 @@ class SearchSortController {
         null;
     }
 
-    finalMap.value
-      ..clear()
-      ..addEntries(genresList);
+    finalMap.value.assignAllEntries(genresList);
 
     settings.save(genreSort: sortBy, genreSortReversed: reverse);
     _searchMediaType(type: MediaType.genre, text: LibraryTab.genres.textSearchController?.text ?? '');
@@ -936,9 +928,7 @@ class SearchSortController {
         null;
     }
 
-    playlistsMap
-      ..clear()
-      ..addEntries(playlistList);
+    playlistsMap.assignAllEntries(playlistList);
 
     settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
@@ -970,7 +960,7 @@ class SearchSortController {
 
       final results = <String>[];
       if (keyIsPath) {
-        keys.loop((path, _) {
+        keys.loop((path) {
           String pathN = path;
           while (pathN.isNotEmpty && pathN[pathN.length - 1] == Platform.pathSeparator) {
             pathN = pathN.substring(0, pathN.length);
@@ -980,7 +970,7 @@ class SearchSortController {
           }
         });
       } else {
-        keys.loop((name, _) {
+        keys.loop((name) {
           if (cleanupFunction(name).contains(cleanupFunction(text))) {
             results.add(name);
           }

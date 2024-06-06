@@ -17,6 +17,15 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   static final HistoryController _instance = HistoryController._internal();
   HistoryController._internal();
 
+  @override
+  double daysToSectionExtent(List<int> days) {
+    final trackTileExtent = Dimensions.inst.trackTileItemExtent;
+    const dayHeaderExtent = kHistoryDayHeaderHeightWithPadding;
+    double total = 0;
+    days.loop((day) => total += dayToSectionExtent(day, trackTileExtent, dayHeaderExtent));
+    return total;
+  }
+
   Future<void> replaceTracksDirectoryInHistory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
     await replaceTheseTracksInHistory(
@@ -48,22 +57,17 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     );
   }
 
-  Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources, {DateTime? oldestDate, DateTime? newestDate, bool andSave = true}) async {
+  Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources, {DateTime? oldestDate, DateTime? newestDate}) async {
     if (sources.isEmpty) return 0;
 
     int totalRemoved = 0;
-
-    Future<void> saveHistory([List<int>? daysToSave]) async {
-      if (andSave) {
-        await saveHistoryToStorage(daysToSave);
-      }
-    }
+    List<int>? daysToSave;
 
     // -- remove all sources (i.e all history)
     if (oldestDate == null && newestDate == null && sources.isEqualTo(TrackSource.values)) {
-      totalRemoved = historyTracksLength;
+      totalRemoved = totalHistoryItemsCount.value;
       historyMap.value.clear();
-      await saveHistory();
+      daysToSave = null;
     } else {
       final daysToRemoveFrom = historyDays.toList();
 
@@ -84,19 +88,25 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
       // -- will loop the whole days.
       /* if (oldestDay == null && newestDay == null) {} */
 
-      daysToRemoveFrom.loop((d, index) {
-        totalRemoved += historyMap.value[d]?.removeWhereWithDifference((twd) => sources.contains(twd.source)) ?? 0;
+      final history = historyMap.value;
+      daysToRemoveFrom.loop((d) {
+        totalRemoved += history[d]?.removeWhereWithDifference((twd) => sources.contains(twd.source)) ?? 0;
       });
-      await saveHistory(daysToRemoveFrom);
+      daysToSave = daysToRemoveFrom;
     }
 
-    updateMostPlayedPlaylist();
-    calculateAllItemsExtentsInHistory();
+    if (totalRemoved > 0) {
+      totalHistoryItemsCount.value -= totalRemoved;
+      historyMap.refresh();
+      updateMostPlayedPlaylist();
+      await saveHistoryToStorage(daysToSave);
+    } else if (daysToSave != null) {
+      // just in case its edited but `totalRemoved` uh
+      await saveHistoryToStorage(daysToSave);
+    }
+
     return totalRemoved;
   }
-
-  @override
-  double get DAY_HEADER_HEIGHT_WITH_PADDING => kHistoryDayHeaderHeightWithPadding;
 
   @override
   String get HISTORY_DIRECTORY => AppDirs.HISTORY_PLAYLIST;
@@ -108,13 +118,14 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   Track mainItemToSubItem(TrackWithDate item) => item.track;
 
   @override
-  Future<({SplayTreeMap<int, List<TrackWithDate>> historyMap, Map<Track, List<int>> topItems})> prepareAllHistoryFilesFunction(String directoryPath) async {
+  Future<HistoryPrepareInfo<TrackWithDate, Track>> prepareAllHistoryFilesFunction(String directoryPath) async {
     return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<({SplayTreeMap<int, List<TrackWithDate>> historyMap, Map<Track, List<int>> topItems})> _readHistoryFilesCompute(String path) async {
+  static Future<HistoryPrepareInfo<TrackWithDate, Track>> _readHistoryFilesCompute(String path) async {
     final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <Track, List<int>>{};
+    int totalCount = 0;
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
@@ -122,8 +133,9 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
           final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
           map[dayOfTrack] = listTracks;
+          totalCount += listTracks.length;
 
-          listTracks.loop((e, index) {
+          listTracks.loop((e) {
             tempMapTopItems.addForce(e.track, e.dateTimeAdded.millisecondsSinceEpoch);
           });
         } catch (e) {
@@ -149,7 +161,11 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
       });
     final topItems = Map.fromEntries(sortedEntries);
 
-    return (historyMap: map, topItems: topItems);
+    return HistoryPrepareInfo(
+      historyMap: map,
+      topItems: topItems,
+      totalItemsCount: totalCount,
+    );
   }
 
   @override
@@ -160,7 +176,4 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
   @override
   bool get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay.value;
-
-  @override
-  double get trackTileItemExtent => Dimensions.inst.trackTileItemExtent;
 }

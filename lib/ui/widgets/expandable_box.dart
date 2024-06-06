@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
-class ExpandableBox extends StatelessWidget {
+class ExpandableBox extends StatefulWidget {
   final bool isBarVisible;
   final bool showSearchBox;
   final bool displayloadingIndicator;
@@ -18,7 +17,7 @@ class ExpandableBox extends StatelessWidget {
   final String leftText;
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
-  final CustomTextFiled textField;
+  final CustomTextFiled Function() textField;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
   final bool enableHero;
@@ -39,18 +38,49 @@ class ExpandableBox extends StatelessWidget {
   });
 
   @override
+  State<ExpandableBox> createState() => _ExpandableBoxState();
+}
+
+class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late bool _latestShowSearchBox;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      value: widget.showSearchBox ? 1.0 : 0.0,
+    );
+    _latestShowSearchBox = widget.showSearchBox;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final textfieldWidget = widget.textField();
+    if (widget.showSearchBox != _latestShowSearchBox) {
+      _latestShowSearchBox = widget.showSearchBox;
+      _controller.animateTo(widget.showSearchBox ? 1.0 : 0.0);
+    }
+
     return NamidaHero(
-      enabled: enableHero,
+      enabled: widget.enableHero,
       tag: 'ExpandableBox',
       child: Column(
         children: [
           AnimatedOpacity(
-            opacity: isBarVisible ? 1 : 0,
+            opacity: widget.isBarVisible ? 1 : 0,
             duration: const Duration(milliseconds: 400),
             child: AnimatedSizedBox(
               duration: const Duration(milliseconds: 400),
-              height: isBarVisible ? kExpandableBoxHeight : 0.0,
+              height: widget.isBarVisible ? kExpandableBoxHeight : 0.0,
               animateWidth: false,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -62,62 +92,60 @@ class ExpandableBox extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (leftWidgets != null) ...leftWidgets!,
+                        if (widget.leftWidgets != null) ...widget.leftWidgets!,
                         Expanded(
                           child: Text(
-                            leftText,
+                            widget.leftText,
                             style: context.textTheme.displayMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
+                        if (widget.displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
                       ],
                     ),
                   ),
-                  // const Spacer(),
-                  if (gridWidget != null) gridWidget!,
-                  // Sort By Menu
+                  if (widget.gridWidget != null) widget.gridWidget!,
                   const SizedBox(width: 4.0),
-                  sortByMenuWidget,
+                  widget.sortByMenuWidget,
                   const SizedBox(width: 12.0),
                   SmallIconButton(
                     icon: Broken.filter_search,
-                    onTap: onFilterIconTap,
+                    onTap: widget.onFilterIconTap,
                   ),
                   const SizedBox(width: 12.0),
                 ],
               ),
             ),
           ),
-          AnimatedOpacity(
-            opacity: showSearchBox ? 1 : 0,
-            duration: const Duration(milliseconds: 400),
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 400),
-              child: AnimatedSizedBox(
-                duration: const Duration(milliseconds: 400),
-                height: showSearchBox ? 58.0 : 0,
-                animateWidth: false,
-                child: Row(
-                  children: [
-                    const SizedBox(width: 12.0),
-                    Expanded(child: textField),
-                    const SizedBox(width: 12.0),
-                    NamidaIconButton(
-                      onPressed: () {
-                        onCloseButtonPressed();
-                        ScrollSearchController.inst.unfocusKeyboard();
-                      },
-                      icon: Broken.close_circle,
-                    ),
-                    const SizedBox(width: 8.0),
-                  ],
+          AnimatedBuilder(
+            animation: _controller,
+            child: Row(
+              children: [
+                const SizedBox(width: 12.0),
+                Expanded(child: textfieldWidget),
+                const SizedBox(width: 12.0),
+                NamidaIconButton(
+                  onPressed: () {
+                    widget.onCloseButtonPressed();
+                    ScrollSearchController.inst.unfocusKeyboard();
+                  },
+                  icon: Broken.close_circle,
                 ),
-              ),
+                const SizedBox(width: 8.0),
+              ],
             ),
+            builder: (context, child) {
+              return Opacity(
+                opacity: _controller.value,
+                child: SizedBox(
+                  height: _controller.value * 58.0,
+                  child: child!,
+                ),
+              );
+            },
           ),
-          if (showSearchBox) const SizedBox(height: 8.0)
+          if (widget.showSearchBox) const SizedBox(height: 8.0)
         ],
       ),
     );
@@ -175,7 +203,7 @@ class SortByMenu extends StatelessWidget {
           style: const ButtonStyle(
             visualDensity: VisualDensity.compact,
           ),
-          child: Text(title),
+          child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
           onPressed: () => showMenu(
             color: context.theme.appBarTheme.backgroundColor,
             context: context,

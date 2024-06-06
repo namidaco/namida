@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:get/get_rx/get_rx.dart';
-
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class YoutubeParallelDownloadsHandler {
   static final YoutubeParallelDownloadsHandler inst = YoutubeParallelDownloadsHandler._internal();
@@ -17,7 +16,7 @@ class YoutubeParallelDownloadsHandler {
   void refreshCompleterStatus() => _tryReAssignMaxParallelDownloadsCompleter();
 
   int _currentDownloadingItemsCount = 0;
-  final _maxParallelDownloadingItems = 1.obs;
+  final _maxParallelDownloadingItems = 1.obso;
 
   /// used to control the parallel process, stopping the download loop or continuing it.
   Completer<void>? _maxParallelDownloadsCompleter;

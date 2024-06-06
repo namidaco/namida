@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
@@ -36,7 +36,7 @@ class ArtistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thumbnailSize = dimensions.$1;
-    final fontSize = dimensions.$2.multipliedFontScale;
+    final fontSize = dimensions.$2;
 
     final hero = 'artist_$name$additionalHeroTag';
     return GridTile(

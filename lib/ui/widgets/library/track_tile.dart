@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -32,7 +32,7 @@ class TrackTile extends StatelessWidget {
   final bool displayTrackNumber;
 
   /// Disable if you want to have priority to hold & reorder instead of selecting.
-  final bool selectable;
+  final bool Function()? selectable;
   final QueueSource queueSource;
   final void Function()? onRightAreaTap;
   final double cardColorOpacity;
@@ -51,7 +51,7 @@ class TrackTile extends StatelessWidget {
     required this.index,
     this.thirdLineText = '',
     this.displayTrackNumber = false,
-    this.selectable = true,
+    this.selectable,
     required this.queueSource,
     this.onRightAreaTap,
     this.cardColorOpacity = 0.9,
@@ -104,14 +104,18 @@ class TrackTile extends StatelessWidget {
       children: [
         Obx(
           () {
-            final willSleepAfterThis = queueSource == QueueSource.playerQueue && Player.inst.enableSleepAfterTracks && Player.inst.sleepingTrackIndex == index;
+            bool willSleepAfterThis = false;
+            if (queueSource == QueueSource.playerQueue) {
+              final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+              willSleepAfterThis = sleepconfig.enableSleepAfterItems && Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
+            }
 
-            final double thumbnailSize = settings.trackThumbnailSizeinList.value;
-            final double trackTileHeight = settings.trackListTileHeight.value;
+            final double thumbnailSize = settings.trackThumbnailSizeinList.valueR;
+            final double trackTileHeight = settings.trackListTileHeight.valueR;
             final bool isTrackSelected = SelectedTracksController.inst.isTrackSelected(trackOrTwd);
-            final bool isTrackSame = track == CurrentColor.inst.currentPlayingTrack.value?.track;
-            final bool isRightHistoryList = queueSource == QueueSource.history ? trackWithDate == CurrentColor.inst.currentPlayingTrack.value?.trackWithDate : true;
-            final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.value : true;
+            final bool isTrackSame = track == CurrentColor.inst.currentPlayingTrack.valueR?.track;
+            final bool isRightHistoryList = queueSource == QueueSource.history ? trackWithDate == CurrentColor.inst.currentPlayingTrack.valueR?.trackWithDate : true;
+            final bool isRightIndex = canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.valueR : true;
             final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
 
             final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
@@ -127,7 +131,7 @@ class TrackTile extends StatelessWidget {
                   isTrackCurrentlyPlaying
                       ? comingFromQueue
                           ? CurrentColor.inst.miniplayerColor
-                          : CurrentColor.inst.color
+                          : CurrentColor.inst.currentColorScheme
                       : context.theme.cardTheme.color!.withOpacity(cardColorOpacity),
                 );
 
@@ -138,7 +142,7 @@ class TrackTile extends StatelessWidget {
                 child: InkWell(
                   onTap: onTap ??
                       () async {
-                        if (SelectedTracksController.inst.selectedTracks.isNotEmpty && !isInSelectedTracksPreview) {
+                        if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty && !isInSelectedTracksPreview) {
                           _selectTrack();
                         } else {
                           if (onPlaying != null) {
@@ -149,7 +153,7 @@ class TrackTile extends StatelessWidget {
                             ScrollSearchController.inst.unfocusKeyboard();
                             await Player.inst.playOrPause(
                               settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                              settings.trackPlayMode.value.getQueue(track),
+                              settings.trackPlayMode.value.generateQueue(track),
                               queueSource,
                             );
                           } else {
@@ -161,9 +165,10 @@ class TrackTile extends StatelessWidget {
                           }
                         }
                       },
-                  onLongPress: !selectable || onTap != null
+                  onLongPress: onTap != null
                       ? null
                       : () {
+                          if (selectable != null && selectable!() == false) return;
                           if (!isInSelectedTracksPreview) {
                             ScrollSearchController.inst.unfocusKeyboard();
                             _selectTrack();
@@ -195,7 +200,7 @@ class TrackTile extends StatelessWidget {
                                         track: track,
                                         thumbnailSize: thumbnailSize,
                                         path: track.pathToImage,
-                                        forceSquared: settings.forceSquaredTrackThumbnail.value,
+                                        forceSquared: settings.forceSquaredTrackThumbnail.valueR,
                                         useTrackTileCacheHeight: true,
                                         onTopWidgets: [
                                           if (displayTrackNumber)
@@ -218,7 +223,7 @@ class TrackTile extends StatelessWidget {
                                               child: Container(
                                                 padding: const EdgeInsets.all(2.0),
                                                 decoration: BoxDecoration(
-                                                  color: context.theme.colorScheme.background.withAlpha(160),
+                                                  color: context.theme.colorScheme.surface.withAlpha(160),
                                                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                                 ),
                                                 child: const Icon(
@@ -235,7 +240,6 @@ class TrackTile extends StatelessWidget {
                                 if (draggableThumbnail)
                                   NamidaReordererableListener(
                                     durationMs: 80,
-                                    isInQueue: queueSource == QueueSource.playerQueue,
                                     index: index,
                                     child: Container(
                                       color: Colors.transparent,
@@ -250,7 +254,9 @@ class TrackTile extends StatelessWidget {
                               child: trackOrTwd.track.toTrackExtOrNull() == null
                                   ? Text(
                                       trackOrTwd.track.path,
-                                      style: context.textTheme.displaySmall,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        color: textColor?.withAlpha(170),
+                                      ),
                                     )
                                   : Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -280,7 +286,7 @@ class TrackTile extends StatelessWidget {
                                           ),
 
                                         // check if third row isnt empty
-                                        if (thirdLineText == '' && settings.displayThirdRow.value)
+                                        if (thirdLineText == '' && settings.displayThirdRow.valueR)
                                           if (row3Text != '')
                                             Text(
                                               row3Text,
@@ -302,7 +308,7 @@ class TrackTile extends StatelessWidget {
                                     ),
                             ),
                             const SizedBox(width: 6.0),
-                            if (settings.displayFavouriteIconInListTile.value || rightItem1Text != '' || rightItem2Text != '')
+                            if (settings.displayFavouriteIconInListTile.valueR || rightItem1Text != '' || rightItem2Text != '')
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -324,7 +330,7 @@ class TrackTile extends StatelessWidget {
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                  if (settings.displayFavouriteIconInListTile.value)
+                                  if (settings.displayFavouriteIconInListTile.valueR)
                                     NamidaLikeButton(
                                       track: track,
                                       size: 22.0,
@@ -336,7 +342,6 @@ class TrackTile extends StatelessWidget {
                               const SizedBox(width: 8.0),
                               NamidaReordererableListener(
                                 durationMs: 20,
-                                isInQueue: queueSource == QueueSource.playerQueue,
                                 index: index,
                                 child: FittedBox(
                                   child: Icon(
@@ -402,7 +407,7 @@ class TrackTileManager {
       if (i1 != '') i1,
       if (i2 != '') i2,
       if (i3 != '') i3,
-    ].join(' ${settings.trackTileSeparator} ');
+    ].join(' ${settings.trackTileSeparator.value} ');
   }
 
   static String getChoosenTrackTileItem(TrackTilePosition? itemPosition, Track trackPre) {
@@ -410,7 +415,7 @@ class TrackTileManager {
     final inf = _infoMap[trackPre]?[itemPosition];
     if (_infoMap[trackPre]?[itemPosition] != null) return inf!;
 
-    final trackItem = settings.trackItem[itemPosition] ?? TrackTileItem.none;
+    final trackItem = settings.trackItem.value[itemPosition] ?? TrackTileItem.none;
 
     final val = _getTrackItemValue(trackItem, trackPre);
 

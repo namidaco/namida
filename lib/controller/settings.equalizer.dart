@@ -1,8 +1,7 @@
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class EqualizerSettings with SettingsFileWriter {
   static final EqualizerSettings inst = EqualizerSettings._internal();
@@ -14,7 +13,7 @@ class EqualizerSettings with SettingsFileWriter {
   bool loudnessEnhancerEnabled = false;
   double loudnessEnhancer = 0.0;
 
-  final uiTapToUpdate = true.obs;
+  final uiTapToUpdate = true.obso;
 
   void save({
     int? preset,

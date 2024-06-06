@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:vibration/vibration.dart';
 
@@ -15,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -41,7 +41,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
           () => _SliderTextWidget(
             icon: Broken.airpods,
             title: lang.PITCH,
-            value: settings.player.pitch.value,
+            value: settings.player.pitch.valueR,
             restoreDefault: () {
               Player.inst.setPlayerPitch(1.0);
               settings.player.save(pitch: 1.0);
@@ -63,7 +63,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
           () => _SliderTextWidget(
             icon: Broken.forward,
             title: lang.SPEED,
-            value: settings.player.speed.value,
+            value: settings.player.speed.valueR,
             restoreDefault: () {
               Player.inst.setPlayerSpeed(1.0);
               settings.player.save(speed: 1.0);
@@ -84,9 +84,9 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         verticalPadding,
         Obx(
           () => _SliderTextWidget(
-            icon: settings.player.volume.value > 0 ? Broken.volume_up : Broken.volume_slash,
+            icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
             title: lang.VOLUME,
-            value: settings.player.volume.value,
+            value: settings.player.volume.valueR,
             restoreDefault: () {
               Player.inst.setPlayerVolume(1.0);
               settings.player.save(volume: 1.0);
@@ -110,7 +110,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
 }
 
 class EqualizerPage extends StatefulWidget {
-  const EqualizerPage({Key? key}) : super(key: key);
+  const EqualizerPage({super.key});
 
   @override
   EqualizerPageState createState() => EqualizerPageState();
@@ -205,10 +205,11 @@ class EqualizerPageState extends State<EqualizerPage> {
                           icon: null,
                           iconSize: 24.0,
                           onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
-                          child: Obx(
-                            () => StackedIcon(
+                          child: ObxO(
+                            rx: settings.equalizer.uiTapToUpdate,
+                            builder: (val) => StackedIcon(
                               baseIcon: Broken.mouse_1,
-                              secondaryIcon: settings.equalizer.uiTapToUpdate.value ? Broken.tick_circle : Broken.close_circle,
+                              secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
                               secondaryIconSize: 12.0,
                               iconSize: 24.0,
                             ),
@@ -275,7 +276,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 borderRadius: 5.0,
                                 margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                bgColor: _activePresetCustom.value
+                                bgColor: _activePresetCustom.valueR
                                     ? Color.alphaBlend(CurrentColor.inst.color.withOpacity(0.9), context.theme.scaffoldBackgroundColor)
                                     : context.theme.colorScheme.secondary.withOpacity(0.15),
                                 onTap: _resetPreset,
@@ -283,8 +284,8 @@ class EqualizerPageState extends State<EqualizerPage> {
                                   lang.CUSTOM,
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 13.5.multipliedFontScale,
-                                    color: _activePresetCustom.value ? Colors.white.withOpacity(0.7) : null,
+                                    fontSize: 13.5,
+                                    color: _activePresetCustom.valueR ? Colors.white.withOpacity(0.7) : null,
                                   ),
                                 ),
                               ),
@@ -296,7 +297,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       borderRadius: 5.0,
                                       margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                      bgColor: _activePreset.value == e.value
+                                      bgColor: _activePreset.valueR == e.value
                                           ? Color.alphaBlend(CurrentColor.inst.color.withOpacity(0.9), context.theme.scaffoldBackgroundColor)
                                           : context.theme.colorScheme.secondary.withOpacity(0.15),
                                       onTap: () async {
@@ -309,9 +310,9 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       child: Text(
                                         e.value,
                                         style: context.textTheme.displaySmall?.copyWith(
-                                          color: _activePreset.value == e.value ? Colors.white.withOpacity(0.7) : null,
+                                          color: _activePreset.valueR == e.value ? Colors.white.withOpacity(0.7) : null,
                                           fontWeight: FontWeight.w700,
-                                          fontSize: 13.5.multipliedFontScale,
+                                          fontSize: 13.5,
                                         ),
                                       ),
                                     ),
@@ -357,8 +358,9 @@ class EqualizerPageState extends State<EqualizerPage> {
                                     ),
                                   ),
                                 ),
-                                Obx(
-                                  () => _CuteSlider(
+                                ObxO(
+                                  rx: settings.equalizer.uiTapToUpdate,
+                                  builder: (uiTapToUpdate) => _CuteSlider(
                                     key: _loudnessKey,
                                     initialValue: targetGain,
                                     min: -1,
@@ -367,7 +369,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       settings.equalizer.save(loudnessEnhancer: newVal);
                                       _loudnessEnhancer.setTargetGain(newVal);
                                     },
-                                    tapToUpdate: settings.equalizer.uiTapToUpdate.value,
+                                    tapToUpdate: uiTapToUpdate,
                                   ),
                                 ),
                               ],
@@ -376,10 +378,11 @@ class EqualizerPageState extends State<EqualizerPage> {
                         );
                       },
                     ),
-                    Obx(
-                      () => EqualizerMainSlidersColumn(
+                    ObxO(
+                      rx: settings.equalizer.uiTapToUpdate,
+                      builder: (uiTapToUpdate) => EqualizerMainSlidersColumn(
                         verticalInBetweenPadding: verticalInBetweenPaddingH,
-                        tapToUpdate: settings.equalizer.uiTapToUpdate.value,
+                        tapToUpdate: uiTapToUpdate,
                       ),
                     ),
                     verticalInBetweenPadding,
@@ -476,7 +479,7 @@ class _CuteSliderState extends State<_CuteSlider> {
   late double _currentVal = widget.initialValue;
 
   void _updateVal(double newVal) {
-    final finalVal = newVal.toPrecision(4);
+    final finalVal = newVal.roundDecimals(4);
     if (finalVal != _currentVal) {
       setState(() {
         _currentVal = finalVal;
@@ -552,21 +555,21 @@ class EqualizerControls extends StatelessWidget {
   final bool Function() tapToUpdate;
 
   const EqualizerControls({
-    Key? key,
+    super.key,
     required this.equalizer,
     required this.onGainSetCallback,
     required this.tapToUpdate,
-  }) : super(key: key);
+  });
 
   void _onGainSet(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels).toPrecision(4);
+    final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels).roundDecimals(4);
     settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newVal);
     onGainSetCallback();
   }
 
   void _onGainSetNoClamp(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    final newVal = newValue.toPrecision(4);
+    final newVal = newValue.roundDecimals(4);
     settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newValue);
     onGainSetCallback();
@@ -670,14 +673,14 @@ class VerticalSlider extends StatefulWidget {
   final bool Function() tapToUpdate;
 
   const VerticalSlider({
-    Key? key,
+    super.key,
     required this.value,
     this.min = 0.0,
     this.max = 1.0,
     required this.circleWidth,
     required this.onChanged,
     required this.tapToUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<VerticalSlider> createState() => _VerticalSliderState();
@@ -771,7 +774,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                 child: Obx(
                   () => AnimatedScale(
                     duration: const Duration(milliseconds: 200),
-                    scale: _isPointerDown.value ? 1.2 : 1.0,
+                    scale: _isPointerDown.valueR ? 1.2 : 1.0,
                     child: Container(
                       width: circleWidth,
                       height: circleHeight,

@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:get/get.dart';
+
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -42,7 +43,7 @@ class YoutubeImportController {
     }
 
     final completer = Completer<void>();
-    res.loop((playlist, index) {
+    res.loopAdv((playlist, index) {
       final details = playlist.$1.details;
       final plID = details != null ? PlaylistID(id: details.playlistID) : null;
       YoutubePlaylistController.inst.addNewPlaylistRaw(
@@ -77,7 +78,7 @@ class YoutubeImportController {
   Future<int> importSubscriptions(String subscriptionsFilePath) async {
     isImportingSubscriptions.value = true;
     final res = await _parseSubscriptions.thready(subscriptionsFilePath);
-    res.loop((e, index) {
+    res.loop((e) {
       final valInMap = YoutubeSubscriptionsController.inst.getChannel(e.id);
       YoutubeSubscriptionsController.inst.setChannel(
         e.id,
@@ -108,7 +109,7 @@ class YoutubeImportController {
 
     List<_VideoEntry> getVideos(List<String> lines) {
       final videos = <_VideoEntry>[];
-      lines.loop((e, _) {
+      lines.loop((e) {
         try {
           final parts = e.split(','); // id, dateAdded
           if (parts.length >= 2) videos.add((id: parts[0], dateAdded: DateTime.tryParse(parts[1]))); // should be only 2, but maybe more stuff will be appended in future
@@ -119,7 +120,7 @@ class YoutubeImportController {
 
     _YTPlaylistDetails getPlaylistDetailsOld(List<String> header, List<String> split) {
       final map = <String, String>{};
-      header.loop((part, index) => map[part.toLowerCase()] ??= split[index]);
+      header.loopAdv((part, index) => map[part.toLowerCase()] ??= split[index]);
 
       return (
         playlistID: map['playlist id'] ?? '',
@@ -134,7 +135,7 @@ class YoutubeImportController {
 
     _YTPlaylistDetails getPlaylistDetailsNew(List<String> header, List<String> split) {
       final map = <String, String>{};
-      header.loop((part, index) => map[part.toLowerCase().split('playlist').last.split('(').first] ??= split[index]);
+      header.loopAdv((part, index) => map[part.toLowerCase().split('playlist').last.split('(').first] ??= split[index]);
       return (
         playlistID: map['playlist id'] ?? '',
         channelID: map['channel id'] ?? '',
@@ -158,7 +159,7 @@ class YoutubeImportController {
         final plLines = plMetaFile.readAsLinesSync();
         final header = plLines.removeAt(0);
         final headerParts = header.split(',');
-        plLines.loop((line, _) {
+        plLines.loop((line) {
           final splitted = line.split(',');
           final details = getPlaylistDetailsNew(headerParts, splitted);
           playlistsMetadata[details.name] = details;
@@ -166,7 +167,7 @@ class YoutubeImportController {
       } catch (_) {}
     }
 
-    files.loop((e, _) {
+    files.loop((e) {
       if (e is File) {
         try {
           String playlistName = e.path.getFilenameWOExt;
@@ -203,7 +204,7 @@ class YoutubeImportController {
       final header = lines.removeAt(0);
       final list = <({String id, String title})>[];
       if (header.split(',').length < 3) return list;
-      lines.loop((e, _) {
+      lines.loop((e) {
         try {
           final parts = e.split(','); // id, url, name
           if (parts.length >= 3) list.add((id: parts[0], title: parts[2])); // should be only 3, but maybe more stuff will be appended in future

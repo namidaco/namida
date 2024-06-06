@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
 void showAddToPlaylistSheet({
@@ -35,10 +35,10 @@ void showAddToPlaylistSheet({
       (ids.length > 3 ? '... + ${ids.length - 3}' : '');
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-  // ignore: use_build_context_synchronously
   await showModalBottomSheet(
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
+    // ignore: use_build_context_synchronously
     context: context,
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
@@ -68,8 +68,8 @@ void showAddToPlaylistSheet({
                       videoNamesSubtitle,
                       style: context.textTheme.displaySmall,
                     )
-                  : RichText(
-                      text: TextSpan(
+                  : Text.rich(
+                      TextSpan(
                         text: playlistNameToAdd,
                         style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
                         children: [
@@ -148,6 +148,7 @@ void showAddToPlaylistSheet({
                 Obx(
                   () {
                     const watchLater = 'Watch Later';
+                    pc.YoutubePlaylistController.inst.playlistsMap.valueR;
                     final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
                     final idExist = pl?.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) != null;
                     return NamidaIconButton(

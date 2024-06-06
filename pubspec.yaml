@@ -4,40 +4,42 @@ publish_to: "none"
 version: 2.5.6+240522118
 
 environment:
-  sdk: ">=3.1.4 <4.0.0"
-  flutter: ^3.13.8
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ^3.22.0
 
 dependency_overrides:
-  win32: ^3.0.0
   just_audio_platform_interface:
     git:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
       ref: video
-  archive: ^3.3.8
-  intl: ^0.18.0
 
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # ---- Core ----
-  get:
+  nampack:
     git:
-      url: https://github.com/MSOB7YY/getx
+      url: https://github.com/MSOB7YY/nampack
+  dart_extensions:
+    git:
+      url: https://github.com/MSOB7YY/dart_extensions
   permission_handler: ^11.0.1
   logger: ^2.2.0
-  package_info_plus: ^4.2.0
-  device_info_plus: ^9.1.2
-  intl: ^0.18.0
-  flutter_archive: ^5.0.0
+  package_info_plus: ^8.0.0
+  device_info_plus: ^10.1.0
+  intl: ^0.19.0
+  flutter_archive: ^6.0.3
   url_launcher: ^6.1.10
-  connectivity_plus: ^4.0.2
+  connectivity_plus: ^6.0.3
   selectable_autolink_text: ^2.6.0
-  share_plus: ^7.1.0
-  calendar_date_picker2: ^0.5.2
+  share_plus: ^9.0.0
+  calendar_date_picker2: ^1.0.2
   wakelock_plus: ^1.1.1
-  flutter_local_notifications: ^15.1.0
+  flutter_local_notifications: ^17.1.2
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
@@ -53,11 +55,12 @@ dependencies:
     git:
       url: https://github.com/zhourengui/flutter_html
   flutter_volume_controller: ^1.3.0
-  flutter_markdown: ^0.6.17+3
+  flutter_markdown: ^0.7.1
   flutter_mailer: ^2.1.1
   lrc: ^1.0.2
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
+  native_device_orientation: ^2.0.3
 
   # ---- Audio Indexing & Playback ----
   just_audio:
@@ -86,16 +89,13 @@ dependencies:
 
   # ---- Image Utilities ----
   palette_generator: ^0.3.3+2
-  photo_view: ^0.14.0
+  photo_view: ^0.15.0
 
   # ---- UI Rendering ----
   flutter_staggered_animations: ^1.1.1
-  flutter_staggered_grid_view: ^0.6.2
+  flutter_staggered_grid_view: ^0.7.0
   flutter_colorpicker: ^1.0.3
   animated_background: ^2.0.0
-  known_extents_list_view_builder:
-    git:
-      url: https://github.com/MSOB7YY/known_extents_listview_fancy
   flutter_animate: ^4.2.0+1
   dynamic_color: ^1.6.7
   scrollable_positioned_list: ^0.3.8
@@ -117,8 +117,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^2.0.2
+  flutter_lints: ^4.0.0
   flutter_native_splash:
+
+  custom_lint:
+  obx_lints:
+    git:
+      url: https://github.com/MSOB7YY/nampack
+      path: packages/obx_lints
 
 flutter_native_splash:
   image: assets/namida_icon.png

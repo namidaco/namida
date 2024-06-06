@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -16,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -84,7 +83,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.direct,
                 title: lang.ENABLE_BOTTOM_NAV_BAR,
                 subtitle: lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
-                value: settings.enableBottomNavBar.value,
+                value: settings.enableBottomNavBar.valueR,
                 onChanged: (p0) {
                   settings.save(enableBottomNavBar: !p0);
                   MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(!p0);
@@ -99,7 +98,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.pip),
                 icon: Broken.screenmirroring,
                 title: lang.ENABLE_PICTURE_IN_PICTURE,
-                value: settings.enablePip.value,
+                value: settings.enablePip.valueR,
                 onChanged: (isTrue) {
                   settings.save(enablePip: !isTrue);
                   NamidaChannel.inst.setCanEnterPip(!isTrue);
@@ -114,7 +113,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.foldersHierarchy),
                 icon: Broken.folder_open,
                 title: lang.ENABLE_FOLDERS_HIERARCHY,
-                value: settings.enableFoldersHierarchy.value,
+                value: settings.enableFoldersHierarchy.valueR,
                 onChanged: (p0) {
                   settings.save(enableFoldersHierarchy: !p0);
                   Folders.inst.onFoldersHierarchyChanged(!p0);
@@ -129,7 +128,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.fabType),
                 icon: Broken.safe_home,
                 title: lang.FLOATING_ACTION_BUTTON,
-                trailingText: settings.floatingActionButton.value.toText(),
+                trailingText: settings.floatingActionButton.valueR.toText(),
                 onTap: () {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
@@ -145,13 +144,14 @@ class ExtrasSettings extends SettingSubpageProvider {
                         child: Column(
                           children: FABType.values
                               .map(
-                                (e) => Obx(
-                                  () => Container(
+                                (e) => ObxO(
+                                  rx: settings.floatingActionButton,
+                                  builder: (floatingActionButton) => Container(
                                     margin: const EdgeInsets.all(4.0),
                                     child: ListTileWithCheckMark(
                                       title: e.toText(),
                                       icon: e.toIcon(),
-                                      active: settings.floatingActionButton.value == e,
+                                      active: floatingActionButton == e,
                                       onTap: () => settings.save(floatingActionButton: e),
                                     ),
                                   ),
@@ -173,7 +173,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
                 icon: Broken.receipt_1,
                 title: lang.DEFAULT_LIBRARY_TAB,
-                trailingText: settings.autoLibraryTab.value ? lang.AUTO : settings.staticLibraryTab.value.toText(),
+                trailingText: settings.autoLibraryTab.valueR ? lang.AUTO : settings.staticLibraryTab.valueR.toText(),
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.DEFAULT_LIBRARY_TAB,
@@ -194,12 +194,12 @@ class ExtrasSettings extends SettingSubpageProvider {
                                 title: lang.AUTO,
                                 icon: Broken.recovery_convert,
                                 onTap: () => settings.save(autoLibraryTab: true),
-                                active: settings.autoLibraryTab.value,
+                                active: settings.autoLibraryTab.valueR,
                               ),
                             ),
                           ),
                           const SizedBox(height: 12.0),
-                          ...settings.libraryTabs.asMap().entries.map(
+                          ...settings.libraryTabs.value.asMap().entries.map(
                                 (e) => Obx(
                                   () => Container(
                                     margin: const EdgeInsets.all(4.0),
@@ -213,7 +213,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                           autoLibraryTab: false,
                                         );
                                       },
-                                      active: settings.selectedLibraryTab.value == e.value,
+                                      active: settings.selectedLibraryTab.valueR == e.value,
                                     ),
                                   ),
                                 ),
@@ -290,7 +290,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.document_filter,
                 title: lang.ENABLE_SEARCH_CLEANUP,
                 subtitle: lang.ENABLE_SEARCH_CLEANUP_SUBTITLE,
-                value: settings.enableSearchCleanup.value,
+                value: settings.enableSearchCleanup.valueR,
                 onChanged: (p0) => settings.save(enableSearchCleanup: !p0),
               ),
             ),
@@ -302,7 +302,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
                 icon: Broken.mobile_programming,
                 title: lang.PRIORITIZE_EMBEDDED_LYRICS,
-                value: settings.prioritizeEmbeddedLyrics.value,
+                value: settings.prioritizeEmbeddedLyrics.valueR,
                 onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
               ),
             ),
@@ -312,13 +312,13 @@ class ExtrasSettings extends SettingSubpageProvider {
             child: Obx(
               () => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
-                enabled: settings.enableLyrics.value,
+                enabled: settings.enableLyrics.valueR,
                 title: lang.LYRICS_SOURCE,
                 leading: const StackedIcon(
                   baseIcon: Broken.mobile_programming,
                   secondaryIcon: Broken.cpu_setting,
                 ),
-                trailingText: settings.lyricsSource.value.toText(),
+                trailingText: settings.lyricsSource.valueR.toText(),
                 onTap: () {
                   bool isEnabled(LyricsSource val) => settings.lyricsSource.value == val;
                   void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
@@ -367,7 +367,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.external_drive,
                 title: lang.IMMERSIVE_MODE,
                 subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
-                value: settings.hideStatusBarInExpandedMiniplayer.value,
+                value: settings.hideStatusBarInExpandedMiniplayer.valueR,
                 onChanged: (p0) => settings.save(hideStatusBarInExpandedMiniplayer: !p0),
               ),
             ),
@@ -379,7 +379,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.swipeToOpenDrawer),
                 icon: Broken.sidebar_right,
                 title: lang.SWIPE_TO_OPEN_DRAWER,
-                value: settings.swipeableDrawer.value,
+                value: settings.swipeableDrawer.valueR,
                 onChanged: (isTrue) {
                   settings.save(swipeableDrawer: !isTrue);
                   NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(!isTrue);
@@ -395,7 +395,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.clipboard_export,
                 title: lang.ENABLE_CLIPBOARD_MONITORING,
                 subtitle: lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE,
-                value: settings.enableClipboardMonitoring.value,
+                value: settings.enableClipboardMonitoring.valueR,
                 onChanged: (isTrue) {
                   settings.save(enableClipboardMonitoring: !isTrue);
                 },
@@ -411,8 +411,8 @@ class ExtrasSettings extends SettingSubpageProvider {
               trailing: Obx(
                 () => Column(
                   children: [
-                    Text("${Indexer.inst.colorPalettesInStorage.value}/${Indexer.inst.artworksInStorage.value}"),
-                    if (CurrentColor.inst.isGeneratingAllColorPalettes.value) const LoadingIndicator(),
+                    Text("${Indexer.inst.colorPalettesInStorage.valueR}/${Indexer.inst.artworksInStorage.valueR}"),
+                    if (CurrentColor.inst.isGeneratingAllColorPalettes.valueR) const LoadingIndicator(),
                   ],
                 ),
               ),
@@ -473,13 +473,14 @@ class ExtrasSettings extends SettingSubpageProvider {
           onTap: () {
             final subList = <LibraryTab>[].obs;
 
-            LibraryTab.values.loop((e, index) {
+            LibraryTab.values.loop((e) {
               if (!settings.libraryTabs.contains(e)) {
                 subList.add(e);
               }
             });
 
             NamidaNavigator.inst.navigateDialog(
+              scale: 1.0,
               onDisposing: () {
                 subList.close();
               },
@@ -492,8 +493,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                   ),
                 ],
                 child: SizedBox(
-                  width: Get.width,
-                  height: Get.height * 0.5,
+                  width: namida.width,
+                  height: namida.height * 0.5,
                   child: Obx(
                     () => Column(
                       children: [
@@ -504,16 +505,15 @@ class ExtrasSettings extends SettingSubpageProvider {
                         const SizedBox(height: 12.0),
                         Expanded(
                           flex: 6,
-                          child: ReorderableListView.builder(
-                            shrinkWrap: true,
-                            proxyDecorator: (child, index, animation) => child,
+                          child: NamidaListView(
+                            itemExtent: null,
                             padding: EdgeInsets.zero,
                             itemCount: settings.libraryTabs.length,
                             itemBuilder: (context, i) {
                               final tab = settings.libraryTabs[i];
-                              return Container(
+                              return Padding(
                                 key: ValueKey(i),
-                                margin: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(4.0),
                                 child: ListTileWithCheckMark(
                                   title: "${i + 1}. ${tab.toText()}",
                                   icon: tab.toIcon(),
@@ -534,7 +534,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                               if (newIndex > oldIndex) {
                                 newIndex -= 1;
                               }
-                              final item = settings.libraryTabs.elementAt(oldIndex);
+                              final item = settings.libraryTabs.value.elementAt(oldIndex);
                               settings.removeFromList(
                                 libraryTab1: item,
                               );

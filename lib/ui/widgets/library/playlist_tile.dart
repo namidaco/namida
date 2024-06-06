@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/class/track.dart';
 
 import 'package:namida/controller/playlist_controller.dart';
@@ -38,6 +38,7 @@ class PlaylistTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
             child: Obx(
               () {
+                PlaylistController.inst.playlistsMap.valueR;
                 final playlist = PlaylistController.inst.getPlaylist(playlistName);
                 if (playlist == null) return const SizedBox();
                 final tracksRaw = playlist.tracks.toTracks();
@@ -66,7 +67,7 @@ class PlaylistTile extends StatelessWidget {
                             tag: 'line2_$hero',
                             child: Text(
                               [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7.multipliedFontScale),
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),

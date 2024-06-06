@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -19,8 +20,10 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class NamidaNavigator {
@@ -28,18 +31,22 @@ class NamidaNavigator {
   static final NamidaNavigator _instance = NamidaNavigator._internal();
   NamidaNavigator._internal();
 
-  final navKey = Get.nestedKey(1);
+  GlobalKey<NavigatorState> get _rootNav => namida.rootNavigatorKey;
 
-  final ytLocalSearchNavigatorKey = Get.nestedKey(9);
+  final navKey = GlobalKey<NavigatorState>();
 
-  final ytMiniplayerCommentsPageKey = Get.nestedKey(11);
+  final ytLocalSearchNavigatorKey = GlobalKey<NavigatorState>();
+
+  final ytMiniplayerCommentsPageKey = GlobalKey<NavigatorState>();
 
   bool isytLocalSearchInFullPage = false;
   bool isInYTCommentsSubpage = false;
   bool isQueueSheetOpen = false;
 
-  final RxList<NamidaRoute> currentWidgetStack = <NamidaRoute>[].obs;
-  NamidaRoute? get currentRoute => currentWidgetStack.lastOrNull;
+  final currentWidgetStack = <NamidaRoute>[].obs;
+  NamidaRoute? get currentRoute => currentWidgetStack.value.lastOrNull;
+  // ignore: avoid_rx_value_getter_outside_obx
+  NamidaRoute? get currentRouteR => currentWidgetStack.valueR.lastOrNull;
   int _currentDialogNumber = 0;
   int _currentMenusNumber = 0;
 
@@ -68,27 +75,34 @@ class NamidaNavigator {
     _onLandscapeEvents.remove(key);
   }
 
-  Future<T?> showMenu<T>(Future? menuFunction) async {
+  Future<T?> showMenu<T>({
+    required BuildContext context,
+    required RelativeRect position,
+    required List<PopupMenuEntry<T>> items,
+  }) async {
     _currentMenusNumber++;
     _printMenus();
-    return await menuFunction;
+    return material.showMenu(
+      useRootNavigator: true,
+      context: context,
+      position: position,
+      items: items,
+    );
   }
 
   void popMenu({bool handleClosing = true}) {
     if (_currentMenusNumber > 0) {
       _currentMenusNumber--;
       if (handleClosing) {
-        Get.close(1);
+        _rootNav.currentState?.pop();
       }
     }
     _printMenus();
   }
 
   void popAllMenus() {
-    if (_currentMenusNumber > 0) {
-      Get.until((route) => route.isFirst);
-      _currentMenusNumber = 0;
-    }
+    _rootNav.currentState?.popUntil((route) => true);
+    _currentMenusNumber = 0;
     _printMenus();
   }
 
@@ -121,7 +135,7 @@ class NamidaNavigator {
   void onFirstLoad() {
     final initialTab = settings.selectedLibraryTab.value;
     final isSearchTab = initialTab == LibraryTab.search;
-    final finalTab = isSearchTab ? settings.libraryTabs.first : initialTab;
+    final finalTab = isSearchTab ? settings.libraryTabs.value.first : initialTab;
     navigateTo(finalTab.toWidget(), durationInMs: 0);
     Dimensions.inst.updateAllTileDimensions();
     if (isSearchTab) ScrollSearchController.inst.animatePageController(initialTab);
@@ -185,8 +199,8 @@ class NamidaNavigator {
     _isInFullScreen = true;
     WakelockController.inst.updateFullscreenStatus(true);
 
-    Get.to(
-      () => WillPopScope(
+    _rootNav.currentState?.pushPage(
+      WillPopScope(
         onWillPop: () async {
           if (onWillPop != null) await onWillPop();
           exitFullScreen();
@@ -194,13 +208,9 @@ class NamidaNavigator {
         },
         child: widget,
       ),
-      id: null,
-      preventDuplicates: true,
       transition: Transition.noTransition,
-      curve: Curves.easeOut,
-      duration: Duration.zero,
-      opaque: true,
-      fullscreenDialog: false,
+      durationInMs: 0,
+      maintainState: true,
     );
 
     setDefaultSystemUIOverlayStyle(semiTransparent: true);
@@ -212,7 +222,7 @@ class NamidaNavigator {
 
   Future<void> exitFullScreen() async {
     if (!_isInFullScreen) return;
-    Get.until((route) => route.isFirst);
+    _rootNav.currentState?.pop();
 
     setDefaultSystemUIOverlayStyle();
     await Future.wait([
@@ -229,21 +239,35 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
-    currentWidgetStack.add(page.toNamidaRoute());
+    final newRoute = page.toNamidaRoute();
+    currentWidgetStack.add(newRoute);
     _hideEverything();
 
-    currentRoute?.updateColorScheme();
+    newRoute.updateColorScheme();
 
-    await Get.to(
-      () => page,
-      id: 1,
-      preventDuplicates: false,
+    await navKey.currentState?.pushPage(
+      page,
+      durationInMs: durationInMs,
       transition: transition,
-      curve: Curves.easeOut,
-      duration: Duration(milliseconds: durationInMs),
-      opaque: true,
-      fullscreenDialog: false,
+      maintainState: true,
     );
+  }
+
+  Future<T?> navigateToRoot<T>(
+    Widget page, {
+    Transition transition = Transition.cupertino,
+    int durationInMs = _defaultRouteAnimationDurMS,
+  }) async {
+    return await _rootNav.currentState?.pushPage(
+      page,
+      durationInMs: durationInMs,
+      transition: transition,
+      maintainState: true,
+    );
+  }
+
+  Future<void> popRoot<T>([T? result]) async {
+    return _rootNav.currentState?.pop<T>(result);
   }
 
   /// Use [dialogBuilder] in case you want to acess the theme generated by [colorScheme].
@@ -259,9 +283,6 @@ class NamidaNavigator {
     final bool blackBg = false,
     final void Function()? onDisposing,
   }) async {
-    final rootNav = navigator;
-    if (rootNav == null) return;
-
     ScrollSearchController.inst.unfocusKeyboard();
     _currentDialogNumber++;
 
@@ -279,8 +300,8 @@ class NamidaNavigator {
 
     final theme = AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
 
-    await Get.to(
-      () => WillPopScope(
+    await _rootNav.currentState?.pushPage(
+      WillPopScope(
         onWillPop: onWillPop,
         child: TapDetector(
           onTap: onWillPop,
@@ -300,11 +321,11 @@ class NamidaNavigator {
           ),
         ),
       ),
-      duration: Duration(milliseconds: durationInMs),
-      preventDuplicates: false,
+      durationInMs: durationInMs,
       opaque: false,
       fullscreenDialog: true,
       transition: Transition.fade,
+      maintainState: true,
     );
     if (onDisposing != null) {
       onDisposing.executeAfterDelay(durationMS: durationInMs * 2);
@@ -314,9 +335,12 @@ class NamidaNavigator {
 
   Future<void> closeDialog([int count = 1]) async {
     if (_currentDialogNumber == 0) return;
-    final closeCount = count.withMaximum(_currentDialogNumber);
-    _currentDialogNumber -= closeCount;
-    Get.close(closeCount);
+    int closeCount = count.withMaximum(_currentDialogNumber);
+    while (closeCount > 0) {
+      _currentDialogNumber--;
+      _rootNav.currentState?.pop();
+      closeCount--;
+    }
     _printDialogs();
   }
 
@@ -333,21 +357,23 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
-    currentWidgetStack.removeLast();
-    currentWidgetStack.add(page.toNamidaRoute());
+    final newRoute = page.toNamidaRoute();
+    currentWidgetStack.execute(
+      (value) {
+        value.removeLast();
+        value.add(newRoute);
+      },
+    );
+
     _hideEverything();
 
-    currentRoute?.updateColorScheme();
+    newRoute.updateColorScheme();
 
-    await Get.off(
-      () => page,
-      id: 1,
-      preventDuplicates: false,
+    await navKey.currentState?.pushPageReplacement(
+      page,
+      durationInMs: durationInMs,
       transition: transition,
-      curve: Curves.easeOut,
-      duration: Duration(milliseconds: durationInMs),
-      opaque: true,
-      fullscreenDialog: false,
+      maintainState: true,
     );
   }
 
@@ -355,17 +381,19 @@ class NamidaNavigator {
     Widget page, {
     Transition transition = Transition.cupertino,
   }) async {
+    final newRoute = page.toNamidaRoute();
     currentWidgetStack.value = [page.toNamidaRoute()];
     _hideEverything();
 
-    currentRoute?.updateColorScheme();
+    newRoute.updateColorScheme();
 
-    await Get.offAll(
-      () => page,
-      id: 1,
+    navKey.currentState?.popUntil((r) => r.isFirst);
+
+    await navKey.currentState?.pushPageReplacement(
+      page,
+      durationInMs: 500,
       transition: transition,
-      curve: Curves.easeOut,
-      duration: const Duration(milliseconds: 500),
+      maintainState: true,
     );
   }
 
@@ -381,7 +409,7 @@ class NamidaNavigator {
       return;
     }
     if (isInYTCommentsSubpage) {
-      ytMiniplayerCommentsPageKey?.currentState?.pop();
+      ytMiniplayerCommentsPageKey.currentState?.pop();
       isInYTCommentsSubpage = false;
       return;
     }
@@ -391,7 +419,10 @@ class NamidaNavigator {
       return;
     }
 
-    final ytsnvks = ytLocalSearchNavigatorKey?.currentState;
+    final miniplayerAllowPop = MiniPlayerController.inst.onWillPop();
+    if (!miniplayerAllowPop) return;
+
+    final ytsnvks = ytLocalSearchNavigatorKey.currentState;
     if (ytsnvks != null) {
       ytsnvks.pop();
       isytLocalSearchInFullPage = false;
@@ -402,15 +433,23 @@ class NamidaNavigator {
       _hideSearchMenuAndUnfocus();
       return;
     }
-    if (SettingsSearchController.inst.canShowSearch) {
+    if (SettingsSearchController.inst.canShowSearch.value) {
       SettingsSearchController.inst.closeSearch();
       return;
     }
 
-    if (currentRoute?.route == RouteType.PAGE_folders) {
-      final canIgoBackPls = Folders.inst.onBackButton();
-      if (!canIgoBackPls) return;
+    final route = currentRoute?.route;
+    if (route != null) {
+      if (route == RouteType.PAGE_folders) {
+        final canIgoBackPls = Folders.inst.onBackButton();
+        if (!canIgoBackPls) return;
+      } else if (route == RouteType.SUBPAGE_playlistTracks) {
+        PlaylistController.inst.resetCanReorder();
+      } else if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
+        YoutubePlaylistController.inst.resetCanReorder();
+      }
     }
+
     if (_currentMenusNumber > 0) {
       return;
     }
@@ -418,7 +457,7 @@ class NamidaNavigator {
     // pop only if not in root, otherwise show _doubleTapToExit().
     if (currentWidgetStack.length > 1) {
       currentWidgetStack.removeLast();
-      navKey?.currentState?.pop();
+      navKey.currentState?.pop();
     } else {
       await _doubleTapToExit();
     }
@@ -437,11 +476,11 @@ class NamidaNavigator {
         icon: Broken.logout,
         message: lang.EXIT_APP_SUBTITLE,
         top: false,
-        margin: const EdgeInsets.all(8.0),
+        margin: const EdgeInsets.all(12.0),
         animationDurationMS: 500,
-        snackbarStatus: (status) {
+        onStatusChanged: (status) {
           // -- resets time
-          if (status == SnackbarStatus.CLOSED) {
+          if (status == SnackbarStatus.closing || status == SnackbarStatus.closed) {
             _currentBackPressTime = DateTime(0);
           }
         },
@@ -456,67 +495,132 @@ class NamidaNavigator {
 
 void snackyy({
   IconData? icon,
-  Widget? iconWidget,
   String title = '',
   required String message,
   bool top = true,
-  void Function(SnackbarStatus?)? snackbarStatus,
-  EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+  void Function(SnackbarStatus status)? onStatusChanged,
+  EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
   int animationDurationMS = 600,
   int displaySeconds = 2,
   double borderRadius = 12.0,
   Color? leftBarIndicatorColor,
-  Widget? button,
+  (String text, FutureOr<void> Function() function)? button,
   bool? isError,
   int? maxLinesMessage,
 }) {
   isError ??= title == lang.ERROR;
-  final view = Get.context == null ? null : View.of(Get.context!);
-  Get.showSnackbar(
-    GetSnackBar(
-      maxWidth: view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio,
-      alignment: Alignment.centerLeft,
-      icon: iconWidget ??
-          (icon == null
-              ? null
-              : Center(
-                  child: Icon(icon),
-                )),
-      titleText: title == ''
-          ? null
-          : Text(
-              title,
-              style: Get.textTheme.displayLarge,
+  final context = namida.context;
+  final view = context?.view ?? namida.platformView;
+  final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacity(0.3) ?? Colors.black54;
+  final itemsColor = context?.theme.colorScheme.onSurface.withOpacity(0.7) ?? Colors.white54;
+
+  TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
+        fontWeight: fontWeight,
+        fontSize: size,
+        color: action ? null : itemsColor,
+        fontFamily: "LexendDeca",
+        fontFamilyFallback: const ['sans-serif', 'Roboto'],
+      );
+
+  final borderR = borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius);
+  SnackbarController? snackbarController;
+
+  final EdgeInsets paddingInsets;
+  if (button != null) {
+    paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0);
+  } else if (icon != null || title != '') {
+    paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
+  } else {
+    paddingInsets = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0);
+  }
+  final content = Padding(
+    padding: paddingInsets,
+    child: SizedBox(
+      width: view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio,
+      child: Row(
+        children: [
+          if (icon != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Icon(icon, color: itemsColor),
             ),
-      messageText: Text(
-        message,
-        style: title != '' ? Get.textTheme.displaySmall : Get.textTheme.displayMedium,
-        maxLines: maxLinesMessage,
-        overflow: TextOverflow.ellipsis,
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != '')
+                  Text(
+                    title,
+                    style: getTextStyle(FontWeight.w700, 17.0),
+                  ),
+                Text(
+                  message,
+                  style: title != '' ? getTextStyle(FontWeight.w400, 14.0) : getTextStyle(FontWeight.w600, 15.0),
+                  maxLines: maxLinesMessage,
+                  overflow: maxLinesMessage == null ? null : TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (button != null)
+            TextButton(
+              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              onPressed: () {
+                button.$2();
+                snackbarController?.close();
+              },
+              child: NamidaButtonText(
+                button.$1,
+                style: getTextStyle(FontWeight.bold, 14.0, action: true),
+              ),
+            ),
+        ],
       ),
-      mainButton: button,
-      margin: margin,
-      snackPosition: top ? SnackPosition.TOP : SnackPosition.BOTTOM,
-      leftBarIndicatorColor: leftBarIndicatorColor,
-      borderWidth: 1.5,
-      borderColor: isError ? Colors.red.withOpacity(0.2) : null,
-      boxShadows: isError
-          ? [
-              BoxShadow(
-                color: Colors.red.withAlpha(15),
-                blurRadius: 16.0,
-              )
-            ]
-          : null,
-      shouldIconPulse: false,
-      backgroundColor: Get.theme.scaffoldBackgroundColor.withOpacity(0.3),
-      borderRadius: borderRadius.multipliedRadius,
-      barBlur: 12.0,
-      animationDuration: Duration(milliseconds: animationDurationMS),
-      forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
-      reverseAnimationCurve: Curves.easeInOutQuart,
-      duration: Duration(seconds: displaySeconds),
-      snackbarStatus: snackbarStatus,
     ),
   );
+  final snackbar = NamSnackBar(
+    margin: margin,
+    duration: Duration(seconds: displaySeconds),
+    animationDuration: Duration(milliseconds: animationDurationMS),
+    alignment: Alignment.centerLeft,
+    top: top,
+    forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
+    reverseAnimationCurve: Curves.easeInOutQuart,
+    onStatusChanged: onStatusChanged,
+    child: Material(
+      color: Colors.transparent,
+      type: MaterialType.transparency,
+      child: ClipRRect(
+        borderRadius: borderR ?? BorderRadius.zero,
+        child: NamidaBgBlur(
+          blur: 12.0,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: borderR,
+              border: isError ? Border.all(color: Colors.red.withOpacity(0.2), width: 1.5) : Border.all(color: Colors.grey.withOpacity(0.5), width: 0.5),
+              boxShadow: isError
+                  ? [
+                      BoxShadow(
+                        color: Colors.red.withAlpha(15),
+                        blurRadius: 16.0,
+                      )
+                    ]
+                  : null,
+            ),
+            child: leftBarIndicatorColor != null
+                ? DecoratedBox(
+                    decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
+                    child: content,
+                  )
+                : content,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  snackbarController = SnackbarController(snackbar);
+  snackbarController.show();
 }

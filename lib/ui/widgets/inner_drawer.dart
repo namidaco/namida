@@ -1,11 +1,8 @@
-// ignore_for_file: unused_element
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -40,7 +37,10 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
   void toggle() => isOpened ? _closeDrawer() : _openDrawer();
   void open() => _openDrawer();
   void close() => _closeDrawer();
-  void toggleCanSwipe(bool swipe) => setState(() => _canSwipe = swipe);
+  void toggleCanSwipe(bool swipe) {
+    if (_canSwipe == swipe) return;
+    setState(() => _canSwipe = swipe);
+  }
 
   late final AnimationController controller;
 
@@ -174,7 +174,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
         );
         return _canSwipe
             // -- touch absorber
-            ? _HorizontalDragDetector(
+            ? HorizontalDragDetector(
                 behavior: HitTestBehavior.translucent,
                 onDown: (details) {
                   controller.stop();
@@ -200,47 +200,6 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               )
             : finalBuilder;
       },
-    );
-  }
-}
-
-class _HorizontalDragDetector extends StatelessWidget {
-  final GestureDragDownCallback? onDown;
-  final GestureDragUpdateCallback? onUpdate;
-  final GestureDragEndCallback? onEnd;
-  final void Function(HorizontalDragGestureRecognizer instance)? initializer;
-  final Widget? child;
-  final HitTestBehavior? behavior;
-
-  const _HorizontalDragDetector({
-    super.key,
-    this.initializer,
-    this.child,
-    this.behavior,
-    this.onDown,
-    this.onUpdate,
-    this.onEnd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
-    gestures[HorizontalDragGestureRecognizer] = GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
-      () => HorizontalDragGestureRecognizer(debugOwner: this),
-      initializer ??
-          (HorizontalDragGestureRecognizer instance) {
-            instance
-              ..onDown = onDown
-              ..onUpdate = onUpdate
-              ..onEnd = onEnd
-              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-          },
-    );
-
-    return RawGestureDetector(
-      behavior: behavior,
-      gestures: gestures,
-      child: child,
     );
   }
 }

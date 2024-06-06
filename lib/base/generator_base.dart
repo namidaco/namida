@@ -53,7 +53,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
       final subItem = itemToSub(t);
       if (subItem == item) {
         final heatTracks = historytracks.getRange(clamped(i - length), clamped(i + length)).toList();
-        heatTracks.loop((e, index) {
+        heatTracks.loop((e) {
           numberOfListensMap.update(itemToSub(e), (value) => value + 1, ifAbsent: () => 1);
         });
         // skip length since we already took 10 tracks.

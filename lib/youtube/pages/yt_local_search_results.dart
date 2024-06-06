@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
@@ -8,6 +7,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
@@ -126,7 +126,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                                 () => Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    if (YTLocalSearchController.inst.didLoadLookupLists.value == false)
+                                    if (YTLocalSearchController.inst.didLoadLookupLists.valueR == false)
                                       IgnorePointer(
                                         child: NamidaOpacity(
                                           opacity: 0.3,

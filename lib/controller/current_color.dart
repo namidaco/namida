@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -6,7 +7,6 @@ import 'dart:ui' as ui;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:get/get.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
@@ -19,11 +19,12 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
-Color get playerStaticColor => Get.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
-Color get playerStaticColorLight => Color(settings.staticColor.value);
-Color get playerStaticColorDark => Color(settings.staticColorDark.value);
+Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
+Color get playerStaticColorLight => Color(settings.staticColor.valueR);
+Color get playerStaticColorDark => Color(settings.staticColorDark.valueR);
 
 class CurrentColor {
   static CurrentColor get inst => _instance;
@@ -31,12 +32,13 @@ class CurrentColor {
   CurrentColor._internal();
 
   bool get _canAutoUpdateColor => settings.autoColor.value || settings.forceMiniplayerTrackColor.value;
-  Color get miniplayerColor => settings.forceMiniplayerTrackColor.value ? _namidaColorMiniplayer.value ?? color : color;
-  Color get color => _namidaColor.value.color;
-  List<Color> get palette => _namidaColor.value.palette;
-  Color get currentColorScheme => _colorSchemeOfSubPages.value ?? color;
-  int get colorAlpha => Get.isDarkMode ? 200 : 120;
-  bool get shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
+  bool get _shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
+
+  Color get miniplayerColor => settings.forceMiniplayerTrackColor.valueR ? _namidaColorMiniplayer.valueR ?? color : color;
+  Color get color => _namidaColor.valueR.color;
+  List<Color> get palette => _namidaColor.valueR.palette;
+  Color get currentColorScheme => _colorSchemeOfSubPages.valueR ?? color;
+  int get colorAlpha => namida.isDarkMode ? 200 : 120;
 
   final _namidaColorMiniplayer = Rxn<Color>();
 
@@ -59,6 +61,11 @@ class CurrentColor {
 
   final isGeneratingAllColorPalettes = false.obs;
 
+  void refreshhh() {
+    _namidaColor.refresh();
+    _namidaColorMiniplayer.refresh();
+  }
+
   final _colorsMap = <String, NamidaColor>{};
   final _colorsMapYTID = <String, NamidaColor>{};
 
@@ -66,18 +73,18 @@ class CurrentColor {
   void switchColorPalettes(bool isPlaying) {
     _colorsSwitchTimer?.cancel();
     _colorsSwitchTimer = null;
-    if (Player.inst.currentQueue.isEmpty && Player.inst.currentQueueYoutube.isEmpty) return;
+    if (Player.inst.currentItem.value == null) return;
     final durms = isPlaying ? 150 : 2200;
     _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
       if (settings.enablePartyModeColorSwap.value) {
         if (paletteFirstHalf.isEmpty) return;
 
-        final lastItem1 = paletteFirstHalf.last;
+        final lastItem1 = paletteFirstHalf.value.last;
         paletteFirstHalf.remove(lastItem1);
         paletteFirstHalf.insertSafe(0, lastItem1);
 
         if (paletteSecondHalf.isEmpty) return;
-        final lastItem2 = paletteSecondHalf.last;
+        final lastItem2 = paletteSecondHalf.value.last;
         paletteSecondHalf.remove(lastItem2);
         paletteSecondHalf.insertSafe(0, lastItem2);
       }
@@ -120,7 +127,7 @@ class CurrentColor {
 
   Future<void> refreshColorsAfterResumeApp() async {
     final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
-    if (namidaColor != null && settings.autoColor.value && shouldUpdateFromDeviceWallpaper) {
+    if (namidaColor != null && settings.autoColor.value && _shouldUpdateFromDeviceWallpaper) {
       _namidaColor.value = namidaColor;
       _updateCurrentPaletteHalfs(namidaColor);
     }
@@ -155,7 +162,7 @@ class CurrentColor {
     if (!updateIndexOnly && track != null) {
       _updatePlayerColorFromItem(
         getColorPalette: () async => await getTrackColors(track.track),
-        stillPlaying: () => track.track == Player.inst.nowPlayingTrack,
+        stillPlaying: () => track.track == Player.inst.currentTrack?.track,
       );
     }
     if (track != null) {
@@ -172,7 +179,7 @@ class CurrentColor {
     if (id == '') return;
 
     // -- only extract if same item is still playing, i.e. user didn't skip.
-    bool stillPlaying() => ytIdItem.id == Player.inst.nowPlayingVideoID?.id;
+    bool stillPlaying() => ytIdItem.id == Player.inst.currentVideo?.id;
 
     _updatePlayerColorFromItem(
       getColorPalette: () async {
@@ -206,7 +213,7 @@ class CurrentColor {
         _namidaColorMiniplayer.value = trColors.color;
 
         if (settings.autoColor.value) {
-          if (shouldUpdateFromDeviceWallpaper) {
+          if (_shouldUpdateFromDeviceWallpaper) {
             namidaColor = await getPlayerColorFromDeviceWallpaper();
           } else {
             namidaColor = trColors;
@@ -365,8 +372,8 @@ class CurrentColor {
       final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true, useIsolate: useIsolate);
       _updateInColorMap(filename, nc);
     }
-    if (Player.inst.nowPlayingTWD == track) {
-      updatePlayerColorFromTrack(Player.inst.nowPlayingTWD, null);
+    if (Player.inst.currentTrack == track) {
+      updatePlayerColorFromTrack(Player.inst.currentTrack, null);
     }
   }
 
@@ -444,13 +451,21 @@ class CurrentColor {
     paletteFirstHalf.clear();
     paletteSecondHalf.clear();
 
-    nc.palette.loop((c, i) {
-      if (i <= halfIndex) {
-        paletteFirstHalf.add(c);
-      } else {
-        paletteSecondHalf.add(c);
-      }
-    });
+    paletteFirstHalf.execute(
+      (firstPart) {
+        paletteSecondHalf.execute(
+          (secondPart) {
+            nc.palette.loopAdv((c, i) {
+              if (i <= halfIndex) {
+                firstPart.add(c);
+              } else {
+                secondPart.add(c);
+              }
+            });
+          },
+        );
+      },
+    );
   }
 
   Future<void> generateAllColorPalettes() async {

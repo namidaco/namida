@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -16,7 +16,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> historyController;
   final bool Function(MostPlayedTimeRange type) isTimeRangeChipEnabled;
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
-  final List<double>? itemExtents;
+  final double? itemExtent;
   final Widget Function(Widget timeRangeChips, double bottomPadding) header;
   final Widget Function(BuildContext context, int i, RxMap<E, List<int>> listensMap) itemBuilder;
   final Rx<DateRange> customDateRange;
@@ -26,7 +26,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     required this.historyController,
     required this.isTimeRangeChipEnabled,
     required this.onSavingTimeRange,
-    required this.itemExtents,
+    required this.itemExtent,
     required this.header,
     required this.itemBuilder,
     required this.customDateRange,
@@ -80,7 +80,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                 dateText ?? mptr.toText(),
                 style: context.textTheme.displaySmall?.copyWith(
                   color: textColor,
-                  fontSize: dateText == null ? null : 12.0.multipliedFontScale,
+                  fontSize: dateText == null ? null : 12.0,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -143,7 +143,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                 children: [
                   Obx(
                     () {
-                      final dateRange = customDateRange.value;
+                      final dateRange = customDateRange.valueR;
                       return _getChipChild(
                         context: context,
                         mptr: MostPlayedTimeRange.custom,
@@ -186,7 +186,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
         () {
           final finalListenMap = historyController.currentTopTracksMapListens;
           return NamidaListView(
-            itemExtents: itemExtents,
+            itemExtent: itemExtent,
             header: header(bottomWidget, bottomPadding),
             padding: kBottomPaddingInsets,
             itemCount: finalListenMap.length,

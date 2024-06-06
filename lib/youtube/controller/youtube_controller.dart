@@ -6,7 +6,6 @@ import 'dart:isolate';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' hide EnumUtils;
 
 import 'package:namida/base/ports_provider.dart';
@@ -21,47 +20,17 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/download_progress.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YTThumbnail {
-  final String id;
-  const YTThumbnail(this.id);
-  String get maxResUrl => StreamThumbnail(id).maxresdefault;
-  String get hqdefault => StreamThumbnail(id).hqdefault;
-  String get mqdefault => StreamThumbnail(id).mqdefault;
-  String get sddefault => StreamThumbnail(id).sddefault;
-  String get lowres => StreamThumbnail(id).lowres;
-  List<String> get allQualitiesByHighest => [maxResUrl, hqdefault, mqdefault, sddefault, lowres];
-  List<String> get allQualitiesExceptHighest => [hqdefault, mqdefault, sddefault, lowres];
-}
-
-class DownloadProgress {
-  final int progress;
-  final int totalProgress;
-
-  const DownloadProgress({
-    required this.progress,
-    required this.totalProgress,
-  });
-
-  double get percentage => progress / totalProgress;
-
-  String? percentageText({String? prefix}) {
-    final p = percentage;
-    if (p.isFinite) {
-      final String res = (percentage * 100).toStringAsFixed(0);
-      return prefix != null ? "$prefix $res%" : "$res%";
-    }
-    return null;
-  }
-}
-
 class YoutubeController {
   static YoutubeController get inst => _instance;
   static final YoutubeController _instance = YoutubeController._internal();
+
   YoutubeController._internal() {
     scrollController.addListener(() {
       final pixels = scrollController.positions.lastOrNull?.pixels;
@@ -73,7 +42,7 @@ class YoutubeController {
 
   int get _defaultMiniplayerDimSeconds => settings.ytMiniplayerDimAfterSeconds.value;
   double get _defaultMiniplayerOpacity => settings.ytMiniplayerDimOpacity.value;
-  bool get canDimMiniplayer => _canDimMiniplayer.value;
+  RxBaseCore<bool> get canDimMiniplayer => _canDimMiniplayer;
   final _canDimMiniplayer = false.obs;
   Timer? _dimTimer;
   void cancelDimTimer() {
@@ -92,7 +61,8 @@ class YoutubeController {
   }
 
   final scrollController = ScrollController();
-  bool get shouldShowGlowUnderVideo => _shouldShowGlowUnderVideo.value;
+
+  RxBaseCore<bool> get shouldShowGlowUnderVideo => _shouldShowGlowUnderVideo;
   final _shouldShowGlowUnderVideo = false.obs;
 
   final homepageFeed = <YoutubeFeed>[].obs;
@@ -172,7 +142,7 @@ class YoutubeController {
     final completer2 = Completer<void>();
 
     Directory(paths.$1).listAllIsolate().then((value) {
-      value.loop((e, index) {
+      value.loop((e) {
         if (e is File) {
           try {
             final map = e.readAsJsonSync();
@@ -183,7 +153,7 @@ class YoutubeController {
       completer1.complete();
     });
     Directory(paths.$2).listAllIsolate().then((value) {
-      value.loop((e, index) {
+      value.loop((e) {
         if (e is File) {
           try {
             final map = e.readAsJsonSync();
@@ -359,7 +329,7 @@ class YoutubeController {
       final excess = map.length - 2000;
       if (excess > 0) {
         final excessKeys = map.keys.take(excess).toList();
-        excessKeys.loop((k, _) => map.remove(k));
+        excessKeys.loop((k) => map.remove(k));
       }
 
       await _saveTemporarelyVideoInfoIsolate.thready({
@@ -373,7 +343,7 @@ class YoutubeController {
     final dirPath = p['dirPath'] as String;
     final entries = p['entries'] as List<MapEntry<String, Map<String, String?>>>;
 
-    entries.loop((e, index) {
+    entries.loop((e) {
       final file = File('$dirPath${e.key}.txt');
       file.writeAsJsonSync(e.value);
     });
@@ -381,7 +351,7 @@ class YoutubeController {
 
   /// Checks if the requested id is still playing, since most functions are async and will often
   /// take time to fetch from internet, and user may have played other vids, this covers such cases.
-  bool _canSafelyModifyMetadata(String id) => Player.inst.nowPlayingVideoID?.id == id;
+  bool _canSafelyModifyMetadata(String id) => Player.inst.currentVideo?.id == id;
 
   Future<void> prepareHomeFeed() async {
     homepageFeed.clear();
@@ -418,7 +388,7 @@ class YoutubeController {
     currentRelatedVideos.value = List.filled(20, null, growable: true);
     final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
     _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
-    items.loop((p, index) {
+    items.loop((p) {
       if (p is YoutubePlaylist) {
         YoutubeController.inst.getPlaylistStreams(p, forceInitial: true);
       }
@@ -463,9 +433,7 @@ class YoutubeController {
 
   Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
     currentTotalCommentsCount.value = null;
-    currentComments
-      ..clear()
-      ..addAll(List.filled(20, null));
+    currentComments.assignAll(List.filled(20, null));
 
     // -- Fetching Comments.
     final fetchedComments = <YoutubeComment>[];
@@ -521,7 +489,7 @@ class YoutubeController {
 
       // -- saving to cache
       final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
-      _saveCommentsToStorage(cachedFile, currentComments);
+      _saveCommentsToStorage(cachedFile, currentComments.value);
     }
   }
 
@@ -545,7 +513,7 @@ class YoutubeController {
   }
 
   VideoStream getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
-    final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities).map((element) => element.settingLabeltoVideoLabel());
+    final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value).map((element) => element.settingLabeltoVideoLabel());
     VideoStream? plsLoop(bool webm) {
       for (int i = 0; i < streams.length; i++) {
         final q = streams[i];
@@ -727,22 +695,22 @@ class YoutubeController {
   }
 
   void _loopMapAndPostNotification({
-    required Map<String, Map<String, DownloadProgress>> bigMap,
+    required Map<String, RxMap<String, DownloadProgress>> bigMap,
     required int Function(String key, int progress) speedInBytes,
     required DateTime startTime,
     required bool isAudio,
   }) {
     final downloadingText = isAudio ? "Audio" : "Video";
     for (final bigEntry in bigMap.entries.toList()) {
-      final map = bigEntry.value;
+      final map = bigEntry.value.value;
       final videoId = bigEntry.key;
       for (final entry in map.entries.toList()) {
         final p = entry.value.progress;
         final tp = entry.value.totalProgress;
         final title = getVideoName(videoId) ?? videoId;
         final speedB = speedInBytes(videoId, entry.value.progress);
-        currentSpeedsInByte[videoId] ??= <String, int>{}.obs;
-        currentSpeedsInByte[videoId]![entry.key] = speedB;
+        currentSpeedsInByte.value[videoId] ??= <String, int>{}.obs;
+        currentSpeedsInByte.value[videoId]![entry.key] = speedB;
         if (p / tp >= 1) {
           map.remove(entry.key);
         } else {
@@ -813,7 +781,7 @@ class YoutubeController {
         _loopMapAndPostNotification(
           startTime: startTime,
           isAudio: false,
-          bigMap: downloadsVideoProgressMap,
+          bigMap: downloadsVideoProgressMap.value,
           speedInBytes: (key, newProgress) {
             final previousProgress = _speedMapVideo[key] ?? 0;
             final speed = newProgress - previousProgress;
@@ -824,7 +792,7 @@ class YoutubeController {
         _loopMapAndPostNotification(
           startTime: startTime,
           isAudio: true,
-          bigMap: downloadsAudioProgressMap,
+          bigMap: downloadsAudioProgressMap.value,
           speedInBytes: (key, newProgress) {
             final previousProgress = _speedMapAudio[key] ?? 0;
             final speed = newProgress - previousProgress;
@@ -863,15 +831,15 @@ class YoutubeController {
               final aFile = File("$saveDirPath/.tempa_${ytitem.filename}");
               final vFile = File("$saveDirPath/.tempv_${ytitem.filename}");
               if (aFile.existsSync()) {
-                downloadsAudioProgressMap[ytitem.id] ??= <String, DownloadProgress>{}.obs;
-                downloadsAudioProgressMap[ytitem.id]![ytitem.filename] = DownloadProgress(
+                downloadsAudioProgressMap.value[ytitem.id] ??= <String, DownloadProgress>{}.obs;
+                downloadsAudioProgressMap.value[ytitem.id]![ytitem.filename] = DownloadProgress(
                   progress: aFile.fileSizeSync() ?? 0,
                   totalProgress: 0,
                 );
               }
               if (vFile.existsSync()) {
-                downloadsVideoProgressMap[ytitem.id] ??= <String, DownloadProgress>{}.obs;
-                downloadsVideoProgressMap[ytitem.id]![ytitem.filename] = DownloadProgress(
+                downloadsVideoProgressMap.value[ytitem.id] ??= <String, DownloadProgress>{}.obs;
+                downloadsVideoProgressMap.value[ytitem.id]![ytitem.filename] = DownloadProgress(
                   progress: vFile.fileSizeSync() ?? 0,
                   totalProgress: 0,
                 );
@@ -907,7 +875,7 @@ class YoutubeController {
     for (final e in youtubeDownloadTasksMap.entries) {
       for (final config in e.value.values) {
         final groupName = e.key;
-        videosIds.loop((e, index) {
+        videosIds.loop((e) {
           if (e == config.id) {
             onMatch(groupName, config);
           }
@@ -988,7 +956,7 @@ class YoutubeController {
         onMatch: onMatch,
       );
     } else {
-      itemsConfig.loop((c, _) => onMatch(groupName, c));
+      itemsConfig.loop((c) => onMatch(groupName, c));
     }
     youtubeDownloadTasksInQueueMap.refresh();
   }
@@ -1027,7 +995,7 @@ class YoutubeController {
     if (remove) {
       final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
       final itemsToCancel = allInGroupName ? youtubeDownloadTasksMap[groupName]!.values.toList() : itemsConfig;
-      await itemsToCancel.loopFuture((c, _) async {
+      for (final c in itemsToCancel) {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
@@ -1036,16 +1004,18 @@ class YoutubeController {
           youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);
           YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList.remove((groupName, c));
         }
-        await File("$directory/${c.filename}").deleteIfExists();
+        try {
+          await File("$directory/${c.filename}").delete();
+        } catch (_) {}
         downloadedFilesMap[groupName]?[c.filename] = null;
-      });
+      }
 
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap[groupName]?.isEmpty == true) {
         youtubeDownloadTasksMap.remove(groupName);
       }
     } else {
-      itemsConfig.loop((c, _) {
+      itemsConfig.loop((c) {
         youtubeDownloadTasksMap[groupName]![c.filename] = c;
         youtubeDownloadTasksInQueueMap[groupName]![c.filename] = true;
       });
@@ -1099,8 +1069,8 @@ class YoutubeController {
       final completerA = _completersVAI[config]!.$2;
       final completerI = _completersVAI[config]!.$3;
 
-      isFetchingData[videoID] ??= <String, bool>{}.obs;
-      isFetchingData[videoID]![config.filename] = true;
+      isFetchingData.value[videoID] ??= <String, bool>{}.obs;
+      isFetchingData.value[videoID]![config.filename] = true;
 
       try {
         final dummyVideoUrl = (config.videoStream?.url == null || config.videoStream?.url == '');
@@ -1321,8 +1291,8 @@ class YoutubeController {
       );
     }
 
-    isDownloading[id] ??= <String, bool>{}.obs;
-    isDownloading[id]![filenameClean] = true;
+    isDownloading.value[id] ??= <String, bool>{}.obs;
+    isDownloading.value[id]![filenameClean] = true;
 
     _startNotificationTimer();
 
@@ -1376,7 +1346,7 @@ class YoutubeController {
 
           int bytesLength = 0;
 
-          downloadsVideoProgressMap[id] ??= <String, DownloadProgress>{}.obs;
+          downloadsVideoProgressMap.value[id] ??= <String, DownloadProgress>{}.obs;
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
             url: videoStream.url ?? '',
@@ -1431,7 +1401,7 @@ class YoutubeController {
           }
           int bytesLength = 0;
 
-          downloadsAudioProgressMap[id] ??= <String, DownloadProgress>{}.obs;
+          downloadsAudioProgressMap.value[id] ??= <String, DownloadProgress>{}.obs;
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
             url: audioStream.url ?? '',
@@ -1745,7 +1715,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   Future<void> stopDownloads({required List<File> files}) async {
     if (files.isEmpty) return;
-    files.loop((e, _) => _onFileFinish(e.path, false));
+    files.loop((e) => _onFileFinish(e.path, false));
     final p = {'files': files, 'stop': true};
     await sendPort(p);
   }
@@ -1850,7 +1820,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
   }
 
   void _onFileFinish(String path, bool? value) {
-    if (value != null) _downloadCompleters[path].completeIfWasnt(value);
+    if (value != null) _downloadCompleters[path]?.completeIfWasnt(value);
     _downloadCompleters[path] = null;
     _progressPorts[path]?.close();
     _progressPorts[path] = null;

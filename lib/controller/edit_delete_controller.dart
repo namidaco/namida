@@ -23,7 +23,7 @@ class EditDeleteController {
 
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {
     final videosToDelete = <NamidaVideo>[];
-    tracks.loop((e, index) {
+    tracks.loop((e) {
       videosToDelete.addAll(VideoController.inst.getNVFromID(e.track.youtubeID));
     });
     await Indexer.inst.clearVideoCache(videosToDelete);
@@ -57,7 +57,7 @@ class EditDeleteController {
   /// returns failed deletes.
   static int _deleteAllIsolate(List<String> files) {
     int failed = 0;
-    files.loop((e, index) {
+    files.loop((e) {
       try {
         File(e).deleteSync();
       } catch (_) {
@@ -71,7 +71,7 @@ class EditDeleteController {
   static ({int deletedCount, int sizeOfDeleted}) _deleteAllWithDetailsIsolate(List<String> files) {
     int deleted = 0;
     int size = 0;
-    files.loop((e, index) {
+    files.loop((e) {
       int s = 0;
       try {
         s = File(e).lengthSync();
@@ -132,7 +132,7 @@ class EditDeleteController {
 
     final oldNewTrack = oldNewMap;
     for (final oldNewTrack in oldNewTrack.entries) {
-      allHistory.loop((entry, index) {
+      allHistory.loop((entry) {
         final day = entry.key;
         final trs = entry.value;
         trs.replaceWhere(
@@ -146,13 +146,14 @@ class EditDeleteController {
         );
       });
     }
+    HistoryController.inst.historyMap.refresh();
     await Future.wait([
       HistoryController.inst.saveHistoryToStorage(daysToSave).then((value) => HistoryController.inst.updateMostPlayedPlaylist()),
       QueueController.inst.replaceTrackInAllQueues(oldNewTrack), // -- Queues
       PlaylistController.inst.replaceTrackInAllPlaylistsBulk(oldNewTrack), // -- Playlists
     ]);
     // -- Selected Tracks
-    if (SelectedTracksController.inst.selectedTracks.isNotEmpty) {
+    if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
       for (final oldNewTrack in oldNewTrack.entries) {
         SelectedTracksController.inst.replaceThisTrack(oldNewTrack.key, oldNewTrack.value);
       }
@@ -170,7 +171,7 @@ class EditDeleteController {
       HistoryController.inst.replaceAllTracksInsideHistory(oldTrack, newTrack), // History
     ]);
     // --- Selected Tracks ---
-    if (SelectedTracksController.inst.selectedTracks.isNotEmpty) {
+    if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
       SelectedTracksController.inst.replaceThisTrack(oldTrack, newTrack);
     }
   }
@@ -186,7 +187,7 @@ class EditDeleteController {
       Player.inst.replaceTracksDirectoryInQueue(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
       HistoryController.inst.replaceTracksDirectoryInHistory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
     ]);
-    if (SelectedTracksController.inst.selectedTracks.isNotEmpty) {
+    if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
       SelectedTracksController.inst.replaceTrackDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists);
     }
   }

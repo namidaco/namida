@@ -5,7 +5,7 @@ import 'parser_qrc.dart';
 ///smart parser
 ///Parser is automatically selected
 class LRCParserSmart extends LyricsParse {
-  LRCParserSmart(String lyric) : super(lyric);
+  LRCParserSmart(super.lyric);
 
   @override
   List<LyricsLineModel> parseLines({bool isMain = true}) {

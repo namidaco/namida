@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class SettingsCard extends StatelessWidget {
   final Widget child;
@@ -62,7 +61,7 @@ class SettingsCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0.multipliedFontScale),
+                        style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0),
                       ),
                       if (subtitle != null) Text(subtitle!, style: context.textTheme.displaySmall),
                     ],

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide Response;
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
@@ -22,6 +21,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -80,7 +80,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                   borderRadius: 6.0,
-                  bgColor: settings.performanceMode.value == e ? context.theme.cardColor : null,
+                  bgColor: settings.performanceMode.valueR == e ? context.theme.cardColor : null,
                   child: Row(
                     children: [
                       Icon(
@@ -90,7 +90,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                       const SizedBox(width: 6.0),
                       Text(
                         e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0.multipliedFontScale),
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
                       ),
                     ],
                   ),
@@ -105,8 +105,8 @@ class AdvancedSettings extends SettingSubpageProvider {
           ],
           child: Obx(
             () => Text(
-              settings.performanceMode.value.toText(),
-              style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onBackground.withAlpha(200)),
+              settings.performanceMode.valueR.toText(),
+              style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
               textAlign: TextAlign.end,
             ),
           ),
@@ -135,8 +135,8 @@ class AdvancedSettings extends SettingSubpageProvider {
               ),
               trailingRaw: Obx(
                 () {
-                  final current = VideoController.inst.localVideoExtractCurrent.value;
-                  final total = VideoController.inst.localVideoExtractTotal.value;
+                  final current = VideoController.inst.localVideoExtractCurrent.valueR;
+                  final total = VideoController.inst.localVideoExtractTotal.valueR;
                   final isCounterVisible = total != 0;
                   final isLoadingVisible = current != null;
 
@@ -173,14 +173,12 @@ class AdvancedSettings extends SettingSubpageProvider {
 
                 final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
                 void resetSourcesMap() {
-                  TrackSource.values.loop((e, index) {
-                    sourcesMap[e] = 0;
-                  });
+                  sourcesMap.execute((map) => TrackSource.values.loop((e) => map[e] = 0));
                 }
 
-                final RxInt totalTracksToBeRemoved = 0.obs;
+                final totalTracksToBeRemoved = 0.obs;
 
-                final RxInt totalTracksBetweenDates = 0.obs;
+                final totalTracksBetweenDates = 0.obs;
 
                 void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
                   final sussyDays = HistoryController.inst.historyDays.toList();
@@ -193,9 +191,9 @@ class AdvancedSettings extends SettingSubpageProvider {
                     printy(sussyDays);
                   }
                   resetSourcesMap();
-                  sussyDays.loop((d, index) {
+                  sussyDays.loop((d) {
                     final tracks = HistoryController.inst.historyMap.value[d] ?? [];
-                    tracks.loop((twd, index) {
+                    tracks.loop((twd) {
                       sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
                     });
                   });
@@ -204,7 +202,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   }
                   if (sourcesToDelete.isNotEmpty) {
                     totalTracksToBeRemoved.value = 0;
-                    sourcesToDelete.loop((e, index) {
+                    sourcesToDelete.loop((e) {
                       totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
                     });
                   }
@@ -231,7 +229,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                         text: lang.REMOVE,
                         onPressed: () async {
                           final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
-                            sourcesToDelete,
+                            sourcesToDelete.value,
                             oldestDate: oldestDate,
                             newestDate: newestDate,
                           );
@@ -251,7 +249,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                               const Icon(Broken.danger),
                               const SizedBox(width: 8.0),
                               Obx(() => Text(
-                                    '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.value}',
+                                    '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
                                     style: context.textTheme.displayMedium,
                                   )),
                             ],
@@ -282,15 +280,18 @@ class AdvancedSettings extends SettingSubpageProvider {
                             },
                           ),
                           const SizedBox(height: 12.0),
-                          BetweenDatesTextButton(
-                            useHistoryDates: true,
-                            onConfirm: (dates) {
-                              oldestDate = dates.firstOrNull;
-                              newestDate = dates.lastOrNull;
-                              calculateTotalTracks(oldestDate, newestDate);
-                              NamidaNavigator.inst.closeDialog();
-                            },
-                            tracksLength: totalTracksBetweenDates.value,
+                          ObxO(
+                            rx: totalTracksBetweenDates,
+                            builder: (total) => BetweenDatesTextButton(
+                              useHistoryDates: true,
+                              onConfirm: (dates) {
+                                oldestDate = dates.firstOrNull;
+                                newestDate = dates.lastOrNull;
+                                calculateTotalTracks(oldestDate, newestDate);
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                              tracksLength: total,
+                            ),
                           ),
                         ],
                       ),
@@ -334,15 +335,18 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_IMAGE_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider(
-                    totalCount: getValue(4 * 1024), // 4 GB
-                    initValue: getValue(settings.imagesMaxCacheInMB.value),
+                  () {
+                    final maxInSettings = settings.imagesMaxCacheInMB.valueR;
+                    return NamidaWheelSlider(
+                      totalCount: getValue(4 * 1024), // 4 GB
+                      initValue: getValue(maxInSettings),
 
-                    text: (settings.imagesMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
+                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
+                      onValueChanged: (val) {
+                        settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
+                      },
+                    );
+                  },
                 ),
               ),
             );
@@ -362,15 +366,17 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_AUDIO_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider(
-                    totalCount: getValue(4 * 1024), // 4 GB
-                    initValue: getValue(settings.audiosMaxCacheInMB.value),
-
-                    text: (settings.audiosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(audiosMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
+                  () {
+                    final maxInSettings = settings.audiosMaxCacheInMB.valueR;
+                    return NamidaWheelSlider(
+                      totalCount: getValue(4 * 1024), // 4 GB
+                      initValue: getValue(maxInSettings),
+                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
+                      onValueChanged: (val) {
+                        settings.save(audiosMaxCacheInMB: minimumValue + (val * stepper));
+                      },
+                    );
+                  },
                 ),
               ),
             );
@@ -390,15 +396,17 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_VIDEO_CACHE_SIZE,
                 trailing: Obx(
-                  () => NamidaWheelSlider(
-                    totalCount: getValue(10 * 1024), // 10 GB
-                    initValue: getValue(settings.videosMaxCacheInMB.value),
-
-                    text: (settings.videosMaxCacheInMB.value * 1024 * 1024).fileSizeFormatted,
-                    onValueChanged: (val) {
-                      settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
-                    },
-                  ),
+                  () {
+                    final maxInSettings = settings.videosMaxCacheInMB.valueR;
+                    return NamidaWheelSlider(
+                      totalCount: getValue(10 * 1024), // 10 GB
+                      initValue: getValue(maxInSettings),
+                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
+                      onValueChanged: (val) {
+                        settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
+                      },
+                    );
+                  },
                 ),
               ),
             );
@@ -427,7 +435,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   secondaryIcon: Broken.close_circle,
                 ),
                 title: lang.CLEAR_VIDEO_CACHE,
-                trailingText: Indexer.inst.videosSizeInStorage.value.fileSizeFormatted,
+                trailingText: Indexer.inst.videosSizeInStorage.valueR.fileSizeFormatted,
                 onTap: () {
                   final allvideos = VideoController.inst.getCurrentVideosInCache();
                   const cacheManager = StorageCacheManager();
@@ -535,13 +543,13 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                 const CancelButton(),
                 Obx(
                   () {
-                    final total = dirsChoosen.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
+                    final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
                     return NamidaButton(
                       text: "${lang.CLEAR.toUpperCase()} (${total.fileSizeFormatted})",
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
 
-                        for (final d in dirsChoosen) {
+                        for (final d in dirsChoosen.value) {
                           await Directory(d).delete(recursive: true);
                           await Directory(d).create();
                         }
@@ -612,7 +620,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
 
   static int _fillSizeIsolate(String dirPath) {
     int size = 0;
-    Directory(dirPath).listSyncSafe().loop((e, _) {
+    Directory(dirPath).listSyncSafe().loop((e) {
       size += e.statSync().size;
     });
     return size;
@@ -620,14 +628,14 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
 
   static int _tempFilesSizeIsolate(String dirPath) {
     int size = 0;
-    Directory(dirPath).listSyncSafe().loop((e, _) {
+    Directory(dirPath).listSyncSafe().loop((e) {
       if (e.path.endsWith('.part')) size += e.statSync().size;
     });
     return size;
   }
 
   static void _tempFilesDeleteIsolate(String dirPath) {
-    Directory(dirPath).listSyncSafe().loop((e, _) {
+    Directory(dirPath).listSyncSafe().loop((e) {
       if (e.path.endsWith('.part')) {
         if (e is File) {
           try {
@@ -651,7 +659,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
       onTap: () {
         final allaudios = <AudioCacheDetails>[];
         for (final acFiles in Player.inst.audioCacheMap.values) {
-          acFiles.loop((e, index) => allaudios.add(e));
+          acFiles.loop((e) => allaudios.add(e));
         }
 
         const cacheManager = StorageCacheManager();
@@ -829,8 +837,8 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                     () => CustomSwitchListTile(
                       passedColor: colorScheme,
                       title: lang.UPDATE_MISSING_TRACKS_ONLY,
-                      value: updateMissingOnly.value,
-                      onChanged: (isTrue) => updateMissingOnly.value = !updateMissingOnly.value,
+                      value: updateMissingOnly.valueR,
+                      onChanged: (isTrue) => updateMissingOnly.toggle(),
                     ),
                   ),
                 ],
@@ -909,7 +917,7 @@ class _CompressImagesListTile extends StatelessWidget {
             text: lang.COMPRESS,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
-              _startCompressing(dirsToCompress, compPerc.value, keepOriginalFileDates.value);
+              _startCompressing(dirsToCompress.value, compPerc.value, keepOriginalFileDates.value);
             },
           ),
         ],
@@ -920,7 +928,7 @@ class _CompressImagesListTile extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 children: [
-                  ...initialDirectories.map(
+                  ...initialDirectories.valueR.map(
                     (e) => Obx(
                       () {
                         final dirPath = e.split(Platform.pathSeparator)..removeWhere((element) => element == '');
@@ -947,7 +955,7 @@ class _CompressImagesListTile extends StatelessWidget {
                 () => NamidaWheelSlider(
                   totalCount: 100,
                   initValue: 50,
-                  text: "${compPerc.value}%",
+                  text: "${compPerc.valueR}%",
                   onValueChanged: (val) {
                     compPerc.value = val;
                   },
@@ -968,7 +976,7 @@ class _CompressImagesListTile extends StatelessWidget {
               () => CustomSwitchListTile(
                 icon: Broken.document_code_2,
                 title: lang.KEEP_FILE_DATES,
-                value: keepOriginalFileDates.value,
+                value: keepOriginalFileDates.valueR,
                 onChanged: (isTrue) => keepOriginalFileDates.value = !isTrue,
               ),
             ),

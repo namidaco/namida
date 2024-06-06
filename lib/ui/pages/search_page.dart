@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
@@ -149,7 +149,7 @@ class SearchPage extends StatelessWidget {
                     ...MediaType.values.map(
                       (e) => Obx(
                         () {
-                          final list = settings.activeSearchMediaTypes;
+                          final list = settings.activeSearchMediaTypes.valueR;
                           final isActive = list.contains(e);
                           final isForcelyEnabled = e == MediaType.track;
                           return NamidaOpacity(
@@ -213,7 +213,7 @@ class SearchPage extends StatelessWidget {
                             child: NamidaOpacity(
                               opacity: 0.8,
                               child: TweenAnimationBuilder(
-                                tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.value ? 4.0 : 12.0),
+                                tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? 4.0 : 12.0),
                                 duration: const Duration(milliseconds: 500),
                                 child: Image.asset('assets/namida_icon.png', cacheHeight: 100, scale: 0.4),
                                 builder: (context, value, child) => ImageFiltered(
@@ -226,20 +226,20 @@ class SearchPage extends StatelessWidget {
                               ),
                             ),
                           )
-                        : AnimationLimiter(
+                        : NamidaScrollbarWithController(
                             key: const Key('fullsearch'),
-                            child: NamidaScrollbarWithController(
-                              child: (sc) => Obx(
+                            child: (sc) => AnimationLimiter(
+                              child: Obx(
                                 () {
-                                  final activeList = settings.activeSearchMediaTypes;
+                                  final activeList = settings.activeSearchMediaTypes.valueR;
 
-                                  final albumSearchTemp = SearchSortController.inst.albumSearchTemp;
-                                  final artistSearchTemp = SearchSortController.inst.artistSearchTemp;
-                                  final albumArtistSearchTemp = SearchSortController.inst.albumArtistSearchTemp;
-                                  final composerSearchTemp = SearchSortController.inst.composerSearchTemp;
-                                  final genreSearchTemp = SearchSortController.inst.genreSearchTemp;
-                                  final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp;
-                                  final folderSearchTemp = SearchSortController.inst.folderSearchTemp.where((f) => Folder(f).tracks.isNotEmpty).toList();
+                                  final albumSearchTemp = SearchSortController.inst.albumSearchTemp.valueR;
+                                  final artistSearchTemp = SearchSortController.inst.artistSearchTemp.valueR;
+                                  final albumArtistSearchTemp = SearchSortController.inst.albumArtistSearchTemp.valueR;
+                                  final composerSearchTemp = SearchSortController.inst.composerSearchTemp.valueR;
+                                  final genreSearchTemp = SearchSortController.inst.genreSearchTemp.valueR;
+                                  final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp.valueR;
+                                  final folderSearchTemp = SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder(f).tracks().isNotEmpty).toList();
 
                                   return CustomScrollView(
                                     controller: sc,
@@ -386,7 +386,7 @@ class SearchPage extends StatelessWidget {
                                           list: folderSearchTemp,
                                           builder: (item) {
                                             final folder = Folder(item);
-                                            final tracks = folder.tracks;
+                                            final tracks = folder.tracks();
 
                                             return NamidaInkWell(
                                               margin: const EdgeInsets.only(left: 6.0),
@@ -413,13 +413,13 @@ class SearchPage extends StatelessWidget {
                                                       Text(
                                                         folder.folderName,
                                                         style: context.textTheme.displayMedium?.copyWith(
-                                                          fontSize: 13.0.multipliedFontScale,
+                                                          fontSize: 13.0,
                                                         ),
                                                       ),
                                                       Text(
                                                         tracks.length.displayTrackKeyword,
                                                         style: context.textTheme.displaySmall?.copyWith(
-                                                          fontSize: 12.0.multipliedFontScale,
+                                                          fontSize: 12.0,
                                                         ),
                                                       ),
                                                     ],
@@ -449,8 +449,8 @@ class SearchPage extends StatelessWidget {
                                                     child: NamidaInkWell(
                                                       child: Obx(
                                                         () {
-                                                          final isAuto = settings.tracksSortSearchIsAuto.value;
-                                                          final activeType = isAuto ? settings.tracksSort.value : settings.tracksSortSearch.value;
+                                                          final isAuto = settings.tracksSortSearchIsAuto.valueR;
+                                                          final activeType = isAuto ? settings.tracksSort.valueR : settings.tracksSortSearch.valueR;
                                                           return Text(
                                                             activeType.toText() + (isAuto ? ' (${lang.AUTO})' : ''),
                                                             style: context.textTheme.displaySmall?.copyWith(
@@ -469,8 +469,8 @@ class SearchPage extends StatelessWidget {
                                                     },
                                                     child: Obx(
                                                       () {
-                                                        final isAuto = settings.tracksSortSearchIsAuto.value;
-                                                        final activeReverse = isAuto ? settings.tracksSortReversed.value : settings.tracksSortSearchReversed.value;
+                                                        final isAuto = settings.tracksSortSearchIsAuto.valueR;
+                                                        final activeReverse = isAuto ? settings.tracksSortReversed.valueR : settings.tracksSortSearchReversed.valueR;
                                                         return Icon(
                                                           activeReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                                           size: 16.0,
@@ -482,7 +482,7 @@ class SearchPage extends StatelessWidget {
                                                 ],
                                               ),
                                               buttonIcon: Broken.play,
-                                              buttonText: settings.trackPlayMode.value.toText(),
+                                              buttonText: settings.trackPlayMode.valueR.toText(),
                                               onPressed: () {
                                                 final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
                                                 settings.save(trackPlayMode: element);

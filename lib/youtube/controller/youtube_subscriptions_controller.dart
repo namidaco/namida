@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:get/get.dart';
-
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 
 class YoutubeSubscriptionsController {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -92,13 +92,17 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   bool _isDraggingDownwards = false;
   double get _percentageMultiplier => _alternativePercentage && _isDraggingDownwards ? 0.25 : 1.0;
 
-  bool _isDragManagedInternally = true;
   void updatePercentageMultiplier(bool alt) {
     _alternativePercentage = alt;
   }
 
   void saveDragHeightStart() {
     _startedDragAtHeight = _dragheight;
+  }
+
+  bool _isDragManagedInternally = true;
+  void setDragExternally(bool external) {
+    _isDragManagedInternally = !external;
   }
 
   double? _startedDragAtHeight;
@@ -150,7 +154,6 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   }
 
   void _resetValues() {
-    _isDragManagedInternally = false;
     _alternativePercentage = false;
     _startedDragAtHeight = null;
   }
@@ -221,14 +224,9 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                   alignment: Alignment.bottomCenter,
                   child: GestureDetector(
                     onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
-                    onVerticalDragStart: (details) {
-                      _isDragManagedInternally = !_alternativePercentage;
-                    },
                     onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
-                    // onVerticalDragCancel: () => !_isDragManagedInternally ? null : animateToState(_wasExpanded),
                     onVerticalDragEnd: (details) {
                       if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
-                      _isDragManagedInternally = !_alternativePercentage;
                     },
                     child: Material(
                       clipBehavior: Clip.hardEdge,

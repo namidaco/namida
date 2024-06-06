@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
-import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
+import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 class YoutubePage extends StatefulWidget {
   const YoutubePage({super.key});
@@ -34,7 +33,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
     return BackgroundWrapper(
       child: Obx(
         () {
-          final homepageFeed = YoutubeController.inst.homepageFeed;
+          final homepageFeed = YoutubeController.inst.homepageFeed.valueR;
           final feed = homepageFeed.isEmpty ? List<YoutubeFeed?>.filled(10, null) : homepageFeed;
 
           if (feed.isNotEmpty && feed.first == null) {
@@ -63,7 +62,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               padding: const EdgeInsets.all(24.0),
               child: Text(
                 lang.HOME,
-                style: context.textTheme.displayLarge?.copyWith(fontSize: 38.0.multipliedFontScale),
+                style: context.textTheme.displayLarge?.copyWith(fontSize: 38.0),
               ),
             ),
             itemBuilder: (context, i) {
@@ -78,7 +77,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               );
             },
             itemCount: feed.length,
-            itemExtents: List.filled(feed.length, thumbnailItemExtent),
+            itemExtent: thumbnailItemExtent,
           );
         },
       ),

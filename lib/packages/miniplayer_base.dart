@@ -5,7 +5,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
@@ -79,9 +81,8 @@ class MiniplayerTextData {
 }
 
 class NamidaMiniPlayerBase<E> extends StatefulWidget {
-  final List<E> queue;
   final double queueItemExtent;
-  final (Widget, Key) Function(BuildContext context, int index, int currentIndex) itemBuilder;
+  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue) itemBuilder;
   final int Function(E currentItem)? getDurationMS;
   final String Function(int number) itemsKeyword;
   final void Function(E currentItem) onAddItemsTap;
@@ -89,7 +90,6 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final void Function(E currentItem) onTopTextTap;
   final void Function(E currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions<E> focusedMenuOptions;
-  final Widget Function(E currentItem) extraActionButton;
   final Widget Function(E item, double cp) imageBuilder;
   final Widget Function(E item, double bcp) currentImageBuilder;
   final MiniplayerTextData Function(E item) textBuilder;
@@ -97,7 +97,6 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
 
   const NamidaMiniPlayerBase({
     super.key,
-    required this.queue,
     required this.queueItemExtent,
     required this.itemBuilder,
     required this.getDurationMS,
@@ -107,7 +106,6 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
     required this.onTopTextTap,
     required this.onMenuOpen,
     required this.focusedMenuOptions,
-    required this.extraActionButton,
     required this.imageBuilder,
     required this.currentImageBuilder,
     required this.textBuilder,
@@ -123,10 +121,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
   final isLoadingMore = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
 
-  List<E> get _currentQueue => widget.queue;
-  E get _getcurrentItem => widget.queue[Player.inst.currentIndex];
-
-  int _getDurationMS(E item) => Player.inst.currentItemDuration?.inMilliseconds ?? widget.getDurationMS?.call(item) ?? 0;
+  E get _getcurrentItem => Player.inst.currentQueue.value[Player.inst.currentIndex.value] as E;
 
   @override
   void dispose() {
@@ -137,12 +132,12 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
 
   int refine(int index) {
     if (index <= -1) {
-      return _currentQueue.length - 1;
-    }
-    if (index >= _currentQueue.length) {
+      return Player.inst.currentQueue.value.length - 1;
+    } else if (index >= Player.inst.currentQueue.value.length) {
       return 0;
+    } else {
+      return index;
     }
-    return index;
   }
 
   @override
@@ -150,15 +145,251 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
     const waveformChild = WaveformMiniplayer();
 
+    final topRightButton = IconButton(
+      onPressed: () {},
+      icon: TapDetector(
+        onTap: null,
+        initializer: (instance) {
+          void tapUp(TapUpDetails details) => widget.onMenuOpen(_getcurrentItem, details);
+          instance
+            ..onTapUp = tapUp
+            ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(4.0),
+          decoration: BoxDecoration(
+            color: context.theme.colorScheme.secondary.withOpacity(.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Broken.more, color: onSecondary),
+        ),
+      ),
+      iconSize: 22.0,
+    );
+
+    final topLeftButton = IconButton(
+      onPressed: MiniPlayerController.inst.snapToMini,
+      icon: Icon(Broken.arrow_down_2, color: onSecondary),
+      iconSize: 22.0,
+    );
+
+    const partyContainersChild = Stack(
+      children: [
+        NamidaPartyContainer(
+          height: 2,
+          spreadRadiusMultiplier: 0.8,
+        ),
+        NamidaPartyContainer(
+          width: 2,
+          spreadRadiusMultiplier: 0.25,
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: NamidaPartyContainer(
+            height: 2,
+            spreadRadiusMultiplier: 0.8,
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: NamidaPartyContainer(
+            width: 2,
+            spreadRadiusMultiplier: 0.25,
+          ),
+        ),
+      ],
+    );
+    final positionTextChild = TapDetector(
+      onTap: () => Player.inst.seekSecondsBackward(),
+      child: LongPressDetector(
+        onLongPress: () => Player.inst.seek(Duration.zero),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Obx(
+                () {
+                  final seek = MiniPlayerController.inst.seekValue.valueR;
+                  final diffInMs = seek - Player.inst.nowPlayingPositionR;
+                  final plusOrMinus = diffInMs < 0 ? '' : '+';
+                  final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
+                  return Text(
+                    "$plusOrMinus$seekText",
+                    style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                  ).animateEntrance(
+                    showWhen: seek != 0,
+                    durationMS: 700,
+                    allCurves: Curves.easeInOutQuart,
+                  );
+                },
+              ),
+              NamidaHero(
+                tag: 'MINIPLAYER_POSITION',
+                child: Obx(
+                  () => Text(
+                    Player.inst.nowPlayingPositionR.milliSecondsLabel,
+                    style: context.textTheme.displaySmall,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final buttonsRowChild = Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        const RepeatModeIconButton(),
+        const EqualizerIconButton(),
+        LongPressDetector(
+          onLongPress: () {
+            showLRCSetDialog(_getcurrentItem as Playable, CurrentColor.inst.miniplayerColor);
+          },
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            padding: const EdgeInsets.all(2.0),
+            onPressed: () {
+              settings.save(enableLyrics: !settings.enableLyrics.value);
+              Lyrics.inst.updateLyrics(_getcurrentItem as Playable);
+            },
+            icon: Obx(
+              () => settings.enableLyrics.valueR
+                  ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
+                      ? StackedIcon(
+                          baseIcon: Broken.document,
+                          secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
+                          iconSize: 20.0,
+                          blurRadius: 6.0,
+                          baseIconColor: context.theme.colorScheme.onSecondaryContainer,
+                          secondaryIconColor: context.theme.colorScheme.onSecondaryContainer,
+                        )
+                      : Icon(
+                          Broken.document,
+                          size: 20.0,
+                          color: context.theme.colorScheme.onSecondaryContainer,
+                        )
+                  : Icon(
+                      Broken.card_slash,
+                      size: 20.0,
+                      color: context.theme.colorScheme.onSecondaryContainer,
+                    ),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: lang.QUEUE,
+          visualDensity: VisualDensity.compact,
+          style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+          padding: const EdgeInsets.all(2.0),
+          onPressed: MiniPlayerController.inst.snapToQueue,
+          icon: Icon(
+            Broken.row_vertical,
+            size: 19.0,
+            color: context.theme.colorScheme.onSecondaryContainer,
+          ),
+        ),
+        const SizedBox(width: 6.0),
+      ],
+    );
+
+    final maxQueueHeight = MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0;
+
+    final queueChild = SafeArea(
+      bottom: false,
+      child: SizedBox(
+        height: context.height,
+        width: context.width,
+        child: Stack(
+          fit: StackFit.loose,
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              height: maxQueueHeight,
+              child: BorderRadiusClip(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32.0.multipliedRadius),
+                  topRight: Radius.circular(32.0.multipliedRadius),
+                ),
+                child: Obx(
+                  () {
+                    final queue = Player.inst.currentQueue.valueR;
+                    final queueLength = queue.length;
+                    if (queueLength == 0) return const SizedBox();
+                    final currentIndex = Player.inst.currentIndex.valueR;
+                    final padding =
+                        EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.valueR + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom);
+
+                    return NamidaListView(
+                      key: const Key('minikuru'),
+                      scrollController: MiniPlayerController.inst.queueScrollController,
+                      itemCount: queueLength,
+                      itemExtent: widget.queueItemExtent,
+                      onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
+                      onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
+                      onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                      padding: padding,
+                      itemBuilder: (context, i) {
+                        final childWK = widget.itemBuilder(context, i, currentIndex, queue);
+                        return FadeDismissible(
+                          key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
+                          onDismissed: (direction) {
+                            Player.inst.removeFromQueue(i);
+                            MiniPlayerController.inst.invokeDoneReordering();
+                          },
+                          onDismissStart: (_) => MiniPlayerController.inst.invokeStartReordering(),
+                          onDismissEnd: (_) => MiniPlayerController.inst.invokeDoneReordering(),
+                          child: childWK.$1,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+            Container(
+              width: context.width,
+              height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
+              decoration: BoxDecoration(
+                color: context.theme.scaffoldBackgroundColor,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12.0.multipliedRadius),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
+                child: FittedBox(
+                  child: QueueUtilsRow(
+                    itemsKeyword: widget.itemsKeyword,
+                    onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
+                    scrollQueueWidget: ObxO(
+                      rx: MiniPlayerController.inst.arrowIcon,
+                      builder: (arrow) => NamidaButton(
+                        onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
+                        icon: arrow,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
     return Obx(
       () {
-        final currentIndex = Player.inst.currentIndex;
+        final currentIndex = Player.inst.currentIndex.valueR;
+        final queue = Player.inst.currentQueue.valueR;
         final indminus = refine(currentIndex - 1);
         final indplus = refine(currentIndex + 1);
-        final prevItem = _currentQueue.isEmpty ? null : _currentQueue[indminus];
-        final currentItem = widget.queue[currentIndex];
-        final nextItem = _currentQueue.isEmpty ? null : _currentQueue[indplus];
-        final currentDurationInMS = _getDurationMS(currentItem);
+        final prevItem = queue.isEmpty ? null : queue[indminus] as E;
+        final currentItem = queue[currentIndex] as E;
+        final nextItem = queue.isEmpty ? null : queue[indplus] as E;
+        final currentDurationInMS = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? widget.getDurationMS?.call(currentItem) ?? 0;
 
         final prevText = prevItem == null ? null : widget.textBuilder(prevItem);
         final currentText = widget.textBuilder(currentItem);
@@ -167,34 +398,6 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
         final topText = widget.topText(currentItem);
         final videoIconBuilder = widget.focusedMenuOptions.videoIconBuilder(currentItem, 18.0, onSecondary);
         final focusedMenuBuilder = widget.focusedMenuOptions.builder(currentItem);
-        final extraActionButton = widget.extraActionButton(currentItem);
-
-        const partyContainersChild = Stack(
-          children: [
-            NamidaPartyContainer(
-              height: 2,
-              spreadRadiusMultiplier: 0.8,
-            ),
-            NamidaPartyContainer(
-              width: 2,
-              spreadRadiusMultiplier: 0.25,
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: NamidaPartyContainer(
-                height: 2,
-                spreadRadiusMultiplier: 0.8,
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: NamidaPartyContainer(
-                width: 2,
-                spreadRadiusMultiplier: 0.25,
-              ),
-            ),
-          ],
-        );
 
         final topRowChild = SafeArea(
           child: Padding(
@@ -202,11 +405,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: MiniPlayerController.inst.snapToMini,
-                  icon: Icon(Broken.arrow_down_2, color: onSecondary),
-                  iconSize: 22.0,
-                ),
+                topLeftButton,
                 Expanded(
                   child: NamidaInkWell(
                     borderRadius: 14.0,
@@ -216,10 +415,10 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "${currentIndex + 1}/${_currentQueue.length}",
+                          "${currentIndex + 1}/${queue.length}",
                           style: TextStyle(
                             color: onSecondary.withOpacity(.8),
-                            fontSize: 12.0.multipliedFontScale,
+                            fontSize: 12.0,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -229,33 +428,13 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                           maxLines: 1,
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0.multipliedFontScale, color: onSecondary.withOpacity(.9)),
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0, color: onSecondary.withOpacity(.9)),
                         ),
                       ],
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: TapDetector(
-                    onTap: null,
-                    initializer: (instance) {
-                      void tapUp(TapUpDetails details) => widget.onMenuOpen(_getcurrentItem, details);
-                      instance
-                        ..onTapUp = tapUp
-                        ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        color: context.theme.colorScheme.secondary.withOpacity(.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Broken.more, color: onSecondary),
-                    ),
-                  ),
-                  iconSize: 22.0,
-                ),
+                topRightButton,
               ],
             ),
           ),
@@ -264,45 +443,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
         final positionDurationRowChild = Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            TapDetector(
-              onTap: () => Player.inst.seekSecondsBackward(),
-              child: LongPressDetector(
-                onLongPress: () => Player.inst.seek(Duration.zero),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Obx(
-                        () {
-                          final seek = MiniPlayerController.inst.seekValue.value;
-                          final diffInMs = seek - Player.inst.nowPlayingPosition;
-                          final plusOrMinus = diffInMs < 0 ? '' : '+';
-                          final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
-                          return Text(
-                            "$plusOrMinus$seekText",
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.multipliedFontScale),
-                          ).animateEntrance(
-                            showWhen: seek != 0,
-                            durationMS: 700,
-                            allCurves: Curves.easeInOutQuart,
-                          );
-                        },
-                      ),
-                      NamidaHero(
-                        tag: 'MINIPLAYER_POSITION',
-                        child: Obx(
-                          () => Text(
-                            Player.inst.nowPlayingPosition.milliSecondsLabel,
-                            style: context.textTheme.displaySmall,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            positionTextChild,
             TapDetector(
               onTap: () => Player.inst.seekSecondsForward(),
               child: Padding(
@@ -311,10 +452,13 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                   tag: 'MINIPLAYER_DURATION',
                   child: Obx(
                     () {
-                      final displayRemaining = settings.player.displayRemainingDurInsteadOfTotal.value;
-                      final toSubtract = displayRemaining ? Player.inst.nowPlayingPosition : 0;
+                      int toSubtract = 0;
+                      String prefix = '';
+                      if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
+                        toSubtract = Player.inst.nowPlayingPositionR;
+                        prefix = '-';
+                      }
                       final msToDisplay = currentDurationInMS - toSubtract;
-                      final prefix = displayRemaining ? '-' : '';
                       return Text(
                         "$prefix ${msToDisplay.milliSecondsLabel}",
                         style: context.textTheme.displaySmall,
@@ -324,29 +468,6 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 ),
               ),
             ),
-          ],
-        );
-
-        final buttonsRowChild = Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            const RepeatModeIconButton(),
-            const EqualizerIconButton(),
-            extraActionButton,
-            IconButton(
-              tooltip: lang.QUEUE,
-              visualDensity: VisualDensity.compact,
-              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-              padding: const EdgeInsets.all(2.0),
-              onPressed: MiniPlayerController.inst.snapToQueue,
-              icon: Icon(
-                Broken.row_vertical,
-                size: 19.0,
-                color: context.theme.colorScheme.onSecondaryContainer,
-              ),
-            ),
-            const SizedBox(width: 6.0),
           ],
         );
 
@@ -374,7 +495,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 ),
                 menuWidget: Obx(
                   () {
-                    final availableVideos = widget.focusedMenuOptions.localVideos;
+                    final availableVideos = widget.focusedMenuOptions.localVideos.valueR;
                     final ytVideos = widget.focusedMenuOptions.streamVideos.where((s) => s.formatSuffix != 'webm');
                     return ListView(
                       padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -384,7 +505,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                             title: lang.CHECK_FOR_MORE,
                             icon: Broken.chart,
                             bgColor: null,
-                            trailing: isLoadingMore.value ? const LoadingIndicator() : null,
+                            trailing: isLoadingMore.valueR ? const LoadingIndicator() : null,
                             onTap: () async {
                               isLoadingMore.value = true;
                               await widget.focusedMenuOptions.loadQualities!(currentItem);
@@ -396,7 +517,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                             final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
                             return Obx(
                               () {
-                                final isCurrent = element.path == (VideoController.inst.currentVideo.value?.path ?? Player.inst.currentCachedVideo?.path);
+                                final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
                                 return _MPQualityButton(
                                   onTap: () => widget.focusedMenuOptions.onLocalVideoTap(currentItem, element),
                                   bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
@@ -444,7 +565,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                       () {
                         return AnimatedDecoration(
                           duration: animationDuration,
-                          decoration: isMenuOpened.value
+                          decoration: isMenuOpened.valueR
                               ? BoxDecoration(
                                   color: context.theme.scaffoldBackgroundColor,
                                   borderRadius: BorderRadius.circular(24.0.multipliedRadius),
@@ -457,86 +578,88 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(6.0),
+                                DecoratedBox(
                                   decoration: BoxDecoration(
                                     color: context.theme.colorScheme.secondaryContainer,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: NamidaIconButton(
-                                    horizontalPadding: 0.0,
-                                    icon: null,
-                                    child: videoIconBuilder,
-                                    onPressed: () {
-                                      String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6.0),
+                                    child: NamidaIconButton(
+                                      horizontalPadding: 0.0,
+                                      icon: null,
+                                      child: videoIconBuilder,
+                                      onPressed: () {
+                                        String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
 
-                                      Widget getTextWidget(IconData icon, String title, double value) {
-                                        return Row(
-                                          children: [
-                                            Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
-                                            const SizedBox(width: 12.0),
-                                            Text(
-                                              title,
-                                              style: context.textTheme.displayLarge,
+                                        Widget getTextWidget(IconData icon, String title, double value) {
+                                          return Row(
+                                            children: [
+                                              Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
+                                              const SizedBox(width: 12.0),
+                                              NamidaButtonText(
+                                                title,
+                                                style: context.textTheme.displayLarge,
+                                              ),
+                                              const SizedBox(width: 8.0),
+                                              NamidaButtonText(
+                                                toPercentage(value),
+                                                style: context.textTheme.displayMedium,
+                                              )
+                                            ],
+                                          );
+                                        }
+
+                                        Widget getSlider({
+                                          double min = 0.0,
+                                          double max = 2.0,
+                                          required double value,
+                                          required void Function(double newValue)? onChanged,
+                                        }) {
+                                          return Slider.adaptive(
+                                            min: min,
+                                            max: max,
+                                            value: value.clamp(min, max),
+                                            onChanged: onChanged,
+                                            divisions: (max * 100).round(),
+                                            label: "${(value * 100).toStringAsFixed(0)}%",
+                                          );
+                                        }
+
+                                        NamidaNavigator.inst.navigateDialog(
+                                          dialog: CustomBlurryDialog(
+                                            title: lang.CONFIGURE,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                                            actions: [
+                                              NamidaIconButton(
+                                                icon: Broken.refresh,
+                                                onPressed: () {
+                                                  const val = 1.0;
+                                                  Player.inst.setPlayerPitch(val);
+                                                  Player.inst.setPlayerSpeed(val);
+                                                  Player.inst.setPlayerVolume(val);
+                                                  settings.player.save(
+                                                    pitch: val,
+                                                    speed: val,
+                                                    volume: val,
+                                                  );
+                                                },
+                                              ),
+                                              NamidaButton(
+                                                text: lang.DONE,
+                                                onPressed: () {
+                                                  NamidaNavigator.inst.closeDialog();
+                                                },
+                                              )
+                                            ],
+                                            child: const EqualizerMainSlidersColumn(
+                                              verticalInBetweenPadding: 18.0,
+                                              tapToUpdate: false,
                                             ),
-                                            const SizedBox(width: 8.0),
-                                            Text(
-                                              toPercentage(value),
-                                              style: context.textTheme.displayMedium,
-                                            )
-                                          ],
-                                        );
-                                      }
-
-                                      Widget getSlider({
-                                        double min = 0.0,
-                                        double max = 2.0,
-                                        required double value,
-                                        required void Function(double newValue)? onChanged,
-                                      }) {
-                                        return Slider.adaptive(
-                                          min: min,
-                                          max: max,
-                                          value: value.clamp(min, max),
-                                          onChanged: onChanged,
-                                          divisions: (max * 100).round(),
-                                          label: "${(value * 100).toStringAsFixed(0)}%",
-                                        );
-                                      }
-
-                                      NamidaNavigator.inst.navigateDialog(
-                                        dialog: CustomBlurryDialog(
-                                          title: lang.CONFIGURE,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-                                          actions: [
-                                            NamidaIconButton(
-                                              icon: Broken.refresh,
-                                              onPressed: () {
-                                                const val = 1.0;
-                                                Player.inst.setPlayerPitch(val);
-                                                Player.inst.setPlayerSpeed(val);
-                                                Player.inst.setPlayerVolume(val);
-                                                settings.player.save(
-                                                  pitch: val,
-                                                  speed: val,
-                                                  volume: val,
-                                                );
-                                              },
-                                            ),
-                                            NamidaButton(
-                                              text: lang.DONE,
-                                              onPressed: () {
-                                                NamidaNavigator.inst.closeDialog();
-                                              },
-                                            )
-                                          ],
-                                          child: const EqualizerMainSlidersColumn(
-                                            verticalInBetweenPadding: 18.0,
-                                            tapToUpdate: false,
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8.0),
@@ -566,90 +689,6 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
           ),
         );
 
-        final queueChild = SafeArea(
-          bottom: false,
-          child: SizedBox(
-            height: context.height,
-            width: context.width,
-            child: Stack(
-              fit: StackFit.loose,
-              alignment: Alignment.bottomCenter,
-              children: [
-                SizedBox(
-                  height: MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0,
-                  child: BorderRadiusClip(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32.0.multipliedRadius),
-                      topRight: Radius.circular(32.0.multipliedRadius),
-                    ),
-                    child: Obx(
-                      () {
-                        final currentIndex = Player.inst.currentIndex;
-                        final padding =
-                            EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.value + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom);
-
-                        return NamidaListView(
-                          key: const Key('minikuru'),
-                          scrollController: MiniPlayerController.inst.queueScrollController,
-                          itemCount: widget.queue.length,
-                          itemExtents: List.filled(widget.queue.length, widget.queueItemExtent),
-                          onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
-                          onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
-                          onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                          padding: padding,
-                          itemBuilder: (context, i) {
-                            final childWK = widget.itemBuilder(context, i, currentIndex);
-                            return FadeDismissible(
-                              key: Key("Diss_${i}_${childWK.$2}"),
-                              onDismissed: (direction) {
-                                Player.inst.removeFromQueue(i);
-                                MiniPlayerController.inst.invokeDoneReordering();
-                              },
-                              onUpdate: (details) {
-                                final isReordering = details.progress != 0.0;
-                                if (isReordering) {
-                                  MiniPlayerController.inst.invokeStartReordering();
-                                } else {
-                                  MiniPlayerController.inst.invokeDoneReordering();
-                                }
-                              },
-                              child: childWK.$1,
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Container(
-                  width: context.width,
-                  height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
-                  decoration: BoxDecoration(
-                    color: context.theme.scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12.0.multipliedRadius),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
-                    child: FittedBox(
-                      child: QueueUtilsRow(
-                        itemsKeyword: widget.itemsKeyword,
-                        onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
-                        scrollQueueWidget: Obx(
-                          () => NamidaButton(
-                            onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
-                            icon: MiniPlayerController.inst.arrowIcon.value,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
         return MiniplayerRaw(
           builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
               borderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight) {
@@ -708,9 +747,9 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                           colors: [
-                                            Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(100), CurrentColor.inst.miniplayerColor)
+                                            Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
                                                 .withOpacity(velpy(a: .38, b: .28, c: icp)),
-                                            Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                            Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
                                                 .withOpacity(velpy(a: .1, b: .22, c: icp)),
                                           ],
                                         ),
@@ -719,19 +758,20 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                   ),
 
                                   /// Smol progress bar
-                                  Obx(
-                                    () {
-                                      final w = currentDurationInMS == 0 ? 0 : Player.inst.nowPlayingPosition / currentDurationInMS;
+                                  ObxO(
+                                    rx: Player.inst.nowPlayingPosition,
+                                    builder: (nowPlayingPosition) {
+                                      final w = currentDurationInMS == 0 ? 0 : nowPlayingPosition / currentDurationInMS;
                                       return Container(
                                         height: 2 * (1 - cp),
-                                        width: w > 0 ? ((Get.width * w) * 0.9) : 0,
+                                        width: w > 0 ? ((context.width * w) * 0.9) : 0,
                                         margin: const EdgeInsets.symmetric(horizontal: 16.0),
                                         child: AnimatedDecoration(
                                           duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                           decoration: BoxDecoration(
                                             color: CurrentColor.inst.miniplayerColor,
                                             borderRadius: BorderRadius.circular(50),
-                                            //  color: Color.alphaBlend(context.theme.colorScheme.onBackground.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                            //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
                                             //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
                                           ),
                                         ),
@@ -827,7 +867,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                     child: Center(
                                       child: Obx(
                                         () {
-                                          final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+                                          final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
                                           return TapDetector(
                                             onTap: null,
                                             initializer: (instance) {
@@ -870,13 +910,14 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                   children: [
                                                     IconButton(
                                                       highlightColor: Colors.transparent,
-                                                      onPressed: () => Player.inst.togglePlayPause(),
+                                                      onPressed: Player.inst.togglePlayPause,
                                                       icon: Padding(
                                                         padding: EdgeInsets.all(6.0 * cp * rcp),
-                                                        child: Obx(
-                                                          () => AnimatedSwitcher(
+                                                        child: ObxO(
+                                                          rx: Player.inst.isPlaying,
+                                                          builder: (isPlaying) => AnimatedSwitcher(
                                                             duration: const Duration(milliseconds: 200),
-                                                            child: Player.inst.isPlaying
+                                                            child: isPlaying
                                                                 ? Icon(
                                                                     Broken.pause,
                                                                     size: iconSize,
@@ -896,7 +937,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                     if (widget.canShowBuffering)
                                                       IgnorePointer(
                                                         child: Obx(
-                                                          () => Player.inst.shouldShowLoadingIndicator
+                                                          () => Player.inst.shouldShowLoadingIndicatorR
                                                               ? ThreeArchedCircle(
                                                                   color: Colors.white.withAlpha(120),
                                                                   size: iconSize * 1.4,
@@ -1127,12 +1168,12 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 ),
 
                 Visibility(
-                  maintainState: true,
+                  maintainState: true, // cuz rebuilding from scratch almost kills raster
                   visible: qp > 0 && !bounceUp,
                   child: Opacity(
                     opacity: qp.clamp(0.0, 1.0),
                     child: Transform.translate(
-                      offset: Offset(0, (1 - qp) * maxOffset * 0.8),
+                      offset: Offset(0, (1 - qp) * maxQueueHeight),
                       child: queueChild,
                     ),
                   ),
@@ -1148,7 +1189,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
 
 class _RawImageContainer extends StatelessWidget {
   const _RawImageContainer({
-    Key? key,
+    super.key,
     required this.child,
     required this.bottomOffset,
     required this.maxOffset,
@@ -1156,7 +1197,7 @@ class _RawImageContainer extends StatelessWidget {
     required this.cp,
     required this.p,
     required this.width,
-  }) : super(key: key);
+  });
 
   final Widget child;
   final double width;
@@ -1197,7 +1238,7 @@ class _TrackInfo extends StatelessWidget {
   final double maxOffset;
 
   const _TrackInfo({
-    Key? key,
+    super.key,
     required this.textData,
     required this.cp,
     required this.qp,
@@ -1205,7 +1246,7 @@ class _TrackInfo extends StatelessWidget {
     required this.screenSize,
     required this.bottomOffset,
     required this.maxOffset,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1247,7 +1288,7 @@ class _TrackInfo extends StatelessWidget {
                                         maxLines: textData.secondLine == '' ? 2 : 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: velpy(a: 14.5, b: 20.0, c: p).multipliedFontScale,
+                                          fontSize: velpy(a: 14.5, b: 20.0, c: p),
                                           height: 1,
                                         ),
                                       ),
@@ -1258,7 +1299,7 @@ class _TrackInfo extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
-                                          fontSize: velpy(a: 12.5, b: 15.0, c: p).multipliedFontScale,
+                                          fontSize: velpy(a: 12.5, b: 15.0, c: p),
                                         ),
                                       ),
                                   ],
@@ -1298,8 +1339,13 @@ class WaveformMiniplayer extends StatelessWidget {
   const WaveformMiniplayer({super.key, this.fixPadding = false});
 
   int get _currentDurationInMS {
-    final totalDur = Player.inst.currentItemDuration ?? (Player.inst.currentQueue.isNotEmpty ? Player.inst.nowPlayingTrack.duration.seconds : Duration.zero);
-    return totalDur.inMilliseconds;
+    final totalDur = Player.inst.currentItemDuration.value;
+    if (totalDur != null) return totalDur.inMilliseconds;
+    final current = Player.inst.currentItem.value;
+    if (current is Selectable) {
+      return current.track.duration * 1000;
+    }
+    return 0;
   }
 
   void onSeekDragUpdate(double deltax, double maxWidth) {
@@ -1380,14 +1426,14 @@ class _MPQualityButton extends StatelessWidget {
                 Text(
                   title,
                   style: context.textTheme.displayMedium?.copyWith(
-                    fontSize: 13.0.multipliedFontScale,
+                    fontSize: 13.0,
                   ),
                 ),
                 if (subtitle != '')
                   Text(
                     subtitle,
                     style: context.textTheme.displaySmall?.copyWith(
-                      fontSize: 13.0.multipliedFontScale,
+                      fontSize: 13.0,
                     ),
                   ),
               ],

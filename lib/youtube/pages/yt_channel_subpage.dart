@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:photo_view/photo_view.dart';
 
+import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -14,10 +14,10 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
-import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
@@ -79,7 +79,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
           String title = lang.COPIED_ARTWORK;
           String subtitle = '${lang.SAVED_IN} $saveDirPath';
           // ignore: use_build_context_synchronously
-          Color snackColor = context.theme.colorScheme.background;
+          Color snackColor = context.theme.colorScheme.surface;
 
           if (saveDirPath == null) {
             title = lang.ERROR;
@@ -188,7 +188,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                                     subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
                                   ].join(' '),
                             style: context.textTheme.displayMedium?.copyWith(
-                              fontSize: 12.0.multipliedFontScale,
+                              fontSize: 12.0,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -217,9 +217,9 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                   borderRadius: 8.0,
                   icon: Broken.task_square,
                   text: lang.LOAD_ALL,
-                  enabled: !isLoadingMoreUploads.value && !lastLoadingMoreWasEmpty.value,
+                  enabled: !isLoadingMoreUploads.valueR && !lastLoadingMoreWasEmpty.valueR,
                   disableWhenLoading: false,
-                  showLoadingWhenDisabled: !lastLoadingMoreWasEmpty.value,
+                  showLoadingWhenDisabled: !lastLoadingMoreWasEmpty.valueR,
                   onTap: () async {
                     _canKeepLoadingMore = !_canKeepLoadingMore;
                     while (_canKeepLoadingMore && !lastLoadingMoreWasEmpty.value && ConnectivityController.inst.hasConnection) {
@@ -290,7 +290,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                     .toList(),
                 infoLookupCallback: () {
                   final m = <String, StreamInfoItem>{};
-                  streamsList.loop((e, index) {
+                  streamsList.loop((e) {
                     m[e.id ?? ''] = e;
                   });
                   return m;
@@ -327,7 +327,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                       },
                       listview: (controller) {
                         return ListView.builder(
-                          padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotal),
+                          padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
                           controller: controller,
                           itemExtent: thumbnailItemExtent,
                           itemCount: streamsList.length,

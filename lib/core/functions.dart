@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/class/folder.dart';
@@ -28,6 +27,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
@@ -146,12 +146,9 @@ class NamidaOnTaps {
       title: lang.UNDO_CHANGES,
       message: lang.UNDO_CHANGES_DELETED_QUEUE,
       displaySeconds: 3,
-      button: TextButton(
-        onPressed: () {
-          QueueController.inst.reAddQueue(oldQueue);
-          Get.closeAllSnackbars();
-        },
-        child: Text(lang.UNDO),
+      button: (
+        lang.UNDO,
+        () async => await QueueController.inst.reAddQueue(oldQueue),
       ),
     );
   }
@@ -162,12 +159,9 @@ class NamidaOnTaps {
         title: lang.UNDO_CHANGES,
         message: lang.UNDO_CHANGES_DELETED_TRACK,
         displaySeconds: 3,
-        button: TextButton(
-          onPressed: () {
-            Get.closeCurrentSnackbar();
-            whatDoYouWant();
-          },
-          child: Text(lang.UNDO),
+        button: (
+          lang.UNDO,
+          whatDoYouWant,
         ),
       );
     }
@@ -179,8 +173,10 @@ class NamidaOnTaps {
       await HistoryController.inst.removeTracksFromHistory(tracksWithDates);
       showSnacky(
         whatDoYouWant: () async {
-          await HistoryController.inst.addTracksToHistory(tempList);
+          final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList);
+          HistoryController.inst.updateMostPlayedPlaylist(tempList);
           HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSince1970()));
+          await HistoryController.inst.saveHistoryToStorage(daysToSave);
         },
       );
     } else {
@@ -188,7 +184,7 @@ class NamidaOnTaps {
       if (playlist == null) return;
 
       final Map<TrackWithDate, int> twdAndIndexes = {};
-      tracksWithDates.loop((twd, index) {
+      tracksWithDates.loop((twd) {
         twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
       });
 
@@ -205,27 +201,22 @@ class NamidaOnTaps {
   }
 
   void onSubPageTracksSortIconTap(MediaType media) {
-    final sorters = (settings.mediaItemsTrackSorting[media] ?? []).obs;
-    final defaultSorts = <MediaType, List<SortType>>{
-      MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
-      MediaType.artist: [SortType.year, SortType.title],
-      MediaType.genre: [SortType.year, SortType.title],
-      MediaType.folder: [SortType.filename],
-    };
+    final sorters = (settings.mediaItemsTrackSorting.value[media] ?? []).obs;
 
     final allSorts = List<SortType>.from(SortType.values).obs;
     void resortVisualItems() => allSorts.sortByReverse((e) {
           final active = sorters.contains(e);
-          return active ? sorters.length - sorters.indexOf(e) : sorters.indexOf(e);
+          return active ? sorters.length - sorters.value.indexOf(e) : sorters.value.indexOf(e);
         });
     resortVisualItems();
 
     void resortMedia() {
-      settings.updateMediaItemsTrackSorting(media, sorters);
+      settings.updateMediaItemsTrackSorting(media, sorters.value);
       Indexer.inst.sortMediaTracksSubLists([media]);
     }
 
     NamidaNavigator.inst.navigateDialog(
+      scale: 1.0,
       onDisposing: () {
         sorters.close();
         allSorts.close();
@@ -238,6 +229,12 @@ class NamidaOnTaps {
             icon: const Icon(Broken.refresh),
             tooltip: lang.RESTORE_DEFAULTS,
             onPressed: () {
+              final defaultSorts = <MediaType, List<SortType>>{
+                MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
+                MediaType.artist: [SortType.year, SortType.title],
+                MediaType.genre: [SortType.year, SortType.title],
+                MediaType.folder: [SortType.filename],
+              };
               final defaults = defaultSorts[media] ?? [SortType.year];
               sorters.value = defaults;
               settings.updateMediaItemsTrackSorting(media, defaults);
@@ -252,13 +249,13 @@ class NamidaOnTaps {
           ),
         ],
         child: SizedBox(
-          width: Get.width,
-          height: Get.height * 0.4,
+          width: namida.width,
+          height: namida.height * 0.4,
           child: Column(
             children: [
               Obx(
                 () {
-                  final currentlyReverse = settings.mediaItemsTrackSortingReverse[media] ?? false;
+                  final currentlyReverse = settings.mediaItemsTrackSortingReverse.valueR[media] ?? false;
                   return ListTileWithCheckMark(
                     title: lang.REVERSE_ORDER,
                     active: currentlyReverse,
@@ -272,9 +269,9 @@ class NamidaOnTaps {
               Expanded(
                 child: Obx(
                   () => NamidaListView(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.only(bottom: 12.0),
                     itemCount: allSorts.length,
-                    itemExtents: null,
+                    itemExtent: null,
                     onReorder: (oldIndex, newIndex) {
                       if (newIndex > oldIndex) {
                         newIndex -= 1;
@@ -323,21 +320,12 @@ class NamidaOnTaps {
   }
 
   void openEqualizer() {
-    Get.to(
-      () => const EqualizerPage(),
-      id: null,
-      preventDuplicates: true,
-      transition: Transition.cupertino,
-      curve: Curves.easeOut,
-      duration: const Duration(milliseconds: 300),
-      opaque: false,
-      fullscreenDialog: false,
-    );
+    NamidaNavigator.inst.navigateToRoot(const EqualizerPage());
   }
 
   static Map<int, int> _getQueuesSize(String dir) {
     final map = <int, int>{};
-    Directory(dir).listSync().loop((e, index) {
+    Directory(dir).listSync().loop((e) {
       try {
         if (e is File) map[int.parse(e.path.getFilenameWOExt)] = e.lengthSync();
       } catch (_) {}
@@ -351,7 +339,7 @@ class NamidaOnTaps {
     String getSubtitle(Map<int, int> lookup, List<int> datesList) {
       int total = 0;
       String? suffix;
-      datesList.loop((e, index) {
+      datesList.loop((e) {
         final size = lookup[e];
         if (size != null) {
           total += size;
@@ -389,17 +377,17 @@ class NamidaOnTaps {
       int total = 0;
       if (nonFavourites.value) {
         total += lookupNonFavourites.values.where((v) => v).length;
-        selectedToClear.loop((e, index) {
+        selectedToClear.loop((e) {
           total += lookup[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
         });
-        selectedHomepageItemToClear.loop((e, index) {
+        selectedHomepageItemToClear.loop((e) {
           total += lookupHomepageItem[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
         });
       } else {
-        selectedToClear.loop((e, index) {
+        selectedToClear.loop((e) {
           total += lookup[e]?.length ?? 0;
         });
-        selectedHomepageItemToClear.loop((e, index) {
+        selectedHomepageItemToClear.loop((e) {
           total += lookupHomepageItem[e]?.length ?? 0;
         });
       }
@@ -424,15 +412,15 @@ class NamidaOnTaps {
           const SizedBox(width: 8.0),
           Obx(
             () => NamidaButton(
-              enabled: !isRemoving.value && totalToRemove.value > 0,
+              enabled: !isRemoving.valueR && totalToRemove.valueR > 0,
               textWidget: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (isRemoving.value) ...[
+                  if (isRemoving.valueR) ...[
                     const LoadingIndicator(),
                     const SizedBox(width: 8.0),
                   ],
-                  Text("${lang.DELETE} (${totalToRemove.value})"),
+                  Text("${lang.DELETE} (${totalToRemove.valueR})"),
                 ],
               ),
               onPressed: () async {
@@ -452,11 +440,11 @@ class NamidaOnTaps {
                           if (nonFavourites.value) {
                             await QueueController.inst.removeQueues(lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList());
                           }
-                          for (final s in selectedToClear) {
+                          for (final s in selectedToClear.value) {
                             final queues = lookup[s];
                             if (queues != null) await QueueController.inst.removeQueues(queues);
                           }
-                          for (final s in selectedHomepageItemToClear) {
+                          for (final s in selectedHomepageItemToClear.value) {
                             final queues = lookupHomepageItem[s];
                             if (queues != null) await QueueController.inst.removeQueues(queues);
                           }
@@ -472,70 +460,73 @@ class NamidaOnTaps {
           ),
         ],
         child: SizedBox(
-          height: Get.height * 0.6,
-          width: Get.width,
+          height: namida.height * 0.6,
+          width: namida.width,
           child: Obx(
-            () => ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: ListTileWithCheckMark(
-                    dense: true,
-                    icon: Broken.heart_slash,
-                    title: '${lang.NON_FAVOURITES} (${lookupNonFavourites.length})',
-                    subtitle: getSubtitle(sizesLookupMap, lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList()),
-                    active: nonFavourites.value,
-                    onTap: () {
-                      nonFavourites.value = !nonFavourites.value;
-                      updateTotalToRemove();
+            () {
+              final sizesLookup = sizesLookupMap.valueR;
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: ListTileWithCheckMark(
+                      dense: true,
+                      icon: Broken.heart_slash,
+                      title: '${lang.NON_FAVOURITES} (${lookupNonFavourites.length})',
+                      subtitle: getSubtitle(sizesLookup, lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList()),
+                      active: nonFavourites.valueR,
+                      onTap: () {
+                        nonFavourites.toggle();
+                        updateTotalToRemove();
+                      },
+                    ),
+                  ),
+                  const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
+                  ...values.map(
+                    (e) {
+                      final list = lookup[e];
+                      return list != null && list.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(3.0),
+                              child: ListTileWithCheckMark(
+                                dense: true,
+                                title: "${e.toText()} (${list.length})",
+                                subtitle: getSubtitle(sizesLookup, list),
+                                active: selectedToClear.contains(e),
+                                onTap: () {
+                                  selectedToClear.addOrRemove(e);
+                                  updateTotalToRemove();
+                                },
+                              ),
+                            )
+                          : const SizedBox();
                     },
                   ),
-                ),
-                const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
-                ...values.map(
-                  (e) {
-                    final list = lookup[e];
-                    return list != null && list.isNotEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: ListTileWithCheckMark(
-                              dense: true,
-                              title: "${e.toText()} (${list.length})",
-                              subtitle: getSubtitle(sizesLookupMap, list),
-                              active: selectedToClear.contains(e),
-                              onTap: () {
-                                selectedToClear.addOrRemove(e);
-                                updateTotalToRemove();
-                              },
-                            ),
-                          )
-                        : const SizedBox();
-                  },
-                ),
-                const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
-                ...HomePageItems.values.map(
-                  (e) {
-                    final list = lookupHomepageItem[e];
-                    return list != null && list.isNotEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: ListTileWithCheckMark(
-                              dense: true,
-                              title: "${e.toText()} (${list.length})",
-                              subtitle: getSubtitle(sizesLookupMap, list),
-                              active: selectedHomepageItemToClear.contains(e),
-                              onTap: () {
-                                selectedHomepageItemToClear.addOrRemove(e);
-                                updateTotalToRemove();
-                              },
-                            ),
-                          )
-                        : const SizedBox();
-                  },
-                ),
-              ],
-            ),
+                  const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0)),
+                  ...HomePageItems.values.map(
+                    (e) {
+                      final list = lookupHomepageItem[e];
+                      return list != null && list.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(3.0),
+                              child: ListTileWithCheckMark(
+                                dense: true,
+                                title: "${e.toText()} (${list.length})",
+                                subtitle: getSubtitle(sizesLookup, list),
+                                active: selectedHomepageItemToClear.contains(e),
+                                onTap: () {
+                                  selectedHomepageItemToClear.addOrRemove(e);
+                                  updateTotalToRemove();
+                                },
+                              ),
+                            )
+                          : const SizedBox();
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -593,8 +584,8 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
     dialog: CustomBlurryDialog(
       titleWidgetInPadding: Obx(
         () => Text(
-          '$title ${daysNumber.value == 0 ? '' : "(${daysNumber.value.displayDayKeyword})"}',
-          style: Get.textTheme.displayLarge,
+          '$title ${daysNumber.valueR == 0 ? '' : "(${daysNumber.valueR.displayDayKeyword})"}',
+          style: namida.textTheme.displayLarge,
         ),
       ),
       normalTitleStyle: true,
@@ -603,7 +594,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         const CancelButton(),
         Obx(
           () => NamidaButton(
-            enabled: canGenerate.value,
+            enabled: canGenerate.valueR,
             onPressed: () => onGenerate(dates),
             text: buttonText,
           ),
@@ -612,9 +603,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
       child: CalendarDatePicker2(
         onValueChanged: (value) {
           final dts = value.whereType<DateTime>().toList();
-          dates
-            ..clear()
-            ..addAll(dts);
+          dates.assignAll(dts);
 
           if (onChanged != null) onChanged(dts);
 
@@ -654,8 +643,8 @@ Future<String> showNamidaBottomSheetWithTextField({
   focusNode.requestFocus();
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-  // ignore: use_build_context_synchronously
   await showModalBottomSheet(
+    // ignore: use_build_context_synchronously
     context: context,
     useRootNavigator: useRootNavigator,
     showDragHandle: showDragHandle,
@@ -738,10 +727,6 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
   }
 }
 
-bool checkIfQueueSameAsCurrent(List<Selectable> queue) {
-  return checkIfListsSimilar(queue, Player.inst.currentQueue) == 1.0;
-}
-
 bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
   return checkIfListsSimilar(queue, allTracksInLibrary) == 1.0;
 }
@@ -782,7 +767,7 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
   // "thumb", "album", "albumart", etc.. are covered by the check `element.contains(filename)`.
   final coversNames = ["folder", "front", "cover", "thumbnail", "albumartsmall"];
 
-  allAvailableDirectories.keys.toList().loop((d, index) {
+  allAvailableDirectories.keys.toList().loop((d) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
     try {
       for (final systemEntity in d.listSyncSafe()) {
@@ -833,7 +818,9 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
 
 class TracksAddOnTap {
   void onAddTracksTap(BuildContext context) {
-    final currentTrack = Player.inst.nowPlayingTrack;
+    final currentTrackS = Player.inst.currentItem.value;
+    if (currentTrackS is! Selectable) return;
+    final currentTrack = currentTrackS.track;
     showAddItemsToQueueDialog(
       context: context,
       tiles: (getAddTracksTile) {
@@ -889,15 +876,15 @@ class TracksAddOnTap {
 
               // -- moods from playlists.
               final allAvailableMoodsPlaylists = <String, List<Track>>{};
-              for (final pl in PlaylistController.inst.playlistsMap.entries) {
-                pl.value.moods.loop((mood, _) {
+              for (final pl in PlaylistController.inst.playlistsMap.value.entries) {
+                pl.value.moods.loop((mood) {
                   allAvailableMoodsPlaylists.addAllNoDuplicatesForce(mood, pl.value.tracks.tracks);
                 });
               }
               // -- moods from tracks.
               final allAvailableMoodsTracks = <String, List<Track>>{};
-              for (final tr in Indexer.inst.trackStatsMap.entries) {
-                tr.value.moods.loop((mood, _) {
+              for (final tr in Indexer.inst.trackStatsMap.value.entries) {
+                tr.value.moods.loop((mood) {
                   allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr.key);
                 });
               }
@@ -905,7 +892,7 @@ class TracksAddOnTap {
               // -- moods from track embedded tag
               final library = allTracksInLibrary;
               for (final tr in library) {
-                tr.moodList.loop((mood, _) {
+                tr.moodList.loop((mood) {
                   allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr);
                 });
               }
@@ -925,7 +912,7 @@ class TracksAddOnTap {
                 required String title,
                 required List<String> moodsList,
                 required Map<String, List<Track>> allAvailableMoods,
-                required List<String> selectedList,
+                required RxList<String> selectedList,
               }) {
                 return [
                   SliverToBoxAdapter(
@@ -957,7 +944,7 @@ class TracksAddOnTap {
                                   Obx(
                                     () => NamidaCheckMark(
                                       size: 12.0,
-                                      active: selectedList.contains(m),
+                                      active: selectedList.valueR.contains(m),
                                     ),
                                   ),
                                 ],
@@ -986,10 +973,10 @@ class TracksAddOnTap {
                       text: lang.GENERATE,
                       onPressed: () {
                         final finalTracks = <Track>[];
-                        selectedmoodsPlaylists.loop((m, _) {
+                        selectedmoodsPlaylists.loop((m) {
                           finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
                         });
-                        selectedmoodsTracks.loop((m, _) {
+                        selectedmoodsTracks.loop((m) {
                           finalTracks.addAll(allAvailableMoodsTracks[m] ?? []);
                         });
                         Player.inst.addToQueue(
@@ -1034,8 +1021,8 @@ class TracksAddOnTap {
             onTap: (insertionType) async {
               NamidaNavigator.inst.closeDialog();
 
-              final RxInt minRating = 80.obs;
-              final RxInt maxRating = 100.obs;
+              final minRating = 80.obs;
+              final maxRating = 100.obs;
               await NamidaNavigator.inst.navigateDialog(
                 onDisposing: () {
                   minRating.close();
@@ -1081,7 +1068,7 @@ class TracksAddOnTap {
                               const SizedBox(height: 2.0),
                               Obx(
                                 () => Text(
-                                  '${minRating.value}%',
+                                  '${minRating.valueR}%',
                                   style: context.textTheme.displaySmall,
                                 ),
                               )
@@ -1101,7 +1088,7 @@ class TracksAddOnTap {
                               const SizedBox(height: 2.0),
                               Obx(
                                 () => Text(
-                                  '${maxRating.value}%',
+                                  '${maxRating.valueR}%',
                                   style: context.textTheme.displaySmall,
                                 ),
                               ),
@@ -1167,7 +1154,7 @@ class TracksAddOnTap {
   }
 
   void onAddVideosTap(BuildContext context) {
-    final currentVideo = Player.inst.nowPlayingVideoID;
+    final currentVideo = Player.inst.currentVideo;
     if (currentVideo == null) return;
     final currentVideoId = currentVideo.id;
     final currentVideoName = YoutubeController.inst.getVideoName(currentVideoId) ?? currentVideoId;
@@ -1179,7 +1166,7 @@ class TracksAddOnTap {
         return [
           Obx(
             () {
-              final isLoading = NamidaYTGenerator.inst.didPrepareResources.value == false;
+              final isLoading = NamidaYTGenerator.inst.didPrepareResources.valueR == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(
@@ -1231,7 +1218,7 @@ class TracksAddOnTap {
           const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
           Obx(
             () {
-              final isLoading = NamidaYTGenerator.inst.didPrepareResources.value == false;
+              final isLoading = NamidaYTGenerator.inst.didPrepareResources.valueR == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(
@@ -1345,9 +1332,9 @@ class TracksAddOnTap {
                 trailing: Obx(
                   () => NamidaWheelSlider(
                     totalCount: maxCount,
-                    initValue: tracksNo.value,
+                    initValue: tracksNo.valueR,
                     onValueChanged: (val) => tracksNo.value = val,
-                    text: tracksNo.value == 0 ? lang.UNLIMITED : '${tracksNo.value}',
+                    text: tracksNo.valueR == 0 ? lang.UNLIMITED : '${tracksNo.valueR}',
                   ),
                 ),
               ),
@@ -1355,7 +1342,7 @@ class TracksAddOnTap {
                 () => CustomSwitchListTile(
                   icon: Broken.next,
                   title: lang.PLAY_NEXT,
-                  value: insertN.value,
+                  value: insertN.valueR,
                   onChanged: (isTrue) => insertN.value = !isTrue,
                 ),
               ),
@@ -1370,28 +1357,26 @@ class TracksAddOnTap {
                         () => Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(sortBy.value.toIcon(), size: 18.0),
+                            Icon(sortBy.valueR.toIcon(), size: 18.0),
                             const SizedBox(width: 8.0),
-                            Text(sortBy.value.toText()),
+                            Text(sortBy.valueR.toText()),
                           ],
                         ),
                       ),
                       itemBuilder: (context) {
                         return <PopupMenuEntry<InsertionSortingType>>[
-                          ...InsertionSortingType.values
-                              .map(
-                                (e) => PopupMenuItem(
-                                  value: e,
-                                  child: Row(
-                                    children: [
-                                      Icon(e.toIcon(), size: 20.0),
-                                      const SizedBox(width: 8.0),
-                                      Text(e.toText()),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList()
+                          ...InsertionSortingType.values.map(
+                            (e) => PopupMenuItem(
+                              value: e,
+                              child: Row(
+                                children: [
+                                  Icon(e.toIcon(), size: 20.0),
+                                  const SizedBox(width: 8.0),
+                                  Text(e.toText()),
+                                ],
+                              ),
+                            ),
+                          )
                         ];
                       },
                       onSelected: (value) => sortBy.value = value,
@@ -1425,7 +1410,7 @@ class TracksAddOnTap {
                 icon: Broken.setting_4,
                 onPressed: () => openQueueInsertionConfigure(insertionType, title),
               ).animateEntrance(
-                showWhen: shouldShowConfigureIcon.value,
+                showWhen: shouldShowConfigureIcon.valueR,
                 durationMS: 200,
               ),
             ),
@@ -1440,7 +1425,7 @@ class TracksAddOnTap {
           NamidaIconButton(
             icon: Broken.setting_3,
             tooltip: lang.CONFIGURE,
-            onPressed: () => shouldShowConfigureIcon.value = !shouldShowConfigureIcon.value,
+            onPressed: shouldShowConfigureIcon.toggle,
           ),
         ],
         child: Column(children: tiles(getAddTracksTile)),

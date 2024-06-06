@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "flutter",
+      "command": "flutter",
+      "args": ["build", "apk"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "flutter: flutter build apk",
+      "detail": ""
+    },
+    {
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "build",
+        "apk",
+        "--target-platform",
+        "android-arm64",
+        "--release",
+        "-v"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "label": "build flutter apk arm64",
+      "detail": ""
+    }
+  ]
+}

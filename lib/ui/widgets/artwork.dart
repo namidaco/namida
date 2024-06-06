@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -14,6 +12,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/drop_shadow.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -212,7 +211,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     int? finalCache;
     if (widget.compressed || widget.useTrackTileCacheHeight) {
-      final pixelRatio = context.mediaQuery.devicePixelRatio;
+      final pixelRatio = context.pixelRatio;
       final cacheMultiplier = (pixelRatio * settings.artworkCacheHeightMultiplier.value).round();
       finalCache = widget.useTrackTileCacheHeight ? 60 * cacheMultiplier : widget.cacheHeight * cacheMultiplier;
     }
@@ -373,166 +372,116 @@ class MultiArtworks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaHero(
-      tag: heroTag,
-      enabled: !disableHero,
-      child: Container(
-        height: thumbnailSize,
-        width: thumbnailSize,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(borderRadius.multipliedRadius)),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            return tracks.isEmpty
-                ? ArtworkWidget(
-                    key: const Key(''),
-                    track: null,
-                    thumbnailSize: thumbnailSize,
-                    path: null,
-                    forceSquared: true,
-                    blur: 0,
-                    forceDummyArtwork: true,
-                    bgcolor: bgcolor,
-                    borderRadius: borderRadius,
-                    iconSize: iconSize,
-                    width: c.maxWidth,
-                    height: c.maxHeight,
-                    fallbackToFolderCover: fallbackToFolderCover,
-                  )
-                : tracks.length == 1
-                    ? ArtworkWidget(
-                        key: Key(tracks[0].pathToImage),
-                        thumbnailSize: thumbnailSize,
-                        track: tracks[0],
-                        path: tracks[0].pathToImage,
-                        forceSquared: true,
-                        blur: 0,
-                        borderRadius: 0,
-                        compressed: false,
-                        width: c.maxWidth,
-                        height: c.maxHeight,
-                        fallbackToFolderCover: fallbackToFolderCover,
-                      )
-                    : tracks.length == 2
-                        ? Row(
-                            children: [
-                              ArtworkWidget(
-                                key: Key("0_${tracks[0].pathToImage}"),
-                                thumbnailSize: thumbnailSize / 2,
-                                track: tracks[0],
-                                path: tracks[0].pathToImage,
-                                forceSquared: true,
-                                blur: 0,
-                                borderRadius: 0,
-                                iconSize: iconSize - 2.0,
-                                width: c.maxWidth / 2,
-                                height: c.maxHeight,
-                                fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 60 : 80,
-                              ),
-                              ArtworkWidget(
-                                key: Key("1_${tracks[1].pathToImage}"),
-                                thumbnailSize: thumbnailSize / 2,
-                                track: tracks[1],
-                                path: tracks[1].pathToImage,
-                                forceSquared: true,
-                                blur: 0,
-                                borderRadius: 0,
-                                iconSize: iconSize - 2.0,
-                                width: c.maxWidth / 2,
-                                height: c.maxHeight,
-                                fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 60 : 80,
-                              ),
-                            ],
+    return SizedBox(
+      height: thumbnailSize,
+      width: thumbnailSize,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+        ),
+        child: NamidaHero(
+          tag: heroTag,
+          enabled: !disableHero,
+          child: tracks.isEmpty
+              ? ArtworkWidget(
+                  key: const Key(''),
+                  track: null,
+                  thumbnailSize: thumbnailSize,
+                  path: null,
+                  forceSquared: true,
+                  blur: 0,
+                  forceDummyArtwork: true,
+                  bgcolor: bgcolor,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
+                  width: thumbnailSize,
+                  height: thumbnailSize,
+                  fallbackToFolderCover: fallbackToFolderCover,
+                )
+              : LayoutBuilder(
+                  builder: (context, c) {
+                    return tracks.length == 1
+                        ? ArtworkWidget(
+                            key: Key(tracks[0].pathToImage),
+                            thumbnailSize: thumbnailSize,
+                            track: tracks[0],
+                            path: tracks[0].pathToImage,
+                            forceSquared: true,
+                            blur: 0,
+                            borderRadius: 0,
+                            compressed: false,
+                            width: c.maxWidth,
+                            height: c.maxHeight,
+                            fallbackToFolderCover: fallbackToFolderCover,
                           )
-                        : tracks.length == 3
+                        : tracks.length == 2
                             ? Row(
                                 children: [
-                                  Column(
-                                    children: [
-                                      ArtworkWidget(
-                                        key: Key("0_${tracks[0].pathToImage}"),
-                                        thumbnailSize: thumbnailSize / 2,
-                                        track: tracks[0],
-                                        path: tracks[0].pathToImage,
-                                        forceSquared: true,
-                                        blur: 0,
-                                        borderRadius: 0,
-                                        iconSize: iconSize - 2.0,
-                                        width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
-                                        fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 40 : 80,
-                                      ),
-                                      ArtworkWidget(
-                                        key: Key("1_${tracks[1].pathToImage}"),
-                                        thumbnailSize: thumbnailSize / 2,
-                                        track: tracks[1],
-                                        path: tracks[1].pathToImage,
-                                        forceSquared: true,
-                                        blur: 0,
-                                        borderRadius: 0,
-                                        iconSize: iconSize - 2.0,
-                                        width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
-                                        fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 40 : 80,
-                                      ),
-                                    ],
-                                  ),
                                   ArtworkWidget(
-                                    key: Key("2_${tracks[2].pathToImage}"),
+                                    key: Key("0_${tracks[0].pathToImage}"),
                                     thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[2],
-                                    path: tracks[2].pathToImage,
+                                    track: tracks[0],
+                                    path: tracks[0].pathToImage,
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
-                                    iconSize: iconSize,
+                                    iconSize: iconSize - 2.0,
                                     width: c.maxWidth / 2,
                                     height: c.maxHeight,
                                     fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
+                                    cacheHeight: reduceQuality ? 60 : 80,
+                                  ),
+                                  ArtworkWidget(
+                                    key: Key("1_${tracks[1].pathToImage}"),
+                                    thumbnailSize: thumbnailSize / 2,
+                                    track: tracks[1],
+                                    path: tracks[1].pathToImage,
+                                    forceSquared: true,
+                                    blur: 0,
+                                    borderRadius: 0,
+                                    iconSize: iconSize - 2.0,
+                                    width: c.maxWidth / 2,
+                                    height: c.maxHeight,
+                                    fallbackToFolderCover: fallbackToFolderCover,
+                                    cacheHeight: reduceQuality ? 60 : 80,
                                   ),
                                 ],
                               )
-                            : Column(
-                                children: [
-                                  Row(
+                            : tracks.length == 3
+                                ? Row(
                                     children: [
-                                      ArtworkWidget(
-                                        key: Key("0_${tracks[0].pathToImage}"),
-                                        thumbnailSize: thumbnailSize / 2,
-                                        track: tracks[0],
-                                        path: tracks[0].pathToImage,
-                                        forceSquared: true,
-                                        blur: 0,
-                                        borderRadius: 0,
-                                        iconSize: iconSize - 3.0,
-                                        width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
-                                        fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 40 : 80,
+                                      Column(
+                                        children: [
+                                          ArtworkWidget(
+                                            key: Key("0_${tracks[0].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[0],
+                                            path: tracks[0].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 2.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                          ArtworkWidget(
+                                            key: Key("1_${tracks[1].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[1],
+                                            path: tracks[1].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 2.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                        ],
                                       ),
-                                      ArtworkWidget(
-                                        key: Key("1_${tracks[1].pathToImage}"),
-                                        thumbnailSize: thumbnailSize / 2,
-                                        track: tracks[1],
-                                        path: tracks[1].pathToImage,
-                                        forceSquared: true,
-                                        blur: 0,
-                                        borderRadius: 0,
-                                        iconSize: iconSize - 3.0,
-                                        width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
-                                        fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 40 : 80,
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
                                       ArtworkWidget(
                                         key: Key("2_${tracks[2].pathToImage}"),
                                         thumbnailSize: thumbnailSize / 2,
@@ -541,31 +490,84 @@ class MultiArtworks extends StatelessWidget {
                                         forceSquared: true,
                                         blur: 0,
                                         borderRadius: 0,
-                                        iconSize: iconSize - 3.0,
+                                        iconSize: iconSize,
                                         width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
-                                        fallbackToFolderCover: fallbackToFolderCover,
-                                        cacheHeight: reduceQuality ? 40 : 80,
-                                      ),
-                                      ArtworkWidget(
-                                        key: Key("3_${tracks[3].pathToImage}"),
-                                        thumbnailSize: thumbnailSize / 2,
-                                        track: tracks[3],
-                                        path: tracks[3].pathToImage,
-                                        forceSquared: true,
-                                        blur: 0,
-                                        borderRadius: 0,
-                                        iconSize: iconSize - 3.0,
-                                        width: c.maxWidth / 2,
-                                        height: c.maxHeight / 2,
+                                        height: c.maxHeight,
                                         fallbackToFolderCover: fallbackToFolderCover,
                                         cacheHeight: reduceQuality ? 40 : 80,
                                       ),
                                     ],
-                                  ),
-                                ],
-                              );
-          },
+                                  )
+                                : Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          ArtworkWidget(
+                                            key: Key("0_${tracks[0].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[0],
+                                            path: tracks[0].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 3.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                          ArtworkWidget(
+                                            key: Key("1_${tracks[1].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[1],
+                                            path: tracks[1].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 3.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          ArtworkWidget(
+                                            key: Key("2_${tracks[2].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[2],
+                                            path: tracks[2].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 3.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                          ArtworkWidget(
+                                            key: Key("3_${tracks[3].pathToImage}"),
+                                            thumbnailSize: thumbnailSize / 2,
+                                            track: tracks[3],
+                                            path: tracks[3].pathToImage,
+                                            forceSquared: true,
+                                            blur: 0,
+                                            borderRadius: 0,
+                                            iconSize: iconSize - 3.0,
+                                            width: c.maxWidth / 2,
+                                            height: c.maxHeight / 2,
+                                            fallbackToFolderCover: fallbackToFolderCover,
+                                            cacheHeight: reduceQuality ? 40 : 80,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                  },
+                ),
         ),
       ),
     );

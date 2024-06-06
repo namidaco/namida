@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
-
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/controller/indexer_controller.dart';
 
 class IndexingPercentage extends StatelessWidget {
   final double size;
@@ -14,14 +13,14 @@ class IndexingPercentage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaHero(
-      tag: 'indexingper',
-      child: Obx(
-        () => NamidaCircularPercentage(
-          percentage: Indexer.inst.tracksInfoList.length / Indexer.inst.allAudioFiles.length,
-          size: size,
-        ).animateEntrance(showWhen: Indexer.inst.isIndexing.value),
-      ),
+    return Obx(
+      () => Indexer.inst.isIndexing.valueR
+          ? NamidaCircularPercentage(
+              heroTag: 'indexingper',
+              percentage: Indexer.inst.tracksInfoList.valueR.length / Indexer.inst.allAudioFiles.valueR.length,
+              size: size,
+            ).animateEntrance(showWhen: Indexer.inst.isIndexing.valueR)
+          : const SizedBox(),
     );
   }
 }
@@ -35,15 +34,13 @@ class ParsingJsonPercentage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => JsonToHistoryParser.inst.isParsing.value && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.value)
+      () => JsonToHistoryParser.inst.isParsing.valueR && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.valueR)
           ? TapDetector(
               onTap: () => JsonToHistoryParser.inst.showParsingProgressDialog(),
-              child: NamidaHero(
-                tag: 'parsingjsonper',
-                child: NamidaCircularPercentage(
-                  percentage: JsonToHistoryParser.inst.parsedHistoryJson.value / JsonToHistoryParser.inst.totalJsonToParse.value,
-                  size: size,
-                ),
+              child: NamidaCircularPercentage(
+                heroTag: 'parsingjsonper',
+                percentage: JsonToHistoryParser.inst.parsedHistoryJson.valueR / JsonToHistoryParser.inst.totalJsonToParse.valueR,
+                size: size,
               ),
             )
           : const SizedBox(),

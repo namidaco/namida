@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager {
@@ -44,7 +44,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   void updatePeakDates(List<StreamInfoItem> streams) {
     int oldest = (streamsPeakDates?.oldest ?? DateTime.now()).millisecondsSinceEpoch;
     int newest = (streamsPeakDates?.newest ?? DateTime(0)).millisecondsSinceEpoch;
-    streams.loop((e, _) {
+    streams.loop((e) {
       final d = e.date;
       if (d != null) {
         final ms = d.millisecondsSinceEpoch;

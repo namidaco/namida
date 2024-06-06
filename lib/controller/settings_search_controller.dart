@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -107,7 +107,7 @@ class SettingsSearchController {
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
-  bool get canShowSearch => _canShowSearch.value;
+  RxBaseCore<bool> get canShowSearch => _canShowSearch;
   final _canShowSearch = false.obs;
 
   void closeSearch() {
@@ -156,7 +156,7 @@ class SettingsSearchController {
 
   void onSearchChanged(String val) {
     final res = <SettingSubpageEnum, List<SettingSearchResultItem>>{};
-    _allWidgets.loop((widget, index) {
+    _allWidgets.loop((widget) {
       for (final e in widget.$2.entries) {
         final match = e.value.any((element) => element.cleanUpForComparison.contains(val.cleanUpForComparison));
         if (match) {

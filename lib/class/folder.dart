@@ -55,7 +55,7 @@ class Folder {
   int get hashCode => _key.hashCode;
 
   @override
-  String toString() => "Folder(path: $path, tracks: ${tracks.length})";
+  String toString() => "Folder(path: $path, tracks: ${tracks().length})";
 }
 
 extension FolderUtils on Folder {
@@ -69,7 +69,7 @@ extension FolderUtils on Folder {
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
     int count = 0;
-    for (final k in Indexer.inst.mainMapFolders.keys) {
+    for (final k in Indexer.inst.mainMapFolders.value.keys) {
       if (k.folderName == folderName) {
         count++;
         if (count > 1) return true;
@@ -78,9 +78,10 @@ extension FolderUtils on Folder {
     return false;
   }
 
-  List<Track> get tracks => Indexer.inst.mainMapFolders[this] ?? [];
-  Iterable<Track> get tracksRecusive sync* {
-    for (final e in Indexer.inst.mainMapFolders.entries) {
+  List<Track> tracks() => Indexer.inst.mainMapFolders.value[this] ?? [];
+
+  Iterable<Track> tracksRecusive() sync* {
+    for (final e in Indexer.inst.mainMapFolders.value.entries) {
       if (this.isParentOf(e.key)) {
         yield* e.value;
       }
@@ -94,7 +95,7 @@ extension FolderUtils on Folder {
 
     while (parts.isNotEmpty) {
       final f = Folder(parts.join(_pathSeparator));
-      if (Indexer.inst.mainMapFolders[f] != null) return f;
+      if (Indexer.inst.mainMapFolders.value[f] != null) return f;
       parts.removeLast();
     }
 
@@ -108,7 +109,7 @@ extension FolderUtils on Folder {
 
     final splitsCount = this.splitParts().length;
 
-    for (final folder in foldersMap.keys) {
+    for (final folder in foldersMap.value.keys) {
       if (this.isDirectParentOf(folder, splitsCount)) allInside.add(folder);
     }
 

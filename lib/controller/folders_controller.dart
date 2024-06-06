@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
@@ -18,16 +18,14 @@ class Folders {
 
   final RxList<Folder> currentFolderslist = <Folder>[].obs;
 
-  List<Track> get currentTracks => currentFolder.value?.tracks ?? [];
-
   /// Even with this logic, root paths are invincible.
-  final RxBool isHome = true.obs;
+  final isHome = true.obs;
 
   /// Used for non-hierarchy.
-  final RxBool isInside = false.obs;
+  final isInside = false.obs;
 
   /// Highlights the track that is meant to be navigated to after calling [goToFolder].
-  final RxnInt indexToScrollTo = RxnInt();
+  final indexToScrollTo = Rxn<int>();
 
   final _latestScrollOffset = <Folder?, double>{};
 
@@ -61,7 +59,7 @@ class Folders {
     currentFolder.value = folder;
 
     if (trackToScrollTo != null) {
-      indexToScrollTo.value = folder.tracks.indexOf(trackToScrollTo);
+      indexToScrollTo.value = folder.tracks().indexOf(trackToScrollTo);
     }
     _scrollJump(jumpTo);
   }

@@ -1,7 +1,6 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
@@ -280,10 +279,7 @@ const k_PLAYLIST_NAME_HISTORY = '_HISTORY_';
 const k_PLAYLIST_NAME_MOST_PLAYED = '_MOST_PLAYED_';
 const k_PLAYLIST_NAME_AUTO_GENERATED = '_AUTO_GENERATED_';
 
-List<Track> get allTracksInLibrary => UnmodifiableListView(Indexer.inst.tracksInfoList);
-
-bool get shouldAlbumBeSquared =>
-    (settings.albumGridCount.value > 1 && !settings.useAlbumStaggeredGridView.value) || (settings.albumGridCount.value == 1 && settings.forceSquaredAlbumThumbnail.value);
+List<Track> get allTracksInLibrary => Indexer.inst.tracksInfoList.value;
 
 /// Stock Video Qualities List
 final List<String> kStockVideoQualities = [
@@ -482,7 +478,7 @@ class UnknownTags {
 
 int get currentTimeMS => DateTime.now().millisecondsSinceEpoch;
 
-const kThemeAnimationDurationMS = 350;
+const kThemeAnimationDurationMS = 250;
 
 const kMaximumSleepTimerTracks = 40;
 const kMaximumSleepTimerMins = 180;

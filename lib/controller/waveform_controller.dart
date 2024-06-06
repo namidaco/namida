@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 import 'package:waveform_extractor/waveform_extractor.dart';
 
 import 'package:namida/controller/settings_controller.dart';
@@ -11,7 +11,8 @@ class WaveformController {
 
   int get _defaultUserBarsCount => settings.waveformTotalBars.value;
 
-  final isWaveformUIEnabled = false.obs;
+  RxBaseCore<bool> get isWaveformUIEnabled => _isWaveformUIEnabled;
+  final _isWaveformUIEnabled = false.obso;
 
   late List<double> currentWaveformUI = List<double>.filled(_defaultUserBarsCount, -1, growable: false);
 
@@ -24,7 +25,7 @@ class WaveformController {
   void resetWaveform() {
     _currentWaveform = [];
     _currentScaleMap = {};
-    isWaveformUIEnabled.value = false;
+    _isWaveformUIEnabled.value = false;
   }
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
@@ -72,7 +73,7 @@ class WaveformController {
       original: _currentWaveform,
     ));
     currentWaveformUI = waveform;
-    isWaveformUIEnabled.value = true;
+    _isWaveformUIEnabled.value = true;
   }
 
   static List<double> _calculateUIWaveformIsolate(({List<double> original, int targetSize}) params) {
@@ -90,7 +91,7 @@ class WaveformController {
   static Map<int, List<double>> _downscaledWaveformLists(({List<int> original, List<int> targetSizes}) params) {
     final newLists = <int, List<double>>{};
     const maxClamping = 64.0;
-    params.targetSizes.loop((targetSize, index) {
+    params.targetSizes.loop((targetSize) {
       newLists[targetSize] = params.original.changeListSize(
         targetSize: targetSize,
         clampToMax: maxClamping,

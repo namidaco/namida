@@ -8,6 +8,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -61,7 +62,7 @@ class NamidaDialogs {
       "${tracks.displayTrackKeyword} & ${artists.length.displayArtistKeyword}",
       QueueSource.album,
       thirdLineText: artists.join(', ').overflow,
-      forceSquared: shouldAlbumBeSquared,
+      forceSquared: Dimensions.inst.shouldAlbumBeSquared,
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
       albumToAddFrom: (tracks.album, albumIdentifier),
@@ -197,7 +198,7 @@ class NamidaDialogs {
     required bool recursiveTracks,
   }) async {
     if (recursiveTracks) Vibration.vibrate(duration: 20, amplitude: 50);
-    final tracks = recursiveTracks ? folder.tracksRecusive.toList() : folder.tracks;
+    final tracks = recursiveTracks ? folder.tracksRecusive().toList() : folder.tracks();
     await showGeneralPopupDialog(
       tracks,
       folder.folderName,

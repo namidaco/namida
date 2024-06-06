@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -24,11 +24,11 @@ class ScrollSearchController {
   final ytSearchKey = GlobalKey<YoutubeSearchResultsPageState>();
   final currentSearchType = SearchType.localTracks.obs;
 
-  final RxBool isGlobalSearchMenuShown = false.obs;
+  final isGlobalSearchMenuShown = false.obs;
   final TextEditingController searchTextEditingController = TextEditingController();
 
-  final Map<LibraryTab, RxBool> isSearchBoxVisibleMap = <LibraryTab, RxBool>{};
-  final Map<LibraryTab, RxBool> isBarVisibleMap = <LibraryTab, RxBool>{};
+  final Map<LibraryTab, Rx<bool>> isSearchBoxVisibleMap = <LibraryTab, Rx<bool>>{};
+  final Map<LibraryTab, Rx<bool>> isBarVisibleMap = <LibraryTab, Rx<bool>>{};
 
   ScrollController scrollController = ScrollController();
   final Map<LibraryTab, double> scrollPositionsMap = {};
@@ -98,20 +98,20 @@ class ScrollSearchController {
     });
   }
 
-  bool getIsSearchBoxVisible(LibraryTab tab) {
+  RxBaseCore<bool> getIsSearchBoxVisible(LibraryTab tab) {
     if (isSearchBoxVisibleMap[tab] != null) {
-      return isSearchBoxVisibleMap[tab]!.value;
+      return isSearchBoxVisibleMap[tab]!;
     }
     isSearchBoxVisibleMap[tab] = false.obs;
-    return isSearchBoxVisibleMap[tab]!.value;
+    return isSearchBoxVisibleMap[tab]!;
   }
 
-  bool getIsBarVisible(LibraryTab tab) {
+  RxBaseCore<bool> getIsBarVisible(LibraryTab tab) {
     if (isBarVisibleMap[tab] != null) {
-      return isBarVisibleMap[tab]!.value;
+      return isBarVisibleMap[tab]!;
     }
     isBarVisibleMap[tab] = true.obs;
-    return isBarVisibleMap[tab]!.value;
+    return isBarVisibleMap[tab]!;
   }
 
   double getScrollPosition(LibraryTab tab) {
@@ -197,8 +197,8 @@ extension LibraryTabStuff on LibraryTab {
   ScrollController get scrollController => ScrollSearchController.inst.scrollController;
   TextEditingController? get textSearchController => ScrollSearchController.inst.textSearchControllers[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
-  bool get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
-  bool get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);
+  RxBaseCore<bool> get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
+  RxBaseCore<bool> get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);
   double get offsetOrZero => (ScrollSearchController.inst.scrollController.hasClients) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;
   bool get shouldAnimateTiles => offsetOrZero == 0.0;
 }

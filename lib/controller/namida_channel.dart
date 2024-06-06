@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -55,7 +55,7 @@ class NamidaChannel {
 
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
     final t = <int>[];
-    types.loop((e, index) {
+    types.loop((e) {
       final n = _setMusicAsActionConverter[e];
       if (n != null) t.add(n);
     });

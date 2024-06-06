@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'dart:io';
 
-import 'package:get/get.dart';
+import 'package:namida/class/route.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -17,29 +19,29 @@ class SelectedTracksController {
   static final SelectedTracksController _instance = SelectedTracksController._internal();
   SelectedTracksController._internal();
 
-  List<Selectable> get selectedTracks => _tracksOrTwdList;
+  RxBaseCore<List<Selectable>> get selectedTracks => _tracksOrTwdList;
 
   final selectedPlaylistsNames = <Track, String>{};
 
   final _tracksOrTwdList = <Selectable>[].obs;
   final _allTracksHashCodes = <Track, bool>{}.obs;
 
-  List<Selectable> get currentAllTracks {
+  Iterable<Selectable> getCurrentAllTracks() {
     if (MiniPlayerController.inst.isInQueue) {
-      return Player.inst.currentQueue;
+      return Player.inst.currentQueue.value.mapAs<Selectable>();
     } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      return SearchSortController.inst.trackSearchTemp;
+      return SearchSortController.inst.trackSearchTemp.value;
     }
 
-    return NamidaNavigator.inst.currentRoute?.tracksInside ?? [];
+    return NamidaNavigator.inst.currentRoute?.tracksInside() ?? [];
   }
 
-  final RxBool isMenuMinimized = true.obs;
-  final RxBool isExpanded = false.obs;
+  final isMenuMinimized = true.obs;
+  final isExpanded = false.obs;
 
-  final RxBool didInsertTracks = false.obs;
+  final didInsertTracks = false.obs;
 
-  final RxDouble bottomPadding = 0.0.obs;
+  final bottomPadding = 0.0.obs;
 
   // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
   bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
@@ -49,7 +51,7 @@ class SelectedTracksController {
     final rawTrack = track.track;
     if (isTrackSelected(track)) {
       _allTracksHashCodes.remove(rawTrack);
-      final indexInList = _tracksOrTwdList.indexWhere((element) => element.track == rawTrack);
+      final indexInList = _tracksOrTwdList.value.indexWhere((element) => element.track == rawTrack);
       if (indexInList != -1) _tracksOrTwdList.removeAt(indexInList);
       selectedPlaylistsNames.remove(rawTrack);
     } else {
@@ -62,11 +64,9 @@ class SelectedTracksController {
   }
 
   void reorderTracks(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
-    }
-    final item = _tracksOrTwdList.removeAt(oldIndex);
+    if (newIndex > oldIndex) newIndex -= 1;
 
+    final item = _tracksOrTwdList.value.removeAt(oldIndex);
     _tracksOrTwdList.insertSafe(newIndex, item);
   }
 
@@ -85,21 +85,55 @@ class SelectedTracksController {
   }
 
   void selectAllTracks() {
-    final tracks = currentAllTracks;
-    _tracksOrTwdList.addAll(tracks);
-    _tracksOrTwdList.removeDuplicates((element) => element.track);
-    tracks.loop((e, index) => _allTracksHashCodes[e.track] = true);
+    List<Selectable>? tracks;
+    NamidaRoute? routeTracks; // if the tracks are obtained from route
+    if (MiniPlayerController.inst.isInQueue) {
+      tracks = Player.inst.currentQueue.value.mapAs<Selectable>().toList();
+    } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      tracks = SearchSortController.inst.trackSearchTemp.value;
+    } else {
+      final currentRoute = NamidaNavigator.inst.currentRoute;
+      tracks = currentRoute?.tracksListInside();
+      routeTracks = currentRoute;
+    }
+
+    if (tracks == null || tracks.isEmpty) return;
+
+    String? playlistNameToAdd;
 
     // -- Adding playlist name if the current route is referring to a playlist
-    final cr = NamidaNavigator.inst.currentRoute;
-    if (cr?.route != null) {
-      if (cr!.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
-        cr.tracksInside.loop((e, index) {
-          selectedPlaylistsNames[e.track] = cr.name;
-        });
+    final cr = routeTracks;
+    if (cr != null) {
+      if (cr.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
+        playlistNameToAdd = cr.name;
       }
     }
     // ----------
+
+    final pln = playlistNameToAdd;
+    final hashMap = _allTracksHashCodes.value;
+    final trMainList = _tracksOrTwdList.value;
+    if (pln != null && pln != '') {
+      tracks.loop((twd) {
+        final tr = twd.track;
+        if (hashMap[tr] != true) {
+          trMainList.add(twd);
+          hashMap[tr] = true;
+          selectedPlaylistsNames[tr] = pln; // <-- difference here
+        }
+      });
+    } else {
+      tracks.loop((twd) {
+        final tr = twd.track;
+        if (hashMap[tr] != true) {
+          trMainList.add(twd);
+          hashMap[tr] = true;
+        }
+      });
+    }
+
+    _allTracksHashCodes.refresh();
+    _tracksOrTwdList.refresh();
   }
 
   void replaceThisTrack(Track oldTrack, Track newTrack) {
@@ -135,7 +169,7 @@ class SelectedTracksController {
       },
     );
     _allTracksHashCodes.clear();
-    _tracksOrTwdList.loop((e, index) {
+    _tracksOrTwdList.value.loop((e) {
       _allTracksHashCodes[e.track] = true;
     });
   }

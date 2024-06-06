@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -188,7 +188,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   decoration: BoxDecoration(
                                     boxShadow: [
                                       BoxShadow(
-                                        color: _shouldShowGlow.value ? CurrentColor.inst.color : Colors.transparent,
+                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color : Colors.transparent,
                                         blurRadius: 12.0,
                                         spreadRadius: 2.0,
                                       )

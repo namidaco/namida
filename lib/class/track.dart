@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
@@ -339,7 +340,7 @@ extension TrackExtUtils on TrackExtended {
     return "${AppDirs.ARTWORKS}$identifier.png";
   }
 
-  String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers);
+  String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers.value);
 
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) {
     final n = identifiers.contains(AlbumIdentifier.albumName) ? album : '';
@@ -358,7 +359,7 @@ extension TrackExtUtils on TrackExtended {
 
   String get youtubeID => youtubeLink.getYoutubeID;
 
-  TrackStats get stats => Indexer.inst.trackStatsMap[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
+  TrackStats get stats => Indexer.inst.trackStatsMap.value[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
 
   String get yearPreferyyyyMMdd {
     final tostr = year.toString();
@@ -469,9 +470,10 @@ extension TrackUtils on Track {
   TrackExtended? toTrackExtOrNull() => path.toTrackExtOrNull();
 
   set duration(int value) {
-    final trx = Indexer.inst.allTracksMappedByPath[this];
+    final trx = Indexer.inst.allTracksMappedByPath.value[this];
     if (trx != null) {
-      Indexer.inst.allTracksMappedByPath[this] = trx.copyWith(duration: value);
+      Indexer.inst.allTracksMappedByPath.value[this] = trx.copyWith(duration: value);
+      Indexer.inst.allTracksMappedByPath.refresh();
     }
   }
 

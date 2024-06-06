@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
+import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -36,11 +36,11 @@ class ArtistTracksPage extends StatelessWidget {
         () {
           // to update after sorting
           type == MediaType.artist
-              ? Indexer.inst.mainMapArtists.value
+              ? Indexer.inst.mainMapArtists.valueR
               : type == MediaType.albumArtist
-                  ? Indexer.inst.mainMapAlbumArtists.value
+                  ? Indexer.inst.mainMapAlbumArtists.valueR
                   : type == MediaType.composer
-                      ? Indexer.inst.mainMapComposer.value
+                      ? Indexer.inst.mainMapComposer.valueR
                       : null;
           return NamidaTracksList(
             queueSource: QueueSource.artist,
@@ -67,7 +67,7 @@ class ArtistTracksPage extends StatelessWidget {
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
                           track: tracks.trackOfImage,
-                          thumbnailSize: Get.width * 0.35,
+                          thumbnailSize: namida.width * 0.35,
                           path: tracks.pathToImage,
                           forceSquared: true,
                           blur: 0,
@@ -76,7 +76,7 @@ class ArtistTracksPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  tracks: tracks,
+                  tracksFn: () => tracks,
                 ),
                 NamidaExpansionTile(
                   icon: Broken.music_dashboard,
