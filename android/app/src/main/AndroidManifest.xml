@@ -81,6 +81,8 @@
                 <data android:scheme="file" />
                 <data android:host="*" android:pathPattern=".*\\.m3u"
                     android:mimeType="*/*" />
+                <data android:host="*" android:pathPattern=".*\\.m3u8"
+                    android:mimeType="*/*" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
