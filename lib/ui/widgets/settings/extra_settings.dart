@@ -133,11 +133,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
                       title: lang.FLOATING_ACTION_BUTTON,
-                      actions: [
-                        NamidaButton(
-                          text: lang.DONE,
-                          onPressed: NamidaNavigator.inst.closeDialog,
-                        ),
+                      actions: const [
+                        DoneButton(),
                       ],
                       child: SizedBox(
                         width: context.width,
@@ -177,11 +174,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.DEFAULT_LIBRARY_TAB,
-                    actions: [
-                      NamidaButton(
-                        text: lang.DONE,
-                        onPressed: NamidaNavigator.inst.closeDialog,
-                      ),
+                    actions: const [
+                      DoneButton(),
                     ],
                     child: SizedBox(
                       width: context.width,
@@ -253,10 +247,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           ]);
                         },
                       ),
-                      NamidaButton(
-                        text: lang.DONE,
-                        onPressed: NamidaNavigator.inst.closeDialog,
-                      ),
+                      const DoneButton(),
                     ],
                     child: SingleChildScrollView(
                       child: Column(
@@ -330,10 +321,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           onPressed: () => tileOnTap(LyricsSource.auto),
                           icon: const Icon(Broken.refresh),
                         ),
-                        NamidaButton(
-                          text: lang.DONE,
-                          onPressed: NamidaNavigator.inst.closeDialog,
-                        ),
+                        const DoneButton(),
                       ],
                       child: Obx(
                         () => ListView(
@@ -486,11 +474,8 @@ class ExtrasSettings extends SettingSubpageProvider {
               },
               dialog: CustomBlurryDialog(
                 title: lang.LIBRARY_TABS,
-                actions: [
-                  NamidaButton(
-                    text: lang.DONE,
-                    onPressed: NamidaNavigator.inst.closeDialog,
-                  ),
+                actions: const [
+                  DoneButton(),
                 ],
                 child: SizedBox(
                   width: namida.width,

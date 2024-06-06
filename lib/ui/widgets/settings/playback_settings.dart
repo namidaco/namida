@@ -110,10 +110,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       onPressed: () => tileOnTap(VideoPlaybackSource.auto),
                       icon: const Icon(Broken.refresh),
                     ),
-                    NamidaButton(
-                      text: lang.DONE,
-                      onPressed: NamidaNavigator.inst.closeDialog,
-                    ),
+                    const DoneButton(),
                   ],
                   child: Obx(
                     () => ListView(
@@ -170,15 +167,13 @@ class PlaybackSettings extends SettingSubpageProvider {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: lang.VIDEO_QUALITY,
-                  actions: [
+                  actions: const [
                     // IconButton(
                     //   onPressed: () => tileOnTap(0),
                     //   icon: const Icon(Broken.refresh),
                     // ),
-                    NamidaButton(
-                      text: lang.DONE,
-                      onPressed: NamidaNavigator.inst.closeDialog,
-                    ),
+
+                    DoneButton(),
                   ],
                   child: DefaultTextStyle(
                     style: context.textTheme.displaySmall!,
@@ -234,11 +229,8 @@ class PlaybackSettings extends SettingSubpageProvider {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: lang.LOCAL_VIDEO_MATCHING,
-                  actions: [
-                    NamidaButton(
-                      text: lang.DONE,
-                      onPressed: NamidaNavigator.inst.closeDialog,
-                    ),
+                  actions: const [
+                    DoneButton(),
                   ],
                   child: Column(
                     children: [

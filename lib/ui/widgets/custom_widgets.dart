@@ -1136,6 +1136,24 @@ class CancelButton extends StatelessWidget {
   }
 }
 
+class DoneButton extends StatelessWidget {
+  final bool enabled;
+  final void Function()? additional;
+  const DoneButton({super.key, this.enabled = true, this.additional});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaButton(
+      enabled: enabled,
+      text: lang.DONE,
+      onPressed: () {
+        NamidaNavigator.inst.closeDialog();
+        if (additional != null) additional!();
+      },
+    );
+  }
+}
+
 class CollapsedSettingTileWidget extends StatelessWidget {
   final Color? bgColor;
   const CollapsedSettingTileWidget({super.key, this.bgColor});

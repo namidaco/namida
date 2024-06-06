@@ -663,12 +663,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                                   );
                                                 },
                                               ),
-                                              NamidaButton(
-                                                text: lang.DONE,
-                                                onPressed: () {
-                                                  NamidaNavigator.inst.closeDialog();
-                                                },
-                                              )
+                                              const DoneButton(),
                                             ],
                                             child: const EqualizerMainSlidersColumn(
                                               verticalInBetweenPadding: 18.0,

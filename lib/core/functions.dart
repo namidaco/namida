@@ -240,13 +240,7 @@ class NamidaOnTaps {
               settings.updateMediaItemsTrackSorting(media, defaults);
             },
           ),
-          NamidaButton(
-            text: lang.DONE,
-            onPressed: () {
-              resortMedia();
-              NamidaNavigator.inst.closeDialog();
-            },
-          ),
+          DoneButton(additional: resortMedia),
         ],
         child: SizedBox(
           width: namida.width,

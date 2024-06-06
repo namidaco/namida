@@ -97,11 +97,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
         icon: Broken.refresh_circle,
         normalTitleStyle: true,
         title: lang.BACKUP_AND_RESTORE,
-        actions: [
-          NamidaButton(
-            text: lang.DONE,
-            onPressed: NamidaNavigator.inst.closeDialog,
-          ),
+        actions: const [
+          DoneButton(),
         ],
         child: Column(
           children: [

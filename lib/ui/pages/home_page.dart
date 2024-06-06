@@ -246,11 +246,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       },
       dialog: CustomBlurryDialog(
         title: "${lang.CONFIGURE} (${lang.REORDERABLE})",
-        actions: [
-          NamidaButton(
-            text: lang.DONE,
-            onPressed: NamidaNavigator.inst.closeDialog,
-          ),
+        actions: const [
+          DoneButton(),
         ],
         child: SizedBox(
           width: namida.width,

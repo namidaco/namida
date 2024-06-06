@@ -828,13 +828,12 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                   ),
                                 ],
                                 actions: [
-                                  Obx(
-                                    () => NamidaButton(
-                                      enabled: finishedEditing.valueR,
-                                      text: lang.DONE,
-                                      onPressed: () => NamidaNavigator.inst.closeDialog(),
+                                  ObxO(
+                                    rx: finishedEditing,
+                                    builder: (finished) => DoneButton(
+                                      enabled: finished,
                                     ),
-                                  )
+                                  ),
                                 ],
                                 child: Padding(
                                   padding: const EdgeInsets.all(12.0),

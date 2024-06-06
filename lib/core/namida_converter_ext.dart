@@ -527,11 +527,8 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
         normalTitleStyle: true,
-        actions: [
-          NamidaButton(
-            text: lang.DONE,
-            onPressed: NamidaNavigator.inst.closeDialog,
-          )
+        actions: const [
+          DoneButton(),
         ],
         child: Column(
           children: [

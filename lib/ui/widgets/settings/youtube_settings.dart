@@ -316,11 +316,8 @@ class YoutubeSettings extends SettingSubpageProvider {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
                       title: lang.CHOOSE,
-                      actions: [
-                        NamidaButton(
-                          text: lang.DONE,
-                          onPressed: NamidaNavigator.inst.closeDialog,
-                        )
+                      actions: const [
+                        DoneButton(),
                       ],
                       child: Column(
                         children: [
