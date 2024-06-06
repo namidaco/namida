@@ -220,6 +220,7 @@ enum RouteType {
   YOUTUBE_LIKED_SUBPAGE,
   YOUTUBE_HISTORY_SUBPAGE,
   YOUTUBE_MOST_PLAYED_SUBPAGE,
+  YOUTUBE_CHANNEL_SUBPAGE,
 
   /// others
   UNKNOWN,
@@ -237,6 +238,7 @@ enum MediaType {
 
   /// not used
   folder,
+  others,
 }
 
 enum VideoPlaybackSource {

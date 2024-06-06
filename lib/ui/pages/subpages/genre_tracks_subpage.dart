@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
-class GenreTracksPage extends StatelessWidget {
+class GenreTracksPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SUBPAGE_genreTracks;
+
+  @override
   final String name;
   final List<Track> tracks;
   const GenreTracksPage({

@@ -5,6 +5,7 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -31,7 +32,10 @@ import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
-class YTMostPlayedVideosPage extends StatelessWidget {
+class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE;
+
   const YTMostPlayedVideosPage({super.key});
 
   MostPlayedItemsPage getMainWidget(List<String> videos) {
@@ -89,7 +93,10 @@ class YTMostPlayedVideosPage extends StatelessWidget {
   }
 }
 
-class YTLikedVideosPage extends StatelessWidget {
+class YTLikedVideosPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_LIKED_SUBPAGE;
+
   const YTLikedVideosPage({super.key});
 
   @override
@@ -102,7 +109,13 @@ class YTLikedVideosPage extends StatelessWidget {
   }
 }
 
-class YTNormalPlaylistSubpage extends StatefulWidget {
+class YTNormalPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  String? get name => playlistName;
+
+  @override
+  RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
+
   final String playlistName;
   final bool isEditable;
   final bool reversedList;
@@ -334,7 +347,12 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
   }
 }
 
-class YTHostedPlaylistSubpage extends StatefulWidget {
+class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  String? get name => playlist.name;
+  @override
+  RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
+
   final yt.YoutubePlaylist playlist;
 
   const YTHostedPlaylistSubpage({

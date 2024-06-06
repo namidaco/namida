@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -9,7 +10,10 @@ import 'package:namida/youtube/pages/yt_channels_page.dart';
 import 'package:namida/youtube/pages/yt_downloads_page.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
-class YouTubeHomeView extends StatelessWidget {
+class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_HOME;
+
   const YouTubeHomeView({super.key});
 
   @override

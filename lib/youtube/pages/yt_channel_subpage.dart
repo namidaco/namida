@@ -6,11 +6,13 @@ import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:photo_view/photo_view.dart';
 
 import 'package:namida/base/youtube_channel_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -25,7 +27,10 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/widgets/yt_videos_actions_bar.dart';
 
-class YTChannelSubpage extends StatefulWidget {
+class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_CHANNEL_SUBPAGE;
+
   final String channelID;
   final YoutubeSubscription? sub;
   final YoutubeChannel? channel;

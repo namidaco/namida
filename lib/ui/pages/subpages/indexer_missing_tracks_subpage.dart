@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
@@ -16,9 +16,11 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -34,7 +36,10 @@ enum _LoadingProgress {
   const _LoadingProgress(this.value);
 }
 
-class IndexerMissingTracksSubpage extends StatefulWidget {
+class IndexerMissingTracksSubpage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS;
+
   const IndexerMissingTracksSubpage({super.key});
 
   @override

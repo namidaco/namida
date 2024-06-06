@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -20,9 +19,10 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
@@ -33,7 +33,10 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 /// 2. Hide Grid Widget.
 /// 3. Disable bottom padding.
 /// 4. Disable Scroll Controller.
-class PlaylistsPage extends StatefulWidget {
+class PlaylistsPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_playlists;
+
   final List<Track>? tracksToAdd;
   final int countPerRow;
   final bool animateTiles;

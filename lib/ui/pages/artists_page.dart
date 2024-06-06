@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -12,13 +11,17 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/artist_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
-class ArtistsPage extends StatelessWidget {
+class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_artists;
+
   final List<String>? artists;
   final int countPerRow;
   final bool animateTiles;

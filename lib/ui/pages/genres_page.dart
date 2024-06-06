@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -12,13 +11,17 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
-class GenresPage extends StatelessWidget {
+class GenresPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_genres;
+
   final int countPerRow;
   final bool animateTiles;
   final bool enableHero;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -356,7 +357,10 @@ class NamidaSearchBar extends StatelessWidget {
   }
 }
 
-class AlbumSearchResultsPage extends StatelessWidget {
+class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SEARCH_albumResults;
+
   const AlbumSearchResultsPage({super.key});
 
   @override
@@ -368,7 +372,10 @@ class AlbumSearchResultsPage extends StatelessWidget {
   }
 }
 
-class ArtistSearchResultsPage extends StatelessWidget {
+class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SEARCH_artistResults;
+
   final List<String> artists;
   final MediaType type;
   const ArtistSearchResultsPage({super.key, required this.artists, required this.type});

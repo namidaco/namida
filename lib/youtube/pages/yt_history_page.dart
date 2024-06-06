@@ -4,9 +4,11 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/base/history_days_rebuilder.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
@@ -16,7 +18,10 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YoutubeHistoryPage extends StatefulWidget {
+class YoutubeHistoryPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_HISTORY_SUBPAGE;
+
   const YoutubeHistoryPage({super.key});
 
   @override

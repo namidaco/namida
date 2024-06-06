@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -17,7 +18,10 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class FoldersPage extends StatelessWidget {
+class FoldersPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_folders;
+
   const FoldersPage({super.key});
 
   Widget get iconWidget => ObxO(

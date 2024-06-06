@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -24,9 +26,11 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
-import 'package:playlist_manager/playlist_manager.dart';
 
-class YoutubePlaylistsView extends StatelessWidget {
+class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_PLAYLISTS;
+
   final Iterable<String> idsToAdd;
   final bool displayMenu;
   final bool? minimalView;
@@ -333,7 +337,7 @@ class YoutubePlaylistsView extends StatelessWidget {
 class _HorizontalSliverList extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Widget Function() viewAllPage;
+  final NamidaRouteWidget Function() viewAllPage;
   final Iterable<YoutubeID> videos;
   final String playlistName;
   final String playlistID;

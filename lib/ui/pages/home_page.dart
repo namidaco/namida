@@ -1,14 +1,13 @@
 // ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
-
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
@@ -25,6 +24,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -47,7 +47,10 @@ extension _MapUtilsHomePage<K, V> on Map<K, V> {
 
 final int _lowestDateMSSEToDisplay = DateTime(1970).millisecondsSinceEpoch + 1;
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_HOME;
+
   const HomePage({super.key});
 
   @override
@@ -1361,7 +1364,10 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
   }
 }
 
-class RecentlyAddedTracksPage extends StatelessWidget {
+class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SUBPAGE_recentlyAddedTracks;
+
   final List<Selectable> tracksSorted;
   const RecentlyAddedTracksPage({super.key, required this.tracksSorted});
 

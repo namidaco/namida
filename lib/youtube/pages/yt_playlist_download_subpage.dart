@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -23,7 +25,12 @@ import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class YTPlaylistDownloadPage extends StatefulWidget {
+class YTPlaylistDownloadPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  String? get name => playlistName;
+  @override
+  RouteType get route => RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE;
+
   final List<YoutubeID> ids;
   final String playlistName;
   final Map<String, StreamInfoItem> infoLookup;

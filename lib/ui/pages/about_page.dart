@@ -5,26 +5,30 @@ import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
-
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:namida/core/utils.dart';
+import 'package:http/http.dart' as http;
 import 'package:markdown/src/ast.dart' as md;
 import 'package:share_plus/share_plus.dart';
-import 'package:http/http.dart' as http;
 
+import 'package:namida/class/route.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 String? _latestCheckedVersion;
 
-class AboutPage extends StatefulWidget {
+class AboutPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.PAGE_about;
+
   const AboutPage({super.key});
 
   @override

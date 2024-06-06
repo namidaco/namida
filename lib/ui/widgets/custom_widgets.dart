@@ -1170,8 +1170,8 @@ class AboutPageTileWidget extends StatelessWidget {
       title: lang.ABOUT,
       subtitle: null,
       icon: Broken.info_circle,
-      rawPage: true,
-      page: const AboutPage(),
+      page: null,
+      rawPage: () => const AboutPage(),
     );
   }
 }

@@ -4,12 +4,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:namida/class/folder.dart';
 import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/folder.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/queue.dart';
@@ -38,22 +38,13 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
-import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
-import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
-import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
-import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
-import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
-import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
-import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
-import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -67,100 +58,69 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
-import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
-import 'package:namida/youtube/youtube_playlists_view.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
   LibraryTab? toLibraryTab() {
-    switch (this) {
-      case MediaType.track:
-        return LibraryTab.tracks;
-      case MediaType.album:
-        return LibraryTab.albums;
-      case MediaType.artist:
-        return LibraryTab.artists;
-      case MediaType.genre:
-        return LibraryTab.genres;
-      case MediaType.folder:
-        return LibraryTab.folders;
-      default:
-        return null;
-    }
+    return switch (this) {
+      MediaType.track => LibraryTab.tracks,
+      MediaType.album => LibraryTab.albums,
+      MediaType.artist || MediaType.albumArtist || MediaType.composer => LibraryTab.artists,
+      MediaType.genre => LibraryTab.genres,
+      MediaType.folder => LibraryTab.folders,
+      MediaType.playlist => LibraryTab.playlists,
+      MediaType.others => null,
+    };
   }
 }
 
 extension LibraryTabUtils on LibraryTab {
   MediaType? toMediaType() {
-    switch (this) {
-      case LibraryTab.tracks:
-        return MediaType.track;
-      case LibraryTab.albums:
-        return MediaType.album;
-      case LibraryTab.artists:
-        return MediaType.artist;
-      case LibraryTab.genres:
-        return MediaType.genre;
-      case LibraryTab.playlists:
-        return MediaType.playlist;
-      case LibraryTab.folders:
-        return MediaType.folder;
-      default:
-        return null;
-    }
+    return switch (this) {
+      LibraryTab.tracks => MediaType.track,
+      LibraryTab.albums => MediaType.album,
+      LibraryTab.artists => MediaType.artist,
+      LibraryTab.genres => MediaType.genre,
+      LibraryTab.playlists => MediaType.playlist,
+      LibraryTab.folders => MediaType.folder,
+      LibraryTab.home => MediaType.others,
+      LibraryTab.search => MediaType.others,
+      LibraryTab.youtube => MediaType.others,
+    };
   }
 
   int toInt() => settings.libraryTabs.value.indexOf(this);
 
-  Widget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
-    Widget page = const SizedBox();
-    switch (this) {
-      case LibraryTab.tracks:
-        page = TracksPage(animateTiles: animateTiles);
-        break;
-      case LibraryTab.albums:
-        page = AlbumsPage(
+  NamidaRouteWidget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
+    return switch (this) {
+      LibraryTab.tracks => TracksPage(animateTiles: animateTiles),
+      LibraryTab.albums => AlbumsPage(
           countPerRow: gridCount ?? settings.albumGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
-        );
-        break;
-      case LibraryTab.artists:
-        page = ArtistsPage(
+        ),
+      LibraryTab.artists => ArtistsPage(
           countPerRow: gridCount ?? settings.artistGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
-        );
-        break;
-      case LibraryTab.genres:
-        page = GenresPage(
+        ),
+      LibraryTab.genres => GenresPage(
           countPerRow: gridCount ?? settings.genreGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
-        );
-        break;
-      case LibraryTab.playlists:
-        page = PlaylistsPage(
+        ),
+      LibraryTab.playlists => PlaylistsPage(
           countPerRow: gridCount ?? settings.playlistGridCount.value,
           animateTiles: animateTiles,
           enableHero: enableHero,
-        );
-        break;
-      case LibraryTab.folders:
-        page = const FoldersPage();
-        break;
-      case LibraryTab.home:
-        page = const HomePage();
-      case LibraryTab.youtube:
-        page = const YouTubeHomeView();
-        break;
-      default:
-        null;
-    }
-
-    return page;
+        ),
+      LibraryTab.folders => const FoldersPage(),
+      LibraryTab.home => const HomePage(),
+      LibraryTab.youtube => const YouTubeHomeView(),
+      LibraryTab.search => const NamidaDummyPage(),
+    };
   }
 
   String toText() => _NamidaConverters.inst.getTitle(this);
@@ -741,129 +701,6 @@ extension YTSeekActionModeUtils on YTSeekActionMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
-extension WidgetsPagess on Widget {
-  NamidaRoute toNamidaRoute() {
-    String name = '';
-    RouteType route = RouteType.UNKNOWN;
-    switch (runtimeType) {
-      // ----- Pages -----
-      case const (TracksPage):
-        route = RouteType.PAGE_allTracks;
-        break;
-      case const (AlbumsPage):
-        route = RouteType.PAGE_albums;
-        break;
-      case const (ArtistsPage):
-        route = RouteType.PAGE_artists;
-        break;
-      case const (GenresPage):
-        route = RouteType.PAGE_genres;
-        break;
-      case const (PlaylistsPage):
-        route = RouteType.PAGE_playlists;
-        break;
-      case const (FoldersPage):
-        route = RouteType.PAGE_folders;
-        break;
-      case const (QueuesPage):
-        route = RouteType.PAGE_queue;
-        break;
-      case const (AboutPage):
-        route = RouteType.PAGE_about;
-        break;
-
-      // ----- Subpages -----
-      case const (RecentlyAddedTracksPage):
-        route = RouteType.SUBPAGE_recentlyAddedTracks;
-        break;
-      case const (AlbumTracksPage):
-        route = RouteType.SUBPAGE_albumTracks;
-        name = (this as AlbumTracksPage).albumIdentifier;
-        break;
-      case const (ArtistTracksPage):
-        final page = (this as ArtistTracksPage);
-        final type = page.type;
-        route = type == MediaType.albumArtist
-            ? RouteType.SUBPAGE_albumArtistTracks
-            : type == MediaType.composer
-                ? RouteType.SUBPAGE_composerTracks
-                : RouteType.SUBPAGE_artistTracks;
-        name = page.name;
-        break;
-      case const (GenreTracksPage):
-        route = RouteType.SUBPAGE_genreTracks;
-        name = (this as GenreTracksPage).name;
-        break;
-      case const (NormalPlaylistTracksPage):
-        route = RouteType.SUBPAGE_playlistTracks;
-        name = (this as NormalPlaylistTracksPage).playlistName;
-        break;
-      case const (HistoryTracksPage):
-        route = RouteType.SUBPAGE_historyTracks;
-        name = k_PLAYLIST_NAME_HISTORY;
-        break;
-      case const (MostPlayedTracksPage):
-        route = RouteType.SUBPAGE_mostPlayedTracks;
-        name = k_PLAYLIST_NAME_MOST_PLAYED;
-        break;
-      case const (QueueTracksPage):
-        route = RouteType.SUBPAGE_queueTracks;
-        name = (this as QueueTracksPage).queue.date.toString();
-        break;
-      case const (IndexerMissingTracksSubpage):
-        route = RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS;
-        break;
-
-      // ----- Search Results -----
-      case const (AlbumSearchResultsPage):
-        route = RouteType.SEARCH_albumResults;
-        break;
-      case const (ArtistSearchResultsPage):
-        route = RouteType.SEARCH_artistResults;
-        break;
-
-      // ----- Settings -----
-      case const (SettingsPage):
-        route = RouteType.SETTINGS_page;
-        break;
-      case const (SettingsSubPage):
-        route = RouteType.SETTINGS_subpage;
-        name = (this as SettingsSubPage).title;
-        break;
-
-      case const (YouTubeHomeView):
-        route = RouteType.YOUTUBE_HOME;
-        break;
-      case const (YoutubePlaylistsView):
-        route = RouteType.YOUTUBE_PLAYLISTS;
-        break;
-      case const (YTNormalPlaylistSubpage):
-        route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
-        name = (this as YTNormalPlaylistSubpage).playlistName;
-        break;
-      case const (YTHostedPlaylistSubpage):
-        route = RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
-        name = (this as YTHostedPlaylistSubpage).playlist.name ?? '';
-        break;
-      case const (YTPlaylistDownloadPage):
-        route = RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE;
-        name = (this as YTPlaylistDownloadPage).playlistName;
-        break;
-      case const (YoutubeHistoryPage):
-        route = RouteType.YOUTUBE_HISTORY_SUBPAGE;
-        break;
-      case const (YTMostPlayedVideosPage):
-        route = RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE;
-        break;
-      case const (YTLikedVideosPage):
-        route = RouteType.YOUTUBE_LIKED_SUBPAGE;
-        break;
-    }
-
-    return NamidaRoute(route, name);
-  }
-}
-
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -877,13 +714,13 @@ extension RouteUtils on NamidaRoute {
     return switch (route) {
           RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
           RouteType.PAGE_folders => Folders.inst.currentFolder.value?.tracks(),
-          RouteType.SUBPAGE_albumTracks => name.getAlbumTracks(),
-          RouteType.SUBPAGE_artistTracks => name.getArtistTracks(),
-          RouteType.SUBPAGE_albumArtistTracks => name.getAlbumArtistTracks(),
-          RouteType.SUBPAGE_composerTracks => name.getComposerTracks(),
-          RouteType.SUBPAGE_genreTracks => name.getGenresTracks(),
-          RouteType.SUBPAGE_queueTracks => name.getQueue()?.tracks,
-          RouteType.SUBPAGE_playlistTracks => PlaylistController.inst.getPlaylist(name)?.tracks,
+          RouteType.SUBPAGE_albumTracks => name?.getAlbumTracks(),
+          RouteType.SUBPAGE_artistTracks => name?.getArtistTracks(),
+          RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),
+          RouteType.SUBPAGE_composerTracks => name?.getComposerTracks(),
+          RouteType.SUBPAGE_genreTracks => name?.getGenresTracks(),
+          RouteType.SUBPAGE_queueTracks => name?.getQueue()?.tracks,
+          RouteType.SUBPAGE_playlistTracks => name == null ? null : PlaylistController.inst.getPlaylist(name!)?.tracks,
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
           RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
           RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracks,
@@ -895,6 +732,8 @@ extension RouteUtils on NamidaRoute {
   /// Currently Supports only [RouteType.SUBPAGE_albumTracks], [RouteType.SUBPAGE_artistTracks],
   /// [RouteType.SUBPAGE_albumArtistTracks] & [RouteType.SUBPAGE_composerTracks].
   Track? get trackOfColor {
+    final name = this.name;
+    if (name == null) return null;
     if (route == RouteType.SUBPAGE_albumTracks) return name.getAlbumTracks().trackOfImage;
     if (route == RouteType.SUBPAGE_artistTracks) return name.getArtistTracks().trackOfImage;
     if (route == RouteType.SUBPAGE_albumArtistTracks) return name.getAlbumArtistTracks().trackOfImage;
@@ -924,7 +763,7 @@ extension RouteUtils on NamidaRoute {
         finalWidget = getTextWidget(lang.SETTINGS);
         break;
       case RouteType.SETTINGS_subpage:
-        finalWidget = getTextWidget(name);
+        finalWidget = getTextWidget(name ?? '');
         break;
       case RouteType.SEARCH_albumResults:
         finalWidget = getTextWidget(lang.ALBUMS);
@@ -971,7 +810,9 @@ extension RouteUtils on NamidaRoute {
     final shouldShowInitialActions = route != RouteType.PAGE_stats && route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
     final shouldShowProgressPercentage = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
 
-    final queue = route == RouteType.SUBPAGE_queueTracks ? name.getQueue() : null;
+    final name = this.name;
+
+    final queue = route == RouteType.SUBPAGE_queueTracks ? name?.getQueue() : null;
 
     MediaType? sortingTracksMediaType;
     switch (route) {
@@ -1060,39 +901,40 @@ extension RouteUtils on NamidaRoute {
         shouldShow: sortingTracksMediaType != null,
       ),
 
-      getAnimatedCrossFade(
-        child: getMoreIcon(() {
-          switch (route) {
-            case RouteType.SUBPAGE_albumTracks:
-              NamidaDialogs.inst.showAlbumDialog(name);
-              break;
-            case RouteType.SUBPAGE_artistTracks:
-              NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
-              break;
-            case RouteType.SUBPAGE_albumArtistTracks:
-              NamidaDialogs.inst.showArtistDialog(name, MediaType.albumArtist);
-              break;
-            case RouteType.SUBPAGE_composerTracks:
-              NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
-              break;
-            case RouteType.SUBPAGE_genreTracks:
-              NamidaDialogs.inst.showGenreDialog(name);
-              break;
-            case RouteType.SUBPAGE_queueTracks:
-              NamidaDialogs.inst.showQueueDialog(int.parse(name));
-              break;
+      if (name != null)
+        getAnimatedCrossFade(
+          child: getMoreIcon(() {
+            switch (route) {
+              case RouteType.SUBPAGE_albumTracks:
+                NamidaDialogs.inst.showAlbumDialog(name);
+                break;
+              case RouteType.SUBPAGE_artistTracks:
+                NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
+                break;
+              case RouteType.SUBPAGE_albumArtistTracks:
+                NamidaDialogs.inst.showArtistDialog(name, MediaType.albumArtist);
+                break;
+              case RouteType.SUBPAGE_composerTracks:
+                NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
+                break;
+              case RouteType.SUBPAGE_genreTracks:
+                NamidaDialogs.inst.showGenreDialog(name);
+                break;
+              case RouteType.SUBPAGE_queueTracks:
+                NamidaDialogs.inst.showQueueDialog(int.parse(name));
+                break;
 
-            default:
-              null;
-          }
-        }),
-        shouldShow: route == RouteType.SUBPAGE_albumTracks ||
-            route == RouteType.SUBPAGE_artistTracks ||
-            route == RouteType.SUBPAGE_albumArtistTracks ||
-            route == RouteType.SUBPAGE_composerTracks ||
-            route == RouteType.SUBPAGE_genreTracks ||
-            route == RouteType.SUBPAGE_queueTracks,
-      ),
+              default:
+                null;
+            }
+          }),
+          shouldShow: route == RouteType.SUBPAGE_albumTracks ||
+              route == RouteType.SUBPAGE_artistTracks ||
+              route == RouteType.SUBPAGE_albumArtistTracks ||
+              route == RouteType.SUBPAGE_composerTracks ||
+              route == RouteType.SUBPAGE_genreTracks ||
+              route == RouteType.SUBPAGE_queueTracks,
+        ),
 
       getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: HistoryController.inst), shouldShow: route == RouteType.SUBPAGE_historyTracks),
 
@@ -1110,12 +952,13 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: route == RouteType.SUBPAGE_playlistTracks,
       ),
-      getAnimatedCrossFade(
-        child: getMoreIcon(() {
-          NamidaDialogs.inst.showPlaylistDialog(name);
-        }),
-        shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
-      ),
+      if (name != null)
+        getAnimatedCrossFade(
+          child: getMoreIcon(() {
+            NamidaDialogs.inst.showPlaylistDialog(name);
+          }),
+          shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
+        ),
 
       getAnimatedCrossFade(
         child: ObxO(

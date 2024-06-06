@@ -234,16 +234,15 @@ class NamidaNavigator {
     WakelockController.inst.updateFullscreenStatus(false);
   }
 
-  Future<void> navigateTo(
-    Widget page, {
+  Future<void> navigateTo<W extends NamidaRouteWidget>(
+    W page, {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
-    final newRoute = page.toNamidaRoute();
-    currentWidgetStack.add(newRoute);
+    currentWidgetStack.add(page);
     _hideEverything();
 
-    newRoute.updateColorScheme();
+    page.updateColorScheme();
 
     await navKey.currentState?.pushPage(
       page,
@@ -352,22 +351,21 @@ class NamidaNavigator {
   void _printDialogs() => printy("Current Dialogs: $_currentDialogNumber");
   void _printMenus() => printy("Current Menus: $_currentMenusNumber");
 
-  Future<void> navigateOff(
-    Widget page, {
+  Future<void> navigateOff<W extends NamidaRouteWidget>(
+    W page, {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
-    final newRoute = page.toNamidaRoute();
     currentWidgetStack.execute(
       (value) {
         value.removeLast();
-        value.add(newRoute);
+        value.add(page);
       },
     );
 
     _hideEverything();
 
-    newRoute.updateColorScheme();
+    page.updateColorScheme();
 
     await navKey.currentState?.pushPageReplacement(
       page,
@@ -377,15 +375,14 @@ class NamidaNavigator {
     );
   }
 
-  Future<void> navigateOffAll(
-    Widget page, {
+  Future<void> navigateOffAll<W extends NamidaRouteWidget>(
+    W page, {
     Transition transition = Transition.cupertino,
   }) async {
-    final newRoute = page.toNamidaRoute();
-    currentWidgetStack.value = [page.toNamidaRoute()];
+    currentWidgetStack.value = [page];
     _hideEverything();
 
-    newRoute.updateColorScheme();
+    page.updateColorScheme();
 
     navKey.currentState?.popUntil((r) => r.isFirst);
 

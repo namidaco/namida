@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:namida/base/history_days_rebuilder.dart';
-import 'package:namida/core/utils.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/base/history_days_rebuilder.dart';
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -20,6 +20,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
@@ -29,7 +30,13 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class HistoryTracksPage extends StatefulWidget {
+class HistoryTracksPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  String? get name => k_PLAYLIST_NAME_HISTORY;
+
+  @override
+  RouteType get route => RouteType.SUBPAGE_historyTracks;
+
   const HistoryTracksPage({super.key});
 
   @override
@@ -155,7 +162,13 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
   }
 }
 
-class MostPlayedTracksPage extends StatelessWidget {
+class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  String? get name => k_PLAYLIST_NAME_MOST_PLAYED;
+
+  @override
+  RouteType get route => RouteType.SUBPAGE_mostPlayedTracks;
+
   const MostPlayedTracksPage({super.key});
 
   @override
@@ -344,7 +357,13 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
   }
 }
 
-class NormalPlaylistTracksPage extends StatefulWidget {
+class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  String? get name => playlistName;
+
+  @override
+  RouteType get route => RouteType.SUBPAGE_playlistTracks;
+
   final String playlistName;
   final bool disableAnimation;
   const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false});
