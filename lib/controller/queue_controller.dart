@@ -263,14 +263,13 @@ class QueueController {
     String type = '';
     final queue = <Object>[];
     switch (items.firstOrNull.runtimeType) {
+      case const (Selectable):
       case const (Track):
-        type = LibraryCategory.localTracks;
-        (items.cast<Track>()).loop((e) => queue.add(e.path));
-        break;
       case const (TrackWithDate):
         type = LibraryCategory.localTracks;
-        (items.cast<TrackWithDate>()).loop((e) => queue.add(e.track.path));
+        items.loop((e) => queue.add((e as Selectable).track.path));
         break;
+
       case const (YoutubeID):
         type = LibraryCategory.youtube;
         (items.cast<YoutubeID>()).loop((e) => queue.add(e.toJson()));

@@ -174,7 +174,10 @@ class Indexer {
     bool allowDeletion = true,
     bool showFinishedSnackbar = true,
   }) async {
-    if (isIndexing.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+    if (isIndexing.value) {
+      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      return;
+    }
 
     isIndexing.value = true;
     useMediaStore ??= _defaultUseMediaStore;

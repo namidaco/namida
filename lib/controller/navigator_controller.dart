@@ -493,7 +493,7 @@ class NamidaNavigator {
   }
 }
 
-void snackyy({
+SnackbarController? snackyy({
   IconData? icon,
   String title = '',
   required String message,
@@ -533,6 +533,9 @@ void snackyy({
   } else {
     paddingInsets = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0);
   }
+
+  bool alreadyTappedButton = false;
+
   final content = Padding(
     padding: paddingInsets,
     child: SizedBox(
@@ -552,11 +555,11 @@ void snackyy({
                 if (title != '')
                   Text(
                     title,
-                    style: getTextStyle(FontWeight.w700, 17.0),
+                    style: getTextStyle(FontWeight.w700, 16),
                   ),
                 Text(
                   message,
-                  style: title != '' ? getTextStyle(FontWeight.w400, 14.0) : getTextStyle(FontWeight.w600, 15.0),
+                  style: title != '' ? getTextStyle(FontWeight.w400, 13.0) : getTextStyle(FontWeight.w600, 14.0),
                   maxLines: maxLinesMessage,
                   overflow: maxLinesMessage == null ? null : TextOverflow.ellipsis,
                 ),
@@ -567,6 +570,8 @@ void snackyy({
             TextButton(
               style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
               onPressed: () {
+                if (alreadyTappedButton) return;
+                alreadyTappedButton = true;
                 button.$2();
                 snackbarController?.close();
               },
@@ -623,4 +628,5 @@ void snackyy({
 
   snackbarController = SnackbarController(snackbar);
   snackbarController.show();
+  return snackbarController;
 }

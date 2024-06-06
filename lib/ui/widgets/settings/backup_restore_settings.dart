@@ -78,7 +78,8 @@ class BackupAndRestore extends SettingSubpageProvider {
         ),
         onTap: () async {
           if (BackupController.inst.isRestoringBackup.value) {
-            return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+            snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+            return;
           }
 
           NamidaNavigator.inst.navigateDialog(
@@ -164,7 +165,8 @@ class BackupAndRestore extends SettingSubpageProvider {
               ),
               onTap: () {
                 if (BackupController.inst.isCreatingBackup.value) {
-                  return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                  snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                  return;
                 }
 
                 bool isActive(List<String> items) => items.every((element) => settings.backupItemslist.contains(element));

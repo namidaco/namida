@@ -251,7 +251,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 onTap: () async {
                                   await _requestPermission();
                                   if (BackupController.inst.isRestoringBackup.value) {
-                                    return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                    snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                    return;
                                   }
                                   _navigateToNamida();
                                 },

@@ -1641,7 +1641,10 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                           ),
                           child: InkWell(
                             onTap: () {
-                              if (e == 1.0) return snackyy(message: lang.ERROR);
+                              if (e == 1.0) {
+                                snackyy(message: lang.ERROR); // we already ignore tap but uh
+                                return;
+                              }
                               if (settings.player.speeds.length <= 4) return showMinimumItemsSnack(4);
 
                               settings.player.speeds

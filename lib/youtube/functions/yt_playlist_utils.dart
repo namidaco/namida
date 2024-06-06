@@ -243,7 +243,10 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
         onTap: () async {
           final playlist = this;
           final didFetch = await playlist.fetchAllPlaylistStreams(context: context);
-          if (!didFetch) return snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+          if (!didFetch) {
+            snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+            return;
+          }
 
           final ids = <String>[];
           final info = <String, String?>{};

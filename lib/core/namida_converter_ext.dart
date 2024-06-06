@@ -467,9 +467,15 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
 
   Future<void> executePlaylist(String playlistUrl, {YoutubePlaylist? playlist, required BuildContext? context}) async {
     final plInfo = playlist ?? await YoutubeController.inst.getPlaylistInfo(playlistUrl);
-    if (plInfo == null) return snackyy(title: lang.ERROR, message: 'error retrieving playlist info, check your connection?');
+    if (plInfo == null) {
+      snackyy(title: lang.ERROR, message: 'error retrieving playlist info, check your connection?');
+      return;
+    }
     final didFetch = await plInfo.fetchAllPlaylistStreams(context: context?.mounted == true ? context : null);
-    if (!didFetch) return snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+    if (!didFetch) {
+      snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+      return;
+    }
 
     final streams = plInfo.streams;
 

@@ -140,6 +140,24 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
     }
   }
 
+  SnackbarController? _latestSnacky;
+  void _onRemoveFromQueue(int index) {
+    _latestSnacky?.close();
+    final item = Player.inst.currentQueue.value[index];
+    Player.inst.removeFromQueue(index);
+    _latestSnacky = snackyy(
+      icon: Broken.rotate_left,
+      title: lang.UNDO_CHANGES,
+      message: lang.UNDO_CHANGES_DELETED_TRACK,
+      displaySeconds: 2,
+      top: false,
+      button: (
+        lang.UNDO,
+        () => Player.inst.insertInQueue([item], index),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
@@ -337,7 +355,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                         return FadeDismissible(
                           key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
                           onDismissed: (direction) {
-                            Player.inst.removeFromQueue(i);
+                            _onRemoveFromQueue(i);
                             MiniPlayerController.inst.invokeDoneReordering();
                           },
                           onDismissStart: (_) => MiniPlayerController.inst.invokeStartReordering(),

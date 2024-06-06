@@ -70,7 +70,10 @@ class BackupController {
   }
 
   Future<void> createBackupFile(List<String> backupItemsPaths, {String fileSuffix = ''}) async {
-    if (isCreatingBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+    if (isCreatingBackup.value) {
+      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      return;
+    }
 
     if (!await requestManageStoragePermission()) return;
 
@@ -209,7 +212,10 @@ class BackupController {
   }
 
   Future<void> restoreBackupOnTap(bool auto) async {
-    if (isRestoringBackup.value) return snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+    if (isRestoringBackup.value) {
+      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      return;
+    }
 
     File? backupzip;
     if (auto) {
