@@ -201,23 +201,23 @@ class FoldersPage extends StatelessWidget {
                     );
             },
           ),
-          Obx(
-            () => Folders.inst.indexToScrollTo.value != null
-                ? Positioned(
-                    bottom: Dimensions.inst.globalBottomPaddingEffective + 8.0,
-                    right: kFABHeight + 12.0 + 8.0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: NamidaIconButton(
-                        padding: const EdgeInsets.all(7.0),
-                        onPressed: () {
-                          scrollController.animateToEff(Dimensions.inst.trackTileItemExtent * (Folders.inst.indexToScrollTo.value! + Folders.inst.currentFolderslist.length - 2),
-                              duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
-                        },
-                        icon: Broken.arrow_circle_down,
+          ObxO(
+            rx: Folders.inst.indexToScrollTo,
+            builder: (indexToScrollTo) => indexToScrollTo != null
+                ? Obx(
+                    () => Positioned(
+                      bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 8.0,
+                      right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABHeight) + 12.0 + 8.0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: context.theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: _SmolIconFolderScroll(
+                          iconSize: scrollToIconSize,
+                          controller: scrollController,
+                          indexToScrollTo: indexToScrollTo,
+                        ),
                       ),
                     ),
                   )
@@ -225,6 +225,75 @@ class FoldersPage extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class _SmolIconFolderScroll extends StatefulWidget {
+  final double iconSize;
+  final int indexToScrollTo;
+  final ScrollController controller;
+  const _SmolIconFolderScroll({required this.iconSize, required this.indexToScrollTo, required this.controller});
+
+  @override
+  State<_SmolIconFolderScroll> createState() => __SmolIconFolderScrollState();
+}
+
+class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
+  double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + Folders.inst.currentFolderslist.length - 2);
+
+  IconData _arrowIcon = Broken.cd;
+  void _updateIcon(IconData icon) {
+    if (icon != _arrowIcon) refreshState(() => _arrowIcon = icon);
+  }
+
+  void _updateIconListener() {
+    final sizeInSettings = _getScrollToPosition;
+    double pixels;
+    try {
+      pixels = widget.controller.positions.first.pixels;
+    } catch (_) {
+      pixels = sizeInSettings;
+    }
+    if (pixels > sizeInSettings) {
+      _updateIcon(Broken.arrow_circle_up);
+    } else if (pixels < sizeInSettings) {
+      _updateIcon(Broken.arrow_circle_down);
+    } else if (pixels == sizeInSettings) {
+      _updateIcon(Broken.cd);
+    }
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIconListener());
+    widget.controller.addListener(_updateIconListener);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_updateIconListener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      padding: const EdgeInsets.all(7.0),
+      iconSize: widget.iconSize,
+      horizontalPadding: 0.0,
+      verticalPadding: 0.0,
+      onPressed: () {
+        try {
+          widget.controller.animateToEff(
+            _getScrollToPosition,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.fastEaseInToSlowEaseOut,
+          );
+        } catch (_) {}
+      },
+      icon: _arrowIcon,
     );
   }
 }
