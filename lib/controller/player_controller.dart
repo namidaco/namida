@@ -285,11 +285,15 @@ class Player {
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
     if (allTracks) {
-      if (currentItem is Selectable) {
-        _audioHandler.shuffleAllItems((element) => (element as Selectable).track);
-      } else {
-        _audioHandler.shuffleAllItems((element) => (element as YoutubeID).id);
-      }
+      currentItem.value?._executeAsync(
+        selectable: (_) {
+          return _audioHandler.shuffleAllItems((element) => (element as Selectable).track);
+        },
+        youtubeID: (_) {
+          return _audioHandler.shuffleAllItems((element) => (element as YoutubeID).id);
+        },
+      );
+
       MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
     } else {
       await _audioHandler.shuffleNextItems();
@@ -297,11 +301,15 @@ class Player {
   }
 
   int removeDuplicatesFromQueue() {
-    if (currentItem is Selectable) {
-      return _audioHandler.removeDuplicatesFromQueue((element) => (element as Selectable).track);
-    } else {
-      return _audioHandler.removeDuplicatesFromQueue((element) => (element as YoutubeID).id);
-    }
+    return currentItem.value?._execute(
+          selectable: (_) {
+            return _audioHandler.removeDuplicatesFromQueue((element) => (element as Selectable).track);
+          },
+          youtubeID: (_) {
+            return _audioHandler.removeDuplicatesFromQueue((element) => (element as YoutubeID).id);
+          },
+        ) ??
+        0;
   }
 
   /// returns true if tracks aren't empty.
@@ -316,52 +324,55 @@ class Player {
     final insertionDetails = insertionType?.toQueueInsertion();
     final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
     final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
-    if (tracks.firstOrNull is Selectable) {
-      final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
-      insertionType?.shuffleOrSort(finalTracks);
+    final newItem = tracks.firstOrNull;
+    return await newItem?._executeAsync(
+          selectable: (_) async {
+            final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
+            insertionType?.shuffleOrSort(finalTracks);
 
-      if (showSnackBar && finalTracks.isEmpty) {
-        snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
-        return false;
-      }
-      await _audioHandler.addToQueue(
-        finalTracks,
-        insertNext: shouldInsertNext,
-        insertAfterLatest: insertAfterLatest,
-      );
-      if (showSnackBar) {
-        final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
-        snackyy(
-          icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-          message: '${addins.capitalizeFirst()} ${finalTracks.displayTrackKeyword}',
-        );
-      }
-      return true;
-    } else if (tracks.firstOrNull is YoutubeID) {
-      final finalVideos = List<YoutubeID>.from(tracks.withLimit(maxCount));
-      insertionType?.shuffleOrSortYT(finalVideos);
+            if (showSnackBar && finalTracks.isEmpty) {
+              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
+              return false;
+            }
+            await _audioHandler.addToQueue(
+              finalTracks,
+              insertNext: shouldInsertNext,
+              insertAfterLatest: insertAfterLatest,
+            );
+            if (showSnackBar) {
+              final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+              snackyy(
+                icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
+                message: '${addins.capitalizeFirst()} ${finalTracks.displayTrackKeyword}',
+              );
+            }
+            return true;
+          },
+          youtubeID: (_) async {
+            final finalVideos = List<YoutubeID>.from(tracks.withLimit(maxCount));
+            insertionType?.shuffleOrSortYT(finalVideos);
 
-      if (showSnackBar && finalVideos.isEmpty) {
-        snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
-        return false;
-      }
-      await _audioHandler.addToQueue(
-        finalVideos,
-        insertNext: shouldInsertNext,
-        insertAfterLatest: insertAfterLatest,
-      );
-      if (showSnackBar) {
-        final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
-        snackyy(
-          icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-          message: '${addins.capitalizeFirst()} ${finalVideos.length.displayVideoKeyword}',
-          top: false,
-        );
-      }
-      return true;
-    }
-
-    return false;
+            if (showSnackBar && finalVideos.isEmpty) {
+              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
+              return false;
+            }
+            await _audioHandler.addToQueue(
+              finalVideos,
+              insertNext: shouldInsertNext,
+              insertAfterLatest: insertAfterLatest,
+            );
+            if (showSnackBar) {
+              final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+              snackyy(
+                icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
+                message: '${addins.capitalizeFirst()} ${finalVideos.length.displayVideoKeyword}',
+                top: false,
+              );
+            }
+            return true;
+          },
+        ) ??
+        false;
   }
 
   Future<void> insertInQueue(Iterable<Playable> tracks, int index) async {
@@ -383,7 +394,7 @@ class Player {
 
   Future<void> replaceTracksDirectoryInQueue(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
-    if (currentItem is Selectable) {
+    if (currentItem.value is Selectable) {
       await _audioHandler.replaceWhereInQueue(
         (e) {
           final trackPath = (e as Selectable).track.path;
@@ -565,5 +576,34 @@ extension QueueListExt on List<Playable> {
   Iterable<T> mapAs<T extends Playable>() {
     if (Player._instance.currentItem is! T) return <T>[];
     return this.map((e) => e as T);
+  }
+}
+
+// -- duplicated from audio_handler.dart but not a FutureOr<T>
+extension _PlayableExecuter on Playable {
+  T? _execute<T>({
+    required T Function(Selectable finalItem) selectable,
+    required T Function(YoutubeID finalItem) youtubeID,
+  }) {
+    final item = this;
+    if (item is Selectable) {
+      return selectable(item);
+    } else if (item is YoutubeID) {
+      return youtubeID(item);
+    }
+    return null;
+  }
+
+  FutureOr<T?> _executeAsync<T>({
+    required FutureOr<T> Function(Selectable finalItem) selectable,
+    required FutureOr<T> Function(YoutubeID finalItem) youtubeID,
+  }) async {
+    final item = this;
+    if (item is Selectable) {
+      return selectable(item);
+    } else if (item is YoutubeID) {
+      return youtubeID(item);
+    }
+    return null;
   }
 }

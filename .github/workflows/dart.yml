@@ -24,11 +24,11 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: "3.1.4"
+          sdk: "3.4.0"
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.13.8"
+          flutter-version: "3.22.0"
 
       - name: setup credentials for namidaco
         run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/

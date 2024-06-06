@@ -252,18 +252,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
     if (currentQueue.isEmpty) return;
-    await items._execute(
-      selectable: (finalItems) async {
-        if (currentItem.value is! Selectable) {
-          await clearQueue();
-        }
-      },
-      youtubeID: (finalItem) async {
-        if (currentItem.value is! YoutubeID) {
-          await clearQueue();
-        }
-      },
-    );
+
+    // this is what keeps local & youtube separated. this shall be removed if mixed playback ever got supported.
+    final current = currentItem.value;
+    final newItem = items.firstOrNull;
+    if (newItem is Selectable && current is! Selectable) {
+      await clearQueue();
+    } else if (newItem is YoutubeID && current is! YoutubeID) {
+      await clearQueue();
+    }
   }
 
   @override
@@ -1591,24 +1588,9 @@ extension _PlayableExecuter on Playable {
   }) async {
     final item = this;
     if (item is Selectable) {
-      return await selectable(item);
+      return selectable(item);
     } else if (item is YoutubeID) {
-      return await youtubeID(item);
-    }
-    return null;
-  }
-}
-
-extension _PlayableExecuterList on Iterable<Playable> {
-  FutureOr<T?> _execute<T>({
-    required FutureOr<T> Function(Iterable<Selectable> finalItems) selectable,
-    required FutureOr<T> Function(Iterable<YoutubeID> finalItem) youtubeID,
-  }) async {
-    final item = firstOrNull;
-    if (item is Selectable) {
-      return await selectable(cast<Selectable>());
-    } else if (item is YoutubeID) {
-      return await youtubeID(cast<YoutubeID>());
+      return youtubeID(item);
     }
     return null;
   }

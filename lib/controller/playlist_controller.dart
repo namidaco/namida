@@ -330,12 +330,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
       final infoMap = resBoth['infoMap'] as Map<String, String?>;
 
+      // -- removing old m3u playlists
+      PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+
       for (final e in paths.entries) {
-        final plName = e.key;
-        final m3uPath = e.value.$1;
-        final trs = e.value.$2;
-        final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
-        PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
+        try {
+          final plName = e.key;
+          final m3uPath = e.value.$1;
+          final trs = e.value.$2;
+          final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
+          PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
+        } catch (_) {}
       }
       _pathsM3ULookup = infoMap;
     } catch (_) {}
