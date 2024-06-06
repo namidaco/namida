@@ -9,11 +9,12 @@ class MediaInfo {
     this.format,
   });
 
-  factory MediaInfo.fromMap(Map<dynamic, dynamic> json) {
+  factory MediaInfo.fromMap(Map<dynamic, dynamic> map) {
+    final format = map.getOrUpperCase("format");
     return MediaInfo(
-      path: json["PATH"],
-      streams: (json["streams"] as List?)?.map((e) => MIStream.fromMap(e)).toList(),
-      format: json["format"] == null ? null : MIFormat.fromMap(json["format"]),
+      path: map.getOrLowerCase("PATH"),
+      streams: (map.getOrUpperCase("streams") as List?)?.map((e) => MIStream.fromMap(e)).toList(),
+      format: format == null ? null : MIFormat.fromMap(format),
     );
   }
 
@@ -48,18 +49,22 @@ class MIFormat {
     this.tags,
   });
 
-  factory MIFormat.fromMap(Map<dynamic, dynamic> json) => MIFormat(
-        duration: (json["duration"] as String?).getDuration(),
-        startTime: json["start_time"],
-        bitRate: json["bit_rate"],
-        filename: json["filename"],
-        size: json["size"] == null ? null : int.tryParse(json["size"]),
-        probeScore: json["probe_score"],
-        nbPrograms: json["nb_programs"],
-        nbStreams: json["nb_streams"],
-        formatName: json["format_name"],
-        tags: json["tags"] == null ? null : MIFormatTags.fromMap(json["tags"]),
-      );
+  factory MIFormat.fromMap(Map<dynamic, dynamic> map) {
+    final tags = map.getOrUpperCase("tags");
+    final size = map.getOrUpperCase("size");
+    return MIFormat(
+      duration: (map.getOrUpperCase("duration") as String?).getDuration(),
+      startTime: map.getOrUpperCase("start_time"),
+      bitRate: map.getOrUpperCase("bit_rate"),
+      filename: map.getOrUpperCase("filename"),
+      size: size == null ? null : int.tryParse(size),
+      probeScore: map.getOrUpperCase("probe_score"),
+      nbPrograms: map.getOrUpperCase("nb_programs"),
+      nbStreams: map.getOrUpperCase("nb_streams"),
+      formatName: map.getOrUpperCase("format_name"),
+      tags: tags == null ? null : MIFormatTags.fromMap(tags),
+    );
+  }
 
   Map<dynamic, dynamic> toMap() => {
         "duration": duration?.inMilliseconds ?? 0 / 1000,
@@ -130,32 +135,32 @@ class MIFormatTags {
     this.mood,
   });
 
-  factory MIFormatTags.fromMap(Map<dynamic, dynamic> json) => MIFormatTags(
-        date: json["date"],
-        language: json["LANGUAGE"],
-        artist: json["artist"],
-        album: json["album"],
-        composer: json["composer"],
-        majorBrand: json["major_brand"],
-        description: json["description"],
-        remixer: json["REMIXER"],
-        synopsis: json["synopsis"],
-        title: json["title"],
-        encoder: json["encoder"],
-        minorVersion: json["minor_version"],
-        albumArtist: json["album_artist"],
-        genre: json["genre"],
-        country: json["Country"],
-        label: json["LABEL"],
-        comment: json["comment"],
-        disc: json["disc"],
-        track: json["track"],
-        trackTotal: json["TRACKTOTAL"],
-        discTotal: json["DISCTOTAL"],
-        lyrics: json["lyrics"],
-        lyricist: json["LYRICIST"],
-        compatibleBrands: json["compatible_brands"],
-        mood: json["mood"],
+  factory MIFormatTags.fromMap(Map<dynamic, dynamic> map) => MIFormatTags(
+        date: map.getOrUpperCase("date"),
+        language: map.getOrLowerCase("LANGUAGE"),
+        artist: map.getOrUpperCase("artist"),
+        album: map.getOrUpperCase("album"),
+        composer: map.getOrUpperCase("composer"),
+        majorBrand: map.getOrUpperCase("major_brand"),
+        description: map.getOrUpperCase("description"),
+        remixer: map.getOrLowerCase("REMIXER"),
+        synopsis: map.getOrUpperCase("synopsis"),
+        title: map.getOrUpperCase("title"),
+        encoder: map.getOrUpperCase("encoder"),
+        minorVersion: map.getOrUpperCase("minor_version"),
+        albumArtist: map.getOrUpperCase("album_artist"),
+        genre: map.getOrUpperCase("genre"),
+        country: map.getOrUpperCase("Country"),
+        label: map.getOrLowerCase("LABEL"),
+        comment: map.getOrUpperCase("comment"),
+        disc: map.getOrUpperCase("disc"),
+        track: map.getOrUpperCase("track"),
+        trackTotal: map.getOrLowerCase("TRACKTOTAL"),
+        discTotal: map.getOrLowerCase("DISCTOTAL"),
+        lyrics: map.getOrUpperCase("lyrics"),
+        lyricist: map.getOrLowerCase("LYRICIST"),
+        compatibleBrands: map.getOrUpperCase("compatible_brands"),
+        mood: map.getOrUpperCase("mood"),
       );
 
   Map<dynamic, dynamic> toMap() => {
@@ -260,42 +265,45 @@ class MIStream {
     this.height,
   });
 
-  factory MIStream.fromMap(Map<dynamic, dynamic> json) => MIStream(
-        rFrameRate: json["r_frame_rate"],
-        startPts: json["start_pts"],
-        channelLayout: json["channel_layout"],
-        durationTs: json["duration_ts"],
-        duration: (json["duration"] as String?).getDuration(),
-        bitRate: json["bit_rate"],
-        codecTagString: json["codec_tag_string"],
-        avgFrameRate: json["avg_frame_rate"],
-        nbFrames: json["nb_frames"],
-        codecLongName: json["codec_long_name"],
-        timeBase: json["time_base"],
-        profile: json["profile"],
-        index: json["index"],
-        maxBitRate: json["max_bit_rate"],
-        codecName: json["codec_name"],
-        tags: json["tags"] == null ? null : MIStreamTags.fromMap(json["tags"]),
-        startTime: json["start_time"],
-        disposition: (json["disposition"] as Map?)?.map((k, v) => MapEntry<String, int>(k, v)),
-        codecTag: json["codec_tag"],
-        sampleRate: json["sample_rate"],
-        channels: json["channels"],
-        sampleFmt: json["sample_fmt"],
-        codecTimeBase: json["codec_time_base"],
-        bitsPerSample: json["bits_per_sample"],
-        codecType: json["codec_type"],
-        colorRange: json["color_range"],
-        pixFmt: json["pix_fmt"],
-        codedHeight: json["coded_height"],
-        level: json["level"],
-        hasBFrames: json["has_b_frames"],
-        refs: json["refs"],
-        width: json["width"],
-        codedWidth: json["coded_width"],
-        height: json["height"],
-      );
+  factory MIStream.fromMap(Map<dynamic, dynamic> map) {
+    final tags = map.getOrUpperCase("tags");
+    return MIStream(
+      rFrameRate: map.getOrUpperCase("r_frame_rate"),
+      startPts: map.getOrUpperCase("start_pts"),
+      channelLayout: map.getOrUpperCase("channel_layout"),
+      durationTs: map.getOrUpperCase("duration_ts"),
+      duration: (map.getOrUpperCase("duration") as String?).getDuration(),
+      bitRate: map.getOrUpperCase("bit_rate"),
+      codecTagString: map.getOrUpperCase("codec_tag_string"),
+      avgFrameRate: map.getOrUpperCase("avg_frame_rate"),
+      nbFrames: map.getOrUpperCase("nb_frames"),
+      codecLongName: map.getOrUpperCase("codec_long_name"),
+      timeBase: map.getOrUpperCase("time_base"),
+      profile: map.getOrUpperCase("profile"),
+      index: map.getOrUpperCase("index"),
+      maxBitRate: map.getOrUpperCase("max_bit_rate"),
+      codecName: map.getOrUpperCase("codec_name"),
+      tags: tags == null ? null : MIStreamTags.fromMap(tags),
+      startTime: map.getOrUpperCase("start_time"),
+      disposition: (map.getOrUpperCase("disposition") as Map?)?.map((k, v) => MapEntry<String, int>(k, v)),
+      codecTag: map.getOrUpperCase("codec_tag"),
+      sampleRate: map.getOrUpperCase("sample_rate"),
+      channels: map.getOrUpperCase("channels"),
+      sampleFmt: map.getOrUpperCase("sample_fmt"),
+      codecTimeBase: map.getOrUpperCase("codec_time_base"),
+      bitsPerSample: map.getOrUpperCase("bits_per_sample"),
+      codecType: map.getOrUpperCase("codec_type"),
+      colorRange: map.getOrUpperCase("color_range"),
+      pixFmt: map.getOrUpperCase("pix_fmt"),
+      codedHeight: map.getOrUpperCase("coded_height"),
+      level: map.getOrUpperCase("level"),
+      hasBFrames: map.getOrUpperCase("has_b_frames"),
+      refs: map.getOrUpperCase("refs"),
+      width: map.getOrUpperCase("width"),
+      codedWidth: map.getOrUpperCase("coded_width"),
+      height: map.getOrUpperCase("height"),
+    );
+  }
 
   Map<dynamic, dynamic> toMap() => {
         "r_frame_rate": rFrameRate,
@@ -344,9 +352,9 @@ class MIStreamTags {
     this.language,
   });
 
-  factory MIStreamTags.fromMap(Map<dynamic, dynamic> json) => MIStreamTags(
-        handlerName: json["handler_name"],
-        language: json["language"],
+  factory MIStreamTags.fromMap(Map<dynamic, dynamic> map) => MIStreamTags(
+        handlerName: map.getOrUpperCase("handler_name"),
+        language: map.getOrUpperCase("language"),
       );
 
   Map<dynamic, dynamic> toMap() => {
@@ -371,6 +379,11 @@ extension StringToDuration on String? {
 
 extension SreamTypeDetector on MIStream {
   StreamType? get streamType => _streamTypes[codecType];
+}
+
+extension _MapValueGetter on Map {
+  dynamic getOrUpperCase(String lowercase) => this[lowercase] ?? this[lowercase.toUpperCase()];
+  dynamic getOrLowerCase(String uppercase) => this[uppercase] ?? this[uppercase.toLowerCase()];
 }
 
 final _streamTypes = <String, StreamType>{
