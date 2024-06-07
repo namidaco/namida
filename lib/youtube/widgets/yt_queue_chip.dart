@@ -370,7 +370,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 return FadeDismissible(
                                   key: Key("Diss_${video.id}_$i"),
                                   onDismissed: (direction) {
-                                    Player.inst.removeFromQueue(i);
+                                    Player.inst.removeFromQueueWithUndo(i);
                                     MiniPlayerController.inst.invokeDoneReordering();
                                   },
                                   onDismissStart: (_) => MiniPlayerController.inst.invokeStartReordering(),

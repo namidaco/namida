@@ -379,6 +379,24 @@ class Player {
     await _audioHandler.insertInQueue(tracks, index);
   }
 
+  SnackbarController? _latestSnacky;
+  Future<void> removeFromQueueWithUndo(int index) async {
+    _latestSnacky?.close();
+    final item = this.currentQueue.value[index];
+    this.removeFromQueue(index);
+    _latestSnacky = snackyy(
+      icon: Broken.rotate_left,
+      title: lang.UNDO_CHANGES,
+      message: lang.UNDO_CHANGES_DELETED_TRACK,
+      displaySeconds: 2,
+      top: false,
+      button: (
+        lang.UNDO,
+        () => this.insertInQueue([item], index),
+      ),
+    );
+  }
+
   Future<void> removeFromQueue(int index) async {
     // why [isPlaying] ? imagine removing while paused
     await _audioHandler.removeFromQueue(index, isPlaying.value && _audioHandler.defaultShouldStartPlayingWhenPaused);
