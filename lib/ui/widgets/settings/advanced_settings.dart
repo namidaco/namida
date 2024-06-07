@@ -65,6 +65,141 @@ class AdvancedSettings extends SettingSubpageProvider {
         _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
       };
 
+  void _onPerformanceTileTap(BuildContext context) {
+    const artworkPartsMultiplier = 100;
+    const artworkMinimum = 0.5;
+    bool changedArtworkCacheM = false; // to rebuild wheel slider
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.CONFIGURE,
+        actions: const [
+          DoneButton(),
+        ],
+        child: SizedBox(
+          width: context.width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12.0),
+              CustomListTile(
+                icon: Broken.cpu_setting,
+                title: lang.PERFORMANCE_MODE,
+                trailing: NamidaPopupWrapper(
+                  children: () => [
+                    ...PerformanceMode.values.map(
+                      (e) => ObxO(
+                        rx: settings.performanceMode,
+                        builder: (performanceMode) => NamidaInkWell(
+                          margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                          borderRadius: 6.0,
+                          bgColor: performanceMode == e ? context.theme.cardColor : null,
+                          child: Row(
+                            children: [
+                              Icon(
+                                e.toIcon(),
+                                size: 18.0,
+                              ),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                e.toText(),
+                                style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            changedArtworkCacheM = !changedArtworkCacheM;
+                            e.execute();
+                            settings.save(performanceMode: e);
+                            NamidaNavigator.inst.popMenu();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                  child: ObxO(
+                    rx: settings.performanceMode,
+                    builder: (performanceMode) => Text(
+                      performanceMode.toText(),
+                      style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6.0),
+              const NamidaContainerDivider(),
+              const SizedBox(height: 6.0),
+              ObxO(
+                rx: settings.enableBlurEffect,
+                builder: (enableBlurEffect) => CustomSwitchListTile(
+                  icon: Broken.drop,
+                  title: lang.ENABLE_BLUR_EFFECT,
+                  subtitle: lang.PERFORMANCE_NOTE,
+                  onChanged: (p0) {
+                    settings.save(
+                      enableBlurEffect: !p0,
+                      performanceMode: PerformanceMode.custom,
+                    );
+                  },
+                  value: enableBlurEffect,
+                ),
+              ),
+              ObxO(
+                rx: settings.enableGlowEffect,
+                builder: (enableGlowEffect) => CustomSwitchListTile(
+                  icon: Broken.sun_1,
+                  title: lang.ENABLE_GLOW_EFFECT,
+                  subtitle: lang.PERFORMANCE_NOTE,
+                  onChanged: (p0) {
+                    settings.save(
+                      enableGlowEffect: !p0,
+                      performanceMode: PerformanceMode.custom,
+                    );
+                  },
+                  value: enableGlowEffect,
+                ),
+              ),
+              ObxO(
+                rx: settings.enableMiniplayerParallaxEffect,
+                builder: (enableMiniplayerParallaxEffect) => CustomSwitchListTile(
+                  icon: Broken.maximize,
+                  title: lang.ENABLE_PARALLAX_EFFECT,
+                  subtitle: lang.PERFORMANCE_NOTE,
+                  onChanged: (isTrue) => settings.save(
+                    enableMiniplayerParallaxEffect: !isTrue,
+                    performanceMode: PerformanceMode.custom,
+                  ),
+                  value: enableMiniplayerParallaxEffect,
+                ),
+              ),
+              CustomListTile(
+                icon: Broken.card_pos,
+                title: lang.ARTWORK,
+                subtitle: lang.PERFORMANCE_NOTE,
+                trailing: ObxO(
+                  rx: settings.artworkCacheHeightMultiplier,
+                  builder: (artworkCacheHeightMultiplier) => NamidaWheelSlider(
+                    key: ValueKey(changedArtworkCacheM),
+                    text: '${artworkCacheHeightMultiplier}x',
+                    totalCount: 1 * artworkPartsMultiplier, // from 0.5 to 1.5 * 100 part
+                    initValue: ((artworkCacheHeightMultiplier - artworkMinimum) * artworkPartsMultiplier).round(),
+                    onValueChanged: (val) {
+                      settings.save(
+                        artworkCacheHeightMultiplier: (artworkMinimum + (val / artworkPartsMultiplier)).roundDecimals(2),
+                        performanceMode: PerformanceMode.custom,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget getPerformanceTile(BuildContext context) {
     return getItemWrapper(
       key: _AdvancedSettingKeys.performanceMode,
@@ -72,45 +207,15 @@ class AdvancedSettings extends SettingSubpageProvider {
         bgColor: getBgColor(_AdvancedSettingKeys.performanceMode),
         icon: Broken.cpu_setting,
         title: lang.PERFORMANCE_MODE,
-        trailing: NamidaPopupWrapper(
-          children: () => [
-            ...PerformanceMode.values.map(
-              (e) => Obx(
-                () => NamidaInkWell(
-                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                  borderRadius: 6.0,
-                  bgColor: settings.performanceMode.valueR == e ? context.theme.cardColor : null,
-                  child: Row(
-                    children: [
-                      Icon(
-                        e.toIcon(),
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 6.0),
-                      Text(
-                        e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    e.execute();
-                    settings.save(performanceMode: e);
-                    NamidaNavigator.inst.popMenu();
-                  },
-                ),
-              ),
-            ),
-          ],
-          child: Obx(
-            () => Text(
-              settings.performanceMode.valueR.toText(),
-              style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
-              textAlign: TextAlign.end,
-            ),
+        trailing: ObxO(
+          rx: settings.performanceMode,
+          builder: (performanceMode) => Text(
+            performanceMode.toText(),
+            style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+            textAlign: TextAlign.end,
           ),
         ),
+        onTap: () => _onPerformanceTileTap(context),
       ),
     );
   }
@@ -868,7 +973,7 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final p = NamidaFFMPEG.inst.currentOperations[OperationType.ytdlpThumbnailFix]?.value;
+        final p = NamidaFFMPEG.inst.currentOperations[OperationType.ytdlpThumbnailFix]?.valueR;
         final currentAudioPath = p?.currentFilePath;
         final currentProgress = p?.progress ?? 0;
         final totalAudiosToFix = p?.totalFiles ?? 0;
@@ -998,7 +1103,7 @@ class _CompressImagesListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final p = NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.value;
+        final p = NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.valueR;
         final currentImagePath = p?.currentFilePath;
         final currentProgress = p?.progress ?? 0;
         final totalImagesToCompress = p?.totalFiles ?? 0;
