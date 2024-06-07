@@ -504,6 +504,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     });
 
     Future<Duration?> setPls() async {
+      if (!File(tr.path).existsSync()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
       final dur = await setSource(
         tr.toAudioSource(currentIndex.value, currentQueue.length),
         item: pi,
@@ -535,6 +536,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return false;
       }
     }
+
+    if (tr.path.startsWith('/namida_dummy/')) return;
 
     try {
       duration = await setPls();
@@ -633,7 +636,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           );
         }
       }
-      if (wasPlaying) await onPlayRaw();
+      if (wasPlaying) onPlayRaw();
     }
   }
 
@@ -698,7 +701,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
       await seek(position.value.milliseconds);
       if (wasPlaying) {
-        await onPlayRaw();
+        onPlayRaw();
       }
     }
   }
@@ -804,8 +807,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
       if (startPlaying()) {
-        setVolume(_userPlayerVolume);
-        await onPlayRaw();
+        onPlayRaw();
       }
       if (sourceChanged) {
         await seek(currentPositionMS.value.milliseconds);
@@ -1419,7 +1421,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           }
           _isCurrentAudioFromCache = true;
           await plsSeek();
-          if (wasPlaying) await onPlayRaw();
+          if (wasPlaying) onPlayRaw();
         } else {
           await plsSeek();
         }
