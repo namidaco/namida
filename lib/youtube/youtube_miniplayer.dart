@@ -92,6 +92,68 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
     const seekReadyWidget = SeekReadyWidget();
 
+    final absorbBottomDragWidget = AbsorbPointer(
+      child: SizedBox(
+        height: 18.0,
+        width: context.width,
+      ),
+    );
+
+    final miniplayerDimWidget = Positioned.fill(
+      key: const Key('dimmie'),
+      child: IgnorePointer(
+        child: ObxO(
+          rx: YoutubeController.inst.canDimMiniplayer,
+          builder: (canDimMiniplayer) => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            reverseDuration: const Duration(milliseconds: 200),
+            child: canDimMiniplayer
+                ? ObxO(
+                    rx: settings.ytMiniplayerDimOpacity,
+                    builder: (dimOpacity) => Container(
+                      color: Colors.black.withOpacity(dimOpacity),
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+    final ytMiniplayerQueueChip = YTMiniplayerQueueChip(key: NamidaNavigator.inst.ytQueueSheetKey);
+
+    final rightDragAbsorberWidget = Align(
+      alignment: Alignment.centerRight,
+      child: SizedBox(
+        height: context.height,
+        width: (context.width * 0.25).withMaximum(324.0),
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) {
+            _mpState?.updatePercentageMultiplier(true);
+            _mpState?.setDragExternally(true);
+            _mpState?.saveDragHeightStart();
+            _velocity.addPosition(event.timeStamp, event.position);
+          },
+          onPointerMove: (event) {
+            if (!_canScrollQueue) {
+              _mpState?.onVerticalDragUpdate(event.delta.dy);
+              _velocity.addPosition(event.timeStamp, event.position);
+            }
+          },
+          onPointerUp: (event) {
+            if (YoutubeController.inst.scrollController.hasClients && YoutubeController.inst.scrollController.position.pixels <= 0) {
+              _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
+            }
+            _mpState?.updatePercentageMultiplier(false);
+            // thats because the internal GestureDetector executes drag end after Listener's onPointerUp
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              _mpState?.setDragExternally(false);
+            });
+          },
+        ),
+      ),
+    );
+
     return DefaultTextStyle(
       style: context.textTheme.displayMedium!,
       child: ObxO(
@@ -171,7 +233,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
               // ====  MiniPlayer Body, contains title, description, comments, ..etc. ====
               final miniplayerBody = Stack(
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.bottomCenter, // bottom alignment is for touch absorber
                 children: [
                   // opacity: (percentage * 4 - 3).withMinimum(0),
                   Listener(
@@ -903,34 +965,10 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                       ],
                     ),
                   ),
-
-                  YTMiniplayerQueueChip(key: NamidaNavigator.inst.ytQueueSheetKey),
-
-                  // -- dimming
-                  Positioned.fill(
-                    key: const Key('dimmie'),
-                    child: IgnorePointer(
-                      child: Obx(
-                        () => AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 600),
-                          reverseDuration: const Duration(milliseconds: 200),
-                          child: YoutubeController.inst.canDimMiniplayer.valueR
-                              ? Container(
-                                  color: Colors.black.withOpacity(settings.ytMiniplayerDimOpacity.valueR),
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // prevent accidental scroll while performing home gesture
-                  AbsorbPointer(
-                    child: SizedBox(
-                      height: 18.0,
-                      width: context.width,
-                    ),
-                  ),
+                  rightDragAbsorberWidget,
+                  ytMiniplayerQueueChip,
+                  miniplayerDimWidget, // -- dimming
+                  absorbBottomDragWidget, // prevent accidental scroll while performing home gesture
                 ],
               );
 
@@ -1026,38 +1064,6 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                 },
               );
 
-              final rightDragAbsorberWidget = Align(
-                alignment: Alignment.centerRight,
-                child: SizedBox(
-                  height: context.height,
-                  width: (context.width * 0.25).withMaximum(324.0),
-                  child: Listener(
-                    behavior: HitTestBehavior.translucent,
-                    onPointerDown: (event) {
-                      _mpState?.updatePercentageMultiplier(true);
-                      _mpState?.setDragExternally(true);
-                      _mpState?.saveDragHeightStart();
-                      _velocity.addPosition(event.timeStamp, event.position);
-                    },
-                    onPointerMove: (event) {
-                      if (!_canScrollQueue) {
-                        _mpState?.onVerticalDragUpdate(event.delta.dy);
-                        _velocity.addPosition(event.timeStamp, event.position);
-                      }
-                    },
-                    onPointerUp: (event) {
-                      if (YoutubeController.inst.scrollController.hasClients && YoutubeController.inst.scrollController.position.pixels <= 0) {
-                        _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
-                      }
-                      _mpState?.updatePercentageMultiplier(false);
-                      // thats because the internal GestureDetector executes drag end after Listener's onPointerUp
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                        _mpState?.setDragExternally(false);
-                      });
-                    },
-                  ),
-                ),
-              );
               return NamidaYTMiniplayer(
                 key: MiniPlayerController.inst.ytMiniplayerKey,
                 duration: const Duration(milliseconds: 1000),
@@ -1164,7 +1170,6 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 fit: StackFit.expand,
                                 children: [
                                   miniplayerBody,
-                                  rightDragAbsorberWidget,
                                   IgnorePointer(
                                     child: ColoredBox(
                                       color: miniplayerBGColor.withOpacity(1 - percentageFast),

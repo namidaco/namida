@@ -140,7 +140,7 @@ class MiniPlayerController {
   bool bounceUp = false;
   bool bounceDown = false;
 
-  double get _currentItemExtent => Player.inst.currentItem is YoutubeID ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
+  double get _currentItemExtent => Player.inst.currentItem.value is YoutubeID ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
 
   void animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
     if (queueScrollController.hasClients) {

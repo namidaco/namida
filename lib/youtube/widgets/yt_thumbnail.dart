@@ -200,7 +200,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         compressed: widget.compressed,
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
-        fadeMilliSeconds: 300,
+        fadeMilliSeconds: 200,
         path: imagePath,
         height: widget.height,
         width: widget.width,
@@ -262,8 +262,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
                 ),
               ),
             ),
-          Obx(
-            () => _thumbnailNotFound.valueR
+          ObxO(
+            rx: _thumbnailNotFound,
+            builder: (notFound) => notFound
                 ? Positioned(
                     top: 0.0,
                     right: 0.0,

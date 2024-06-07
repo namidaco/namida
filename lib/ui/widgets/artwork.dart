@@ -262,6 +262,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded) return child;
+                            if (widget.fadeMilliSeconds == 0) return child;
                             if (_imagePath != null && bytes != null && bytes.isNotEmpty) return child;
                             if (frame == null) return child;
 
@@ -372,16 +373,16 @@ class MultiArtworks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: thumbnailSize,
-      width: thumbnailSize,
+    return NamidaHero(
+      tag: heroTag,
+      enabled: !disableHero,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
         ),
-        child: NamidaHero(
-          tag: heroTag,
-          enabled: !disableHero,
+        child: SizedBox(
+          height: thumbnailSize,
+          width: thumbnailSize,
           child: tracks.isEmpty
               ? ArtworkWidget(
                   key: const Key(''),

@@ -31,7 +31,7 @@ class Dimensions {
             route == RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE || // bcz has fab
             route == RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS || // bcz has fab
             ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInside() != true) ||
-            (settings.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible == false);
+            (settings.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible.valueR == false);
     return shouldHide;
   }
 

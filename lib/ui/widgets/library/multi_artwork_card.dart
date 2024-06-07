@@ -47,16 +47,13 @@ class MultiArtworkCard extends StatelessWidget {
           children: [
             Column(
               children: [
-                NamidaHero(
-                  tag: heroTag,
-                  child: MultiArtworks(
-                    borderRadius: 12.0,
-                    heroTag: heroTag,
-                    disableHero: true,
-                    tracks: tracks.toImageTracks(),
-                    thumbnailSize: thumbnailSize,
-                    iconSize: 92.0 - 14 * gridCount,
-                  ),
+                MultiArtworks(
+                  borderRadius: 12.0,
+                  heroTag: heroTag,
+                  disableHero: false,
+                  tracks: tracks.toImageTracks(),
+                  thumbnailSize: thumbnailSize,
+                  iconSize: 92.0 - 14 * gridCount,
                 ),
                 Expanded(
                   child: Container(

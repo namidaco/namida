@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 2.6.9-beta+240607136
+version: 2.7.0-beta+240607208
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -81,7 +81,7 @@ dependencies:
       path: packages/on_audio_query
 
   # ---- Video Indexing & Playback ----
-  ffmpeg_kit_flutter_min: "5.1.0-LTS"
+  ffmpeg_kit_flutter_min: "6.0.3-LTS"
   newpipeextractor_dart:
     git:
       url: https://github.com/MSOB7YY/NewPipeExtractor_Dart

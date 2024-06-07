@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -29,6 +28,7 @@ import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -175,7 +175,7 @@ void mainInitialization() async {
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
-  FlutterLocalNotificationsPlugin().cancelAll();
+  NotificationService.cancelAll();
   FlutterVolumeController.updateShowSystemUI(false);
   CurrentColor.inst.initialize();
 
@@ -425,6 +425,38 @@ class Namida extends StatelessWidget {
   final bool shouldShowOnBoarding;
   const Namida({super.key, required this.shouldShowOnBoarding});
 
+  Widget buildMainApp(Widget widget, Brightness? platformBrightness) => ScrollConfiguration(
+        behavior: const ScrollBehaviorModified(),
+        child: ObxO(
+          rx: settings.selectedLanguage,
+          builder: (selectedLanguage) {
+            final codes = selectedLanguage.code.split('_');
+            return Localizations(
+              locale: Locale(codes.first, codes.last),
+              delegates: const [
+                DefaultWidgetsLocalizations.delegate,
+                DefaultMaterialLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+              ],
+              child: Obx(
+                () {
+                  final mode = settings.themeMode.valueR;
+                  final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
+                  final isLight = !useDarkTheme;
+                  final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                  NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
+                  return Theme(
+                    data: theme,
+                    child: widget,
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     // -- no need to listen, widget is rebuilt on applifecycle
@@ -447,41 +479,21 @@ class Namida extends StatelessWidget {
                 title: 'Namida',
                 // restorationScopeId: 'Namida',
                 builder: (context, widget) {
+                  Brightness? platformBrightness;
                   // overlay entries get rebuilt on any insertion/removal, so we create app here.
-                  final mainApp = ScrollConfiguration(
-                    behavior: const ScrollBehaviorModified(),
-                    child: ObxO(
-                      rx: settings.selectedLanguage,
-                      builder: (selectedLanguage) {
-                        final codes = selectedLanguage.code.split('_');
-                        return Localizations(
-                          locale: Locale(codes.first, codes.last),
-                          delegates: const [
-                            DefaultWidgetsLocalizations.delegate,
-                            DefaultMaterialLocalizations.delegate,
-                            GlobalMaterialLocalizations.delegate,
-                            GlobalWidgetsLocalizations.delegate,
-                          ],
-                          child: Obx(
-                            () {
-                              final mode = settings.themeMode.valueR;
-                              final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-                              final isLight = !useDarkTheme;
-                              final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                              NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
-                              return Theme(
-                                data: theme,
-                                child: widget!,
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
+
+                  Widget mainApp = buildMainApp(widget!, platformBrightness);
+
                   return Overlay(
                     initialEntries: [
-                      OverlayEntry(builder: (_) => mainApp),
+                      OverlayEntry(builder: (context) {
+                        final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                        if (newPlatformBrightness != platformBrightness) {
+                          platformBrightness = newPlatformBrightness;
+                          mainApp = buildMainApp(widget, platformBrightness);
+                        }
+                        return mainApp;
+                      }),
                     ],
                   );
                 },

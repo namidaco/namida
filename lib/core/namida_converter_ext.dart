@@ -63,7 +63,7 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
-  LibraryTab? toLibraryTab() {
+  LibraryTab toLibraryTab() {
     return switch (this) {
       MediaType.track => LibraryTab.tracks,
       MediaType.album => LibraryTab.albums,
@@ -71,7 +71,6 @@ extension MediaTypeUtils on MediaType {
       MediaType.genre => LibraryTab.genres,
       MediaType.folder => LibraryTab.folders,
       MediaType.playlist => LibraryTab.playlists,
-      MediaType.others => null,
     };
   }
 }
@@ -85,9 +84,9 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.genres => MediaType.genre,
       LibraryTab.playlists => MediaType.playlist,
       LibraryTab.folders => MediaType.folder,
-      LibraryTab.home => MediaType.others,
-      LibraryTab.search => MediaType.others,
-      LibraryTab.youtube => MediaType.others,
+      LibraryTab.home => null,
+      LibraryTab.search => null,
+      LibraryTab.youtube => null,
     };
   }
 
@@ -970,38 +969,6 @@ extension RouteUtils on NamidaRoute {
       ),
       const SizedBox(width: 8.0),
     ];
-  }
-
-  LibraryTab? toLibraryTab() {
-    LibraryTab? tab;
-    switch (route) {
-      case RouteType.PAGE_allTracks:
-        tab = LibraryTab.tracks;
-        break;
-      case RouteType.PAGE_albums:
-        tab = LibraryTab.albums;
-        break;
-      case RouteType.PAGE_artists:
-        tab = LibraryTab.artists;
-        break;
-      case RouteType.PAGE_genres:
-        tab = LibraryTab.genres;
-        break;
-      case RouteType.PAGE_folders:
-        tab = LibraryTab.folders;
-        break;
-      case RouteType.PAGE_playlists:
-        tab = LibraryTab.playlists;
-        break;
-      case RouteType.PAGE_HOME:
-        tab = LibraryTab.home;
-      case RouteType.YOUTUBE_HOME:
-        tab = LibraryTab.youtube;
-        break;
-      default:
-        null;
-    }
-    return tab;
   }
 }
 

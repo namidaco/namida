@@ -331,7 +331,7 @@ class Player {
             insertionType?.shuffleOrSort(finalTracks);
 
             if (showSnackBar && finalTracks.isEmpty) {
-              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND);
+              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
               return false;
             }
             await _audioHandler.addToQueue(
@@ -344,6 +344,7 @@ class Player {
               snackyy(
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
                 message: '${addins.capitalizeFirst()} ${finalTracks.displayTrackKeyword}',
+                top: false,
               );
             }
             return true;
@@ -388,7 +389,6 @@ class Player {
       icon: Broken.rotate_left,
       title: lang.UNDO_CHANGES,
       message: lang.UNDO_CHANGES_DELETED_TRACK,
-      displaySeconds: 2,
       top: false,
       button: (
         lang.UNDO,
@@ -592,7 +592,7 @@ class Player {
 
 extension QueueListExt on List<Playable> {
   Iterable<T> mapAs<T extends Playable>() {
-    if (Player._instance.currentItem is! T) return <T>[];
+    if (Player._instance.currentItem.value is! T) return <T>[];
     return this.map((e) => e as T);
   }
 }

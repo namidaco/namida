@@ -3639,6 +3639,7 @@ class QueueUtilsRow extends StatelessWidget {
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
             snackyy(
+              top: false,
               icon: Broken.filter_remove,
               message: "${lang.REMOVED} ${itemsKeyword(removed)}",
             );

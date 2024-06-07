@@ -39,17 +39,38 @@ jobs:
       - name: Git Submodule Update
         run: git clone https://github.com/namidaco/namida-translations/ assets/language
 
-      - name: flutter clean
-        run: flutter clean
-
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+          flutter pub upgrade
 
       - name: Modify applicationId
         run: sed -i 's/applicationId "com.msob7y.namida"/applicationId "com.msob7y.namida.snapshot"/g' android/app/build.gradle
 
-      - name: Build APKs
-        run: flutter build apk --target-platform android-arm64 --release -v
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
+          echo ::set-output name=version::"$VERSION"
+
+      - name: Build APK -> arm64-v8a
+        run: flutter build apk --target-platform android-arm64 --release
+
+      - name: Move arm64-v8a
+        run: |
+          mkdir -p build_final
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk.sha1 build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-arm64-v8a.apk.sha1
+
+      - name: Build APK -> armeabi-v7a
+        run: flutter build apk --target-platform android-arm --release
+
+      - name: Move armeabi-v7a
+        run: |
+          mkdir -p build_final
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk.sha1 build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk.sha1
 
       # - name: Sign App Bundle
       #   uses: r0adkll/sign-android-release@v1
@@ -67,12 +88,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
-          echo ::set-output name=version::"$VERSION"
-
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
         with:
@@ -80,20 +95,11 @@ jobs:
           tag_name: ${{ steps.extract_version.outputs.version}}
           body: ${{ steps.generate_changelog.outputs.changelog }}
           files: |
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk.sha1
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk.sha1
+            build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
-      - name: Upload arm64-v8a APK
+      - name: Upload all APKs
         uses: actions/upload-artifact@v3
         with:
-          name: app-arm64-v8a-release
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-
-      - name: Upload armeabi-v7a
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-armeabi-v7a-release
-          path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          name: all-apks
+          path: build_final/**

@@ -653,6 +653,7 @@ class Indexer {
     if (updateArtwork) {
       imageCache.clear();
       imageCache.clearLiveImages();
+      AudioService.evictArtworkCache();
     }
 
     tracksMissing.loop((e) => onProgress(false));

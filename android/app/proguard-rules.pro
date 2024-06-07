@@ -27,6 +27,8 @@
 
 -dontwarn android.arch.util.paging.CountedDataSource
 -dontwarn android.arch.persistence.room.paging.LimitOffsetDataSource
+
+
 -keep class com.artxdev.** { *; }
 -keep class com.namidaco.** { *; }
 -keep class org.jaudiotagger.** { *; }
@@ -38,3 +40,11 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 -keep class androidx.lifecycle.DefaultLifecycleObserver
+
+
+-keep class android.window.** { *; }
+
+-dontwarn com.google.android.play.core.**
+-dontwarn java.awt.**
+-dontwarn javax.imageio.**
+-dontwarn javax.swing.filechooser.FileFilter

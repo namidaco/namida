@@ -117,8 +117,9 @@ class CustomizationSettings extends SettingSubpageProvider {
         children: [
           getItemWrapper(
             key: _CustomizationSettingsKeys.enableBlur,
-            child: Obx(
-              () => CustomSwitchListTile(
+            child: ObxO(
+              rx: settings.enableBlurEffect,
+              builder: (enableBlurEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableBlur),
                 icon: Broken.drop,
                 title: lang.ENABLE_BLUR_EFFECT,
@@ -129,14 +130,15 @@ class CustomizationSettings extends SettingSubpageProvider {
                     performanceMode: PerformanceMode.custom,
                   );
                 },
-                value: settings.enableBlurEffect.valueR,
+                value: enableBlurEffect,
               ),
             ),
           ),
           getItemWrapper(
             key: _CustomizationSettingsKeys.enableGlow,
-            child: Obx(
-              () => CustomSwitchListTile(
+            child: ObxO(
+              rx: settings.enableGlowEffect,
+              builder: (enableGlowEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableGlow),
                 icon: Broken.sun_1,
                 title: lang.ENABLE_GLOW_EFFECT,
@@ -147,14 +149,15 @@ class CustomizationSettings extends SettingSubpageProvider {
                     performanceMode: PerformanceMode.custom,
                   );
                 },
-                value: settings.enableGlowEffect.valueR,
+                value: enableGlowEffect,
               ),
             ),
           ),
           getItemWrapper(
             key: _CustomizationSettingsKeys.enableParallax,
-            child: Obx(
-              () => CustomSwitchListTile(
+            child: ObxO(
+              rx: settings.enableMiniplayerParallaxEffect,
+              builder: (enableMiniplayerParallaxEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableParallax),
                 icon: Broken.maximize,
                 title: lang.ENABLE_PARALLAX_EFFECT,
@@ -163,7 +166,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   enableMiniplayerParallaxEffect: !isTrue,
                   performanceMode: PerformanceMode.custom,
                 ),
-                value: settings.enableMiniplayerParallaxEffect.valueR,
+                value: enableMiniplayerParallaxEffect,
               ),
             ),
           ),

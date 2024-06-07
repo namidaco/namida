@@ -15,9 +15,12 @@ class NamidaDummyPage extends StatelessWidget with NamidaRouteWidget {
 mixin NamidaRouteWidget on Widget implements NamidaRoute {
   @override
   String? get name => null;
+
+  @override
+  bool isSameRouteAs(NamidaRoute r) => this.name == r.name && this.route == r.route;
 }
 
-class NamidaRoute {
+abstract class NamidaRoute {
   final RouteType route;
   final String? name;
 
@@ -28,6 +31,8 @@ class NamidaRoute {
 
   @override
   String toString() => '(route: $route, name: $name)';
+
+  bool isSameRouteAs(NamidaRoute r);
 
   @override
   bool operator ==(other) {

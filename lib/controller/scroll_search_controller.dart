@@ -3,8 +3,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import 'package:namida/core/utils.dart';
-
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -12,6 +10,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
@@ -61,7 +60,7 @@ class ScrollSearchController {
       return;
     }
 
-    if (w.toNamidaRoute() == NamidaNavigator.inst.currentRoute) {
+    if (NamidaNavigator.inst.currentRoute?.isSameRouteAs(w) == true) {
       if (scrollController.hasClients) {
         MiniPlayerController.inst.snapToMini();
         scrollController.animateToEff(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);

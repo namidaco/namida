@@ -276,7 +276,7 @@ class SearchSortController {
           if (fetchedQuery == lastSearchText) _searchMapTemp[type]?.value = r.$1;
         } else {
           final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
-          if (fetchedQuery == typeNomalize.toLibraryTab()?.textSearchController?.text) _searchMap[typeNomalize]?.value = r.$1;
+          if (fetchedQuery == typeNomalize.toLibraryTab().textSearchController?.text) _searchMap[typeNomalize]?.value = r.$1;
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -447,7 +447,7 @@ class SearchSortController {
         _searchMapTemp[type]?.clear();
       } else {
         final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
-        typeNomalize.toLibraryTab()?.textSearchController?.clear();
+        typeNomalize.toLibraryTab().textSearchController?.clear();
         _searchMap[typeNomalize]?.value = keys.toList();
       }
       return;
@@ -722,7 +722,7 @@ class SearchSortController {
         sortThis((e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0);
         break;
 
-      default:
+      case null:
         null;
     }
     onDone(sortBy, reverse);

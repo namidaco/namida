@@ -238,7 +238,6 @@ enum MediaType {
 
   /// not used
   folder,
-  others,
 }
 
 enum VideoPlaybackSource {

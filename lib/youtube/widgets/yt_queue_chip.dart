@@ -80,11 +80,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
       final sizeInSettings = _itemScrollOffsetInQueue.withMinimum(0);
       if (pixels > sizeInSettings) {
         _arrowIcon.value = Broken.arrow_up_1;
-      }
-      if (pixels < sizeInSettings) {
+      } else if (pixels < sizeInSettings) {
         _arrowIcon.value = Broken.arrow_down;
-      }
-      if (pixels == sizeInSettings) {
+      } else if (pixels == sizeInSettings) {
         _arrowIcon.value = Broken.cd;
       }
     }
@@ -105,6 +103,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     YoutubeController.inst.startDimTimer();
     NamidaNavigator.inst.isQueueSheetOpen = true;
     _updateCanScrollQueue(true);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _animateQueueToCurrentTrack());
   }
 
   void _animateBigToSmall() {

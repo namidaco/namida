@@ -29,6 +29,7 @@ if (flutterVersionName == null) {
 // }
 
 android {
+    namespace 'com.msob7y.namida'
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
     splits {
@@ -47,7 +48,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     sourceSets {

@@ -7,7 +7,7 @@ import 'package:namida/core/extensions.dart';
 class NotificationService {
   //Hanle displaying of notifications.
   static final NotificationService _notificationService = NotificationService._internal();
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   factory NotificationService() => NotificationService._internal();
 
@@ -17,8 +17,14 @@ class NotificationService {
     init();
   }
 
+  static Future<void> cancelAll() async {
+    try {
+      await _flutterLocalNotificationsPlugin.cancelAll();
+    } catch (_) {}
+  }
+
   final _historyImportID = 1;
-  final _historyImportPayload = 'history_import';
+  static const _historyImportPayload = 'history_import';
   final _historyImportChannelName = 'History Import';
   final _historyImportChannelDescription = 'Imports Tracks to History from a source';
 
@@ -27,7 +33,7 @@ class NotificationService {
   final _youtubeDownloadChannelName = 'Downloads';
   final _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
 
-  Future<void> init() async {
+  static Future<void> init() async {
     await _flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_musicnote'),
@@ -167,7 +173,7 @@ class NotificationService {
     );
   }
 
-  void _onDidReceiveLocalNotification(NotificationResponse details) async {
+  static void _onDidReceiveLocalNotification(NotificationResponse details) async {
     if (details.payload == _historyImportPayload) {
       JsonToHistoryParser.inst.showParsingProgressDialog();
     }

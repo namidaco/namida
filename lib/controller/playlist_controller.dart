@@ -119,7 +119,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
 
     snackyy(
       message: "${lang.ADDED} ${addedTracksLength.displayTrackKeyword}",
-      displaySeconds: 2,
       button: addedTracksLength > 0
           ? (
               lang.UNDO,
