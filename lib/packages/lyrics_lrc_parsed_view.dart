@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lrc/lrc.dart';
-import 'package:namida/core/constants.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:namida/class/track.dart';
@@ -74,12 +73,29 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     controller = ItemScrollController();
     positionListener = ItemPositionsListener.create();
     fillLists(widget.initialLrc);
+    Player.inst.currentItemDuration.addListener(_itemDurationUpdater);
+  }
+
+  int _itemDurationUpdater() {
+    int totalDurSeconds = Player.inst.currentItemDuration.value?.inSeconds ?? 0;
+    if (totalDurSeconds == 0) {
+      final current = Player.inst.currentItem.value;
+      if (current is Selectable) {
+        totalDurSeconds = current.track.duration;
+      }
+    }
+    _currentItemDurationSeconds.value = totalDurSeconds;
+    return totalDurSeconds;
   }
 
   Lrc? currentLRC;
 
+  final _currentItemDurationSeconds = RxnO<int>();
+
   void fillLists(Lrc? lrc) {
+    if (currentLRC == null && lrc == null) return;
     currentLRC = lrc;
+
     if (lrc == null) {
       timestampsMap.clear();
       lyrics.clear();
@@ -99,7 +115,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           seconds: int.parse(parts[1]),
           milliseconds: int.parse("${parts[2]}0"), // aditional 0 to convert to millis
         );
-        final totalDurSeconds = Player.inst.currentItemDuration.value?.inSeconds ?? Player.inst.currentTrack?.track.duration ?? 0;
+        final totalDurSeconds = _itemDurationUpdater();
         final totalDurMicro = totalDurSeconds * 1000 * 1000;
         cal = totalDurMicro / lyricsDuration.inMicroseconds;
       } catch (_) {}
@@ -206,9 +222,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   @override
   void dispose() {
+    Player.inst.setPositionListener(null);
+    Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
     _latestUpdatedLineIndex.close();
     _latestUpdatedLine.close();
-    Player.inst.setPositionListener(null);
+    _currentItemDurationSeconds.close();
     super.dispose();
   }
 
@@ -229,9 +247,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 NamidaHero(
                   enabled: false,
                   tag: 'MINIPLAYER_POSITION',
-                  child: Obx(
-                    () => Text(
-                      Player.inst.nowPlayingPositionR.milliSecondsLabel,
+                  child: ObxO(
+                    rx: Player.inst.nowPlayingPosition,
+                    builder: (currentMS) => Text(
+                      currentMS.milliSecondsLabel,
                       style: context.textTheme.displaySmall,
                     ),
                   ),
@@ -240,9 +259,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 NamidaIconButton(
                   icon: Broken.previous,
                   iconSize: 24.0,
-                  onPressed: () {
-                    Player.inst.previous();
-                  },
+                  onPressed: Player.inst.previous,
                 ),
                 ObxO(
                   rx: Player.inst.isPlaying,
@@ -256,20 +273,29 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 NamidaIconButton(
                   icon: Broken.next,
                   iconSize: 24.0,
-                  onPressed: () {
-                    Player.inst.next();
-                  },
+                  onPressed: Player.inst.next,
                 ),
                 const Spacer(),
                 NamidaHero(
                   enabled: false,
                   tag: 'MINIPLAYER_DURATION',
                   child: ObxO(
-                    rx: Player.inst.currentItem,
-                    builder: (item) {
-                      final track = item is Selectable ? item.track : kDummyTrack;
+                    rx: _currentItemDurationSeconds,
+                    builder: (seconds) {
+                      if (seconds == null || seconds == 0) {
+                        return ObxO(
+                          rx: Player.inst.currentItem,
+                          builder: (currentItem) {
+                            final seconds = currentItem is Selectable ? currentItem.track.duration : 0;
+                            return Text(
+                              seconds.secondsLabel,
+                              style: context.textTheme.displaySmall,
+                            );
+                          },
+                        );
+                      }
                       return Text(
-                        track.duration.secondsLabel,
+                        seconds.secondsLabel,
                         style: context.textTheme.displaySmall,
                       );
                     },

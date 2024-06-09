@@ -1,30 +1,27 @@
 /// copyright: google search request is originally from [@netlob](https://github.com/netlob/dart-lyrics), edited to fit Namida.
 library;
 
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:lrc/lrc.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:path/path.dart' as p;
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
@@ -43,6 +40,7 @@ class Lyrics {
   Playable? _currentItem;
 
   bool get _lyricsEnabled => settings.enableLyrics.value;
+  bool get _canDisplayLRCForYoutubeID => settings.youtubeStyleMiniplayer.value == false;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
@@ -73,97 +71,61 @@ class Lyrics {
 
     lyricsCanBeAvailable.value = true;
     if (!_lyricsEnabled) return;
+    if (item is YoutubeID && !_canDisplayLRCForYoutubeID) return;
 
-    if (item is YoutubeID) {
-      // TODO: allow lyrics for youtube videos
-    } else if (item is Selectable) {
-      final track = item.track;
+    final LrcSearchUtils? lrcUtils = LrcSearchUtils.fromPlayable(item);
 
-      final embedded = track.lyrics;
+    if (lrcUtils == null) return;
 
-      if (_lyricsPrioritizeEmbedded && embedded != '') {
-        final lrc = embedded.parseLRC();
-        if (lrc != null && lrc.lyrics.isNotEmpty) {
-          currentLyricsLRC.value = lrc;
-          _updateWidgets(lrc);
-        } else {
-          currentLyricsText.value = embedded;
-        }
-        return;
-      }
-
-      /// 1. device lrc
-      /// 2. cached lrc
-      /// 3. track embedded lrc
-      /// 4. database.
-      final lrcLyrics = await _fetchLRCBasedLyrics(track, embedded, _lyricsSource);
-
-      if (checkInterrupted()) return;
-
-      if (lrcLyrics.$1 != null) {
-        currentLyricsLRC.value = lrcLyrics.$1;
-        _updateWidgets(lrcLyrics.$1);
-        return;
-      } else if (lrcLyrics.$2 != null) {
-        currentLyricsText.value = lrcLyrics.$2 ?? '';
-        _updateWidgets(null);
-        return;
-      }
-
-      if (checkInterrupted()) return;
-
-      /// 1. cached txt lyrics
-      /// 2. track embedded txt
-      /// 3. google search
-      final textLyrics = await _fetchTextBasedLyrics(track, embedded, _lyricsSource);
-
-      if (checkInterrupted()) return;
-
-      if (textLyrics != '') {
-        currentLyricsText.value = textLyrics;
+    final embedded = lrcUtils.embeddedLyrics;
+    if (_lyricsPrioritizeEmbedded && embedded != '') {
+      final lrc = embedded.parseLRC();
+      if (lrc != null && lrc.lyrics.isNotEmpty) {
+        currentLyricsLRC.value = lrc;
+        _updateWidgets(lrc);
       } else {
-        lyricsCanBeAvailable.value = false;
+        currentLyricsText.value = embedded;
       }
+      return;
+    }
+
+    /// 1. device lrc
+    /// 2. cached lrc
+    /// 3. track embedded lrc
+    /// 4. database.
+    final lrcLyrics = await _fetchLRCBasedLyrics(lrcUtils, embedded, _lyricsSource);
+
+    if (checkInterrupted()) return;
+
+    if (lrcLyrics.$1 != null) {
+      currentLyricsLRC.value = lrcLyrics.$1;
+      _updateWidgets(lrcLyrics.$1);
+      return;
+    } else if (lrcLyrics.$2 != null) {
+      currentLyricsText.value = lrcLyrics.$2 ?? '';
+      _updateWidgets(null);
+      return;
+    }
+
+    if (checkInterrupted()) return;
+
+    /// 1. cached txt lyrics
+    /// 2. track embedded txt
+    /// 3. google search
+    final textLyrics = await _fetchTextBasedLyrics(lrcUtils, embedded, _lyricsSource);
+
+    if (checkInterrupted()) return;
+
+    if (textLyrics != '') {
+      currentLyricsText.value = textLyrics;
+    } else {
+      lyricsCanBeAvailable.value = false;
     }
   }
 
-  bool hasLyrics(Track tr) {
-    return tr.lyrics != '' || lyricsFileCacheLRC(tr).existsSync() || lyricsFilesDevice(tr).any((element) => element.existsSync()) || lyricsFileCacheText(tr).existsSync();
-  }
-
-  File lyricsFileCacheText(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.txt"));
-  File lyricsFileCacheLRC(Track tr) => File(p.join(AppDirs.LYRICS, "${tr.filename}.lrc"));
-  List<File> lyricsFilesDevice(Track tr) {
-    final dirPath = tr.path.getDirectoryPath;
-    return [
-      File(p.join(dirPath, "${tr.filename}.lrc")),
-      File(p.join(dirPath, "${tr.filenameWOExt}.lrc")),
-      File(p.join(dirPath, "${tr.filename}.LRC")),
-      File(p.join(dirPath, "${tr.filenameWOExt}.LRC")),
-    ];
-  }
-
-  Future<void> saveLyricsToCache(Track track, String lyricsText, bool isSynced) async {
-    final fc = isSynced ? lyricsFileCacheLRC(track) : lyricsFileCacheText(track);
-    await fc.create();
-    await fc.writeAsString(lyricsText);
-  }
-
-  Future<List<LyricsModel>> searchLRCLyricsFromInternet({
-    required TrackExtended? trackExt,
-    String customQuery = '',
-  }) async {
-    if (trackExt == null && customQuery == '') return [];
-    var searchTries = <_LRCSearchDetails>[];
-    if (trackExt != null) {
-      final durS = trackExt.duration;
-      searchTries = [
-        _LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: '', durationSeconds: durS),
-        _LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: trackExt.album, durationSeconds: durS),
-        if (trackExt.artistsList.isNotEmpty) _LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: '', durationSeconds: durS),
-        if (trackExt.artistsList.isNotEmpty) _LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: trackExt.album, durationSeconds: durS),
-      ];
-    }
+  Future<List<LyricsModel>> searchLRCLyricsFromInternet({required LrcSearchUtils lrcUtils, String? customQuery}) async {
+    final searchTries = lrcUtils.searchDetailsQueries();
+    if (searchTries.isEmpty && (customQuery == null || customQuery == '')) return [];
 
     return await _lrcSearchManager.search(
       queries: searchTries,
@@ -171,14 +133,14 @@ class Lyrics {
     );
   }
 
-  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
+  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source) async {
     String? lrcContent;
 
     /// 1. device lrc
     /// 2. cached lrc
     /// 3. track embedded
     if (source != LyricsSource.internet) {
-      final lyricsFilesLocal = lyricsFilesDevice(track);
+      final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
       for (final lf in lyricsFilesLocal) {
         if (await lf.existsAndValid()) {
           lrcContent = await lf.readAsString();
@@ -186,7 +148,7 @@ class Lyrics {
         }
       }
       if (lrcContent == null) {
-        final syncedInCache = lyricsFileCacheLRC(track);
+        final syncedInCache = lrcUtils.cachedLRCFile;
         if (await syncedInCache.existsAndValid()) {
           lrcContent = await syncedInCache.readAsString();
         } else if (trackLyrics != '') {
@@ -197,17 +159,16 @@ class Lyrics {
 
     /// 4. if still null, fetch from database.
     if (source != LyricsSource.local && lrcContent == null) {
-      final trackExt = track.toTrackExt();
-      final lyrics = await searchLRCLyricsFromInternet(trackExt: trackExt);
+      final lyrics = await searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
       final lyricsModelToUse = lyrics.firstOrNull;
       if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
         final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
         if (parsedLrc != null) {
-          final syncedInCache = lyricsFileCacheLRC(track);
+          final syncedInCache = lrcUtils.cachedLRCFile;
           await syncedInCache.writeAsString(lyricsModelToUse.lyrics);
           return (parsedLrc, null);
         } else {
-          final plainInCache = lyricsFileCacheText(track);
+          final plainInCache = lrcUtils.cachedTxtFile;
           await plainInCache.writeAsString(lyricsModelToUse.lyrics);
           return (null, lyricsModelToUse.lyrics);
         }
@@ -222,8 +183,8 @@ class Lyrics {
     }
   }
 
-  Future<String> _fetchTextBasedLyrics(Track track, String trackLyrics, LyricsSource source) async {
-    final lyricsFile = lyricsFileCacheText(track);
+  Future<String> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source) async {
+    final lyricsFile = lrcUtils.cachedTxtFile;
 
     /// get from storage
     if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
@@ -234,7 +195,7 @@ class Lyrics {
 
     /// download lyrics
     else if (source != LyricsSource.local) {
-      final lyrics = await _fetchLyricsGoogle(artist: track.artistsList.firstOrNull ?? '', title: track.title);
+      final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
       final regex = RegExp(r'<[^>]*>');
       if (lyrics != '') {
         final formattedText = lyrics.replaceAll(regex, '');
@@ -245,15 +206,8 @@ class Lyrics {
     return '';
   }
 
-  Future<String> _fetchLyricsGoogle({String title = '', String artist = ''}) async {
-    if (title == '' && artist == '') return '';
-
-    final possibleQueries = <String>[
-      '$title by $artist lyrics',
-      '${title.split("-").first} by $artist lyrics',
-      '$title by $artist song lyrics',
-    ];
-
+  Future<String> _fetchLyricsGoogle(List<String> possibleQueries) async {
+    if (possibleQueries.isEmpty) return '';
     return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
   }
 
@@ -294,12 +248,6 @@ class Lyrics {
   }
 }
 
-class _LRCSearchDetails {
-  final String title, artist, album;
-  final int durationSeconds;
-  const _LRCSearchDetails({required this.title, required this.artist, required this.album, required this.durationSeconds});
-}
-
 class _LRCSearchManager with PortsProvider<SendPort> {
   _LRCSearchManager();
 
@@ -307,14 +255,14 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
   /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
   Future<List<LyricsModel>> search({
-    required List<_LRCSearchDetails> queries,
-    String customQuery = '',
+    required List<LRCSearchDetails> queries,
+    String? customQuery,
   }) async {
     _completer?.completeIfWasnt([]);
     _completer = Completer<List<LyricsModel>>();
 
     await initialize();
-    final p = customQuery != '' ? customQuery : queries;
+    final p = customQuery != null && customQuery.isNotEmpty ? customQuery : queries;
     await sendPort(p);
     final res = await _completer?.future ?? [];
     _completer = null;
@@ -346,7 +294,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     }
 
     Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
-      _LRCSearchDetails? details,
+      LRCSearchDetails? details,
       String customQuery = '',
       required HttpClientWrapper requester,
     }) async {
@@ -441,7 +389,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       final c = mainRequester!; // instance so it can be closed
 
       var lyrics = <LyricsModel>[];
-      if (p is List<_LRCSearchDetails>) {
+      if (p is List<LRCSearchDetails>) {
         for (final details in p) {
           lyrics = await fetchLRCBasedLyricsFromInternet(
             details: details,

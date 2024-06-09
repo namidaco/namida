@@ -568,7 +568,6 @@ class _AnimatingTrackImage extends StatelessWidget {
           child: _AnimatingThumnailWidget(
             cp: cp,
             isLocal: true,
-            displayLyrics: true,
             fallback: _TrackImage(
               track: track,
               cp: cp,
@@ -583,30 +582,32 @@ class _AnimatingTrackImage extends StatelessWidget {
 class _AnimatingThumnailWidget extends StatelessWidget {
   final double cp;
   final bool isLocal;
-  final bool displayLyrics;
   final Widget fallback;
-  const _AnimatingThumnailWidget({super.key, required this.cp, required this.isLocal, required this.fallback, required this.displayLyrics});
+
+  const _AnimatingThumnailWidget({
+    required this.cp,
+    required this.isLocal,
+    required this.fallback,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final lyricsWidget = displayLyrics
-        ? Obx(
-            () => AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
-                  ? LyricsLRCParsedView(
-                      key: Lyrics.inst.lrcViewKey,
-                      cp: cp,
-                      initialLrc: Lyrics.inst.currentLyricsLRC.valueR,
-                      videoOrImage: const SizedBox(),
-                    )
-                  : const IgnorePointer(
-                      key: Key('empty_lrc'),
-                      child: SizedBox(),
-                    ),
-            ),
-          )
-        : null;
+    final lyricsWidget = Obx(
+      () => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
+            ? LyricsLRCParsedView(
+                key: Lyrics.inst.lrcViewKey,
+                cp: cp,
+                initialLrc: Lyrics.inst.currentLyricsLRC.valueR,
+                videoOrImage: const SizedBox(),
+              )
+            : const IgnorePointer(
+                key: Key('empty_lrc'),
+                child: SizedBox(),
+              ),
+      ),
+    );
     return ObxO(
       rx: settings.animatingThumbnailInversed,
       builder: (isInversed) => ObxO(
@@ -630,7 +631,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 videoOrImage,
-                if (lyricsWidget != null) lyricsWidget,
+                lyricsWidget,
               ],
             );
             return ObxO(
@@ -741,7 +742,6 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
     return _AnimatingThumnailWidget(
       cp: cp,
       isLocal: false,
-      displayLyrics: false,
       fallback: _YoutubeIDImage(
         video: video,
         cp: cp,

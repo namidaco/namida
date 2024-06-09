@@ -785,6 +785,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     canPlayAudioOnlyFromCache ??= (_isAudioOnlyPlayback || !ConnectivityController.inst.hasConnection);
 
     WaveformController.inst.resetWaveform();
+    Lyrics.inst.resetLyrics();
 
     YoutubeController.inst.currentYTQualities.clear();
     YoutubeController.inst.currentYTAudioStreams.clear();
@@ -820,6 +821,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         startSleepAfterMinCount();
         startCounterToAListen(pi);
         increaseListenTime(LibraryCategory.youtube);
+        Lyrics.inst.updateLyrics(item);
       }
     }
 

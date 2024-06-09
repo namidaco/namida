@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:async';
 import 'dart:io';
 
@@ -12,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -21,22 +20,19 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 
 void showLRCSetDialog(Playable item, Color colorScheme) async {
-  if (item is YoutubeID) return; // TODO: allow lyrics for youtube videos
-  if (item is! Selectable) return;
+  final LrcSearchUtils? lrcUtils = LrcSearchUtils.fromPlayable(item);
+  if (lrcUtils == null) return;
 
-  final trackPre = item.track;
-  final track = trackPre.toTrackExt();
   final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
 
-  final embedded = track.lyrics;
-  final cachedTxt = Lyrics.inst.lyricsFileCacheText(trackPre);
-  final cachedLRC = Lyrics.inst.lyricsFileCacheLRC(trackPre);
-  final localLRCFiles = Lyrics.inst.lyricsFilesDevice(trackPre);
+  final embedded = lrcUtils.embeddedLyrics;
+  final cachedTxt = lrcUtils.cachedTxtFile;
+  final cachedLRC = lrcUtils.cachedLRCFile;
+  final localLRCFiles = lrcUtils.deviceLRCFiles;
 
   if (embedded != '') {
     availableLyrics.add(
@@ -90,8 +86,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   }
 
   void updateForCurrentTrack() {
-    if (trackPre == Player.inst.currentItem.value) {
-      Lyrics.inst.updateLyrics(trackPre);
+    if (item == Player.inst.currentItem.value) {
+      Lyrics.inst.updateLyrics(item);
     }
   }
 
@@ -201,7 +197,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   language: lrc.language,
                 );
                 final lyricsString = newLRC.format();
-                await Lyrics.inst.saveLyricsToCache(trackPre, newLRC.format(), true);
+                await lrcUtils.saveLyricsToCache(lyricsString, true);
                 availableLyrics.remove(l);
                 availableLyrics.add(
                   LyricsModel(
@@ -284,13 +280,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
 
   final searchController = TextEditingController();
 
-  final initialSearchTextHint = '${track.originalArtist} - ${track.title}';
+  final initialSearchTextHint = lrcUtils.initialSearchTextHint;
 
   void onSearchTrigger([String? query]) async {
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
     final lyrics = await Lyrics.inst.searchLRCLyricsFromInternet(
-      trackExt: track,
+      lrcUtils: lrcUtils,
       customQuery: query ?? searchController.text,
     );
     if (lyrics.isNotEmpty) fetchedLyrics.addAll(lyrics);
@@ -326,7 +322,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               onPressed: () async {
                 final selected = selectedLyrics.value;
                 if (selected != null) {
-                  await Lyrics.inst.saveLyricsToCache(trackPre, selected.lyrics, selected.synced);
+                  await lrcUtils.saveLyricsToCache(selected.lyrics, selected.synced);
                   updateForCurrentTrack();
                 }
                 NamidaNavigator.inst.closeDialog();
@@ -533,7 +529,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   final picked = await NamidaFileBrowser.pickFile(
                     note: lang.ADD_LRC_FILE,
                     allowedExtensions: ['lrc', 'LRC', 'txt', 'TXT'],
-                    initialDirectory: track.path.getDirectoryPath,
+                    initialDirectory: lrcUtils.pickFileInitialDirectory,
                   );
                   final path = picked?.path;
                   if (path != null) {

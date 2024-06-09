@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/folder.dart';
@@ -13,7 +12,7 @@ import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -27,6 +26,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -1071,7 +1071,7 @@ Future<void> showGeneralPopupDialog(
                               trailing: isSingle
                                   ? IconButton(
                                       tooltip: lang.LYRICS,
-                                      icon: Lyrics.inst.hasLyrics(tracks.first)
+                                      icon: LrcSearchUtilsSelectable(tracks.first.toTrackExt(), tracks.first).hasLyrics()
                                           ? StackedIcon(
                                               baseIcon: Broken.document,
                                               secondaryIcon: Broken.tick_circle,
