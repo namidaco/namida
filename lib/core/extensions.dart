@@ -347,11 +347,12 @@ extension TitleAndArtistUtils on String {
     );
     final match2 = regexCareForSpaces.firstMatch(input);
     if (match2 != null) {
-      final artist = match2.group(1)?.trim();
-      final title = match2.group(2)?.trim();
+      String? artist = match2.group(1)?.trim();
+      String? title = match2.group(2)?.trim();
       if (artist != null && title != null) {
-        final a = artist.startsWith('「') ? artist.replaceRange(0, 1, '') : artist;
-        return (a, title);
+        if (artist.startsWith('「')) artist = artist.replaceRange(0, 1, '');
+        if (title.startsWith('"')) title = title.replaceRange(0, 1, '');
+        return (artist, title);
       }
     }
     // final regexDoesntCareAboutSpaces = RegExp(
@@ -373,7 +374,7 @@ extension TitleAndArtistUtils on String {
   String keepFeatKeywordsOnly() {
     if (this == '') return '';
     final regex = RegExp(
-      r'\s*\((?!remix|featured|ft\.|feat\.|featuring)(?!.*Remix)[^)]*\)|\s*\[(?!remix|featured|ft\.|feat\.|featuring)(?!.*Remix)[^\]]*\]',
+      r'\s*\((?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^)]*\)|\s*\[(?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^\]]*\]',
       caseSensitive: false,
     );
     String res = replaceAll(regex, '').trimAll();
