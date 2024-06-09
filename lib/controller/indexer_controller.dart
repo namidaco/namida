@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:async';
 import 'dart:io';
 
@@ -956,7 +954,7 @@ class Indexer {
     final map = <Track, TrackStats>{};
     final list = File(path).readAsJsonSync() as List?;
     if (list != null) {
-      for (int i = 0; i <= list.length - 1; i++) {
+      for (int i = 0; i < list.length; i++) {
         try {
           final item = list[i];
           final trst = TrackStats.fromJson(item);
@@ -975,7 +973,7 @@ class Indexer {
     final allTracks = <Track>[];
     final list = File(config.path).readAsJsonSync() as List?;
     if (list != null) {
-      for (int i = 0; i <= list.length - 1; i++) {
+      for (int i = 0; i < list.length; i++) {
         try {
           final item = list[i];
           final trExt = TrackExtended.fromJson(
@@ -995,15 +993,6 @@ class Indexer {
     return (map, idsMap, allTracks);
   }
 
-  static List<String> splitBySeparators(String? string, Iterable<String> separators, String fallback, Iterable<String> blacklist) {
-    final List<String> finalStrings = <String>[];
-    final List<String> pre = string?.trimAll().multiSplit(separators, blacklist) ?? [fallback];
-    pre.loop((e) {
-      if (e != '') finalStrings.add(e.trimAll());
-    });
-    return finalStrings;
-  }
-
   /// [addArtistsFromTitle] extracts feat artists.
   /// Defaults to [settings.extractFeatArtistFromTitle]
   static List<String> splitArtist({
@@ -1013,12 +1002,7 @@ class Indexer {
   }) {
     final allArtists = <String>[];
 
-    final artistsOrg = splitBySeparators(
-      originalArtist,
-      config.separators,
-      UnknownTags.ARTIST,
-      config.separatorsBlacklist,
-    );
+    final artistsOrg = config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
     allArtists.addAll(artistsOrg);
 
     if (config.addFeatArtist) {
@@ -1026,12 +1010,7 @@ class Indexer {
       if (moreArtists != null && moreArtists.length > 1) {
         final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
         allArtists.addAll(
-          splitBySeparators(
-            extractedFeatArtists,
-            config.separators,
-            '',
-            config.separatorsBlacklist,
-          ),
+          config.splitText(extractedFeatArtists, fallback: ''),
         );
       }
     }
@@ -1042,11 +1021,9 @@ class Indexer {
     String? originalGenre, {
     required GenresSplitConfig config,
   }) {
-    return splitBySeparators(
+    return config.splitText(
       originalGenre,
-      config.separators,
-      UnknownTags.GENRE,
-      config.separatorsBlacklist,
+      fallback: UnknownTags.GENRE,
     );
   }
 
@@ -1173,6 +1150,8 @@ class Indexer {
     allMusic.retainWhere((element) =>
         settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
     final tracks = <(TrackExtended, int)>[];
+    final artistsSplitConfig = ArtistsSplitConfig.settings();
+    final genresSplitConfig = GenresSplitConfig.settings();
     allMusic.loop((e) {
       final map = e.getMap;
       final artist = e.artist;
@@ -1181,21 +1160,21 @@ class Indexer {
           : Indexer.splitArtist(
               title: e.title,
               originalArtist: artist,
-              config: ArtistsSplitConfig.settings(),
+              config: artistsSplitConfig,
             );
       final genre = e.genre;
       final genres = genre == null
           ? <String>[]
           : Indexer.splitGenre(
               genre,
-              config: GenresSplitConfig.settings(),
+              config: genresSplitConfig,
             );
       final mood = map['mood'];
       final moods = mood == null
           ? <String>[]
           : Indexer.splitGenre(
               mood,
-              config: GenresSplitConfig.settings(),
+              config: genresSplitConfig,
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
