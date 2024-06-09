@@ -6,6 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -21,6 +22,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 enum _ThemeSettingsKeys {
   themeMode,
@@ -52,11 +54,11 @@ class ThemeSetting extends SettingSubpageProvider {
       };
 
   void _refreshColorCurrentPlayingItem() {
-    final currentVideoId = Player.inst.currentVideo;
-    if (currentVideoId != null) {
-      CurrentColor.inst.updatePlayerColorFromYoutubeID(currentVideoId);
-    } else {
-      CurrentColor.inst.updatePlayerColorFromTrack(Player.inst.currentTrack, null);
+    final currentItem = Player.inst.currentItem.value;
+    if (currentItem is YoutubeID) {
+      CurrentColor.inst.updatePlayerColorFromYoutubeID(currentItem);
+    } else if (currentItem is Selectable) {
+      CurrentColor.inst.updatePlayerColorFromTrack(currentItem, null);
     }
   }
 

@@ -179,7 +179,7 @@ class CurrentColor {
     if (id == '') return;
 
     // -- only extract if same item is still playing, i.e. user didn't skip.
-    bool stillPlaying() => ytIdItem.id == Player.inst.currentVideo?.id;
+    bool stillPlaying() => ytIdItem == Player.inst.currentItem.value;
 
     _updatePlayerColorFromItem(
       getColorPalette: () async {
@@ -219,7 +219,8 @@ class CurrentColor {
             namidaColor = trColors;
           }
           if (namidaColor != null) {
-            _namidaColor.value = namidaColor;
+            _namidaColor.set(namidaColor);
+            _namidaColor.refresh(); // force refresh for pitch black/etc
             _updateCurrentPaletteHalfs(
               settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
             );

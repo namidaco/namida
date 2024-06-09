@@ -15,7 +15,7 @@ import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:namida/controller/backup_controller.dart';
@@ -246,7 +246,7 @@ void _initLifeCycle() {
 
 Future<void> _initializeIntenties() async {
   Future<void> clearIntentCachedFiles() async {
-    final cacheDir = await getTemporaryDirectory();
+    final cacheDir = await pp.getTemporaryDirectory();
     await for (final cf in cacheDir.list()) {
       if (cf is File) {
         cf.tryDeleting();

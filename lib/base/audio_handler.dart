@@ -265,6 +265,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> clearQueue() async {
+    videoPlayerInfo.value = null;
+    Lyrics.inst.resetLyrics();
+    WaveformController.inst.resetWaveform();
     CurrentColor.inst.resetCurrentPlayingTrack();
 
     VideoController.inst.currentVideo.value = null;
@@ -541,7 +544,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     try {
       duration = await setPls();
-      if (checkInterrupted()) return;
     } on Exception catch (e) {
       if (checkInterrupted()) return;
       final reallyError = !(duration != null && currentPositionMS.value > 0);
@@ -582,6 +584,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       }
     }
+
+    if (checkInterrupted()) return;
 
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 

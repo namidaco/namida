@@ -58,7 +58,7 @@ class Player {
   }
 
   RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue;
-  Rx<Playable?> get currentItem => _audioHandler.currentItem;
+  RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
   String get getCurrentVideoIdR => (YoutubeController.inst.currentYoutubeMetadataVideo.valueR ?? currentVideoInfo.valueR)?.id ?? currentVideoR?.id ?? '';
   String get getCurrentVideoId => (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? currentVideoInfo.value)?.id ?? currentVideo?.id ?? '';
