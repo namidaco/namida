@@ -328,7 +328,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   trailingPadding: 12.0,
                   playlistName: widget.playlistName,
                   initialFolder: _groupName.valueR,
-                  subtitle: (value) => "${AppDirs.YOUTUBE_DOWNLOADS}$value",
+                  subtitle: (value) {
+                    String dir = AppDirs.YOUTUBE_DOWNLOADS;
+                    if (!dir.endsWith('/')) dir += '/';
+                    return "$dir$value";
+                  },
                   onDownloadGroupNameChanged: (newGroupName) {
                     _groupName.value = newGroupName;
                   },
@@ -352,7 +356,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             () {
                               final isSelected = _selectedList.contains(id);
                               final filename = _configMap[id]?.filename;
-                              final fileExists = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.valueR}/$filename").existsSync();
+                              String dir = AppDirs.YOUTUBE_DOWNLOADS;
+                              if (!dir.endsWith('/')) dir += '/';
+                              final fileExists = File("$dir${_groupName.valueR}/$filename").existsSync();
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
