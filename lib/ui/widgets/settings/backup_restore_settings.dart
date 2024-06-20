@@ -20,6 +20,7 @@ import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 enum _BackupAndRestoreKeys {
   create,
@@ -46,8 +47,16 @@ class BackupAndRestore extends SettingSubpageProvider {
         _BackupAndRestoreKeys.importLastfm: [lang.IMPORT_LAST_FM_HISTORY],
       };
 
-  bool _canDoImport() {
-    if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory) {
+  bool _canDoImport({required bool isYT}) {
+    if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || (isYT && YoutubeHistoryController.inst.isLoadingHistory)) {
+      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      return false;
+    }
+    return true;
+  }
+
+  bool _canCreateRestoreBackup() {
+    if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || YoutubeHistoryController.inst.isLoadingHistory) {
       snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
       return false;
     }
@@ -77,10 +86,7 @@ class BackupAndRestore extends SettingSubpageProvider {
           child: const LoadingIndicator(),
         ),
         onTap: () async {
-          if (BackupController.inst.isRestoringBackup.value) {
-            snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
-            return;
-          }
+          if (!_canCreateRestoreBackup()) return;
 
           NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
@@ -164,10 +170,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                 child: const LoadingIndicator(),
               ),
               onTap: () {
-                if (BackupController.inst.isCreatingBackup.value) {
-                  snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
-                  return;
-                }
+                if (!_canCreateRestoreBackup()) return;
 
                 bool isActive(List<String> items) => items.every((element) => settings.backupItemslist.contains(element));
 
@@ -569,7 +572,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                 ),
               ),
               onTap: () {
-                if (!_canDoImport()) return;
+                if (!_canDoImport(isYT: true)) return;
 
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
@@ -717,7 +720,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                 ),
               ),
               onTap: () {
-                if (!_canDoImport()) return;
+                if (!_canDoImport(isYT: false)) return;
 
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
