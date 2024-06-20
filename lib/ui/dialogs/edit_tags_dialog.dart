@@ -196,7 +196,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
 Widget get _getKeepDatesWidget => ObxO(
       rx: settings.editTagsKeepFileDates,
       builder: (editTagsKeepFileDates) => NamidaIconButton(
-        tooltip: lang.KEEP_FILE_DATES,
+        tooltip: () => lang.KEEP_FILE_DATES,
         icon: editTagsKeepFileDates ? Broken.document_code_2 : Broken.calendar_edit,
         onPressed: () {
           settings.save(editTagsKeepFileDates: !settings.editTagsKeepFileDates.value);

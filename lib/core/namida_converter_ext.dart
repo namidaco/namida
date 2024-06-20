@@ -940,7 +940,7 @@ extension RouteUtils on NamidaRoute {
         child: ObxO(
           rx: PlaylistController.inst.canReorderTracks,
           builder: (reorderable) => NamidaAppBarIcon(
-            tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+            tooltip: () => PlaylistController.inst.canReorderTracks.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
             icon: reorderable ? Broken.forward_item : Broken.lock_1,
             onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
           ),
@@ -959,7 +959,7 @@ extension RouteUtils on NamidaRoute {
         child: ObxO(
           rx: ytplc.YoutubePlaylistController.inst.canReorderVideos,
           builder: (reorderable) => NamidaAppBarIcon(
-            tooltip: reorderable ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+            tooltip: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
             icon: reorderable ? Broken.forward_item : Broken.lock_1,
             onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,
           ),

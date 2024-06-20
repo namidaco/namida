@@ -386,7 +386,7 @@ void _showTrackColorPaletteDialog({
         normalTitleStyle: true,
         title: lang.COLOR_PALETTE,
         leftAction: NamidaIconButton(
-          tooltip: lang.RESTORE_DEFAULTS,
+          tooltip: () => lang.RESTORE_DEFAULTS,
           onPressed: onRestoreDefaults,
           icon: Broken.refresh,
         ),

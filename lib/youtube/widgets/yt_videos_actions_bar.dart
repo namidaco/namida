@@ -249,7 +249,7 @@ class _ActionItem extends StatelessWidget {
       horizontalPadding: 6.0,
       iconColor: context.defaultIconColor(),
       icon: icon,
-      tooltip: tooltip,
+      tooltip: () => tooltip,
       onPressed: onTap,
     );
   }

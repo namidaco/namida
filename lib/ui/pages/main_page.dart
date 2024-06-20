@@ -65,8 +65,55 @@ class MainPage extends StatelessWidget {
       color: searchProgressColor,
     );
 
-    final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
-
+    final fab = NamidaTooltip(
+      message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
+      child: FloatingActionButton(
+        heroTag: 'main_page_fab_hero',
+        backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
+        onPressed: () {
+          final fab = settings.floatingActionButton.value;
+          final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+          if (fab == FABType.search || isMenuOpened) {
+            final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
+            if (isOpen && !isMenuOpened) {
+              SearchSortController.inst.prepareResources();
+              ScrollSearchController.inst.showSearchMenu();
+              ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
+            } else {
+              isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
+              ScrollSearchController.inst.toggleSearchMenu();
+              ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+            }
+          } else if (fab == FABType.shuffle || fab == FABType.play) {
+            Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
+          }
+        },
+        child: ObxO(
+          rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
+          builder: (isGlobalSearchMenuShown) => isGlobalSearchMenuShown
+              ? ObxO(
+                  rx: SearchSortController.inst.runningSearches,
+                  builder: (runningSearches) => Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(
+                        Broken.search_status_1,
+                        color: Color.fromRGBO(255, 255, 255, 0.8),
+                      ),
+                      if (runningSearches.values.any((running) => running)) searchProgressWidget,
+                    ],
+                  ),
+                )
+              : ObxO(
+                  rx: settings.floatingActionButton,
+                  builder: (fabButton) => Icon(
+                    fabButton.toIcon(),
+                    color: const Color.fromRGBO(255, 255, 255, 0.8),
+                  ),
+                ),
+        ),
+      ),
+    );
     final mainChild = Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
@@ -117,58 +164,24 @@ class MainPage extends StatelessWidget {
               ),
             ),
 
-            Obx(
-              () {
-                final shouldHide = Dimensions.inst.shouldHideFABR;
-                return AnimatedPositioned(
-                  key: const Key('fab_active'),
-                  right: 12.0,
-                  bottom: fabBottomOffset.withMinimum(Dimensions.inst.globalBottomPaddingEffectiveR),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.fastEaseInToSlowEaseOut,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: shouldHide
-                        ? const SizedBox(key: Key('fab_dummy'))
-                        : FloatingActionButton(
-                            heroTag: 'main_page_fab_hero',
-                            tooltip: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? lang.CLEAR : settings.floatingActionButton.valueR.toText(),
-                            backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
-                            onPressed: () {
-                              final fab = settings.floatingActionButton.value;
-                              final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-                              if (fab == FABType.search || isMenuOpened) {
-                                final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
-                                if (isOpen && !isMenuOpened) {
-                                  SearchSortController.inst.prepareResources();
-                                  ScrollSearchController.inst.showSearchMenu();
-                                  ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
-                                } else {
-                                  isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
-                                  ScrollSearchController.inst.toggleSearchMenu();
-                                  ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
-                                }
-                              } else if (fab == FABType.shuffle || fab == FABType.play) {
-                                Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
-                              }
-                            },
-                            child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR
-                                ? Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      const Icon(
-                                        Broken.search_status_1,
-                                        color: Color.fromRGBO(255, 255, 255, 0.8),
-                                      ),
-                                      if (SearchSortController.inst.hasRunningSearch) searchProgressWidget,
-                                    ],
-                                  )
-                                : Icon(
-                                    settings.floatingActionButton.valueR.toIcon(),
-                                    color: const Color.fromRGBO(255, 255, 255, 0.8),
-                                  ),
-                          ),
-                  ),
+            Builder(
+              builder: (context) {
+                final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
+                return Obx(
+                  () {
+                    final shouldHide = Dimensions.inst.shouldHideFABR;
+                    return AnimatedPositioned(
+                      key: const Key('fab_active'),
+                      right: 12.0,
+                      bottom: fabBottomOffset.withMinimum(Dimensions.inst.globalBottomPaddingEffectiveR),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.fastEaseInToSlowEaseOut,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fab,
+                      ),
+                    );
+                  },
                 );
               },
             ),

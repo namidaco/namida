@@ -93,8 +93,8 @@ class PlaylistTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 2.0),
                     if (playlist.m3uPath != null) ...[
-                      Tooltip(
-                        message: "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                      NamidaTooltip(
+                        message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
                         child: const Icon(Broken.music_filter, size: 18.0),
                       ),
                       const SizedBox(width: 2.0),

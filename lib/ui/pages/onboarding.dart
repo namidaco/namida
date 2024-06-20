@@ -142,7 +142,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
               trailing: Column(
                 children: [
                   NamidaIconButton(
-                    tooltip: lang.RESTORE_BACKUP,
+                    tooltip: () => lang.RESTORE_BACKUP,
                     icon: Broken.back_square,
                     onPressed: _onRestoreBackupIconTap,
                   ),

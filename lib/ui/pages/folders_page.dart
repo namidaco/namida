@@ -69,7 +69,7 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                       final pathOfDefault = Folders.inst.isHome.valueR ? '' : Folders.inst.currentFolder.valueR?.path;
                                       return NamidaIconButton(
                                         horizontalPadding: 8.0,
-                                        tooltip: lang.SET_AS_DEFAULT,
+                                        tooltip: () => lang.SET_AS_DEFAULT,
                                         icon: settings.defaultFolderStartupLocation.valueR == pathOfDefault ? Broken.archive_tick : Broken.save_2,
                                         iconSize: 22.0,
                                         onPressed: () => settings.save(

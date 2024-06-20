@@ -81,12 +81,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                     ),
                   ),
                   const Spacer(),
-                  NamidaIconButton(
-                    tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
-                    icon: Broken.refresh,
-                    iconSize: 22.0,
-                    onPressed: () async {
-                      if (!ConnectivityController.inst.hasConnection) return;
+                        tooltip: isCurrentCommentsFromCache ? () => lang.CACHE : null,
                       sc.jumpTo(0);
                       await YoutubeController.inst.updateCurrentComments(
                         currentId ?? '',

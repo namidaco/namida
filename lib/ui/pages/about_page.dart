@@ -412,7 +412,7 @@ class _AboutPageState extends State<AboutPage> {
                   trailing: NamidaIconButton(
                     iconColor: context.defaultIconColor(),
                     icon: Broken.direct_send,
-                    tooltip: AppSocial.EMAIL,
+                    tooltip: () => AppSocial.EMAIL,
                     onPressed: () async {
                       final mailOptions = MailOptions(
                         body: 'pls look at this report im beggin u pls solve my issue pls i wa-',

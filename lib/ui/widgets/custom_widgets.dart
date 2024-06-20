@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener;
+import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -34,6 +34,7 @@ import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/custom_tooltip.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
@@ -503,7 +504,7 @@ class NamidaButton extends StatelessWidget {
   final Widget? textWidget;
 
   /// will be used if the icon only is sent.
-  final String tooltip;
+  final String Function()? tooltip;
   final void Function() onPressed;
   final bool minimumSize;
   final bool? enabled;
@@ -514,7 +515,7 @@ class NamidaButton extends StatelessWidget {
     this.iconSize,
     this.text,
     this.textWidget,
-    this.tooltip = '',
+    this.tooltip,
     required this.onPressed,
     this.minimumSize = false,
     this.enabled,
@@ -1430,7 +1431,7 @@ class NamidaIconButton extends StatefulWidget {
   final void Function()? onPressed;
   final void Function(LongPressStartDetails details)? onLongPressStart;
   final void Function()? onLongPressFinish;
-  final String? tooltip;
+  final String Function()? tooltip;
   final bool disableColor;
   final Widget? child;
 
@@ -1460,7 +1461,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: widget.tooltip ?? '',
+      message: widget.tooltip,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTapDown: (value) => setState(() => isPressed = true),
@@ -1492,7 +1493,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
 class NamidaAppBarIcon extends StatelessWidget {
   final IconData icon;
   final void Function()? onPressed;
-  final String? tooltip;
+  final String Function()? tooltip;
 
   const NamidaAppBarIcon({
     super.key,
@@ -2805,7 +2806,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaAppBarIcon(
       icon: Broken.calendar,
-      tooltip: lang.JUMP_TO_DAY,
+      tooltip: () => lang.JUMP_TO_DAY,
       onPressed: () {
         showCalendarDialog(
           historyController: controller,
@@ -2930,6 +2931,28 @@ class NamidaHero extends StatelessWidget {
             child: child,
           )
         : child;
+  }
+}
+
+class NamidaTooltip extends StatelessWidget {
+  final String Function()? message;
+  final bool? preferBelow;
+  final Widget child;
+
+  const NamidaTooltip({
+    super.key,
+    required this.message,
+    this.preferBelow,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: message,
+      preferBelow: preferBelow,
+      child: child,
+    );
   }
 }
 
@@ -3634,7 +3657,7 @@ class QueueUtilsRow extends StatelessWidget {
         SizedBox(width: context.width * 0.23),
         const SizedBox(width: 6.0),
         NamidaButton(
-          tooltip: lang.REMOVE_DUPLICATES,
+          tooltip: () => lang.REMOVE_DUPLICATES,
           icon: Broken.broom,
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
@@ -3647,7 +3670,7 @@ class QueueUtilsRow extends StatelessWidget {
         ),
         const SizedBox(width: 6.0),
         NamidaButton(
-          tooltip: lang.NEW_TRACKS_ADD,
+          tooltip: () => lang.NEW_TRACKS_ADD,
           icon: Broken.add_circle,
           onPressed: () => onAddItemsTap(),
         ),
@@ -3725,6 +3748,15 @@ class RepeatModeIconButton extends StatelessWidget {
     settings.player.save(repeatMode: e);
   }
 
+  String _buildTooltip() {
+    final repeat = settings.player.repeatMode.value;
+    String tooltip = repeat.toText();
+    if (repeat == RepeatMode.forNtimes) {
+      tooltip = tooltip.replaceFirst('_NUM_', '${Player.inst.numberOfRepeats.value}');
+    }
+    return tooltip;
+  }
+
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
@@ -3733,59 +3765,52 @@ class RepeatModeIconButton extends StatelessWidget {
       rx: settings.player.repeatMode,
       builder: (repeatMode) {
         final icon = repeatMode.toIcon();
-        String tooltip = repeatMode.toText();
 
-        return ObxO(
-          rx: Player.inst.numberOfRepeats,
-          builder: (numberOfRepeats) {
-            String? numberOfRepeatsText;
-            if (repeatMode == RepeatMode.forNtimes) {
-              numberOfRepeatsText = numberOfRepeats.toString();
-              tooltip = tooltip.replaceFirst('_NUM_', numberOfRepeatsText);
-            }
-
-            final child = Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 20.0,
-                  color: iconColor,
+        final child = Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20.0,
+              color: iconColor,
+            ),
+            if (repeatMode == RepeatMode.forNtimes)
+              ObxO(
+                rx: Player.inst.numberOfRepeats,
+                builder: (numberOfRepeats) => Text(
+                  '$numberOfRepeats',
+                  style: context.textTheme.displaySmall?.copyWith(color: iconColor),
                 ),
-                if (numberOfRepeatsText != null)
-                  Text(
-                    numberOfRepeatsText,
-                    style: context.textTheme.displaySmall?.copyWith(color: iconColor),
-                  ),
-              ],
-            );
-
-            return compact
-                ? NamidaIconButton(
-                    tooltip: tooltip,
-                    icon: null,
-                    horizontalPadding: 0.0,
-                    padding: EdgeInsets.zero,
-                    iconSize: 20.0,
-                    onPressed: () {
-                      onPressed?.call();
-                      _switchMode();
-                    },
-                    child: child,
-                  )
-                : IconButton(
-                    visualDensity: VisualDensity.compact,
-                    style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                    padding: const EdgeInsets.all(2.0),
-                    tooltip: tooltip,
-                    onPressed: () {
-                      onPressed?.call();
-                      _switchMode();
-                    },
-                    icon: child,
-                  );
-          },
+              ),
+          ],
         );
+
+        return compact
+            ? NamidaIconButton(
+                tooltip: _buildTooltip,
+                icon: null,
+                horizontalPadding: 0.0,
+                padding: EdgeInsets.zero,
+                iconSize: 20.0,
+                onPressed: () {
+                  onPressed?.call();
+                  _switchMode();
+                },
+                child: child,
+              )
+            : Tooltip(
+                message: _buildTooltip,
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                  padding: const EdgeInsets.all(2.0),
+                  onPressed: () {
+                    onPressed?.call();
+                    _switchMode();
+                  },
+                  icon: child,
+                ),
+              );
       },
     );
   }
@@ -3840,7 +3865,7 @@ class EqualizerIconButton extends StatelessWidget {
 
     return compact
         ? NamidaIconButton(
-            tooltip: tooltip,
+            tooltip: () => tooltip,
             icon: null,
             horizontalPadding: 0.0,
             padding: EdgeInsets.zero,

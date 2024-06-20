@@ -299,7 +299,7 @@ class IndexerSettings extends SettingSubpageProvider {
         children: [
           NamidaIconButton(
             icon: Broken.refresh_2,
-            tooltip: lang.REFRESH_LIBRARY,
+            tooltip: () => lang.REFRESH_LIBRARY,
             onPressed: () => showRefreshPromptDialog(false),
             child: const _RefreshLibraryIcon(widgetKey: refreshIconKey2),
           ),

@@ -308,8 +308,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           Positioned(
                                             bottom: 8.0,
                                             right: 8.0,
-                                            child: Tooltip(
-                                              message: "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                                            child: NamidaTooltip(
+                                              message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
                                               child: const Icon(Broken.music_filter, size: 18.0),
                                             ),
                                           ),

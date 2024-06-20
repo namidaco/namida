@@ -418,7 +418,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                   ),
                                   NamidaIconButton(
                                     horizontalPadding: 0.0,
-                                    tooltip: lang.COPY,
+                                    tooltip: () => lang.COPY,
                                     icon: Broken.copy,
                                     iconSize: 20.0,
                                     onPressed: () {

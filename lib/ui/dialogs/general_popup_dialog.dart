@@ -112,11 +112,11 @@ Future<void> showGeneralPopupDialog(
   bool shoulShowPlaylistUtils() => tracksWithDates.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
   bool shoulShowRemoveFromPlaylist() => tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
-  Widget bigIcon(IconData icon, String tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
+  Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return NamidaInkWell(
       onTap: onTap,
       borderRadius: 8.0,
-      child: Tooltip(
+      child: NamidaTooltip(
         message: tooltipMessage,
         preferBelow: false,
         child: Padding(
@@ -495,7 +495,7 @@ Future<void> showGeneralPopupDialog(
                   ObxO(
                     rx: shouldCleanUp,
                     builder: (cleanup) => NamidaIconButton(
-                      tooltip: cleanup ? lang.DISABLE_SEARCH_CLEANUP : lang.ENABLE_SEARCH_CLEANUP,
+                      tooltip: () => shouldCleanUp.value ? lang.DISABLE_SEARCH_CLEANUP : lang.ENABLE_SEARCH_CLEANUP,
                       icon: cleanup ? Broken.shield_cross : Broken.shield_search,
                       onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
                     ),
@@ -582,14 +582,14 @@ Future<void> showGeneralPopupDialog(
           child: Row(
             children: [
               const SizedBox(width: 24.0),
-              Expanded(child: bigIcon(Broken.smileys, lang.SET_MOODS, setPlaylistMoods)),
+              Expanded(child: bigIcon(Broken.smileys, () => lang.SET_MOODS, setPlaylistMoods)),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.edit_2, lang.RENAME_PLAYLIST, renamePlaylist)),
+              Expanded(child: bigIcon(Broken.edit_2, () => lang.RENAME_PLAYLIST, renamePlaylist)),
               const SizedBox(width: 8.0),
               Expanded(
                 child: bigIcon(
                   Broken.edit_2,
-                  lang.REMOVE_DUPLICATES,
+                  () => lang.REMOVE_DUPLICATES,
                   removePlaylistDuplicates,
                   iconWidget: const StackedIcon(
                     baseIcon: Broken.copy,
@@ -598,10 +598,10 @@ Future<void> showGeneralPopupDialog(
                 ),
               ),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.pen_remove, lang.DELETE_PLAYLIST, deletePlaylist)),
+              Expanded(child: bigIcon(Broken.pen_remove, () => lang.DELETE_PLAYLIST, deletePlaylist)),
               if (PlaylistController.inst.getPlaylist(playlistName ?? '')?.m3uPath == null) ...[
                 const SizedBox(width: 8.0),
-                Expanded(child: bigIcon(Broken.directbox_send, lang.EXPORT_AS_M3U, exportPlaylist)),
+                Expanded(child: bigIcon(Broken.directbox_send, () => lang.EXPORT_AS_M3U, exportPlaylist)),
               ],
               const SizedBox(width: 24.0),
             ],
@@ -1165,15 +1165,15 @@ Future<void> showGeneralPopupDialog(
                               Row(
                                 children: [
                                   const SizedBox(width: 24.0),
-                                  Expanded(child: bigIcon(Broken.smileys, lang.SET_MOODS, setTrackMoods)),
+                                  Expanded(child: bigIcon(Broken.smileys, () => lang.SET_MOODS, setTrackMoods)),
                                   const SizedBox(width: 8.0),
-                                  Expanded(child: bigIcon(Broken.ticket_discount, lang.SET_TAGS, setTrackTags)),
+                                  Expanded(child: bigIcon(Broken.ticket_discount, () => lang.SET_TAGS, setTrackTags)),
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: Obx(
                                       () => bigIcon(
                                         Broken.grammerly,
-                                        lang.SET_RATING,
+                                        () => lang.SET_RATING,
                                         setTrackRating,
                                         subtitle: stats == null || stats.valueR.rating == 0 ? '' : ' ${stats.valueR.rating}%',
                                       ),
@@ -1184,7 +1184,7 @@ Future<void> showGeneralPopupDialog(
                                     Expanded(
                                       child: bigIcon(
                                         Broken.edit_2,
-                                        lang.SET_YOUTUBE_LINK,
+                                        () => lang.SET_YOUTUBE_LINK,
                                         () => showSetYTLinkCommentDialog(tracks, colorDelightened),
                                         iconWidget: StackedIcon(
                                           baseIcon: Broken.edit_2,
@@ -1198,7 +1198,7 @@ Future<void> showGeneralPopupDialog(
                                     Expanded(
                                       child: bigIcon(
                                         Broken.login_1,
-                                        lang.OPEN_YOUTUBE_LINK,
+                                        () => lang.OPEN_YOUTUBE_LINK,
                                         openYoutubeLink,
                                       ),
                                     ),

@@ -862,7 +862,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NamidaIconButton(
-                    tooltip: lang.RESTORE_DEFAULTS,
+                    tooltip: () => lang.RESTORE_DEFAULTS,
                     icon: Broken.refresh,
                     iconSize: 20.0,
                     onPressed: () {

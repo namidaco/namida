@@ -237,13 +237,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                   NamidaIconButton(
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.shuffle,
-                                    tooltip: lang.SHUFFLE,
+                                    tooltip: () => lang.SHUFFLE,
                                     onPressed: () => Player.inst.playOrPause(0, playlist.tracks, QueueSource.others, shuffle: true),
                                   ),
                                   NamidaIconButton(
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.play_cricle,
-                                    tooltip: lang.PLAY_LAST,
+                                    tooltip: () => lang.PLAY_LAST,
                                     onPressed: () => Player.inst.addToQueue(playlist.tracks, insertNext: false),
                                   ),
                                   NamidaIconButton(
@@ -533,7 +533,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                               NamidaIconButton(
                                 iconColor: context.defaultIconColor(bgColor),
                                 icon: Broken.shuffle,
-                                tooltip: lang.SHUFFLE,
+                                tooltip: () => lang.SHUFFLE,
                                 onPressed: () async {
                                   final videos = await _getAllPlaylistVideos();
                                   Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
@@ -542,7 +542,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                               NamidaIconButton(
                                 iconColor: context.defaultIconColor(bgColor),
                                 icon: Broken.play_cricle,
-                                tooltip: lang.PLAY_LAST,
+                                tooltip: () => lang.PLAY_LAST,
                                 onPressed: () async {
                                   final videos = await _getAllPlaylistVideos();
                                   Player.inst.addToQueue(videos, insertNext: false);

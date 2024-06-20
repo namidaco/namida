@@ -201,7 +201,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                         ),
                         NamidaIconButton(
                           horizontalPadding: 0.0,
-                          tooltip: lang.TAP_TO_SEEK,
+                          tooltip: () => lang.TAP_TO_SEEK,
                           icon: null,
                           iconSize: 24.0,
                           onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
@@ -240,7 +240,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 const SizedBox(width: 4.0),
                                 NamidaIconButton(
                                   horizontalPadding: 0.0,
-                                  tooltip: lang.OPEN_APP,
+                                  tooltip: () => lang.OPEN_APP,
                                   icon: Broken.export_2,
                                   iconColor: context.defaultIconColor(),
                                   iconSize: 20.0,
@@ -442,7 +442,7 @@ class _SliderTextWidget extends StatelessWidget {
           if (restoreDefault != null)
             NamidaIconButton(
               horizontalPadding: 8.0,
-              tooltip: lang.RESTORE_DEFAULTS,
+              tooltip: () => lang.RESTORE_DEFAULTS,
               icon: Broken.refresh,
               iconSize: 20.0,
               onPressed: restoreDefault,

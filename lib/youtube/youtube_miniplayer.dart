@@ -710,7 +710,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             const Spacer(),
                                                             NamidaIconButton(
                                                               horizontalPadding: 0.0,
-                                                              tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
+                                                                          tooltip: commFromCache ? () => lang.CACHE : null,
                                                               icon: Broken.refresh,
                                                               iconSize: 22.0,
                                                               onPressed: () async => await YoutubeController.inst.updateCurrentComments(
@@ -837,7 +837,7 @@ class _YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   const Spacer(),
                                                   NamidaIconButton(
                                                     // key: Key(currentId),
-                                                    tooltip: YoutubeController.inst.isCurrentCommentsFromCache ? lang.CACHE : null,
+                                                                  tooltip: commFromCache ? () => lang.CACHE : null,
                                                     icon: Broken.refresh,
                                                     iconSize: 22.0,
                                                     onPressed: () async => await YoutubeController.inst.updateCurrentComments(

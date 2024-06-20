@@ -288,7 +288,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       NamidaIconButton(
-                        tooltip: lang.INVERT_SELECTION,
+                        tooltip: () => lang.INVERT_SELECTION,
                         icon: Broken.recovery_convert,
                         onPressed: () {
                           widget.ids.loop((e) {

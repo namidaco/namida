@@ -315,7 +315,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 duration: const Duration(milliseconds: 300),
                                 opacity: youtubeAvailable ? 1.0 : 0.6,
                                 child: NamidaIconButton(
-                                  tooltip: lang.YOUTUBE,
+                                  tooltip: () => lang.YOUTUBE,
                                   horizontalPadding: 0.0,
                                   icon: null,
                                   onPressed: () {

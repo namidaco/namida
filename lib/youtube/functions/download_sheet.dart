@@ -232,7 +232,7 @@ Future<void> showDownloadVideoBottomSheet({
           ],
           const Spacer(),
           NamidaIconButton(
-            tooltip: lang.SHOW_WEBM,
+            tooltip: () => lang.SHOW_WEBM,
             horizontalPadding: 0.0,
             iconSize: 20.0,
             icon: Broken.video_octagon,

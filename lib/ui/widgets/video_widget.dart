@@ -768,7 +768,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               child: brigthnessDim < 1.0
                                   ? NamidaIconButton(
                                       key: const Key('brightnesseto_ok'),
-                                      tooltip: lang.RESET_BRIGHTNESS,
+                                      tooltip: () => lang.RESET_BRIGHTNESS,
                                       icon: Broken.sun_1,
                                       iconColor: itemsColor.withOpacity(0.8),
                                       horizontalPadding: 0.0,

@@ -1418,7 +1418,7 @@ class TracksAddOnTap {
         trailingWidgets: [
           NamidaIconButton(
             icon: Broken.setting_3,
-            tooltip: lang.CONFIGURE,
+            tooltip: () => lang.CONFIGURE,
             onPressed: shouldShowConfigureIcon.toggle,
           ),
         ],

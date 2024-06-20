@@ -175,7 +175,7 @@ Future<void> showTrackInfoDialog(
               ObxO(
                 rx: settings.showUnknownFieldsInTrackInfoDialog,
                 builder: (showUnknownFieldsInTrackInfoDialog) => NamidaIconButton(
-                  tooltip: lang.SHOW_HIDE_UNKNOWN_FIELDS,
+                  tooltip: () => lang.SHOW_HIDE_UNKNOWN_FIELDS,
                   icon: showUnknownFieldsInTrackInfoDialog ? Broken.eye : Broken.eye_slash,
                   iconColor: theme.colorScheme.primary,
                   onPressed: () => settings.save(showUnknownFieldsInTrackInfoDialog: !settings.showUnknownFieldsInTrackInfoDialog.value),
@@ -187,7 +187,7 @@ Future<void> showTrackInfoDialog(
                 color: theme.colorScheme.primary,
               ),
               NamidaIconButton(
-                tooltip: lang.PREVIEW,
+                tooltip: () => lang.PREVIEW,
                 icon: Broken.play,
                 iconColor: theme.colorScheme.primary,
                 onPressed: showPreviewTrackDialog,
