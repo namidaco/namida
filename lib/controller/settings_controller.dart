@@ -373,7 +373,11 @@ class SettingsController with SettingsFileWriter {
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
       autoBackupIntervalDays.value = json['autoBackupIntervalDays'] ?? autoBackupIntervalDays.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
-      ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
+
+      String ytDownloadLocationInStorage = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
+      if (!ytDownloadLocationInStorage.endsWith('/')) ytDownloadLocationInStorage += '/';
+      ytDownloadLocation.value = ytDownloadLocationInStorage;
+
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
@@ -934,7 +938,10 @@ class SettingsController with SettingsFileWriter {
     if (defaultBackupLocation != null) this.defaultBackupLocation.value = defaultBackupLocation;
     if (autoBackupIntervalDays != null) this.autoBackupIntervalDays.value = autoBackupIntervalDays;
     if (defaultFolderStartupLocation != null) this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
-    if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
+    if (ytDownloadLocation != null) {
+      if (!ytDownloadLocation.endsWith('/')) ytDownloadLocation += '/';
+      this.ytDownloadLocation.value = ytDownloadLocation;
+    }
     if (enableFoldersHierarchy != null) this.enableFoldersHierarchy.value = enableFoldersHierarchy;
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
