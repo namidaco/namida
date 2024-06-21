@@ -379,7 +379,7 @@ class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     return AlbumsPage(
-      albumIdentifiers: SearchSortController.inst.albumSearchTemp.value,
+      albumIdentifiers: SearchSortController.inst.albumSearchTemp,
       countPerRow: settings.albumGridCount.value,
     );
   }
@@ -389,7 +389,7 @@ class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SEARCH_artistResults;
 
-  final List<String> artists;
+  final RxList<String> artists;
   final MediaType type;
   const ArtistSearchResultsPage({super.key, required this.artists, required this.type});
 

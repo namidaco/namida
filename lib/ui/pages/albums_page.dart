@@ -22,7 +22,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_albums;
 
-  final List<String>? albumIdentifiers;
+  final RxList<String>? albumIdentifiers;
   final int countPerRow;
   final bool animateTiles;
   final bool enableHero;
@@ -39,7 +39,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalAlbums = albumIdentifiers ?? SearchSortController.inst.albumSearchList.value;
     final scrollController = LibraryTab.albums.scrollController;
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
 
@@ -47,109 +46,112 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
       child: NamidaScrollbar(
         controller: scrollController,
         child: AnimationLimiter(
-          child: Column(
-            children: [
-              Obx(
-                () => ExpandableBox(
-                  enableHero: enableHero,
-                  gridWidget: ChangeGridCountWidget(
-                    currentCount: countPerRow,
-                    forStaggered: settings.useAlbumStaggeredGridView.valueR,
-                    onTap: () {
-                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
-                      settings.save(albumGridCount: newCount);
-                    },
-                  ),
-                  isBarVisible: LibraryTab.albums.isBarVisible.valueR,
-                  showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
-                  leftText: finalAlbums.length.displayAlbumKeyword,
-                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
-                  sortByMenuWidget: SortByMenu(
-                    title: settings.albumSort.valueR.toText(),
-                    popupMenuChild: () => const SortByMenuAlbums(),
-                    isCurrentlyReversed: settings.albumSortReversed.valueR,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
-                  ),
-                  textField: () => CustomTextFiled(
-                    textFieldController: LibraryTab.albums.textSearchController,
-                    textFieldHintText: lang.FILTER_ALBUMS,
-                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
+          child: ObxO(
+            rx: albumIdentifiers ?? SearchSortController.inst.albumSearchList,
+            builder: (finalAlbums) => Column(
+              children: [
+                Obx(
+                  () => ExpandableBox(
+                    enableHero: enableHero,
+                    gridWidget: ChangeGridCountWidget(
+                      currentCount: countPerRow,
+                      forStaggered: settings.useAlbumStaggeredGridView.valueR,
+                      onTap: () {
+                        final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
+                        settings.save(albumGridCount: newCount);
+                      },
+                    ),
+                    isBarVisible: LibraryTab.albums.isBarVisible.valueR,
+                    showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
+                    leftText: finalAlbums.length.displayAlbumKeyword,
+                    onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
+                    onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
+                    sortByMenuWidget: SortByMenu(
+                      title: settings.albumSort.valueR.toText(),
+                      popupMenuChild: () => const SortByMenuAlbums(),
+                      isCurrentlyReversed: settings.albumSortReversed.valueR,
+                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
+                    ),
+                    textField: () => CustomTextFiled(
+                      textFieldController: LibraryTab.albums.textSearchController,
+                      textFieldHintText: lang.FILTER_ALBUMS,
+                      onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
+                    ),
                   ),
                 ),
-              ),
-              Obx(
-                () {
-                  settings.albumListTileHeight.valueR;
-                  return countPerRow == 1
-                      ? Expanded(
-                          child: ListView.builder(
-                            controller: scrollController,
-                            itemCount: finalAlbums.length,
-                            itemExtent: settings.albumListTileHeight.valueR + 4.0 * 5,
-                            padding: kBottomPaddingInsets,
-                            itemBuilder: (BuildContext context, int i) {
-                              final albumId = finalAlbums[i];
-                              return AnimatingTile(
-                                position: i,
-                                shouldAnimate: _shouldAnimate,
-                                child: AlbumTile(
-                                  identifier: albumId,
-                                  album: albumId.getAlbumTracks(),
+                Obx(
+                  () {
+                    settings.albumListTileHeight.valueR;
+                    return countPerRow == 1
+                        ? Expanded(
+                            child: ListView.builder(
+                              controller: scrollController,
+                              itemCount: finalAlbums.length,
+                              itemExtent: settings.albumListTileHeight.valueR + 4.0 * 5,
+                              padding: kBottomPaddingInsets,
+                              itemBuilder: (BuildContext context, int i) {
+                                final albumId = finalAlbums[i];
+                                return AnimatingTile(
+                                  position: i,
+                                  shouldAnimate: _shouldAnimate,
+                                  child: AlbumTile(
+                                    identifier: albumId,
+                                    album: albumId.getAlbumTracks(),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : settings.useAlbumStaggeredGridView.valueR
+                            ? Expanded(
+                                child: MasonryGridView.builder(
+                                  controller: scrollController,
+                                  padding: kBottomPaddingInsets,
+                                  itemCount: finalAlbums.length,
+                                  mainAxisSpacing: 8.0,
+                                  gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
+                                  itemBuilder: (context, i) {
+                                    final albumId = finalAlbums[i];
+                                    return AnimatingGrid(
+                                      columnCount: finalAlbums.length,
+                                      position: i,
+                                      shouldAnimate: _shouldAnimate,
+                                      child: AlbumCard(
+                                        dimensions: albumDimensions,
+                                        identifier: albumId,
+                                        album: albumId.getAlbumTracks(),
+                                        staggered: true,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Expanded(
+                                child: GridView.builder(
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
+                                  controller: scrollController,
+                                  itemCount: finalAlbums.length,
+                                  padding: kBottomPaddingInsets,
+                                  itemBuilder: (BuildContext context, int i) {
+                                    final albumId = finalAlbums[i];
+                                    return AnimatingGrid(
+                                      columnCount: finalAlbums.length,
+                                      position: i,
+                                      shouldAnimate: _shouldAnimate,
+                                      child: AlbumCard(
+                                        dimensions: albumDimensions,
+                                        identifier: albumId,
+                                        album: albumId.getAlbumTracks(),
+                                        staggered: false,
+                                      ),
+                                    );
+                                  },
                                 ),
                               );
-                            },
-                          ),
-                        )
-                      : settings.useAlbumStaggeredGridView.valueR
-                          ? Expanded(
-                              child: MasonryGridView.builder(
-                                controller: scrollController,
-                                padding: kBottomPaddingInsets,
-                                itemCount: finalAlbums.length,
-                                mainAxisSpacing: 8.0,
-                                gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
-                                itemBuilder: (context, i) {
-                                  final albumId = finalAlbums[i];
-                                  return AnimatingGrid(
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    shouldAnimate: _shouldAnimate,
-                                    child: AlbumCard(
-                                      dimensions: albumDimensions,
-                                      identifier: albumId,
-                                      album: albumId.getAlbumTracks(),
-                                      staggered: true,
-                                    ),
-                                  );
-                                },
-                              ),
-                            )
-                          : Expanded(
-                              child: GridView.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
-                                controller: scrollController,
-                                itemCount: finalAlbums.length,
-                                padding: kBottomPaddingInsets,
-                                itemBuilder: (BuildContext context, int i) {
-                                  final albumId = finalAlbums[i];
-                                  return AnimatingGrid(
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    shouldAnimate: _shouldAnimate,
-                                    child: AlbumCard(
-                                      dimensions: albumDimensions,
-                                      identifier: albumId,
-                                      album: albumId.getAlbumTracks(),
-                                      staggered: false,
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

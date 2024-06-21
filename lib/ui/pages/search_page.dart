@@ -56,13 +56,15 @@ class SearchPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _getArtistSection(
-      {required String title,
-      required IconData icon,
-      required List<String> list,
-      required MediaType type,
-      required List<Track> Function(String item) getTracks,
-      required (double, double, double) dimensions}) {
+  List<Widget> _getArtistSection({
+    required String title,
+    required IconData icon,
+    required List<String> list,
+    required RxList<String> Function() rxList,
+    required MediaType type,
+    required List<Track> Function(String item) getTracks,
+    required (double, double, double) dimensions,
+  }) {
     return [
       SliverToBoxAdapter(
         child: SearchPageTitleRow(
@@ -72,7 +74,7 @@ class SearchPage extends StatelessWidget {
           buttonText: lang.VIEW_ALL,
           onPressed: () => NamidaNavigator.inst.navigateTo(
             ArtistSearchResultsPage(
-              artists: list,
+              artists: rxList(),
               type: type,
             ),
           ),
@@ -281,6 +283,7 @@ class SearchPage extends StatelessWidget {
                                           title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
                                           icon: Broken.user,
                                           list: artistSearchTemp,
+                                          rxList: () => SearchSortController.inst.artistSearchTemp,
                                           type: MediaType.artist,
                                           getTracks: (item) => item.getArtistTracks(),
                                           dimensions: artistDimensions,
@@ -292,6 +295,7 @@ class SearchPage extends StatelessWidget {
                                           title: '${lang.ALBUM_ARTISTS} • ${albumArtistSearchTemp.length}',
                                           icon: Broken.user,
                                           list: albumArtistSearchTemp,
+                                          rxList: () => SearchSortController.inst.albumArtistSearchTemp,
                                           type: MediaType.albumArtist,
                                           getTracks: (item) => item.getAlbumArtistTracks(),
                                           dimensions: artistDimensions,
@@ -303,6 +307,7 @@ class SearchPage extends StatelessWidget {
                                           title: '${lang.COMPOSER} • ${composerSearchTemp.length}',
                                           icon: Broken.profile_2user,
                                           list: composerSearchTemp,
+                                          rxList: () => SearchSortController.inst.composerSearchTemp,
                                           type: MediaType.composer,
                                           getTracks: (item) => item.getComposerTracks(),
                                           dimensions: artistDimensions,
