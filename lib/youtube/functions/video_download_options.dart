@@ -259,7 +259,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     int rootFiles = 0;
     for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).listSyncSafe()) {
       if (d is Directory) {
-        availableDirectoriesNames[d.path.split(Platform.pathSeparator).last] = Directory(d.path).listSyncSafe().length;
+        availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = Directory(d.path).listSyncSafe().length;
       } else {
         rootFiles++;
       }

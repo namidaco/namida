@@ -954,7 +954,7 @@ class JsonToHistoryParser {
               config: artistsSplitConfig,
             );
             final matchingArtist = artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(artistsList.first.cleanUpForComparison);
-            final matchingTitle = pieces[2].cleanUpForComparison.contains(title.split('(').first.split('[').first.cleanUpForComparison);
+            final matchingTitle = pieces[2].cleanUpForComparison.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
             return matchingArtist && matchingTitle;
           },
         );

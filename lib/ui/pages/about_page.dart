@@ -95,7 +95,7 @@ class _AboutPageState extends State<AboutPage> {
     const textTopPadding = 28.0 * 2;
     final version = _prettyVersion(NamidaDeviceInfo.version) ?? '';
     final buildDateDiff = _getDateDifferenceText();
-    final latestVersion = _prettyVersion(_latestCheckedVersion)?.split('+').first;
+    final latestVersion = _prettyVersion(_latestCheckedVersion)?.splitFirst('+');
     final isBeta = version.endsWith('beta');
 
     final fallbackAvatar = SizedBox(

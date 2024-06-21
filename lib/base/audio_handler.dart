@@ -1226,7 +1226,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final languagesAndBitrate = filenamewe.substring(12, filenamewe.length - 1).split('_');
     final languageCode = languagesAndBitrate.length >= 2 ? languagesAndBitrate[0] : null;
     final languageName = languagesAndBitrate.length >= 3 ? languagesAndBitrate[1] : null;
-    final bitrateText = filenamewe.split('_').last;
+    final bitrateText = filenamewe.splitLast('_');
     return AudioCacheDetails(
       file: file,
       bitrate: int.tryParse(bitrateText),

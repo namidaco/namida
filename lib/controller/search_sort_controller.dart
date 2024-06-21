@@ -965,7 +965,7 @@ class SearchSortController {
           while (pathN.isNotEmpty && pathN[pathN.length - 1] == Platform.pathSeparator) {
             pathN = pathN.substring(0, pathN.length);
           }
-          if (cleanupFunction(pathN.split(Platform.pathSeparator).last).contains(cleanupFunction(text))) {
+          if (cleanupFunction(pathN.splitLast(Platform.pathSeparator)).contains(cleanupFunction(text))) {
             results.add(pathN);
           }
         });

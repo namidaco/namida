@@ -43,9 +43,9 @@ class ThumbnailManager {
     String? finalUrl = url;
     final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
     if (imageUrl != null && imageUrl.length > 1) {
-      finalUrl = imageUrl.last.split('?').first.replaceAll('/', '_');
+      finalUrl = imageUrl.last.splitFirst('?').replaceAll('/', '_');
     } else {
-      if (finalUrl != null) finalUrl = '${finalUrl.split('/').last.split('=').first}.png';
+      if (finalUrl != null) finalUrl = '${finalUrl.splitLast('/').splitFirst('=')}.png';
     }
 
     final dirPrefix = isTemp ? 'temp/' : '';

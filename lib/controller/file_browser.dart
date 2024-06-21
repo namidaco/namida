@@ -622,7 +622,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
     if (excludeHidden && extensions.isNotEmpty) {
       items.loop((e) {
-        final filename = e.path.split(_pathSeparator).last;
+        final filename = e.path.splitLast(_pathSeparator);
         if (e is Directory) {
           if (!filename.startsWith('.')) onAdd(e);
         } else {
@@ -631,13 +631,13 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       });
     } else if (excludeHidden) {
       items.loop((e) {
-        final fileorDirName = e.path.split(_pathSeparator).last;
+        final fileorDirName = e.path.splitLast(_pathSeparator);
         if (!fileorDirName.startsWith('.')) onAdd(e);
       });
     } else if (extensions.isNotEmpty) {
       items.loop((e) {
         if (e is File) {
-          final filename = e.path.split(_pathSeparator).last;
+          final filename = e.path.splitLast(_pathSeparator);
           if (extensions.any((ext) => filename.endsWith(ext))) onAdd(e);
         } else {
           onAdd(e);

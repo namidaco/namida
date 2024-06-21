@@ -135,7 +135,7 @@ class YoutubeImportController {
 
     _YTPlaylistDetails getPlaylistDetailsNew(List<String> header, List<String> split) {
       final map = <String, String>{};
-      header.loopAdv((part, index) => map[part.toLowerCase().split('playlist').last.split('(').first] ??= split[index]);
+      header.loopAdv((part, index) => map[part.toLowerCase().splitLast('playlist').splitFirst('(')] ??= split[index]);
       return (
         playlistID: map['playlist id'] ?? '',
         channelID: map['channel id'] ?? '',

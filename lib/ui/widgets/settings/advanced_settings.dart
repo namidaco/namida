@@ -683,7 +683,14 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                             active: dirsChoosen.contains(e),
                             dense: true,
                             icon: Broken.cpu_setting,
-                            title: e.split(Platform.pathSeparator).lastWhereEff((e) => e != '') ?? e,
+                            title: e.splitLastM(
+                                  Platform.pathSeparator,
+                                  onMatch: (part) {
+                                    if (part.isNotEmpty) return part;
+                                    return null;
+                                  },
+                                ) ??
+                                e,
                             subtitle: subtitle,
                             onTap: () => dirsChoosen.addOrRemove(e),
                           ),

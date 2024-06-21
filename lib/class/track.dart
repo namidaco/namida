@@ -334,7 +334,7 @@ extension TrackExtUtils on TrackExtended {
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
-  String get folderName => folderPath.split(Platform.pathSeparator).last;
+  String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
     return "${AppDirs.ARTWORKS}$identifier.png";
@@ -510,7 +510,7 @@ extension TrackUtils on Track {
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
   Folder get folder => Folder(folderPath);
-  String get folderName => folderPath.split(Platform.pathSeparator).last;
+  String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
     return "${AppDirs.ARTWORKS}$identifier.png";

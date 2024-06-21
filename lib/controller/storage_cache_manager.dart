@@ -423,7 +423,7 @@ class _VideoTrimmer {
     final filesMap = <File, int>{};
     void checkFile(FileSystemEntity e) {
       if (e is File) {
-        final filename = e.path.split(Platform.pathSeparator).last;
+        final filename = e.path.splitLast(Platform.pathSeparator);
         if (filename.startsWith(id)) {
           filesMap[e] = e.statSync().size;
         }
@@ -513,7 +513,7 @@ class _AudioTrimmer {
     Directory(dirPath).listSyncSafe().loop((e) {
       if (e.path.endsWith('.part')) {
         if (e is File) {
-          final filename = e.path.split(Platform.pathSeparator).last;
+          final filename = e.path.splitLast(Platform.pathSeparator);
           if (filename.startsWith(id)) {
             filesMap[e] = e.statSync().size;
           }

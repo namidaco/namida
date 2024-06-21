@@ -14,11 +14,11 @@ class YoutubeSubscriptionsController {
 
   YoutubeSubscription? getChannel(String channelId) => _availableChannels[channelId];
   void setChannel(String channelId, YoutubeSubscription channel) => _availableChannels[channelId] = channel;
-  String? idOrUrlToChannelID(String? idOrURL) => idOrURL?.split('/').last;
+  String? idOrUrlToChannelID(String? idOrURL) => idOrURL?.splitLast('/');
 
   /// Updates a channel subscription status, use null to toggle.
   Future<void> changeChannelStatus(String channelIDOrURL, {bool? subscribe}) async {
-    final channelID = channelIDOrURL.split('/').last;
+    final channelID = channelIDOrURL.splitLast('/');
     final valInMap = _availableChannels[channelID];
     final newSubscribed = subscribe ?? !(valInMap?.subscribed ?? false);
     _availableChannels[channelID] = YoutubeSubscription(

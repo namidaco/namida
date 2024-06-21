@@ -1044,8 +1044,8 @@ class Indexer {
     final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : UnknownTags.ARTIST;
 
     // TODO: split by ( and ) too, but retain Remixes and feat.
-    final cleanedUpTitle = title.split('[').first.trimAll();
-    final cleanedUpArtist = artist.split(']').last.trimAll();
+    final cleanedUpTitle = title.splitFirst('[').trimAll();
+    final cleanedUpArtist = artist.splitLast(']').trimAll();
 
     return (cleanedUpTitle, cleanedUpArtist);
   }

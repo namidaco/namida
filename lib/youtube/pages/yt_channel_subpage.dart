@@ -43,7 +43,7 @@ class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
 class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> {
   late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.getChannel(widget.channelID) ??
       YoutubeSubscription(
-        channelID: widget.channelID.split('/').last,
+        channelID: widget.channelID.splitLast('/'),
         subscribed: false,
       );
 

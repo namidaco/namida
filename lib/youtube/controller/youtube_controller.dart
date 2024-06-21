@@ -515,8 +515,8 @@ class YoutubeController {
     VideoStream? plsLoop(bool webm) {
       for (int i = 0; i < streams.length; i++) {
         final q = streams[i];
-        final webmCondition = webm ? true : q.formatSuffix != 'webm';
-        if (webmCondition && preferredQualities.contains(q.resolution?.split('p').first)) {
+        final webmCondition = webm ? true : !q.isWebm;
+        if (webmCondition && preferredQualities.contains(q.qualityLabel.splitFirst('p'))) {
           return q;
         }
       }
@@ -809,7 +809,7 @@ class YoutubeController {
   Future<void> loadDownloadTasksInfoFile() async {
     await for (final f in Directory(AppDirs.YT_DOWNLOAD_TASKS).list()) {
       if (f is File) {
-        final groupName = f.path.getFilename.split('.').first;
+        final groupName = f.path.getFilename.splitFirst('.');
         final res = await f.readAsJson() as Map<String, dynamic>?;
         if (res != null) {
           final fileModified = f.statSync().modified;
@@ -1276,7 +1276,7 @@ class YoutubeController {
   }) async {
     if (id == '') return null;
 
-    if (filename.split('.').last != fileExtension) filename = "$filename.$fileExtension";
+    if (filename.splitLast('.') != fileExtension) filename = "$filename.$fileExtension";
 
     final filenameClean = cleanupFilename(filename);
     if (filenameClean != filename) {

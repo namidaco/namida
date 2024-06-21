@@ -22,9 +22,9 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
         final l = Indexer.getTitleAndArtistFromFilename(trackFilename);
         final trackTitle = l.$1;
         final trackArtist = l.$2;
-        final matching1 = fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison);
-        final matching2 = fileSystemFilenameCleaned.contains(trackTitle.split('(').first) && fileSystemFilenameCleaned.contains(trackArtist);
-        return matching1 || matching2;
+        if (fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison)) return true;
+        if (fileSystemFilenameCleaned.contains(trackTitle.splitFirst('(')) && fileSystemFilenameCleaned.contains(trackArtist)) return true;
+        return false;
       },
     );
   }

@@ -11,6 +11,7 @@ import 'package:namida/class/lang.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/extensions.dart';
 
 class NamidaDeviceInfo {
   static int sdkVersion = 21;
@@ -112,7 +113,7 @@ class NamidaLinkUtils {
       try {
         if (match.groupCount == 3) {
           dur = Duration(
-            hours: int.parse(match[1]!.split(':').first),
+            hours: int.parse(match[1]!.splitFirst(':')),
             minutes: int.parse(match[2]!),
             seconds: int.parse(match[3]!),
           );

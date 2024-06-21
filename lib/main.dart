@@ -412,7 +412,7 @@ Future<void> setJiffyLocale(String code) async {
     await Jiffy.setLocale(code);
   } catch (e) {
     try {
-      await Jiffy.setLocale(code.split('_').first);
+      await Jiffy.setLocale(code.splitFirst('_'));
     } catch (_) {}
   }
 }
