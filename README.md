@@ -201,6 +201,7 @@ Animating Thumbnail        |  Recommends & Listens
 >   <br>
 
 > ### © Logo by @midjourney
+> ###### thanks [@sujxl24](https://github.com/sujxl24) for the monet version
 
 # Contribute
 - You can help translating Namida to your language on [translation repo](https://github.com/namidaco/namida-translations)
