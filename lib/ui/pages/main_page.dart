@@ -20,7 +20,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/main.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
@@ -65,7 +64,7 @@ class MainPage extends StatelessWidget {
       color: searchProgressColor,
     );
 
-    final fab = NamidaTooltip(
+    final fabChild = NamidaTooltip(
       message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
       child: FloatingActionButton(
         heroTag: 'main_page_fab_hero',
@@ -178,7 +177,7 @@ class MainPage extends StatelessWidget {
                       curve: Curves.fastEaseInToSlowEaseOut,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 400),
-                        child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fab,
+                        child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
                       ),
                     );
                   },

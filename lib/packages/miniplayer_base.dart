@@ -69,7 +69,10 @@ class MiniplayerTextData {
   final IconData likedIcon;
   final IconData normalIcon;
 
-  const MiniplayerTextData({
+  late final bool firstLineGood;
+  late final bool secondLineGood;
+
+  MiniplayerTextData({
     required this.firstLine,
     required this.secondLine,
     required this.isLiked,
@@ -77,7 +80,8 @@ class MiniplayerTextData {
     required this.onMenuOpen,
     required this.likedIcon,
     required this.normalIcon,
-  });
+  })  : firstLineGood = firstLine.isNotEmpty,
+        secondLineGood = secondLine.isNotEmpty;
 }
 
 class NamidaMiniPlayerBase<E> extends StatefulWidget {
@@ -1277,18 +1281,17 @@ class _TrackInfo extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (textData.firstLine != '')
+                                    if (textData.firstLineGood)
                                       Text(
                                         textData.firstLine,
                                         maxLines: textData.secondLine == '' ? 2 : 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: context.textTheme.displayMedium?.copyWith(
                                           fontSize: velpy(a: 14.5, b: 20.0, c: p),
-                                          height: 1,
                                         ),
                                       ),
-                                    if (textData.firstLine != '' && textData.secondLine != '') const SizedBox(height: 4.0),
-                                    if (textData.secondLine != '')
+                                    if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
+                                    if (textData.secondLineGood)
                                       Text(
                                         textData.secondLine,
                                         maxLines: 1,

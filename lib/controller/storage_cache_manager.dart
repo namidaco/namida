@@ -17,8 +17,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum _CacheSorting { size, listenCount, accessTime }
 
@@ -242,8 +242,9 @@ class StorageCacheManager {
               const SizedBox(height: 12.0),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Obx(
-                  () => Row(
+                child: ObxO(
+                  rx: currentSort,
+                  builder: (currentSort) => Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       const SizedBox(width: 24.0),
@@ -251,21 +252,21 @@ class StorageCacheManager {
                         sort: _CacheSorting.size,
                         title: lang.SIZE,
                         icon: Broken.size,
-                        enabled: (sort) => sort == currentSort.value,
+                        enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
                         sort: _CacheSorting.accessTime,
                         title: lang.OLDEST_WATCH,
                         icon: Broken.sort,
-                        enabled: (sort) => sort == currentSort.value,
+                        enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
                         sort: _CacheSorting.listenCount,
                         title: lang.TOTAL_LISTENS,
                         icon: Broken.math,
-                        enabled: (sort) => sort == currentSort.value,
+                        enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 24.0),
                     ],
@@ -279,11 +280,11 @@ class StorageCacheManager {
                     () => ListView.builder(
                       controller: sc,
                       padding: EdgeInsets.zero,
-                      itemCount: allFiles.length,
+                      itemCount: allFiles.valueR.length,
                       itemBuilder: (context, index) {
-                        final item = allFiles[index];
+                        final item = allFiles.value[index];
                         final id = itemToYtId(item);
-                        final title = id == null ? null : YoutubeController.inst.getVideoName(id);
+                        final title = id == null ? null : YoutubeInfoController.utils.getVideoName(id);
                         final listens = getTotalListensForIDLength(id);
                         final itemSize = sizesMap[itemToPath(item)] ?? 0;
                         return NamidaInkWell(
@@ -342,13 +343,14 @@ class StorageCacheManager {
                                 child: SizedBox(
                                   height: 16.0,
                                   width: 16.0,
-                                  child: Obx(
-                                    () => CheckMark(
+                                  child: ObxO(
+                                    rx: itemsToDelete,
+                                    builder: (toDelete) => CheckMark(
                                       strokeWidth: 2,
                                       activeColor: context.theme.listTileTheme.iconColor!,
                                       inactiveColor: context.theme.listTileTheme.iconColor!,
                                       duration: const Duration(milliseconds: 400),
-                                      active: itemsToDelete.contains(item),
+                                      active: toDelete.contains(item),
                                     ),
                                   ),
                                 ),

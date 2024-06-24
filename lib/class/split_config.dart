@@ -95,16 +95,17 @@ class SplitDelimiter {
     if (blacklist.isNotEmpty) {
       blacklist.loop((b) {
         final withoutBL = text.split(b);
-        withoutBL.loop((s) => filteredString += s.trim());
-        if (withoutBL.length > 1) listToAddLater.add(b);
+        if (withoutBL.length > 1) {
+          withoutBL.loop((s) => filteredString += s.trim());
+          listToAddLater.add(b);
+        }
       });
-    } else {
-      filteredString = text;
     }
+    if (filteredString == '') filteredString = text;
 
     final splitted = filteredString.split(_regex).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     splitted.addAll(listToAddLater);
-    if (splitted.length > 1) splitted.sortBy((e) => text.indexOf(e));
+    if (splitted.length > 1) splitted.sort((a, b) => text.indexOf(a).compareTo(text.indexOf(b)));
     return splitted;
   }
 }

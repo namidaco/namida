@@ -253,7 +253,6 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
   Completer<List<LyricsModel>>? _completer;
 
-  /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
   Future<List<LyricsModel>> search({
     required List<LRCSearchDetails> queries,
     String? customQuery,

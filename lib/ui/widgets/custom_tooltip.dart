@@ -768,6 +768,7 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
 
     final TooltipThemeData tooltipTheme = _tooltipTheme;
     final _TooltipOverlay overlayChild = _TooltipOverlay(
+      excludeFromSemantics: widget.excludeFromSemantics ?? _tooltipTheme.excludeFromSemantics ?? _defaultExcludeFromSemantics,
       richMessage: widget.richMessage?.call() ?? TextSpan(text: widget.message?.call()),
       height: widget.height ?? tooltipTheme.height ?? _getDefaultTooltipHeight(),
       padding: widget.padding ?? tooltipTheme.padding ?? _getDefaultPadding(),
@@ -783,11 +784,7 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
       preferBelow: widget.preferBelow ?? tooltipTheme.preferBelow ?? _defaultPreferBelow,
     );
 
-    final bool excludeFromSemantics = widget.excludeFromSemantics ?? _tooltipTheme.excludeFromSemantics ?? _defaultExcludeFromSemantics;
-    return Semantics(
-      tooltip: excludeFromSemantics ? null : _buildTooltipMessage(),
-      child: SelectionContainer.maybeOf(context) == null ? overlayChild : SelectionContainer.disabled(child: overlayChild),
-    );
+    return SelectionContainer.maybeOf(context) == null ? overlayChild : SelectionContainer.disabled(child: overlayChild);
   }
 
   @override
@@ -887,6 +884,7 @@ class _TooltipOverlay extends StatelessWidget {
   const _TooltipOverlay({
     required this.height,
     required this.richMessage,
+    required this.excludeFromSemantics,
     this.padding,
     this.margin,
     this.decoration,
@@ -902,6 +900,7 @@ class _TooltipOverlay extends StatelessWidget {
 
   final InlineSpan richMessage;
   final double height;
+  final bool excludeFromSemantics;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
@@ -957,7 +956,10 @@ class _TooltipOverlay extends StatelessWidget {
           verticalOffset: verticalOffset,
           preferBelow: preferBelow,
         ),
-        child: result,
+        child: Semantics(
+          tooltip: excludeFromSemantics ? null : richMessage.toPlainText(),
+          child: result,
+        ),
       ),
     );
   }

@@ -444,6 +444,7 @@ class _HorizontalSliverList extends StatelessWidget {
                         minimalCardWidth: thumbWidth,
                         thumbnailHeight: thumbHeight,
                         overrideListens: listensMap?[finalVideos[index].id] ?? [],
+                        canHaveDuplicates: false, // its history but filtered
                       );
                     },
                   ),

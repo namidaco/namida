@@ -59,6 +59,8 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
 
     final daysLength = historyDays.length;
 
+    final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
+
     return BackgroundWrapper(
       child: CustomScrollView(
         controller: HistoryController.inst.scrollController,
@@ -91,67 +93,68 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
             rx: HistoryController.inst.historyMap,
             builder: (history) {
               // -- refresh sublist when history change
-              return SliverVariedExtentList.builder(
-                key: ValueKey(daysLength), // rebuild after adding/removing day
-                itemExtentBuilder: (index, dimensions) {
-                  final day = historyDays[index];
-                  return HistoryController.inst.dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
-                },
-                itemCount: daysLength,
-                itemBuilder: (context, index) {
-                  final day = historyDays[index];
-                  final dayInMs = super.dayToMillis(day);
-                  final tracks = history[day] ?? [];
+              return ObxO(
+                rx: HistoryController.inst.highlightedItem,
+                builder: (highlightedItem) => SliverVariedExtentList.builder(
+                  key: ValueKey(daysLength), // rebuild after adding/removing day
+                  itemExtentBuilder: (index, dimensions) {
+                    final day = historyDays[index];
+                    return HistoryController.inst.dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
+                  },
+                  itemCount: daysLength,
+                  itemBuilder: (context, index) {
+                    final day = historyDays[index];
+                    final dayInMs = super.dayToMillis(day);
+                    final tracks = history[day] ?? [];
 
-                  return StickyHeader(
-                    key: ValueKey(index),
-                    header: NamidaHistoryDayHeaderBox(
-                      height: dayHeaderHeight,
-                      title: [
-                        dayInMs.dateFormattedOriginal,
-                        tracks.length.displayTrackKeyword,
-                      ].join('  •  '),
-                      sideColor: dayHeaderSideColor,
-                      bgColor: dayHeaderBgColor,
-                      shadowColor: dayHeaderShadowColor,
-                      menu: NamidaIconButton(
-                        icon: Broken.more,
-                        horizontalPadding: 8.0,
-                        iconSize: 22.0,
-                        onPressed: () {
-                          showGeneralPopupDialog(
-                            tracks.toTracks(),
-                            dayInMs.dateFormattedOriginal,
-                            tracks.length.displayTrackKeyword,
-                            QueueSource.history,
-                            tracksWithDates: tracks,
+                    return StickyHeader(
+                      key: ValueKey(index),
+                      header: NamidaHistoryDayHeaderBox(
+                        height: dayHeaderHeight,
+                        title: [
+                          dayInMs.dateFormattedOriginal,
+                          tracks.length.displayTrackKeyword,
+                        ].join('  •  '),
+                        sideColor: dayHeaderSideColor,
+                        bgColor: dayHeaderBgColor,
+                        shadowColor: dayHeaderShadowColor,
+                        menu: NamidaIconButton(
+                          icon: Broken.more,
+                          horizontalPadding: 8.0,
+                          iconSize: 22.0,
+                          onPressed: () {
+                            showGeneralPopupDialog(
+                              tracks.toTracks(),
+                              dayInMs.dateFormattedOriginal,
+                              tracks.length.displayTrackKeyword,
+                              QueueSource.history,
+                              tracksWithDates: tracks,
+                              playlistName: k_PLAYLIST_NAME_HISTORY,
+                            );
+                          },
+                        ),
+                      ),
+                      content: ListView.builder(
+                        padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
+                        primary: false,
+                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                        itemCount: tracks.length,
+                        itemBuilder: (context, i) {
+                          final tr = tracks[i];
+                          return TrackTile(
+                            trackOrTwd: tr,
+                            index: i,
+                            queueSource: QueueSource.history,
+                            bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                            draggableThumbnail: false,
                             playlistName: k_PLAYLIST_NAME_HISTORY,
+                            thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
                           );
                         },
                       ),
-                    ),
-                    content: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
-                      primary: false,
-                      itemExtent: Dimensions.inst.trackTileItemExtent,
-                      itemCount: tracks.length,
-                      itemBuilder: (context, i) {
-                        final tr = tracks[i];
-                        return TrackTile(
-                          trackOrTwd: tr,
-                          index: i,
-                          queueSource: QueueSource.history,
-                          bgColor: day == HistoryController.inst.dayOfHighLight.value && i == HistoryController.inst.indexToHighlight.value
-                              ? context.theme.colorScheme.onSurface.withAlpha(40)
-                              : null,
-                          draggableThumbnail: false,
-                          playlistName: k_PLAYLIST_NAME_HISTORY,
-                          thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
-                        );
-                      },
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           ),

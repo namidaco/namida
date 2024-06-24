@@ -62,7 +62,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
     final artist = trackExt.originalArtist;
     return <String>[
       '$title by $artist lyrics',
-      '${title.split("-").first} by $artist lyrics',
+      '${title.splitFirst("-")} by $artist lyrics',
       '$title by $artist song lyrics',
     ];
   }

@@ -29,8 +29,7 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
         extraItemsOffset: 2,
       );
       NamidaOnTaps.inst.onHistoryPlaylistTap(
-        indexToHighlight: scrollInfo.indexOfSmallList,
-        dayOfHighLight: scrollInfo.dayToHighLight,
+        scrollInfo: scrollInfo,
         initialScrollOffset: (scrollInfo.itemsToScroll * Dimensions.inst.trackTileItemExtent) + (scrollInfo.daysToScroll * kHistoryDayHeaderHeightWithPadding),
       );
     },

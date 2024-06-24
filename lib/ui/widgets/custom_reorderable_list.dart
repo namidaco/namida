@@ -679,7 +679,6 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
         ..addPointer(event);
       _recognizerPointer = event.pointer;
     } else {
-      // TODO(darrenaustin): Can we handle this better, maybe scroll to the item?
       throw Exception('Attempting to start a drag on a non-visible item');
     }
   }
@@ -1280,7 +1279,6 @@ class _DragInfo extends Drag {
     this.proxyDecorator,
     required this.tickerProvider,
   }) {
-    // TODO(polina-c): stop duplicating code across disposables
     // https://github.com/flutter/flutter/issues/137435
     if (kFlutterMemoryAllocationsEnabled) {
       FlutterMemoryAllocations.instance.dispatchObjectCreated(

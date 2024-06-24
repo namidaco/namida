@@ -176,7 +176,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   title: lang.HISTORY,
                                                   displayLoadingIndicator: count == -1,
                                                   text: count.formatDecimal(),
-                                                  onTap: () => NamidaOnTaps.inst.onHistoryPlaylistTap(),
+                                                  onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
                                                 ),
                                               ),
                                             ),

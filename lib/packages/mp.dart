@@ -118,7 +118,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   double _dragheight = 0;
 
-  EdgeInsets _padding = const EdgeInsets.only();
+  EdgeInsets _padding = EdgeInsets.zero;
 
   double get maxHeight => widget.maxHeight - _padding.bottom - _padding.top;
   double get controllerHeight => controller.value * maxHeight;
@@ -196,9 +196,14 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    final padding = MediaQuery.paddingOf(context);
-    _padding = padding;
-    animateToState(_wasExpanded);
+    if (_padding == EdgeInsets.zero) {
+      // -- context access makes it awful for yt miniplayer (since it has MaterialPage),
+      // -- the keyboard keeps showing/hiding
+      // -- so yeah we only check once
+      final padding = MediaQuery.paddingOf(context);
+      _padding = padding;
+      animateToState(_wasExpanded);
+    }
 
     final maxWidth = context.width;
     return AnimatedBuilder(

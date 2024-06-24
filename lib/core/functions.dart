@@ -391,6 +391,8 @@ class NamidaOnTaps {
 
     final isRemoving = false.obs;
 
+    final nonFavouritesList = lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList();
+
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         selectedToClear.close();
@@ -432,7 +434,7 @@ class NamidaOnTaps {
                           NamidaNavigator.inst.closeDialog();
                           isRemoving.value = true;
                           if (nonFavourites.value) {
-                            await QueueController.inst.removeQueues(lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList());
+                            await QueueController.inst.removeQueues(nonFavouritesList);
                           }
                           for (final s in selectedToClear.value) {
                             final queues = lookup[s];
@@ -467,8 +469,8 @@ class NamidaOnTaps {
                     child: ListTileWithCheckMark(
                       dense: true,
                       icon: Broken.heart_slash,
-                      title: '${lang.NON_FAVOURITES} (${lookupNonFavourites.length})',
-                      subtitle: getSubtitle(sizesLookup, lookupNonFavourites.keys.where((v) => lookupNonFavourites[v] == true).toList()),
+                      title: '${lang.NON_FAVOURITES} (${nonFavouritesList.length})',
+                      subtitle: getSubtitle(sizesLookup, nonFavouritesList),
                       active: nonFavourites.valueR,
                       onTap: () {
                         nonFavourites.toggle();

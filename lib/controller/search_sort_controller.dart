@@ -75,7 +75,7 @@ class SearchSortController {
 
   RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
-  bool get hasRunningSearch => _runningSearches.values.any((running) => running);
+  RxBaseCore<Map<MediaType, bool>> get runningSearches => _runningSearches;
 
   final _runningSearches = <MediaType, bool>{}.obs;
 

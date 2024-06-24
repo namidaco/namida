@@ -195,7 +195,7 @@ class SortByMenuArtists extends StatelessWidget {
       children: [
         ListTileWithCheckMark(
           activeRx: settings.artistSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, reverse: !settings.artistSortReversed.value),
+          onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
         ),
         ...[
           artistType == MediaType.albumArtist

@@ -784,47 +784,59 @@ class ListTileWithCheckMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tileAlpha = context.isDarkMode ? 5 : 20;
+    final br = BorderRadius.circular(14.0.multipliedRadius);
     return Material(
-      borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-      color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(tileAlpha), context.theme.cardTheme.color!),
-      child: ListTile(
-        horizontalTitleGap: dense ? 10.0 : 14.0,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0.multipliedRadius)),
-        leading: leading ??
-            Icon(
-              icon ?? Broken.arrange_circle,
-              size: iconSize,
-            ),
-        title: titleWidget ??
-            Text(
-              title ?? lang.REVERSE_ORDER,
-              style: context.textTheme.displayMedium,
-            ),
-        subtitle: subtitle != ''
-            ? Text(
-                subtitle,
-                style: context.textTheme.displaySmall,
-              )
-            : null,
-        trailing: activeRx != null
-            ? ObxO(
-                rx: activeRx!,
-                builder: (active) => NamidaCheckMark(
-                  size: 18.0,
-                  active: active,
+        borderRadius: br,
+        color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(tileAlpha), context.theme.cardTheme.color!),
+        child: InkWell(
+          borderRadius: br,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Row(
+              children: [
+                leading ??
+                    Icon(
+                      icon ?? Broken.arrange_circle,
+                      size: iconSize,
+                    ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titleWidget ??
+                            Text(
+                              title ?? lang.REVERSE_ORDER,
+                              style: context.textTheme.displayMedium,
+                            ),
+                        if (subtitle != '')
+                          Text(
+                            subtitle,
+                            style: context.textTheme.displaySmall,
+                          )
+                      ],
+                    ),
+                  ),
                 ),
-              )
-            : NamidaCheckMark(
-                size: 18.0,
-                active: active,
-              ),
-        // visualDensity: VisualDensity.compact,
-        visualDensity: const VisualDensity(horizontal: -2.8, vertical: -2.8),
-        onTap: onTap,
-        dense: dense,
-      ),
-    );
+                activeRx != null
+                    ? ObxO(
+                        rx: activeRx!,
+                        builder: (active) => NamidaCheckMark(
+                          size: 18.0,
+                          active: active,
+                        ),
+                      )
+                    : NamidaCheckMark(
+                        size: 18.0,
+                        active: active,
+                      )
+              ],
+            ),
+          ),
+        ));
   }
 }
 
@@ -1460,7 +1472,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
+    return NamidaTooltip(
       message: widget.tooltip,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -2948,6 +2960,7 @@ class NamidaTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message == null) return child;
     return Tooltip(
       message: message,
       preferBelow: preferBelow,
@@ -3798,7 +3811,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 },
                 child: child,
               )
-            : Tooltip(
+            : NamidaTooltip(
                 message: _buildTooltip,
                 child: IconButton(
                   visualDensity: VisualDensity.compact,

@@ -44,68 +44,75 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
 
     final daysLength = historyDays.length;
 
+    final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
+
     return BackgroundWrapper(
       child: CustomScrollView(
         controller: YoutubeHistoryController.inst.scrollController,
         slivers: [
           ObxO(
             rx: YoutubeHistoryController.inst.historyMap,
-            builder: (history) => SliverVariedExtentList.builder(
-              key: ValueKey(daysLength), // rebuild after adding/removing day
-              itemExtentBuilder: (index, dimensions) {
-                final day = historyDays[index];
-                return YoutubeHistoryController.inst.dayToSectionExtent(day, cardExtent, dayHeaderExtent);
-              },
-              itemCount: daysLength,
-              itemBuilder: (context, index) {
-                final day = historyDays[index];
-                final dayInMs = super.dayToMillis(day);
-                final videos = history[day] ?? [];
+            builder: (history) => ObxO(
+              rx: YoutubeHistoryController.inst.highlightedItem,
+              builder: (highlightedItem) => SliverVariedExtentList.builder(
+                key: ValueKey(daysLength), // rebuild after adding/removing day
+                itemExtentBuilder: (index, dimensions) {
+                  final day = historyDays[index];
+                  return YoutubeHistoryController.inst.dayToSectionExtent(day, cardExtent, dayHeaderExtent);
+                },
+                itemCount: daysLength,
+                itemBuilder: (context, index) {
+                  final day = historyDays[index];
+                  final dayInMs = super.dayToMillis(day);
+                  final videos = history[day] ?? [];
 
-                return StickyHeader(
-                  key: ValueKey(index),
-                  header: NamidaHistoryDayHeaderBox(
-                    height: dayHeaderHeight,
-                    title: [
-                      dayInMs.dateFormattedOriginal,
-                      videos.length.displayVideoKeyword,
-                    ].join('  •  '),
-                    sideColor: dayHeaderSideColor,
-                    bgColor: dayHeaderBgColor,
-                    shadowColor: dayHeaderShadowColor,
-                    menu: NamidaPopupWrapper(
-                      openOnLongPress: false,
-                      childrenDefault: () => YTUtils.getVideosMenuItems(
-                        playlistName: k_PLAYLIST_NAME_HISTORY,
-                        videos: videos,
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Icon(
-                          Broken.more,
-                          size: 22.0,
+                  return StickyHeader(
+                    key: ValueKey(index),
+                    header: NamidaHistoryDayHeaderBox(
+                      height: dayHeaderHeight,
+                      title: [
+                        dayInMs.dateFormattedOriginal,
+                        videos.length.displayVideoKeyword,
+                      ].join('  •  '),
+                      sideColor: dayHeaderSideColor,
+                      bgColor: dayHeaderBgColor,
+                      shadowColor: dayHeaderShadowColor,
+                      menu: NamidaPopupWrapper(
+                        openOnLongPress: false,
+                        childrenDefault: () => YTUtils.getVideosMenuItems(
+                          playlistName: k_PLAYLIST_NAME_HISTORY,
+                          videos: videos,
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Icon(
+                            Broken.more,
+                            size: 22.0,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  content: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
-                    primary: false,
-                    itemExtent: Dimensions.youtubeCardItemExtent,
-                    itemCount: videos.length,
-                    itemBuilder: (context, i) {
-                      return YTHistoryVideoCard(
-                        videos: videos,
-                        index: i,
-                        day: day,
-                        playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
-                        playlistName: k_PLAYLIST_NAME_HISTORY,
-                        isImportantInCache: false, // long old history is lowkey useless
-                      );
-                    },
-                  ),
-                );
-              },
+                    content: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
+                      primary: false,
+                      itemExtent: Dimensions.youtubeCardItemExtent,
+                      itemCount: videos.length,
+                      itemBuilder: (context, i) {
+                        return YTHistoryVideoCard(
+                          videos: videos,
+                          index: i,
+                          day: day,
+                          bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                          playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+                          playlistName: k_PLAYLIST_NAME_HISTORY,
+                          isImportantInCache: false, // long old history is lowkey useless
+                          canHaveDuplicates: true,
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           kBottomPaddingWidgetSliver,

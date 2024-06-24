@@ -32,8 +32,7 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
       final totalDaysExtent = scrollInfo.daysToScroll * kYoutubeHistoryDayHeaderHeightWithPadding;
 
       YTUtils.onYoutubeHistoryPlaylistTap(
-        indexToHighlight: scrollInfo.indexOfSmallList,
-        dayOfHighLight: scrollInfo.dayToHighLight,
+        scrollInfo: scrollInfo,
         initialScrollOffset: totalItemsExtent + totalDaysExtent,
       );
     },

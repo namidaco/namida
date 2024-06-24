@@ -534,6 +534,14 @@ class JsonToHistoryParser {
 
       HistoryController.inst.historyMap.value = res.localHistory;
       YoutubeHistoryController.inst.historyMap.value = res.ytHistory;
+      if (res.addedLocalHistoryCount > 0) {
+        HistoryController.inst.totalHistoryItemsCount.value += res.addedLocalHistoryCount;
+        HistoryController.inst.totalHistoryItemsCount.refresh();
+      }
+      if (res.addedYTHistoryCount > 0) {
+        YoutubeHistoryController.inst.totalHistoryItemsCount.value += res.addedYTHistoryCount;
+        YoutubeHistoryController.inst.totalHistoryItemsCount.refresh();
+      }
     }
 
     await Future.wait([
@@ -555,6 +563,8 @@ class JsonToHistoryParser {
     Map<String, YoutubeVideoHistory>? affectedIds,
     List<int> daysToSaveLocal,
     List<int> daysToSaveYT,
+    int addedLocalHistoryCount,
+    int addedYTHistoryCount,
     SplayTreeMap<int, List<TrackWithDate>> localHistory,
     SplayTreeMap<int, List<YoutubeID>> ytHistory,
     Map<_MissingListenEntry, List<int>> missingEntries,
@@ -572,6 +582,9 @@ class JsonToHistoryParser {
 
     final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
     final ytHistory = params['ytHistory'] as SplayTreeMap<int, List<YoutubeID>>;
+
+    int addedLocalHistoryCount = 0;
+    int addedYTHistoryCount = 0;
 
     final portProgressParsed = params['portProgressParsed'] as SendPort;
     final portProgressAdded = params['portProgressAdded'] as SendPort;
@@ -653,6 +666,7 @@ class JsonToHistoryParser {
           final day = item.dateTimeAdded.toDaysSince1970();
           daysToSaveLocal.add(day);
           localHistory.insertForce(0, day, item);
+          addedLocalHistoryCount++;
         });
 
         // -- youtube history --
@@ -673,6 +687,7 @@ class JsonToHistoryParser {
             final day = ytid.dateTimeAdded.toDaysSince1970();
             daysToSaveYT.add(day);
             ytHistory.insertForce(0, day, ytid);
+            addedYTHistoryCount++;
           }
         });
 
@@ -696,6 +711,8 @@ class JsonToHistoryParser {
       affectedIds: mapOfAffectedIds,
       daysToSaveLocal: daysToSaveLocal,
       daysToSaveYT: daysToSaveYT,
+      addedLocalHistoryCount: addedLocalHistoryCount,
+      addedYTHistoryCount: addedYTHistoryCount,
       localHistory: localHistory,
       ytHistory: ytHistory,
       missingEntries: missingEntries,
@@ -866,6 +883,10 @@ class JsonToHistoryParser {
 
     if (res != null) {
       HistoryController.inst.historyMap.value = res.localHistory;
+      if (res.addedHistoryCount > 0) {
+        HistoryController.inst.totalHistoryItemsCount.value = res.addedHistoryCount;
+        HistoryController.inst.totalHistoryItemsCount.refresh();
+      }
     }
 
     await HistoryController.inst.setIdleStatus(false);
@@ -881,6 +902,7 @@ class JsonToHistoryParser {
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static ({
     List<int> daysToSaveLocal,
+    int addedHistoryCount,
     SplayTreeMap<int, List<TrackWithDate>> localHistory,
     Map<_MissingListenEntry, List<int>> missingEntries,
   })? _addLastFmSourceIsolate(Map params) {
@@ -892,6 +914,8 @@ class JsonToHistoryParser {
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
 
     final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
+
+    int addedHistoryCount = 0;
 
     final portProgressParsed = params['portProgressParsed'] as SendPort;
     final portProgressAdded = params['portProgressAdded'] as SendPort;
@@ -969,6 +993,7 @@ class JsonToHistoryParser {
             final day = tr.dateTimeAdded.toDaysSince1970();
             daysToSaveLocal.add(day);
             localHistory.insertForce(0, day, tr);
+            addedHistoryCount++;
           }
         } else {
           final me = _MissingListenEntry(
@@ -1001,6 +1026,7 @@ class JsonToHistoryParser {
 
     return (
       daysToSaveLocal: daysToSaveLocal,
+      addedHistoryCount: addedHistoryCount,
       localHistory: localHistory,
       missingEntries: missingEntries,
     );

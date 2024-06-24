@@ -1148,15 +1148,18 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                         title: _sortTypeToName[_sortType.valueR] ?? '',
                         popupMenuChild: () {
                           Widget getTile(IconData icon, String title, _SortType sort) {
-                            return SmallListTile(
-                              visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
-                              trailing: Padding(
-                                padding: const EdgeInsets.only(right: 4.0),
-                                child: Icon(icon, size: 20.0),
+                            return ObxO(
+                              rx: _sortType,
+                              builder: (currentSort) => SmallListTile(
+                                visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
+                                trailing: Padding(
+                                  padding: const EdgeInsets.only(right: 4.0),
+                                  child: Icon(icon, size: 20.0),
+                                ),
+                                title: title,
+                                active: currentSort == sort,
+                                onTap: () => _sortItems(sort, null),
                               ),
-                              title: title,
-                              active: _sortType.value == sort,
-                              onTap: () => _sortItems(sort, null),
                             );
                           }
 
