@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -11,9 +13,11 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/keys.dart';
 import 'package:namida/main.dart';
 
+part 'static_strings.dart';
+
 Language get lang => Language.inst;
 
-class Language extends LanguageKeys {
+class Language extends LanguageKeys with _StaticStrings {
   static Language get inst => _instance;
   static final Language _instance = Language._internal();
   Language._internal();

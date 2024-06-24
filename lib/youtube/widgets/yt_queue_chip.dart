@@ -13,8 +13,9 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -99,16 +100,17 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   }
 
   void _animateSmallToBig() {
+    final wasAlreadyBig = NamidaNavigator.inst.isQueueSheetOpen;
     _animate(1, 0);
-    YoutubeController.inst.startDimTimer();
+    YoutubeMiniplayerUiController.inst.startDimTimer();
     NamidaNavigator.inst.isQueueSheetOpen = true;
     _updateCanScrollQueue(true);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _animateQueueToCurrentTrack());
+    if (!wasAlreadyBig) WidgetsBinding.instance.addPostFrameCallback((_) => _animateQueueToCurrentTrack());
   }
 
   void _animateBigToSmall() {
     _animate(0, 1);
-    YoutubeController.inst.startDimTimer();
+    YoutubeMiniplayerUiController.inst.startDimTimer();
     NamidaYTGenerator.inst.cleanResources();
     NamidaNavigator.inst.isQueueSheetOpen = false;
   }
@@ -204,7 +206,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       final currentIndex = Player.inst.currentIndex.valueR;
                                       final nextItem =
                                           Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
-                                      final nextItemName = nextItem == null ? '' : YoutubeController.inst.getVideoName(nextItem.id);
+                                      final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoName(nextItem.id);
                                       final queueLength = Player.inst.currentQueue.valueR.length;
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -264,11 +266,11 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
               },
               onPointerDown: (_) {
                 _updateCanScrollQueue(true);
-                YoutubeController.inst.cancelDimTimer();
+                YoutubeMiniplayerUiController.inst.cancelDimTimer();
               },
               onPointerUp: (_) {
                 _updateCanScrollQueue(true);
-                YoutubeController.inst.startDimTimer();
+                YoutubeMiniplayerUiController.inst.startDimTimer();
               },
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -388,6 +390,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                     draggingEnabled: true,
                                     draggableThumbnail: true,
                                     showMoreIcon: true,
+                                    canHaveDuplicates: true,
                                   ),
                                 );
                               },

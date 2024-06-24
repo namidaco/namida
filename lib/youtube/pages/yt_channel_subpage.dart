@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
@@ -20,7 +23,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -33,7 +36,7 @@ class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
 
   final String channelID;
   final YoutubeSubscription? sub;
-  final YoutubeChannel? channel;
+  final ChannelInfoItem? channel;
   const YTChannelSubpage({super.key, required this.channelID, this.sub, this.channel});
 
   @override
@@ -41,34 +44,40 @@ class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
 }
 
 class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> {
-  late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.getChannel(widget.channelID) ??
+  late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.availableChannels.value[widget.channelID] ??
       YoutubeSubscription(
         channelID: widget.channelID.splitLast('/'),
         subscribed: false,
       );
 
-  YoutubeChannel? _channelInfo;
+  YoutiPieChannelPageResult? _channelInfo;
   bool _canKeepLoadingMore = false;
 
   @override
   void initState() {
     channel = ch;
-    fetchChannelStreams(ch);
 
-    final channelUrl = 'https://www.youtube.com/channel/${ch.channelID}';
+    final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
+    if (channelInfoCache != null) {
+      _channelInfo = channelInfoCache;
+      fetchChannelStreams(channelInfoCache);
+    }
 
-    _channelInfo = widget.channel ?? YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID, checkFromStorage: true);
     // -- always get new info.
-    YoutubeController.inst.fetchChannelDetails(channelUrl, forceRequest: true).then(
+    YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
       (value) {
-        if (value != null) setState(() => _channelInfo = value);
+        if (value != null) {
+          setState(() => _channelInfo = value);
+          fetchChannelStreams(value);
+        }
       },
     );
 
     super.initState();
   }
 
-  void _onImageTap(BuildContext context, String channelID, String imageUrl, bool isBanner) {
+  void _onImageTap(BuildContext context, String channelID, String? imageUrl, bool isBanner) {
+    // TODO(youtipie): a way to navigate through all banners?
     File? file;
     if (!isBanner) {
       file = ThumbnailManager.inst.imageUrlToCacheFile(id: null, url: channelID);
@@ -120,11 +129,11 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final channelID = _channelInfo?.id ?? ch.channelID;
-    final avatarUrl = _channelInfo?.avatarUrl ?? _channelInfo?.thumbnailUrl ?? ch.channelID;
-    final bannerUrl = _channelInfo?.bannerUrl ?? _channelInfo?.bannerUrl;
-    final subsCount = _channelInfo?.subscriberCount;
-    final streamsCount = _channelInfo?.streamCount;
-    final dummyStreamsCount = streamsCount == null || streamsCount < 0;
+    final avatarUrl = _channelInfo?.thumbnails.firstOrNull?.url;
+    final bannerUrl = (_channelInfo?.banners.firstOrNull ?? _channelInfo?.tvbanners.firstOrNull ?? _channelInfo?.mobileBanners.firstOrNull)?.url;
+    final subsCount = _channelInfo?.subscribersCount;
+    final subsCountText = _channelInfo?.subscribersCountText;
+    final streamsCount = _channelInfo?.videosCount;
     const bannerHeight = 69.0;
 
     return BackgroundWrapper(
@@ -142,7 +151,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                       width: context.width,
                       compressed: false,
                       isImportantInCache: false,
-                      channelUrl: bannerUrl,
+                      customUrl: bannerUrl,
                       borderRadius: 0,
                       displayFallbackIcon: false,
                       height: bannerHeight,
@@ -164,8 +173,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                             key: Key('${channelID}_$avatarUrl'),
                             width: context.width * 0.14,
                             isImportantInCache: true,
-                            channelUrl: avatarUrl,
-                            channelIDForHQImage: ch.channelID,
+                            customUrl: avatarUrl,
                             isCircle: true,
                             compressed: false,
                           ),
@@ -180,18 +188,19 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                           Padding(
                             padding: const EdgeInsets.only(left: 2.0),
                             child: Text(
-                              _channelInfo?.name ?? ch.title,
+                              _channelInfo?.title ?? ch.title,
                               style: context.textTheme.displayLarge,
                             ),
                           ),
                           const SizedBox(height: 4.0),
                           Text(
-                            subsCount == null
-                                ? '? ${lang.SUBSCRIBERS}'
-                                : [
-                                    subsCount.formatDecimalShort(),
-                                    subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                                  ].join(' '),
+                            subsCountText ??
+                                (subsCount == null
+                                    ? '? ${lang.SUBSCRIBERS}'
+                                    : [
+                                        subsCount.formatDecimalShort(),
+                                        subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
+                                      ].join(' ')),
                             style: context.textTheme.displayMedium?.copyWith(
                               fontSize: 12.0,
                             ),
@@ -202,7 +211,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                       ),
                     ),
                     const SizedBox(width: 4.0),
-                    YTSubscribeButton(channelIDOrURL: channelID),
+                    YTSubscribeButton(channelID: channelID),
                     const SizedBox(width: 12.0),
                   ],
                 ),
@@ -228,7 +237,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                   onTap: () async {
                     _canKeepLoadingMore = !_canKeepLoadingMore;
                     while (_canKeepLoadingMore && !lastLoadingMoreWasEmpty.value && ConnectivityController.inst.hasConnection) {
-                      await fetchStreamsNextPage(ch);
+                      await fetchStreamsNextPage();
                     }
                   },
                 ),
@@ -257,7 +266,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                           const Icon(Broken.video_square, size: 16.0),
                           const SizedBox(width: 4.0),
                           Text(
-                            "${streamsList.length} / ${dummyStreamsCount ? '?' : streamsCount}",
+                            "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}",
                             style: context.textTheme.displayMedium,
                           ),
                         ],
@@ -281,23 +290,23 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
               ),
               const SizedBox(width: 4.0),
               YTVideosActionBar(
-                title: _channelInfo?.name ?? ch.title,
-                url: _channelInfo?.url ?? '',
+                title: _channelInfo?.title ?? ch.title,
+                urlBuilder: _channelInfo?.buildUrl,
                 barOptions: const YTVideosActionBarOptions(
                   addToPlaylist: false,
                   playLast: false,
                 ),
                 videosCallback: () => streamsList
-                    .map((e) => YoutubeID(
-                          id: e.id ?? '',
+                    ?.map((e) => YoutubeID(
+                          id: e.id,
                           playlistID: null,
                         ))
                     .toList(),
                 infoLookupCallback: () {
+                  final streamsList = this.streamsList;
+                  if (streamsList == null) return null;
                   final m = <String, StreamInfoItem>{};
-                  streamsList.loop((e) {
-                    m[e.id ?? ''] = e;
-                  });
+                  streamsList.loop((e) => m[e.id] = e);
                   return m;
                 },
               ),
@@ -314,12 +323,10 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                       child: ListView.builder(
                         itemCount: 15,
                         itemBuilder: (context, index) {
-                          return const YoutubeVideoCard(
+                          return const YoutubeVideoCardDummy(
+                            shimmerEnabled: true,
                             thumbnailHeight: thumbnailHeight,
                             thumbnailWidth: thumbnailWidth,
-                            isImageImportantInCache: false,
-                            video: null,
-                            playlistID: null,
                             thumbnailWidthPercentage: 0.8,
                           );
                         },
@@ -328,9 +335,11 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                   : LazyLoadListView(
                       scrollController: uploadsScrollController,
                       onReachingEnd: () async {
-                        await fetchStreamsNextPage(ch);
+                        await fetchStreamsNextPage();
                       },
                       listview: (controller) {
+                        final streamsList = this.streamsList;
+                        if (streamsList == null || streamsList.isEmpty) return const SizedBox();
                         return ListView.builder(
                           padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
                           controller: controller,
@@ -339,7 +348,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                           itemBuilder: (context, index) {
                             final item = streamsList[index];
                             return YoutubeVideoCard(
-                              key: Key("${context.hashCode}_${(item).id}"),
+                              key: Key(item.id),
                               thumbnailHeight: thumbnailHeight,
                               thumbnailWidth: thumbnailWidth,
                               isImageImportantInCache: false,

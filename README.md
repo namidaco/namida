@@ -193,7 +193,7 @@ Animating Thumbnail        |  Recommends & Listens
 
 ### Special Thanks:
 
-> - [@Artx-II](https://github.com/Artx-II) for their initial dart port of Newpipe Extractor, which powers youtube section.
+> - [@MSOB7YY](https://github.com/MSOB7YY) for their youtube client, which powers youtube section.
 > - [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
 > - [@alexmercerind](https://github.com/alexmercerind) for helping me out a lot.
 > - [@lusaxweb](https://github.com/lusaxweb) for their awesome Iconsax icon pack.

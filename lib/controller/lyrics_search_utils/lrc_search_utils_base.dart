@@ -7,7 +7,7 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_youtubeid.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 abstract class LrcSearchUtils {
   const LrcSearchUtils();
@@ -17,8 +17,8 @@ abstract class LrcSearchUtils {
       final tr = item.track;
       return LrcSearchUtilsSelectable(tr.toTrackExt(), tr);
     } else if (item is YoutubeID) {
-      final videoInfo = YoutubeController.inst.getVideoInfo(item.id, checkFromStorage: true);
-      return LrcSearchUtilsYoutubeID(item, videoInfo?.name);
+      final title = YoutubeInfoController.utils.getVideoName(item.id);
+      return LrcSearchUtilsYoutubeID(item, title);
     }
     return null;
   }

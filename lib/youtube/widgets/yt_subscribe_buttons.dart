@@ -7,16 +7,16 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 class YTSubscribeButton extends StatelessWidget {
-  final String? channelIDOrURL;
-  const YTSubscribeButton({super.key, required this.channelIDOrURL});
+  final String? channelID;
+  const YTSubscribeButton({super.key, required this.channelID});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final channelID = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelIDOrURL);
+    return ObxO(
+      rx: YoutubeSubscriptionsController.inst.availableChannels,
+      builder: (availableChannels) {
         final disabled = channelID == null;
-        final subscribed = YoutubeSubscriptionsController.inst.getChannel(channelID ?? '')?.subscribed ?? false;
+        final subscribed = availableChannels[channelID ?? '']?.subscribed ?? false;
         return AnimatedOpacity(
           opacity: disabled ? 0.5 : 1.0,
           duration: const Duration(milliseconds: 300),
@@ -34,8 +34,9 @@ class YTSubscribeButton extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              if (channelIDOrURL != null) {
-                await YoutubeSubscriptionsController.inst.changeChannelStatus(channelIDOrURL!);
+              final chid = channelID;
+              if (chid != null) {
+                await YoutubeSubscriptionsController.inst.toggleChannelSubscription(chid);
               }
             },
           ),

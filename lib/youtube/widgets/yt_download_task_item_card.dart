@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -23,6 +24,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
@@ -117,19 +119,20 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   void _showInfoDialog(
     final BuildContext context,
     final YoutubeItemDownloadConfig item,
-    final VideoInfo? info,
+    final StreamInfoItem? info,
     final String groupName,
   ) {
-    final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(item.id) ?? item.id;
-    final videoSubtitle = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(item.id) ?? '?';
-    final dateMS = info?.date?.millisecondsSinceEpoch;
+    final videoPage = YoutubeInfoController.video.fetchVideoPageSync(item.id);
+    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(item.id) ?? item.id;
+    final videoSubtitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(item.id) ?? '?';
+    final dateMS = info?.publishedAt.date?.millisecondsSinceEpoch;
     final dateText = dateMS?.dateAndClockFormattedOriginal ?? '?';
     final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow()})";
-    final duration = info?.duration?.inSeconds.secondsLabel ?? '?';
+    final duration = info?.durSeconds?.secondsLabel ?? '?';
     final descriptionWidget = info == null
         ? null
         : Html(
-            data: info.description ?? '',
+            data: info.availableDescription ?? '',
             style: {
               '*': Style.fromTextStyle(
                 context.textTheme.displaySmall!.copyWith(
@@ -170,6 +173,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       ];
     }
 
+    final videoId = info?.id ?? '';
+    final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == videoId) != null;
+    final videoPageInfo = videoPage?.videoInfo;
+    final likesCount = videoPageInfo?.engagement?.likesCount;
+    final videoLikeCount = likesCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (likesCount ?? 0);
+
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 38.0, vertical: 32.0),
@@ -178,29 +187,24 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         trailingWidgets: [
           ...getTrailing(
             Broken.eye,
-            info?.viewCount?.formatDecimalShort() ?? '?',
+            videoPageInfo?.viewsCount?.formatDecimalShort() ?? '?',
             iconColor: context.theme.colorScheme.primary,
           ),
           const SizedBox(width: 6.0),
-          ...() {
-            final videoId = info?.id ?? '';
-            final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == videoId) != null;
-            final videoLikeCount = info?.likeCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (info?.likeCount ?? 0);
-            return getTrailing(
-              Broken.like_1,
-              videoLikeCount?.formatDecimalShort() ?? '?',
-              iconWidget: NamidaRawLikeButton(
-                size: 18.0,
-                likedIcon: Broken.like_filled,
-                normalIcon: Broken.like_1,
-                disabledColor: context.theme.colorScheme.primary,
-                isLiked: isUserLiked,
-                onTap: (isLiked) async {
-                  YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId);
-                },
-              ),
-            );
-          }(),
+          ...getTrailing(
+            Broken.like_1,
+            videoLikeCount?.formatDecimalShort() ?? '?',
+            iconWidget: NamidaRawLikeButton(
+              size: 18.0,
+              likedIcon: Broken.like_filled,
+              normalIcon: Broken.like_1,
+              disabledColor: context.theme.colorScheme.primary,
+              isLiked: isUserLiked,
+              onTap: (isLiked) async {
+                YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId);
+              },
+            ),
+          ),
         ],
         child: SizedBox(
           height: context.height * 0.7,
@@ -233,7 +237,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                       ),
                       TrackInfoListTile(
                         title: lang.LINK,
-                        value: YoutubeController.inst.getYoutubeLink(item.id),
+                        value: YTUrlUtils.buildVideoUrl(item.id),
                         icon: Broken.link_1,
                       ),
                       TrackInfoListTile(
@@ -248,7 +252,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                       ),
                       TrackInfoListTile(
                         title: lang.DESCRIPTION,
-                        value: HtmlParser.parseHTML(info?.description ?? '').text,
+                        value: info?.availableDescription ?? '',
                         icon: Broken.message_text_1,
                         child: descriptionWidget,
                       ),
@@ -333,9 +337,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         getRow(
           icon: Broken.video_square,
           texts: [
-            videoStream.sizeInBytes?.fileSizeFormatted ?? '',
-            videoStream.bitrateText,
-            videoStream.resolution ?? '',
+            videoStream.sizeInBytes.fileSizeFormatted,
+            videoStream.bitrateText(),
+            videoStream.qualityLabel,
           ],
         ),
       ],
@@ -344,8 +348,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         getRow(
           icon: Broken.audio_square,
           texts: [
-            audioStream.sizeInBytes?.fileSizeFormatted ?? '',
-            audioStream.bitrateText,
+            audioStream.sizeInBytes.fileSizeFormatted,
+            audioStream.bitrateText(),
           ],
         ),
       ],
@@ -470,8 +474,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
-    final info = YoutubeController.inst.getVideoInfo(item.id);
-    final duration = info?.duration?.inSeconds.secondsLabel;
+    final info = YoutubeInfoController.utils.getStreamInfoSync(item.id);
+    final duration = info?.durSeconds?.secondsLabel;
 
     final itemIcon = item.videoStream != null
         ? Broken.video
@@ -484,10 +488,10 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         videoId: item.id,
-        url: info?.url,
-        channelUrl: info?.uploaderUrl,
+        url: info?.buildUrl(),
+        channelID: info?.channelId,
         playlistID: null,
-        idsNamesLookup: {item.id: info?.name},
+        idsNamesLookup: {item.id: info?.title},
         playlistName: '',
         videoYTID: null,
       )..insert(
@@ -732,7 +736,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                           children: [
                             Text(
                               [
-                                item.videoStream?.resolution,
+                                item.videoStream?.qualityLabel,
                                 downloadedFile.fileSizeFormatted(),
                               ].joinText(),
                               style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),

@@ -24,8 +24,8 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class JsonToHistoryParser {
   static JsonToHistoryParser get inst => _instance;
@@ -529,7 +529,7 @@ class JsonToHistoryParser {
             printy('updatedIds: ${updatedIds.length}');
           },
         );
-        YoutubeController.inst.fillBackupInfoMap();
+        YoutubeInfoController.utils.fillBackupInfoMap();
       }
 
       HistoryController.inst.historyMap.value = res.localHistory;

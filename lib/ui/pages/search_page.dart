@@ -109,16 +109,11 @@ class SearchPage extends StatelessWidget {
     final playlistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.playlistSearchGridCount);
     return BackgroundWrapper(
       child: NamidaTabView(
-        initialIndex: () {
-          switch (ScrollSearchController.inst.currentSearchType.value) {
-            case SearchType.localTracks:
-              return 0;
-            case SearchType.youtube:
-              return 1;
-            default:
-              return 0;
-          }
-        }(),
+        initialIndex: switch (ScrollSearchController.inst.currentSearchType.value) {
+          SearchType.localTracks => 0,
+          SearchType.youtube => 1,
+          SearchType.localVideos => 2,
+        },
         onIndexChanged: (index) async {
           switch (index) {
             case 0:

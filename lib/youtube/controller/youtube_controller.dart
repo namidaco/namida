@@ -2,17 +2,17 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:flutter/widgets.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' hide EnumUtils;
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -22,62 +22,18 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_progress.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubeController {
   static YoutubeController get inst => _instance;
   static final YoutubeController _instance = YoutubeController._internal();
-
-  YoutubeController._internal() {
-    scrollController.addListener(() {
-      final pixels = scrollController.positions.lastOrNull?.pixels;
-      final hasScrolledEnough = pixels != null && pixels > 40;
-      _shouldShowGlowUnderVideo.value = hasScrolledEnough;
-    });
-  }
-  void resetGlowUnderVideo() => _shouldShowGlowUnderVideo.value = false;
-
-  int get _defaultMiniplayerDimSeconds => settings.ytMiniplayerDimAfterSeconds.value;
-  double get _defaultMiniplayerOpacity => settings.ytMiniplayerDimOpacity.value;
-  RxBaseCore<bool> get canDimMiniplayer => _canDimMiniplayer;
-  final _canDimMiniplayer = false.obs;
-  Timer? _dimTimer;
-  void cancelDimTimer() {
-    _dimTimer?.cancel();
-    _dimTimer = null;
-    _canDimMiniplayer.value = false;
-  }
-
-  void startDimTimer() {
-    cancelDimTimer();
-    if (_defaultMiniplayerDimSeconds > 0 && _defaultMiniplayerOpacity > 0) {
-      _dimTimer = Timer(Duration(seconds: _defaultMiniplayerDimSeconds), () {
-        _canDimMiniplayer.value = true;
-      });
-    }
-  }
-
-  final scrollController = ScrollController();
-
-  RxBaseCore<bool> get shouldShowGlowUnderVideo => _shouldShowGlowUnderVideo;
-  final _shouldShowGlowUnderVideo = false.obs;
+  YoutubeController._internal();
 
   final homepageFeed = <YoutubeFeed>[].obs;
 
-  final currentYoutubeMetadataVideo = Rxn<VideoInfo>();
-  final currentYoutubeMetadataChannel = Rxn<YoutubeChannel>();
-  final currentRelatedVideos = <YoutubeFeed?>[].obs;
-  final currentComments = <YoutubeComment?>[].obs;
-  final commentToParsedHtml = <String, String?>{};
-  final currentTotalCommentsCount = Rxn<int>();
-  final isLoadingComments = false.obs;
-  final isTitleExpanded = false.obs;
-  final currentYTQualities = <VideoOnlyStream>[].obs;
-  final currentYTAudioStreams = <AudioOnlyStream>[].obs;
-
-  /// Used as a backup in case of no connection.
-  final currentCachedQualities = <NamidaVideo>[].obs;
+  // final commentToParsedHtml = <String, String?>{};
 
   /// {id: <filename, DownloadProgress>{}}
   final downloadsVideoProgressMap = <String, RxMap<String, DownloadProgress>>{}.obs;
@@ -115,56 +71,6 @@ class YoutubeController {
   ///
   /// {groupName: {filename: File}}
   final downloadedFilesMap = <String, Map<String, File?>>{}.obs;
-
-  /// Temporarely saves StreamInfoItem info for flawless experience while waiting for real info.
-  final tempVideoInfosFromStreams = <String, StreamInfoItem>{}; // {id: StreamInfoItem()}
-
-  /// Used for easily displaying title & channel inside history directly without needing to fetch or rely on cache.
-  /// This comes mainly after a youtube history import
-  var tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
-
-  late var tempVideoInfo = <String, VideoInfo?>{};
-  late var tempChannelInfo = <String, YoutubeChannel?>{};
-
-  Future<void> loadInfoToMemory() async {
-    final res = await _loadInfoToMemoryIsolate.thready((AppDirs.YT_METADATA, AppDirs.YT_METADATA_CHANNELS));
-    if (res.$1.isNotEmpty) tempVideoInfo = res.$1;
-    if (res.$2.isNotEmpty) tempChannelInfo = res.$2;
-  }
-
-  static Future<(Map<String, VideoInfo?>, Map<String, YoutubeChannel?>)> _loadInfoToMemoryIsolate((String pv, String pc) paths) async {
-    final mv = <String, VideoInfo?>{};
-    final mc = <String, YoutubeChannel?>{};
-
-    final completer1 = Completer<void>();
-    final completer2 = Completer<void>();
-
-    Directory(paths.$1).listAllIsolate().then((value) {
-      value.loop((e) {
-        if (e is File) {
-          try {
-            final map = e.readAsJsonSync();
-            mv[e.path.getFilenameWOExt] = VideoInfo.fromMap(map);
-          } catch (_) {}
-        }
-      });
-      completer1.complete();
-    });
-    Directory(paths.$2).listAllIsolate().then((value) {
-      value.loop((e) {
-        if (e is File) {
-          try {
-            final map = e.readAsJsonSync();
-            mc[e.path.getFilenameWOExt] = YoutubeChannel.fromMap(map);
-          } catch (_) {}
-        }
-      });
-      completer2.complete();
-    });
-    await completer1.future;
-    await completer2.future;
-    return (mv, mc);
-  }
 
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
@@ -229,287 +135,6 @@ class YoutubeController {
     await _writeTaskGroupToStorage(groupName: groupName);
   }
 
-  YoutubeVideoHistory? _getBackupVideoInfo(String id) => tempBackupVideoInfo[id];
-
-  Future<void> fillBackupInfoMap() async {
-    final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
-    tempBackupVideoInfo = map;
-    tempBackupVideoInfo.remove('');
-  }
-
-  static Map<String, YoutubeVideoHistory> _fillBackupInfoMapIsolate(String dirPath) {
-    final map = <String, YoutubeVideoHistory>{};
-    for (final f in Directory(dirPath).listSyncSafe()) {
-      if (f is File) {
-        try {
-          final response = f.readAsJsonSync();
-          if (response != null) {
-            for (final r in response as List) {
-              final yvh = YoutubeVideoHistory.fromJson(r);
-              map[yvh.id] = yvh;
-            }
-          }
-        } catch (e) {
-          continue;
-        }
-      }
-    }
-    return map;
-  }
-
-  String getYoutubeLink(String id) => id.toYTUrl();
-
-  VideoInfo? getVideoInfo(String id, {bool checkFromStorage = false}) {
-    final info = _getTemporarelyVideoInfo(id, checkFromStorage: checkFromStorage) ?? _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage);
-    if (info != null) return info;
-    final bk = _getBackupVideoInfo(id);
-    if (bk != null) return VideoInfo(id: id, name: bk.title, uploaderName: bk.channel, uploaderUrl: bk.channelUrl);
-    return null;
-  }
-
-  String? getVideoName(String id, {bool checkFromStorage = false}) {
-    return getTemporarelyStreamInfo(id)?.name ??
-        _getBackupVideoInfo(id)?.title ?? //
-        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.name;
-  }
-
-  String? getVideoChannelName(String id, {bool checkFromStorage = false}) {
-    return getTemporarelyStreamInfo(id)?.uploaderName ??
-        _getBackupVideoInfo(id)?.channel ?? //
-        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.uploaderName;
-  }
-
-  DateTime? getVideoReleaseDate(String id, {bool checkFromStorage = false}) {
-    return getTemporarelyStreamInfo(id)?.date ?? //
-        _fetchVideoDetailsFromCacheSync(id, checkFromStorage: checkFromStorage)?.date;
-  }
-
-  VideoInfo? _getTemporarelyVideoInfo(String id, {bool checkFromStorage = false}) {
-    final r = getTemporarelyStreamInfo(id, checkFromStorage: checkFromStorage);
-    return r == null ? null : VideoInfo.fromStreamInfoItem(r);
-  }
-
-  StreamInfoItem? getTemporarelyStreamInfo(String id, {bool checkFromStorage = false}) {
-    final si = tempVideoInfosFromStreams[id];
-    if (si != null) return si;
-    if (checkFromStorage) {
-      final file = File('${AppDirs.YT_METADATA_TEMP}$id.txt');
-      final res = file.readAsJsonSync();
-      if (res != null) {
-        try {
-          final strInfo = StreamInfoItem.fromMap(res);
-          return strInfo;
-        } catch (_) {}
-      }
-    }
-    return null;
-  }
-
-  /// Keeps the map at max 2000 items. maintained by least recently used.
-  void _fillTempVideoInfoMap(Iterable<StreamInfoItem>? items) async {
-    if (items != null) {
-      final map = tempVideoInfosFromStreams;
-
-      final entriesForStorage = <MapEntry<String, Map<String, String?>>>[];
-      for (final e in items) {
-        final id = e.id;
-        if (id != null) {
-          // -- adding to storage (later)
-          // -- we only add if it didnt exist in map before, to minimize writes
-          if (map[id] == null) entriesForStorage.add(MapEntry(id, e.toMap()));
-
-          // -- adding to memory (directly)
-          map.remove(id);
-          map[id] = e;
-        }
-      }
-      // -- clearing excess from map to keep it at 2000
-      final excess = map.length - 2000;
-      if (excess > 0) {
-        final excessKeys = map.keys.take(excess).toList();
-        excessKeys.loop((k) => map.remove(k));
-      }
-
-      await _saveTemporarelyVideoInfoIsolate.thready({
-        'dirPath': AppDirs.YT_METADATA_TEMP,
-        'entries': entriesForStorage,
-      });
-    }
-  }
-
-  static void _saveTemporarelyVideoInfoIsolate(Map p) {
-    final dirPath = p['dirPath'] as String;
-    final entries = p['entries'] as List<MapEntry<String, Map<String, String?>>>;
-
-    entries.loop((e) {
-      final file = File('$dirPath${e.key}.txt');
-      file.writeAsJsonSync(e.value);
-    });
-  }
-
-  /// Checks if the requested id is still playing, since most functions are async and will often
-  /// take time to fetch from internet, and user may have played other vids, this covers such cases.
-  bool _canSafelyModifyMetadata(String id) => Player.inst.currentVideo?.id == id;
-
-  Future<void> prepareHomeFeed() async {
-    homepageFeed.clear();
-    final videos = await NewPipeExtractorDart.trending.getTrendingVideos();
-    _fillTempVideoInfoMap(videos);
-    homepageFeed.addAll([
-      ...videos,
-    ]);
-  }
-
-  Future<List> searchForItems(String text) async {
-    try {
-      final videos = await NewPipeExtractorDart.search.searchYoutube(text, []);
-      _fillTempVideoInfoMap(videos.searchVideos);
-      return videos.dynamicSearchResultsList;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<List> searchNextPage() async {
-    final parsedList = await NewPipeExtractorDart.search.getNextPage();
-    final v = YoutubeSearch(
-      query: '',
-      searchVideos: parsedList[0],
-      searchPlaylists: parsedList[1],
-      searchChannels: parsedList[2],
-    );
-    _fillTempVideoInfoMap(v.searchVideos);
-    return v.dynamicSearchResultsList;
-  }
-
-  Future<void> fetchRelatedVideos(String id) async {
-    currentRelatedVideos.value = List.filled(20, null, growable: true);
-    final items = await NewPipeExtractorDart.videos.getRelatedStreams(id.toYTUrl());
-    _fillTempVideoInfoMap(items.whereType<StreamInfoItem>());
-    items.loop((p) {
-      if (p is YoutubePlaylist) {
-        YoutubeController.inst.getPlaylistStreams(p, forceInitial: true);
-      }
-    });
-    if (_canSafelyModifyMetadata(id)) {
-      currentRelatedVideos.value = [
-        ...items,
-      ];
-    }
-  }
-
-  /// For full list of items, use [streams] getter in [playlist].
-  Future<List<StreamInfoItem>> getPlaylistStreams(YoutubePlaylist? playlist, {bool forceInitial = false}) async {
-    if (playlist == null) return [];
-    final streams = forceInitial ? await playlist.getStreams() : await playlist.getStreamsNextPage();
-    _fillTempVideoInfoMap(streams);
-    return streams;
-  }
-
-  Future<YoutubePlaylist?> getPlaylistInfo(String playlistUrl, {bool forceInitial = false}) async {
-    return await NewPipeExtractorDart.playlists.getPlaylistDetails(playlistUrl);
-  }
-
-  Future<List<StreamInfoItem>> getChannelStreams(String channelID) async {
-    if (channelID == '') return [];
-    final url = 'https://www.youtube.com/channel/$channelID';
-    var streams = await NewPipeExtractorDart.channels.getChannelUploads(url);
-    int retries = 3;
-    while (streams.isEmpty && retries > 0) {
-      retries--;
-      streams = await NewPipeExtractorDart.channels.getChannelUploads(url);
-    }
-    _fillTempVideoInfoMap(streams);
-    return streams;
-  }
-
-  Future<List<StreamInfoItem>> getChannelStreamsNextPage() async {
-    final streams = await NewPipeExtractorDart.channels.getChannelNextUploads();
-    _fillTempVideoInfoMap(streams);
-    return streams;
-  }
-
-  Future<void> _fetchComments(String id, {bool forceRequest = false}) async {
-    currentTotalCommentsCount.value = null;
-    currentComments.assignAll(List.filled(20, null));
-
-    // -- Fetching Comments.
-    final fetchedComments = <YoutubeComment>[];
-    final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
-
-    // fetching cache
-    final userForceNewRequest = ConnectivityController.inst.hasConnection && settings.ytPreferNewComments.value;
-    if (!forceRequest && !userForceNewRequest && await cachedFile.exists()) {
-      final res = await cachedFile.readAsJson();
-      final commList = (res as List?)?.map((e) => YoutubeComment.fromMap(e));
-      if (commList != null && commList.isNotEmpty) {
-        fetchedComments.addAll(commList);
-      }
-      _isCurrentCommentsFromCache = true;
-    }
-    // fetching from yt, in case no comments were added, i.e: no cache.
-    if (fetchedComments.isEmpty) {
-      final comments = await NewPipeExtractorDart.comments.getComments(id.toYTUrl());
-      fetchedComments.addAll(comments);
-      _isCurrentCommentsFromCache = false;
-
-      if (comments.isNotEmpty) _saveCommentsToStorage(cachedFile, comments);
-    }
-    // -- Fetching Comments End.
-    if (_canSafelyModifyMetadata(id)) {
-      currentComments.clear();
-      _fillCommentsLists(fetchedComments);
-      currentTotalCommentsCount.value = fetchedComments.firstOrNull?.totalCommentsCount;
-    }
-  }
-
-  void _fillCommentsLists(List<YoutubeComment?> comments) {
-    for (final c in comments) {
-      final cid = c?.commentId;
-      final ctxt = c?.commentText;
-      if (cid != null && ctxt != null) {
-        commentToParsedHtml[cid] = removeCommentHTML(ctxt);
-      }
-    }
-
-    currentComments.addAll(comments);
-  }
-
-  String removeCommentHTML(String htmlComment) {
-    return HtmlParser.parseHTML(htmlComment.replaceAll('<br>', '\n')).text;
-  }
-
-  Future<void> _fetchNextComments(String id) async {
-    if (_isCurrentCommentsFromCache) return;
-    final comments = await NewPipeExtractorDart.comments.getNextComments();
-    if (_canSafelyModifyMetadata(id)) {
-      _fillCommentsLists(comments);
-
-      // -- saving to cache
-      final cachedFile = File("${AppDirs.YT_METADATA_COMMENTS}$id.txt");
-      _saveCommentsToStorage(cachedFile, currentComments.value);
-    }
-  }
-
-  Future<void> _saveCommentsToStorage(File file, Iterable<YoutubeComment?> commListy) async {
-    await file.writeAsJson(commListy.map((e) => e?.toMap()).toList());
-  }
-
-  /// Used to keep track of current comments sources, mainly to
-  /// prevent fetching next comments when cached version is loaded.
-  bool get isCurrentCommentsFromCache => _isCurrentCommentsFromCache;
-  bool _isCurrentCommentsFromCache = false;
-
-  Future<void> updateCurrentComments(String id, {bool fetchNextOnly = false, bool forceRequest = false}) async {
-    isLoadingComments.value = true;
-    if (currentComments.isNotEmpty && fetchNextOnly && !forceRequest) {
-      await _fetchNextComments(id);
-    } else {
-      await _fetchComments(id, forceRequest: forceRequest);
-    }
-    isLoadingComments.value = false;
-  }
-
   VideoStream getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
     final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value).map((element) => element.settingLabeltoVideoLabel());
     VideoStream? plsLoop(bool webm) {
@@ -530,173 +155,12 @@ class YoutubeController {
     }
   }
 
-  Future<void> updateVideoDetails(String id, {bool forceRequest = false}) async {
-    if (scrollController.hasClients) {
-      scrollController.jumpTo(0);
-      resetGlowUnderVideo();
-    }
-    startDimTimer();
-    isTitleExpanded.value = false;
-
-    updateCurrentVideoMetadata(id, forceRequest: forceRequest);
-    if (settings.youtubeStyleMiniplayer.value) {
-      updateCurrentComments(id);
-      fetchRelatedVideos(id);
-    }
-  }
-
-  Future<void> updateCurrentVideoMetadata(String id, {bool forceRequest = false}) async {
-    currentYoutubeMetadataVideo.value = null;
-    currentYoutubeMetadataChannel.value = null;
-
-    void updateForCurrentID(void Function() fn) {
-      if (_canSafelyModifyMetadata(id)) {
-        fn();
-      }
-    }
-
-    final channelUrl = tempVideoInfosFromStreams[id]?.uploaderUrl;
-
-    if (channelUrl != null) {
-      await Future.wait([
-        fetchVideoDetails(id).then((info) {
-          updateForCurrentID(() {
-            currentYoutubeMetadataVideo.value = info;
-          });
-        }),
-        fetchChannelDetails(channelUrl).then((channel) {
-          updateForCurrentID(() {
-            currentYoutubeMetadataChannel.value = channel;
-          });
-        }),
-      ]);
-    } else {
-      final info = await fetchVideoDetails(id, forceRequest: forceRequest);
-      final channel = await fetchChannelDetails(info?.uploaderUrl, forceRequest: forceRequest);
-      updateForCurrentID(() {
-        currentYoutubeMetadataVideo.value = info;
-        currentYoutubeMetadataChannel.value = channel;
-      });
-    }
-  }
-
-  Future<VideoInfo?> fetchVideoDetails(String id, {bool forceRequest = false}) async {
-    final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
-    VideoInfo? vi;
-    if (forceRequest == false && await cachedFile.exists()) {
-      final res = await cachedFile.readAsJson();
-      vi = VideoInfo.fromMap(res);
-    } else {
-      final info = await NewPipeExtractorDart.videos.getInfo(id.toYTUrl());
-      vi = info;
-      _cacheVideoInfo(id, info);
-    }
-    return vi;
-  }
-
-  Future<void> _cacheVideoInfo(String id, VideoInfo? info) async {
-    if (info != null) {
-      tempVideoInfo[id] = info;
-      await File("${AppDirs.YT_METADATA}$id.txt").writeAsJson(info.toMap());
-    }
-  }
-
-  /// fetches cache version only.
-  VideoInfo? _fetchVideoDetailsFromCacheSync(String id, {bool checkFromStorage = false}) {
-    if (tempVideoInfo[id] != null) return tempVideoInfo[id]!;
-    if (checkFromStorage) {
-      final cachedFile = File("${AppDirs.YT_METADATA}$id.txt");
-      if (cachedFile.existsSync()) {
-        final res = cachedFile.readAsJsonSync();
-        if (res != null) {
-          try {
-            return VideoInfo.fromMap(res);
-          } catch (_) {}
-        }
-      }
-    }
-    return null;
-  }
-
-  YoutubeChannel? fetchChannelDetailsFromCacheSync(String? channelUrl, {bool checkFromStorage = false}) {
-    final channelId = channelUrl?.split('/').last;
-    if (tempChannelInfo[channelId] != null) return tempChannelInfo[channelId]!;
-    if (checkFromStorage) {
-      final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
-      if (cachedFile.existsSync()) {
-        try {
-          final res = cachedFile.readAsJsonSync();
-          return YoutubeChannel.fromMap(res);
-        } catch (_) {}
-      }
-    }
-    return null;
-  }
-
-  Future<YoutubeChannel?> fetchChannelDetails(String? channelUrl, {bool forceRequest = false}) async {
-    final channelId = channelUrl?.split('/').last;
-    if (channelId == null) return null;
-    final cachedFile = File("${AppDirs.YT_METADATA_CHANNELS}$channelId.txt");
-    YoutubeChannel? vi;
-    if (!forceRequest && await cachedFile.exists()) {
-      final res = await cachedFile.readAsJson();
-      vi = YoutubeChannel.fromMap(res);
-    } else {
-      try {
-        final info = await NewPipeExtractorDart.channels.channelInfo(channelUrl);
-        vi = info;
-        tempChannelInfo[channelId] = info; // saves in memory
-        cachedFile.writeAsJson(info.toMap());
-      } catch (e) {
-        printy(e, isError: true);
-      }
-    }
-    return vi;
-  }
-
-  Future<List<VideoOnlyStream>> getAvailableVideoStreamsOnly(String id) async {
-    final videos = await NewPipeExtractorDart.videos.getVideoOnlyStreams(id.toYTUrl());
-    _sortVideoStreams(videos);
-    return videos;
-  }
-
-  Future<List<AudioOnlyStream>> getAvailableAudioOnlyStreams(String id) async {
-    final audios = await NewPipeExtractorDart.videos.getAudioOnlyStreams(id.toYTUrl());
-    _sortAudioStreams(audios);
-    return audios;
-  }
-
-  Future<YoutubeVideo> getAvailableStreams(String id) async {
-    final url = id.toYTUrl();
-    final video = await NewPipeExtractorDart.videos.getStream(url);
-    _cacheVideoInfo(id, video.videoInfo);
-
-    _sortVideoStreams(video.videoOnlyStreams);
-    _sortVideoStreams(video.videoStreams);
-    _sortAudioStreams(video.audioOnlyStreams);
-
-    return video;
-  }
-
-  void _sortVideoStreams(List<VideoStream>? streams) {
-    streams?.sortByReverseAlt(
-      (e) => e.width ?? (int.tryParse(e.resolution?.split('p').firstOrNull ?? '') ?? 0),
-      (e) => e.fps ?? 0,
-    );
-  }
-
-  void _sortAudioStreams(List<AudioOnlyStream>? streams) {
-    streams?.sortByReverseAlt(
-      (e) => e.bitrate ?? 0,
-      (e) => e.sizeInBytes ?? 0,
-    );
-  }
-
   void _loopMapAndPostNotification({
     required Map<String, RxMap<String, DownloadProgress>> bigMap,
     required int Function(String key, int progress) speedInBytes,
     required DateTime startTime,
     required bool isAudio,
+    required String? Function(String videoId) titleCallback,
   }) {
     final downloadingText = isAudio ? "Audio" : "Video";
     for (final bigEntry in bigMap.entries.toList()) {
@@ -705,7 +169,7 @@ class YoutubeController {
       for (final entry in map.entries.toList()) {
         final p = entry.value.progress;
         final tp = entry.value.totalProgress;
-        final title = getVideoName(videoId) ?? videoId;
+        final title = titleCallback(videoId) ?? videoId;
         final speedB = speedInBytes(videoId, entry.value.progress);
         currentSpeedsInByte.value[videoId] ??= <String, int>{}.obs;
         currentSpeedsInByte.value[videoId]![entry.key] = speedB;
@@ -775,6 +239,12 @@ class YoutubeController {
   void _startNotificationTimer() {
     if (_downloadNotificationTimer == null) {
       final startTime = DateTime.now();
+      String? title;
+      String? titleCallback(String videoId) {
+        title ??= YoutubeInfoController.utils.getVideoName(videoId);
+        return title;
+      }
+
       _downloadNotificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _loopMapAndPostNotification(
           startTime: startTime,
@@ -786,6 +256,7 @@ class YoutubeController {
             _speedMapVideo[key] = newProgress;
             return speed;
           },
+          titleCallback: titleCallback,
         );
         _loopMapAndPostNotification(
           startTime: startTime,
@@ -797,12 +268,11 @@ class YoutubeController {
             _speedMapAudio[key] = newProgress;
             return speed;
           },
+          titleCallback: titleCallback,
         );
       });
     }
   }
-
-  Future<int?> _getContentSize(String url) async => await NewPipeExtractorDart.httpClient.getContentLength(url);
 
   String cleanupFilename(String filename) => filename.replaceAll(RegExp(r'[*#\$|/\\!^:"]', caseSensitive: false), '_');
 
@@ -961,9 +431,7 @@ class YoutubeController {
 
   void _breakRetrievingInfoRequest(YoutubeItemDownloadConfig c) {
     final err = Exception('Download was canceled by the user');
-    _completersVAI[c]?.$1.completeErrorIfWasnt(err);
-    _completersVAI[c]?.$2.completeErrorIfWasnt(err);
-    _completersVAI[c]?.$3.completeErrorIfWasnt(err);
+    _completersVAI[c]?.completeErrorIfWasnt(err);
   }
 
   Future<void> cancelDownloadTask({
@@ -1037,7 +505,7 @@ class YoutubeController {
     }
   }
 
-  final _completersVAI = <YoutubeItemDownloadConfig, (Completer<void>, Completer<void>, Completer<void>)>{};
+  final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult>>{};
 
   Future<void> downloadYoutubeVideos({
     required List<YoutubeItemDownloadConfig> itemsConfig,
@@ -1061,66 +529,49 @@ class YoutubeController {
     Future<void> downloady(YoutubeItemDownloadConfig config) async {
       final videoID = config.id;
 
-      _completersVAI[config] = (Completer<void>(), Completer<void>(), Completer<void>());
-
-      final completerV = _completersVAI[config]!.$1;
-      final completerA = _completersVAI[config]!.$2;
-      final completerI = _completersVAI[config]!.$3;
+      final completer = _completersVAI[config] = Completer<VideoStreamsResult>();
+      final streamResultSync = YoutubeInfoController.video.fetchVideoStreamsSync(videoID);
+      if (streamResultSync != null && streamResultSync.hasExpired() == false) {
+        completer.completeIfWasnt(streamResultSync);
+      } else {
+        YoutubeInfoController.video.fetchVideoStreams(videoID).then((value) => completer.completeIfWasnt(value));
+      }
 
       isFetchingData.value[videoID] ??= <String, bool>{}.obs;
       isFetchingData.value[videoID]![config.filename] = true;
 
       try {
-        final dummyVideoUrl = (config.videoStream?.url == null || config.videoStream?.url == '');
-        final dummyAudioUrl = (config.audioStream?.url == null || config.audioStream?.url == '');
-        final fetchMissing = config.fetchMissingStreams || (dummyVideoUrl && dummyAudioUrl);
-        // -- we are using url cuz we remove it when reading from json
-        if (!audioOnly && (fetchMissing || config.prefferedVideoQualityID != null) && dummyVideoUrl) {
-          getAvailableVideoStreamsOnly(videoID).then((availableVideos) {
-            _sortVideoStreams(availableVideos);
-            if (config.prefferedVideoQualityID != null) {
-              config.videoStream = availableVideos.firstWhereEff((e) => e.id == config.prefferedVideoQualityID);
-            }
-            if (config.videoStream == null || config.videoStream?.url == null || config.videoStream?.url == '') {
-              final webm = config.filename.endsWith('.webm') || config.filename.endsWith('.WEBM');
-              config.videoStream = getPreferredStreamQuality(availableVideos, qualities: preferredQualities, preferIncludeWebm: webm);
-            }
-            completerV.completeIfWasnt();
-          });
-        } else {
-          completerV.completeIfWasnt();
+        final streams = await completer.future;
+
+        // -- video
+        final videos = streams.videoStreams;
+        if (config.prefferedVideoQualityID != null) {
+          config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
         }
-        if ((fetchMissing || config.prefferedAudioQualityID != null) && dummyAudioUrl) {
-          getAvailableAudioOnlyStreams(videoID).then((audios) {
-            _sortAudioStreams(audios);
-            if (config.prefferedAudioQualityID != null) {
-              config.audioStream = audios.firstWhereEff((e) => e.id == config.prefferedAudioQualityID);
-            }
-            if (config.audioStream == null || config.audioStream?.url == null || config.audioStream?.url == '') {
-              config.audioStream = audios.firstWhereEff((e) => e.formatSuffix != 'webm') ?? audios.firstOrNull;
-            }
-            completerA.completeIfWasnt();
-          });
-        } else {
-          completerA.completeIfWasnt();
+        if (config.videoStream == null || config.videoStream?.buildUrl()?.isNotEmpty != true) {
+          final webm = config.filename.endsWith('.webm') || config.filename.endsWith('.WEBM');
+          config.videoStream = getPreferredStreamQuality(videos, qualities: preferredQualities, preferIncludeWebm: webm);
         }
 
+        // -- audio
+        final audios = streams.audioStreams;
+        if (config.prefferedAudioQualityID != null) {
+          config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
+        }
+        if (config.audioStream == null || config.audioStream?.buildUrl()?.isNotEmpty != true) {
+          config.audioStream = audios.firstNonWebm() ?? audios.firstOrNull;
+        }
+
+        // -- meta info
         if (config.ffmpegTags.isEmpty) {
-          fetchVideoDetails(videoID).then((info) {
-            final meta = YTUtils.getMetadataInitialMap(videoID, info, autoExtract: autoExtractTitleAndArtist);
+          final info = streams.info;
+          final meta = YTUtils.getMetadataInitialMap(videoID, info, autoExtract: autoExtractTitleAndArtist);
 
-            config.ffmpegTags.addAll(meta);
-            config.fileDate = info?.date;
-            completerI.completeIfWasnt();
-          });
-        } else {
-          completerI.completeIfWasnt();
+          config.ffmpegTags.addAll(meta);
+          config.fileDate = info?.publishDate.date ?? info?.uploadDate.date;
         }
-
-        await completerV.future;
-        await completerA.future;
-        await completerI.future;
       } catch (e) {
+        // -- force break
         isFetchingData[videoID]?[config.filename] = false;
         return;
       }
@@ -1135,7 +586,7 @@ class YoutubeController {
         useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
         saveDirectory: saveDirectory,
         filename: config.filename,
-        fileExtension: config.videoStream?.formatSuffix ?? config.audioStream?.formatSuffix ?? '',
+        fileExtension: config.videoStream?.codecInfo.container ?? config.audioStream?.codecInfo.container ?? '',
         videoStream: config.videoStream,
         audioStream: config.audioStream,
         merge: true,
@@ -1150,7 +601,6 @@ class YoutubeController {
         onAudioFileReady: (audioFile) async {
           final thumbnailFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
             id: videoID,
-            channelUrlOrID: null,
             isImportantInCache: true,
           );
           await YTUtils.writeAudioMetadata(
@@ -1261,7 +711,7 @@ class YoutubeController {
     required String filename,
     required String fileExtension,
     required VideoStream? videoStream,
-    required AudioOnlyStream? audioStream,
+    required AudioStream? audioStream,
     required Map<String, String?> ffmpegTags,
     required bool merge,
     required bool keepCachedVersionsIfDownloaded,
@@ -1334,21 +784,17 @@ class YoutubeController {
       // --------- Downloading Choosen Video.
       if (videoStream != null) {
         final filecache = videoStream.getCachedFile(id);
-        if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: videoStream.sizeInBytes ?? 0)) {
+        if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: videoStream.sizeInBytes)) {
           videoFile = filecache;
           isVideoFileCached = true;
         } else {
-          if (videoStream.sizeInBytes == null || videoStream.sizeInBytes == 0) {
-            videoStream.sizeInBytes = await _getContentSize(videoStream.url ?? '');
-          }
-
           int bytesLength = 0;
 
           downloadsVideoProgressMap.value[id] ??= <String, DownloadProgress>{}.obs;
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
-            url: videoStream.url ?? '',
-            targetSize: videoStream.sizeInBytes ?? 0,
+            url: videoStream.buildUrl() ?? '',
+            targetSize: videoStream.sizeInBytes,
             filename: filenameClean,
             destinationFilePath: _getTempVideoPath(
               groupName: groupName,
@@ -1364,14 +810,14 @@ class YoutubeController {
               bytesLength += downloadedBytesLength;
               downloadsVideoProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
-                totalProgress: videoStream.sizeInBytes ?? 0,
+                totalProgress: videoStream.sizeInBytes,
               );
             },
           );
           videoFile = downloadedFile;
         }
 
-        final qualified = await fileSizeQualified(file: videoFile, targetSize: videoStream.sizeInBytes ?? 0);
+        final qualified = await fileSizeQualified(file: videoFile, targetSize: videoStream.sizeInBytes);
         if (qualified) {
           await onVideoFileReady(videoFile);
 
@@ -1390,20 +836,17 @@ class YoutubeController {
       // --------- Downloading Choosen Audio.
       if (skipAudio == false && audioStream != null) {
         final filecache = audioStream.getCachedFile(id);
-        if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: audioStream.sizeInBytes ?? 0)) {
+        if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: audioStream.sizeInBytes)) {
           audioFile = filecache;
           isAudioFileCached = true;
         } else {
-          if (audioStream.sizeInBytes == null || audioStream.sizeInBytes == 0) {
-            audioStream.sizeInBytes = await _getContentSize(audioStream.url ?? '');
-          }
           int bytesLength = 0;
 
           downloadsAudioProgressMap.value[id] ??= <String, DownloadProgress>{}.obs;
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
-            url: audioStream.url ?? '',
-            targetSize: audioStream.sizeInBytes ?? 0,
+            url: audioStream.buildUrl() ?? '',
+            targetSize: audioStream.sizeInBytes,
             filename: filenameClean,
             destinationFilePath: _getTempAudioPath(
               groupName: groupName,
@@ -1419,13 +862,13 @@ class YoutubeController {
               bytesLength += downloadedBytesLength;
               downloadsAudioProgressMap[id]![filename] = DownloadProgress(
                 progress: bytesLength,
-                totalProgress: audioStream.sizeInBytes ?? 0,
+                totalProgress: audioStream.sizeInBytes,
               );
             },
           );
           audioFile = downloadedFile;
         }
-        final qualified = await fileSizeQualified(file: audioFile, targetSize: audioStream.sizeInBytes ?? 0);
+        final qualified = await fileSizeQualified(file: audioFile, targetSize: audioStream.sizeInBytes);
 
         if (qualified) {
           await onAudioFileReady(audioFile);
@@ -1549,9 +992,10 @@ class YoutubeController {
   File? _latestSingleDownloadingFile;
   Future<NamidaVideo?> downloadYoutubeVideo({
     required String id,
-    VideoStream? stream,
-    required void Function(List<VideoOnlyStream> availableStreams) onAvailableQualities,
-    required void Function(VideoOnlyStream choosenStream) onChoosingQuality,
+    required VideoStream stream,
+    required DateTime? creationDate,
+    required void Function(List<VideoStream> availableStreams) onAvailableQualities,
+    required void Function(VideoStream choosenStream) onChoosingQuality,
     required void Function(int downloadedBytesLength) downloadingStream,
     required void Function(int initialFileSize) onInitialFileSize,
     required bool Function() canStartDownloading,
@@ -1560,22 +1004,7 @@ class YoutubeController {
     NamidaVideo? dv;
     try {
       // --------- Getting Video to Download.
-      late VideoOnlyStream erabaretaStream;
-      if (stream != null) {
-        erabaretaStream = stream;
-      } else {
-        final availableVideos = await getAvailableVideoStreamsOnly(id);
-
-        _sortVideoStreams(availableVideos);
-
-        onAvailableQualities(availableVideos);
-
-        erabaretaStream = availableVideos.last; // worst quality
-
-        if (stream == null) {
-          erabaretaStream = getPreferredStreamQuality(availableVideos);
-        }
-      }
+      VideoStream erabaretaStream = stream;
 
       onChoosingQuality(erabaretaStream);
       // ------------------------------------
@@ -1586,7 +1015,7 @@ class YoutubeController {
         return erabaretaStream.cachePath(id, directory: dir);
       }
 
-      final erabaretaStreamSizeInBytes = erabaretaStream.sizeInBytes ?? 0;
+      final erabaretaStreamSizeInBytes = erabaretaStream.sizeInBytes;
 
       final file = await File(getVPath(true)).create(); // retrieving the temp file (or creating a new one).
       int initialFileSizeOnDisk = 0;
@@ -1613,7 +1042,7 @@ class YoutubeController {
         _downloadManager.stopDownload(file: _latestSingleDownloadingFile); // disposing old download process
         _latestSingleDownloadingFile = file;
         downloaded = await _downloadManager.download(
-          url: erabaretaStream.url ?? '',
+          url: erabaretaStream.buildUrl(),
           file: file,
           downloadStartRange: downloadStartRange,
           downloadingStream: downloadingStream,
@@ -1627,13 +1056,13 @@ class YoutubeController {
           path: newFilePath,
           ytID: id,
           nameInCache: newFilePath.getFilenameWOExt,
-          height: erabaretaStream.height ?? 0,
-          width: erabaretaStream.width ?? 0,
+          height: erabaretaStream.height,
+          width: erabaretaStream.width,
           sizeInBytes: erabaretaStreamSizeInBytes,
-          frameratePrecise: erabaretaStream.fps?.toDouble() ?? 0.0,
-          creationTimeMS: 0, // TODO: get using metadata
-          durationMS: erabaretaStream.durationMS ?? 0,
-          bitrate: erabaretaStream.bitrate ?? 0,
+          frameratePrecise: erabaretaStream.fps.toDouble(),
+          creationTimeMS: creationDate?.millisecondsSinceEpoch ?? 0,
+          durationMS: erabaretaStream.duration.inMilliseconds,
+          bitrate: erabaretaStream.bitrate,
         );
       }
     } catch (e) {
@@ -1658,23 +1087,21 @@ class YoutubeController {
   }
 }
 
-extension _IDToUrlConvert on String {
-  String toYTUrl() => 'https://www.youtube.com/watch?v=$this';
-}
-
 class _YTDownloadManager with PortsProvider<SendPort> {
   final _downloadCompleters = <String, Completer<bool>?>{}; // file path
   final _progressPorts = <String, ReceivePort?>{}; // file path
 
   /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
   Future<bool> download({
-    required String url,
+    required String? url,
     required File file,
     String? moveTo,
     int? moveToRequiredBytes,
     required int downloadStartRange,
     required void Function(int downloadedBytesLength) downloadingStream,
   }) async {
+    if (url == null || url.isEmpty) return false;
+
     final filePath = file.path;
     _downloadCompleters[filePath]?.completeIfWasnt(false);
     _downloadCompleters[filePath] = Completer<bool>();

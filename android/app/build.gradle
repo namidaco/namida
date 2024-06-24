@@ -31,7 +31,7 @@ if (flutterVersionName == null) {
 android {
     namespace 'com.msob7y.namida'
     compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    ndkVersion "26.3.11579264"
     splits {
 
         abi {
@@ -53,6 +53,12 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    packaging {
+        jniLibs {
+            exclude("lib/x86/*.so")
+        }
     }
 
     applicationVariants.all { variant ->

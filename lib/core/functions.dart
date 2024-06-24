@@ -37,8 +37,8 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
 
 class NamidaOnTaps {
@@ -94,12 +94,10 @@ class NamidaOnTaps {
   }
 
   Future<void> onHistoryPlaylistTap({
+    HistoryScrollInfo? scrollInfo,
     double initialScrollOffset = 0,
-    int? indexToHighlight,
-    int? dayOfHighLight,
   }) async {
-    HistoryController.inst.indexToHighlight.value = indexToHighlight;
-    HistoryController.inst.dayOfHighLight.value = dayOfHighLight;
+    HistoryController.inst.highlightedItem.value = scrollInfo;
 
     void jump() {
       if (HistoryController.inst.scrollController.hasClients) {
@@ -818,6 +816,7 @@ class TracksAddOnTap {
     if (currentTrackS is! Selectable) return;
     final currentTrack = currentTrackS.track;
     showAddItemsToQueueDialog(
+      onDisposing: null,
       context: context,
       tiles: (getAddTracksTile) {
         return [
@@ -1153,10 +1152,15 @@ class TracksAddOnTap {
     final currentVideo = Player.inst.currentVideo;
     if (currentVideo == null) return;
     final currentVideoId = currentVideo.id;
-    final currentVideoName = YoutubeController.inst.getVideoName(currentVideoId) ?? currentVideoId;
+    final currentVideoName = YoutubeInfoController.utils.getVideoName(currentVideoId) ?? currentVideoId;
+
+    final isLoadingVideoDate = false.obs;
 
     NamidaYTGenerator.inst.initialize();
     showAddItemsToQueueDialog(
+      onDisposing: () {
+        isLoadingVideoDate.close();
+      },
       context: context,
       tiles: (getAddTracksTile) {
         return [
@@ -1214,7 +1218,7 @@ class TracksAddOnTap {
           const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
           Obx(
             () {
-              final isLoading = NamidaYTGenerator.inst.didPrepareResources.valueR == false;
+              final isLoading = isLoadingVideoDate.valueR || NamidaYTGenerator.inst.didPrepareResources.valueR == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(
@@ -1226,7 +1230,18 @@ class TracksAddOnTap {
                   icon: Broken.calendar_1,
                   insertionType: QueueInsertionType.sameReleaseDate,
                   onTap: (insertionType) async {
-                    final videos = await NamidaYTGenerator.inst.generateVideoFromSameEra(currentVideoId, videoToRemove: currentVideoId);
+                    DateTime? date = YoutubeInfoController.utils.getVideoReleaseDate(currentVideoId);
+                    if (date == null) {
+                      isLoadingVideoDate.value = true;
+                      final info = await YoutubeInfoController.video.fetchVideoStreams(currentVideoId, forceRequest: false);
+                      date = info?.info?.publishedAt.date ?? info?.info?.publishDate.date;
+                      isLoadingVideoDate.value = false;
+                    }
+                    if (date == null) {
+                      snackyy(message: 'failed to fetch video date', isError: true, title: lang.ERROR);
+                      return;
+                    }
+                    final videos = await NamidaYTGenerator.inst.generateVideoFromSameEra(currentVideoId, date, videoToRemove: currentVideoId);
                     Player.inst
                         .addToQueue(
                           videos,
@@ -1268,6 +1283,7 @@ class TracksAddOnTap {
 
   Future<void> showAddItemsToQueueDialog({
     required BuildContext context,
+    required void Function()? onDisposing,
     required List<Widget> Function(
             Widget Function({
               required String title,
@@ -1414,6 +1430,10 @@ class TracksAddOnTap {
     }
 
     await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        onDisposing?.call();
+        shouldShowConfigureIcon.close();
+      },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
         title: lang.NEW_TRACKS_ADD,

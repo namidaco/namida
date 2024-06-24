@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -33,6 +32,9 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/extensions.dart';
 
 class FocusedMenuOptions<E> {
   final bool Function(E currentItem) onOpen;
@@ -41,10 +43,10 @@ class FocusedMenuOptions<E> {
   final Widget Function(E currentItem) builder;
   final RxList<NamidaVideo> localVideos;
   final String? Function(E item) currentId;
-  final RxList<VideoOnlyStream> streamVideos;
+  final Rxn<VideoStreamsResult> streams;
   final Future<void> Function(E item)? loadQualities;
   final Future<void> Function(E item, NamidaVideo video) onLocalVideoTap;
-  final Future<void> Function(E item, String? videoId, VideoOnlyStream stream, File? cacheFile) onStreamVideoTap;
+  final Future<void> Function(E item, String? videoId, VideoStream stream, File? cacheFile, VideoStreamsResult? mainStreams) onStreamVideoTap;
 
   const FocusedMenuOptions({
     required this.onOpen,
@@ -53,7 +55,7 @@ class FocusedMenuOptions<E> {
     required this.builder,
     required this.currentId,
     required this.localVideos,
-    required this.streamVideos,
+    required this.streams,
     required this.loadQualities,
     required this.onLocalVideoTap,
     required this.onStreamVideoTap,
@@ -500,7 +502,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                 menuWidget: Obx(
                   () {
                     final availableVideos = widget.focusedMenuOptions.localVideos.valueR;
-                    final ytVideos = widget.focusedMenuOptions.streamVideos.where((s) => s.formatSuffix != 'webm');
+                    final ytVideos = widget.focusedMenuOptions.streams.valueR?.videoStreams.withoutWebm();
                     return ListView(
                       padding: const EdgeInsets.symmetric(vertical: 12.0),
                       children: [
@@ -544,17 +546,17 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                           },
                         ),
                         const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 6.0)),
-                        ...ytVideos.map(
+                        ...?ytVideos?.map(
                           (element) {
                             final currentId = widget.focusedMenuOptions.currentId(currentItem);
                             final cacheFile = currentId == null ? null : element.getCachedFile(currentId);
                             final cacheExists = cacheFile != null;
                             return _MPQualityButton(
-                              onTap: () => widget.focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile),
+                              onTap: () => widget.focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, widget.focusedMenuOptions.streams.value),
                               bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
                               icon: cacheExists ? Broken.tick_circle : Broken.import,
-                              title: "${element.resolution} • ${element.sizeInBytes?.fileSizeFormatted}",
-                              subtitle: "${element.formatSuffix} • ${element.bitrateText}",
+                              title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
+                              subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
                             );
                           },
                         ),

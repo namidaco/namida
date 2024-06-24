@@ -1,11 +1,13 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
@@ -50,7 +52,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
@@ -175,16 +176,26 @@ extension YTVideoQuality on String {
   }
 }
 
-extension CacheGetterAudio on AudioOnlyStream {
+extension CacheGetterAudio on AudioStream {
   String cacheKey(String id) {
     final audio = this;
     // -- wont save english track, only saves non-english ones.
-    final langCode = audio.language?.toLowerCase();
-    final langName = audio.displayLanguage?.toLowerCase();
-    final isNull = langCode == null || langName == null;
-    final isEnglish = langCode == 'en' || langName == 'english';
-    final languageText = isNull || isEnglish ? '' : '_${audio.language}_${audio.displayLanguage}';
-    return "$id${languageText}_${audio.bitrate}.${audio.formatSuffix}";
+    String languageText = '';
+
+    final audioTrack = audio.audioTrack;
+    if (audioTrack != null) {
+      final langCode = audioTrack.langCode?.toLowerCase();
+      final langName = audioTrack.displayName?.toLowerCase();
+
+      if (langCode == 'en' && audioTrack.isDefault == true) {
+        // -- is original english
+        // -- isDefault check is required cuz there can be more than 1 english audio
+      } else {
+        languageText = '_${langCode}_$langName';
+      }
+    }
+
+    return "$id${languageText}_${audio.bitrate}.${audio.codecInfo.container}";
   }
 
   String cachePath(String id, {String? directory}) {
@@ -198,10 +209,10 @@ extension CacheGetterAudio on AudioOnlyStream {
   }
 }
 
-extension CacheGetterVideo on VideoOnlyStream {
+extension CacheGetterVideo on VideoStream {
   String cacheKey(String id, {String? directory}) {
     final video = this;
-    return "${id}_${video.resolution}.${video.formatSuffix}";
+    return "${id}_${video.qualityLabel}.${video.codecInfo.container}";
   }
 
   String cachePath(String id, {String? directory}) {
@@ -212,34 +223,6 @@ extension CacheGetterVideo on VideoOnlyStream {
     if (id == null) return null;
     final path = cachePath(id, directory: directory);
     return File(path).existsSync() ? File(path) : null;
-  }
-}
-
-extension StreamInfoUtils on StreamInfoItem {
-  VideoInfo toVideoInfo() {
-    return VideoInfo(
-      id: id,
-      url: url,
-      name: name,
-      uploaderName: uploaderName,
-      uploaderUrl: uploaderUrl,
-      uploaderAvatarUrl: uploaderAvatarUrl,
-      date: date,
-      isDateApproximation: isDateApproximation,
-      description: null,
-      duration: duration,
-      viewCount: viewCount,
-      likeCount: null,
-      category: null,
-      ageLimit: null,
-      tags: null,
-      thumbnailUrl: thumbnailUrl,
-      isUploaderVerified: isUploaderVerified,
-      textualUploadDate: textualUploadDate,
-      uploaderSubscriberCount: -1,
-      privacy: null,
-      isShortFormContent: isShortFormContent,
-    );
   }
 }
 
@@ -423,28 +406,28 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 
-  Future<void> executePlaylist(String playlistUrl, {YoutubePlaylist? playlist, required BuildContext? context}) async {
-    final plInfo = playlist ?? await YoutubeController.inst.getPlaylistInfo(playlistUrl);
+  Future<void> executePlaylist({required String playlistId, YoutiPiePlaylistResult? playlist}) async {
+    final plInfo = playlist ?? await YoutiPie.playlist.fetchPlaylist(playlistId: playlistId);
     if (plInfo == null) {
       snackyy(title: lang.ERROR, message: 'error retrieving playlist info, check your connection?');
       return;
     }
-    final didFetch = await plInfo.fetchAllPlaylistStreams(context: context?.mounted == true ? context : null);
+    final didFetch = await plInfo.info.fetchAllPlaylistStreams(showProgressSheet: true, playlist: plInfo);
     if (!didFetch) {
       snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
       return;
     }
 
-    final streams = plInfo.streams;
+    final streams = plInfo.items;
 
-    final playlistId = playlist?.id == null ? null : PlaylistID(id: playlist!.id!);
-    Iterable<YoutubeID> getPlayables() => streams.map((e) => YoutubeID(id: e.id ?? '', playlistID: playlistId));
+    final plID = PlaylistID(id: playlistId);
+    Iterable<YoutubeID> getPlayables() => streams.map((e) => YoutubeID(id: e.id, playlistID: plID));
 
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
-        plInfo.showPlaylistDownloadSheet(context: context?.mounted == true ? context : null);
+        plInfo.info.showPlaylistDownloadSheet(showProgressSheet: true, playlistToFetch: plInfo);
       case OnYoutubeLinkOpenAction.addToPlaylist:
-        showAddToPlaylistSheet(ids: streams.map((e) => e.id ?? ''), idsNamesLookup: {});
+        showAddToPlaylistSheet(ids: streams.map((e) => e.id), idsNamesLookup: {});
       case OnYoutubeLinkOpenAction.play:
         await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
       case OnYoutubeLinkOpenAction.playNext:
@@ -455,7 +438,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         await Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
         _showAskDialog(
-          (action) => action.executePlaylist(playlistUrl, context: context, playlist: plInfo),
+          (action) => action.executePlaylist(playlistId: playlistId, playlist: plInfo),
           playlistToOpen: plInfo,
           playlistToAddAs: plInfo,
         );
@@ -498,8 +481,8 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutubePlaylist? playlistToOpen, YoutubePlaylist? playlistToAddAs}) {
-    String playlistNameToAddAs = playlistToAddAs?.name ?? '';
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutiPiePlaylistResult? playlistToOpen, YoutiPiePlaylistResult? playlistToAddAs}) {
+    String playlistNameToAddAs = playlistToAddAs?.info.title ?? '';
     String suffix = '';
     int suffixIndex = 1;
     while (ytplc.YoutubePlaylistController.inst.playlistsMap["$playlistNameToAddAs$suffix"] != null) {
@@ -579,7 +562,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                     didAddToPlaylist.value = true;
                     ytplc.YoutubePlaylistController.inst.addNewPlaylist(
                       playlistNameToAddAs,
-                      videoIds: playlistToAddAs?.streams.map((e) => e.id ?? '') ?? [],
+                      videoIds: playlistToAddAs?.items.map((e) => e.id),
                     );
                   },
                 ),
@@ -595,10 +578,11 @@ extension PerformanceModeUtils on PerformanceMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 
-  Future<void> execute() async {
+  Future<void> executeAndSave() async {
     switch (this) {
       case PerformanceMode.highPerformance:
         settings.save(
+          performanceMode: PerformanceMode.highPerformance,
           enableBlurEffect: false,
           enableGlowEffect: false,
           enableMiniplayerParallaxEffect: false,
@@ -606,6 +590,7 @@ extension PerformanceModeUtils on PerformanceMode {
         );
       case PerformanceMode.balanced:
         settings.save(
+          performanceMode: PerformanceMode.balanced,
           enableBlurEffect: false,
           enableGlowEffect: false,
           enableMiniplayerParallaxEffect: true,
@@ -613,12 +598,16 @@ extension PerformanceModeUtils on PerformanceMode {
         );
       case PerformanceMode.goodLooking:
         settings.save(
+          performanceMode: PerformanceMode.goodLooking,
           enableBlurEffect: true,
           enableGlowEffect: true,
           enableMiniplayerParallaxEffect: true,
           artworkCacheHeightMultiplier: 1.0,
         );
-      // case PerformanceMode.custom:
+      case PerformanceMode.custom:
+        settings.save(
+          performanceMode: PerformanceMode.custom,
+        );
       default:
         null;
     }

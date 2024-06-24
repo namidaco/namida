@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
+import 'package:youtipie/class/comments/comment_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -11,8 +11,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/namida_read_more.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -20,25 +18,29 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YTCommentCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
-  final YoutubeComment? comment;
+  final CommentInfoItem? comment;
   const YTCommentCard({super.key, required this.comment, required this.margin});
 
   @override
   Widget build(BuildContext context) {
-    final uploaderAvatar = comment?.uploaderAvatarUrl;
-    final author = comment?.author;
-    final uploadedFrom = comment?.uploadDate;
-    final commentText = comment?.commentText;
-    final likeCount = comment?.likeCount;
-    final repliesCount = comment?.replyCount == -1 ? null : comment?.replyCount;
-    final isHearted = comment?.hearted ?? false;
-    final isPinned = comment?.pinned ?? false;
+    final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
+    final author = comment?.author?.displayName;
+    final isArtist = comment?.author?.isArtist ?? false;
+    final uploadedFrom = comment?.publishedTimeText;
+    final commentTextParsed = comment?.text;
+    final likeCount = comment?.likesCount;
+    final repliesCount = comment?.repliesCount;
+    final isHearted = comment?.isHearted ?? false;
+    final isPinned = comment?.isPinned ?? false;
 
     final containerColor = context.theme.cardColor.withAlpha(100);
     final readmoreColor = context.theme.colorScheme.primary.withAlpha(160);
 
-    final cid = comment?.commentId;
-
+    final authorTextColor = context.theme.colorScheme.onSurface.withAlpha(180);
+    final authorTextStyle = context.textTheme.displaySmall?.copyWith(
+      fontWeight: FontWeight.w400,
+      color: authorTextColor,
+    );
     return Stack(
       children: [
         Padding(
@@ -71,7 +73,7 @@ class YTCommentCard extends StatelessWidget {
                       child: YoutubeThumbnail(
                         key: Key(uploaderAvatar ?? ''),
                         isImportantInCache: false,
-                        channelUrl: uploaderAvatar,
+                        customUrl: uploaderAvatar,
                         width: 38.0,
                         isCircle: true,
                       ),
@@ -108,33 +110,50 @@ class YTCommentCard extends StatelessWidget {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    [
-                                      author,
-                                      if (uploadedFrom != null) uploadedFrom,
-                                    ].join(' • '),
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400, color: context.theme.colorScheme.onSurface.withAlpha(180)),
+                                  child: Row(
+                                    children: [
+                                      if (author != null)
+                                        Flexible(
+                                          child: Text(
+                                            author,
+                                            style: authorTextStyle,
+                                          ),
+                                        ),
+                                      if (uploadedFrom != null)
+                                        Text(
+                                          " • $uploadedFrom",
+                                          style: authorTextStyle,
+                                        ),
+                                      if (isArtist) ...[
+                                        const SizedBox(width: 4.0),
+                                        Icon(
+                                          Broken.musicnote,
+                                          size: 10.0,
+                                          color: authorTextColor,
+                                        ),
+                                      ],
+                                      if (isHearted) ...[
+                                        const SizedBox(width: 4.0),
+                                        const Icon(
+                                          Broken.heart_tick,
+                                          size: 14.0,
+                                          color: Color.fromARGB(210, 233, 80, 112),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
-                                if (isHearted) ...[
-                                  const SizedBox(width: 4.0),
-                                  const Icon(
-                                    Broken.heart_tick,
-                                    size: 16.0,
-                                    color: Color.fromARGB(200, 250, 90, 80),
-                                  ),
-                                ],
                               ],
                             ),
                           ),
                           const SizedBox(height: 4.0),
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 200),
-                            child: commentText == null
+                            child: commentTextParsed == null
                                 ? Column(
                                     children: [
                                       ...List.filled(
-                                        3,
+                                        (4 - 1).getRandomNumberBelow(1),
                                         const Padding(
                                           padding: EdgeInsets.only(top: 2.0),
                                           child: NamidaDummyContainer(
@@ -149,7 +168,7 @@ class YTCommentCard extends StatelessWidget {
                                     ],
                                   )
                                 : NamidaReadMoreText(
-                                    text: YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
+                                    text: commentTextParsed,
                                     lines: 5,
                                     builder: (text, lines, isExpanded, exceededMaxLines, toggle) {
                                       return Column(
@@ -214,7 +233,7 @@ class YTCommentCard extends StatelessWidget {
                           const SizedBox(height: 8.0),
                           Row(
                             children: [
-                              const Icon(Broken.like_1, size: 16.0),
+                              if (comment != null) const Icon(Broken.like_1, size: 16.0),
                               if (likeCount == null || likeCount > 0) ...[
                                 const SizedBox(width: 4.0),
                                 NamidaDummyContainer(
@@ -270,9 +289,8 @@ class YTCommentCard extends StatelessWidget {
                 icon: Broken.copy,
                 title: lang.COPY,
                 onTap: () {
-                  final commentHTML = comment?.commentText;
-                  if (commentHTML != null) {
-                    Clipboard.setData(ClipboardData(text: YoutubeController.inst.removeCommentHTML(commentHTML)));
+                  if (commentTextParsed != null) {
+                    Clipboard.setData(ClipboardData(text: commentTextParsed));
                   }
                 },
               ),
@@ -280,10 +298,10 @@ class YTCommentCard extends StatelessWidget {
                 icon: Broken.user,
                 title: lang.GO_TO_CHANNEL,
                 onTap: () {
-                  final url = comment?.uploaderUrl;
-                  final chid = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(url);
-                  if (chid == null) return;
-                  NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid));
+                  final channelId = comment?.author?.channelId;
+                  if (channelId != null) {
+                    NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelId));
+                  }
                 },
               ),
             ],
@@ -299,21 +317,19 @@ class YTCommentCard extends StatelessWidget {
 }
 
 class YTCommentCardCompact extends StatelessWidget {
-  final YoutubeComment? comment;
+  final CommentInfoItem? comment;
   const YTCommentCardCompact({super.key, required this.comment});
 
   @override
   Widget build(BuildContext context) {
-    final uploaderAvatar = comment?.uploaderAvatarUrl;
-    final author = comment?.author;
-    final uploadedFrom = comment?.uploadDate;
-    final commentText = comment?.commentText;
-    final likeCount = comment?.likeCount;
-    final repliesCount = comment?.replyCount == -1 ? null : comment?.replyCount;
-    final isHearted = comment?.hearted ?? false;
-    final isPinned = comment?.pinned ?? false;
-
-    final cid = comment?.commentId;
+    final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
+    final author = comment?.author?.displayName;
+    final uploadedFrom = comment?.publishedTimeText;
+    final commentTextParsed = comment?.text;
+    final likeCount = comment?.likesCount;
+    final repliesCount = comment?.repliesCount;
+    final isHearted = comment?.isHearted ?? false;
+    final isPinned = comment?.isPinned ?? false;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +342,7 @@ class YTCommentCardCompact extends StatelessWidget {
           child: YoutubeThumbnail(
             key: Key(uploaderAvatar ?? ''),
             isImportantInCache: false,
-            channelUrl: uploaderAvatar,
+            customUrl: uploaderAvatar,
             width: 28.0,
             isCircle: true,
           ),
@@ -378,7 +394,7 @@ class YTCommentCardCompact extends StatelessWidget {
               const SizedBox(height: 2.0),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
-                child: commentText == null
+                child: commentTextParsed == null
                     ? Column(
                         children: [
                           ...List.filled(
@@ -397,7 +413,7 @@ class YTCommentCardCompact extends StatelessWidget {
                         ],
                       )
                     : Text(
-                        YoutubeController.inst.commentToParsedHtml[cid] ?? commentText,
+                        commentTextParsed,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: context.textTheme.displaySmall?.copyWith(
@@ -411,7 +427,7 @@ class YTCommentCardCompact extends StatelessWidget {
               Row(
                 children: [
                   const SizedBox(width: 4.0),
-                  const Icon(Broken.like_1, size: 12.0),
+                  if (comment != null) const Icon(Broken.like_1, size: 12.0),
                   if (likeCount == null || likeCount > 0) ...[
                     const SizedBox(width: 4.0),
                     NamidaDummyContainer(

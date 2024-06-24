@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:newpipeextractor_dart/models/stream_info_item.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/class/route.dart';
@@ -23,8 +27,8 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
@@ -77,6 +81,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
           overrideListens: listens,
           playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
           playlistName: '',
+          canHaveDuplicates: false,
         );
       },
     );
@@ -262,7 +267,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                   NamidaPopupWrapper(
                                     openOnLongPress: false,
                                     childrenDefault: () => [
-                                      NamidaPopupItem(icon: Broken.share, title: lang.SHARE, onTap: playlist.shareVideos),
+                                      NamidaPopupItem(
+                                        icon: Broken.share,
+                                        title: lang.SHARE,
+                                        onTap: playlist.shareVideos,
+                                      ),
                                       if (widget.isEditable) ...[
                                         NamidaPopupItem(
                                           icon: Broken.edit_2,
@@ -332,6 +341,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                               builder: (canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
                             );
                           },
+                          canHaveDuplicates: true,
                         );
                       },
                     ),
@@ -349,11 +359,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
 
 class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
-  String? get name => playlist.name;
+  String? get name => playlist.basicInfo.title;
   @override
   RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
 
-  final yt.YoutubePlaylist playlist;
+  final YoutiPiePlaylistResultBase playlist;
 
   const YTHostedPlaylistSubpage({
     super.key,
@@ -366,7 +376,7 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
 
 class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with YoutubeStreamsManager {
   @override
-  List<StreamInfoItem> get streamsList => widget.playlist.streams;
+  List<StreamInfoItem> get streamsList => _playlist.items;
 
   @override
   ScrollController get scrollController => controller;
@@ -380,25 +390,23 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   late final ScrollController controller;
   final _isLoadingMoreItems = false.obs;
 
-  bool _canKeepFetching = false;
+  YoutiPieFetchAllRes? _currentFetchAllRes;
 
   void _scrollListener() async {
     if (_isLoadingMoreItems.value) return;
+    if (!_playlist.canFetchNext) return;
+
     if (!controller.hasClients) return;
 
-    final fetched = widget.playlist.streams.length;
-    final total = widget.playlist.streamCount;
-    // -- mainly a workaround for playlists containing hidden videos
-    // -- works only for small playlists (<=100 videos).
-    if (fetched > 0 && fetched <= 100 && total > 0 && total <= 100) return;
-    final needsToLoadMore = total >= 0 && fetched < total;
-    if (needsToLoadMore && controller.offset >= controller.position.maxScrollExtent - 400 && !controller.position.outOfRange) {
+    if (controller.offset >= controller.position.maxScrollExtent - 400 && !controller.position.outOfRange) {
       await _fetch100Video();
     }
   }
 
+  late YoutiPiePlaylistResultBase _playlist;
   @override
   void initState() {
+    _playlist = widget.playlist;
     super.initState();
     controller = ScrollController()..addListener(_scrollListener);
     _fetch100Video();
@@ -416,17 +424,29 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   Color? bgColor;
 
   Future<List<YoutubeID>> _getAllPlaylistVideos() async {
-    return await widget.playlist.fetchAllPlaylistAsYTIDs(context: context);
+    return await _playlist.basicInfo.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: _playlist);
   }
 
-  PlaylistID? get _getPlaylistID {
-    final plId = widget.playlist.id;
-    return plId == null ? null : PlaylistID(id: plId);
+  PlaylistID get _getPlaylistID {
+    final plId = _playlist.basicInfo.id;
+    return PlaylistID(id: plId);
   }
 
   Future<void> _fetch100Video() async {
     _isLoadingMoreItems.value = true;
-    await YoutubeController.inst.getPlaylistStreams(widget.playlist, forceInitial: widget.playlist.streams.isEmpty);
+
+    try {
+      if (_playlist.items.isEmpty) {
+        final playlist = await YoutubeInfoController.playlist.fetchPlaylist(
+          playlistId: _playlist.basicInfo.id,
+          details: ExecuteDetails.forceRequest(),
+        );
+        if (playlist != null) _playlist = playlist;
+      } else {
+        await _playlist.fetchNext();
+      }
+    } catch (_) {}
+
     trySortStreams();
     _isLoadingMoreItems.value = false;
     setState(() {});
@@ -436,14 +456,29 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
     final bigThumbWidth = context.width - horizontalBigThumbPadding * 2;
-    final playlist = widget.playlist;
+    final playlist = _playlist;
 
     const itemsThumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const itemsThumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
 
-    final firstID = playlist.streams.firstOrNull?.id;
-    final hasMoreStreamsLeft = playlist.streams.length < playlist.streamCount;
+    final videosCount = playlist.basicInfo.videosCount;
+    String? description;
+    String uploaderTitleAndViews = '';
+    String? thumbnailUrl;
+    if (playlist is YoutiPiePlaylistResult) {
+      description = playlist.info.description;
+      final uploaderTitle = playlist.info.uploader?.title;
+      final viewsCount = playlist.info.viewsCount;
+      final viewsCountText = viewsCount == null ? playlist.info.viewsCountText : "${viewsCount.formatDecimalShort()} ${viewsCount == 0 ? lang.VIEW : lang.VIEWS}";
+      uploaderTitleAndViews = [
+        if (uploaderTitle != null) uploaderTitle,
+        if (viewsCountText != null) viewsCountText,
+      ].join(' - ');
+      thumbnailUrl = playlist.info.thumbnails.pick()?.url;
+    }
+    final firstID = playlist.items.firstOrNull?.id;
+    final hasMoreStreamsLeft = playlist.canFetchNext;
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
@@ -462,7 +497,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                       height: context.width * 9 / 16,
                       compressed: true,
                       isImportantInCache: false,
-                      channelUrl: playlist.thumbnailUrl,
+                      customUrl: thumbnailUrl,
                       videoId: firstID,
                       blur: 0.0,
                       borderRadius: 0.0,
@@ -495,7 +530,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             height: (bigThumbWidth * 9 / 16),
                             compressed: false,
                             isImportantInCache: true,
-                            channelUrl: playlist.thumbnailUrl,
+                            customUrl: thumbnailUrl,
                             videoId: firstID,
                             blur: 4.0,
                           ),
@@ -507,23 +542,25 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      playlist.name ?? '',
+                                      playlist.basicInfo.title,
                                       style: context.textTheme.displayLarge,
                                     ),
                                     const SizedBox(height: 6.0),
                                     Text(
-                                      playlist.streamCount < 0 ? '+25' : playlist.streamCount.displayVideoKeyword,
+                                      videosCount == null ? '+25' : videosCount.displayVideoKeyword,
                                       style: context.textTheme.displaySmall,
                                     ),
-                                    const SizedBox(height: 2.0),
-                                    Text(
-                                      playlist.uploaderName ?? '',
-                                      style: context.textTheme.displaySmall,
-                                    ),
-                                    if (playlist.description != null && playlist.description != '') ...[
+                                    if (uploaderTitleAndViews.isNotEmpty == true) ...[
                                       const SizedBox(height: 2.0),
                                       Text(
-                                        playlist.description!,
+                                        uploaderTitleAndViews,
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                    ],
+                                    if (description != null && description.isNotEmpty) ...[
+                                      const SizedBox(height: 2.0),
+                                      Text(
+                                        description,
                                         style: context.textTheme.displaySmall,
                                       ),
                                     ],
@@ -556,7 +593,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                   NamidaNavigator.inst.navigateTo(
                                     YTPlaylistDownloadPage(
                                       ids: videos,
-                                      playlistName: playlist.name ?? '',
+                                      playlistName: playlist.basicInfo.title,
                                       infoLookup: const {},
                                     ),
                                   );
@@ -564,8 +601,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                               ),
                               NamidaPopupWrapper(
                                 openOnLongPress: false,
-                                childrenDefault: () => playlist.getPopupMenuItems(
-                                  context,
+                                childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
+                                  playlistToFetch: _playlist,
+                                  showProgressSheet: true,
                                   displayDownloadItem: false,
                                   displayShuffle: false,
                                 ),
@@ -596,24 +634,29 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                         Expanded(
                           child: sortWidget,
                         ),
-                        Obx(
-                          () => NamidaInkWellButton(
+                        ObxO(
+                          rx: _isLoadingMoreItems,
+                          builder: (isLoadingMoreItems) => NamidaInkWellButton(
                             animationDurationMS: 100,
                             sizeMultiplier: 0.95,
                             borderRadius: 8.0,
                             icon: Broken.task_square,
                             text: lang.LOAD_ALL,
-                            enabled: !_isLoadingMoreItems.valueR && hasMoreStreamsLeft,
+                            enabled: !isLoadingMoreItems && hasMoreStreamsLeft,
                             disableWhenLoading: false,
                             showLoadingWhenDisabled: hasMoreStreamsLeft,
                             onTap: () async {
-                              _canKeepFetching = !_canKeepFetching;
-                              widget.playlist.fetchAllPlaylistStreams(
-                                context: null,
-                                onStart: () => _isLoadingMoreItems.value = true,
-                                onEnd: () => _isLoadingMoreItems.value = false,
-                                canKeepFetching: () => _canKeepFetching,
-                              );
+                              if (_currentFetchAllRes != null) {
+                                _currentFetchAllRes?.cancel();
+                              } else {
+                                _playlist.basicInfo.fetchAllPlaylistStreams(
+                                  playlist: _playlist,
+                                  showProgressSheet: false,
+                                  onStart: () => _isLoadingMoreItems.value = true,
+                                  onEnd: () => _isLoadingMoreItems.value = false,
+                                  controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
+                                );
+                              }
                             },
                           ),
                         ),
@@ -623,9 +666,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                 ),
                 sliver: SliverFixedExtentList.builder(
                   itemExtent: itemsThumbnailItemExtent,
-                  itemCount: playlist.streams.length,
+                  itemCount: playlist.items.length,
                   itemBuilder: (context, index) {
-                    final item = playlist.streams[index];
+                    final item = playlist.items[index];
                     return YoutubeVideoCard(
                       thumbnailHeight: itemsThumbnailHeight,
                       thumbnailWidth: itemsThumbnailWidth,
@@ -639,8 +682,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                 ),
               ),
               SliverToBoxAdapter(
-                child: Obx(
-                  () => _isLoadingMoreItems.valueR
+                child: ObxO(
+                  rx: _isLoadingMoreItems,
+                  builder: (isLoadingMoreItems) => isLoadingMoreItems
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Stack(

@@ -111,20 +111,18 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                           searchText: searchText,
                           onVideoTap: (video) {
                             NamidaNavigator.inst.closeDialog();
-                            final url = video.url;
-                            if (url != null) {
-                              controller.text = url;
-                              canEditComment.value = true;
+                            final url = video.buildUrl();
+                            controller.text = url;
+                            canEditComment.value = true;
 
-                              snackyy(
-                                message: 'Set to "${video.name ?? ''}" by "${video.uploaderName ?? ''}"',
-                                top: false,
-                                borderRadius: 0,
-                                margin: EdgeInsets.zero,
-                                leftBarIndicatorColor: colorScheme,
-                                animationDurationMS: 500,
-                              );
-                            }
+                            snackyy(
+                              message: 'Set to "${video.title}" by "${video.channelName ?? video.channel.title}"',
+                              top: false,
+                              borderRadius: 0,
+                              margin: EdgeInsets.zero,
+                              leftBarIndicatorColor: colorScheme,
+                              animationDurationMS: 500,
+                            );
                           },
                         ),
                       ),

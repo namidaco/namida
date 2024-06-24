@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
@@ -13,7 +13,6 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -21,6 +20,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -90,7 +90,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id) {
-    final videoTitle = widget.infoLookup[id]?.name ?? YoutubeController.inst.getVideoName(id);
+    final videoTitle = widget.infoLookup[id]?.title ?? YoutubeInfoController.utils.getVideoName(id);
     final filename = videoTitle ?? id;
     return YoutubeItemDownloadConfig(
       id: id,
@@ -101,7 +101,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       audioStream: null,
       prefferedVideoQualityID: null,
       prefferedAudioQualityID: null,
-      fetchMissingStreams: true,
     );
   }
 
@@ -111,12 +110,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   Future<void> _onEditIconTap({
     required String id,
-    required VideoInfo? info,
   }) async {
     await showDownloadVideoBottomSheet(
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: id,
-      info: info,
       confirmButtonText: lang.CONFIRM,
       onConfirmButtonTap: (groupName, config) {
         _configMap[id] = config;
@@ -126,8 +123,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _showAllConfigDialog(BuildContext context) {
-    final st = StreamController<int>();
-    void rebuildy() => st.add(0);
+    final st = Rxn<void>();
+    void rebuildy() => st.refresh();
 
     const visualDensity = null;
 
@@ -153,9 +150,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
-        child: StreamBuilder(
-            stream: st.stream,
-            builder: (context, snapshot) {
+        child: ObxO(
+            rx: st,
+            builder: (_) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -345,8 +342,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         itemCount: widget.ids.length,
                         itemBuilder: (context, index) {
                           final id = widget.ids[index].id;
-                          final info = widget.infoLookup[id]?.toVideoInfo() ?? YoutubeController.inst.getVideoInfo(id);
-                          final duration = info?.duration?.inSeconds.secondsLabel;
+                          final info = widget.infoLookup[id] ?? YoutubeInfoController.utils.getStreamInfoSync(id);
+                          final duration = info?.durSeconds?.secondsLabel;
 
                           return Obx(
                             () {
@@ -409,7 +406,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             children: [
                                               const SizedBox(height: 6.0),
                                               Text(
-                                                info?.name ?? id,
+                                                info?.title ?? id,
                                                 style: context.textTheme.displayMedium?.copyWith(fontSize: 15.0 * _hmultiplier),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
@@ -424,7 +421,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                   ),
                                                   const SizedBox(width: 2.0),
                                                   Text(
-                                                    info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(id) ?? '',
+                                                    info?.channelName ?? info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(id) ?? '',
                                                     style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
@@ -440,7 +437,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                           horizontalPadding: 0.0,
                                           icon: Broken.edit_2,
                                           iconSize: 20.0,
-                                          onPressed: () => _onEditIconTap(id: id, info: info),
+                                          onPressed: () => _onEditIconTap(id: id),
                                         ),
                                         Checkbox.adaptive(
                                           shape: RoundedRectangleBorder(

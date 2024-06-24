@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/track.dart';
@@ -13,8 +14,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
-import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -40,6 +39,8 @@ class YTHistoryVideoCard extends StatelessWidget {
   final double cardColorOpacity;
   final double fadeOpacity;
   final bool isImportantInCache;
+  final Color? bgColor;
+  final bool canHaveDuplicates;
 
   const YTHistoryVideoCard({
     super.key,
@@ -64,6 +65,8 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.cardColorOpacity = 0.75,
     this.fadeOpacity = 0,
     this.isImportantInCache = true,
+    this.bgColor,
+    required this.canHaveDuplicates,
   });
 
   @override
@@ -73,10 +76,10 @@ class YTHistoryVideoCard extends StatelessWidget {
     final thumbHeight = thumbnailHeight ?? (minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
     final thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
 
-    final info = YoutubeController.inst.getVideoInfo(video.id);
-    final duration = info?.duration?.inSeconds.secondsLabel;
-    final videoTitle = info?.name ?? YoutubeController.inst.getVideoName(video.id) ?? video.id;
-    final videoChannel = info?.uploaderName ?? YoutubeController.inst.getVideoChannelName(video.id);
+    final info = YoutubeInfoController.utils.getStreamInfoSync(video.id) /* ??  YoutubeInfoController.video.fetchVideoPageSync(video.id) */;
+    final duration = info?.durSeconds?.secondsLabel;
+    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(video.id) ?? video.id;
+    final videoChannel = info?.channelName ?? info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(video.id);
     final watchMS = video.dateTimeAdded.millisecondsSinceEpoch;
     final dateText = !displayTimeAgo
         ? ''
@@ -101,10 +104,10 @@ class YTHistoryVideoCard extends StatelessWidget {
       openOnLongPress: openMenuOnLongPress,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         videoId: video.id,
-        url: info?.url,
-        channelUrl: info?.uploaderUrl,
+        url: info?.buildUrl(),
+        channelID: info?.channelId ?? info?.channel.id,
         playlistID: playlistID,
-        idsNamesLookup: {video.id: info?.name},
+        idsNamesLookup: {video.id: info?.title},
         playlistName: playlistName,
         videoYTID: video,
       ),
@@ -116,10 +119,8 @@ class YTHistoryVideoCard extends StatelessWidget {
             willSleepAfterThis = sleepconfig.enableSleepAfterItems && Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
           }
 
-          final isCurrentlyPlaying = Player.inst.currentVideoR == video;
-          final sameDay = day == YoutubeHistoryController.inst.dayOfHighLight.valueR;
-          final sameIndex = index == YoutubeHistoryController.inst.indexToHighlight.valueR;
-          final hightlightedColor = sameDay && sameIndex ? context.theme.colorScheme.onSurface.withAlpha(40) : null;
+          final bool isRightIndex = canHaveDuplicates ? index == Player.inst.currentIndex.valueR : true;
+          final bool isCurrentlyPlaying = isRightIndex && Player.inst.currentVideoR == video;
           final itemsColor7 = isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null;
           final itemsColor6 = isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null;
           final itemsColor5 = isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null;
@@ -215,9 +216,10 @@ class YTHistoryVideoCard extends StatelessWidget {
             },
             height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
             margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
-            bgColor: isCurrentlyPlaying
-                ? (fromPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-                : (hightlightedColor ?? context.theme.cardColor.withOpacity(cardColorOpacity)),
+            bgColor: bgColor ??
+                (isCurrentlyPlaying
+                    ? (fromPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
+                    : (context.theme.cardColor.withOpacity(cardColorOpacity))),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             ),
@@ -252,8 +254,8 @@ class YTHistoryVideoCard extends StatelessWidget {
                     child: NamidaPopupWrapper(
                       childrenDefault: () => YTUtils.getVideoCardMenuItems(
                         videoId: video.id,
-                        url: info?.url,
-                        channelUrl: info?.uploaderUrl,
+                        url: info?.buildUrl(),
+                        channelID: info?.channelId ?? info?.channel.id,
                         playlistID: playlistID,
                         idsNamesLookup: {video.id: videoTitle},
                       ),

@@ -109,8 +109,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                           ),
                           onTap: () {
                             changedArtworkCacheM = !changedArtworkCacheM;
-                            e.execute();
-                            settings.save(performanceMode: e);
+                            e.executeAndSave();
                             NamidaNavigator.inst.popMenu();
                           },
                         ),

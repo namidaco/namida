@@ -1,7 +1,9 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -16,8 +18,8 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -31,6 +33,11 @@ class YoutubeChannelsPage extends StatefulWidget {
 }
 
 class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> {
+  @override
+  List<StreamInfoItem>? get streamsList => _allStreamsList ?? channelVideoTab?.items;
+
+  List<StreamInfoItem>? _allStreamsList;
+
   late final ScrollController _horizontalListController;
 
   final _allChannelsStreamsProgress = 0.0.obs;
@@ -44,7 +51,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
     if (subCh != null) {
-      final sub = YoutubeSubscriptionsController.inst.getChannel(subCh);
+      final sub = YoutubeSubscriptionsController.inst.availableChannels.value[subCh];
       _updateChannel(sub);
     }
 
@@ -61,27 +68,31 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     super.dispose();
   }
 
-  void _updateChannel(YoutubeSubscription? sub) {
+  void _updateChannel(YoutubeSubscription? sub) async {
     lastLoadingMoreWasEmpty.value = false;
     if (uploadsScrollController.hasClients) uploadsScrollController.jumpTo(0);
     setState(() {
       isLoadingInitialStreams = true;
       channel = sub;
-      streamsList.clear();
       streamsPeakDates = null;
+      _allStreamsList = null;
     });
 
     if (sub != null) {
-      fetchChannelStreams(sub);
+      final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(channelId: sub.channelID);
+      if (channelInfo != null && channel == sub) {
+        fetchChannelStreams(channelInfo);
+      }
     } else {
       _fetchAllChannelsStreams();
     }
   }
 
+  /// TODO(youtipie): might be faster using rss feed, but limited to 15 vid.
   Future<void> _fetchAllChannelsStreams() async {
     setState(() {
       isLoadingInitialStreams = true;
-      streamsList.clear();
+      _allStreamsList = [];
     });
     _allChannelsStreamsLoading.value = true;
 
@@ -92,10 +103,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final maxDateBeforeMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;
 
     bool enoughStreams(List<StreamInfoItem> streams) {
-      final lastDate = streams.lastOrNull?.date;
+      final lastDate = streams.lastOrNull?.publishedAt.date;
       if (lastDate == null || lastDate.millisecondsSinceEpoch < maxDateBeforeMS) {
         streams.removeWhere((element) {
-          final date = element.date;
+          final date = element.publishedAt.date;
           return date != null && date.millisecondsSinceEpoch < maxDateBeforeMS;
         });
         return true;
@@ -103,23 +114,48 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       return false;
     }
 
+    void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.ERROR);
+
+    final executeDetails = ExecuteDetails.forceRequest();
+
+    int pageFetchErrors = 0;
     for (int i = 0; i < idsLength; i++) {
       final channelID = ids[i];
       _allChannelsStreamsProgress.value = i / idsLength;
-      final chStreams = await YoutubeController.inst.getChannelStreams(channelID);
-      while (!enoughStreams(chStreams)) {
-        final nextPage = await YoutubeController.inst.getChannelStreamsNextPage();
-        if (nextPage.isEmpty) break;
-        chStreams.addAll(nextPage);
+      final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: executeDetails);
+      if (channelPage == null) {
+        if (pageFetchErrors < 3) {
+          reportError('failed to fetch channel page for $channelID');
+          continue;
+        } else {
+          reportError('failed to fetch channel pages 3 times in row, aborting.');
+          break;
+        }
+      } else {
+        pageFetchErrors = 0;
       }
-      printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${chStreams.length} videos');
+      final videosTab = channelPage.tabs.getVideosTab();
+      if (videosTab == null) {
+        reportError('failed to fetch video tab for $channelID');
+        continue;
+      }
+      final videosPage = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelPage.id, tab: videosTab, details: executeDetails);
+      if (videosPage == null) {
+        reportError('failed to fetch initial videos for $channelID');
+        continue;
+      }
+      while (!enoughStreams(videosPage.items)) {
+        final didFetch = await videosPage.fetchNext();
+        if (!didFetch) break;
+      }
+      printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${videosPage.length} videos');
       if (channel != null) {
         _allChannelsStreamsProgress.value = 0.0;
         _allChannelsStreamsLoading.value = false;
         return;
       }
       YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
-      streams.addAll(chStreams);
+      streams.addAll(videosPage.items);
     }
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     _allChannelsStreamsProgress.value = 0.0;
@@ -129,7 +165,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     setState(() {
       isLoadingInitialStreams = false;
-      streamsList.addAll(streams);
+      _allStreamsList?.addAll(streams);
     });
   }
 
@@ -211,7 +247,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                             child: Text(
-                              streamsList.length.displayVideoKeyword,
+                              streamsList?.length.displayVideoKeyword ?? '?',
                               style: context.textTheme.displayMedium,
                             ),
                           ),
@@ -263,8 +299,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 key: Key(ch.channelID),
                                 width: 32.0,
                                 isImportantInCache: true,
-                                channelUrl: /*  info?.avatarUrl ?? info?.thumbnailUrl ?? */ ch.channelID,
-                                channelIDForHQImage: ch.channelID,
+                                urlSymLinkId: ch.channelID,
                                 isCircle: true,
                               ),
                               const SizedBox(width: 8.0),
@@ -272,7 +307,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    ch.title != '' ? ch.title : YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID)?.name ?? '',
+                                    ch.title != '' ? ch.title : YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID)?.title ?? '',
                                     style: context.textTheme.displayMedium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -329,12 +364,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           child: ListView.builder(
                             itemCount: 15,
                             itemBuilder: (context, index) {
-                              return const YoutubeVideoCard(
+                              return const YoutubeVideoCardDummy(
+                                shimmerEnabled: true,
                                 thumbnailHeight: thumbnailHeight,
                                 thumbnailWidth: thumbnailWidth,
-                                isImageImportantInCache: false,
-                                video: null,
-                                playlistID: null,
                                 thumbnailWidthPercentage: 0.8,
                               );
                             },
@@ -342,10 +375,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         )
                       : LazyLoadListView(
                           scrollController: uploadsScrollController,
-                          onReachingEnd: () async {
-                            if (channel != null) await fetchStreamsNextPage(channel);
-                          },
+                          onReachingEnd: fetchStreamsNextPage,
                           listview: (controller) {
+                            final streamsList = this.streamsList;
+                            if (streamsList == null || streamsList.isEmpty) return const SizedBox();
                             return ListView.builder(
                               controller: controller,
                               itemExtent: thumbnailItemExtent,
@@ -353,7 +386,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               itemBuilder: (context, index) {
                                 final item = streamsList[index];
                                 return YoutubeVideoCard(
-                                  key: Key("${context.hashCode}_${(item).id}"),
+                                  key: Key(item.id),
                                   thumbnailHeight: thumbnailHeight,
                                   thumbnailWidth: thumbnailWidth,
                                   isImageImportantInCache: false,
@@ -454,9 +487,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           itemBuilder: (context, indexPre) {
                             final index = totalIDsLength - indexPre - 1;
                             final key = channelIDS[index];
-                            final ch = YoutubeSubscriptionsController.inst.getChannel(key)!;
-                            final info = YoutubeController.inst.fetchChannelDetailsFromCacheSync(ch.channelID);
-                            final channelName = info?.name == null || info?.name == '' ? ch.title : info?.name;
+                            final ch = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
+                            final info = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
+                            final channelTitle = info?.title;
+                            final channelName = channelTitle == null || channelTitle == '' ? ch.title : channelTitle;
                             return NamidaInkWell(
                               borderRadius: 10.0,
                               animationDurationMS: 150,
@@ -472,13 +506,12 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                     key: Key(ch.channelID),
                                     width: _thumbSize,
                                     isImportantInCache: true,
-                                    channelUrl: info?.avatarUrl ?? info?.thumbnailUrl ?? ch.channelID,
-                                    channelIDForHQImage: ch.channelID,
+                                    customUrl: info?.thumbnails.pick()?.url,
                                     isCircle: true,
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
-                                    channelName ?? '',
+                                    channelName,
                                     style: context.textTheme.displaySmall,
                                     overflow: TextOverflow.ellipsis,
                                   )

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -11,9 +12,15 @@ import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YoutubeChannelCard extends StatefulWidget {
-  final YoutubeChannel? channel;
+  final ChannelInfoItem? channel;
+  final int? subscribersCount;
   final double? thumbnailSize;
-  const YoutubeChannelCard({super.key, required this.channel, this.thumbnailSize});
+  const YoutubeChannelCard({
+    super.key,
+    required this.channel,
+    required this.subscribersCount,
+    this.thumbnailSize,
+  });
 
   @override
   State<YoutubeChannelCard> createState() => _YoutubeChannelCardState();
@@ -24,11 +31,12 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
   @override
   Widget build(BuildContext context) {
     final channel = widget.channel;
-    final subscribers = channel?.subscriberCount?.formatDecimalShort();
+    final subscribers = widget.subscribersCount?.formatDecimalShort();
     final thumbnailSize = widget.thumbnailSize ?? context.width * 0.2;
     const verticalPadding = 8.0;
     final shimmerEnabled = channel == null;
-    final avatarUrl = channel?.avatarUrl ?? channel?.thumbnailUrl;
+    final avatarUrl = channel?.thumbnails.pick()?.url;
+    const int? streamsCount = null; // not available with outside [YoutiPieChannelPageResult]
     return NamidaInkWell(
       margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       bgColor: bgColor?.withAlpha(100) ?? context.theme.cardColor,
@@ -50,8 +58,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
               key: Key("${avatarUrl}_${channel?.id}"),
               compressed: false,
               isImportantInCache: true,
-              channelUrl: avatarUrl,
-              channelIDForHQImage: channel?.id ?? '',
+              customUrl: avatarUrl,
               width: thumbnailSize,
               height: thumbnailSize,
               borderRadius: 10.0,
@@ -76,7 +83,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                   borderRadius: 4.0,
                   shimmerEnabled: shimmerEnabled,
                   child: Text(
-                    channel?.name ?? '',
+                    channel?.title ?? '',
                     style: context.textTheme.displayLarge,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -95,7 +102,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (channel?.streamCount != null && channel?.streamCount != -1) ...[
+                if (streamsCount != null) ...[
                   const SizedBox(height: 2.0),
                   NamidaDummyContainer(
                     width: context.width,
@@ -103,7 +110,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                     borderRadius: 4.0,
                     shimmerEnabled: shimmerEnabled,
                     child: Text(
-                      channel?.streamCount.displayVideoKeyword ?? '',
+                      streamsCount.displayVideoKeyword,
                       style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

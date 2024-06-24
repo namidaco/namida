@@ -32,8 +32,9 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -92,7 +93,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
                       builder: (youtubeStyleMiniplayer) => AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: youtubeStyleMiniplayer
-                            ? const YoutubeMiniPlayer(key: Key('yt_miniplayer')) //
+                            ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
                             : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
                       ),
                     )
@@ -136,7 +137,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       firstLine: firstLine,
       secondLine: secondLine,
       isLiked: track.isFavouriteR,
-      onLikeTap: (isLiked) async => await PlaylistController.inst.favouriteButtonOnPressed(track),
+      onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       onMenuOpen: (_) => _openMenu(track),
       likedIcon: Broken.heart_tick,
       normalIcon: Broken.heart,
@@ -261,12 +262,12 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         },
         currentId: (item) => item.track.youtubeID,
         loadQualities: (item) async => await VideoController.inst.fetchYTQualities(item.track),
-        localVideos: VideoController.inst.currentPossibleVideos,
-        streamVideos: VideoController.inst.currentYTQualities,
+        localVideos: VideoController.inst.currentPossibleLocalVideos,
+        streams: VideoController.inst.currentYTStreams,
         onLocalVideoTap: (item, video) async {
           VideoController.inst.playVideoCurrent(video: video, track: item.track);
         },
-        onStreamVideoTap: (item, videoId, stream, cacheFile) async {
+        onStreamVideoTap: (item, videoId, stream, cacheFile, streams) async {
           final cacheExists = cacheFile != null;
           if (!cacheExists) await VideoController.inst.getVideoFromYoutubeAndUpdate(videoId, stream: stream);
           VideoController.inst.playVideoCurrent(
@@ -294,14 +295,15 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
   const NamidaMiniPlayerYoutubeID({super.key});
 
   void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) {
-    final info = YoutubeController.inst.getVideoInfo(video.id);
+    final vidpage = YoutubeInfoController.video.fetchVideoPageSync(video.id);
+    final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id);
     final popUpItems = NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         videoId: video.id,
-        url: info?.url,
-        channelUrl: info?.uploaderUrl,
+        url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),
+        channelID: vidpage?.channelInfo?.id,
         playlistID: null,
-        idsNamesLookup: {video.id: info?.name},
+        idsNamesLookup: {video.id: vidpage?.videoInfo?.title ?? vidstreams?.info?.title},
         playlistName: '',
         videoYTID: video,
         copyUrl: true,
@@ -318,8 +320,8 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     String firstLine = '';
     String secondLine = '';
 
-    firstLine = YoutubeController.inst.getVideoName(video.id) ?? '';
-    secondLine = YoutubeController.inst.getVideoChannelName(video.id) ?? '';
+    firstLine = YoutubeInfoController.utils.getVideoName(video.id) ?? '';
+    secondLine = YoutubeInfoController.utils.getVideoChannelName(video.id) ?? '';
     if (firstLine == '') {
       firstLine = secondLine;
       secondLine = '';
@@ -360,6 +362,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
             showMoreIcon: true,
             cardColorOpacity: 0.5,
             fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+            canHaveDuplicates: true,
           ),
           key,
         );
@@ -368,14 +371,16 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
       itemsKeyword: (number) => number.displayVideoKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddVideosTap(context),
       topText: (currentItem) =>
-          YoutubeController.inst.currentYoutubeMetadataChannel.value?.name ??
-          Player.inst.currentChannelInfo.value?.name ??
-          YoutubeController.inst.getVideoChannelName(currentItem.id) ??
+          YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.title ??
+          YoutubeInfoController.current.currentYTStreams.value?.info?.channelName ??
+          YoutubeInfoController.utils.getVideoChannelName(currentItem.id) ??
           '',
       onTopTextTap: (currentItem) {
-        final channel = YoutubeController.inst.currentYoutubeMetadataChannel.value ?? Player.inst.currentChannelInfo.value;
-        final chid = channel?.id;
-        if (chid != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid, channel: channel));
+        final pageChannel = YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
+        final channelId = pageChannel?.id ??
+            YoutubeInfoController.current.currentYTStreams.value?.info?.channelId ?? //
+            YoutubeInfoController.utils.getVideoChannelID(currentItem.id);
+        if (channelId != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelId, channel: pageChannel));
       },
       onMenuOpen: (currentItem, d) => _openMenu(context, currentItem, d),
       focusedMenuOptions: FocusedMenuOptions<YoutubeID>(
@@ -395,14 +400,14 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
               List<TextSpan>? textChildren;
               if (settings.displayAudioInfoMiniplayer.valueR) {
                 final audioStream = Player.inst.currentAudioStream.valueR;
-                final formatName = audioStream?.formatName;
+                final formatName = audioStream?.codecInfo.codec;
                 final bitrate = audioStream?.bitrate ?? Player.inst.currentCachedAudio.valueR?.bitrate;
                 final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kps";
-                final sampleRate = audioStream?.samplerate;
+                final sampleRate = audioStream?.codecInfo.embeddedAudioInfo?.audioSampleRate;
                 final sampleRateText = sampleRate == null ? null : "$sampleRate khz";
-                final language = audioStream?.language ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;
+                final language = audioStream?.audioTrack?.langCode ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;
 
-                final finalText = [
+                final finalText = <String?>[
                   formatName,
                   bitrateText,
                   sampleRateText,
@@ -435,7 +440,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
                 size = cached?.sizeInBytes;
               }
               final sizeFinal = size ?? 0;
-              final qualityText = stream?.resolution ?? (cached == null ? null : "${cached.resolution}p${cached.framerateText()}");
+              final qualityText = stream?.qualityLabel ?? (cached == null ? null : "${cached.resolution}p${cached.framerateText()}");
               return Text.rich(
                 TextSpan(
                   text: lang.VIDEO,
@@ -476,19 +481,21 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         },
         currentId: (item) => item.id,
         loadQualities: null,
-        localVideos: YoutubeController.inst.currentCachedQualities,
-        streamVideos: YoutubeController.inst.currentYTQualities,
+        localVideos: YoutubeInfoController.current.currentCachedQualities,
+        streams: YoutubeInfoController.current.currentYTStreams,
         onLocalVideoTap: (item, video) async {
           Player.inst.onItemPlayYoutubeIDSetQuality(
             stream: null,
+            mainStreams: null,
             cachedFile: File(video.path),
             videoItem: video,
             useCache: true,
             videoId: Player.inst.currentVideo?.id ?? '',
           );
         },
-        onStreamVideoTap: (item, videoId, stream, cacheFile) async {
+        onStreamVideoTap: (item, videoId, stream, cacheFile, streams) async {
           Player.inst.onItemPlayYoutubeIDSetQuality(
+            mainStreams: streams,
             stream: stream,
             cachedFile: null,
             useCache: true,

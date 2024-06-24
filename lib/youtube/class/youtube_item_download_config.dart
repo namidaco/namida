@@ -1,4 +1,5 @@
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
 
 class YoutubeItemDownloadConfig {
   final String id;
@@ -6,10 +7,9 @@ class YoutubeItemDownloadConfig {
   final Map<String, String?> ffmpegTags;
   DateTime? fileDate;
   VideoStream? videoStream;
-  AudioOnlyStream? audioStream;
+  AudioStream? audioStream;
   final String? prefferedVideoQualityID;
   final String? prefferedAudioQualityID;
-  final bool fetchMissingStreams;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -20,20 +20,26 @@ class YoutubeItemDownloadConfig {
     required this.audioStream,
     required this.prefferedVideoQualityID,
     required this.prefferedAudioQualityID,
-    required this.fetchMissingStreams,
   });
 
   factory YoutubeItemDownloadConfig.fromJson(Map<String, dynamic> map) {
+    VideoStream? vids;
+    AudioStream? auds;
+    try {
+      vids = VideoStream.fromMap(map['videoStream']);
+    } catch (_) {}
+    try {
+      auds = AudioStream.fromMap(map['audioStream']);
+    } catch (_) {}
     return YoutubeItemDownloadConfig(
       id: map['id'] ?? 'UNKNOWN_ID',
       filename: map['filename'] ?? 'UNKNOWN_FILENAME',
       fileDate: DateTime.fromMillisecondsSinceEpoch(map['fileDate'] ?? 0),
       ffmpegTags: (map['ffmpegTags'] as Map<String, dynamic>?)?.cast() ?? {},
-      videoStream: map['videoStream'] == null ? null : VideoStream.fromMap(map['videoStream']),
-      audioStream: map['audioStream'] == null ? null : AudioOnlyStream.fromMap(map['audioStream']),
+      videoStream: vids,
+      audioStream: auds,
       prefferedVideoQualityID: map['prefferedVideoQualityID'],
       prefferedAudioQualityID: map['prefferedAudioQualityID'],
-      fetchMissingStreams: map['fetchMissingStreams'] ?? true,
     );
   }
 
@@ -43,11 +49,10 @@ class YoutubeItemDownloadConfig {
       'filename': filename,
       'ffmpegTags': ffmpegTags,
       'fileDate': fileDate?.millisecondsSinceEpoch,
-      'videoStream': videoStream?.toMap()?..remove('url'),
-      'audioStream': audioStream?.toMap()?..remove('url'),
+      'videoStream': videoStream?.toMap(),
+      'audioStream': audioStream?.toMap(),
       'prefferedVideoQualityID': prefferedVideoQualityID,
       'prefferedAudioQualityID': prefferedAudioQualityID,
-      'fetchMissingStreams': fetchMissingStreams,
     };
   }
 

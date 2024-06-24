@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:namida/core/dimensions.dart';
 
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
+import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
 
 class YoutubePage extends StatefulWidget {
   const YoutubePage({super.key});
@@ -21,19 +27,20 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    YoutubeController.inst.prepareHomeFeed();
+    YoutubeInfoController.current.prepareFeed();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final thumbnailWidth = context.width * 0.36; // card height is dynamic
-    final thumbnailHeight = thumbnailWidth * 9 / 16;
-    final thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
+
+    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
+    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     return BackgroundWrapper(
-      child: Obx(
-        () {
-          final homepageFeed = YoutubeController.inst.homepageFeed.valueR;
+      child: ObxO(
+        rx: YoutubeController.inst.homepageFeed,
+        builder: (homepageFeed) {
           final feed = homepageFeed.isEmpty ? List<YoutubeFeed?>.filled(10, null) : homepageFeed;
 
           if (feed.isNotEmpty && feed.first == null) {
@@ -45,10 +52,8 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
                 itemCount: feed.length,
                 shrinkWrap: true,
                 itemBuilder: (context, index) {
-                  return YoutubeVideoCard(
-                    isImageImportantInCache: false,
-                    video: null,
-                    playlistID: null,
+                  return const YoutubeVideoCardDummy(
+                    shimmerEnabled: true,
                     thumbnailWidth: thumbnailWidth,
                     thumbnailHeight: thumbnailHeight,
                   );
@@ -66,15 +71,38 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               ),
             ),
             itemBuilder: (context, i) {
-              final feedItem = feed[i];
-              return YoutubeVideoCard(
-                key: ValueKey(i),
-                isImageImportantInCache: false,
-                video: feedItem is StreamInfoItem ? feedItem : null,
-                playlistID: null,
-                thumbnailWidth: thumbnailWidth,
-                thumbnailHeight: thumbnailHeight,
-              );
+              final item = feed[i];
+
+              return switch (item.runtimeType) {
+                const (StreamInfoItem) => YoutubeVideoCard(
+                    key: Key((item as StreamInfoItem).id),
+                    thumbnailWidth: thumbnailWidth,
+                    thumbnailHeight: thumbnailHeight,
+                    isImageImportantInCache: false,
+                    video: item,
+                    playlistID: null,
+                  ),
+                const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                    key: Key("${(item as StreamInfoItemShort?)?.id}"),
+                    thumbnailWidth: thumbnailWidth,
+                    thumbnailHeight: thumbnailHeight,
+                    short: item as StreamInfoItemShort,
+                    playlistID: null,
+                  ),
+                const (PlaylistInfoItem) => YoutubePlaylistCard(
+                    key: Key((item as PlaylistInfoItem).id),
+                    playlist: item,
+                    thumbnailWidth: thumbnailWidth,
+                    thumbnailHeight: thumbnailHeight,
+                    subtitle: item.subtitle,
+                    playOnTap: true,
+                  ),
+                _ => const YoutubeVideoCardDummy(
+                    shimmerEnabled: true,
+                    thumbnailWidth: thumbnailWidth,
+                    thumbnailHeight: thumbnailHeight,
+                  ),
+              };
             },
             itemCount: feed.length,
             itemExtent: thumbnailItemExtent,

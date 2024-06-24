@@ -1,18 +1,23 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/cache_details.dart';
+import 'package:youtipie/class/publish_time.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum YTLocalSearchSortType {
   mostPlayed,
@@ -97,10 +102,9 @@ class YTLocalSearchController with PortsProvider<Map> {
   @override
   IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
     final params = {
-      'tempStreamInfo': YoutubeController.inst.tempVideoInfosFromStreams,
-      'dirStreamInfo': AppDirs.YT_METADATA_TEMP,
-      'dirVideoInfo': AppDirs.YT_METADATA,
-      'tempBackupYTVH': YoutubeController.inst.tempBackupVideoInfo,
+      'databasesDir': AppDirs.YOUTIPIE_CACHE,
+      'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
+      'tempBackupYTVH': YoutubeInfoController.utils.tempBackupVideoInfo,
       'enableFuzzySearch': enableFuzzySearch,
       'sendPort': port,
     };
@@ -119,32 +123,34 @@ class YTLocalSearchController with PortsProvider<Map> {
   }
 
   static void _prepareResourcesAndSearch(Map params) async {
-    final tempStreamInfo = params['tempStreamInfo'] as Map<String, StreamInfoItem>;
-    final dirStreamInfo = params['dirStreamInfo'] as String;
-    final dirVideoInfo = params['dirVideoInfo'] as String;
+    final databasesDir = params['databasesDir'] as String;
+    final sensitiveDataDir = params['sensitiveDataDir'] as String;
     final tempBackupYTVH = params['tempBackupYTVH'] as Map<String, YoutubeVideoHistory>;
     final enableFuzzySearch = params['enableFuzzySearch'] as bool;
     final sendPort = params['sendPort'] as SendPort;
-    final recievePort = ReceivePort();
 
+    final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
     final lookupItemAvailable = <String, ({int list, int index})>{};
 
-    final lookupListStreamInfo = <StreamInfoItem>[];
-    final lookupListStreamInfoMap = <Map>[];
-    final lookupListVideoInfoMap = <Map<String, dynamic>>[];
+    final lookupListStreamInfoMap = <Map<String, dynamic>>[]; // StreamInfoItem
+    final lookupListVideoStreamsMap = <Map<String, dynamic>>[]; // VideoStreamInfo
     final lookupListYTVH = <YoutubeVideoHistory>[];
+
+    var lookupListStreamInfoMapCacheDetails = <CacheDetailsBase>[];
+    var lookupListVideoStreamsMapCacheDetails = <CacheDetailsBase>[];
 
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
         recievePort.close();
-        lookupListStreamInfo.clear();
+        lookupListStreamInfoMapCacheDetails.loop((item) => item.close());
+        lookupListVideoStreamsMapCacheDetails.loop((item) => item.close());
         lookupListYTVH.clear();
         lookupListStreamInfoMap.clear();
-        lookupListVideoInfoMap.clear();
+        lookupListVideoStreamsMap.clear();
         lookupItemAvailable.clear();
         streamSub?.cancel();
         return;
@@ -161,17 +167,13 @@ class YTLocalSearchController with PortsProvider<Map> {
           final res = lookupItemAvailable[possibleID];
           if (res != null) {
             switch (res.list) {
-              case 1:
-                final vid = lookupListStreamInfo[res.index];
-                searchResults.add(vid);
-                break;
               case 2:
                 final info = lookupListStreamInfoMap[res.index];
                 searchResults.add(StreamInfoItem.fromMap(info));
                 break;
               case 3:
-                final info = lookupListVideoInfoMap[res.index];
-                searchResults.add(VideoInfo.fromMap(info).toStreamInfo());
+                final info = lookupListVideoStreamsMap[res.index];
+                searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
                 break;
               case 4:
                 final info = lookupListYTVH[res.index];
@@ -198,24 +200,11 @@ class YTLocalSearchController with PortsProvider<Map> {
       // -----------------------------------
 
       if (!shouldBreak()) {
-        final list1 = lookupListStreamInfo;
-        final l1 = list1.length;
-        for (int i = 0; i < l1; i++) {
-          final info = list1[i];
-          if (isMatch(info.name, info.uploaderName)) {
-            searchResults.add(info);
-            if (shouldBreak()) break;
-          }
-        }
-      }
-      // -----------------------------------
-
-      if (!shouldBreak()) {
         final list2 = lookupListStreamInfoMap;
         final l2 = list2.length;
         for (int i = 0; i < l2; i++) {
           final info = list2[i];
-          if (isMatch(info['name'], info['uploaderName'])) {
+          if (isMatch(info['title'], info['channel']?['title'] as String?)) {
             searchResults.add(StreamInfoItem.fromMap(info));
             if (shouldBreak()) break;
           }
@@ -224,12 +213,12 @@ class YTLocalSearchController with PortsProvider<Map> {
 
       // -----------------------------------
       if (!shouldBreak()) {
-        final list3 = lookupListVideoInfoMap;
+        final list3 = lookupListVideoStreamsMap;
         final l3 = list3.length;
         for (int i = 0; i < l3; i++) {
           final info = list3[i];
-          if (isMatch(info['name'], info['uploaderName'])) {
-            searchResults.add(VideoInfo.fromMap(info).toStreamInfo());
+          if (isMatch(info['title'], info['channelName'])) {
+            searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
             if (shouldBreak()) break;
           }
         }
@@ -254,47 +243,42 @@ class YTLocalSearchController with PortsProvider<Map> {
     // -- start filling info
     final start = DateTime.now();
 
-    for (final id in tempStreamInfo.keys) {
-      final val = tempStreamInfo[id]!;
-      lookupListStreamInfo.add(val);
-      lookupItemAvailable[id] = (list: 1, index: lookupListStreamInfo.length - 1);
+    YoutiPie.cacheManager.init(databasesDir);
+    final activeChannel = YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
+    final activeChannelId = activeChannel?.id;
+
+    if (activeChannelId != null && activeChannelId.isNotEmpty) {
+      lookupListStreamInfoMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.streamInfoItem, null, () => activeChannelId));
+      lookupListVideoStreamsMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.videoStreams, null, () => activeChannelId));
     }
+    // -- damn the annonymous acc videos look saxy
+    lookupListStreamInfoMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.streamInfoItem, null, () => null));
+    lookupListVideoStreamsMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.videoStreams, null, () => null));
 
-    final completer1 = Completer<void>();
-    final completer2 = Completer<void>();
+    lookupListStreamInfoMapCacheDetails.loop(
+      (db) {
+        db.loadEverything((map) {
+          final id = map['id'];
+          if (id != null && lookupItemAvailable[id] == null) {
+            lookupListStreamInfoMap.add(map);
+            lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
+          }
+        });
+      },
+    );
+    lookupListVideoStreamsMapCacheDetails.loop(
+      (db) {
+        db.loadEverything((map) {
+          final info = map['info'] as Map;
+          final id = info['id'];
+          if (id != null && lookupItemAvailable[id] == null) {
+            lookupListVideoStreamsMap.add(info.cast());
+            lookupItemAvailable[id] = (list: 3, index: lookupListVideoStreamsMap.length - 1);
+          }
+        });
+      },
+    );
 
-    Directory(dirStreamInfo).listAllIsolate().then((value) {
-      value.loop((file) {
-        try {
-          final res = (file as File).readAsJsonSync();
-          if (res != null) {
-            final id = res['id'];
-            if (id != null && lookupItemAvailable[id] == null) {
-              lookupListStreamInfoMap.add(res);
-              lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
-            }
-          }
-        } catch (_) {}
-      });
-      completer1.complete();
-    });
-    Directory(dirVideoInfo).listAllIsolate().then((value) {
-      value.loop((file) {
-        try {
-          final res = (file as File).readAsJsonSync();
-          if (res != null) {
-            final id = res['id'];
-            if (id != null && lookupItemAvailable[id] == null) {
-              lookupListVideoInfoMap.add(res.cast());
-              lookupItemAvailable[id] = (list: 3, index: lookupListVideoInfoMap.length - 1);
-            }
-          }
-        } catch (_) {}
-      });
-      completer2.complete();
-    });
-    await completer1.future;
-    await completer2.future;
     for (final id in tempBackupYTVH.keys) {
       if (lookupItemAvailable[id] == null) {
         final val = tempBackupYTVH[id]!;
@@ -305,9 +289,9 @@ class YTLocalSearchController with PortsProvider<Map> {
     sendPort.send(null); // finished filling
 
     final durationTaken = start.difference(DateTime.now());
-    printo('Initialized 4 Lists in $durationTaken');
-    printo('''Initialized _lookupListStreamInfo: ${lookupListStreamInfo.length} | _lookupListStreamInfoMap: ${lookupListStreamInfoMap.length} | 
-        _lookupListVideoInfoMap: ${lookupListVideoInfoMap.length} | _lookupListYTVH: ${lookupListYTVH.length}''');
+    printo('Initialized 3 Lists in $durationTaken');
+    printo('''Initialized lookupListStreamInfoMap: ${lookupListStreamInfoMap.length} | 
+        lookupListVideoStreamsMap: ${lookupListVideoStreamsMap.length} | lookupListYTVH: ${lookupListYTVH.length}''');
     // -- end filling info
   }
 
@@ -358,46 +342,61 @@ class YTLocalSearchController with PortsProvider<Map> {
   }
 }
 
-extension _VideoInfoUtils on VideoInfo {
+extension _VideoInfoUtils on VideoStreamInfo {
   StreamInfoItem toStreamInfo() {
+    final vid = this;
+    final date = vid.publishedAt.date;
     return StreamInfoItem(
-      url: url,
-      id: id,
-      name: name,
-      uploaderName: uploaderName,
-      uploaderUrl: uploaderUrl,
-      uploaderAvatarUrl: uploaderAvatarUrl,
-      thumbnailUrl: thumbnailUrl,
-      date: date,
-      textualUploadDate: date == null ? textualUploadDate : Jiffy.parseFromDateTime(date!).fromNow(),
-      isDateApproximation: isDateApproximation,
-      duration: duration,
-      viewCount: viewCount,
-      isUploaderVerified: isUploaderVerified,
-      isShortFormContent: isShortFormContent,
-      shortDescription: description,
+      id: vid.id,
+      title: vid.title,
+      shortDescription: vid.availableDescription,
+      channel: ChannelInfoItem(
+        id: vid.channelId ?? '',
+        handler: '',
+        title: vid.channelName ?? '',
+        thumbnails: [],
+      ),
+      thumbnailGifUrl: null,
+      publishedFromText: date == null ? '' : Jiffy.parseFromDateTime(date).fromNow(),
+      publishedAt: vid.publishedAt,
+      indexInPlaylist: null,
+      durSeconds: null,
+      durText: null,
+      viewsText: vid.viewsCount.toString(),
+      viewsCount: vid.viewsCount,
+      percentageWatched: null,
+      liveThumbs: vid.thumbnails,
+      isUploaderVerified: null,
+      badges: null,
     );
   }
 }
 
 extension _YTVHToVideoInfo on YoutubeVideoHistory {
   StreamInfoItem toStreamInfo() {
+    final chId = channelUrl.splitLast('/');
     return StreamInfoItem(
-      url: null,
       id: id,
-      name: title,
-      uploaderName: channel,
-      uploaderUrl: channelUrl,
-      uploaderAvatarUrl: null,
-      thumbnailUrl: null,
-      date: null,
-      textualUploadDate: null,
-      isDateApproximation: null,
-      duration: null,
-      viewCount: null,
-      isUploaderVerified: null,
-      isShortFormContent: null,
+      title: title,
+      channel: ChannelInfoItem(
+        id: chId,
+        handler: '',
+        title: channel,
+        thumbnails: [],
+      ),
       shortDescription: null,
+      thumbnailGifUrl: null,
+      publishedFromText: '',
+      publishedAt: const PublishTime.unknown(),
+      indexInPlaylist: null,
+      durSeconds: null,
+      durText: null,
+      viewsText: null,
+      viewsCount: null,
+      percentageWatched: null,
+      liveThumbs: [],
+      isUploaderVerified: null,
+      badges: [],
     );
   }
 }

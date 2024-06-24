@@ -16,8 +16,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class BackupController {
@@ -292,6 +292,6 @@ class BackupController {
     YoutubePlaylistController.inst.prepareAllPlaylists();
     YoutubeHistoryController.inst.prepareHistoryFile();
     await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
-    YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
+    YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.
   }
 }

@@ -11,7 +11,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
@@ -29,7 +29,7 @@ void showAddToPlaylistSheet({
   final context = ctx ?? rootContext;
 
   final videoNamesSubtitle = ids
-          .map((id) => idsNamesLookup[id] ?? YoutubeController.inst.getVideoName(id) ?? id) //
+          .map((id) => idsNamesLookup[id] ?? YoutubeInfoController.utils.getVideoName(id) ?? id) //
           .take(3)
           .join(', ') +
       (ids.length > 3 ? '... + ${ids.length - 3}' : '');

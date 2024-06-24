@@ -141,6 +141,10 @@ class NamidaLinkUtils {
     }
     return didLaunch;
   }
+
+  static String? extractPlaylistId(String playlistUrl) {
+    return NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(playlistUrl)?.group(1);
+  }
 }
 
 /// Files used by Namida
@@ -212,14 +216,19 @@ class AppDirs {
   // ================= Youtube =================
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
 
+  static final YOUTIPIE_CACHE = '$YOUTUBE_MAIN_DIRECTORY/Youtipie/';
+  static final YOUTIPIE_DATA = '$YOUTUBE_MAIN_DIRECTORY/Youtipie_data/';
+
   static final YT_PLAYLISTS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Playlists/';
   static final YT_HISTORY_PLAYLIST = '$YOUTUBE_MAIN_DIRECTORY/Youtube History/';
   static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
   static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
+
   static final YT_METADATA = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos/';
   static final YT_METADATA_TEMP = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos Temp/';
   static final YT_METADATA_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Channels/';
   static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
+
   static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
   static final YT_PALETTES = '$YOUTUBE_MAIN_DIRECTORY/Palettes/';
   static final YT_DOWNLOAD_TASKS = '$YOUTUBE_MAIN_DIRECTORY/Download Tasks/';

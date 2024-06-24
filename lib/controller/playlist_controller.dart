@@ -191,8 +191,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return action.value;
   }
 
-  Future<bool> favouriteButtonOnPressed(Track track) async {
-    return await super.toggleTrackFavourite(
+  bool favouriteButtonOnPressed(Track track) {
+    return super.toggleTrackFavourite(
       newTrack: TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
       identifyBy: (tr) => tr.track == track,
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -178,14 +178,11 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                             itemCount: 10,
                             shrinkWrap: true,
                             itemBuilder: (context, index) {
-                              return const YoutubeVideoCard(
+                              return const YoutubeVideoCardDummy(
+                                shimmerEnabled: true,
                                 fontMultiplier: 0.9,
                                 thumbnailHeight: thumbnailHeight,
                                 thumbnailWidth: thumbnailWidth,
-                                isImageImportantInCache: false,
-                                video: null,
-                                playlistID: null,
-                                onTap: null,
                               );
                             },
                           ),

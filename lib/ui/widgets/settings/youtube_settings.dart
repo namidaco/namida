@@ -12,7 +12,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
 enum _YoutubeSettingKeys {
   youtubeStyleMiniplayer,
@@ -97,7 +97,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 value: settings.ytTopComments.valueR,
                 onChanged: (isTrue) {
                   settings.save(ytTopComments: !isTrue);
-                  YoutubeController.inst.resetGlowUnderVideo();
+                  YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
 
                   // -- pop comments subpage in case was inside.
                   if (settings.ytTopComments.value == false) {

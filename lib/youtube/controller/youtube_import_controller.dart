@@ -79,7 +79,7 @@ class YoutubeImportController {
     isImportingSubscriptions.value = true;
     final res = await _parseSubscriptions.thready(subscriptionsFilePath);
     res.loop((e) {
-      final valInMap = YoutubeSubscriptionsController.inst.getChannel(e.id);
+      final valInMap = YoutubeSubscriptionsController.inst.availableChannels.value[e.id];
       YoutubeSubscriptionsController.inst.setChannel(
         e.id,
         YoutubeSubscription(

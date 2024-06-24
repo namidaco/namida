@@ -10,13 +10,13 @@ import 'package:namida/core/extensions.dart';
 final logger = _Log();
 
 class _Log {
-  late Logger _logger = updateLogger(Level.all);
+  late Logger logger = updateLogger(Level.all);
 
   void updateLoggerPath() => updateLogger(Level.all);
 
   Logger updateLogger(Level? level) {
     final filter = kDebugMode ? DevelopmentFilter() : ProductionFilter();
-    return _logger = Logger(
+    return logger = Logger(
       level: level,
       filter: filter,
       printer: PrettyPrinter(
@@ -35,7 +35,7 @@ class _Log {
     StackTrace? st,
   }) {
     printo('$e => $message\n=> $st', isError: true);
-    _logger.e(message, error: e, stackTrace: st);
+    logger.e(message, error: e, stackTrace: st);
   }
 }
 

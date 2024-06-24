@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart' as yt;
+import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -14,7 +19,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
@@ -73,176 +77,178 @@ extension YoutubePlaylistShare on YoutubePlaylist {
   }
 }
 
-extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
-  /// Sending a [context] means showing a bottom sheet with progress.
-  ///
-  /// Returns wether the fetching process ended successfully, videos are accessible through [streams] getter.
+extension PlaylistBasicInfoExt on PlaylistBasicInfo {
+  /// Videos are accessible through [YoutiPiePlaylistResult.items] getter.
   Future<bool> fetchAllPlaylistStreams({
-    required BuildContext? context,
+    required bool showProgressSheet,
+    required YoutiPiePlaylistResultBase playlist,
     VoidCallback? onStart,
     VoidCallback? onEnd,
-    bool Function()? canKeepFetching,
+    void Function(YoutiPieFetchAllRes fetchAllRes)? controller,
   }) async {
-    final playlist = this;
-    if (playlist.streams.length >= playlist.streamCount) return true;
+    final currentCount = playlist.items.length.obs;
+    final fetchAllRes = playlist.fetchAll(
+      onProgress: () {
+        currentCount.value = playlist.items.length;
+      },
+    );
+    if (fetchAllRes == null) return true; // no continuation left
 
-    final currentCount = playlist.streams.length.obs;
-    final totalCount = playlist.streamCount.obs;
+    controller?.call(fetchAllRes);
+
+    final totalCount = Rxn<int>(playlist.basicInfo.videosCount);
     const switchAnimationDur = Duration(milliseconds: 600);
     const switchAnimationDurHalf = Duration(milliseconds: 300);
 
-    bool isTotalCountNull() => totalCount.value < 0;
+    void Function()? popSheet;
 
-    if (context != null) {
-      await Future.delayed(Duration.zero);
-      showModalBottomSheet(
-        // ignore: use_build_context_synchronously
-        context: context,
-        useRootNavigator: true,
-        isDismissible: false,
-        builder: (context) {
-          final iconSize = context.width * 0.5;
-          final iconColor = context.theme.colorScheme.onSurface.withOpacity(0.6);
-          return SizedBox(
-            width: context.width,
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Obx(
-                    () => AnimatedSwitcher(
-                      key: const Key('circle_switch'),
-                      duration: switchAnimationDurHalf,
-                      child: currentCount.valueR < totalCount.valueR || isTotalCountNull()
-                          ? ThreeArchedCircle(
-                              size: iconSize,
-                              color: iconColor,
-                            )
-                          : Icon(
-                              key: const Key('tick_switch'),
-                              Broken.tick_circle,
-                              size: iconSize,
-                              color: iconColor,
-                            ),
+    if (showProgressSheet) {
+      WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback(
+        (timeStamp) async {
+          final rootContext = nampack.rootNavigatorKey.currentContext;
+          if (rootContext != null) {
+            popSheet = Navigator.of(rootContext, rootNavigator: true).pop;
+            await Future.delayed(Duration.zero);
+            showModalBottomSheet(
+              // ignore: use_build_context_synchronously
+              context: rootContext,
+              useRootNavigator: true,
+              isDismissible: false,
+              builder: (context) {
+                final iconSize = context.width * 0.5;
+                final iconColor = context.theme.colorScheme.onSurface.withOpacity(0.6);
+                return SizedBox(
+                  width: context.width,
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Obx(
+                          () {
+                            final totalC = totalCount.valueR;
+                            return AnimatedSwitcher(
+                              key: const Key('circle_switch'),
+                              duration: switchAnimationDurHalf,
+                              child: totalC == null || currentCount.valueR < totalC
+                                  ? ThreeArchedCircle(
+                                      size: iconSize,
+                                      color: iconColor,
+                                    )
+                                  : Icon(
+                                      key: const Key('tick_switch'),
+                                      Broken.tick_circle,
+                                      size: iconSize,
+                                      color: iconColor,
+                                    ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12.0),
+                        Text(
+                          '${lang.FETCHING}...',
+                          style: context.textTheme.displayLarge,
+                        ),
+                        const SizedBox(height: 8.0),
+                        Obx(
+                          () {
+                            final totalC = totalCount.valueR;
+                            return Text(
+                              '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
+                              style: context.textTheme.displayLarge,
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12.0),
-                  Text(
-                    '${lang.FETCHING}...',
-                    style: context.textTheme.displayLarge,
-                  ),
-                  const SizedBox(height: 8.0),
-                  Obx(
-                    () => Text(
-                      '${currentCount.valueR.formatDecimal()}/${isTotalCountNull() ? '?' : totalCount.valueR.formatDecimal()}',
-                      style: context.textTheme.displayLarge,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+                );
+              },
+            );
+          }
         },
       );
     }
 
     onStart?.call();
 
-    if (isTotalCountNull() || currentCount.value == 0) {
-      await YoutubeController.inst.getPlaylistStreams(playlist, forceInitial: currentCount.value == 0);
-      currentCount.value = playlist.streams.length;
-      totalCount.value = playlist.streamCount < 0 ? playlist.streams.length : playlist.streamCount;
+    await fetchAllRes.result;
+
+    onEnd?.call();
+
+    if (showProgressSheet) {
+      await Future.delayed(switchAnimationDur);
+      popSheet?.call();
     }
-
-    void plsPop() => context?.safePop();
-
-    void closeRxStreams() {
-      onEnd?.call();
+    Future.delayed(
+      const Duration(milliseconds: 200),
       () {
         currentCount.close();
         totalCount.close();
-      }.executeDelayed(const Duration(milliseconds: 200));
-    }
+      },
+    );
 
-    // -- if still not fetched
-    if (isTotalCountNull()) {
-      plsPop();
-      closeRxStreams();
-      return false;
-    }
-
-    bool keepFetching() => canKeepFetching == null ? false : canKeepFetching();
-
-    while (currentCount.value < totalCount.value) {
-      if (!keepFetching()) break;
-      final res = await YoutubeController.inst.getPlaylistStreams(playlist);
-      if (!keepFetching() || res.isEmpty) break;
-      currentCount.value = playlist.streams.length;
-    }
-
-    if (context != null) {
-      await Future.delayed(switchAnimationDur);
-      plsPop();
-    }
-
-    closeRxStreams();
     return true;
   }
 
-  Future<List<YoutubeID>> fetchAllPlaylistAsYTIDs({required BuildContext? context}) async {
+  Future<List<YoutubeID>> fetchAllPlaylistAsYTIDs({
+    required bool showProgressSheet,
+    required YoutiPiePlaylistResultBase playlistToFetch,
+  }) async {
     final playlist = this;
-    final didFetch = await playlist.fetchAllPlaylistStreams(context: context);
+    final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
     if (!didFetch) snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
-    return playlist.streams
+    final plId = PlaylistID(id: this.id);
+    return playlistToFetch.items
         .map(
           (e) => YoutubeID(
-            id: e.id ?? '',
-            playlistID: getPlaylistID,
+            id: e.id,
+            playlistID: plId,
           ),
         )
         .toList();
   }
 
-  PlaylistID? get getPlaylistID {
-    final plId = id;
-    return plId == null ? null : PlaylistID(id: plId);
-  }
-
-  Future<void> showPlaylistDownloadSheet({required BuildContext? context}) async {
-    final videoIDs = await fetchAllPlaylistAsYTIDs(context: context?.mounted == true ? context : null);
+  Future<void> showPlaylistDownloadSheet({
+    required bool showProgressSheet,
+    required YoutiPiePlaylistResultBase playlistToFetch,
+  }) async {
+    final videoIDs = await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
     if (videoIDs.isEmpty) return;
 
     final playlist = this;
-    final infoLookup = <String, yt.StreamInfoItem>{};
-    playlist.streams.loop((e) {
-      infoLookup[e.id ?? ''] = e;
-    });
+    final infoLookup = <String, StreamInfoItem>{};
+    playlistToFetch.items.loop((e) => infoLookup[e.id] = e);
     NamidaNavigator.inst.navigateTo(
       YTPlaylistDownloadPage(
         ids: videoIDs.toList(),
-        playlistName: playlist.name ?? '',
+        playlistName: playlist.title,
         infoLookup: infoLookup,
       ),
     );
   }
 
-  List<NamidaPopupItem> getPopupMenuItems(
-    BuildContext context, {
+  List<NamidaPopupItem> getPopupMenuItems({
+    required bool showProgressSheet,
+    required YoutiPiePlaylistResultBase playlistToFetch,
     bool displayDownloadItem = true,
     bool displayShuffle = true,
     bool displayPlay = true,
-    yt.YoutubePlaylist? playlistToOpen,
+    bool displayOpenPlaylist = false,
   }) {
-    final countText = streamCount < 0 ? "+25" : streamCount.formatDecimalShort();
+    final playlist = this;
+    final videosCount = playlist.videosCount;
+    final countText = videosCount == null || videosCount < 0 ? "+25" : videosCount.formatDecimalShort();
     final playAfterVid = YTUtils.getPlayerAfterVideo();
+
+    Future<List<YoutubeID>> fetchAllIDs() async => await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
+
     return [
       NamidaPopupItem(
         icon: Broken.music_playlist,
         title: lang.ADD_TO_PLAYLIST,
         onTap: () async {
-          final playlist = this;
-          final didFetch = await playlist.fetchAllPlaylistStreams(context: context);
+          final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
           if (!didFetch) {
             snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
             return;
@@ -250,12 +256,10 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
 
           final ids = <String>[];
           final info = <String, String?>{};
-          playlist.streams.loop((e) {
+          playlistToFetch.items.loop((e) {
             final id = e.id;
-            if (id != null) {
-              ids.add(id);
-              info[id] = e.name;
-            }
+            ids.add(id);
+            info[id] = e.title;
           });
 
           showAddToPlaylistSheet(
@@ -268,21 +272,25 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
         icon: Broken.share,
         title: lang.SHARE,
         onTap: () {
-          if (url != null) Share.share(url!);
+          final url = this.buildUrl();
+          Share.share(url);
         },
       ),
       if (displayDownloadItem)
         NamidaPopupItem(
           icon: Broken.import,
           title: lang.DOWNLOAD,
-          onTap: () => showPlaylistDownloadSheet(context: context),
+          onTap: () => showPlaylistDownloadSheet(
+            showProgressSheet: showProgressSheet,
+            playlistToFetch: playlistToFetch,
+          ),
         ),
-      if (playlistToOpen != null)
+      if (displayOpenPlaylist)
         NamidaPopupItem(
           icon: Broken.export_2,
           title: lang.OPEN,
           onTap: () {
-            NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
+            NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToFetch));
           },
         ),
       if (displayPlay)
@@ -290,7 +298,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
           icon: Broken.play,
           title: "${lang.PLAY} ($countText)",
           onTap: () async {
-            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
             Player.inst.playOrPause(0, videos, QueueSource.others);
           },
@@ -300,7 +308,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
           icon: Broken.shuffle,
           title: "${lang.SHUFFLE} ($countText)",
           onTap: () async {
-            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
             Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
           },
@@ -309,7 +317,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
         icon: Broken.next,
         title: "${lang.PLAY_NEXT} ($countText)",
         onTap: () async {
-          final videos = await fetchAllPlaylistAsYTIDs(context: context);
+          final videos = await fetchAllIDs();
           if (videos.isEmpty) return;
           Player.inst.addToQueue(videos, insertNext: true);
         },
@@ -321,7 +329,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
           subtitle: playAfterVid.name,
           oneLinedSub: true,
           onTap: () async {
-            final videos = await fetchAllPlaylistAsYTIDs(context: context);
+            final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
             Player.inst.addToQueue(videos, insertAfterLatest: true);
           },
@@ -330,7 +338,7 @@ extension YoutubePlaylistHostedUtils on yt.YoutubePlaylist {
         icon: Broken.play_cricle,
         title: "${lang.PLAY_LAST} ($countText)",
         onTap: () async {
-          final videos = await fetchAllPlaylistAsYTIDs(context: context);
+          final videos = await fetchAllIDs();
           if (videos.isEmpty) return;
           Player.inst.addToQueue(videos, insertNext: false);
         },

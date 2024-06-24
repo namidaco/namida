@@ -84,10 +84,10 @@ dependencies:
       path: packages/on_audio_query
 
   # ---- Video Indexing & Playback ----
-  ffmpeg_kit_flutter_min: "6.0.3-LTS"
-  newpipeextractor_dart:
+  ffmpeg_kit_flutter_min: "6.0.0-LTS"
+  youtipie:
     git:
-      url: https://github.com/MSOB7YY/NewPipeExtractor_Dart
+      url: https://github.com/namidaco/youtipie
 
   # ---- Image Utilities ----
   palette_generator: ^0.3.3+2

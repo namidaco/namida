@@ -13,7 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
@@ -49,6 +49,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
@@ -141,6 +142,8 @@ void mainInitialization() async {
 
   const StorageCacheManager().trimExtraFiles();
 
+  YoutubeInfoController.initialize();
+
   QueueController.inst.prepareAllQueuesFile();
 
   await Player.inst.initializePlayer();
@@ -161,8 +164,7 @@ void mainInitialization() async {
 
   YoutubePlaylistController.inst.prepareAllPlaylists();
 
-  YoutubeController.inst.loadInfoToMemory();
-  YoutubeController.inst.fillBackupInfoMap(); // for history videos info.
+  YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.
 
   await _initializeIntenties();
 
@@ -296,16 +298,16 @@ Future<void> _initializeIntenties() async {
             final id = e.getYoutubeID;
             return id == '' ? null : id;
           }).whereType<String>();
-          final ytPlaylists = paths.map((e) {
-            final match = e.isEmpty ? null : NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(e)?[0];
-            return match;
+          final ytPlaylistsIds = paths.map((e) {
+            final matchPlId = e.isEmpty ? null : NamidaLinkUtils.extractPlaylistId(e);
+            return matchPlId;
           }).whereType<String>();
           if (youtubeIds.isNotEmpty) {
             await _waitForFirstBuildContext.future;
             settings.onYoutubeLinkOpen.value.execute(youtubeIds);
-          } else if (ytPlaylists.isNotEmpty) {
-            for (final pl in ytPlaylists) {
-              await OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(pl, context: rootContext);
+          } else if (ytPlaylistsIds.isNotEmpty) {
+            for (final plid in ytPlaylistsIds) {
+              await OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(playlistId: plid);
             }
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links

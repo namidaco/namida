@@ -5,18 +5,19 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:namida/core/utils.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/base/audio_handler.dart';
-import 'package:namida/controller/settings.equalizer.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/settings.equalizer.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
@@ -25,8 +26,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class Player {
   static Player get inst => _instance;
@@ -60,28 +62,27 @@ class Player {
   RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue;
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
-  String get getCurrentVideoIdR => (YoutubeController.inst.currentYoutubeMetadataVideo.valueR ?? currentVideoInfo.valueR)?.id ?? currentVideoR?.id ?? '';
-  String get getCurrentVideoId => (YoutubeController.inst.currentYoutubeMetadataVideo.value ?? currentVideoInfo.value)?.id ?? currentVideo?.id ?? '';
-
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
 
   AndroidEqualizer get equalizer => _audioHandler.equalizer;
   AndroidLoudnessEnhancer get loudnessEnhancer => _audioHandler.loudnessEnhancer;
   int? get androidSessionId => _audioHandler.androidSessionId;
 
-  RxBaseCore<VideoInfo?> get currentVideoInfo => _audioHandler.currentVideoInfo;
-  RxBaseCore<YoutubeChannel?> get currentChannelInfo => _audioHandler.currentChannelInfo;
-  RxBaseCore<VideoOnlyStream?> get currentVideoStream => _audioHandler.currentVideoStream;
-  RxBaseCore<AudioOnlyStream?> get currentAudioStream => _audioHandler.currentAudioStream;
+  // RxBaseCore<VideoInfo?> get currentVideoInfo => _audioHandler.currentVideoInfo;
+  // RxBaseCore<YoutubeChannel?> get currentChannelInfo => _audioHandler.currentChannelInfo;
+  RxBaseCore<VideoStream?> get currentVideoStream => _audioHandler.currentVideoStream;
+  RxBaseCore<AudioStream?> get currentAudioStream => _audioHandler.currentAudioStream;
   RxBaseCore<NamidaVideo?> get currentCachedVideo => _audioHandler.currentCachedVideo;
   RxBaseCore<AudioCacheDetails?> get currentCachedAudio => _audioHandler.currentCachedAudio;
 
   Duration get getCurrentVideoDurationR {
     Duration? playerDuration = currentItemDuration.valueR;
     if (playerDuration == null || playerDuration == Duration.zero) {
-      playerDuration = currentAudioStream.valueR?.durationMS?.milliseconds ??
-          currentVideoStream.valueR?.durationMS?.milliseconds ??
-          (currentVideo == null ? VideoController.inst.currentVideo.valueR?.durationMS.milliseconds : YoutubeController.inst.currentYoutubeMetadataVideo.valueR?.duration) ??
+      playerDuration = currentAudioStream.valueR?.duration ??
+          currentVideoStream.valueR?.duration ??
+          (currentVideo == null
+              ? VideoController.inst.currentVideo.valueR?.durationMS.milliseconds
+              : YoutubeInfoController.current.currentYTStreams.valueR?.videoStreams.firstOrNull?.duration) ??
           Duration.zero;
     }
     return playerDuration;
@@ -90,9 +91,11 @@ class Player {
   Duration get getCurrentVideoDuration {
     Duration? playerDuration = Player.inst.currentItemDuration.value;
     if (playerDuration == null || playerDuration == Duration.zero) {
-      playerDuration = currentAudioStream.value?.durationMS?.milliseconds ??
-          currentVideoStream.value?.durationMS?.milliseconds ??
-          (currentVideo == null ? VideoController.inst.currentVideo.value?.durationMS.milliseconds : YoutubeController.inst.currentYoutubeMetadataVideo.value?.duration) ??
+      playerDuration = currentAudioStream.value?.duration ??
+          currentVideoStream.value?.duration ??
+          (currentVideo == null
+              ? VideoController.inst.currentVideo.value?.durationMS.milliseconds //
+              : YoutubeInfoController.current.currentYTStreams.valueR?.videoStreams.firstOrNull?.duration) ??
           Duration.zero;
     }
     return playerDuration;
@@ -444,6 +447,7 @@ class Player {
   }
 
   Future<void> onItemPlayYoutubeIDSetQuality({
+    required VideoStreamsResult? mainStreams,
     required VideoStream? stream,
     required File? cachedFile,
     required bool useCache,
@@ -451,6 +455,7 @@ class Player {
     NamidaVideo? videoItem,
   }) async {
     await _audioHandler.onItemPlayYoutubeIDSetQuality(
+      mainStreams: mainStreams,
       stream: stream,
       cachedFile: cachedFile,
       useCache: useCache,
@@ -460,12 +465,14 @@ class Player {
   }
 
   Future<void> onItemPlayYoutubeIDSetAudio({
-    required AudioOnlyStream? stream,
+    required VideoStreamsResult? mainStreams,
+    required AudioStream? stream,
     required File? cachedFile,
     bool useCache = true,
     required String videoId,
   }) async {
     await _audioHandler.onItemPlayYoutubeIDSetAudio(
+      mainStreams: mainStreams,
       stream: stream,
       cachedFile: cachedFile,
       useCache: useCache,

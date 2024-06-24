@@ -27,7 +27,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
 
   void addNewPlaylist(
     String name, {
-    Iterable<String> videoIds = const <String>[],
+    Iterable<String>? videoIds,
     int? creationDate,
     String comment = '',
     List<String> moods = const [],
@@ -37,7 +37,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
       name,
       tracks: (playlistID) {
         final newTracks = videoIds
-            .map(
+            ?.map(
               (id) => YoutubeID(
                 id: id,
                 watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
@@ -81,8 +81,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     return newtracks;
   }
 
-  Future<bool> favouriteButtonOnPressed(String id) async {
-    return await super.toggleTrackFavourite(
+  bool favouriteButtonOnPressed(String id) {
+    return super.toggleTrackFavourite(
       newTrack: YoutubeID(
         id: id,
         watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),

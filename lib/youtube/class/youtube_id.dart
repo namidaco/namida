@@ -4,13 +4,12 @@ import 'dart:io';
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class YoutubeID implements Playable, ItemWithDate {
   final String id;
@@ -62,33 +61,13 @@ class YoutubeID implements Playable, ItemWithDate {
 }
 
 extension YoutubeIDUtils on YoutubeID {
-  Future<VideoInfo?> toVideoInfo() async {
-    return await YoutubeController.inst.fetchVideoDetails(id);
-  }
-
-  Future<File?> getThumbnail() async {
-    return await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
-  }
-
   File? getThumbnailSync() {
     return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id);
-  }
-
-  Future<Duration?> getDuration() async {
-    Duration? dur;
-    final a = YoutubeController.inst.getVideoInfo(id, checkFromStorage: true);
-    dur = a?.duration;
-
-    if (dur == null) {
-      final b = await YoutubeController.inst.fetchVideoDetails(id);
-      dur = b?.duration;
-    }
-    return dur;
   }
 }
 
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
-    await Share.share(map((e) => "${YoutubeController.inst.getYoutubeLink(e.id)} - ${e.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal}\n").join());
+    await Share.share(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal}\n").join());
   }
 }

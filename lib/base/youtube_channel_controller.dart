@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
+import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/tabs/channel_tab_videos_result.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:youtipie/youtipie.dart';
 
 abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager {
   @override
-  List<StreamInfoItem> get streamsList => _streamsList;
+  List<StreamInfoItem>? get streamsList => channelVideoTab?.items;
 
   @override
   ScrollController get scrollController => uploadsScrollController;
@@ -25,7 +27,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   late final ScrollController uploadsScrollController = ScrollController();
   YoutubeSubscription? channel;
-  late final _streamsList = <StreamInfoItem>[];
+  YoutiPieChannelTabVideosResult? channelVideoTab;
   ({DateTime oldest, DateTime newest})? streamsPeakDates;
 
   bool isLoadingInitialStreams = true;
@@ -41,11 +43,12 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     super.dispose();
   }
 
+  /// TODO(youtipie): this is not really accurate
   void updatePeakDates(List<StreamInfoItem> streams) {
     int oldest = (streamsPeakDates?.oldest ?? DateTime.now()).millisecondsSinceEpoch;
     int newest = (streamsPeakDates?.newest ?? DateTime(0)).millisecondsSinceEpoch;
     streams.loop((e) {
-      final d = e.date;
+      final d = e.publishedAt.date;
       if (d != null) {
         final ms = d.millisecondsSinceEpoch;
         if (ms < oldest) {
@@ -58,36 +61,43 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     streamsPeakDates = (oldest: DateTime.fromMillisecondsSinceEpoch(oldest), newest: DateTime.fromMillisecondsSinceEpoch(newest));
   }
 
-  Future<void> fetchChannelStreams(YoutubeSubscription sub) async {
-    final st = await YoutubeController.inst.getChannelStreams(sub.channelID);
+  Future<void> fetchChannelStreams(YoutiPieChannelPageResult channelPage) async {
+    final tab = channelPage.tabs.getVideosTab();
+    if (tab == null) return;
+    final channelID = channelPage.id;
+    final result = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab);
+    if (result == null) return;
+    this.channelVideoTab = result;
+
+    final st = result.items;
     updatePeakDates(st);
-    YoutubeSubscriptionsController.inst.refreshLastFetchedTime(sub.channelID);
+    YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
     setState(() {
       isLoadingInitialStreams = false;
-      if (sub.channelID == channel?.channelID) {
-        streamsList.addAll(st);
+      if (channelID == channel?.channelID) {
         trySortStreams();
       }
     });
   }
 
-  Future<void> fetchStreamsNextPage(YoutubeSubscription? sub) async {
+  Future<void> fetchStreamsNextPage() async {
     if (isLoadingMoreUploads.value) return;
     if (lastLoadingMoreWasEmpty.value) return;
 
+    final result = this.channelVideoTab;
+    if (result == null) return;
+
     isLoadingMoreUploads.value = true;
-    final st = await YoutubeController.inst.getChannelStreamsNextPage();
-    updatePeakDates(st);
+    final didFetch = await result.fetchNext();
     isLoadingMoreUploads.value = false;
-    if (st.isEmpty) {
+
+    if (didFetch) {
+      if (result.channelId == channel?.channelID) {
+        setState(trySortStreams);
+      }
+    } else {
       if (ConnectivityController.inst.hasConnection) lastLoadingMoreWasEmpty.value = true;
       return;
-    }
-    if (sub?.channelID == channel?.channelID) {
-      setState(() {
-        streamsList.addAll(st);
-        trySortStreams();
-      });
     }
   }
 }

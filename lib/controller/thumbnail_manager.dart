@@ -5,9 +5,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:html/parser.dart' as parser;
-import 'package:http/http.dart' as http;
-import 'package:newpipeextractor_dart/utils/httpClient.dart';
+import 'package:youtipie/class/thumbnail.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_manager.dart';
@@ -15,7 +13,6 @@ import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/youtube/class/yt_thumbnail_wrapper.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 class ThumbnailManager {
@@ -38,6 +35,7 @@ class ThumbnailManager {
   File? imageUrlToCacheFile({
     required String? id,
     required String? url,
+    String? symlinkId,
     bool isTemp = false,
   }) {
     String? finalUrl = url;
@@ -51,36 +49,12 @@ class ThumbnailManager {
     final dirPrefix = isTemp ? 'temp/' : '';
 
     final file = id != null && id != ''
-        ? File("${AppDirs.YT_THUMBNAILS}$dirPrefix$id.png")
+        ? File("${AppDirs.YT_THUMBNAILS}$dirPrefix${symlinkId ?? '$id.png'}")
         : finalUrl == null
             ? null
-            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix$finalUrl");
+            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
 
     return file;
-  }
-
-  static Future<String?> _getChannelAvatarUrlIsolate(String channelId) async {
-    final url = 'https://www.youtube.com/channel/$channelId?hl=en';
-    final client = http.Client();
-    try {
-      final response = await client.get(Uri.parse(url), headers: ExtractorHttpClient.defaultHeaders);
-      final raw = response.body;
-      final s = parser.parse(raw).querySelector('meta[property="og:image"]')?.attributes['content'];
-      return s;
-    } catch (_) {
-      return null;
-    } finally {
-      client.close();
-    }
-  }
-
-  File? getYoutubeThumbnailFromCacheSync({String? id, String? channelUrl, bool isTemp = false}) {
-    if (id == null && channelUrl == null) return null;
-
-    final file = imageUrlToCacheFile(id: id, url: channelUrl, isTemp: isTemp);
-
-    if (file != null && file.existsSync()) return file;
-    return null;
   }
 
   Future<File?> extractVideoThumbnailAndSave({
@@ -99,32 +73,45 @@ class ThumbnailManager {
     return fileExists ? file : null;
   }
 
+  File? getYoutubeThumbnailFromCacheSync({String? id, String? customUrl, bool isTemp = false}) {
+    if (id == null && customUrl == null) return null;
+    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp);
+    if (file != null && file.existsSync()) return file;
+    return null;
+  }
+
   Future<File?> getYoutubeThumbnailAndCache({
     String? id,
-    String? channelUrlOrID,
+    String? customUrl,
     bool isImportantInCache = true,
-    bool hqChannelImage = false,
+    String? symlinkId,
     VoidCallback? onNotFound,
   }) async {
-    if (id == null && channelUrlOrID == null) return null;
+    if (id == null && customUrl == null) return null;
 
     final isTemp = isImportantInCache ? false : true;
 
-    final file = imageUrlToCacheFile(id: id, url: channelUrlOrID, isTemp: isTemp);
+    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp);
     if (file == null) return null;
+    if (file.existsSync()) return file;
 
-    if (channelUrlOrID != null && hqChannelImage) {
-      final res = await _getChannelAvatarUrlIsolate.thready(channelUrlOrID);
-      if (res != null) channelUrlOrID = res;
+    if (symlinkId != null) {
+      final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp);
+      if (symlinkfile != null && symlinkfile.existsSync()) {
+        final targetFilePath = Link.fromUri(symlinkfile.uri).targetSync();
+        final targetFile = File(targetFilePath);
+        if (targetFile.existsSync()) return targetFile;
+      }
     }
 
     final itemId = file.path.getFilenameWOExt;
     final downloaded = await _getYoutubeThumbnail(
       itemId: itemId,
-      urls: channelUrlOrID == null ? null : [channelUrlOrID],
+      urls: customUrl == null ? null : [customUrl],
       isVideo: id != null,
       isImportantInCache: isImportantInCache,
       destinationFile: file,
+      symlinkId: symlinkId,
       isTemp: isTemp,
       forceRequest: false,
       lowerResYTID: false,
@@ -134,7 +121,7 @@ class ThumbnailManager {
     return downloaded;
   }
 
-  Future<File?> getLowResYoutubeVideoThumbnail(String? videoId, {bool useHighQualityIfEnoughListens = true, VoidCallback? onNotFound}) async {
+  Future<File?> getLowResYoutubeVideoThumbnail(String? videoId, {String? symlinkId, bool useHighQualityIfEnoughListens = true, VoidCallback? onNotFound}) async {
     if (videoId == null) return null;
 
     bool isTemp = true;
@@ -151,6 +138,7 @@ class ThumbnailManager {
       isVideo: true,
       isImportantInCache: false,
       destinationFile: file,
+      symlinkId: symlinkId,
       isTemp: isTemp,
       forceRequest: false,
       lowerResYTID: lowerResYTID,
@@ -173,11 +161,12 @@ class ThumbnailManager {
     required bool forceRequest,
     required bool isImportantInCache,
     required File destinationFile,
+    required String? symlinkId,
     required VoidCallback? onNotFound,
   }) async {
     final links = <String>[];
     if (isVideo && (urls == null || urls.isEmpty)) {
-      final yth = YTThumbnail(itemId);
+      final yth = YoutiPieVideoThumbnail(itemId);
       if (lowerResYTID) {
         links.addAll(yth.allQualitiesExceptHighest);
       } else {
@@ -193,6 +182,7 @@ class ThumbnailManager {
       forceRequest: forceRequest,
       isImportantInCache: isImportantInCache,
       destinationFile: destinationFile,
+      symlinkId: symlinkId,
       isTemp: isTemp,
       onNotFound: onNotFound,
     );
@@ -212,6 +202,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     required bool isTemp,
     required bool isImportantInCache,
     required File destinationFile,
+    required String? symlinkId,
     required VoidCallback? onNotFound,
   }) async {
     if (_notFoundThumbnails[id] == true) {
@@ -234,6 +225,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       'isImportantInCache': isImportantInCache,
       'isTemp': isTemp,
       'destinationFile': destinationFile,
+      'symlinkId': symlinkId,
     };
     await initialize();
     await sendPort(p);
@@ -286,6 +278,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         final isImportantInCache = p['isImportantInCache'] as bool? ?? false;
         final isTemp = p['isTemp'] as bool? ?? false;
         final destinationFile = p['destinationFile'] as File;
+        final symlinkId = p['symlinkId'] as String?;
 
         if (forceRequest == true && destinationFile.existsSync()) {
           final res = _YTThumbnailDownloadResult(
@@ -339,6 +332,9 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                 final downloadStream = response.asBroadcastStream();
                 await fileStream.addStream(downloadStream);
                 newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
+                if (symlinkId != null) {
+                  Link.fromUri(Uri.file("${newFile.parent.path}/symlinkId")).create(newFile.path).catchError((_) => Link(''));
+                }
                 if (deleteOldExtracted) {
                   File("${destinationFile.parent}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
                 }

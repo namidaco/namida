@@ -253,11 +253,13 @@ class NamidaSearchBar extends StatelessWidget {
   const NamidaSearchBar({super.key, required this.searchBarKey});
 
   void _onSubmitted(String val) {
-    final ytPlaylistLink = NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(val)?[0];
-    if (ytPlaylistLink != null && ytPlaylistLink != '') {
-      OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(ytPlaylistLink, context: rootContext);
-      return;
-    }
+    try {
+      final ytPlaylistId = NamidaLinkUtils.extractPlaylistId(val);
+      if (ytPlaylistId != null && ytPlaylistId != '') {
+        OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(playlistId: ytPlaylistId);
+        return;
+      }
+    } catch (_) {}
 
     final ytlink = NamidaLinkRegex.youtubeLinkRegex.firstMatch(val)?[0];
     final ytID = ytlink?.getYoutubeID;

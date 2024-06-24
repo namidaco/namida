@@ -71,7 +71,7 @@ class YoutubeCard extends StatelessWidget {
     final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
     final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
 
-    final channelThumbSize = 20.0 * thumbnailWidthPercentage;
+    final channelThumbSize = 0.25 * thumbnailHeight * thumbnailWidthPercentage;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
@@ -94,7 +94,7 @@ class YoutubeCard extends StatelessWidget {
                     key: Key("${videoId}_$thumbnailUrl"),
                     isImportantInCache: isImageImportantInCache,
                     videoId: videoId,
-                    channelUrl: thumbnailUrl,
+                    customUrl: thumbnailUrl,
                     width: thumbnailWidth,
                     height: thumbnailHeight,
                     borderRadius: 10.0,
@@ -149,17 +149,18 @@ class YoutubeCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (displayChannelThumbnail) ...[
-                              NamidaDummyContainer(
-                                width: channelThumbSize,
-                                height: channelThumbSize,
-                                shimmerEnabled: shimmerEnabled && (channelThumbnailUrl == null || !displayChannelThumbnail),
-                                child: YoutubeThumbnail(
-                                  key: Key("${channelThumbnailUrl}_$channelID"),
-                                  isImportantInCache: false,
-                                  channelUrl: channelThumbnailUrl ?? '',
-                                  channelIDForHQImage: channelThumbnailUrl == null ? (channelID ?? '') : '',
+                              Flexible(
+                                child: NamidaDummyContainer(
                                   width: channelThumbSize,
-                                  isCircle: true,
+                                  height: channelThumbSize,
+                                  shimmerEnabled: shimmerEnabled && (channelThumbnailUrl == null || !displayChannelThumbnail),
+                                  child: YoutubeThumbnail(
+                                    key: Key("${channelThumbnailUrl}_$channelID"),
+                                    isImportantInCache: false,
+                                    customUrl: channelThumbnailUrl,
+                                    width: channelThumbSize,
+                                    isCircle: true,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6.0),

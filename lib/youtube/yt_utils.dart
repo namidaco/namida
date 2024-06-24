@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
-import 'package:newpipeextractor_dart/newpipeextractor_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -26,10 +27,10 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
@@ -51,7 +52,7 @@ class YTUtils {
       );
     }
 
-    YoutubeController.inst.resetGlowUnderVideo();
+    YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
   }
 
   static List<Widget> getVideoCacheStatusIcons({
@@ -166,7 +167,7 @@ class YTUtils {
   static List<NamidaPopupItem> getVideoCardMenuItems({
     required String videoId,
     required String? url,
-    required String? channelUrl,
+    required String? channelID,
     required PlaylistID? playlistID,
     required Map<String, String?> idsNamesLookup,
     String playlistName = '',
@@ -174,7 +175,8 @@ class YTUtils {
     bool copyUrl = false,
   }) {
     final playAfterVid = getPlayerAfterVideo();
-    final isCurrentlyPlaying = Player.inst.currentVideo != null && videoId == Player.inst.getCurrentVideoId;
+    final currentVideo = Player.inst.currentVideo;
+    final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -204,6 +206,14 @@ class YTUtils {
           title: lang.COPY,
           onTap: () => YTUtils().copyCurrentVideoUrl(videoId),
         ),
+      if (channelID != null && channelID != '')
+        NamidaPopupItem(
+          icon: Broken.user,
+          title: lang.GO_TO_CHANNEL,
+          onTap: () {
+            NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelID));
+          },
+        ),
       isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,
@@ -220,16 +230,6 @@ class YTUtils {
                 Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
               },
             ),
-      if (channelUrl != '')
-        NamidaPopupItem(
-          icon: Broken.user,
-          title: lang.GO_TO_CHANNEL,
-          onTap: () {
-            final chid = YoutubeSubscriptionsController.inst.idOrUrlToChannelID(channelUrl);
-            if (chid == null) return;
-            NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid));
-          },
-        ),
       NamidaPopupItem(
         icon: Broken.next,
         title: lang.PLAY_NEXT,
@@ -270,50 +270,44 @@ class YTUtils {
       try {
         final playAfterVideo = player.currentQueue.value[player.latestInsertedIndex] as YoutubeID;
         final diff = player.latestInsertedIndex - player.currentIndex.value;
-        final name = YoutubeController.inst.getVideoName(playAfterVideo.id) ?? '';
+        final name = YoutubeInfoController.utils.getVideoName(playAfterVideo.id) ?? '';
         return (video: playAfterVideo, diff: diff, name: name);
       } catch (_) {}
     }
     return null;
   }
 
-  static Map<String, String?> getMetadataInitialMap(String id, VideoInfo? info, {bool autoExtract = true}) {
+  static Map<String, String?> getMetadataInitialMap(String id, VideoStreamInfo? info, {bool autoExtract = true}) {
     String removeTopic(String text) {
       const topic = '- Topic';
       final startIndex = (text.length - topic.length).withMinimum(0);
       return text.replaceFirst(topic, '', startIndex).trimAll();
     }
 
-    final date = info?.date;
-    final description = info?.description;
-    String? title = info?.name;
-    String? artist = info?.uploaderName;
+    final date = info?.publishedAt.date;
+    final description = info?.availableDescription;
+    String? title = info?.title;
+    String? artist = info?.channelName;
     String? album;
     if (autoExtract) {
-      final splitted = info?.name?.splitArtistAndTitle();
+      final splitted = info?.title.splitArtistAndTitle();
       if (splitted != null && splitted.$1 != null && splitted.$2 != null) {
         title = splitted.$2;
         artist = splitted.$1;
       }
-      final uploaderName = info?.uploaderName;
+      final uploaderName = info?.channelName;
       if (uploaderName != null) album = removeTopic(uploaderName);
     }
 
     if (artist != null) artist = removeTopic(artist);
 
-    String? synopsis;
-    if (description != null) {
-      try {
-        synopsis = HtmlParser.parseHTML(description).text;
-      } catch (_) {}
-    }
     return {
       FFMPEGTagField.title: title,
       FFMPEGTagField.artist: artist,
       FFMPEGTagField.album: album,
-      FFMPEGTagField.comment: YoutubeController.inst.getYoutubeLink(id),
+      FFMPEGTagField.comment: YTUrlUtils.buildVideoUrl(id),
       FFMPEGTagField.year: date == null ? null : DateFormat('yyyyMMdd').format(date),
-      FFMPEGTagField.synopsis: synopsis,
+      FFMPEGTagField.synopsis: description,
     };
   }
 
@@ -334,12 +328,10 @@ class YTUtils {
   }
 
   static Future<void> onYoutubeHistoryPlaylistTap({
-    double initialScrollOffset = 0,
-    int? indexToHighlight,
-    int? dayOfHighLight,
+    required HistoryScrollInfo scrollInfo,
+    required double initialScrollOffset,
   }) async {
-    YoutubeHistoryController.inst.indexToHighlight.value = indexToHighlight;
-    YoutubeHistoryController.inst.dayOfHighLight.value = dayOfHighLight;
+    YoutubeHistoryController.inst.highlightedItem.value = scrollInfo;
 
     void jump() => YoutubeHistoryController.inst.scrollController.jumpTo(initialScrollOffset);
 
@@ -553,10 +545,11 @@ class YTUtils {
                     totalSizeToDelete.value -= size;
                   }
                 },
-                trailing: Obx(
-                  () => NamidaCheckMark(
+                trailing: ObxO(
+                  rx: tempFilesDelete,
+                  builder: (deletetemp) => NamidaCheckMark(
                     size: 16.0,
-                    active: tempFilesDelete.valueR,
+                    active: deletetemp,
                   ),
                 ),
               );

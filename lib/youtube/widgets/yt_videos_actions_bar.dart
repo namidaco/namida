@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:newpipeextractor_dart/models/stream_info_item.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -37,16 +37,16 @@ class YTVideosActionBarOptions {
 
 class YTVideosActionBar extends StatelessWidget {
   final String title;
-  final String url;
-  final List<YoutubeID> Function() videosCallback;
-  final Map<String, StreamInfoItem> Function()? infoLookupCallback;
+  final String Function()? urlBuilder;
+  final List<YoutubeID>? Function() videosCallback;
+  final Map<String, StreamInfoItem>? Function()? infoLookupCallback;
   final YTVideosActionBarOptions barOptions;
   final YTVideosActionBarOptions menuOptions;
 
   const YTVideosActionBar({
     super.key,
     required this.title,
-    required this.url,
+    required this.urlBuilder,
     required this.videosCallback,
     this.infoLookupCallback,
     this.barOptions = const YTVideosActionBarOptions(),
@@ -61,46 +61,60 @@ class YTVideosActionBar extends StatelessWidget {
     ),
   });
 
-  List<YoutubeID> get videos => videosCallback();
-  Map<String, StreamInfoItem> get infoLookup => infoLookupCallback?.call() ?? {};
-
   Future<void> _onDownloadTap() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await NamidaNavigator.inst.navigateTo(
       YTPlaylistDownloadPage(
         ids: videos,
         playlistName: title,
-        infoLookup: infoLookup,
+        infoLookup: infoLookupCallback?.call() ?? {},
       ),
     );
   }
 
   Future<void> _onShuffle() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
   }
 
   Future<void> _onPlay() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await Player.inst.playOrPause(0, videos, QueueSource.others);
   }
 
   Future<void> _onPlayNext() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await Player.inst.addToQueue(videos, insertNext: true);
   }
 
   Future<void> _onPlayAfter() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await Player.inst.addToQueue(videos, insertAfterLatest: true);
   }
 
   Future<void> _onPlayLast() async {
+    final videos = videosCallback();
+    if (videos == null) return;
     await Player.inst.addToQueue(videos, insertNext: false);
   }
 
   void _onAddToPlaylist() {
+    final videos = videosCallback();
+    if (videos == null) return;
+
     final ids = <String>[];
     final info = <String, String?>{};
+
+    final infoLookup = infoLookupCallback?.call() ?? {};
     videos.loop((e) {
       final id = e.id;
       ids.add(id);
-      info[id] = infoLookup[id]?.name;
+      info[id] = infoLookup[id]?.title;
     });
 
     showAddToPlaylistSheet(
@@ -110,8 +124,10 @@ class YTVideosActionBar extends StatelessWidget {
   }
 
   List<NamidaPopupItem> getMenuItems() {
-    final countText = videos.length;
+    final videos = videosCallback();
+    final videosCount = videos?.length ?? 0;
     final playAfterVid = menuOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
+    final url = urlBuilder?.call();
     return [
       if (menuOptions.addToPlaylist)
         NamidaPopupItem(
@@ -119,7 +135,7 @@ class YTVideosActionBar extends StatelessWidget {
           title: lang.ADD_TO_PLAYLIST,
           onTap: _onAddToPlaylist,
         ),
-      if (url != '')
+      if (url != null && url != '')
         NamidaPopupItem(
           icon: Broken.share,
           title: lang.SHARE,
@@ -131,38 +147,40 @@ class YTVideosActionBar extends StatelessWidget {
           title: lang.DOWNLOAD,
           onTap: _onDownloadTap,
         ),
-      if (menuOptions.shuffle)
-        NamidaPopupItem(
-          icon: Broken.shuffle,
-          title: "${lang.SHUFFLE} ($countText)",
-          onTap: _onShuffle,
-        ),
-      if (menuOptions.play)
-        NamidaPopupItem(
-          icon: Broken.play,
-          title: "${lang.PLAY} ($countText)",
-          onTap: _onPlay,
-        ),
-      if (menuOptions.playNext)
-        NamidaPopupItem(
-          icon: Broken.next,
-          title: "${lang.PLAY_NEXT} ($countText)",
-          onTap: _onPlayNext,
-        ),
-      if (playAfterVid != null)
-        NamidaPopupItem(
-          icon: Broken.hierarchy_square,
-          title: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
-          subtitle: playAfterVid.name,
-          oneLinedSub: true,
-          onTap: _onPlayAfter,
-        ),
-      if (menuOptions.playLast)
-        NamidaPopupItem(
-          icon: Broken.play_cricle,
-          title: "${lang.PLAY_LAST} ($countText)",
-          onTap: _onPlayLast,
-        ),
+      if (videosCount > 0) ...[
+        if (menuOptions.shuffle)
+          NamidaPopupItem(
+            icon: Broken.shuffle,
+            title: "${lang.SHUFFLE} ($videosCount)",
+            onTap: _onShuffle,
+          ),
+        if (menuOptions.play)
+          NamidaPopupItem(
+            icon: Broken.play,
+            title: "${lang.PLAY} ($videosCount)",
+            onTap: _onPlay,
+          ),
+        if (menuOptions.playNext)
+          NamidaPopupItem(
+            icon: Broken.next,
+            title: "${lang.PLAY_NEXT} ($videosCount)",
+            onTap: _onPlayNext,
+          ),
+        if (playAfterVid != null)
+          NamidaPopupItem(
+            icon: Broken.hierarchy_square,
+            title: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+            subtitle: playAfterVid.name,
+            oneLinedSub: true,
+            onTap: _onPlayAfter,
+          ),
+        if (menuOptions.playLast)
+          NamidaPopupItem(
+            icon: Broken.play_cricle,
+            title: "${lang.PLAY_LAST} ($videosCount)",
+            onTap: _onPlayLast,
+          ),
+      ],
     ];
   }
 
