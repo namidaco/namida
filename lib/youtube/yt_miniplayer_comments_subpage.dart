@@ -97,7 +97,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                           if (currentId != null) {
                             await YoutubeInfoController.current.updateCurrentComments(
                               currentId,
-                              sortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
+                              newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
                               initial: true,
                             );
                           }

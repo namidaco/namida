@@ -801,7 +801,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                           iconSize: 22.0,
                                                                           onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(
                                                                             currentId,
-                                                                            sortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
+                                                                            newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
                                                                             initial: true,
                                                                           ),
                                                                           child: commFromCache
@@ -941,7 +941,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   iconSize: 22.0,
                                                                   onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(
                                                                     currentId,
-                                                                    sortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
+                                                                    newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
                                                                     initial: true,
                                                                   ),
                                                                   child: commFromCache

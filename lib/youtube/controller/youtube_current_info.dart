@@ -118,11 +118,12 @@ class _YoutubeCurrentInfoController {
   }
 
   /// specify [sortType] to force refresh. otherwise fetches next
-  Future<void> updateCurrentComments(String videoId, {CommentsSortType? sortType, bool initial = false}) async {
+  Future<void> updateCurrentComments(String videoId, {CommentsSortType? newSortType, bool initial = false}) async {
     final commentRes = _currentComments.value;
     if (commentRes == null) return;
+    if (initial == false && commentRes.canFetchNext == false) return;
 
-    if (initial == false && commentRes.canFetchNext && commentRes.isNotEmpty && sortType == null) {
+    if (initial == false && commentRes.canFetchNext && newSortType == null) {
       _isLoadingMoreComments.value = true;
       final didFetch = await commentRes.fetchNext();
       if (didFetch) _currentComments.refresh();
@@ -130,7 +131,7 @@ class _YoutubeCurrentInfoController {
     } else {
       // -- fetch initial.
       _isLoadingInitialComments.value = true;
-      final initialContinuation = sortType == null ? _initialCommentsContinuation : commentRes.sorters[sortType] ?? _initialCommentsContinuation;
+      final initialContinuation = newSortType == null ? _initialCommentsContinuation : commentRes.sorters[newSortType] ?? _initialCommentsContinuation;
       if (initialContinuation != null) {
         final newRes = await YoutubeInfoController.comment.fetchComments(
           videoId: videoId,
