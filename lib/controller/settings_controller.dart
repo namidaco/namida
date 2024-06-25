@@ -137,7 +137,7 @@ class SettingsController with SettingsFileWriter {
   final isTrackPlayedSecondsCount = 40.obs;
   final isTrackPlayedPercentageCount = 40.obs;
   final waveformTotalBars = 140.obs;
-  final videosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final videosMaxCacheInMB = (4 * 1024).obs; // 4GB
   final audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final ytMiniplayerDimAfterSeconds = 15.obs;
