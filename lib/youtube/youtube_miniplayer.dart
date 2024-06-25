@@ -908,59 +908,14 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                               rx: settings.ytTopComments,
                                               builder: (ytTopComments) {
                                                 if (ytTopComments) return const SliverToBoxAdapter();
-                                                return ObxO(
-                                                  rx: YoutubeInfoController.current.currentComments,
-                                                  builder: (comments) {
-                                                    final count = comments?.commentsCount;
-                                                    return SliverToBoxAdapter(
-                                                      child: Padding(
-                                                        key: Key("${currentId}_comments_header"),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-                                                        child: Row(
-                                                          mainAxisAlignment: MainAxisAlignment.start,
-                                                          children: [
-                                                            const Icon(Broken.document),
-                                                            const SizedBox(width: 8.0),
-                                                            Text(
-                                                              [
-                                                                lang.COMMENTS,
-                                                                if (count != null) count.formatDecimalShort(),
-                                                              ].join(' • '),
-                                                              style: mainTextTheme.displayLarge,
-                                                              textAlign: TextAlign.start,
-                                                            ),
-                                                            const Spacer(),
-                                                            ObxO(
-                                                              rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
-                                                              builder: (commFromCache) {
-                                                                commFromCache ??= false;
-                                                                return NamidaIconButton(
-                                                                  // key: Key(currentId),
-                                                                  tooltip: commFromCache ? () => lang.CACHE : null,
-                                                                  icon: Broken.refresh,
-                                                                  iconSize: 22.0,
-                                                                  onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(
-                                                                    currentId,
-                                                                    newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
-                                                                    initial: true,
-                                                                  ),
-                                                                  child: commFromCache
-                                                                      ? const StackedIcon(
-                                                                          baseIcon: Broken.refresh,
-                                                                          secondaryIcon: Broken.global,
-                                                                        )
-                                                                      : Icon(
-                                                                          Broken.refresh,
-                                                                          color: defaultIconColor,
-                                                                        ),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
+                                                return SliverToBoxAdapter(
+                                                  key: Key("${currentId}_comments_header"),
+                                                  child: const Padding(
+                                                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                                                    child: YoutubeCommentsHeader(
+                                                      displayBackButton: false,
+                                                    ),
+                                                  ),
                                                 );
                                               },
                                             ),
@@ -977,6 +932,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             transparent: false,
                                                             shimmerEnabled: true,
                                                             child: ListView.builder(
+                                                              padding: EdgeInsets.zero,
                                                               // key: Key(currentId),
                                                               physics: const NeverScrollableScrollPhysics(),
                                                               itemCount: 10,

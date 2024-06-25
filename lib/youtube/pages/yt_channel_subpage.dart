@@ -321,6 +321,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                   ? ShimmerWrapper(
                       shimmerEnabled: true,
                       child: ListView.builder(
+                        padding: EdgeInsets.zero,
                         itemCount: 15,
                         itemBuilder: (context, index) {
                           return const YoutubeVideoCardDummy(

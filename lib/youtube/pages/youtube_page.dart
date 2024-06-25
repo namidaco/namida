@@ -48,6 +48,7 @@ class _YoutubePageState extends State<YoutubePage> with AutomaticKeepAliveClient
               transparent: false,
               shimmerEnabled: true,
               child: ListView.builder(
+                padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: feed.length,
                 shrinkWrap: true,

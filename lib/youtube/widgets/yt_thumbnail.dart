@@ -30,7 +30,6 @@ class YoutubeThumbnail extends StatefulWidget {
   final String? smallBoxText;
   final IconData? smallBoxIcon;
   final bool displayFallbackIcon;
-  final String? localImagePath;
   final bool extractColor;
   final double blur;
   final bool compressed;
@@ -57,7 +56,6 @@ class YoutubeThumbnail extends StatefulWidget {
     this.smallBoxText,
     this.smallBoxIcon,
     this.displayFallbackIcon = true,
-    this.localImagePath,
     this.extractColor = false,
     this.blur = 1.5,
     this.compressed = true,
@@ -78,9 +76,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
   final _thumbnailNotFound = false.obs;
-
-  bool get canFetchYTImage => widget.videoId != null || widget.customUrl != null;
-  bool get canFetchImage => widget.localImagePath != null || canFetchYTImage;
 
   Timer? _dontTouchMeImFetchingThumbnail;
 
@@ -105,8 +100,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (imagePath != null && imageColors != null) return;
     _dontTouchMeImFetchingThumbnail = null;
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
-
-    imagePath = widget.localImagePath;
 
     void onThumbnailNotFound() => _thumbnailNotFound.value = true;
 

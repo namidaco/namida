@@ -1615,6 +1615,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
   MediaItem toMediaItem(int currentIndex, int queueLength) {
     final tr = track.toTrackExt();
     final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
+    final imagePage = tr.pathToImage;
     return MediaItem(
       id: tr.path,
       title: tr.title,
@@ -1625,7 +1626,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
       duration: Duration(seconds: tr.duration),
-      artUri: Uri.file(File(tr.pathToImage).existsSync() ? tr.pathToImage : AppPaths.NAMIDA_LOGO),
+      artUri: Uri.file(File(imagePage).existsSync() ? imagePage : AppPaths.NAMIDA_LOGO),
     );
   }
 }

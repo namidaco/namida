@@ -7,6 +7,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -685,6 +686,10 @@ extension YTSeekActionModeUtils on YTSeekActionMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension CommentsSortTypeUtils on CommentsSortType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -1298,6 +1303,10 @@ class _NamidaConverters {
         YTSeekActionMode.minimizedMiniplayer: lang.MINIMIZED_MINIPLAYER,
         YTSeekActionMode.expandedMiniplayer: lang.EXPANDED_MINIPLAYER,
         YTSeekActionMode.all: lang.ALL,
+      },
+      CommentsSortType: {
+        CommentsSortType.top: lang.TOP,
+        CommentsSortType.newest: lang.NEWEST,
       },
     };
 

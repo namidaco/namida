@@ -3,6 +3,48 @@ import 'package:flutter/material.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 
+typedef PullToRefreshCallback = Future<void> Function();
+const double _defaultMaxDistance = 128.0;
+
+class PullToRefresh extends StatefulWidget {
+  final Widget child;
+  final ScrollController controller;
+  final PullToRefreshCallback onRefresh;
+  final double maxDistance;
+
+  const PullToRefresh({
+    super.key,
+    required this.child,
+    required this.controller,
+    required this.onRefresh,
+    this.maxDistance = _defaultMaxDistance,
+  });
+
+  @override
+  State<PullToRefresh> createState() => _PullToRefreshState();
+}
+
+class _PullToRefreshState extends State<PullToRefresh> with TickerProviderStateMixin, PullToRefreshMixin {
+  @override
+  double get maxDistance => widget.maxDistance;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerMove: (event) => onPointerMove(widget.controller, event),
+      onPointerUp: (_) => onRefresh(widget.onRefresh),
+      onPointerCancel: (_) => onVerticalDragFinish(),
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          widget.child,
+          pullToRefreshWidget,
+        ],
+      ),
+    );
+  }
+}
+
 mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements TickerProvider {
   bool enablePullToRefresh = true;
 
@@ -15,6 +57,8 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   final _minTrigger = 20;
   num get pullNormalizer => 100;
+
+  final double maxDistance = _defaultMaxDistance;
 
   bool? _isDraggingVertically;
   double _distanceDragged = 0;
@@ -48,7 +92,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   bool _isRefreshing = false;
-  Future<void> onRefresh(Future<void> Function() execute) async {
+  Future<void> onRefresh(PullToRefreshCallback execute) async {
     if (!enablePullToRefresh) return;
     onVerticalDragFinish();
     if (animation.value != 1 || _isRefreshing) return;
@@ -78,7 +122,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
           const multiplier = 4.5;
           const minus = multiplier / 3;
           return Padding(
-            padding: EdgeInsets.only(top: 12.0 + p * 128.0),
+            padding: EdgeInsets.only(top: 12.0 + p * maxDistance),
             child: Transform.rotate(
               angle: (p * multiplier) - minus,
               child: AnimatedBuilder(

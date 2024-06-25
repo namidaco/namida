@@ -38,7 +38,7 @@ part 'info_controllers/yt_video_info_controller.dart';
 part 'youtube_current_info.dart';
 
 class YoutubeInfoController {
-  YoutubeInfoController._();
+  const YoutubeInfoController._();
 
   static const video = _VideoInfoController();
   static const playlist = YoutiPie.playlist;

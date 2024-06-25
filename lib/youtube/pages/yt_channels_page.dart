@@ -362,6 +362,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       ? ShimmerWrapper(
                           shimmerEnabled: true,
                           child: ListView.builder(
+                            padding: EdgeInsets.zero,
                             itemCount: 15,
                             itemBuilder: (context, index) {
                               return const YoutubeVideoCardDummy(
