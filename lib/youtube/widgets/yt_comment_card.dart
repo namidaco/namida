@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:selectable_autolink_text/selectable_autolink_text.dart';
-import 'package:youtipie/class/comments/comment_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -13,13 +9,16 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/namida_read_more.dart';
+import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:youtipie/class/comments/comment_info_item.dart';
 
 class YTCommentCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
+  final String? videoId;
   final CommentInfoItem? comment;
-  const YTCommentCard({super.key, required this.comment, required this.margin});
+  const YTCommentCard({super.key, required this.videoId, required this.comment, required this.margin});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class YTCommentCard extends StatelessWidget {
     final author = comment?.author?.displayName;
     final isArtist = comment?.author?.isArtist ?? false;
     final uploadedFrom = comment?.publishedTimeText;
-    final commentTextParsed = comment?.text;
+    final commentContent = comment?.content;
     final likeCount = comment?.likesCount;
     final repliesCount = comment?.repliesCount;
     final isHearted = comment?.isHearted ?? false;
@@ -41,6 +40,7 @@ class YTCommentCard extends StatelessWidget {
       fontWeight: FontWeight.w400,
       color: authorTextColor,
     );
+
     return Stack(
       children: [
         Padding(
@@ -148,88 +148,72 @@ class YTCommentCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4.0),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: commentTextParsed == null
-                                ? Column(
-                                    children: [
-                                      ...List.filled(
-                                        (4 - 1).getRandomNumberBelow(1),
-                                        const Padding(
-                                          padding: EdgeInsets.only(top: 2.0),
-                                          child: NamidaDummyContainer(
-                                            width: null,
-                                            height: 12.0,
-                                            borderRadius: 4.0,
-                                            shimmerEnabled: true,
-                                            child: null,
+                              duration: const Duration(milliseconds: 200),
+                              child: commentContent == null
+                                  ? Column(
+                                      children: [
+                                        ...List.filled(
+                                          (4 - 1).getRandomNumberBelow(1),
+                                          const Padding(
+                                            padding: EdgeInsets.only(top: 2.0),
+                                            child: NamidaDummyContainer(
+                                              width: null,
+                                              height: 12.0,
+                                              borderRadius: 4.0,
+                                              shimmerEnabled: true,
+                                              child: null,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )
-                                : NamidaReadMoreText(
-                                    text: commentTextParsed,
-                                    lines: 5,
-                                    builder: (text, lines, isExpanded, exceededMaxLines, toggle) {
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          SelectableAutoLinkText(
-                                            text,
-                                            maxLines: lines,
-                                            style: context.textTheme.displaySmall?.copyWith(
-                                              fontSize: 13.5,
-                                              fontWeight: FontWeight.w500,
-                                              color: context.theme.colorScheme.onSurface.withAlpha(220),
-                                            ),
-                                            linkStyle: context.textTheme.displayMedium?.copyWith(
-                                              color: context.theme.colorScheme.primary.withAlpha(210),
-                                              fontSize: 13.5,
-                                            ),
-                                            highlightedLinkStyle: TextStyle(
-                                              color: context.theme.colorScheme.primary.withAlpha(220),
-                                              backgroundColor: context.theme.colorScheme.onSurface.withAlpha(40),
-                                              fontSize: 13.5,
-                                            ),
-                                            scrollPhysics: const NeverScrollableScrollPhysics(),
-                                            linkRegExpPattern: NamidaLinkRegex.all,
-                                            onTap: (url) async {
-                                              final dur = NamidaLinkUtils.parseDuration(url);
-                                              if (dur != null) {
-                                                Player.inst.seek(dur);
-                                              } else {
-                                                NamidaLinkUtils.openLink(url);
-                                              }
-                                            },
-                                          ),
-                                          if (exceededMaxLines)
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: TapDetector(
-                                                onTap: toggle,
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                      ],
+                                    )
+                                  : commentContent.rawText == null
+                                      ? const SizedBox()
+                                      : YoutubeDescriptionWidget(
+                                          videoId: videoId,
+                                          content: commentContent,
+                                          linkColor: context.theme.colorScheme.primary.withAlpha(210),
+                                          childBuilder: (span) {
+                                            return NamidaReadMoreText(
+                                              span: span,
+                                              lines: 5,
+                                              builder: (span, lines, isExpanded, exceededMaxLines, toggle) {
+                                                return Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(
-                                                      isExpanded ? '' : lang.SHOW_MORE,
-                                                      style: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                                                    Text.rich(
+                                                      span,
+                                                      maxLines: lines,
                                                     ),
-                                                    const SizedBox(width: 8),
-                                                    Icon(
-                                                      isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                                                      size: 18.0,
-                                                      color: readmoreColor,
-                                                    ),
+                                                    if (exceededMaxLines)
+                                                      Padding(
+                                                        padding: const EdgeInsets.all(8.0),
+                                                        child: TapDetector(
+                                                          onTap: toggle,
+                                                          child: Row(
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              Text(
+                                                                isExpanded ? '' : lang.SHOW_MORE,
+                                                                style: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                                                              ),
+                                                              const SizedBox(width: 8),
+                                                              Icon(
+                                                                isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                                                size: 18.0,
+                                                                color: readmoreColor,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
                                                   ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                          ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        )),
                           const SizedBox(height: 8.0),
                           Row(
                             children: [
@@ -289,8 +273,9 @@ class YTCommentCard extends StatelessWidget {
                 icon: Broken.copy,
                 title: lang.COPY,
                 onTap: () {
-                  if (commentTextParsed != null) {
-                    Clipboard.setData(ClipboardData(text: commentTextParsed));
+                  final rawText = comment?.content.rawText;
+                  if (rawText != null) {
+                    Clipboard.setData(ClipboardData(text: rawText));
                   }
                 },
               ),
@@ -325,7 +310,7 @@ class YTCommentCardCompact extends StatelessWidget {
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
     final uploadedFrom = comment?.publishedTimeText;
-    final commentTextParsed = comment?.text;
+    final commentTextParsed = comment?.content.rawText;
     final likeCount = comment?.likesCount;
     final repliesCount = comment?.repliesCount;
     final isHearted = comment?.isHearted ?? false;

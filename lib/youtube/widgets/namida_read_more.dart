@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class NamidaReadMoreText extends StatefulWidget {
-  final String text;
+  final TextSpan span;
   final int lines;
   final Locale? locale;
   final Widget Function(
-    String text,
+    TextSpan span,
     int? lines,
     bool isExpanded,
     bool exceededMaxLines,
@@ -14,7 +14,7 @@ class NamidaReadMoreText extends StatefulWidget {
 
   const NamidaReadMoreText({
     super.key,
-    required this.text,
+    required this.span,
     required this.lines,
     this.locale,
     required this.builder,
@@ -30,27 +30,25 @@ class _ReadMoreTextState extends State<NamidaReadMoreText> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final locale = widget.locale ?? Localizations.maybeLocaleOf(context);
-        final span = TextSpan(text: widget.text);
-        final tp = TextPainter(
-          text: span,
-          locale: locale,
-          maxLines: widget.lines,
-          textDirection: Directionality.of(context),
-        );
-        tp.layout(maxWidth: constraints.maxWidth);
-        final exceededMaxLines = tp.didExceedMaxLines;
-        tp.dispose();
-        return widget.builder(
-          widget.text,
-          _isTextExpanded || !exceededMaxLines ? null : widget.lines,
-          _isTextExpanded,
-          exceededMaxLines,
-          _onReadMoreClicked,
-        );
-      },
+    final locale = widget.locale ?? Localizations.maybeLocaleOf(context);
+    final tp = TextPainter(
+      text: widget.span,
+      locale: locale,
+      maxLines: widget.lines,
+      textDirection: Directionality.of(context),
+    );
+    bool exceededMaxLines = false;
+    try {
+      tp.layout();
+      exceededMaxLines = tp.didExceedMaxLines;
+    } catch (_) {}
+    tp.dispose();
+    return widget.builder(
+      widget.span,
+      _isTextExpanded || !exceededMaxLines ? null : widget.lines,
+      _isTextExpanded,
+      exceededMaxLines,
+      _onReadMoreClicked,
     );
   }
 }

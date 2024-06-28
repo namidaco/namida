@@ -6,6 +6,7 @@ import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
@@ -370,6 +371,11 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
     required this.playlist,
   });
 
+  YTHostedPlaylistSubpage.fromId({
+    super.key,
+    required String playlistId,
+  }) : playlist = _EmptyPlaylistResult(playlistId: playlistId);
+
   @override
   State<YTHostedPlaylistSubpage> createState() => _YTHostedPlaylistSubpageState();
 }
@@ -703,5 +709,27 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
         ),
       ),
     );
+  }
+}
+
+/// not meant for usage, just a placeholder instead of nullifying everything
+class _EmptyPlaylistResult extends YoutiPiePlaylistResultBase {
+  _EmptyPlaylistResult({
+    required String playlistId,
+  }) : super(
+          basicInfo: PlaylistBasicInfo(id: playlistId, title: '', videosCountText: null, videosCount: null, thumbnails: []),
+          items: [],
+          cacheKey: null,
+          continuation: null,
+        );
+
+  @override
+  Future<bool> fetchNextFunction(ExecuteDetails? details) async {
+    return false;
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    return {};
   }
 }

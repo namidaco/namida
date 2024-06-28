@@ -108,11 +108,10 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                       itemCount: 10,
                                       shrinkWrap: true,
                                       itemBuilder: (context, index) {
-                                        const comment = null;
                                         return const YTCommentCard(
-                                          key: Key("${comment == null}"),
                                           margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                          comment: comment,
+                                          comment: null,
+                                          videoId: null,
                                         );
                                       },
                                     ),
@@ -136,6 +135,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                           key: Key("${comment == null}_${comment?.commentId}"),
                                           margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                           comment: comment,
+                                          videoId: currentId,
                                         ),
                                       );
                                     },

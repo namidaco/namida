@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -15,7 +15,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -41,6 +40,7 @@ import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_action_button.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
+import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -49,7 +49,6 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/yt_miniplayer_comments_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
-import 'package:youtipie/youtipie.dart';
 
 const _space2ForThumbnail = 90.0;
 const _extraPaddingForYTMiniplayer = 12.0;
@@ -263,39 +262,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     final videoViewCount = videoInfo?.viewsCount;
 
                     final description = videoInfo?.description;
-                    final descriptionWidget = description == null || description == ''
+                    final descriptionWidget = description == null
                         ? null
-                        : SelectionArea(
-                            child: Html(
-                              data: description,
-                              style: {
-                                '*': Style.fromTextStyle(
-                                  mainTextTheme.displayMedium!.copyWith(
-                                    fontSize: 14.0,
-                                  ),
-                                ),
-                                'a': Style.fromTextStyle(
-                                  mainTextTheme.displayMedium!.copyWith(
-                                    color: mainTheme.colorScheme.primary.withAlpha(210),
-                                    fontSize: 13.5,
-                                  ),
-                                )
-                              },
-                              onLinkTap: (url, attributes, element) async {
-                                if (url != null) {
-                                  final partsDur = url.split("$currentId&t=");
-                                  if (partsDur.length > 1) {
-                                    try {
-                                      await Player.inst.seek(Duration(seconds: int.parse(partsDur.last)));
-                                    } catch (e) {
-                                      snackyy(title: lang.ERROR, message: e.toString(), isError: true, top: false);
-                                    }
-                                  } else {
-                                    await NamidaLinkUtils.openLink(url);
-                                  }
-                                }
-                              },
-                            ),
+                        : YoutubeDescriptionWidget(
+                            videoId: currentId,
+                            content: description,
                           );
 
                     YoutubeController.inst.downloadedFilesMap; // for refreshing.
@@ -938,11 +909,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               itemCount: 10,
                                                               shrinkWrap: true,
                                                               itemBuilder: (context, index) {
-                                                                const comment = null;
                                                                 return const YTCommentCard(
-                                                                  key: Key("${comment == null}"),
                                                                   margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                                                  comment: comment,
+                                                                  comment: null,
+                                                                  videoId: null,
                                                                 );
                                                               },
                                                             ),
@@ -961,6 +931,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                       key: Key("${comment == null}_${comment?.commentId}"),
                                                                       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                                                       comment: comment,
+                                                                      videoId: currentId,
                                                                     );
                                                                   },
                                                                 ),
