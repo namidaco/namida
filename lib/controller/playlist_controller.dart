@@ -354,6 +354,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     final allTracksPaths = params['libraryTracks'] as List<Track>; // used as a fallback lookup
     final backupDirPath = params['backupDirPath'] as String; // used as a backup for newly found m3u files.
 
+    bool pathExists(String path) => File(path).existsSync();
+
     final all = <String, (String, List<Track>)>{};
     final infoMap = <String, String?>{};
     for (final path in paths) {
@@ -361,19 +363,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
       final filename = file.path.getFilenameWOExt;
       final fullPaths = <String>[];
       String? latestInfo;
-      for (final line in file.readAsLinesSync()) {
+      for (String line in file.readAsLinesSync()) {
         if (line.startsWith("#")) {
           latestInfo = line;
         } else {
-          String fullPath = line; // maybe is absolute path
-
-          if (!File(fullPath).existsSync()) {
-            fullPath = p.join(file.path.getDirectoryPath, line); // maybe was relative
+          if (line.startsWith('primary/')) {
+            line = line.replaceFirst('primary/', '');
           }
 
-          if (!File(fullPath).existsSync()) {
+          String fullPath = line; // maybe is absolute path
+          bool fileExists = false;
+
+          if (pathExists(fullPath)) fileExists = true;
+
+          if (!fileExists) {
+            fullPath = p.join(file.path.getDirectoryPath, line); // maybe was relative
+            if (pathExists(fullPath)) fileExists = true;
+          }
+
+          if (!fileExists) {
             final maybeTrack = allTracksPaths.firstWhereEff((e) => e.path.endsWith(line)); // no idea, trying to get from library
-            if (maybeTrack != null) fullPath = maybeTrack.path;
+            if (maybeTrack != null) {
+              fullPath = maybeTrack.path;
+              // if (pathExists(fullPath)) fileExists = true; // no further checks
+            }
           }
 
           fullPaths.add(fullPath);
