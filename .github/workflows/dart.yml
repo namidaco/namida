@@ -84,18 +84,11 @@ jobs:
       #     keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       #     keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
-      - name: "✏️ Generate release changelog"
-        id: generate_changelog
-        uses: heinrichreimer/action-github-changelog-generator@v2.3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
         with:
           repository: namidaco/namida-snapshots
           tag_name: ${{ steps.extract_version.outputs.version}}
-          body: ${{ steps.generate_changelog.outputs.changelog }}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
