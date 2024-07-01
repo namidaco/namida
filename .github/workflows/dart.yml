@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: '17'
+          java-version: "17"
 
       - name: setup credentials for namidaco
         run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
@@ -50,7 +50,7 @@ jobs:
           flutter pub upgrade
 
       - name: Modify applicationId
-        run: sed -i 's/applicationId "com.msob7y.namida"/applicationId "com.msob7y.namida.snapshot"/g' android/app/build.gradle
+        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
 
       - name: Extract version from pubspec.yaml
         id: extract_version

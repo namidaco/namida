@@ -29,7 +29,7 @@ if (flutterVersionName == null) {
 // }
 
 android {
-    namespace 'com.msob7y.namida'
+    namespace "com.msob7y.namida"
     compileSdkVersion 34
     ndkVersion "26.3.11579264"
     splits {
