@@ -58,6 +58,23 @@ jobs:
           VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
           echo ::set-output name=version::"$VERSION"
 
+      - name: Create keystore
+        id: create_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: "keystore_"
+          encodedString: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
+
+      - name: Create key properties
+        id: create_key_properties
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: "key.properties_"
+          encodedString: ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }}
+
+      - run: cp "${{ steps.create_keystore.outputs.filePath }}" android/app/keystore.jks
+      - run: cp "${{ steps.create_key_properties.outputs.filePath }}" android/key.properties
+
       - name: Build APK -> arm64-v8a
         run: flutter build apk --target-platform android-arm64 --release
 
@@ -73,16 +90,6 @@ jobs:
         run: |
           mkdir -p build_final
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
-
-      # - name: Sign App Bundle
-      #   uses: r0adkll/sign-android-release@v1
-      #   id: sign_app
-      #   with:
-      #     releaseDirectory: build/app/outputs/flutter-apk/
-      #     signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
-      #     alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-      #     keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      #     keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2

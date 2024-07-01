@@ -22,11 +22,11 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-// def keystoreProperties = new Properties()
-// def keystorePropertiesFile = rootProject.file('key.properties')
-// if (keystorePropertiesFile.exists()) {
-//         keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-// }
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace "com.msob7y.namida"
@@ -80,41 +80,37 @@ android {
         multiDexEnabled true
     }
 
-    // signingConfigs {
-    //     debug {
-    //        keyAlias keystoreProperties['keyAlias']
-    //        keyPassword keystoreProperties['keyPassword']
-    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-    //        storePassword keystoreProperties['storePassword']
-    //     } 
+    signingConfigs {
+        debug {
+           keyAlias keystoreProperties['keyAlias']
+           keyPassword keystoreProperties['keyPassword']
+           storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+           storePassword keystoreProperties['storePassword']
+        } 
 
-    //     release {
-    //        keyAlias keystoreProperties['keyAlias']
-    //        keyPassword keystoreProperties['keyPassword']
-    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-    //        storePassword keystoreProperties['storePassword']
-    //     }
+        release {
+           keyAlias keystoreProperties['keyAlias']
+           keyPassword keystoreProperties['keyPassword']
+           storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+           storePassword keystoreProperties['storePassword']
+        }
 
-    //     certificate {
-    //        keyAlias keystoreProperties['keyAlias']
-    //        keyPassword keystoreProperties['keyPassword']
-    //        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-    //        storePassword keystoreProperties['storePassword']
-    //     }
-    // }
+        certificate {
+           keyAlias keystoreProperties['keyAlias']
+           keyPassword keystoreProperties['keyPassword']
+           storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+           storePassword keystoreProperties['storePassword']
+        }
+    }
 
     buildTypes {
         debug {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
         } 
         
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             shrinkResources false
 
             minifyEnabled true
