@@ -844,12 +844,15 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
 
         final GlobalKey<FormState> formKey = GlobalKey<FormState>();
         final updateMissingOnly = true.obs;
+        final isUpdating = false.obs;
         NamidaNavigator.inst.navigateDialog(
           onDisposing: () {
             updateMissingOnly.close();
+            isUpdating.close();
             oldDirController.dispose();
             newDirController.dispose();
           },
+          tapToDismiss: () => !isUpdating.value,
           colorScheme: colorScheme,
           dialogBuilder: (theme) => Form(
             key: formKey,
@@ -857,45 +860,53 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
               title: lang.UPDATE_DIRECTORY_PATH,
               actions: [
                 const CancelButton(),
-                NamidaButton(
-                  text: lang.UPDATE,
-                  onPressed: () async {
-                    Future<void> okUpdate() async {
-                      await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
-                        oldDirController.text,
-                        newDirController.text,
-                        forThesePathsOnly: tracksPaths,
-                        ensureNewFileExists: updateMissingOnly.value,
-                      );
-                      NamidaNavigator.inst.closeDialog();
-                    }
+                ObxO(
+                  rx: isUpdating,
+                  builder: (updating) => AnimatedEnabled(
+                    enabled: !updating,
+                    child: NamidaButton(
+                      text: lang.UPDATE,
+                      onPressed: () async {
+                        Future<void> okUpdate() async {
+                          isUpdating.value = true;
+                          await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
+                            oldDirController.text,
+                            newDirController.text,
+                            forThesePathsOnly: tracksPaths,
+                            ensureNewFileExists: updateMissingOnly.value,
+                          );
+                          isUpdating.value = false;
+                          NamidaNavigator.inst.closeDialog();
+                        }
 
-                    if (formKey.currentState?.validate() ?? false) {
-                      if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
-                        NamidaNavigator.inst.navigateDialog(
-                          colorScheme: colorScheme,
-                          dialogBuilder: (theme) => CustomBlurryDialog(
-                            normalTitleStyle: true,
-                            isWarning: true,
-                            actions: [
-                              const CancelButton(),
-                              NamidaButton(
-                                text: lang.CONFIRM,
-                                onPressed: () async {
-                                  NamidaNavigator.inst.closeDialog();
-                                  await okUpdate();
-                                },
-                              )
-                            ],
-                            bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
-                          ),
-                        );
-                      } else {
-                        await okUpdate();
-                      }
-                    }
-                  },
-                )
+                        if (formKey.currentState?.validate() ?? false) {
+                          if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
+                            NamidaNavigator.inst.navigateDialog(
+                              colorScheme: colorScheme,
+                              dialogBuilder: (theme) => CustomBlurryDialog(
+                                normalTitleStyle: true,
+                                isWarning: true,
+                                actions: [
+                                  const CancelButton(),
+                                  NamidaButton(
+                                    text: lang.CONFIRM,
+                                    onPressed: () async {
+                                      NamidaNavigator.inst.closeDialog();
+                                      await okUpdate();
+                                    },
+                                  )
+                                ],
+                                bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
+                              ),
+                            );
+                          } else {
+                            await okUpdate();
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ),
               ],
               child: Column(
                 children: [

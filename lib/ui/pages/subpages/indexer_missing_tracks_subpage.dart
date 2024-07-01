@@ -438,6 +438,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           final allSelected =
                               _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
                           return FloatingActionButton.small(
+                            heroTag: 'indexer_missing_tracks_fab_hero_small',
                             tooltip: lang.SELECT_ALL,
                             backgroundColor: allSelected ? CurrentColor.inst.color.withOpacity(1.0) : context.theme.disabledColor.withOpacity(1.0),
                             child: Icon(
@@ -463,10 +464,16 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                         () {
                           final totalLength = _selectedTracksToUpdate.length;
                           return FloatingActionButton.extended(
+                            heroTag: 'indexer_missing_tracks_fab_hero_extended',
                             backgroundColor: (totalLength <= 0 ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
                             extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                             onPressed: () async {
+                              final isUpdating = false.obs;
                               NamidaNavigator.inst.navigateDialog(
+                                onDisposing: () {
+                                  isUpdating.close();
+                                },
+                                tapToDismiss: () => !isUpdating.value,
                                 dialog: CustomBlurryDialog(
                                   isWarning: true,
                                   normalTitleStyle: true,
@@ -474,12 +481,30 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   actions: [
                                     const CancelButton(),
                                     const SizedBox(width: 8.0),
-                                    NamidaButton(
-                                      text: lang.UPDATE.toUpperCase(),
-                                      onPressed: () async {
+                                    ObxO(
+                                      rx: isUpdating,
+                                      builder: (updating) => AnimatedEnabled(
+                                        enabled: !updating,
+                                        child: NamidaButton(
+                                          text: lang.UPDATE.toUpperCase(),
+                                          onPressed: () async {
+                                            isUpdating.value = true;
+                                            await _onUpdating();
+                                            isUpdating.value = false;
+                                        NamidaNavigator.inst.closeDialog();
+                                        NamidaNavigator.inst.closeDialog();
                                         NamidaNavigator.inst.closeDialog();
                                         _onUpdating();
-                                      },
+                                            NamidaNavigator.inst.closeDialog();
+                                        _onUpdating();
+                                            NamidaNavigator.inst.closeDialog();
+                                        NamidaNavigator.inst.closeDialog();
+                                        _onUpdating();
+                                            NamidaNavigator.inst.closeDialog();
+                                        _onUpdating();
+                                          },
+                                        ),
+                                      ),
                                     )
                                   ],
                                 ),

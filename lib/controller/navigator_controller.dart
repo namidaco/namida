@@ -278,7 +278,7 @@ class NamidaNavigator {
     final Widget? dialog,
     final Widget Function(ThemeData theme)? dialogBuilder,
     final int durationInMs = 300,
-    final bool tapToDismiss = true,
+    final bool Function()? tapToDismiss,
     final FutureOr<void> Function()? onDismissing,
     final Color? colorScheme,
     final bool lighterDialogColor = true,
@@ -290,7 +290,7 @@ class NamidaNavigator {
     _currentDialogNumber++;
 
     Future<bool> onWillPop() async {
-      if (!tapToDismiss) return false;
+      if (tapToDismiss != null && tapToDismiss() == false) return false;
       if (onDismissing != null) await onDismissing();
 
       if (_currentDialogNumber > 0) {

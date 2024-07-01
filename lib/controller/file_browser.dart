@@ -1295,6 +1295,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                         duration: const Duration(milliseconds: 200),
                         child: T == File && _selectedFiles.isNotEmpty
                             ? FloatingActionButton.extended(
+                                heroTag: 'file_browser_fab_hero_extended',
                                 extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                                 onPressed: () => _onSelectionComplete(_selectedFiles as List<T>),
                                 label: Row(

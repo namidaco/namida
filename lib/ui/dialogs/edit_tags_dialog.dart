@@ -814,7 +814,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               finishedEditing.close();
                               updatingLibrary.close();
                             },
-                            tapToDismiss: false,
+                            tapToDismiss: () => false,
                             dialog: Obx(
                               () => CustomBlurryDialog(
                                 title: lang.PROGRESS,

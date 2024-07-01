@@ -146,15 +146,14 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Future<void> openDialog(Widget widget, {void Function()? onDisposing}) async {
+  Future<void> openDialog(Widget widget, {void Function()? onDisposing, bool Function()? tapToDismiss}) async {
+    final color = colorDelightened.value; // we dont react cz main dialog can close and dispose this.
     await NamidaNavigator.inst.navigateDialog(
       onDisposing: onDisposing,
-      dialog: ObxO(
-        rx: colorDelightened,
-        builder: (color) => AnimatedTheme(
-          data: AppThemes.inst.getAppTheme(color, null, true),
-          child: widget,
-        ),
+      tapToDismiss: tapToDismiss,
+      dialog: AnimatedTheme(
+        data: AppThemes.inst.getAppTheme(color, null, true),
+        child: widget,
       ),
     );
   }
@@ -388,19 +387,32 @@ Future<void> showGeneralPopupDialog(
   }
 
   void updatePathDialog(String newPath) async {
+    final isUpdating = false.obs;
     await openDialog(
+      onDisposing: () {
+        isUpdating.close();
+      },
+      tapToDismiss: () => !isUpdating.value,
       CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
         bodyText: lang.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
         actions: [
           const CancelButton(),
-          NamidaButton(
-            text: lang.CONFIRM,
-            onPressed: () {
-              NamidaNavigator.inst.closeDialog(2);
-              EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
-            },
+          ObxO(
+            rx: isUpdating,
+            builder: (updating) => AnimatedEnabled(
+              enabled: !updating,
+              child: NamidaButton(
+                text: lang.CONFIRM,
+                onPressed: () async {
+                  isUpdating.value = true;
+                  await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
+                  isUpdating.value = false;
+                  NamidaNavigator.inst.closeDialog(2);
+                },
+              ),
+            ),
           )
         ],
       ),
