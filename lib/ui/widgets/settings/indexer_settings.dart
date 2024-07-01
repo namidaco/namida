@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/file_browser.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -20,6 +23,7 @@ import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 enum _IndexerSettingsKeys {
   preventDuplicatedTracks,
@@ -573,7 +577,17 @@ class IndexerSettings extends SettingSubpageProvider {
               icon: Broken.location_cross,
               title: lang.MISSING_TRACKS,
               trailing: const Icon(Broken.arrow_right_3),
-              onTap: () => NamidaNavigator.inst.navigateTo(const IndexerMissingTracksSubpage()),
+              onTap: () {
+                if (BackupController.inst.isCreatingBackup.value ||
+                    BackupController.inst.isRestoringBackup.value ||
+                    HistoryController.inst.isLoadingHistory ||
+                    YoutubeHistoryController.inst.isLoadingHistory ||
+                    JsonToHistoryParser.inst.isParsing.value) {
+                  snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                  return;
+                }
+                NamidaNavigator.inst.navigateTo(const IndexerMissingTracksSubpage());
+              },
             ),
           ),
           getItemWrapper(
