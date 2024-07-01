@@ -187,6 +187,7 @@ class AppPaths {
 
 /// Directories used by Namida
 class AppDirs {
+  static String ROOT_DIR = '';
   static String USER_DATA = '';
   static String APP_CACHE = '';
   static String INTERNAL_STORAGE = '';
@@ -217,17 +218,12 @@ class AppDirs {
   static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
 
   static final YOUTIPIE_CACHE = '$YOUTUBE_MAIN_DIRECTORY/Youtipie/';
-  static final YOUTIPIE_DATA = '$YOUTUBE_MAIN_DIRECTORY/Youtipie_data/';
+  static final YOUTIPIE_DATA = '$ROOT_DIR/Youtipie/Youtipie_data/'; // this should never be accessed/backed up etc.
 
   static final YT_PLAYLISTS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Playlists/';
   static final YT_HISTORY_PLAYLIST = '$YOUTUBE_MAIN_DIRECTORY/Youtube History/';
   static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
   static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
-
-  static final YT_METADATA = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos/';
-  static final YT_METADATA_TEMP = '$YOUTUBE_MAIN_DIRECTORY/Metadata Videos Temp/';
-  static final YT_METADATA_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Channels/';
-  static final YT_METADATA_COMMENTS = '$YOUTUBE_MAIN_DIRECTORY/Metadata Comments/';
 
   static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
   static final YT_PALETTES = '$YOUTUBE_MAIN_DIRECTORY/Palettes/';
@@ -254,10 +250,9 @@ class AppDirs {
     YT_HISTORY_PLAYLIST,
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,
-    YT_METADATA,
-    YT_METADATA_TEMP,
-    YT_METADATA_CHANNELS,
-    YT_METADATA_COMMENTS,
+
+    YOUTIPIE_CACHE,
+
     YT_STATS,
     YT_PALETTES,
     YT_DOWNLOAD_TASKS,

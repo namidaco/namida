@@ -92,8 +92,26 @@ void mainInitialization() async {
     FAudioTaggerController.inst.updateLogsPath();
   }
 
+  Future<void> fetchRootDir() async {
+    Directory? dir;
+    try {
+      dir = await pp.getApplicationSupportDirectory();
+    } catch (_) {
+      try {
+        dir = await pp.getApplicationDocumentsDirectory();
+      } catch (_) {}
+    }
+    String? path = dir?.path;
+    if (path == null) {
+      final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
+      path = appDatas.firstOrNull ?? '';
+    }
+    AppDirs.ROOT_DIR = path;
+  }
+
   await Future.wait([
     fetchAppData(),
+    fetchRootDir(),
     NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),
     NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
   ]);

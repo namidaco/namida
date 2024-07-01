@@ -211,9 +211,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppDirs.YT_PALETTES,
                   AppDirs.YT_THUMBNAILS,
                   AppDirs.YT_THUMBNAILS_CHANNELS,
-                  AppDirs.YT_METADATA,
-                  AppDirs.YT_METADATA_CHANNELS,
-                  AppDirs.YT_METADATA_COMMENTS,
+                  AppDirs.YOUTIPIE_CACHE,
                 ];
 
                 final sizesMap = <String, int>{}.obs;
@@ -498,9 +496,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                               title: lang.METADATA_CACHE,
                               icon: Broken.message_text,
                               items: [
-                                AppDirs.YT_METADATA,
-                                AppDirs.YT_METADATA_CHANNELS,
-                                AppDirs.YT_METADATA_COMMENTS,
+                                AppDirs.YOUTIPIE_CACHE,
                               ],
                               youtubeAvailable: true,
                               youtubeForceFollowItems: true,
