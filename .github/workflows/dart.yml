@@ -15,6 +15,8 @@ on:
 jobs:
   build_android:
     runs-on: ubuntu-latest
+    env:
+      ACCESS_TOKEN: ${{ secrets.PAT }}
 
     steps:
       - uses: actions/checkout@v3
@@ -52,14 +54,19 @@ jobs:
       - name: Modify applicationId
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
 
-      - name: Remove SigningConfig (to sign later)
-        run: sed -i '/signingConfig signingConfigs.release/d' android/app/build.gradle
-
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
           VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
           echo ::set-output name=version::"$VERSION"
+
+      - name: Create keystore
+        run: |
+          echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
+
+      - name: Create key properties
+        run: |
+          echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
 
       - name: Build APK -> arm64-v8a
         run: flutter build apk --target-platform android-arm64 --release
@@ -76,18 +83,6 @@ jobs:
         run: |
           mkdir -p build_final
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
-
-      - name: Sign app APK
-        uses: Tlaster/android-sign@v1
-        with:
-          releaseDirectory: build_final
-          output: build_final_signed
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
-          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
