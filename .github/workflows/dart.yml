@@ -52,6 +52,9 @@ jobs:
       - name: Modify applicationId
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
 
+      - name: Remove SigningConfig (to sign later)
+        run: sed -i '/signingConfig signingConfigs.release/d' android/app/build.gradle
+
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
