@@ -59,21 +59,16 @@ jobs:
           echo ::set-output name=version::"$VERSION"
 
       - name: Create keystore
-        id: create_keystore
-        uses: timheuer/base64-to-file@v1
+        uses: kitek/decode-base64-into-file-action@1.0
         with:
-          fileName: "keystore_"
-          encodedString: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
+          encoded-value: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
+          destination-file: android/app/keystore.jks
 
       - name: Create key properties
-        id: create_key_properties
-        uses: timheuer/base64-to-file@v1
+        uses: kitek/decode-base64-into-file-action@1.0
         with:
-          fileName: "key.properties_"
-          encodedString: ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }}
-
-      - run: cp "${{ steps.create_keystore.outputs.filePath }}" android/app/keystore.jks
-      - run: cp "${{ steps.create_key_properties.outputs.filePath }}" android/key.properties
+          encoded-value: ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }}
+          destination-file: android/key.properties
 
       - name: Build APK -> arm64-v8a
         run: flutter build apk --target-platform android-arm64 --release
