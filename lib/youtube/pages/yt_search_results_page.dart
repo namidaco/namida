@@ -130,7 +130,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     return BackgroundWrapper(
       child: Navigator(
         key: NamidaNavigator.inst.ytLocalSearchNavigatorKey,
-        onPopPage: (route, result) => true,
+        onPopPage: (route, result) => false,
         requestFocus: false,
         pages: [
           MaterialPage(
@@ -158,7 +158,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                 initialSearch: currentSearchText,
                                 onVideoTap: widget.onVideoTap,
                                 onPopping: (didChangeSort) {
-                                  if (didChangeSort) setState(() {});
+                                  if (didChangeSort) refreshState();
                                 },
                               ),
                               maintainState: false,
@@ -199,7 +199,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                           thumbnailWidthPercentage: 0.6,
                           thumbnailHeight: thumbnailHeightLocal,
                           thumbnailWidth: thumbnailWidthLocal,
-                          dateInsteadOfChannel: true,
                           isImageImportantInCache: false,
                           video: item,
                           playlistID: null,
@@ -314,15 +313,10 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                       short: item as StreamInfoItemShort,
                                                       playlistID: null,
                                                     ),
-                                                  const (PlaylistInfoItem) =>
-                                                    // (item as PlaylistInfoItem).isMix
-                                                    //     ? YoutubePlaylistCardMix(
-                                                    //         firstVideoID: firstItem.id,
-                                                    //         title: firstItem.title,
-                                                    //         subtitle: chunk.title,
-                                                    //       )
-                                                    //     :
-                                                    YoutubePlaylistCard(
+                                                  const (PlaylistInfoItem) => YoutubePlaylistCard(
+                                                      thumbnailHeight: thumbnailHeight,
+                                                      thumbnailWidth: thumbnailWidth,
+                                                      playOnTap: false,
                                                       playlist: item as PlaylistInfoItem,
                                                       subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
                                                     ),

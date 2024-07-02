@@ -12,12 +12,10 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-SettingsController get settings => SettingsController.inst;
+final settings = _SettingsController._internal();
 
-class SettingsController with SettingsFileWriter {
-  static SettingsController get inst => _instance;
-  static final SettingsController _instance = SettingsController._internal();
-  SettingsController._internal();
+class _SettingsController with SettingsFileWriter {
+  _SettingsController._internal();
 
   EqualizerSettings get equalizer => EqualizerSettings.inst;
   PlayerSettings get player => PlayerSettings.inst;

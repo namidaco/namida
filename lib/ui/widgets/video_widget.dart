@@ -571,6 +571,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 if (item is YoutubeID) {
                   final vidId = item.id;
                   return YoutubeThumbnail(
+                    type: ThumbnailType.video,
                     key: Key(vidId),
                     isImportantInCache: true,
                     width: fallbackWidth,

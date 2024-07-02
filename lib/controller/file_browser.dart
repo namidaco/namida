@@ -243,7 +243,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _SortType.size: lang.SIZE,
   };
 
-  void _sortItems(_SortType? type, bool? reversed, {bool refresh = true}) {
+  void _sortItems(_SortType? type, bool? reversed, {bool refreshState = true}) {
     type ??= _sortType.value;
     reversed ??= _sortReversed.value;
 
@@ -272,7 +272,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _sortType.value = type;
     _sortReversed.value = reversed;
 
-    if (refresh) setState(() {});
+    if (refreshState) setState(() {});
   }
 
   final _showHiddenFiles = false.obs;
@@ -344,7 +344,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         _isFetching = false;
         if (isolateRes.$1.isNotEmpty) _currentFiles = isolateRes.$1;
         if (isolateRes.$2.isNotEmpty) _currentFolders = isolateRes.$2;
-        _sortItems(null, null, refresh: false);
+        _sortItems(null, null, refreshState: false);
       });
       if (isolateRes.$3 != null) {
         snackyy(title: lang.ERROR, message: isolateRes.$3!.toString(), isError: true);
@@ -367,6 +367,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         setState(() {
           _currentInfoFiles = res.$1;
           _currentInfoDirs = res.$2;
+          if (_sortType.value != _SortType.name) _sortItems(null, null, refreshState: false);
         });
       }
       _stopInfoIsolates();

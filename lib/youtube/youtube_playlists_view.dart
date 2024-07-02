@@ -25,6 +25,7 @@ import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
@@ -269,6 +270,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                     childrenDefault: displayMenu ? () => getMenuItems(playlist) : null,
                     openOnTap: false,
                     child: YoutubeCard(
+                      thumbnailType: ThumbnailType.playlist,
                       isImageImportantInCache: true,
                       extractColor: true,
                       thumbnailWidthPercentage: 0.75,

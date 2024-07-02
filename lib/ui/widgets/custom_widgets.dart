@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
+import 'package:flutter/material.dart' hide ReorderableListView, ReorderCallback, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -877,6 +877,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final IconData? trailingIcon;
   final double trailingIconSize;
   final String titleText;
+  final Widget? subtitle;
   final String? subtitleText;
   final Color? textColor;
   final Color? textColorScheme;
@@ -896,6 +897,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.trailingIcon = Broken.arrow_down_2,
     this.trailingIconSize = 20.0,
     required this.titleText,
+    this.subtitle,
     this.subtitleText,
     this.textColor,
     this.textColorScheme,
@@ -949,7 +951,9 @@ class NamidaExpansionTile extends StatelessWidget {
                           )),
               ),
             ),
-            if (subtitleText != null)
+            if (subtitle != null)
+              subtitle!
+            else if (subtitleText != null)
               Text(
                 subtitleText!,
                 style: context.textTheme.displaySmall,
@@ -2363,7 +2367,7 @@ class NamidaCircularPercentage extends StatelessWidget {
 
 class NamidaListView extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
-  final void Function(int oldIndex, int newIndex)? onReorder;
+  final ReorderCallback? onReorder;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
@@ -2420,7 +2424,7 @@ class NamidaListView extends StatelessWidget {
 class NamidaListViewRaw extends StatelessWidget {
   final Widget Function(Widget list) listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;
-  final void Function(int oldIndex, int newIndex)? onReorder;
+  final ReorderCallback? onReorder;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
@@ -2522,7 +2526,7 @@ class NamidaListViewRaw extends StatelessWidget {
 
 class NamidaSliverReorderableList extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
-  final void Function(int oldIndex, int newIndex)? onReorder;
+  final ReorderCallback? onReorder;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final double? itemExtent;
@@ -2769,6 +2773,7 @@ class NamidaInkWellButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final itemsColor = context.theme.colorScheme.onSurface.withOpacity(0.8);
+    final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
       child: AnimatedOpacity(
@@ -2784,24 +2789,28 @@ class NamidaInkWellButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                !enabled && showLoadingWhenDisabled
-                    ? const LoadingIndicator(boxHeight: 18.0)
-                    : Icon(
-                        icon,
-                        size: 18.0 * sizeMultiplier,
-                        color: itemsColor,
-                      ),
+              if (!enabled && showLoadingWhenDisabled) ...[
+                const LoadingIndicator(boxHeight: 18.0),
+                SizedBox(width: 6.0 * sizeMultiplier),
+              ] else if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 18.0 * sizeMultiplier,
+                  color: itemsColor,
+                ),
                 SizedBox(width: 6.0 * sizeMultiplier),
               ],
-              Text(
-                text,
-                style: context.textTheme.displayMedium?.copyWith(
-                  color: itemsColor,
-                  fontSize: (15.0 * sizeMultiplier),
+              if (textGood)
+                Flexible(
+                  child: Text(
+                    text,
+                    style: context.textTheme.displayMedium?.copyWith(
+                      color: itemsColor,
+                      fontSize: (15.0 * sizeMultiplier),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4.0),
+              if (textGood) const SizedBox(width: 4.0),
             ],
           ),
         ),

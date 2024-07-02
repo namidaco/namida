@@ -32,7 +32,7 @@ class YoutubeCard extends StatelessWidget {
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final double fontMultiplier;
-  final bool isPlaylist;
+  final ThumbnailType thumbnailType;
 
   const YoutubeCard({
     super.key,
@@ -61,7 +61,7 @@ class YoutubeCard extends StatelessWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.fontMultiplier = 1.0,
-    this.isPlaylist = false,
+    required this.thumbnailType,
   });
 
   @override
@@ -103,7 +103,7 @@ class YoutubeCard extends StatelessWidget {
                     smallBoxIcon: smallBoxIcon,
                     extractColor: extractColor,
                     isCircle: isCircle,
-                    isPlaylist: isPlaylist,
+                    type: thumbnailType,
                   ),
                 ),
                 const SizedBox(width: 8.0),
@@ -155,6 +155,7 @@ class YoutubeCard extends StatelessWidget {
                                   height: channelThumbSize,
                                   shimmerEnabled: shimmerEnabled && (channelThumbnailUrl == null || !displayChannelThumbnail),
                                   child: YoutubeThumbnail(
+                                    type: ThumbnailType.channel,
                                     key: Key("${channelThumbnailUrl}_$channelID"),
                                     isImportantInCache: false,
                                     customUrl: channelThumbnailUrl,

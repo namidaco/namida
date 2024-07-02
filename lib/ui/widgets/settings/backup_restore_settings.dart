@@ -183,15 +183,18 @@ class BackupAndRestore extends SettingSubpageProvider {
                 }
 
                 final totalFiles = [
+                  AppPaths.SETTINGS,
+                  AppPaths.SETTINGS_EQUALIZER,
+                  AppPaths.SETTINGS_PLAYER,
                   AppPaths.TRACKS,
                   AppPaths.TRACKS_STATS,
-                  AppPaths.TOTAL_LISTEN_TIME,
-                  AppPaths.VIDEOS_CACHE,
                   AppPaths.VIDEOS_LOCAL,
-                  AppPaths.FAVOURITES_PLAYLIST,
-                  AppPaths.SETTINGS,
+                  AppPaths.VIDEOS_CACHE,
                   AppPaths.LATEST_QUEUE,
+                  AppPaths.TOTAL_LISTEN_TIME,
+                  AppPaths.FAVOURITES_PLAYLIST,
                   AppPaths.YT_LIKES_PLAYLIST,
+                  AppPaths.YT_SUBSCRIPTIONS,
                 ];
 
                 final totalDirs = [

@@ -24,7 +24,7 @@ class PlayerSettings with SettingsFileWriter {
   final seekDurationInSeconds = 5.obs;
   final seekDurationInPercentage = 2.obs;
   final isSeekDurationPercentage = false.obs;
-  final minTrackDurationToRestoreLastPosInMinutes = 5.obs;
+  final minTrackDurationToRestoreLastPosInMinutes = 20.obs;
   final interruptionResumeThresholdMin = 2.obs;
   final volume0ResumeThresholdMin = 5.obs;
   final enableCrossFade = false.obs;

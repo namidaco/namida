@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
@@ -14,6 +15,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubeVideoCard extends StatelessWidget {
@@ -64,12 +66,14 @@ class YoutubeVideoCard extends StatelessWidget {
       viewsCountText = "${viewsCount.formatDecimalShort()} ${viewsCount == 0 ? lang.VIEW : lang.VIEWS}";
     }
 
-    String publishedFromText = video.publishedFromText;
+    DateTime? publishedDate = video.publishedAt.date;
+    final uploadDateAgo = publishedDate == null ? null : Jiffy.parseFromDateTime(publishedDate).fromNow();
 
     return NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
       child: YoutubeCard(
+        thumbnailType: ThumbnailType.video,
         thumbnailWidthPercentage: thumbnailWidthPercentage,
         fontMultiplier: fontMultiplier,
         thumbnailWidth: thumbnailWidth,
@@ -82,10 +86,10 @@ class YoutubeVideoCard extends StatelessWidget {
         title: video.title,
         subtitle: [
           if (viewsCountText != null && viewsCountText.isNotEmpty) viewsCountText,
-          if (publishedFromText.isNotEmpty) publishedFromText,
+          if (uploadDateAgo != null) uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: true,
-        thirdLineText: dateInsteadOfChannel ? video.publishedAt.date?.millisecondsSinceEpoch.dateAndClockFormattedOriginal ?? '' : video.channel.title,
+        thirdLineText: dateInsteadOfChannel ? video.shortDescription ?? '' : video.channel.title,
         displayChannelThumbnail: !dateInsteadOfChannel,
         channelThumbnailUrl: video.channel.thumbnails.pick()?.url,
         onTap: onTap ??
@@ -151,6 +155,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
       openOnTap: false,
       childrenDefault: getMenuItems,
       child: YoutubeCard(
+        thumbnailType: ThumbnailType.video,
         thumbnailWidthPercentage: thumbnailWidthPercentage,
         fontMultiplier: fontMultiplier,
         thumbnailWidth: thumbnailWidth,
@@ -205,6 +210,7 @@ class YoutubeVideoCardDummy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return YoutubeCard(
+      thumbnailType: ThumbnailType.video,
       thumbnailWidthPercentage: thumbnailWidthPercentage,
       fontMultiplier: fontMultiplier,
       thumbnailWidth: thumbnailWidth,

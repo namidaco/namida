@@ -465,30 +465,54 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
 }
 
 class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
-  String? shortenLongHash(String? longHash, {int chars = 5}) {
-    if (longHash == null || longHash == '') return null;
-    return longHash.substring(0, 7);
-  }
+  final regex = RegExp(r'([a-f0-9]{7}):', caseSensitive: false);
 
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    final regex = RegExp(r'([a-fA-F0-9]{40}):', caseSensitive: false);
     final res = regex.firstMatch(text.text);
-    final longHash = res?.group(1);
-    final url = "${AppSocial.GITHUB}/commit/$longHash";
-    final textWithoutCommit = longHash == null ? text.text : text.text.replaceFirst(regex, '');
-    final commit = shortenLongHash(longHash);
+    final shortHash = res?.group(1);
+    final url = "${AppSocial.GITHUB}/commit/$shortHash";
+    final textWithoutCommit = shortHash == null ? text.text : text.text.substring(shortHash.length + 1);
+    return _CommitTapWidget(
+      url: url,
+      commit: shortHash,
+      textWithoutCommit: textWithoutCommit,
+    );
+  }
+}
+
+class _CommitTapWidget extends StatefulWidget {
+  final String url;
+  final String? commit;
+  final String textWithoutCommit;
+  const _CommitTapWidget({required this.url, required this.commit, required this.textWithoutCommit});
+
+  @override
+  State<_CommitTapWidget> createState() => _CommitTapWidgetState();
+}
+
+class _CommitTapWidgetState extends State<_CommitTapWidget> {
+  late final TapGestureRecognizer recognizer = TapGestureRecognizer()..onTap = () => NamidaLinkUtils.openLink(widget.url);
+
+  @override
+  void dispose() {
+    recognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Text.rich(
       TextSpan(
-        text: commit == null ? '' : "#$commit:",
+        text: widget.commit == null ? '' : "#${widget.commit}:",
         style: namida.textTheme.displayMedium?.copyWith(
           fontSize: 13.5,
           color: namida.theme.colorScheme.secondary,
         ),
-        recognizer: TapGestureRecognizer()..onTap = () => NamidaLinkUtils.openLink(url),
+        recognizer: recognizer,
         children: [
           TextSpan(
-            text: textWithoutCommit,
+            text: widget.textWithoutCommit,
             style: namida.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.w400,
               fontSize: 13.0,

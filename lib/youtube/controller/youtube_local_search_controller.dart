@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
@@ -258,23 +257,27 @@ class YTLocalSearchController with PortsProvider<Map> {
     lookupListStreamInfoMapCacheDetails.loop(
       (db) {
         db.loadEverything((map) {
-          final id = map['id'];
-          if (id != null && lookupItemAvailable[id] == null) {
-            lookupListStreamInfoMap.add(map);
-            lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
-          }
+          try {
+            final id = map['id'];
+            if (id != null && lookupItemAvailable[id] == null) {
+              lookupListStreamInfoMap.add(map);
+              lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
+            }
+          } catch (_) {}
         });
       },
     );
     lookupListVideoStreamsMapCacheDetails.loop(
       (db) {
         db.loadEverything((map) {
-          final info = map['info'] as Map;
-          final id = info['id'];
-          if (id != null && lookupItemAvailable[id] == null) {
-            lookupListVideoStreamsMap.add(info.cast());
-            lookupItemAvailable[id] = (list: 3, index: lookupListVideoStreamsMap.length - 1);
-          }
+          try {
+            final info = map['info'] as Map;
+            final id = info['id'];
+            if (id != null && lookupItemAvailable[id] == null) {
+              lookupListVideoStreamsMap.add(info.cast());
+              lookupItemAvailable[id] = (list: 3, index: lookupListVideoStreamsMap.length - 1);
+            }
+          } catch (_) {}
         });
       },
     );
@@ -345,7 +348,6 @@ class YTLocalSearchController with PortsProvider<Map> {
 extension _VideoInfoUtils on VideoStreamInfo {
   StreamInfoItem toStreamInfo() {
     final vid = this;
-    final date = vid.publishedAt.date;
     return StreamInfoItem(
       id: vid.id,
       title: vid.title,
@@ -357,7 +359,7 @@ extension _VideoInfoUtils on VideoStreamInfo {
         thumbnails: [],
       ),
       thumbnailGifUrl: null,
-      publishedFromText: date == null ? '' : Jiffy.parseFromDateTime(date).fromNow(),
+      publishedFromText: '', // should never be used, use [publishedAt] instead.
       publishedAt: vid.publishedAt,
       indexInPlaylist: null,
       durSeconds: null,

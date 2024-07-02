@@ -70,7 +70,7 @@ Future<void> showTrackInfoDialog(
     }
 
     final ap = AudioPlayer();
-    await ap.setAudioSource(track.toAudioSource(0, 0));
+    await ap.setAudioSource(track.toAudioSource(0, 0, null));
     ap.play();
 
     NamidaNavigator.inst.navigateDialog(

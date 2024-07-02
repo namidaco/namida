@@ -71,6 +71,7 @@ class YTCommentCard extends StatelessWidget {
                       isCircle: true,
                       shimmerEnabled: uploaderAvatar == null,
                       child: YoutubeThumbnail(
+                        type: ThumbnailType.channel,
                         key: Key(uploaderAvatar ?? ''),
                         isImportantInCache: false,
                         customUrl: uploaderAvatar,
@@ -325,6 +326,7 @@ class YTCommentCardCompact extends StatelessWidget {
           isCircle: true,
           shimmerEnabled: uploaderAvatar == null,
           child: YoutubeThumbnail(
+            type: ThumbnailType.channel,
             key: Key(uploaderAvatar ?? ''),
             isImportantInCache: false,
             customUrl: uploaderAvatar,

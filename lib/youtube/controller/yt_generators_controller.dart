@@ -202,16 +202,18 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       (db) {
         db.loadEverything(
           (map) {
-            final id = map['id'];
-            if (id != null && releaseDateMap[id] == null) {
-              DateTime? date;
-              try {
-                date = PublishTime.fromMap(map['publishedAt']).date;
-              } catch (_) {}
-              allIds.add(id);
-              allIdsAdded[id] = true;
-              releaseDateMap[id] = date;
-            }
+            try {
+              final id = map['id'];
+              if (id != null && releaseDateMap[id] == null) {
+                DateTime? date;
+                try {
+                  date = PublishTime.fromMap(map['publishedAt']).date;
+                } catch (_) {}
+                allIds.add(id);
+                allIdsAdded[id] = true;
+                releaseDateMap[id] = date;
+              }
+            } catch (_) {}
           },
         );
       },
@@ -219,22 +221,24 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     lookupListVideoStreamsMapCacheDetails.loop((db) {
       db.loadEverything(
         (map) {
-          final info = map['info'] as Map;
-          final id = info['id'];
-          if (id != null && releaseDateMap[id] == null) {
-            DateTime? date;
-            try {
-              date = PublishTime.fromMap(info['publishDate']).date;
-            } catch (_) {}
-            if (date == null) {
+          try {
+            final info = map['info'] as Map;
+            final id = info['id'];
+            if (id != null && releaseDateMap[id] == null) {
+              DateTime? date;
               try {
-                date = PublishTime.fromMap(info['uploadDate']).date;
+                date = PublishTime.fromMap(info['publishDate']).date;
               } catch (_) {}
+              if (date == null) {
+                try {
+                  date = PublishTime.fromMap(info['uploadDate']).date;
+                } catch (_) {}
+              }
+              allIds.add(id);
+              allIdsAdded[id] = true;
+              releaseDateMap[id] = date;
             }
-            allIds.add(id);
-            allIdsAdded[id] = true;
-            releaseDateMap[id] = date;
-          }
+          } catch (_) {}
         },
       );
     });

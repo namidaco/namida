@@ -88,6 +88,7 @@ class YoutubeDescriptionWidgetManager {
   InlineSpan _styleWrapperToSpan(StylesWrapper sw, String? videoId, Color linkColor) {
     if (sw.attachementUrl != null) {
       _latestAttachment = YoutubeThumbnail(
+        type: ThumbnailType.other,
         key: Key(sw.attachementUrl ?? ''),
         width: 16.0,
         isImportantInCache: true,
@@ -190,6 +191,7 @@ class YoutubeDescriptionWidgetManager {
       return WidgetSpan(
         child: child,
         style: textStyle,
+        alignment: PlaceholderAlignment.middle,
       );
     } else {
       TapGestureRecognizer? recognizer;

@@ -715,6 +715,7 @@ class _YoutubeIDImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = context.width;
     return YoutubeThumbnail(
+      type: ThumbnailType.video,
       key: Key(video.id),
       videoId: video.id,
       width: width,

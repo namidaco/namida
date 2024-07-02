@@ -518,6 +518,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           children: [
             const SizedBox(width: 4.0),
             YoutubeThumbnail(
+              type: ThumbnailType.video,
               key: Key(item.id),
               borderRadius: 8.0,
               isImportantInCache: true,

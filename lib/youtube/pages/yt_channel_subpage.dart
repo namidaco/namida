@@ -5,9 +5,10 @@ import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/execute_details.dart';
-import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -43,7 +44,10 @@ class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
   State<YTChannelSubpage> createState() => _YTChannelSubpageState();
 }
 
-class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> {
+class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> with TickerProviderStateMixin, PullToRefreshMixin {
+  @override
+  double get maxDistance => 64.0;
+
   late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.availableChannels.value[widget.channelID] ??
       YoutubeSubscription(
         channelID: widget.channelID.splitLast('/'),
@@ -68,7 +72,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
       (value) {
         if (value != null) {
           setState(() => _channelInfo = value);
-          fetchChannelStreams(value);
+          super.onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceShow: true);
         }
       },
     );
@@ -137,234 +141,245 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     const bannerHeight = 69.0;
 
     return BackgroundWrapper(
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              if (bannerUrl != null)
-                TapDetector(
-                  onTap: () => _onImageTap(context, channelID, bannerUrl, true),
-                  child: NamidaHero(
-                    tag: 'true_${channelID}_$bannerUrl',
-                    child: YoutubeThumbnail(
-                      key: Key('${channelID}_$bannerUrl'),
-                      width: context.width,
-                      compressed: false,
-                      isImportantInCache: false,
-                      customUrl: bannerUrl,
-                      borderRadius: 0,
-                      displayFallbackIcon: false,
-                      height: bannerHeight,
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: (bannerUrl == null ? EdgeInsets.zero : const EdgeInsets.only(top: bannerHeight * 0.95)),
-                child: Row(
+      child: Listener(
+        onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
+        onPointerUp: (event) => _channelInfo == null ? null : onRefresh(() => fetchChannelStreams(_channelInfo!, forceRequest: true)),
+        onPointerCancel: (event) => onVerticalDragFinish(),
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            Column(
+              children: [
+                Stack(
                   children: [
-                    const SizedBox(width: 12.0),
-                    Transform.translate(
-                      offset: bannerUrl == null ? const Offset(0, 0) : const Offset(0, -bannerHeight * 0.1),
-                      child: TapDetector(
-                        onTap: () => _onImageTap(context, channelID, avatarUrl, false),
+                    if (bannerUrl != null)
+                      TapDetector(
+                        onTap: () => _onImageTap(context, channelID, bannerUrl, true),
                         child: NamidaHero(
-                          tag: 'false_${channelID}_$avatarUrl',
+                          tag: 'true_${channelID}_$bannerUrl',
                           child: YoutubeThumbnail(
-                            key: Key('${channelID}_$avatarUrl'),
-                            width: context.width * 0.14,
-                            isImportantInCache: true,
-                            customUrl: avatarUrl,
-                            isCircle: true,
+                            type: ThumbnailType.channel,
+                            key: Key('${channelID}_$bannerUrl'),
+                            width: context.width,
                             compressed: false,
+                            isImportantInCache: false,
+                            customUrl: bannerUrl,
+                            borderRadius: 0,
+                            displayFallbackIcon: false,
+                            height: bannerHeight,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2.0),
-                            child: Text(
-                              _channelInfo?.title ?? ch.title,
-                              style: context.textTheme.displayLarge,
-                            ),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            subsCountText ??
-                                (subsCount == null
-                                    ? '? ${lang.SUBSCRIBERS}'
-                                    : [
-                                        subsCount.formatDecimalShort(),
-                                        subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                                      ].join(' ')),
-                            style: context.textTheme.displayMedium?.copyWith(
-                              fontSize: 12.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 4.0),
-                    YTSubscribeButton(channelID: channelID),
-                    const SizedBox(width: 12.0),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4.0),
-          Row(
-            children: [
-              const SizedBox(width: 4.0),
-              Expanded(child: sortWidget),
-              const SizedBox(width: 4.0),
-              Obx(
-                () => NamidaInkWellButton(
-                  animationDurationMS: 100,
-                  sizeMultiplier: 0.95,
-                  borderRadius: 8.0,
-                  icon: Broken.task_square,
-                  text: lang.LOAD_ALL,
-                  enabled: !isLoadingMoreUploads.valueR && !lastLoadingMoreWasEmpty.valueR,
-                  disableWhenLoading: false,
-                  showLoadingWhenDisabled: !lastLoadingMoreWasEmpty.valueR,
-                  onTap: () async {
-                    _canKeepLoadingMore = !_canKeepLoadingMore;
-                    while (_canKeepLoadingMore && !lastLoadingMoreWasEmpty.value && ConnectivityController.inst.hasConnection) {
-                      await fetchStreamsNextPage();
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 4.0),
-            ],
-          ),
-          const SizedBox(height: 10.0),
-          Row(
-            children: [
-              const SizedBox(width: 8.0),
-              Expanded(
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  runSpacing: 4.0,
-                  children: [
-                    NamidaInkWell(
-                      borderRadius: 6.0,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+                    Padding(
+                      padding: (bannerUrl == null ? EdgeInsets.zero : const EdgeInsets.only(top: bannerHeight * 0.95)),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Broken.video_square, size: 16.0),
-                          const SizedBox(width: 4.0),
-                          Text(
-                            "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}",
-                            style: context.textTheme.displayMedium,
+                          const SizedBox(width: 12.0),
+                          Transform.translate(
+                            offset: bannerUrl == null ? const Offset(0, 0) : const Offset(0, -bannerHeight * 0.1),
+                            child: TapDetector(
+                              onTap: () => _onImageTap(context, channelID, avatarUrl, false),
+                              child: NamidaHero(
+                                tag: 'false_${channelID}_$avatarUrl',
+                                child: YoutubeThumbnail(
+                                  type: ThumbnailType.channel, // banner akshully
+                                  key: Key('${channelID}_$avatarUrl'),
+                                  width: context.width * 0.14,
+                                  isImportantInCache: true,
+                                  customUrl: avatarUrl,
+                                  isCircle: true,
+                                  compressed: false,
+                                ),
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 6.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 2.0),
+                                  child: Text(
+                                    _channelInfo?.title ?? ch.title,
+                                    style: context.textTheme.displayLarge,
+                                  ),
+                                ),
+                                const SizedBox(height: 4.0),
+                                Text(
+                                  subsCountText ??
+                                      (subsCount == null
+                                          ? '? ${lang.SUBSCRIBERS}'
+                                          : [
+                                              subsCount.formatDecimalShort(),
+                                              subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
+                                            ].join(' ')),
+                                  style: context.textTheme.displayMedium?.copyWith(
+                                    fontSize: 12.0,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4.0),
+                          YTSubscribeButton(channelID: channelID),
+                          const SizedBox(width: 12.0),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 4.0),
-                    if (streamsPeakDates != null)
-                      NamidaInkWell(
-                        borderRadius: 6.0,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                        child: Text(
-                          "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})",
-                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                        ),
-                      ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 4.0),
-              YTVideosActionBar(
-                title: _channelInfo?.title ?? ch.title,
-                urlBuilder: _channelInfo?.buildUrl,
-                barOptions: const YTVideosActionBarOptions(
-                  addToPlaylist: false,
-                  playLast: false,
-                ),
-                videosCallback: () => streamsList
-                    ?.map((e) => YoutubeID(
-                          id: e.id,
-                          playlistID: null,
-                        ))
-                    .toList(),
-                infoLookupCallback: () {
-                  final streamsList = this.streamsList;
-                  if (streamsList == null) return null;
-                  final m = <String, StreamInfoItem>{};
-                  streamsList.loop((e) => m[e.id] = e);
-                  return m;
-                },
-              ),
-              const SizedBox(width: 8.0),
-            ],
-          ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: NamidaScrollbar(
-              controller: uploadsScrollController,
-              child: isLoadingInitialStreams
-                  ? ShimmerWrapper(
-                      shimmerEnabled: true,
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: 15,
-                        itemBuilder: (context, index) {
-                          return const YoutubeVideoCardDummy(
-                            shimmerEnabled: true,
-                            thumbnailHeight: thumbnailHeight,
-                            thumbnailWidth: thumbnailWidth,
-                            thumbnailWidthPercentage: 0.8,
-                          );
+                const SizedBox(height: 4.0),
+                Row(
+                  children: [
+                    const SizedBox(width: 4.0),
+                    Expanded(child: sortWidget),
+                    const SizedBox(width: 4.0),
+                    Obx(
+                      () => NamidaInkWellButton(
+                        animationDurationMS: 100,
+                        sizeMultiplier: 0.95,
+                        borderRadius: 8.0,
+                        icon: Broken.task_square,
+                        text: lang.LOAD_ALL,
+                        enabled: !isLoadingMoreUploads.valueR && !lastLoadingMoreWasEmpty.valueR,
+                        disableWhenLoading: false,
+                        showLoadingWhenDisabled: !lastLoadingMoreWasEmpty.valueR,
+                        onTap: () async {
+                          _canKeepLoadingMore = !_canKeepLoadingMore;
+                          while (_canKeepLoadingMore && !lastLoadingMoreWasEmpty.value && ConnectivityController.inst.hasConnection) {
+                            await fetchStreamsNextPage();
+                          }
                         },
                       ),
-                    )
-                  : LazyLoadListView(
-                      scrollController: uploadsScrollController,
-                      onReachingEnd: () async {
-                        await fetchStreamsNextPage();
-                      },
-                      listview: (controller) {
+                    ),
+                    const SizedBox(width: 4.0),
+                  ],
+                ),
+                const SizedBox(height: 10.0),
+                Row(
+                  children: [
+                    const SizedBox(width: 8.0),
+                    Expanded(
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 4.0,
+                        children: [
+                          NamidaInkWell(
+                            borderRadius: 6.0,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Broken.video_square, size: 16.0),
+                                const SizedBox(width: 4.0),
+                                Text(
+                                  "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}",
+                                  style: context.textTheme.displayMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4.0),
+                          if (streamsPeakDates != null)
+                            NamidaInkWell(
+                              borderRadius: 6.0,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                              child: Text(
+                                "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})",
+                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4.0),
+                    YTVideosActionBar(
+                      title: _channelInfo?.title ?? ch.title,
+                      urlBuilder: _channelInfo?.buildUrl,
+                      barOptions: const YTVideosActionBarOptions(
+                        addToPlaylist: false,
+                        playLast: false,
+                      ),
+                      videosCallback: () => streamsList
+                          ?.map((e) => YoutubeID(
+                                id: e.id,
+                                playlistID: null,
+                              ))
+                          .toList(),
+                      infoLookupCallback: () {
                         final streamsList = this.streamsList;
-                        if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                        return ListView.builder(
-                          padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
-                          controller: controller,
-                          itemExtent: thumbnailItemExtent,
-                          itemCount: streamsList.length,
-                          itemBuilder: (context, index) {
-                            final item = streamsList[index];
-                            return YoutubeVideoCard(
-                              key: Key(item.id),
-                              thumbnailHeight: thumbnailHeight,
-                              thumbnailWidth: thumbnailWidth,
-                              isImageImportantInCache: false,
-                              video: item,
-                              playlistID: null,
-                              thumbnailWidthPercentage: 0.8,
-                              dateInsteadOfChannel: true,
-                            );
-                          },
-                        );
+                        if (streamsList == null) return null;
+                        final m = <String, StreamInfoItem>{};
+                        streamsList.loop((e) => m[e.id] = e);
+                        return m;
                       },
                     ),
+                    const SizedBox(width: 8.0),
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+                Expanded(
+                  child: NamidaScrollbar(
+                    controller: uploadsScrollController,
+                    child: isLoadingInitialStreams
+                        ? ShimmerWrapper(
+                            shimmerEnabled: true,
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: 15,
+                              itemBuilder: (context, index) {
+                                return const YoutubeVideoCardDummy(
+                                  shimmerEnabled: true,
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                  thumbnailWidthPercentage: 0.8,
+                                );
+                              },
+                            ),
+                          )
+                        : LazyLoadListView(
+                            scrollController: uploadsScrollController,
+                            onReachingEnd: fetchStreamsNextPage,
+                            listview: (controller) {
+                              final streamsList = this.streamsList;
+                              if (streamsList == null || streamsList.isEmpty) return const SizedBox();
+                              return ListView.builder(
+                                padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
+                                controller: controller,
+                                itemExtent: thumbnailItemExtent,
+                                itemCount: streamsList.length,
+                                itemBuilder: (context, index) {
+                                  final item = streamsList[index];
+                                  return YoutubeVideoCard(
+                                    key: Key(item.id),
+                                    thumbnailHeight: thumbnailHeight,
+                                    thumbnailWidth: thumbnailWidth,
+                                    isImageImportantInCache: false,
+                                    video: item,
+                                    playlistID: null,
+                                    thumbnailWidthPercentage: 0.8,
+                                    dateInsteadOfChannel: true,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            pullToRefreshWidget,
+          ],
+        ),
       ),
     );
   }

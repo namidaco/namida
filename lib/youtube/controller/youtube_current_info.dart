@@ -8,6 +8,7 @@ class _YoutubeCurrentInfoController {
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
   RxBaseCore<YoutiPieCommentResult?> get currentComments => _currentComments;
+  RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
   RxBaseCore<bool> get isLoadingInitialComments => _isLoadingInitialComments;
   RxBaseCore<bool> get isLoadingMoreComments => _isLoadingMoreComments;
   RxBaseCore<YoutiPieFeedResult?> get currentFeed => _currentFeed;
@@ -23,6 +24,7 @@ class _YoutubeCurrentInfoController {
   final _currentRelatedVideos = Rxn<YoutiPieRelatedVideosResult>();
   final _currentComments = Rxn<YoutiPieCommentResult>();
   final currentYTStreams = Rxn<VideoStreamsResult>();
+  final _isLoadingVideoPage = false.obs;
   final _isLoadingInitialComments = false.obs;
   final _isLoadingMoreComments = false.obs;
   final _isCurrentCommentsFromCache = Rxn<bool>();
@@ -44,6 +46,7 @@ class _YoutubeCurrentInfoController {
     _currentComments.value = null;
     currentYTStreams.value = null;
     _isLoadingInitialComments.value = false;
+    _isLoadingVideoPage.value = false;
     _isLoadingMoreComments.value = false;
     _isCurrentCommentsFromCache.value = null;
   }
@@ -70,7 +73,7 @@ class _YoutubeCurrentInfoController {
     return comms != null;
   }
 
-  Future<void> updateVideoPage(String videoId, {required bool forceRequestPage, required bool forceRequestComments, CommentsSortType? commentsSort}) async {
+  Future<void> updateVideoPage(String videoId, {required bool requestPage, required bool requestComments, CommentsSortType? commentsSort}) async {
     if (!ConnectivityController.inst.hasConnection) {
       snackyy(
         title: lang.ERROR,
@@ -80,23 +83,26 @@ class _YoutubeCurrentInfoController {
       );
       return;
     }
+    if (!requestPage && !requestComments) return;
 
-    if (forceRequestPage) {
+    if (requestPage) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
       _currentVideoPage.value = null;
     }
-    if (forceRequestComments) {
+    if (requestComments) {
       _currentComments.value = null;
       _initialCommentsContinuation = null;
     }
 
     commentsSort ??= YoutubeMiniplayerUiController.inst.currentCommentSort.value;
 
-    final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: forceRequestPage ? ExecuteDetails.forceRequest() : null);
+    _isLoadingVideoPage.value = true;
+    final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest());
+    _isLoadingVideoPage.value = false;
 
     if (_canSafelyModifyMetadata(videoId)) {
-      _currentVideoPage.value = page;
-      if (forceRequestComments) {
+      if (requestPage) _currentVideoPage.value = page; // page is still requested cuz comments need it
+      if (requestComments) {
         final commentsContinuation = page?.commentResult.continuation;
         if (commentsContinuation != null && _canShowComments) {
           _isLoadingInitialComments.value = true;
@@ -105,7 +111,7 @@ class _YoutubeCurrentInfoController {
             continuationToken: commentsContinuation,
             details: ExecuteDetails.forceRequest(),
           );
-          if (identical(page, _currentVideoPage.value)) {
+          if (_canSafelyModifyMetadata(videoId)) {
             _isLoadingInitialComments.value = false;
             _currentVideoPage.refresh();
             _currentComments.value = comm;

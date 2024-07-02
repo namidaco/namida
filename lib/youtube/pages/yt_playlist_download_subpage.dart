@@ -390,6 +390,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: YoutubeThumbnail(
+                                            type: ThumbnailType.video,
                                             key: Key(id),
                                             borderRadius: 8.0,
                                             width: thumWidth - 4.0,

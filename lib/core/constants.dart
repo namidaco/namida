@@ -156,9 +156,9 @@ class AppPaths {
   static final SETTINGS_EQUALIZER = '$_USER_DATA/namida_settings_eq.json';
   static final SETTINGS_PLAYER = '$_USER_DATA/namida_settings_player.json';
   static final TRACKS = '$_USER_DATA/tracks.json';
+  static final TRACKS_STATS = '$_USER_DATA/tracks_stats.json';
   static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
   static final VIDEOS_CACHE = '$_USER_DATA/cache_videos.json';
-  static final TRACKS_STATS = '$_USER_DATA/tracks_stats.json';
   static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';
 
   static String get LOGS => _getLogsFile('');

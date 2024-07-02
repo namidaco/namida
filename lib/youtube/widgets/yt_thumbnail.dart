@@ -15,6 +15,20 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
+enum ThumbnailType {
+  video,
+  playlist,
+  channel,
+  other,
+}
+
+const _typeToIcon = {
+  ThumbnailType.video: Broken.video,
+  ThumbnailType.playlist: Broken.music_library_2,
+  ThumbnailType.channel: Broken.user,
+  ThumbnailType.other: null,
+};
+
 class YoutubeThumbnail extends StatefulWidget {
   final String? videoId;
   final String? customUrl;
@@ -35,7 +49,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool compressed;
   final bool isImportantInCache;
   final bool preferLowerRes;
-  final bool isPlaylist;
+  final ThumbnailType type;
   final double? iconSize;
   final List<BoxShadow>? boxShadow;
   final bool forceSquared;
@@ -61,7 +75,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.compressed = true,
     required this.isImportantInCache,
     this.preferLowerRes = true,
-    this.isPlaylist = false,
+    required this.type,
     this.iconSize,
     this.boxShadow,
     this.forceSquared = true,
@@ -192,11 +206,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         width: widget.width,
         thumbnailSize: widget.width,
         boxShadow: widget.boxShadow,
-        icon: widget.isPlaylist
-            ? Broken.music_library_2
-            : widget.customUrl != null
-                ? Broken.user
-                : Broken.video,
+        icon: _typeToIcon[widget.type] ?? Broken.musicnote,
         iconSize: widget.iconSize ?? (widget.customUrl != null ? null : widget.width * 0.3),
         forceSquared: widget.forceSquared,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,

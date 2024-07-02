@@ -164,6 +164,9 @@ class ThumbnailManager {
     required String? symlinkId,
     required VoidCallback? onNotFound,
   }) async {
+    final activeRequest = _thumbnailDownloader.resultForId(itemId);
+    if (activeRequest != null) return activeRequest;
+
     final links = <String>[];
     if (isVideo && (urls == null || urls.isEmpty)) {
       final yth = YoutiPieVideoThumbnail(itemId);
@@ -176,7 +179,7 @@ class ThumbnailManager {
     if (urls != null) links.addAll(urls);
     if (links.isEmpty) return null;
 
-    final downloaded = await _thumbnailDownloader.download(
+    return _thumbnailDownloader.download(
       urls: links,
       id: itemId,
       forceRequest: forceRequest,
@@ -186,7 +189,6 @@ class ThumbnailManager {
       isTemp: isTemp,
       onNotFound: onNotFound,
     );
-    return downloaded;
   }
 }
 
@@ -194,6 +196,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   final _downloadCompleters = <String, Completer<File?>?>{}; // item id
   final _shouldRetry = <String, bool>{}; // item id
   final _notFoundThumbnails = <String, bool?>{}; // item id
+
+  Future<File?>? resultForId(String id) => _downloadCompleters[id]?.future;
 
   Future<File?> download({
     required List<String> urls,
@@ -333,7 +337,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                 await fileStream.addStream(downloadStream);
                 newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
                 if (symlinkId != null) {
-                  Link.fromUri(Uri.file("${newFile.parent.path}/symlinkId")).create(newFile.path).catchError((_) => Link(''));
+                  Link("${newFile.parent.path}/$symlinkId").create(newFile.path).catchError((_) => Link(''));
                 }
                 if (deleteOldExtracted) {
                   File("${destinationFile.parent}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));

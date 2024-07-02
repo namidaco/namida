@@ -136,6 +136,7 @@ class YTHistoryVideoCard extends StatelessWidget {
               children: [
                 Center(
                   child: YoutubeThumbnail(
+                    type: ThumbnailType.video,
                     key: Key(video.id),
                     borderRadius: 8.0,
                     isImportantInCache: isImportantInCache,

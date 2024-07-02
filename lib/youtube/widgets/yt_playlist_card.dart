@@ -1,9 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
-import 'package:namida/packages/three_arched_circle.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
@@ -16,10 +13,14 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 /// Playlist info is fetched automatically after 3 seconds of being displayed, or after attempting an action.
 class YoutubePlaylistCard extends StatefulWidget {
@@ -28,6 +29,7 @@ class YoutubePlaylistCard extends StatefulWidget {
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final bool playOnTap;
+  final String? playingId;
 
   const YoutubePlaylistCard({
     super.key,
@@ -36,6 +38,7 @@ class YoutubePlaylistCard extends StatefulWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.playOnTap = false,
+    this.playingId,
   });
 
   @override
@@ -54,7 +57,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) {
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
     if (widget.playlist.isMix) {
-      final videoId = firstVideoID;
+      final videoId = firstVideoID ?? widget.playingId;
       if (videoId == null) return Future.value(null);
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
@@ -124,7 +127,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     }
     final thumbnailUrl = playlist.thumbnails.pick()?.url;
     final firstVideoID = this.firstVideoID;
-    final goodVideoID = firstVideoID != '';
+    final goodVideoID = firstVideoID != null && firstVideoID != '';
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,
@@ -132,7 +135,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
       child: YoutubeCard(
         thumbnailHeight: widget.thumbnailHeight,
         thumbnailWidth: widget.thumbnailWidth,
-        isPlaylist: true,
+        thumbnailType: ThumbnailType.playlist,
         isImageImportantInCache: false,
         extractColor: true,
         borderRadius: 12.0,

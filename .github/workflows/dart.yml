@@ -15,8 +15,6 @@ on:
 jobs:
   build_android:
     runs-on: ubuntu-latest
-    env:
-      ACCESS_TOKEN: ${{ secrets.PAT }}
 
     steps:
       - uses: actions/checkout@v3
@@ -90,11 +88,11 @@ jobs:
           repository: namidaco/namida-snapshots
           tag_name: ${{ steps.extract_version.outputs.version}}
           files: |
-            build_final_signed/*
+            build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
       - name: Upload all APKs
         uses: actions/upload-artifact@v3
         with:
           name: all-apks
-          path: build_final_signed/**
+          path: build_final/**

@@ -174,6 +174,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     child: Stack(
                       children: [
                         YoutubeThumbnail(
+                          type: ThumbnailType.playlist,
                           key: Key("$firstID"),
                           width: context.width,
                           height: context.width * 9 / 16,
@@ -186,7 +187,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                           onColorReady: (color) async {
                             if (color != null) {
                               await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                              setState(() {
+                              refreshState(() {
                                 bgColor = color.color;
                               });
                             }
@@ -206,6 +207,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               YoutubeThumbnail(
+                                type: ThumbnailType.playlist,
                                 key: Key("$firstID"),
                                 width: bigThumbWidth,
                                 height: (bigThumbWidth * 9 / 16),
@@ -280,7 +282,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                           onTap: () async {
                                             final newName = await playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
                                             if (context.mounted) {
-                                              setState(() {
+                                              refreshState(() {
                                                 playlistCurrentName = newName;
                                               });
                                             }
@@ -391,7 +393,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   Color? get sortChipBGColor => bgColor?.withOpacity(0.6);
 
   @override
-  void onSortChanged(void Function() fn) => setState(fn);
+  void onSortChanged(void Function() fn) => refreshState(fn);
 
   late final ScrollController controller;
   final _isLoadingMoreItems = false.obs;
@@ -455,7 +457,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
 
     trySortStreams();
     _isLoadingMoreItems.value = false;
-    setState(() {});
+    refreshState();
   }
 
   @override
@@ -498,6 +500,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                 child: Stack(
                   children: [
                     YoutubeThumbnail(
+                      type: ThumbnailType.playlist,
                       key: Key("$firstID"),
                       width: context.width,
                       height: context.width * 9 / 16,
@@ -511,7 +514,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                       onColorReady: (color) async {
                         if (color != null) {
                           await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                          setState(() {
+                          refreshState(() {
                             bgColor = color.color;
                           });
                         }
@@ -531,6 +534,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           YoutubeThumbnail(
+                            type: ThumbnailType.playlist,
                             key: Key("$firstID"),
                             width: bigThumbWidth,
                             height: (bigThumbWidth * 9 / 16),

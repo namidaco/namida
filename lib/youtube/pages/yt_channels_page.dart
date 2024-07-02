@@ -296,6 +296,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             children: [
                               const SizedBox(width: 4.0),
                               YoutubeThumbnail(
+                                type: ThumbnailType.channel,
                                 key: Key(ch.channelID),
                                 width: 32.0,
                                 isImportantInCache: true,
@@ -504,6 +505,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 children: [
                                   const SizedBox(height: 4.0),
                                   YoutubeThumbnail(
+                                    type: ThumbnailType.channel,
                                     key: Key(ch.channelID),
                                     width: _thumbSize,
                                     isImportantInCache: true,

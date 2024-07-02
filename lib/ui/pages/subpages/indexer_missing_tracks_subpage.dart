@@ -491,17 +491,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                             isUpdating.value = true;
                                             await _onUpdating();
                                             isUpdating.value = false;
-                                        NamidaNavigator.inst.closeDialog();
-                                        NamidaNavigator.inst.closeDialog();
-                                        NamidaNavigator.inst.closeDialog();
-                                        _onUpdating();
                                             NamidaNavigator.inst.closeDialog();
-                                        _onUpdating();
-                                            NamidaNavigator.inst.closeDialog();
-                                        NamidaNavigator.inst.closeDialog();
-                                        _onUpdating();
-                                            NamidaNavigator.inst.closeDialog();
-                                        _onUpdating();
                                           },
                                         ),
                                       ),

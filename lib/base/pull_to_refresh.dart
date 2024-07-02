@@ -92,10 +92,15 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   bool _isRefreshing = false;
-  Future<void> onRefresh(PullToRefreshCallback execute) async {
+  Future<void> onRefresh(PullToRefreshCallback execute, {bool forceShow = false}) async {
     if (!enablePullToRefresh) return;
     onVerticalDragFinish();
-    if (animation.value != 1 || _isRefreshing) return;
+    if (_isRefreshing) return;
+    if (animation.value != 1) {
+      if (!forceShow) return;
+      animation.animateTo(1, duration: const Duration(milliseconds: 100));
+    }
+
     _isRefreshing = true;
     _animation2.repeat();
     await execute();
