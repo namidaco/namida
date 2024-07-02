@@ -58,18 +58,6 @@ jobs:
           VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
           echo ::set-output name=version::"$VERSION"
 
-      - name: Create keystore
-        uses: kitek/decode-base64-into-file-action@1.0
-        with:
-          encoded-value: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
-          destination-file: android/app/keystore.jks
-
-      - name: Create key properties
-        uses: kitek/decode-base64-into-file-action@1.0
-        with:
-          encoded-value: ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }}
-          destination-file: android/key.properties
-
       - name: Build APK -> arm64-v8a
         run: flutter build apk --target-platform android-arm64 --release
 
@@ -86,17 +74,29 @@ jobs:
           mkdir -p build_final
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
 
+      - name: Sign app APK
+        uses: Tlaster/android-sign@v1
+        with:
+          releaseDirectory: build_final
+          output: build_final_signed
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEYSTORE }}
+          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
         with:
           repository: namidaco/namida-snapshots
           tag_name: ${{ steps.extract_version.outputs.version}}
           files: |
-            build_final/*
+            build_final_signed/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
       - name: Upload all APKs
         uses: actions/upload-artifact@v3
         with:
           name: all-apks
-          path: build_final/**
+          path: build_final_signed/**
