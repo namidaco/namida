@@ -130,7 +130,79 @@ class Folders {
         return false;
       });
     }
-    map.addEntries(newFolders);
-    map.sortBy((e) => e.key.folderName.toLowerCase());
+
+    map.addEntries(newFolders); // dont clear
+
+    final parsedMap = _buildParsedMap(map.keys.map((e) => e.folderName.toLowerCase()));
+    final sorted = map.entries.toList()
+      ..sort(
+        (entryA, entryB) {
+          final a = entryA.key.folderName.toLowerCase();
+          final b = entryB.key.folderName.toLowerCase();
+          final parsedA = parsedMap[a];
+          final parsedB = parsedMap[b];
+          if (parsedA != null && parsedB != null) {
+            if (parsedA.startAtIndex == parsedB.startAtIndex) {
+              // -- basically checking textPart is enough to know but we check startAtIndex to speed things up.
+              if (parsedA.textPart == parsedB.textPart) {
+                final numbersCompare = parsedA.extractedNumber.compareTo(parsedB.extractedNumber);
+                if (numbersCompare != 0) return numbersCompare;
+              }
+            }
+          }
+          return a.compareTo(b);
+        },
+      );
+
+    map.assignAllEntries(sorted); // we clear after building new sorted one
   }
+
+  Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {
+    final parsedMap = <String, _ParsedResult?>{};
+    for (final n in names) {
+      parsedMap[n] = _parseNumberAtEnd(n);
+    }
+    return parsedMap;
+  }
+
+  _ParsedResult? _parseNumberAtEnd(String text) {
+    final codes = text.codeUnits;
+    final codesL = codes.length;
+    bool wasAddingNumber = false;
+    final charCodes = <int>[];
+    for (int i = codesL - 1; i >= 0; i--) {
+      final code = codes[i];
+      if (code >= 0x0030 && code <= 0x0039) {
+        // -- from 0 to 9
+        wasAddingNumber = true;
+        charCodes.add(code);
+      } else {
+        if (wasAddingNumber) break;
+      }
+    }
+    if (charCodes.isNotEmpty) {
+      final startIndex = codes.length - charCodes.length;
+      return _ParsedResult(
+        extractedNumber: int.parse(String.fromCharCodes(charCodes.reversed)),
+        charactersCount: charCodes.length,
+        startAtIndex: startIndex,
+        textPart: text.substring(0, startIndex),
+      );
+    }
+    return null;
+  }
+}
+
+class _ParsedResult {
+  final int extractedNumber;
+  final int charactersCount;
+  final int startAtIndex;
+  final String textPart;
+
+  const _ParsedResult({
+    required this.extractedNumber,
+    required this.charactersCount,
+    required this.startAtIndex,
+    required this.textPart,
+  });
 }
