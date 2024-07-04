@@ -23,12 +23,15 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-typedef Playlist = GeneralPlaylist<TrackWithDate>;
+typedef LocalPlaylist = GeneralPlaylist<TrackWithDate>;
 
-class PlaylistController extends PlaylistManager<TrackWithDate> {
+class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   static PlaylistController get inst => _instance;
   static final PlaylistController _instance = PlaylistController._internal();
   PlaylistController._internal();
+
+  @override
+  Track identifyBy(TrackWithDate item) => item.track;
 
   final canReorderTracks = false.obs;
   void resetCanReorder() => canReorderTracks.value = false;
@@ -57,7 +60,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   }
 
   void addTracksToPlaylist(
-    Playlist playlist,
+    LocalPlaylist playlist,
     List<Track> tracks, {
     TrackSource source = TrackSource.local,
     List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.values,
@@ -193,8 +196,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
 
   bool favouriteButtonOnPressed(Track track) {
     return super.toggleTrackFavourite(
-      newTrack: TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
-      identifyBy: (tr) => tr.track == track,
+      TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
     );
   }
 
@@ -265,7 +267,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return rt.length;
   }
 
-  Future<void> exportPlaylistToM3UFile(Playlist playlist, String path) async {
+  Future<void> exportPlaylistToM3UFile(LocalPlaylist playlist, String path) async {
     await _saveM3UPlaylistToFile.thready({
       'path': path,
       'tracks': playlist.tracks,
@@ -488,7 +490,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   Timer? writeTimer;
 
   @override
-  FutureOr<void> onPlaylistTracksChanged(Playlist playlist) async {
+  FutureOr<void> onPlaylistTracksChanged(LocalPlaylist playlist) async {
     final m3uPath = playlist.m3uPath;
     if (m3uPath != null && await File(m3uPath).exists()) {
       final didAgree = await _requestM3USyncPermission();
@@ -511,7 +513,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
   }
 
   @override
-  FutureOr<bool> canSavePlaylist(Playlist playlist) {
+  FutureOr<bool> canSavePlaylist(LocalPlaylist playlist) {
     return playlist.m3uPath == null; // dont save m3u-based playlists;
   }
 
@@ -574,21 +576,21 @@ class PlaylistController extends PlaylistManager<TrackWithDate> {
     return await _prepareFavouritesFile.thready(favouritePlaylistPath);
   }
 
-  static Future<Playlist?> _prepareFavouritesFile(String path) async {
+  static Future<LocalPlaylist?> _prepareFavouritesFile(String path) async {
     try {
       final response = File(path).readAsJsonSync();
-      return Playlist.fromJson(response, TrackWithDate.fromJson);
+      return LocalPlaylist.fromJson(response, TrackWithDate.fromJson);
     } catch (_) {}
     return null;
   }
 
-  static Future<Map<String, Playlist>> _readPlaylistFilesCompute(String path) async {
-    final map = <String, Playlist>{};
+  static Future<Map<String, LocalPlaylist>> _readPlaylistFilesCompute(String path) async {
+    final map = <String, LocalPlaylist>{};
     for (final f in Directory(path).listSyncSafe()) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
-          final pl = Playlist.fromJson(response, TrackWithDate.fromJson);
+          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson);
           map[pl.name] = pl;
         } catch (e) {
           continue;

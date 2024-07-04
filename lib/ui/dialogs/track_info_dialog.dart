@@ -181,7 +181,7 @@ Future<void> showTrackInfoDialog(
                   onPressed: () => settings.save(showUnknownFieldsInTrackInfoDialog: !settings.showUnknownFieldsInTrackInfoDialog.value),
                 ),
               ),
-              NamidaLikeButton(
+              NamidaLocalLikeButton(
                 track: track,
                 size: 24,
                 color: theme.colorScheme.primary,

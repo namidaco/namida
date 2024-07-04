@@ -139,7 +139,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       }
 
       indicesProgressMap[allTracks.length] = _LoadingProgress.fillingPlaylistTracks;
-      for (final tracks in PlaylistController.inst.playlistsMap.values.map((e) => e.tracks)) {
+      for (final tracks in PlaylistController.inst.playlistsMap.value.values.map((e) => e.tracks)) {
         tracks.loop((e) {
           allTracks[e.track.path] ??= true;
         });

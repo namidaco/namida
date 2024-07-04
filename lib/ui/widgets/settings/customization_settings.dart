@@ -741,9 +741,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                           .addSeparators(separator: const SizedBox(height: 3.0)),
                       if (settings.displayFavouriteIconInListTile.valueR) ...[
                         const SizedBox(height: 3.0),
-                        const NamidaLikeButton(
-                          track: null,
-                          size: 20,
+                        const NamidaRawLikeButton(
+                          size: 20.0,
+                          isLiked: null,
+                          onTap: null,
                         ),
                       ]
                     ],

@@ -19,6 +19,8 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/lyrics_parser/parser_smart.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 export 'package:dart_extensions/dart_extensions.dart';
 
@@ -246,14 +248,11 @@ extension Channels on String {
 }
 
 extension FavouriteTrack on Track {
-  bool get isFavourite {
-    return PlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.track == this) != null;
-  }
+  bool get isFavourite => PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(this);
+}
 
-  bool get isFavouriteR {
-    // ignore: avoid_rx_value_getter_outside_obx
-    return PlaylistController.inst.favouritesPlaylist.valueR.tracks.firstWhereEff((element) => element.track == this) != null;
-  }
+extension FavouriteYoutubeID on YoutubeID {
+  bool get isFavourite => YoutubePlaylistController.inst.favouritesPlaylist.isItemFavourite(this);
 }
 
 extension PLNAME on String {

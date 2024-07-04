@@ -17,10 +17,13 @@ import 'package:namida/youtube/class/youtube_id.dart';
 
 typedef YoutubePlaylist = GeneralPlaylist<YoutubeID>;
 
-class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
+class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   static YoutubePlaylistController get inst => _instance;
   static final YoutubePlaylistController _instance = YoutubePlaylistController._internal();
   YoutubePlaylistController._internal();
+
+  @override
+  String identifyBy(YoutubeID item) => item.id;
 
   final canReorderVideos = false.obs;
   void resetCanReorder() => canReorderVideos.value = false;
@@ -81,14 +84,13 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID> {
     return newtracks;
   }
 
-  bool favouriteButtonOnPressed(String id) {
+  bool favouriteButtonOnPressed(String videoId) {
     return super.toggleTrackFavourite(
-      newTrack: YoutubeID(
-        id: id,
+      YoutubeID(
+        id: videoId,
         watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
         playlistID: favouritesPlaylist.value.playlistID,
       ),
-      identifyBy: (ytid) => ytid.id == id,
     );
   }
 

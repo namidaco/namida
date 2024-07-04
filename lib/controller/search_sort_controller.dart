@@ -73,7 +73,7 @@ class SearchSortController {
     return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path.getDirectoryName, value));
   }
 
-  RxMap<String, Playlist> get playlistsMap => PlaylistController.inst.playlistsMap;
+  RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
   RxBaseCore<Map<MediaType, bool>> get runningSearches => _runningSearches;
 
@@ -902,7 +902,7 @@ class SearchSortController {
     reverse ??= settings.playlistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
-    void sortThis(Comparable Function(MapEntry<String, Playlist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+    void sortThis(Comparable Function(MapEntry<String, LocalPlaylist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
 
     switch (sortBy) {
       case GroupSortType.title:

@@ -340,7 +340,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
   }
 }
 
-extension PlaylistToQueueSource on Playlist {
+extension PlaylistToQueueSource on LocalPlaylist {
   QueueSource toQueueSource() {
     // if (name == k_PLAYLIST_NAME_MOST_PLAYED) {
     //   return QueueSource.mostPlayed;
@@ -486,7 +486,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     String playlistNameToAddAs = playlistToAddAs?.info.title ?? '';
     String suffix = '';
     int suffixIndex = 1;
-    while (ytplc.YoutubePlaylistController.inst.playlistsMap["$playlistNameToAddAs$suffix"] != null) {
+    while (ytplc.YoutubePlaylistController.inst.playlistsMap.value["$playlistNameToAddAs$suffix"] != null) {
       suffixIndex++;
       suffix = ' ($suffixIndex)';
     }

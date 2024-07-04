@@ -113,7 +113,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
 
   void _openMenu(Track track) => NamidaDialogs.inst.showTrackDialog(track, source: QueueSource.playerQueue);
 
-  MiniplayerTextData _textBuilder(Selectable selectable) {
+  MiniplayerTextData<TrackWithDate, Track> _textBuilder(Selectable selectable) {
     String firstLine = '';
     String secondLine = '';
 
@@ -136,7 +136,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     return MiniplayerTextData(
       firstLine: firstLine,
       secondLine: secondLine,
-      isLiked: track.isFavouriteR,
+      favouritePlaylist: PlaylistController.inst.favouritesPlaylist,
+      itemToLike: track,
       onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       onMenuOpen: (_) => _openMenu(track),
       likedIcon: Broken.heart_tick,
@@ -316,7 +317,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     );
   }
 
-  MiniplayerTextData _textBuilder(BuildContext context, YoutubeID video) {
+  MiniplayerTextData<YoutubeID, String> _textBuilder(BuildContext context, YoutubeID video) {
     String firstLine = '';
     String secondLine = '';
 
@@ -330,7 +331,8 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     return MiniplayerTextData(
       firstLine: firstLine,
       secondLine: secondLine,
-      isLiked: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == video.id) != null,
+      favouritePlaylist: YoutubePlaylistController.inst.favouritesPlaylist,
+      itemToLike: video.id,
       onLikeTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
       onMenuOpen: (d) => _openMenu(context, video, d),
       likedIcon: Broken.like_filled,

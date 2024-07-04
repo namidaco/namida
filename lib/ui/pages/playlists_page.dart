@@ -131,11 +131,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       children: [
                                         const SizedBox(width: 12.0),
-                                        Text(
-                                          PlaylistController.inst.playlistsMap.length.displayPlaylistKeyword,
-                                          style: context.textTheme.displayLarge,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                        ObxO(
+                                          rx: PlaylistController.inst.playlistsMap,
+                                          builder: (playlistsMap) => Text(
+                                            playlistsMap.length.displayPlaylistKeyword,
+                                            style: context.textTheme.displayLarge,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                         const SizedBox(width: 12.0),
                                         const Expanded(
@@ -207,12 +210,13 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           Expanded(
                                             child: NamidaHero(
                                               tag: 'DPC_favs',
-                                              child: Obx(
-                                                () => DefaultPlaylistCard(
+                                              child: ObxOClass(
+                                                rx: PlaylistController.inst.favouritesPlaylist,
+                                                builder: (favouritesPlaylist) => DefaultPlaylistCard(
                                                   colorScheme: Colors.red,
                                                   icon: Broken.heart,
                                                   title: lang.FAVOURITES,
-                                                  text: PlaylistController.inst.favouritesPlaylist.valueR.tracks.length.formatDecimal(),
+                                                  text: favouritesPlaylist.value.tracks.length.formatDecimal(),
                                                   onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
                                                 ),
                                               ),

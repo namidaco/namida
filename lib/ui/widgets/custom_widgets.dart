@@ -1367,7 +1367,7 @@ class NamidaRawLikeButton extends StatelessWidget {
   final Color? disabledColor;
   final bool? isLiked;
   final EdgeInsetsGeometry padding;
-  final Future<void> Function(bool isLiked) onTap;
+  final Future<bool> Function(bool isLiked)? onTap;
   final IconData likedIcon;
   final IconData normalIcon;
 
@@ -1398,10 +1398,7 @@ class NamidaRawLikeButton extends StatelessWidget {
         end: context.theme.colorScheme.tertiary,
       ),
       isLiked: isLiked,
-      onTap: (isLiked) async {
-        onTap(isLiked);
-        return !isLiked;
-      },
+      onTap: onTap,
       likeBuilder: (value) => value
           ? Icon(
               likedIcon,
@@ -1417,24 +1414,29 @@ class NamidaRawLikeButton extends StatelessWidget {
   }
 }
 
-class NamidaLikeButton extends StatelessWidget {
-  final Track? track;
+class NamidaLocalLikeButton extends StatelessWidget {
+  final Track track;
   final double size;
   final Color? color;
-  const NamidaLikeButton({super.key, required this.track, this.size = 30.0, this.color});
+
+  const NamidaLocalLikeButton({
+    super.key,
+    required this.track,
+    this.size = 30.0,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return NamidaRawLikeButton(
-      size: size,
-      enabledColor: color,
-      disabledColor: color,
-      isLiked: track?.isFavouriteR,
-      onTap: (isLiked) async {
-        if (track != null) {
-          PlaylistController.inst.favouriteButtonOnPressed(track!);
-        }
-      },
+    return ObxOClass(
+      rx: PlaylistController.inst.favouritesPlaylist,
+      builder: (favouritesPlaylist) => NamidaRawLikeButton(
+        size: size,
+        enabledColor: color,
+        disabledColor: color,
+        isLiked: favouritesPlaylist.isSubItemFavourite(track),
+        onTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
+      ),
     );
   }
 }

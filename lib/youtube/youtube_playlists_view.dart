@@ -140,18 +140,18 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
               },
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
-            Obx(
-              () {
-                final favs = YoutubePlaylistController.inst.favouritesPlaylist.valueR;
+            ObxOClass(
+              rx: YoutubePlaylistController.inst.favouritesPlaylist,
+              builder: (favs) {
                 return _HorizontalSliverList(
                   title: lang.LIKED,
                   icon: Broken.like_1,
                   viewAllPage: () => const YTLikedVideosPage(),
-                  videos: getFavouriteVideos(favs),
+                  videos: getFavouriteVideos(favs.value),
                   playlistName: k_PLAYLIST_NAME_FAV,
                   playlistID: k_PLAYLIST_NAME_FAV,
                   displayTimeAgo: false,
-                  totalVideosCountInMainList: favs.tracks.length,
+                  totalVideosCountInMainList: favs.value.tracks.length,
                 );
               },
             ),

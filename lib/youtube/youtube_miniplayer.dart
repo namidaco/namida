@@ -225,7 +225,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
     return DefaultTextStyle(
       style: mainTextTheme.displayMedium!,
-      child: ObxO(
+      child: ObxOClass(
         rx: YoutubePlaylistController.inst.favouritesPlaylist,
         builder: (favouritesPlaylist) {
           return ObxO(
@@ -236,7 +236,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                 if (currentItem is! YoutubeID) return const SizedBox();
 
                 final currentId = currentItem.id;
-                final isUserLiked = favouritesPlaylist.tracks.firstWhereEff((element) => element.id == currentId) != null;
+                final isUserLiked = favouritesPlaylist.isItemFavourite(currentItem);
 
                 return ObxO(
                   rx: YoutubeInfoController.current.currentYTStreams,
@@ -522,9 +522,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   normalIcon: Broken.like_1,
                                                                   disabledColor: mainTheme.iconTheme.color,
                                                                   isLiked: isUserLiked,
-                                                                  onTap: (isLiked) async {
-                                                                    YoutubePlaylistController.inst.favouriteButtonOnPressed(currentId);
-                                                                  },
+                                                                  onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(currentId),
                                                                 ),
                                                               ),
                                                             ),

@@ -156,7 +156,7 @@ class NamidaDialogs {
     }
   }
 
-  void showDeletePlaylistDialog(Playlist playlist) {
+  void showDeletePlaylistDialog(LocalPlaylist playlist) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.WARNING,

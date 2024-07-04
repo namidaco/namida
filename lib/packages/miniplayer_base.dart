@@ -5,13 +5,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:namida/controller/lyrics_controller.dart';
-import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
+import 'package:playlist_manager/class/favourite_playlist.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/extensions.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -24,17 +26,16 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
-import 'package:youtipie/class/streams/video_stream.dart';
-import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/extensions.dart';
 
 class FocusedMenuOptions<E> {
   final bool Function(E currentItem) onOpen;
@@ -62,11 +63,12 @@ class FocusedMenuOptions<E> {
   });
 }
 
-class MiniplayerTextData {
+class MiniplayerTextData<T, E> {
   final String firstLine;
   final String secondLine;
-  final bool? isLiked;
-  final Future<void> Function(bool isLiked) onLikeTap;
+  final FavouritePlaylist<T, E> favouritePlaylist;
+  final E itemToLike;
+  final Future<bool> Function(bool isLiked) onLikeTap;
   final void Function(TapUpDetails details) onMenuOpen;
   final IconData likedIcon;
   final IconData normalIcon;
@@ -77,7 +79,8 @@ class MiniplayerTextData {
   MiniplayerTextData({
     required this.firstLine,
     required this.secondLine,
-    required this.isLiked,
+    required this.favouritePlaylist,
+    required this.itemToLike,
     required this.onLikeTap,
     required this.onMenuOpen,
     required this.likedIcon,
@@ -1229,8 +1232,8 @@ class _RawImageContainer extends StatelessWidget {
   }
 }
 
-class _TrackInfo extends StatelessWidget {
-  final MiniplayerTextData textData;
+class _TrackInfo<T, E> extends StatelessWidget {
+  final MiniplayerTextData<T, E> textData;
   final double cp;
   final double qp;
   final double p;
@@ -1312,12 +1315,15 @@ class _TrackInfo extends StatelessWidget {
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
-                            child: NamidaRawLikeButton(
-                              size: 32.0,
-                              likedIcon: textData.likedIcon,
-                              normalIcon: textData.normalIcon,
-                              isLiked: textData.isLiked,
-                              onTap: textData.onLikeTap,
+                            child: ObxOClass(
+                              rx: textData.favouritePlaylist,
+                              builder: (favouritePlaylist) => NamidaRawLikeButton(
+                                size: 32.0,
+                                likedIcon: textData.likedIcon,
+                                normalIcon: textData.normalIcon,
+                                isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+                                onTap: textData.onLikeTap,
+                              ),
                             ),
                           ),
                         ),

@@ -174,7 +174,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     }
 
     final videoId = info?.id ?? '';
-    final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.value.tracks.firstWhereEff((element) => element.id == videoId) != null;
+    final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
     final videoPageInfo = videoPage?.videoInfo;
     final likesCount = videoPageInfo?.engagement?.likesCount;
     final videoLikeCount = likesCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (likesCount ?? 0);
@@ -200,9 +200,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
               normalIcon: Broken.like_1,
               disabledColor: context.theme.colorScheme.primary,
               isLiked: isUserLiked,
-              onTap: (isLiked) async {
-                YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId);
-              },
+              onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
             ),
           ),
         ],
