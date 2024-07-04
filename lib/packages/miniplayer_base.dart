@@ -63,12 +63,13 @@ class FocusedMenuOptions<E> {
   });
 }
 
-class MiniplayerTextData<T, E> {
+class MiniplayerInfoData<T, E> {
   final String firstLine;
   final String secondLine;
   final FavouritePlaylist<T, E> favouritePlaylist;
   final E itemToLike;
   final Future<bool> Function(bool isLiked) onLikeTap;
+  final void Function() onShowAddToPlaylistDialog;
   final void Function(TapUpDetails details) onMenuOpen;
   final IconData likedIcon;
   final IconData normalIcon;
@@ -76,12 +77,13 @@ class MiniplayerTextData<T, E> {
   late final bool firstLineGood;
   late final bool secondLineGood;
 
-  MiniplayerTextData({
+  MiniplayerInfoData({
     required this.firstLine,
     required this.secondLine,
     required this.favouritePlaylist,
     required this.itemToLike,
     required this.onLikeTap,
+    required this.onShowAddToPlaylistDialog,
     required this.onMenuOpen,
     required this.likedIcon,
     required this.normalIcon,
@@ -101,7 +103,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final FocusedMenuOptions<E> focusedMenuOptions;
   final Widget Function(E item, double cp) imageBuilder;
   final Widget Function(E item, double bcp) currentImageBuilder;
-  final MiniplayerTextData Function(E item) textBuilder;
+  final MiniplayerInfoData Function(E item) textBuilder;
   final bool canShowBuffering;
 
   const NamidaMiniPlayerBase({
@@ -1233,7 +1235,7 @@ class _RawImageContainer extends StatelessWidget {
 }
 
 class _TrackInfo<T, E> extends StatelessWidget {
-  final MiniplayerTextData<T, E> textData;
+  final MiniplayerInfoData<T, E> textData;
   final double cp;
   final double qp;
   final double p;
@@ -1315,14 +1317,17 @@ class _TrackInfo<T, E> extends StatelessWidget {
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
-                            child: ObxOClass(
-                              rx: textData.favouritePlaylist,
-                              builder: (favouritePlaylist) => NamidaRawLikeButton(
-                                size: 32.0,
-                                likedIcon: textData.likedIcon,
-                                normalIcon: textData.normalIcon,
-                                isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
-                                onTap: textData.onLikeTap,
+                            child: LongPressDetector(
+                              onLongPress: textData.onShowAddToPlaylistDialog,
+                              child: ObxOClass(
+                                rx: textData.favouritePlaylist,
+                                builder: (favouritePlaylist) => NamidaRawLikeButton(
+                                  size: 32.0,
+                                  likedIcon: textData.likedIcon,
+                                  normalIcon: textData.normalIcon,
+                                  isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+                                  onTap: textData.onLikeTap,
+                                ),
                               ),
                             ),
                           ),

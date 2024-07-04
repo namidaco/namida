@@ -26,6 +26,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_base.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -35,6 +36,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -113,7 +115,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
 
   void _openMenu(Track track) => NamidaDialogs.inst.showTrackDialog(track, source: QueueSource.playerQueue);
 
-  MiniplayerTextData<TrackWithDate, Track> _textBuilder(Selectable selectable) {
+  MiniplayerInfoData<TrackWithDate, Track> _textBuilder(Selectable selectable) {
     String firstLine = '';
     String secondLine = '';
 
@@ -133,12 +135,13 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       firstLine = secondLine;
       secondLine = '';
     }
-    return MiniplayerTextData(
+    return MiniplayerInfoData(
       firstLine: firstLine,
       secondLine: secondLine,
       favouritePlaylist: PlaylistController.inst.favouritesPlaylist,
       itemToLike: track,
       onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
+      onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
       onMenuOpen: (_) => _openMenu(track),
       likedIcon: Broken.heart_tick,
       normalIcon: Broken.heart,
@@ -317,7 +320,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     );
   }
 
-  MiniplayerTextData<YoutubeID, String> _textBuilder(BuildContext context, YoutubeID video) {
+  MiniplayerInfoData<YoutubeID, String> _textBuilder(BuildContext context, YoutubeID video) {
     String firstLine = '';
     String secondLine = '';
 
@@ -328,12 +331,13 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
       secondLine = '';
     }
 
-    return MiniplayerTextData(
+    return MiniplayerInfoData(
       firstLine: firstLine,
       secondLine: secondLine,
       favouritePlaylist: YoutubePlaylistController.inst.favouritesPlaylist,
       itemToLike: video.id,
       onLikeTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
+      onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ctx: context, ids: [video.id], idsNamesLookup: {}),
       onMenuOpen: (d) => _openMenu(context, video, d),
       likedIcon: Broken.like_filled,
       normalIcon: Broken.like_1,
