@@ -84,6 +84,25 @@ Future<void> showDownloadVideoBottomSheet({
     }
   }
 
+  void showWebmWarning() {
+    snackyy(
+      title: lang.WARNING,
+      message: lang.WEBM_NO_EDIT_TAGS_SUPPORT,
+      leftBarIndicatorColor: Colors.red,
+      margin: EdgeInsets.zero,
+      borderRadius: 0,
+      top: false,
+    );
+  }
+
+  void onAudioSelectionChanged() {
+    if (selectedAudioOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
+  }
+
+  void onVideoSelectionChanged() {
+    if (selectedVideoOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
+  }
+
   if (initialItemConfig != null) {
     updatefilenameOutput(customName: initialItemConfig.filename);
     updateTagsMap(initialItemConfig.ffmpegTags);
@@ -110,6 +129,8 @@ Future<void> showDownloadVideoBottomSheet({
         ) ??
         streams?.videoStreams.firstWhereEff((e) => !e.isWebm);
 
+    onAudioSelectionChanged();
+    onVideoSelectionChanged();
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.publishedAt.date;
     final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.ytAutoExtractVideoTagsFromInfo.value);
@@ -366,18 +387,6 @@ Future<void> showDownloadVideoBottomSheet({
                                     onPressed: () {
                                       if (videoInfo == null && tagsMap.isEmpty) return;
 
-                                      // webm doesnt support tag editing
-                                      if (isWEBM) {
-                                        snackyy(
-                                          title: lang.ERROR,
-                                          message: lang.WEBM_NO_EDIT_TAGS_SUPPORT,
-                                          leftBarIndicatorColor: Colors.red,
-                                          margin: EdgeInsets.zero,
-                                          borderRadius: 0,
-                                          top: false,
-                                        );
-                                      }
-
                                       showVideoDownloadOptionsSheet(
                                         context: context,
                                         videoTitle: videoInfo?.title,
@@ -432,18 +441,23 @@ Future<void> showDownloadVideoBottomSheet({
                               title: lang.AUDIO,
                               subtitle: subtitle,
                               icon: Broken.audio_square,
-                              onCloseIconTap: () => selectedAudioOnlyStream.value = null,
+                              onCloseIconTap: () {
+                                selectedAudioOnlyStream.value = null;
+                                onAudioSelectionChanged();
+                              },
                               onSussyIconTap: () {
                                 showAudioWebm.toggle();
                                 if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.isWebm == true) {
                                   selectedAudioOnlyStream.value = streamResult.value?.audioStreams.firstOrNull;
+                                  onAudioSelectionChanged();
                                 }
                               },
                             );
                           },
                         ),
-                        Obx(
-                          () => streamResult.valueR?.audioStreams == null
+                        ObxO(
+                          rx: streamResult,
+                          builder: (streamResult) => streamResult?.audioStreams == null
                               ? Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: ShimmerWrapper(
@@ -454,22 +468,28 @@ Future<void> showDownloadVideoBottomSheet({
                                     ),
                                   ),
                                 )
-                              : getPopupItem(
-                                  items: showAudioWebm.valueR ? streamResult.valueR!.audioStreams : streamResult.valueR!.audioStreams.where((element) => !element.isWebm).toList(),
-                                  itemBuilder: (element) {
-                                    return Obx(
-                                      () {
-                                        final cacheFile = element.getCachedFile(videoId);
-                                        return getQualityButton(
-                                          selected: selectedAudioOnlyStream.valueR == element,
-                                          cacheExists: cacheFile != null,
-                                          title: "${element.codecInfo.codec} • ${element.sizeInBytes.fileSizeFormatted}",
-                                          subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
-                                          onTap: () => selectedAudioOnlyStream.value = element,
-                                        );
-                                      },
-                                    );
-                                  },
+                              : ObxO(
+                                  rx: showAudioWebm,
+                                  builder: (showAudioWebm) => getPopupItem(
+                                    items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm).toList(),
+                                    itemBuilder: (element) {
+                                      return Obx(
+                                        () {
+                                          final cacheFile = element.getCachedFile(videoId);
+                                          return getQualityButton(
+                                            selected: selectedAudioOnlyStream.valueR == element,
+                                            cacheExists: cacheFile != null,
+                                            title: "${element.codecInfo.codec} • ${element.sizeInBytes.fileSizeFormatted}",
+                                            subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                            onTap: () {
+                                              selectedAudioOnlyStream.value = element;
+                                              onAudioSelectionChanged();
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
                         ),
                         getDivider(),
@@ -481,11 +501,15 @@ Future<void> showDownloadVideoBottomSheet({
                               title: lang.VIDEO,
                               subtitle: subtitle,
                               icon: Broken.video_square,
-                              onCloseIconTap: () => selectedVideoOnlyStream.value = null,
+                              onCloseIconTap: () {
+                                selectedVideoOnlyStream.value = null;
+                                onVideoSelectionChanged();
+                              },
                               onSussyIconTap: () {
                                 showVideoWebm.toggle();
                                 if (showVideoWebm.value == false && selectedVideoOnlyStream.value?.isWebm == true) {
                                   selectedVideoOnlyStream.value = streamResult.value?.videoStreams.firstOrNull;
+                                  onVideoSelectionChanged();
                                 }
                               },
                             );
@@ -514,7 +538,10 @@ Future<void> showDownloadVideoBottomSheet({
                                           cacheExists: cacheFile != null,
                                           title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
                                           subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
-                                          onTap: () => selectedVideoOnlyStream.value = element,
+                                          onTap: () {
+                                            selectedVideoOnlyStream.value = element;
+                                            onVideoSelectionChanged();
+                                          },
                                         );
                                       },
                                     );

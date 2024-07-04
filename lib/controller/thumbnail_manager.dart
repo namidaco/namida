@@ -96,12 +96,14 @@ class ThumbnailManager {
     if (file.existsSync()) return file;
 
     if (symlinkId != null) {
-      final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp);
-      if (symlinkfile != null && symlinkfile.existsSync()) {
-        final targetFilePath = Link.fromUri(symlinkfile.uri).targetSync();
-        final targetFile = File(targetFilePath);
-        if (targetFile.existsSync()) return targetFile;
-      }
+      try {
+        final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp);
+        if (symlinkfile != null && symlinkfile.existsSync()) {
+          final targetFilePath = Link.fromUri(symlinkfile.uri).targetSync();
+          final targetFile = File(targetFilePath);
+          if (targetFile.existsSync()) return targetFile;
+        }
+      } catch (_) {}
     }
 
     final itemId = file.path.getFilenameWOExt;
@@ -340,7 +342,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                   Link("${newFile.parent.path}/$symlinkId").create(newFile.path).catchError((_) => Link(''));
                 }
                 if (deleteOldExtracted) {
-                  File("${destinationFile.parent}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
+                  File("${destinationFile.parent.path}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
                 }
               }
 

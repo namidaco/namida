@@ -174,12 +174,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           item: finalItem,
           isItemFavourite: false, // TODO: implement?
           itemIndex: currentIndex.value,
-          youtubeIdMediaItem: youtubeIdMediaItem ??
-              (int index, int queueLength) {
-                final streamInfo = YoutubeInfoController.current.currentYTStreams.value?.info;
-                final thumbnail = finalItem.getThumbnailSync();
-                return finalItem.toMediaItem(streamInfo, thumbnail, index, queueLength, knownDur);
-              },
+          youtubeIdMediaItem: youtubeIdMediaItem,
         );
       },
     );
@@ -199,10 +194,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required YoutubeID item,
     required bool isItemFavourite,
     required int itemIndex,
-    required YoutubeIDToMediaItemCallback youtubeIdMediaItem,
+    required YoutubeIDToMediaItemCallback? youtubeIdMediaItem,
   }) {
-    mediaItem.add(youtubeIdMediaItem(currentIndex.value, currentQueue.value.length));
-    playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
+    youtubeIdMediaItem ??= (index, ql) {
+      return item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, _ytNotificationDuration);
+    };
+    final index = currentIndex.value;
+    final ql = currentQueue.value.length;
+    mediaItem.add(youtubeIdMediaItem(index, ql));
+    playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
   }
 
   // =================================================================================
@@ -844,6 +844,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
+  Duration? _ytNotificationDuration;
+  VideoStreamInfo? _ytNotificationVideoInfo;
+  File? _ytNotificationVideoThumbnail;
+
   Future<void> onItemPlayYoutubeID(
     Q pi,
     YoutubeID item,
@@ -878,19 +882,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final hadCachedComments = YoutubeInfoController.current.updateCurrentCommentsSync(item.id);
 
     Duration? duration;
-    Duration? notificationDuration;
-    VideoStreamInfo? notificationVideoInfo;
-    File? notificationVideoThumbnail;
 
-    bool checkInterrupted() {
+    bool checkInterrupted({bool refreshNoti = true}) {
       if (item != currentItem.value) {
         return true;
       } else {
         if (duration != null) {
           _currentItemDuration.value = duration;
-          if (notificationDuration == null) {
-            notificationDuration = duration;
-            refreshNotification(pi, (index, ql) => item.toMediaItem(notificationVideoInfo, notificationVideoThumbnail, index, ql, duration));
+          final refresh = _ytNotificationDuration == null && refreshNoti;
+          _ytNotificationDuration = duration;
+          if (refresh) {
+            refreshNotification(pi, (index, ql) => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
           }
         }
         return false;
@@ -898,35 +900,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     Future<void> fetchFullVideoPage() async {
+      final requestComments = settings.ytPreferNewComments.value ? true : !hadCachedComments;
       await YoutubeInfoController.current.updateVideoPage(
         item.id,
         requestPage: !hadCachedVideoPage,
-        requestComments: !hadCachedComments,
+        requestComments: requestComments,
       );
     }
 
     void onInfoOrThumbObtained({VideoStreamInfo? info, File? thumbnail}) {
-      if (checkInterrupted()) return;
-      notificationVideoInfo ??= info; // we assign cuz later some functions can depend on this
-      notificationVideoThumbnail ??= thumbnail;
-      refreshNotification(pi, (index, ql) => item.toMediaItem(notificationVideoInfo, notificationVideoThumbnail, index, ql, duration));
+      if (checkInterrupted(refreshNoti: false)) return;
+      if (info != null) _ytNotificationVideoInfo = info; // we assign cuz later some functions can depend on this
+      if (thumbnail != null) _ytNotificationVideoThumbnail = thumbnail;
+      refreshNotification(pi, (index, ql) => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
     }
 
-    notificationVideoInfo = streamsResult?.info;
-    notificationVideoThumbnail = item.getThumbnailSync();
-    if (notificationVideoInfo != null || notificationVideoThumbnail != null) {
-      onInfoOrThumbObtained(info: notificationVideoInfo, thumbnail: notificationVideoThumbnail);
+    _ytNotificationVideoInfo = streamsResult?.info;
+    _ytNotificationVideoThumbnail = item.getThumbnailSync();
+    if (_ytNotificationVideoInfo != null || _ytNotificationVideoThumbnail != null) {
+      onInfoOrThumbObtained(info: _ytNotificationVideoInfo, thumbnail: _ytNotificationVideoThumbnail);
     }
-    if (notificationVideoThumbnail == null) {
+    if (_ytNotificationVideoThumbnail == null) {
       ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) => onInfoOrThumbObtained(thumbnail: thumbFile));
     }
 
     Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
-      if (startPlaying()) {
-        onPlayRaw();
-      }
       if (sourceChanged) {
         await seek(currentPositionMS.value.milliseconds);
+      }
+      if (startPlaying()) {
+        onPlayRaw();
       }
       if (!wasPlayingFromCache) {
         startSleepAfterMinCount();
@@ -976,8 +979,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     /// different then it will be set later after fetching.
     playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
       item: item,
-      mediaItemFn: () => item.toMediaItem(notificationVideoInfo, notificationVideoThumbnail, index, currentQueue.value.length, duration),
-      checkInterrupted: () => item != currentItem.value,
+      mediaItemFn: () => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+      checkInterrupted: checkInterrupted,
       index: index,
       canPlayAudioOnly: canPlayAudioOnlyFromCache,
       disableVideo: _isAudioOnlyPlayback,
@@ -1040,8 +1043,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         isFetchingInfo.value = false;
 
         fetchFullVideoPage();
-
-        notificationVideoInfo = streamsResult?.info;
 
         final audiostreams = streamsResult?.audioStreams ?? [];
         final videoStreams = streamsResult?.videoStreams ?? [];
@@ -1135,7 +1136,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         printy(e, isError: true);
         playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
           item: item,
-          mediaItemFn: () => item.toMediaItem(notificationVideoInfo, notificationVideoThumbnail, index, currentQueue.value.length, duration),
+          mediaItemFn: () => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
           checkInterrupted: checkInterrupted,
           index: index,
           canPlayAudioOnly: canPlayAudioOnlyFromCache,

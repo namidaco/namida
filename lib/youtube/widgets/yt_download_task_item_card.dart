@@ -489,7 +489,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         videoId: item.id,
         url: info?.buildUrl(),
-        channelID: info?.channelId,
+        channelID: info?.channelId ?? info?.channel.id,
         playlistID: null,
         idsNamesLookup: {item.id: info?.title},
         playlistName: '',

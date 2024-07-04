@@ -123,11 +123,12 @@ class _YoutubeCurrentInfoController {
     }
   }
 
-  /// specify [sortType] to force refresh. otherwise fetches next
-  Future<void> updateCurrentComments(String videoId, {CommentsSortType? newSortType, bool initial = false}) async {
+  /// -- Specify [newSortType] to force refresh. otherwise fetches next.
+  /// -- returns wether a new comment result is assigned or not. use to revert ui actions.
+  Future<bool> updateCurrentComments(String videoId, {CommentsSortType? newSortType, bool initial = false}) async {
     final commentRes = _currentComments.value;
-    if (commentRes == null) return;
-    if (initial == false && commentRes.canFetchNext == false) return;
+    if (commentRes == null) return false;
+    if (initial == false && commentRes.canFetchNext == false) return false;
 
     if (initial == false && commentRes.canFetchNext && newSortType == null) {
       _isLoadingMoreComments.value = true;
@@ -147,9 +148,11 @@ class _YoutubeCurrentInfoController {
         if (newRes != null && _canSafelyModifyMetadata(videoId)) {
           _currentComments.value = newRes;
           _isCurrentCommentsFromCache.value = false;
+          return true;
         }
       }
       _isLoadingInitialComments.value = false;
     }
+    return false;
   }
 }

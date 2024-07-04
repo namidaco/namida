@@ -236,18 +236,21 @@ class YoutubeCommentsHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                   bgColor: currentCommentSort == s ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor,
                   onTap: () async {
-                    if (YoutubeMiniplayerUiController.inst.currentCommentSort.value == s) return;
+                    final activeSort = YoutubeMiniplayerUiController.inst.currentCommentSort.value;
+                    if (activeSort == s) return;
 
                     final currentItem = Player.inst.currentItem.value;
                     if (currentItem is! YoutubeID) return;
                     final currentId = currentItem.id;
 
                     YoutubeMiniplayerUiController.inst.currentCommentSort.value = s;
-                    await YoutubeInfoController.current.updateCurrentComments(
+                    final done = await YoutubeInfoController.current.updateCurrentComments(
                       currentId,
                       newSortType: s,
                       initial: true,
                     );
+                    // -- reverting if failed.
+                    if (!done) YoutubeMiniplayerUiController.inst.currentCommentSort.value = activeSort;
                   },
                   child: Text(
                     s.toText(),

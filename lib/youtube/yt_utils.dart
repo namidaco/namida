@@ -194,7 +194,7 @@ class YTUtils {
           );
         },
       ),
-      if (url != null && url != '')
+      if (url != null && url.isNotEmpty)
         NamidaPopupItem(
           icon: Broken.share,
           title: lang.SHARE,
@@ -206,7 +206,7 @@ class YTUtils {
           title: lang.COPY,
           onTap: () => YTUtils().copyCurrentVideoUrl(videoId),
         ),
-      if (channelID != null && channelID != '')
+      if (channelID != null && channelID.isNotEmpty)
         NamidaPopupItem(
           icon: Broken.user,
           title: lang.GO_TO_CHANNEL,

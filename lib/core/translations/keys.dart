@@ -72,6 +72,7 @@ abstract class LanguageKeys {
   String get BORDER_RADIUS_MULTIPLIER => _getKey('BORDER_RADIUS_MULTIPLIER');
   String get CACHE => _getKey('CACHE');
   String get CANCEL => _getKey('CANCEL');
+  String get CANCELED => _getKey('CANCELED');
   String get CHANGED => _getKey('CHANGED');
   String get CHANGELOG => _getKey('CHANGELOG');
   String get CHANNEL => _getKey('CHANNEL');

@@ -165,7 +165,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       // -- only put the image if bytes are NOT valid, or if specified by parent
       final newPath = res?.path;
       if (imagePath != newPath) {
-        if (mounted) setState(() => imagePath = newPath);
+        refreshState(() => imagePath = newPath);
       }
     }
 

@@ -89,7 +89,7 @@ class YoutubeVideoCard extends StatelessWidget {
           if (uploadDateAgo != null) uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: true,
-        thirdLineText: dateInsteadOfChannel ? video.shortDescription ?? '' : video.channel.title,
+        thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channel.title,
         displayChannelThumbnail: !dateInsteadOfChannel,
         channelThumbnailUrl: video.channel.thumbnails.pick()?.url,
         onTap: onTap ??

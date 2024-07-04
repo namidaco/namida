@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
@@ -14,6 +15,7 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -3079,14 +3081,17 @@ class ShimmerWrapper extends StatelessWidget {
 class LazyLoadListView extends StatefulWidget {
   final ScrollController? scrollController;
   final int extend;
-  final Future<void> Function() onReachingEnd;
+  final FutureOr<void> Function() onReachingEnd;
   final Widget Function(ScrollController controller) listview;
+  final bool requiresNetwork;
+
   const LazyLoadListView({
     super.key,
     this.scrollController,
     this.extend = 400,
     required this.onReachingEnd,
     required this.listview,
+    this.requiresNetwork = true,
   });
 
   @override
@@ -3101,6 +3106,7 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
     if (isExecuting) return;
 
     if (controller.offset >= controller.position.maxScrollExtent - widget.extend && !controller.position.outOfRange) {
+      if (widget.requiresNetwork && !ConnectivityController.inst.hasConnection) return;
       isExecuting = true;
       await widget.onReachingEnd();
       isExecuting = false;

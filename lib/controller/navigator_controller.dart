@@ -400,7 +400,7 @@ class NamidaNavigator {
   }
 
   Future<void> popPage({bool waitForAnimation = false}) async {
-    if (innerDrawerKey.currentState?.isOpened ?? false) {
+    if (innerDrawerKey.currentState?.isOpened == true) {
       innerDrawerKey.currentState?.close();
       return;
     }
@@ -410,6 +410,7 @@ class NamidaNavigator {
       isQueueSheetOpen = false;
       return;
     }
+
     if (isInYTCommentsSubpage) {
       ytMiniplayerCommentsPageKey.currentState?.pop();
       isInYTCommentsSubpage = false;
@@ -424,9 +425,8 @@ class NamidaNavigator {
     final miniplayerAllowPop = MiniPlayerController.inst.onWillPop();
     if (!miniplayerAllowPop) return;
 
-    final ytsnvks = ytLocalSearchNavigatorKey.currentState;
-    if (ytsnvks != null) {
-      ytsnvks.pop();
+    if (isytLocalSearchInFullPage) {
+      ytLocalSearchNavigatorKey.currentState?.pop();
       isytLocalSearchInFullPage = false;
       return;
     }
@@ -506,6 +506,7 @@ SnackbarController? snackyy({
   int displaySeconds = 2,
   double borderRadius = 12.0,
   Color? leftBarIndicatorColor,
+  Color? borderColor,
   (String text, FutureOr<void> Function() function)? button,
   bool? isError,
   int? maxLinesMessage,
@@ -606,7 +607,15 @@ SnackbarController? snackyy({
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: borderR,
-              border: isError ? Border.all(color: Colors.red.withOpacity(0.2), width: 1.5) : Border.all(color: Colors.grey.withOpacity(0.5), width: 0.5),
+              border: isError
+                  ? Border.all(
+                      color: borderColor ?? Colors.red.withOpacity(0.2),
+                      width: 1.5,
+                    )
+                  : Border.all(
+                      color: borderColor ?? Colors.grey.withOpacity(0.5),
+                      width: 0.5,
+                    ),
               boxShadow: isError
                   ? [
                       BoxShadow(
