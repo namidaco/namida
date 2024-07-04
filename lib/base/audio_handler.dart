@@ -10,7 +10,7 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/youtipie.dart';
+import 'package:youtipie/core/extensions.dart' show StreamFilterUtils;
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/func_execute_limiter.dart';
@@ -42,6 +42,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
@@ -172,7 +173,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       youtubeID: (finalItem) {
         _notificationUpdateItemYoutubeID(
           item: finalItem,
-          isItemFavourite: false, // TODO: implement?
+          isItemFavourite: finalItem.isFavourite,
           itemIndex: currentIndex.value,
           youtubeIdMediaItem: youtubeIdMediaItem,
         );
@@ -1334,7 +1335,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           duration: currentItemDuration.value,
         );
       },
-      youtubeID: (finalItem) {},
+      youtubeID: (finalItem) {
+        final newStat = YoutubePlaylistController.inst.favouriteButtonOnPressed(finalItem.id);
+        _notificationUpdateItemYoutubeID(
+          item: finalItem,
+          itemIndex: currentIndex.value,
+          isItemFavourite: newStat,
+          youtubeIdMediaItem: null,
+        );
+      },
     );
   }
 
