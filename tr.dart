@@ -97,18 +97,18 @@ ${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
 // \t\t\t$splitterTwo$lastPiece""");
 
     // -- All Langauges files
-    const encoder = JsonEncoder.withIndent('  ');
-    await for (final fileSystem in Directory(_languagesDirectoryPath).list()) {
-      if (fileSystem is File) {
-        if (fileSystem.path.endsWith('.json')) {
-          final str = await fileSystem.readAsString();
-          final map = await jsonDecode(str) as Map<String, dynamic>;
-          map.addAll(argKeysVals);
-          final sorted = Map<String, dynamic>.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
-          await fileSystem.writeAsString(encoder.convert(sorted));
-        }
-      }
-    }
+    // const encoder = JsonEncoder.withIndent('  ');
+    // await for (final fileSystem in Directory(_languagesDirectoryPath).list()) {
+    //   if (fileSystem is File) {
+    //     if (fileSystem.path.endsWith('.json')) {
+    //       final str = await fileSystem.readAsString();
+    //       final map = await jsonDecode(str) as Map<String, dynamic>;
+    //       map.addAll(argKeysVals);
+    //       final sorted = Map<String, dynamic>.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+    //       await fileSystem.writeAsString(encoder.convert(sorted));
+    //     }
+    //   }
+    // }
     print('Added ${argKeysVals.length} ${argKeysVals.length > 1 ? 'keys' : 'key'} Successfully');
     return true;
   } on Exception catch (e) {
@@ -145,19 +145,19 @@ Future<bool> _removeKeys(Iterable<String> keysToRemove) async {
     // await langFile.writeAsString("$firstPiece$splitterOne${mapLines.join('\n')}$splitterTwo$lastPiece");
 
     // -- All Langauges files
-    const encoder = JsonEncoder.withIndent('  ');
-    await for (final fileSystem in Directory(_languagesDirectoryPath).list()) {
-      if (fileSystem is File) {
-        if (fileSystem.path.endsWith('.json')) {
-          final str = await fileSystem.readAsString();
-          final map = await jsonDecode(str) as Map<String, dynamic>;
-          for (final keyToRemove in keysToRemove) {
-            map.remove(keyToRemove);
-          }
-          await fileSystem.writeAsString(encoder.convert(map));
-        }
-      }
-    }
+    // const encoder = JsonEncoder.withIndent('  ');
+    // await for (final fileSystem in Directory(_languagesDirectoryPath).list()) {
+    //   if (fileSystem is File) {
+    //     if (fileSystem.path.endsWith('.json')) {
+    //       final str = await fileSystem.readAsString();
+    //       final map = await jsonDecode(str) as Map<String, dynamic>;
+    //       for (final keyToRemove in keysToRemove) {
+    //         map.remove(keyToRemove);
+    //       }
+    //       await fileSystem.writeAsString(encoder.convert(map));
+    //     }
+    //   }
+    // }
     print('Removed Successfully');
     return true;
   } catch (e) {
@@ -190,4 +190,4 @@ extension OrderedInsert<T extends Comparable> on List<T> {
 
 const _keysFilePath = 'lib/core/translations/keys.dart';
 // const _controllerFilePath = 'lib/core/translations/language.dart';
-const _languagesDirectoryPath = 'assets/language/translations';
+// const _languagesDirectoryPath = 'assets/language/translations';
