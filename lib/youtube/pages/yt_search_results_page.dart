@@ -135,7 +135,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
         pages: [
           MaterialPage(
             child: LazyLoadListView(
-              onReachingEnd: () async => await _fetchSearchNextPage(),
+              onReachingEnd: _fetchSearchNextPage,
               listview: (controller) {
                 return CustomScrollView(
                   controller: controller,

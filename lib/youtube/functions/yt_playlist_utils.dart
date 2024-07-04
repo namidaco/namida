@@ -117,49 +117,52 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
               builder: (context) {
                 final iconSize = context.width * 0.5;
                 final iconColor = context.theme.colorScheme.onSurface.withOpacity(0.6);
-                return SizedBox(
-                  width: context.width,
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Obx(
-                          () {
-                            final totalC = totalCount.valueR;
-                            return AnimatedSwitcher(
-                              key: const Key('circle_switch'),
-                              duration: switchAnimationDurHalf,
-                              child: totalC == null || currentCount.valueR < totalC
-                                  ? ThreeArchedCircle(
-                                      size: iconSize,
-                                      color: iconColor,
-                                    )
-                                  : Icon(
-                                      key: const Key('tick_switch'),
-                                      Broken.tick_circle,
-                                      size: iconSize,
-                                      color: iconColor,
-                                    ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12.0),
-                        Text(
-                          '${lang.FETCHING}...',
-                          style: context.textTheme.displayLarge,
-                        ),
-                        const SizedBox(height: 8.0),
-                        Obx(
-                          () {
-                            final totalC = totalCount.valueR;
-                            return Text(
-                              '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
-                              style: context.textTheme.displayLarge,
-                            );
-                          },
-                        ),
-                      ],
+                return _DisposableWidget(
+                  onDispose: fetchAllRes.cancel,
+                  child: SizedBox(
+                    width: context.width,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Obx(
+                            () {
+                              final totalC = totalCount.valueR;
+                              return AnimatedSwitcher(
+                                key: const Key('circle_switch'),
+                                duration: switchAnimationDurHalf,
+                                child: totalC == null || currentCount.valueR < totalC
+                                    ? ThreeArchedCircle(
+                                        size: iconSize,
+                                        color: iconColor,
+                                      )
+                                    : Icon(
+                                        key: const Key('tick_switch'),
+                                        Broken.tick_circle,
+                                        size: iconSize,
+                                        color: iconColor,
+                                      ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          Text(
+                            '${lang.FETCHING}...',
+                            style: context.textTheme.displayLarge,
+                          ),
+                          const SizedBox(height: 8.0),
+                          Obx(
+                            () {
+                              final totalC = totalCount.valueR;
+                              return Text(
+                                '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
+                                style: context.textTheme.displayLarge,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -345,4 +348,24 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       ),
     ];
   }
+}
+
+class _DisposableWidget extends StatefulWidget {
+  final Widget child;
+  final void Function() onDispose;
+  const _DisposableWidget({super.key, required this.child, required this.onDispose});
+
+  @override
+  State<_DisposableWidget> createState() => __DisposableWidgetState();
+}
+
+class __DisposableWidgetState extends State<_DisposableWidget> {
+  @override
+  void dispose() {
+    widget.onDispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

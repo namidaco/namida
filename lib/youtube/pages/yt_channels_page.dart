@@ -5,6 +5,7 @@ import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -32,7 +33,10 @@ class YoutubeChannelsPage extends StatefulWidget {
   State<YoutubeChannelsPage> createState() => _YoutubeChannelsPageState();
 }
 
-class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> {
+class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> with SingleTickerProviderStateMixin, PullToRefreshMixin {
+  @override
+  double get maxDistance => 64.0;
+
   @override
   List<StreamInfoItem>? get streamsList => _allStreamsList ?? channelVideoTab?.items;
 
@@ -52,7 +56,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
     if (subCh != null) {
       final sub = YoutubeSubscriptionsController.inst.availableChannels.value[subCh];
-      _updateChannel(sub);
+      _updateChannel(sub, forceRequest: true);
     }
 
     final now = DateTime.now();
@@ -68,8 +72,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     super.dispose();
   }
 
-  void _updateChannel(YoutubeSubscription? sub) async {
-    lastLoadingMoreWasEmpty.value = false;
+  Future<void> _updateChannel(YoutubeSubscription? sub, {required bool forceRequest}) async {
     if (uploadsScrollController.hasClients) uploadsScrollController.jumpTo(0);
     setState(() {
       isLoadingInitialStreams = true;
@@ -79,17 +82,25 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     });
 
     if (sub != null) {
-      final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(channelId: sub.channelID);
+      final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
+        channelId: sub.channelID,
+        details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      );
+
       if (channelInfo != null && channel == sub) {
-        fetchChannelStreams(channelInfo);
+        if (forceRequest) {
+          return onRefresh(() => fetchChannelStreams(channelInfo, forceRequest: true), forceShow: true);
+        } else {
+          return fetchChannelStreams(channelInfo, forceRequest: false); // we dont show refresh if it wasnt forced.
+        }
       }
     } else {
-      _fetchAllChannelsStreams();
+      return _fetchAllChannelsStreams(forceRequest: forceRequest);
     }
   }
 
   /// TODO(youtipie): might be faster using rss feed, but limited to 15 vid.
-  Future<void> _fetchAllChannelsStreams() async {
+  Future<void> _fetchAllChannelsStreams({required bool forceRequest}) async {
     setState(() {
       isLoadingInitialStreams = true;
       _allStreamsList = [];
@@ -116,7 +127,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.ERROR);
 
-    final executeDetails = ExecuteDetails.forceRequest();
+    final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : null;
 
     int pageFetchErrors = 0;
     for (int i = 0; i < idsLength; i++) {
@@ -223,7 +234,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               onGenerate: (dates) {
                                 if (dates.isNotEmpty) {
                                   allChannelFetchOldestDate.value = dates.first;
-                                  _fetchAllChannelsStreams();
+                                  _fetchAllChannelsStreams(forceRequest: true);
                                 }
                                 NamidaNavigator.inst.closeDialog();
                               },
@@ -375,31 +386,42 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             },
                           ),
                         )
-                      : LazyLoadListView(
-                          scrollController: uploadsScrollController,
-                          onReachingEnd: fetchStreamsNextPage,
-                          listview: (controller) {
-                            final streamsList = this.streamsList;
-                            if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                            return ListView.builder(
-                              controller: controller,
-                              itemExtent: thumbnailItemExtent,
-                              itemCount: streamsList.length,
-                              itemBuilder: (context, index) {
-                                final item = streamsList[index];
-                                return YoutubeVideoCard(
-                                  key: Key(item.id),
-                                  thumbnailHeight: thumbnailHeight,
-                                  thumbnailWidth: thumbnailWidth,
-                                  isImageImportantInCache: false,
-                                  video: item,
-                                  playlistID: null,
-                                  thumbnailWidthPercentage: 0.8,
-                                  dateInsteadOfChannel: true,
-                                );
-                              },
-                            );
-                          },
+                      : Stack(
+                          alignment: Alignment.topCenter,
+                          children: [
+                            Listener(
+                              onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
+                              onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true)),
+                              onPointerCancel: (_) => onVerticalDragFinish(),
+                              child: LazyLoadListView(
+                                scrollController: uploadsScrollController,
+                                onReachingEnd: fetchStreamsNextPage,
+                                listview: (controller) {
+                                  final streamsList = this.streamsList;
+                                  if (streamsList == null || streamsList.isEmpty) return const SizedBox();
+                                  return ListView.builder(
+                                    controller: controller,
+                                    itemExtent: thumbnailItemExtent,
+                                    itemCount: streamsList.length,
+                                    itemBuilder: (context, index) {
+                                      final item = streamsList[index];
+                                      return YoutubeVideoCard(
+                                        key: Key(item.id),
+                                        thumbnailHeight: thumbnailHeight,
+                                        thumbnailWidth: thumbnailWidth,
+                                        isImageImportantInCache: false,
+                                        video: item,
+                                        playlistID: null,
+                                        thumbnailWidthPercentage: 0.8,
+                                        dateInsteadOfChannel: true,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            pullToRefreshWidget,
+                          ],
                         ),
                 ),
         ),
@@ -445,7 +467,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         margin: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                         padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
                         onTap: () {
-                          _updateChannel(null);
+                          _updateChannel(null, forceRequest: true);
                         },
                         child: Column(
                           children: [
@@ -500,7 +522,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               width: _thumbSize,
                               padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
                               margin: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
-                              onTap: () => _updateChannel(ch),
+                              onTap: () => _updateChannel(ch, forceRequest: false),
                               child: Column(
                                 children: [
                                   const SizedBox(height: 4.0),

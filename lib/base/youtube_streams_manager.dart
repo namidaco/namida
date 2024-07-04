@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/core/extensions.dart';
@@ -13,12 +14,17 @@ enum YTVideosSorting {
   duration,
 }
 
-mixin YoutubeStreamsManager {
+mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
   List<StreamInfoItem>? get streamsList;
+  W? get listWrapper;
   ScrollController get scrollController;
   BuildContext get context;
   Color? get sortChipBGColor;
   void onSortChanged(void Function() fn);
+  void onListChange(void Function() fn);
+  bool canRefreshList(W result);
+
+  final isLoadingMoreUploads = false.obs;
 
   void disposeResources() {
     sorting.close();
@@ -88,10 +94,14 @@ mixin YoutubeStreamsManager {
           ],
         ),
       );
-  void trySortStreams() {
+
+  /// return if sorting was done.
+  bool trySortStreams() {
     if (sorting.value != _defaultSorting || sortingByTop.value != _defaultSortingByTop) {
       sortStreams(jumpToZero: false);
+      return true;
     }
+    return false;
   }
 
   void sortStreams({List<StreamInfoItem>? streams, YTVideosSorting? sort, bool? sortingByTop, bool jumpToZero = true}) {
@@ -139,5 +149,44 @@ mixin YoutubeStreamsManager {
       case YTVideosSorting.duration:
         return (lang.DURATION, Broken.timer_1);
     }
+  }
+
+  Future<void> fetchStreamsNextPage() async {
+    if (isLoadingMoreUploads.value) return;
+
+    final result = this.listWrapper;
+    if (result == null) return;
+    if (!result.canFetchNext) return;
+
+    isLoadingMoreUploads.value = true;
+    final didFetch = await result.fetchNext();
+    isLoadingMoreUploads.value = false;
+
+    if (didFetch) {
+      if (canRefreshList(result)) {
+        onListChange(trySortStreams); // refresh state even if will not sort
+      }
+    }
+  }
+
+  Future<YoutiPieFetchAllResType?> fetchAllStreams(void Function(YoutiPieFetchAllRes fetchAllRes) controller) async {
+    if (isLoadingMoreUploads.value) return null;
+
+    final videosTab = this.listWrapper;
+    if (videosTab == null) return null;
+
+    final res = videosTab.fetchAll(
+      onProgress: () {
+        onListChange(trySortStreams); // refresh state even if will not sort
+      },
+    );
+
+    if (res == null) return null;
+    controller(res);
+
+    isLoadingMoreUploads.value = true;
+    final didFetch = await res.result;
+    isLoadingMoreUploads.value = false;
+    return didFetch;
   }
 }

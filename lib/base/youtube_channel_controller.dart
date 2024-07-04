@@ -6,17 +6,18 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
-import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
-abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager {
+abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager<YoutiPieChannelTabVideosResult> {
   @override
   List<StreamInfoItem>? get streamsList => channelVideoTab?.items;
+
+  @override
+  YoutiPieChannelTabVideosResult? get listWrapper => channelVideoTab;
 
   @override
   ScrollController get scrollController => uploadsScrollController;
@@ -27,20 +28,23 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   @override
   void onSortChanged(void Function() fn) => refreshState(fn);
 
+  @override
+  void onListChange(void Function() fn) => refreshState(fn);
+
+  @override
+  bool canRefreshList(YoutiPieChannelTabVideosResult result) => result.channelId == channel?.channelID;
+
   late final ScrollController uploadsScrollController = ScrollController();
   YoutubeSubscription? channel;
   YoutiPieChannelTabVideosResult? channelVideoTab;
   ({DateTime oldest, DateTime newest})? streamsPeakDates;
 
   bool isLoadingInitialStreams = true;
-  final isLoadingMoreUploads = false.obs;
-  final lastLoadingMoreWasEmpty = false.obs;
 
   @override
   void dispose() {
     uploadsScrollController.dispose();
     isLoadingMoreUploads.close();
-    lastLoadingMoreWasEmpty.close();
     disposeResources();
     super.dispose();
   }
@@ -71,6 +75,9 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     final result = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, details: details);
     if (result == null) return;
 
+    // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
+    // -- but data like viewsCount will not be updated sadly.
+
     final st = result.items;
     updatePeakDates(st);
     YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
@@ -81,26 +88,5 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
         trySortStreams();
       }
     });
-  }
-
-  Future<void> fetchStreamsNextPage() async {
-    if (isLoadingMoreUploads.value) return;
-    if (lastLoadingMoreWasEmpty.value) return;
-
-    final result = this.channelVideoTab;
-    if (result == null) return;
-
-    isLoadingMoreUploads.value = true;
-    final didFetch = await result.fetchNext();
-    isLoadingMoreUploads.value = false;
-
-    if (didFetch) {
-      if (result.channelId == channel?.channelID) {
-        refreshState(trySortStreams);
-      }
-    } else {
-      if (ConnectivityController.inst.hasConnection) lastLoadingMoreWasEmpty.value = true;
-      return;
-    }
   }
 }
