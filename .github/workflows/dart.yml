@@ -82,11 +82,27 @@ jobs:
           mkdir -p build_final
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
 
+      - name: Get the previous release date
+        continue-on-error: true
+        run: |
+          release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
+          release_date=$(echo "$release_info" | jq -r '.published_at')    
+          echo "PREVIOUS_RELEASE_DATE=$release_date" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        continue-on-error: true
+        run: |
+          git_log=$(git log --oneline --decorate --no-abbrev-commit --after="$PREVIOUS_RELEASE_DATE")
+          echo "GIT_CHANGELOG=$git_log" >> $GITHUB_ENV
+
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
         with:
           repository: namidaco/namida-snapshots
+          make_latest: true
+          draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
+          body: ${{ env.GIT_CHANGELOG }}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
