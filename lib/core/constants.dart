@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_udid/flutter_udid.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -15,6 +16,9 @@ import 'package:namida/core/extensions.dart';
 
 class NamidaDeviceInfo {
   static int sdkVersion = 21;
+
+  static String? get deviceId => _deviceId;
+  static String? _deviceId;
 
   static final androidInfoCompleter = Completer<AndroidDeviceInfo>();
   static final packageInfoCompleter = Completer<PackageInfo>();
@@ -39,6 +43,11 @@ class NamidaDeviceInfo {
     } catch (_) {
       _fetchedAndroidInfo = false;
     }
+  }
+
+  static Future<void> fetchDeviceId() async {
+    if (_deviceId != null) return;
+    _deviceId = await FlutterUdid.udid;
   }
 
   static Future<void> fetchPackageInfo() async {

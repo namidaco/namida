@@ -8,6 +8,7 @@ abstract class LanguageKeys {
 
   String get ABOUT => _getKey('ABOUT');
   String get ACTIVE => _getKey('ACTIVE');
+  String get ADD_ACCOUNT => _getKey('ADD_ACCOUNT');
   String get ADD_ALL => _getKey('ADD_ALL');
   String get ADD_ALL_AND_REMOVE_OLD_ONES => _getKey('ADD_ALL_AND_REMOVE_OLD_ONES');
   String get ADD_AS_A_NEW_PLAYLIST => _getKey('ADD_AS_A_NEW_PLAYLIST');
@@ -77,10 +78,12 @@ abstract class LanguageKeys {
   String get CHANGELOG => _getKey('CHANGELOG');
   String get CHANNEL => _getKey('CHANNEL');
   String get CHANNELS => _getKey('CHANNELS');
+  String get CHECK => _getKey('CHECK');
   String get CHECK_FOR_MORE => _getKey('CHECK_FOR_MORE');
   String get CHECK_LIST => _getKey('CHECK_LIST');
   String get CHOOSE_WHAT_TO_CLEAR => _getKey('CHOOSE_WHAT_TO_CLEAR');
   String get CHOOSE => _getKey('CHOOSE');
+  String get CLAIM => _getKey('CLAIM');
   String get CLEAR_IMAGE_CACHE_WARNING => _getKey('CLEAR_IMAGE_CACHE_WARNING');
   String get CLEAR_IMAGE_CACHE => _getKey('CLEAR_IMAGE_CACHE');
   String get CLEAR_TRACK_ITEM_MULTIPLE => _getKey('CLEAR_TRACK_ITEM_MULTIPLE');
@@ -142,6 +145,7 @@ abstract class LanguageKeys {
   String get DELETE_FILE_CACHE_SUBTITLE => _getKey('DELETE_FILE_CACHE_SUBTITLE');
   String get DELETE_TEMP_FILES => _getKey('DELETE_TEMP_FILES');
   String get DESCRIPTION => _getKey('DESCRIPTION');
+  String get DID_YOU_MEAN => _getKey('DID_YOU_MEAN');
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');
   String get DIRECTORY_DOESNT_EXIST => _getKey('DIRECTORY_DOESNT_EXIST');
@@ -184,6 +188,7 @@ abstract class LanguageKeys {
   String get EDIT => _getKey('EDIT');
   String get EDIT_ARTWORK => _getKey('EDIT_ARTWORK');
   String get EDIT_TAGS => _getKey('EDIT_TAGS');
+  String get EMAIL => _getKey('EMAIL');
   String get EMPTY_NON_MEANINGFUL_TAG_FIELDS => _getKey('EMPTY_NON_MEANINGFUL_TAG_FIELDS');
   String get EMPTY_VALUE => _getKey('EMPTY_VALUE');
   String get ENABLE_BLUR_EFFECT => _getKey('ENABLE_BLUR_EFFECT');
@@ -231,6 +236,7 @@ abstract class LanguageKeys {
   String get FAILED => _getKey('FAILED');
   String get FAVOURITES => _getKey('FAVOURITES');
   String get FETCHING => _getKey('FETCHING');
+  String get FETCHING_OF_ALL_VIDEOS => _getKey('FETCHING_OF_ALL_VIDEOS');
   String get FILENAME_SHOULDNT_START_WITH => _getKey('FILENAME_SHOULDNT_START_WITH');
   String get FILE_NAME_WO_EXT => _getKey('FILE_NAME_WO_EXT');
   String get FILE_NAME => _getKey('FILE_NAME');
@@ -336,6 +342,8 @@ abstract class LanguageKeys {
   String get LYRICS_SOURCE => _getKey('LYRICS_SOURCE');
   String get M3U_PLAYLIST => _getKey('M3U_PLAYLIST');
   String get MAKE_YOUR_FIRST_LISTEN => _getKey('MAKE_YOUR_FIRST_LISTEN');
+  String get MANAGE => _getKey('MANAGE');
+  String get MANAGE_YOUR_ACCOUNTS => _getKey('MANAGE_YOUR_ACCOUNTS');
   String get MANUAL_BACKUP_SUBTITLE => _getKey('MANUAL_BACKUP_SUBTITLE');
   String get MANUAL_BACKUP => _getKey('MANUAL_BACKUP');
   String get MATCHING_TYPE => _getKey('MATCHING_TYPE');
@@ -345,6 +353,16 @@ abstract class LanguageKeys {
   String get MAX_AUDIO_CACHE_SIZE => _getKey('MAX_AUDIO_CACHE_SIZE');
   String get MAX_IMAGE_CACHE_SIZE => _getKey('MAX_IMAGE_CACHE_SIZE');
   String get MAX_VIDEO_CACHE_SIZE => _getKey('MAX_VIDEO_CACHE_SIZE');
+  String get MEMBERSHIP_CODE => _getKey('MEMBERSHIP_CODE');
+  String get MEMBERSHIP_CODE_SENT_TO_EMAIL => _getKey('MEMBERSHIP_CODE_SENT_TO_EMAIL');
+  String get MEMBERSHIP_DIDNT_CHANGE => _getKey('MEMBERSHIP_DIDNT_CHANGE');
+  String get MEMBERSHIP_ENJOY_NEW => _getKey('MEMBERSHIP_ENJOY_NEW');
+  String get MEMBERSHIP_FREE_COUPON => _getKey('MEMBERSHIP_FREE_COUPON');
+  String get MEMBERSHIP_MANAGE => _getKey('MEMBERSHIP_MANAGE');
+  String get MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER => _getKey('MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER');
+  String get MEMBERSHIP_SIGN_IN_TO_PATREON_ACCOUNT => _getKey('MEMBERSHIP_SIGN_IN_TO_PATREON_ACCOUNT');
+  String get MEMBERSHIP_UNKNOWN => _getKey('MEMBERSHIP_UNKNOWN');
+  String get MEMBERSHIP_YOU_NEED_MEMBERSHIP_OF_TO_ADD_MULTIPLE_ACCOUNTS => _getKey('MEMBERSHIP_YOU_NEED_MEMBERSHIP_OF_TO_ADD_MULTIPLE_ACCOUNTS');
   String get METADATA_CACHE => _getKey('METADATA_CACHE');
   String get METADATA_EDIT_FAILED => _getKey('METADATA_EDIT_FAILED');
   String get METADATA_READ_FAILED => _getKey('METADATA_READ_FAILED');
@@ -373,6 +391,7 @@ abstract class LanguageKeys {
   String get NAME_CONTAINS_BAD_CHARACTER => _getKey('NAME_CONTAINS_BAD_CHARACTER');
   String get NAME => _getKey('NAME');
   String get NEVER => _getKey('NEVER');
+  String get NEWEST => _getKey('NEWEST');
   String get NEW_DIRECTORY => _getKey('NEW_DIRECTORY');
   String get NEW_TRACKS_ADD => _getKey('NEW_TRACKS_ADD');
   String get NEW_TRACKS_MOODS_SUBTITLE => _getKey('NEW_TRACKS_MOODS_SUBTITLE');
@@ -394,6 +413,7 @@ abstract class LanguageKeys {
   String get NO_EXCLUDED_FOLDERS => _getKey('NO_EXCLUDED_FOLDERS');
   String get NO_FOLDER_CHOSEN => _getKey('NO_FOLDER_CHOSEN');
   String get NO_MOODS_AVAILABLE => _getKey('NO_MOODS_AVAILABLE');
+  String get NO_NETWORK_AVAILABLE_TO_FETCH_DATA => _getKey('NO_NETWORK_AVAILABLE_TO_FETCH_DATA');
   String get NO_TRACKS_FOUND_BETWEEN_DATES => _getKey('NO_TRACKS_FOUND_BETWEEN_DATES');
   String get NO_TRACKS_FOUND_IN_DIRECTORY => _getKey('NO_TRACKS_FOUND_IN_DIRECTORY');
   String get NO_TRACKS_FOUND => _getKey('NO_TRACKS_FOUND');
@@ -420,6 +440,8 @@ abstract class LanguageKeys {
   String get OPEN_MINIPLAYER => _getKey('OPEN_MINIPLAYER');
   String get OPEN_QUEUE => _getKey('OPEN_QUEUE');
   String get OPEN_YOUTUBE_LINK => _getKey('OPEN_YOUTUBE_LINK');
+  String get OPERATION_REQUIRES_ACCOUNT => _getKey('OPERATION_REQUIRES_ACCOUNT');
+  String get OPERATION_REQUIRES_MEMBERSHIP => _getKey('OPERATION_REQUIRES_MEMBERSHIP');
   String get OR => _getKey('OR');
   String get OTHERS => _getKey('OTHERS');
   String get OUTPUT => _getKey('OUTPUT');
@@ -554,6 +576,16 @@ abstract class LanguageKeys {
   String get SHUFFLE => _getKey('SHUFFLE');
   String get SHUFFLE_ALL => _getKey('SHUFFLE_ALL');
   String get SHUFFLE_NEXT => _getKey('SHUFFLE_NEXT');
+  String get SIGNING_IN_ALLOWS_BASIC_USAGE => _getKey('SIGNING_IN_ALLOWS_BASIC_USAGE');
+  String get SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE => _getKey('SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE');
+  String get SIGN_IN => _getKey('SIGN_IN');
+  String get SIGN_IN_CANCELED => _getKey('SIGN_IN_CANCELED');
+  String get SIGN_IN_FAILED => _getKey('SIGN_IN_FAILED');
+  String get SIGN_IN_TO_YOUR_ACCOUNT => _getKey('SIGN_IN_TO_YOUR_ACCOUNT');
+  String get SIGN_IN_YOU_DONT_HAVE_ACCOUNT => _getKey('SIGN_IN_YOU_DONT_HAVE_ACCOUNT');
+  String get SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE => _getKey('SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE');
+  String get SIGN_OUT => _getKey('SIGN_OUT');
+  String get SIGN_OUT_FROM_NAME => _getKey('SIGN_OUT_FROM_NAME');
   String get SIZE => _getKey('SIZE');
   String get SKIP_SILENCE => _getKey('SKIP_SILENCE');
   String get SKIP => _getKey('SKIP');
@@ -593,6 +625,7 @@ abstract class LanguageKeys {
   String get THEME_SETTINGS => _getKey('THEME_SETTINGS');
   String get THUMBNAILS => _getKey('THUMBNAILS');
   String get TITLE => _getKey('TITLE');
+  String get TOP => _getKey('TOP');
   String get TOP_COMMENTS => _getKey('TOP_COMMENTS');
   String get TOP_COMMENTS_SUBTITLE => _getKey('TOP_COMMENTS_SUBTITLE');
   String get TOP_RECENTS => _getKey('TOP_RECENTS');
@@ -667,6 +700,7 @@ abstract class LanguageKeys {
   String get WEEK => _getKey('WEEK');
   String get YEAR => _getKey('YEAR');
   String get YES => _getKey('YES');
+  String get YOUR_CURRENT_MEMBERSHIP_IS => _getKey('YOUR_CURRENT_MEMBERSHIP_IS');
   String get YOUTUBE_MUSIC => _getKey('YOUTUBE_MUSIC');
   String get YOUTUBE => _getKey('YOUTUBE');
   String get YOUTUBE_SETTINGS_SUBTITLE => _getKey('YOUTUBE_SETTINGS_SUBTITLE');

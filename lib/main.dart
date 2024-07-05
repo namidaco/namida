@@ -47,6 +47,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -160,7 +161,9 @@ void mainInitialization() async {
 
   const StorageCacheManager().trimExtraFiles();
 
+  NamidaDeviceInfo.fetchDeviceId();
   YoutubeInfoController.initialize();
+  YoutubeAccountController.initialize();
 
   QueueController.inst.prepareAllQueuesFile();
 

@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 2.9.7-beta+240705185
+version: 3.0.0-beta+240705208
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -13,6 +13,10 @@ dependency_overrides:
       url: https://github.com/MSOB7YY/just_audio
       path: just_audio_platform_interface/
       ref: video
+  on_audio_query_platform_interface:
+    git:
+      url: https://github.com/MSOB7YY/on_audio_query
+      path: packages/on_audio_query_platform_interface
 
 dependencies:
   flutter:
@@ -63,6 +67,7 @@ dependencies:
   lrc: ^1.0.2
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
+  flutter_udid: ^3.0.0
 
   # ---- Audio Indexing & Playback ----
   just_audio:
@@ -88,6 +93,12 @@ dependencies:
   youtipie:
     git:
       url: https://github.com/namidaco/youtipie
+  namico_login_manager:
+    git:
+      url: https://github.com/namidaco/namico_login_manager
+  namico_subscription_manager:
+    git:
+      url: https://github.com/namidaco/namico_subscription_manager
 
   # ---- Image Utilities ----
   palette_generator: ^0.3.3+2

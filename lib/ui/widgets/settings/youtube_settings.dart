@@ -13,8 +13,10 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
+import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
 enum _YoutubeSettingKeys {
+  manageYourAccounts,
   youtubeStyleMiniplayer,
   rememberAudioOnly,
   topComments,
@@ -35,6 +37,7 @@ class YoutubeSettings extends SettingSubpageProvider {
 
   @override
   Map<Enum, List<String>> get lookupMap => {
+        _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
         _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
         _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
@@ -55,6 +58,16 @@ class YoutubeSettings extends SettingSubpageProvider {
       icon: Broken.video,
       child: Column(
         children: [
+          getItemWrapper(
+            key: _YoutubeSettingKeys.manageYourAccounts,
+            child: CustomListTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.manageYourAccounts),
+              icon: Broken.user_edit,
+              title: lang.MANAGE_YOUR_ACCOUNTS,
+              trailing: const Icon(Broken.arrow_right_3),
+              onTap: () => NamidaNavigator.inst.navigateTo(const YoutubeAccountManagePage()),
+            ),
+          ),
           getItemWrapper(
             key: _YoutubeSettingKeys.youtubeStyleMiniplayer,
             child: Obx(

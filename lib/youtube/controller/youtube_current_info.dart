@@ -11,7 +11,6 @@ class _YoutubeCurrentInfoController {
   RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
   RxBaseCore<bool> get isLoadingInitialComments => _isLoadingInitialComments;
   RxBaseCore<bool> get isLoadingMoreComments => _isLoadingMoreComments;
-  RxBaseCore<YoutiPieFeedResult?> get currentFeed => _currentFeed;
 
   /// Used to keep track of current comments sources, mainly to
   /// prevent fetching next comments when cached version is loaded.
@@ -28,8 +27,6 @@ class _YoutubeCurrentInfoController {
   final _isLoadingInitialComments = false.obs;
   final _isLoadingMoreComments = false.obs;
   final _isCurrentCommentsFromCache = Rxn<bool>();
-
-  final _currentFeed = Rxn<YoutiPieFeedResult>();
 
   String? _initialCommentsContinuation;
 
@@ -49,11 +46,6 @@ class _YoutubeCurrentInfoController {
     _isLoadingVideoPage.value = false;
     _isLoadingMoreComments.value = false;
     _isCurrentCommentsFromCache.value = null;
-  }
-
-  Future<void> prepareFeed() async {
-    final val = await YoutiPie.feed.fetchFeed();
-    if (val != null) _currentFeed.value = val;
   }
 
   bool updateVideoPageSync(String videoId) {
@@ -77,7 +69,7 @@ class _YoutubeCurrentInfoController {
     if (!ConnectivityController.inst.hasConnection) {
       snackyy(
         title: lang.ERROR,
-        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_VIDEO_PAGE,
+        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
         isError: true,
         top: false,
       );

@@ -5,7 +5,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/pages/youtube_page.dart';
+import 'package:namida/youtube/pages/youtube_feed_page.dart';
 import 'package:namida/youtube/pages/yt_channels_page.dart';
 import 'package:namida/youtube/pages/yt_downloads_page.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
@@ -27,7 +27,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
           settings.save(ytInitialHomePage: YTHomePages.values[index]);
         },
         children: const [
-          YoutubePage(),
+          YoutubeHomeFeedPage(),
           YoutubeChannelsPage(),
           YoutubePlaylistsView(),
           YTDownloadsPage(),

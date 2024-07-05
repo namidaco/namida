@@ -21,7 +21,6 @@ import 'package:youtipie/class/channels/tabs/channel_tab_videos_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/related_videos_request_params.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
-import 'package:youtipie/class/result_wrapper/feed_result.dart';
 import 'package:youtipie/class/result_wrapper/related_videos_result.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';

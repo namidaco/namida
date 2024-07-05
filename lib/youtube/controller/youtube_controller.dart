@@ -5,7 +5,6 @@ import 'dart:isolate';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/ports_provider.dart';
@@ -31,9 +30,6 @@ class YoutubeController {
   static final YoutubeController _instance = YoutubeController._internal();
   YoutubeController._internal();
 
-  final homepageFeed = <YoutubeFeed>[].obs;
-
-  // final commentToParsedHtml = <String, String?>{};
 
   /// {id: <filename, DownloadProgress>{}}
   final downloadsVideoProgressMap = <String, RxMap<String, DownloadProgress>>{}.obs;
