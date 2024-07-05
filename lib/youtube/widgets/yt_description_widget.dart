@@ -130,10 +130,10 @@ class YoutubeDescriptionWidgetManager {
       fontSize: onTap != null ? 13.5 : 14.0,
       fontStyle: sw.italic ? FontStyle.italic : FontStyle.normal,
       fontWeight: sw.bold
-          ? FontWeight.w700
+          ? FontWeight.w800
           : sw.medium
-              ? FontWeight.w600
-              : FontWeight.w400,
+              ? FontWeight.w700
+              : FontWeight.w500,
       decoration: sw.strikethrough ? TextDecoration.lineThrough : null,
     );
 

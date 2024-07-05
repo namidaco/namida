@@ -13,11 +13,9 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/keys.dart';
 import 'package:namida/main.dart';
 
-part 'static_strings.dart';
-
 Language get lang => Language.inst;
 
-class Language extends LanguageKeys with _StaticStrings {
+class Language extends LanguageKeys {
   static Language get inst => _instance;
   static final Language _instance = Language._internal();
   Language._internal();

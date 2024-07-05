@@ -100,7 +100,6 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.scroll,
             trailingText: settings.videoPlaybackSource.valueR.toText(),
             onTap: () {
-              bool isEnabled(VideoPlaybackSource val) => settings.videoPlaybackSource.value == val;
               void tileOnTap(VideoPlaybackSource val) => settings.save(videoPlaybackSource: val);
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
@@ -112,8 +111,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                     ),
                     const DoneButton(),
                   ],
-                  child: Obx(
-                    () => ListView(
+                  child: ObxO(
+                    rx: settings.videoPlaybackSource,
+                    builder: (videoPlaybackSource) => ListView(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       children: [
@@ -121,7 +121,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           (e) => Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
                             child: ListTileWithCheckMark(
-                              active: isEnabled(e),
+                              active: videoPlaybackSource == e,
                               title: e.toText(),
                               subtitle: e.toSubtitle() ?? '',
                               onTap: () => tileOnTap(e),
@@ -147,10 +147,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.story,
             trailingText: settings.youtubeVideoQualities.valueR.first,
             onTap: () {
-              bool isEnabled(String val) => settings.youtubeVideoQualities.contains(val);
-
               void tileOnTap(String val, int index) {
-                if (isEnabled(val)) {
+                if (settings.youtubeVideoQualities.value.contains(val)) {
                   if (settings.youtubeVideoQualities.length == 1) {
                     showMinimumItemsSnack(1);
                   } else {
@@ -177,19 +175,20 @@ class PlaybackSettings extends SettingSubpageProvider {
                   ],
                   child: DefaultTextStyle(
                     style: context.textTheme.displaySmall!,
-                    child: Obx(
-                      () => Column(
-                        children: [
-                          Text(lang.VIDEO_QUALITY_SUBTITLE),
-                          const SizedBox(
-                            height: 12.0,
-                          ),
-                          Text("${lang.NOTE}: ${lang.VIDEO_QUALITY_SUBTITLE_NOTE}"),
-                          const SizedBox(height: 18.0),
-                          SizedBox(
-                            width: namida.width,
-                            height: namida.height * 0.4,
-                            child: ListView(
+                    child: Column(
+                      children: [
+                        Text(lang.VIDEO_QUALITY_SUBTITLE),
+                        const SizedBox(
+                          height: 12.0,
+                        ),
+                        Text("${lang.NOTE}: ${lang.VIDEO_QUALITY_SUBTITLE_NOTE}"),
+                        const SizedBox(height: 18.0),
+                        SizedBox(
+                          width: namida.width,
+                          height: namida.height * 0.4,
+                          child: ObxO(
+                            rx: settings.youtubeVideoQualities,
+                            builder: (youtubeVideoQualities) => ListView(
                               padding: EdgeInsets.zero,
                               children: [
                                 ...kStockVideoQualities.asMap().entries.map(
@@ -197,7 +196,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                                         padding: const EdgeInsets.symmetric(vertical: 4.0),
                                         child: ListTileWithCheckMark(
                                           icon: Broken.story,
-                                          active: isEnabled(e.value),
+                                          active: youtubeVideoQualities.contains(e.value),
                                           title: e.value,
                                           onTap: () => tileOnTap(e.value, e.key),
                                         ),
@@ -206,8 +205,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

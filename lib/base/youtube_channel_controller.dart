@@ -69,22 +69,26 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   Future<void> fetchChannelStreams(YoutiPieChannelPageResult channelPage, {bool forceRequest = false}) async {
     final tab = channelPage.tabs.getVideosTab();
-    if (tab == null) return;
+    YoutiPieChannelTabVideosResult? newResult;
     final channelID = channelPage.id;
-    final details = forceRequest ? ExecuteDetails.forceRequest() : null;
-    final result = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, details: details);
-    if (result == null) return;
 
-    // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
-    // -- but data like viewsCount will not be updated sadly.
+    if (tab != null) {
+      final details = forceRequest ? ExecuteDetails.forceRequest() : null;
+      newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, details: details);
+      if (newResult != null) {
+        // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
+        // -- but data like viewsCount will not be updated sadly.
 
-    final st = result.items;
-    updatePeakDates(st);
-    YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
+        final st = newResult.items;
+        updatePeakDates(st);
+        YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
+      }
+    }
+
     refreshState(() {
-      this.channelVideoTab = result;
+      this.channelVideoTab = newResult;
       isLoadingInitialStreams = false;
-      if (channelID == channel?.channelID) {
+      if (newResult != null && channelID == channel?.channelID) {
         trySortStreams();
       }
     });

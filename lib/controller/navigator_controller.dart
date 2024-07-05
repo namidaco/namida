@@ -257,12 +257,14 @@ class NamidaNavigator {
     Widget page, {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
+    bool opaque = true,
   }) async {
     return await _rootNav.currentState?.pushPage(
       page,
       durationInMs: durationInMs,
       transition: transition,
       maintainState: true,
+      opaque: opaque,
     );
   }
 
@@ -348,7 +350,7 @@ class NamidaNavigator {
   }
 
   Future<void> closeAllDialogs() async {
-    if (_currentMenusNumber == 0) return;
+    if (_currentDialogNumber == 0) return;
     closeDialog(_currentDialogNumber);
     _printDialogs();
   }
@@ -405,20 +407,16 @@ class NamidaNavigator {
       return;
     }
 
-    if (isQueueSheetOpen) {
-      ytQueueSheetKey.currentState?.dismissSheet();
-      isQueueSheetOpen = false;
-      return;
-    }
-
-    if (isInYTCommentsSubpage) {
-      ytMiniplayerCommentsPageKey.currentState?.pop();
-      isInYTCommentsSubpage = false;
-      return;
-    }
-
     if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
-      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+      if (isQueueSheetOpen) {
+        ytQueueSheetKey.currentState?.dismissSheet();
+        isQueueSheetOpen = false;
+      } else if (isInYTCommentsSubpage) {
+        ytMiniplayerCommentsPageKey.currentState?.pop();
+        isInYTCommentsSubpage = false;
+      } else {
+        MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+      }
       return;
     }
 
@@ -450,10 +448,6 @@ class NamidaNavigator {
       } else if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
         YoutubePlaylistController.inst.resetCanReorder();
       }
-    }
-
-    if (_currentMenusNumber > 0) {
-      return;
     }
 
     // pop only if not in root, otherwise show _doubleTapToExit().

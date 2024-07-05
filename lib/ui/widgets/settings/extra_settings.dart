@@ -311,7 +311,6 @@ class ExtrasSettings extends SettingSubpageProvider {
                 ),
                 trailingText: settings.lyricsSource.valueR.toText(),
                 onTap: () {
-                  bool isEnabled(LyricsSource val) => settings.lyricsSource.value == val;
                   void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
@@ -323,8 +322,9 @@ class ExtrasSettings extends SettingSubpageProvider {
                         ),
                         const DoneButton(),
                       ],
-                      child: Obx(
-                        () => ListView(
+                      child: ObxO(
+                        rx: settings.lyricsSource,
+                        builder: (lyricsSource) => ListView(
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           children: [
@@ -332,7 +332,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                               (e) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12.0),
                                 child: ListTileWithCheckMark(
-                                  active: isEnabled(e),
+                                  active: lyricsSource == e,
                                   title: e.toText(),
                                   onTap: () => tileOnTap(e),
                                 ),

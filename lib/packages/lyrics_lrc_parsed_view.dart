@@ -92,8 +92,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   final _currentItemDurationSeconds = RxnO<int>();
 
+  void clearLists() {
+    timestampsMap.clear();
+    lyrics.clear();
+  }
+
   void fillLists(Lrc? lrc) {
-    if (currentLRC == null && lrc == null) return;
     currentLRC = lrc;
 
     if (lrc == null) {

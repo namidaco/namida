@@ -98,7 +98,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
     if (_isRefreshing) return;
     if (animation.value != 1) {
       if (!forceShow) return;
-      animation.animateTo(1, duration: const Duration(milliseconds: 100));
+      animation.animateTo(1, duration: const Duration(milliseconds: 50));
     }
 
     _isRefreshing = true;

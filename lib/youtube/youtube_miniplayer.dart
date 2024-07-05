@@ -196,7 +196,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
           behavior: HitTestBehavior.translucent,
           onPointerDown: (event) {
             if (NamidaNavigator.inst.isInYTCommentsSubpage) return;
-            _mpState?.updatePercentageMultiplier(true);
             _mpState?.setDragExternally(true);
             _mpState?.saveDragHeightStart();
             _velocity.addPosition(event.timeStamp, event.position);
@@ -208,12 +207,17 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
               _velocity.addPosition(event.timeStamp, event.position);
             }
           },
+          onPointerCancel: (event) {
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              _mpState?.setDragExternally(false);
+            });
+          },
           onPointerUp: (event) {
-            if (NamidaNavigator.inst.isInYTCommentsSubpage) return;
-            if (_scrollController.hasClients && _scrollController.position.pixels <= 0) {
-              _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
+            if (!NamidaNavigator.inst.isInYTCommentsSubpage) {
+              if (_scrollController.hasClients && _scrollController.position.pixels <= 0) {
+                _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
+              }
             }
-            _mpState?.updatePercentageMultiplier(false);
             // thats because the internal GestureDetector executes drag end after Listener's onPointerUp
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               _mpState?.setDragExternally(false);
@@ -734,7 +738,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     child: ObxO(
                                                       rx: YoutubeInfoController.current.currentComments,
                                                       builder: (comments) => ShimmerWrapper(
-                                                        shimmerEnabled: comments == null || comments.isEmpty,
+                                                        shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
                                                         child: NamidaInkWell(
                                                           key: Key("${currentId}_top_comments_highlight"),
                                                           bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacity(0.4), mainTheme.cardColor),

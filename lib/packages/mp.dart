@@ -92,17 +92,15 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   bool _isDraggingDownwards = false;
   double get _percentageMultiplier => _alternativePercentage && _isDraggingDownwards ? 0.25 : 1.0;
 
-  void updatePercentageMultiplier(bool alt) {
-    _alternativePercentage = alt;
+  bool _isDragManagedInternally = true;
+
+  void setDragExternally(bool external) {
+    _alternativePercentage = external;
+    _isDragManagedInternally = !external;
   }
 
   void saveDragHeightStart() {
     _startedDragAtHeight = _dragheight;
-  }
-
-  bool _isDragManagedInternally = true;
-  void setDragExternally(bool external) {
-    _isDragManagedInternally = !external;
   }
 
   double? _startedDragAtHeight;

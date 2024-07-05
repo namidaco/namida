@@ -33,7 +33,7 @@ class YoutubeChannelsPage extends StatefulWidget {
   State<YoutubeChannelsPage> createState() => _YoutubeChannelsPageState();
 }
 
-class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> with SingleTickerProviderStateMixin, PullToRefreshMixin {
+class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> with TickerProviderStateMixin, PullToRefreshMixin {
   @override
   double get maxDistance => 64.0;
 
@@ -56,7 +56,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
     if (subCh != null) {
       final sub = YoutubeSubscriptionsController.inst.availableChannels.value[subCh];
-      _updateChannel(sub, forceRequest: true);
+      onRefresh(() => _updateChannel(sub, forceRequest: true), forceShow: true);
     }
 
     final now = DateTime.now();
@@ -75,7 +75,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   Future<void> _updateChannel(YoutubeSubscription? sub, {required bool forceRequest}) async {
     if (uploadsScrollController.hasClients) uploadsScrollController.jumpTo(0);
     setState(() {
-      isLoadingInitialStreams = true;
+      isLoadingInitialStreams = true; // should show empty list instead
       channel = sub;
       streamsPeakDates = null;
       _allStreamsList = null;
@@ -88,11 +88,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       );
 
       if (channelInfo != null && channel == sub) {
-        if (forceRequest) {
-          return onRefresh(() => fetchChannelStreams(channelInfo, forceRequest: true), forceShow: true);
-        } else {
-          return fetchChannelStreams(channelInfo, forceRequest: false); // we dont show refresh if it wasnt forced.
-        }
+        return fetchChannelStreams(channelInfo, forceRequest: forceRequest);
       }
     } else {
       return _fetchAllChannelsStreams(forceRequest: forceRequest);
@@ -370,30 +366,31 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                 )
               : NamidaScrollbar(
                   controller: uploadsScrollController,
-                  child: isLoadingInitialStreams
-                      ? ShimmerWrapper(
-                          shimmerEnabled: true,
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: 15,
-                            itemBuilder: (context, index) {
-                              return const YoutubeVideoCardDummy(
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      Listener(
+                        onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
+                        onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true), forceShow: true),
+                        onPointerCancel: (_) => onVerticalDragFinish(),
+                        child: isLoadingInitialStreams
+                            ? ShimmerWrapper(
                                 shimmerEnabled: true,
-                                thumbnailHeight: thumbnailHeight,
-                                thumbnailWidth: thumbnailWidth,
-                                thumbnailWidthPercentage: 0.8,
-                              );
-                            },
-                          ),
-                        )
-                      : Stack(
-                          alignment: Alignment.topCenter,
-                          children: [
-                            Listener(
-                              onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
-                              onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true)),
-                              onPointerCancel: (_) => onVerticalDragFinish(),
-                              child: LazyLoadListView(
+                                child: ListView.builder(
+                                  controller: uploadsScrollController,
+                                  padding: EdgeInsets.zero,
+                                  itemCount: 15,
+                                  itemBuilder: (context, index) {
+                                    return const YoutubeVideoCardDummy(
+                                      shimmerEnabled: true,
+                                      thumbnailHeight: thumbnailHeight,
+                                      thumbnailWidth: thumbnailWidth,
+                                      thumbnailWidthPercentage: 0.8,
+                                    );
+                                  },
+                                ),
+                              )
+                            : LazyLoadListView(
                                 scrollController: uploadsScrollController,
                                 onReachingEnd: fetchStreamsNextPage,
                                 listview: (controller) {
@@ -419,10 +416,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   );
                                 },
                               ),
-                            ),
-                            pullToRefreshWidget,
-                          ],
-                        ),
+                      ),
+                      pullToRefreshWidget,
+                    ],
+                  ),
                 ),
         ),
         Obx(
@@ -467,7 +464,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         margin: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                         padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
                         onTap: () {
-                          _updateChannel(null, forceRequest: true);
+                          _updateChannel(null, forceRequest: true); // loading is indicated in the ui rather than a refresh indicator
                         },
                         child: Column(
                           children: [

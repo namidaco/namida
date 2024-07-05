@@ -56,7 +56,9 @@ class Lyrics {
     _currentItem = null;
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
-    _updateWidgets(null);
+    WakelockController.inst.updateLRCStatus(false);
+    lrcViewKey?.currentState?.clearLists();
+    lrcViewKeyFullscreen.currentState?.clearLists();
   }
 
   Future<void> updateLyrics(Playable item) async {
@@ -85,6 +87,7 @@ class Lyrics {
         _updateWidgets(lrc);
       } else {
         currentLyricsText.value = embedded;
+        _updateWidgets(null);
       }
       return;
     }

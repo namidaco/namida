@@ -192,7 +192,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
         color = Colors.orange;
     }
     snackyy(
-      message: message,
+      message: "${lang.FETCHING_OF_ALL_VIDEOS}: $message",
       borderColor: color.withOpacity(0.5),
     );
   }

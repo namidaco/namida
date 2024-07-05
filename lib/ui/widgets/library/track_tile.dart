@@ -331,7 +331,7 @@ class TrackTile extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   if (settings.displayFavouriteIconInListTile.valueR)
-                                    NamidaLikeButton(
+                                    NamidaLocalLikeButton(
                                       track: track,
                                       size: 22.0,
                                       color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),

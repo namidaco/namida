@@ -341,7 +341,7 @@ class YTCommentCardCompact extends StatelessWidget {
             children: [
               const SizedBox(height: 2.0),
               NamidaDummyContainer(
-                width: context.width * 0.5,
+                width: context.width * 0.35,
                 height: 8.0,
                 borderRadius: 4.0,
                 shimmerEnabled: author == null,

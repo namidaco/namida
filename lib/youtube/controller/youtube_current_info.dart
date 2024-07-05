@@ -130,6 +130,7 @@ class _YoutubeCurrentInfoController {
     if (commentRes == null) return false;
     if (initial == false && commentRes.canFetchNext == false) return false;
 
+    bool fetchedSuccessfully = false;
     if (initial == false && commentRes.canFetchNext && newSortType == null) {
       _isLoadingMoreComments.value = true;
       final didFetch = await commentRes.fetchNext();
@@ -148,11 +149,10 @@ class _YoutubeCurrentInfoController {
         if (newRes != null && _canSafelyModifyMetadata(videoId)) {
           _currentComments.value = newRes;
           _isCurrentCommentsFromCache.value = false;
-          return true;
         }
       }
       _isLoadingInitialComments.value = false;
     }
-    return false;
+    return fetchedSuccessfully;
   }
 }
