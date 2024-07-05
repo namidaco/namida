@@ -38,6 +38,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -104,7 +106,9 @@ Future<void> showGeneralPopupDialog(
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
   final List<Folder> availableFolders = tracks.mappedUniqued((e) => e.folder);
 
-  final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id != '');
+  final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id.isNotEmpty);
+  final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
+  final String? firstVideoChannelId = firstVideolId == null ? null : YoutubeInfoController.utils.getVideoChannelID(firstVideolId);
 
   final numberOfRepeats = 1.obso;
   final isLoadingFilesToShare = false.obso;
@@ -1114,6 +1118,18 @@ Future<void> showGeneralPopupDialog(
                                   NamidaNavigator.inst.closeDialog();
                                   Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others);
                                 },
+                                trailing: isSingle && firstVideoChannelId != null
+                                    ? IconButton(
+                                        tooltip: lang.GO_TO_CHANNEL,
+                                        icon: Icon(
+                                          Broken.user,
+                                          size: 20.0,
+                                          color: iconColor,
+                                        ),
+                                        iconSize: 20.0,
+                                        onPressed: () => NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: firstVideoChannelId)),
+                                      )
+                                    : null,
                               ),
 
                             if (removeQueueTile != null) removeQueueTile,

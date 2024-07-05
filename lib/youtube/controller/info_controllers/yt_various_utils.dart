@@ -48,26 +48,26 @@ class _YoutubeInfoUtils {
   }
 
   String? getVideoName(String videoId, {bool checkFromStorage = true /* am sorry every follow me */}) {
-    String? name = tempVideoInfosFromStreams[videoId]?.title ?? tempBackupVideoInfo[videoId]?.title;
+    String? name = tempVideoInfosFromStreams[videoId]?.title.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.title.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return getStreamInfoSync(videoId)?.title ??
-        _getVideoStreamResultSync(videoId)?.info?.title ?? //
-        _getVideoPageResultSync(videoId)?.videoInfo?.title;
+    return getStreamInfoSync(videoId)?.title.nullifyEmpty() ??
+        _getVideoStreamResultSync(videoId)?.info?.title.nullifyEmpty() ?? //
+        _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyEmpty();
   }
 
   String? getVideoChannelName(String videoId, {bool checkFromStorage = true}) {
-    String? name = tempVideoInfosFromStreams[videoId]?.channelName ?? tempBackupVideoInfo[videoId]?.channel;
+    String? name = tempVideoInfosFromStreams[videoId]?.channelName?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channel.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return getStreamInfoSync(videoId)?.channelName ??
-        _getVideoStreamResultSync(videoId)?.info?.channelName ?? //
-        _getVideoPageResultSync(videoId)?.channelInfo?.title;
+    return getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
+        _getVideoStreamResultSync(videoId)?.info?.channelName?.nullifyEmpty() ?? //
+        _getVideoPageResultSync(videoId)?.channelInfo?.title.nullifyEmpty();
   }
 
   String? getVideoChannelID(String videoId) {
-    return tempVideoInfosFromStreams[videoId]?.channelId ??
-        getStreamInfoSync(videoId)?.channelId ??
-        _getVideoStreamResultSync(videoId)?.info?.channelId ?? //
-        _getVideoPageResultSync(videoId)?.channelInfo?.id;
+    return tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
+        getStreamInfoSync(videoId)?.channelId?.nullifyEmpty() ??
+        _getVideoStreamResultSync(videoId)?.info?.channelId?.nullifyEmpty() ?? //
+        _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty();
   }
 
   DateTime? getVideoReleaseDate(String videoId) {
@@ -82,5 +82,12 @@ class _YoutubeInfoUtils {
     return tempVideoInfosFromStreams[videoId]?.durSeconds ??
         getStreamInfoSync(videoId)?.durSeconds ?? //
         _getVideoStreamResultSync(videoId)?.info?.durSeconds;
+  }
+}
+
+extension _StringChecker on String {
+  String? nullifyEmpty() {
+    if (isEmpty) return null;
+    return this;
   }
 }
