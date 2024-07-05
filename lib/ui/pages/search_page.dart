@@ -2,12 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/clipboard_controller.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -19,6 +18,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -72,12 +72,7 @@ class SearchPage extends StatelessWidget {
           icon: icon,
           buttonIcon: Broken.category,
           buttonText: lang.VIEW_ALL,
-          onPressed: () => NamidaNavigator.inst.navigateTo(
-            ArtistSearchResultsPage(
-              artists: rxList(),
-              type: type,
-            ),
-          ),
+          onPressed: ArtistSearchResultsPage(artists: rxList(), type: type).navigate,
         ),
       ),
       _horizontalSliverList(
@@ -249,7 +244,7 @@ class SearchPage extends StatelessWidget {
                                             icon: Broken.music_dashboard,
                                             buttonIcon: Broken.category,
                                             buttonText: lang.VIEW_ALL,
-                                            onPressed: () => NamidaNavigator.inst.navigateTo(const AlbumSearchResultsPage()),
+                                            onPressed: const AlbumSearchResultsPage().navigate,
                                           ),
                                         ),
                                         _horizontalSliverList(

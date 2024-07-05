@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:youtipie/class/youtipie_description/youtipie_description.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -117,9 +117,9 @@ class YoutubeDescriptionWidgetManager {
         }
       };
     } else if (sw.channelId != null) {
-      onTap = () => NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: sw.channelId!, channel: null));
+      onTap = YTChannelSubpage(channelID: sw.channelId!, channel: null).navigate;
     } else if (sw.playlistId != null) {
-      onTap = () => NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage.fromId(playlistId: sw.playlistId!));
+      onTap = YTHostedPlaylistSubpage.fromId(playlistId: sw.playlistId!).navigate;
     } else if (sw.link != null) {
       onTap = () => NamidaLinkUtils.openLink(sw.link!);
     }

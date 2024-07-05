@@ -10,6 +10,7 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/managers/acount_manager.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -216,7 +217,7 @@ class YoutubeAccountController {
       button: manageSubscriptionButton
           ? (
               lang.MANAGE,
-              () => NamidaNavigator.inst.navigateTo(const YoutubeManageSubscriptionPage()),
+              const YoutubeManageSubscriptionPage().navigate,
             )
           : null,
     );

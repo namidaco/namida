@@ -316,7 +316,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                             YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
                           }
                         } else {
-                          NamidaNavigator.inst.navigateTo(YTNormalPlaylistSubpage(playlistName: playlist.name));
+                          YTNormalPlaylistSubpage(playlistName: playlist.name).navigate();
                         }
                       },
                       smallBoxText: playlist.tracks.length.formatDecimal(),
@@ -365,7 +365,7 @@ class _HorizontalSliverList extends StatelessWidget {
     this.listensMap,
   });
 
-  void onTap() => NamidaNavigator.inst.navigateTo(viewAllPage());
+  void onTap() => viewAllPage().navigate();
 
   @override
   Widget build(BuildContext context) {

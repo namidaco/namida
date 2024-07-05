@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -64,13 +64,11 @@ class YTVideosActionBar extends StatelessWidget {
   Future<void> _onDownloadTap() async {
     final videos = videosCallback();
     if (videos == null) return;
-    await NamidaNavigator.inst.navigateTo(
-      YTPlaylistDownloadPage(
-        ids: videos,
-        playlistName: title,
-        infoLookup: infoLookupCallback?.call() ?? {},
-      ),
-    );
+    YTPlaylistDownloadPage(
+      ids: videos,
+      playlistName: title,
+      infoLookup: infoLookupCallback?.call() ?? {},
+    ).navigate();
   }
 
   Future<void> _onShuffle() async {

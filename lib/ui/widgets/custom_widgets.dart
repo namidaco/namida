@@ -14,6 +14,7 @@ import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -1190,7 +1191,7 @@ class CollapsedSettingTileWidget extends StatelessWidget {
         onChanged: (isTrue) async {
           settings.save(useSettingCollapsedTiles: !isTrue);
           await NamidaNavigator.inst.popPage();
-          NamidaNavigator.inst.navigateTo(const SettingsPage());
+          const SettingsPage().navigate();
         },
       ),
     );
@@ -1998,7 +1999,7 @@ class NamidaLogoContainer extends StatelessWidget {
         onTap: () {
           NamidaNavigator.inst.toggleDrawer();
           if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
-            NamidaNavigator.inst.navigateTo(const AboutPage());
+            const AboutPage().navigate();
           }
         },
         child: AnimatedContainer(

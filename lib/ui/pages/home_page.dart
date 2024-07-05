@@ -332,9 +332,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   void _navigateToRecentlyListened() {
     if (_recentlyAddedFull.isNotEmpty) {
-      NamidaNavigator.inst.navigateTo(
-        RecentlyAddedTracksPage(tracksSorted: _recentlyAddedFull),
-      );
+      RecentlyAddedTracksPage(tracksSorted: _recentlyAddedFull).navigate();
     }
   }
 

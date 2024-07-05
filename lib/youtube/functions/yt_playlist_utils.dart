@@ -8,6 +8,7 @@ import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -222,13 +223,12 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     final playlist = this;
     final infoLookup = <String, StreamInfoItem>{};
     playlistToFetch.items.loop((e) => infoLookup[e.id] = e);
-    NamidaNavigator.inst.navigateTo(
-      YTPlaylistDownloadPage(
-        ids: videoIDs.toList(),
-        playlistName: playlist.title,
-        infoLookup: infoLookup,
-      ),
-    );
+
+    YTPlaylistDownloadPage(
+      ids: videoIDs.toList(),
+      playlistName: playlist.title,
+      infoLookup: infoLookup,
+    ).navigate();
   }
 
   List<NamidaPopupItem> getPopupMenuItems({
@@ -292,9 +292,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         NamidaPopupItem(
           icon: Broken.export_2,
           title: lang.OPEN,
-          onTap: () {
-            NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToFetch));
-          },
+          onTap: YTHostedPlaylistSubpage(playlist: playlistToFetch).navigate,
         ),
       if (displayPlay)
         NamidaPopupItem(

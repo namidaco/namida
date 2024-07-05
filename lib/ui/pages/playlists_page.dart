@@ -5,7 +5,6 @@ import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -233,7 +232,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   title: lang.QUEUES,
                                                   displayLoadingIndicator: QueueController.inst.isLoadingQueues,
                                                   text: QueueController.inst.queuesMap.valueR.length.formatDecimal(),
-                                                  onTap: () => NamidaNavigator.inst.navigateTo(const QueuesPage()),
+                                                  onTap: const QueuesPage().navigate,
                                                 ),
                                               ),
                                             ),

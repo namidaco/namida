@@ -8,6 +8,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/queue_insertion.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -51,46 +52,38 @@ class NamidaOnTaps {
 
     final albumIds = tracks.toUniqueAlbums();
 
-    NamidaNavigator.inst.navigateTo(
-      ArtistTracksPage(
-        name: name,
-        tracks: tracks,
-        albumIdentifiers: albumIds,
-        type: type,
-      ),
-    );
+    ArtistTracksPage(
+      name: name,
+      tracks: tracks,
+      albumIdentifiers: albumIds,
+      type: type,
+    ).navigate();
   }
 
   Future<void> onAlbumTap(String albumIdentifier) async {
     final tracks = albumIdentifier.getAlbumTracks();
 
-    NamidaNavigator.inst.navigateTo(
-      AlbumTracksPage(
-        albumIdentifier: albumIdentifier,
-        tracks: tracks,
-      ),
-    );
+    AlbumTracksPage(
+      albumIdentifier: albumIdentifier,
+      tracks: tracks,
+    ).navigate();
   }
 
   Future<void> onGenreTap(String name) async {
-    NamidaNavigator.inst.navigateTo(
-      GenreTracksPage(
-        name: name,
-        tracks: name.getGenresTracks(),
-      ),
-    );
+    GenreTracksPage(
+      name: name,
+      tracks: name.getGenresTracks(),
+    ).navigate();
   }
 
   Future<void> onNormalPlaylistTap(
     String playlistName, {
     bool disableAnimation = false,
   }) async {
-    NamidaNavigator.inst.navigateTo(
-      NormalPlaylistTracksPage(
-        playlistName: playlistName,
-        disableAnimation: disableAnimation,
-      ),
-    );
+    NormalPlaylistTracksPage(
+      playlistName: playlistName,
+      disableAnimation: disableAnimation,
+    ).navigate();
   }
 
   Future<void> onHistoryPlaylistTap({
@@ -116,14 +109,12 @@ class NamidaOnTaps {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         jump();
       });
-      await NamidaNavigator.inst.navigateTo(
-        const HistoryTracksPage(),
-      );
+      await const HistoryTracksPage().navigate();
     }
   }
 
   Future<void> onMostPlayedPlaylistTap() async {
-    NamidaNavigator.inst.navigateTo(const MostPlayedTracksPage());
+    const MostPlayedTracksPage().navigate();
   }
 
   Future<void> onFolderTap(Folder folder, {Track? trackToScrollTo}) async {
@@ -132,9 +123,7 @@ class NamidaOnTaps {
   }
 
   Future<void> onQueueTap(Queue queue) async {
-    NamidaNavigator.inst.navigateTo(
-      QueueTracksPage(queue: queue),
-    );
+    QueueTracksPage(queue: queue).navigate();
   }
 
   Future<void> onQueueDelete(Queue queue) async {

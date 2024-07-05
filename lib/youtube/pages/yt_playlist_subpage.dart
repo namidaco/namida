@@ -258,13 +258,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.import,
                                     onPressed: () async {
-                                      NamidaNavigator.inst.navigateTo(
-                                        YTPlaylistDownloadPage(
-                                          ids: playlist.tracks,
-                                          playlistName: playlistCurrentName,
-                                          infoLookup: const {},
-                                        ),
-                                      );
+                                      YTPlaylistDownloadPage(
+                                        ids: playlist.tracks,
+                                        playlistName: playlistCurrentName,
+                                        infoLookup: const {},
+                                      ).navigate();
                                     },
                                   ),
                                   NamidaPopupWrapper(
@@ -600,13 +598,11 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                   icon: Broken.import,
                                   onPressed: () async {
                                     final videos = await _getAllPlaylistVideos();
-                                    NamidaNavigator.inst.navigateTo(
-                                      YTPlaylistDownloadPage(
-                                        ids: videos,
-                                        playlistName: playlist.basicInfo.title,
-                                        infoLookup: const {},
-                                      ),
-                                    );
+                                    YTPlaylistDownloadPage(
+                                      ids: videos,
+                                      playlistName: playlist.basicInfo.title,
+                                      infoLookup: const {},
+                                    ).navigate();
                                   },
                                 ),
                                 NamidaPopupWrapper(

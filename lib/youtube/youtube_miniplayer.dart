@@ -9,6 +9,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -634,7 +635,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                         onTap: () {
                                                           final ch = channel ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
                                                           final chid = ch?.id;
-                                                          if (chid != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid, channel: ch));
+                                                          if (chid != null) YTChannelSubpage(channelID: chid, channel: ch).navigate();
                                                         },
                                                         child: Row(
                                                           children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -65,7 +66,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               icon: Broken.user_edit,
               title: lang.MANAGE_YOUR_ACCOUNTS,
               trailing: const Icon(Broken.arrow_right_3),
-              onTap: () => NamidaNavigator.inst.navigateTo(const YoutubeAccountManagePage()),
+              onTap: const YoutubeAccountManagePage().navigate,
             ),
           ),
           getItemWrapper(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -44,7 +44,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
       borderRadius: 24.0,
       onTap: () {
         final chid = channel?.id;
-        if (chid != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: chid, channel: channel));
+        if (chid != null) YTChannelSubpage(channelID: chid, channel: channel).navigate();
       },
       height: thumbnailSize + verticalPadding,
       child: Row(

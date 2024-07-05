@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:youtipie/class/comments/comment_info_item.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -12,7 +13,6 @@ import 'package:namida/youtube/widgets/namida_read_more.dart';
 import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
-import 'package:youtipie/class/comments/comment_info_item.dart';
 
 class YTCommentCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
@@ -286,7 +286,7 @@ class YTCommentCard extends StatelessWidget {
                 onTap: () {
                   final channelId = comment?.author?.channelId;
                   if (channelId != null) {
-                    NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelId));
+                    YTChannelSubpage(channelID: channelId).navigate();
                   }
                 },
               ),

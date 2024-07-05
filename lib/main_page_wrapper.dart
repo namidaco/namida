@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:namida/class/route.dart';
 
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -139,7 +140,7 @@ class NamidaDrawer extends StatelessWidget {
                   title: lang.QUEUES,
                   icon: Broken.driver,
                   onTap: () {
-                    NamidaNavigator.inst.navigateTo(const QueuesPage());
+                    const QueuesPage().navigate();
                     toggleDrawer();
                   },
                 ),
@@ -266,12 +267,10 @@ class NamidaDrawer extends StatelessWidget {
                   title: '',
                   icon: Broken.brush_1,
                   onTap: () {
-                    NamidaNavigator.inst.navigateTo(
-                      SettingsSubPage(
-                        title: lang.CUSTOMIZATIONS,
-                        child: const CustomizationSettings(),
-                      ),
-                    );
+                    SettingsSubPage(
+                      title: lang.CUSTOMIZATIONS,
+                      child: const CustomizationSettings(),
+                    ).navigate();
 
                     toggleDrawer();
                   },
@@ -288,7 +287,7 @@ class NamidaDrawer extends StatelessWidget {
                   title: '',
                   icon: Broken.setting,
                   onTap: () {
-                    NamidaNavigator.inst.navigateTo(const SettingsPage());
+                    const SettingsPage().navigate();
                     toggleDrawer();
                   },
                 ),

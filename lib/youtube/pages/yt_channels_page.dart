@@ -7,6 +7,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -295,9 +296,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           borderRadius: 24.0,
                           bgColor: context.theme.cardColor,
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          onTap: () {
-                            NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: ch.channelID, sub: ch));
-                          },
+                          onTap: YTChannelSubpage(channelID: ch.channelID, sub: ch).navigate,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

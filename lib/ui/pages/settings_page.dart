@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -222,7 +221,7 @@ class CustomCollapsedListTile extends StatelessWidget {
                     child: page!(),
                   )
                 : null;
-        if (r != null) NamidaNavigator.inst.navigateTo(r);
+        r?.navigate();
       },
     );
   }

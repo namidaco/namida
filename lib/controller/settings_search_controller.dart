@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
@@ -191,12 +192,10 @@ class SettingsSearchController {
       await NamidaNavigator.inst.popPage(waitForAnimation: true);
     }
     if (page != null) {
-      NamidaNavigator.inst.navigateTo(
-        SettingsSubPage(
-          title: details?.title ?? '',
-          child: page(),
-        ),
-      );
+      SettingsSubPage(
+        title: details?.title ?? '',
+        child: page(),
+      ).navigate();
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       final c = _map[settingPage]?[key.index]?.currentContext;

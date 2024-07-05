@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -586,7 +587,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
                   return;
                 }
-                NamidaNavigator.inst.navigateTo(const IndexerMissingTracksSubpage());
+                const IndexerMissingTracksSubpage().navigate();
               },
             ),
           ),

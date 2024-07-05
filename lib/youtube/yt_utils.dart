@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/core/url_utils.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -210,9 +211,7 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.user,
           title: lang.GO_TO_CHANNEL,
-          onTap: () {
-            NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelID));
-          },
+          onTap: YTChannelSubpage(channelID: channelID).navigate,
         ),
       isCurrentlyPlaying
           ? NamidaPopupItem(
@@ -343,9 +342,7 @@ class YTUtils {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         jump();
       });
-      await NamidaNavigator.inst.navigateTo(
-        const YoutubeHistoryPage(),
-      );
+      await const YoutubeHistoryPage().navigate();
     }
   }
 

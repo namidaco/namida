@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/enums.dart';
 
 class NamidaDummyPage extends StatelessWidget with NamidaRouteWidget {
@@ -44,4 +45,8 @@ abstract class NamidaRoute {
 
   @override
   int get hashCode => "$route$name".hashCode;
+}
+
+extension NamidaRouteWidgetUtils on NamidaRouteWidget {
+  Future<void> navigate() => NamidaNavigator.inst.navigateTo(this);
 }

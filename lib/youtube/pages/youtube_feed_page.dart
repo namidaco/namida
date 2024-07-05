@@ -7,7 +7,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -107,9 +107,7 @@ class _YoutubePageState extends State<YoutubeHomeFeedPage> with AutomaticKeepAli
                         sizeMultiplier: 1.1,
                         icon: Broken.user_edit,
                         text: lang.MANAGE_YOUR_ACCOUNTS,
-                        onTap: () {
-                          NamidaNavigator.inst.navigateTo(const YoutubeAccountManagePage());
-                        },
+                        onTap: const YoutubeAccountManagePage().navigate,
                       ),
                     ],
                   ),

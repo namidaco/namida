@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -24,6 +24,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
@@ -386,7 +387,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         final channelId = pageChannel?.id ??
             YoutubeInfoController.current.currentYTStreams.value?.info?.channelId ?? //
             YoutubeInfoController.utils.getVideoChannelID(currentItem.id);
-        if (channelId != null) NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: channelId, channel: pageChannel));
+        if (channelId != null) YTChannelSubpage(channelID: channelId, channel: pageChannel).navigate();
       },
       onMenuOpen: (currentItem, d) => _openMenu(context, currentItem, d),
       focusedMenuOptions: FocusedMenuOptions<YoutubeID>(

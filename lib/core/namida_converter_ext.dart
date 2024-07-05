@@ -456,13 +456,11 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         if (ids.length == 1) {
           showDownloadVideoBottomSheet(videoId: ids.first);
         } else {
-          NamidaNavigator.inst.navigateTo(
-            YTPlaylistDownloadPage(
-              ids: ids.map((e) => YoutubeID(id: e, playlistID: null)).toList(),
-              playlistName: 'External - ${DateTime.now().millisecondsSinceEpoch.dateAndClockFormattedOriginal}',
-              infoLookup: const {},
-            ),
-          );
+          YTPlaylistDownloadPage(
+            ids: ids.map((e) => YoutubeID(id: e, playlistID: null)).toList(),
+            playlistName: 'External - ${DateTime.now().millisecondsSinceEpoch.dateAndClockFormattedOriginal}',
+            infoLookup: const {},
+          ).navigate();
         }
       case OnYoutubeLinkOpenAction.addToPlaylist:
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
@@ -518,9 +516,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
               CustomListTile(
                 icon: Broken.export_2,
                 title: lang.OPEN,
-                onTap: () {
-                  NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToOpen));
-                },
+                onTap: YTHostedPlaylistSubpage(playlist: playlistToOpen).navigate,
               ),
             ...[
               OnYoutubeLinkOpenAction.showDownload,
@@ -839,12 +835,10 @@ extension RouteUtils on NamidaRoute {
           child: NamidaAppBarIcon(
             icon: Broken.chart_21,
             onPressed: () {
-              NamidaNavigator.inst.navigateTo(
-                SettingsSubPage(
-                  title: lang.STATS,
-                  child: const StatsSection(),
-                ),
-              );
+              SettingsSubPage(
+                title: lang.STATS,
+                child: const StatsSection(),
+              ).navigate();
             },
           ),
           shouldShow: shouldShowInitialActions),
@@ -867,7 +861,7 @@ extension RouteUtils on NamidaRoute {
       getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.setting_2,
-          onPressed: () => NamidaNavigator.inst.navigateTo(const SettingsPage()),
+          onPressed: const SettingsPage().navigate,
         ),
         shouldShow: shouldShowInitialActions,
       ),

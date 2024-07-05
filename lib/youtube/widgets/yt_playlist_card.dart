@@ -8,7 +8,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -155,7 +155,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
             if (videos.isEmpty) return;
             Player.inst.playOrPause(0, videos, QueueSource.others);
           } else {
-            NamidaNavigator.inst.navigateTo(YTHostedPlaylistSubpage(playlist: playlistToFetch));
+            YTHostedPlaylistSubpage(playlist: playlistToFetch).navigate();
           }
         },
         displayChannelThumbnail: false,

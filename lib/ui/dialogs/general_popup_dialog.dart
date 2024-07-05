@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
@@ -1127,7 +1128,7 @@ Future<void> showGeneralPopupDialog(
                                           color: iconColor,
                                         ),
                                         iconSize: 20.0,
-                                        onPressed: () => NamidaNavigator.inst.navigateTo(YTChannelSubpage(channelID: firstVideoChannelId)),
+                                        onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
                                       )
                                     : null,
                               ),

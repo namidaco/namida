@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -331,13 +332,11 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             icon: Broken.import,
                             tooltip: lang.DOWNLOAD,
                             onTap: () {
-                              NamidaNavigator.inst.navigateTo(
-                                YTPlaylistDownloadPage(
-                                  ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
-                                  playlistName: lang.QUEUE,
-                                  infoLookup: const {},
-                                ),
-                              );
+                              YTPlaylistDownloadPage(
+                                ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
+                                playlistName: lang.QUEUE,
+                                infoLookup: const {},
+                              ).navigate();
                             },
                           ),
                           const SizedBox(width: 4.0),
