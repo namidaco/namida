@@ -69,6 +69,8 @@ class YoutubeVideoCard extends StatelessWidget {
     DateTime? publishedDate = video.publishedAt.date;
     final uploadDateAgo = publishedDate == null ? null : Jiffy.parseFromDateTime(publishedDate).fromNow();
 
+    final percentageWatched = video.percentageWatched;
+
     return NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
@@ -104,6 +106,23 @@ class YoutubeVideoCard extends StatelessWidget {
         smallBoxText: video.durSeconds?.secondsLabel,
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
         menuChildrenDefault: getMenuItems,
+        onTopWidgets: percentageWatched == null
+            ? null
+            : (thumbWidth, thumbHeight) => [
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: SizedBox(
+                      height: 1.25,
+                      width: thumbWidth * percentageWatched,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(190, 255, 20, 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
       ),
     );
   }

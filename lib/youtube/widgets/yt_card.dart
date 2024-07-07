@@ -19,7 +19,7 @@ class YoutubeCard extends StatelessWidget {
   final String? channelID;
   final bool displayChannelThumbnail;
   final bool displaythirdLineText;
-  final List<Widget> onTopWidgets;
+  final List<Widget> Function(double width, double height)? onTopWidgets;
   final String? smallBoxText;
   final bool? checkmarkStatus;
   final double thumbnailWidthPercentage;
@@ -48,7 +48,7 @@ class YoutubeCard extends StatelessWidget {
     this.channelID,
     this.displayChannelThumbnail = true,
     this.displaythirdLineText = true,
-    this.onTopWidgets = const <Widget>[],
+    this.onTopWidgets,
     this.smallBoxText,
     this.checkmarkStatus,
     this.thumbnailWidthPercentage = 1.0,
@@ -98,7 +98,7 @@ class YoutubeCard extends StatelessWidget {
                     width: thumbnailWidth,
                     height: thumbnailHeight,
                     borderRadius: 10.0,
-                    onTopWidgets: onTopWidgets,
+                    onTopWidgets: onTopWidgets?.call(thumbnailWidth, thumbnailHeight) ?? [],
                     smallBoxText: smallBoxText,
                     smallBoxIcon: smallBoxIcon,
                     extractColor: extractColor,
