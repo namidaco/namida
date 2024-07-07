@@ -1267,6 +1267,7 @@ class _NamidaConverters {
       },
       YTHomePages: {
         YTHomePages.home: lang.HOME,
+        YTHomePages.notifications: lang.NOTIFICATIONS,
         YTHomePages.channels: lang.CHANNELS,
         YTHomePages.playlists: lang.PLAYLISTS,
         YTHomePages.downloads: lang.DOWNLOADS,

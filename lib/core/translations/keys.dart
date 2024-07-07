@@ -346,6 +346,7 @@ abstract class LanguageKeys {
   String get MANAGE_YOUR_ACCOUNTS => _getKey('MANAGE_YOUR_ACCOUNTS');
   String get MANUAL_BACKUP_SUBTITLE => _getKey('MANUAL_BACKUP_SUBTITLE');
   String get MANUAL_BACKUP => _getKey('MANUAL_BACKUP');
+  String get MARK_AS_READ => _getKey('MARK_AS_READ');
   String get MATCHING_TYPE => _getKey('MATCHING_TYPE');
   String get MATCH_ALL_TRACKS => _getKey('MATCH_ALL_TRACKS');
   String get MATCH_ALL_TRACKS_NOTE => _getKey('MATCH_ALL_TRACKS_NOTE');
@@ -422,6 +423,7 @@ abstract class LanguageKeys {
   String get NON_ACTIVE => _getKey('NON_ACTIVE');
   String get NONE => _getKey('NONE');
   String get NOTE => _getKey('NOTE');
+  String get NOTIFICATIONS => _getKey('NOTIFICATIONS');
   String get NUMBER_OF_TRACKS => _getKey('NUMBER_OF_TRACKS');
   String get OF => _getKey('OF');
   String get OFFLINE_SEARCH => _getKey('OFFLINE_SEARCH');

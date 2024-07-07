@@ -359,6 +359,7 @@ enum FABType {
 
 enum YTHomePages {
   home,
+  notifications,
   channels,
   playlists,
   downloads,

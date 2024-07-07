@@ -174,6 +174,7 @@ class YTUtils {
     String playlistName = '',
     YoutubeID? videoYTID,
     bool copyUrl = false,
+    List<NamidaPopupItem>? moreMenuChildren,
   }) {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
@@ -260,6 +261,7 @@ class YTUtils {
           subtitle: playlistName.translatePlaylistName(liked: true),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
         ),
+      if (moreMenuChildren != null) ...moreMenuChildren,
     ];
   }
 
