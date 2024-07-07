@@ -52,6 +52,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
   @override
   void initState() {
+    super.initState();
     _horizontalListController = ScrollController();
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
@@ -62,7 +63,6 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     final now = DateTime.now();
     allChannelFetchOldestDate = DateTime(now.year, now.month, now.day - 32).obs;
-    super.initState();
   }
 
   @override
@@ -76,7 +76,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   Future<void> _updateChannel(YoutubeSubscription? sub, {required bool forceRequest}) async {
     if (uploadsScrollController.hasClients) uploadsScrollController.jumpTo(0);
     setState(() {
-      isLoadingInitialStreams = true; // should show empty list instead
+      isLoadingInitialStreams = true;
       channel = sub;
       streamsPeakDates = null;
       _allStreamsList = null;
@@ -85,7 +85,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     if (sub != null) {
       final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
         channelId: sub.channelID,
-        details: forceRequest ? ExecuteDetails.forceRequest() : null,
+        // details: forceRequest ? ExecuteDetails.forceRequest() : null, // -- info is not force requested
       );
 
       if (channelInfo != null && channel == sub) {
@@ -111,10 +111,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final maxDateBeforeMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;
 
     bool enoughStreams(List<StreamInfoItem> streams) {
-      final lastDate = streams.lastOrNull?.publishedAt.date;
+      final lastDate = streams.lastOrNull?.publishedAt.date?.toLocal();
       if (lastDate == null || lastDate.millisecondsSinceEpoch < maxDateBeforeMS) {
         streams.removeWhere((element) {
-          final date = element.publishedAt.date;
+          final date = element.publishedAt.date?.toLocal();
           return date != null && date.millisecondsSinceEpoch < maxDateBeforeMS;
         });
         return true;
@@ -130,7 +130,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     for (int i = 0; i < idsLength; i++) {
       final channelID = ids[i];
       _allChannelsStreamsProgress.value = i / idsLength;
-      final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: executeDetails);
+      final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: null);
       if (channelPage == null) {
         if (pageFetchErrors < 3) {
           reportError('failed to fetch channel page for $channelID');
@@ -207,6 +207,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
     final ch = channel;
+    final currentChannelInfo = ch == null ? null : YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
+    final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
 
     return Column(
       children: [
@@ -303,9 +305,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               const SizedBox(width: 4.0),
                               YoutubeThumbnail(
                                 type: ThumbnailType.channel,
-                                key: Key(ch.channelID),
+                                key: Key(currentChannelThumbnail ?? ''),
                                 width: 32.0,
                                 isImportantInCache: true,
+                                customUrl: currentChannelThumbnail,
                                 urlSymLinkId: ch.channelID,
                                 isCircle: true,
                               ),
@@ -511,6 +514,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             final info = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
                             final channelTitle = info?.title;
                             final channelName = channelTitle == null || channelTitle == '' ? ch.title : channelTitle;
+                            final channelThumbnail = info?.thumbnails.pick()?.url;
                             return NamidaInkWell(
                               borderRadius: 10.0,
                               animationDurationMS: 150,
@@ -524,10 +528,11 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   const SizedBox(height: 4.0),
                                   YoutubeThumbnail(
                                     type: ThumbnailType.channel,
-                                    key: Key(ch.channelID),
+                                    key: Key(channelThumbnail ?? ''),
                                     width: _thumbSize,
                                     isImportantInCache: true,
-                                    customUrl: info?.thumbnails.pick()?.url,
+                                    customUrl: channelThumbnail,
+                                    urlSymLinkId: ch.channelID,
                                     isCircle: true,
                                   ),
                                   const SizedBox(height: 4.0),

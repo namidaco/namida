@@ -62,6 +62,8 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
   @override
   void initState() {
+    super.initState();
+
     channel = ch;
 
     final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
@@ -79,8 +81,6 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
         }
       },
     );
-
-    super.initState();
   }
 
   @override
@@ -242,6 +242,13 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     final subsCount = channelInfo?.subscribersCount;
     final subsCountText = channelInfo?.subscribersCountText;
     final streamsCount = channelInfo?.videosCount;
+
+    String videosCountVSTotalText = "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}";
+    String? peakDatesText;
+    if (streamsPeakDates != null) {
+      videosCountVSTotalText += ' | ';
+      peakDatesText = "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})";
+    }
     return BackgroundWrapper(
       child: Listener(
         onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
@@ -387,25 +394,17 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                                 const Icon(Broken.video_square, size: 16.0),
                                 const SizedBox(width: 4.0),
                                 Text(
-                                  "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}",
+                                  videosCountVSTotalText,
                                   style: context.textTheme.displayMedium,
                                 ),
+                                if (peakDatesText != null)
+                                  Text(
+                                    peakDatesText,
+                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                  ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 4.0),
-                          if (streamsPeakDates != null)
-                            NamidaInkWell(
-                              borderRadius: 6.0,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                              child: Text(
-                                "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})",
-                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                              ),
-                            ),
                         ],
                       ),
                     ),

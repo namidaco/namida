@@ -43,7 +43,7 @@ class ThumbnailManager {
     if (imageUrl != null && imageUrl.length > 1) {
       finalUrl = imageUrl.last.splitFirst('?').replaceAll('/', '_');
     } else {
-      if (finalUrl != null) finalUrl = '${finalUrl.splitLast('/').splitFirst('=')}.png';
+      if (finalUrl != null) finalUrl = '${finalUrl.splitLast('/')}.png'; // we need the quality after the =
     }
 
     final dirPrefix = isTemp ? 'temp/' : '';
@@ -137,6 +137,7 @@ class ThumbnailManager {
     if (file == null) return null;
     final downloaded = await _getYoutubeThumbnail(
       itemId: videoId,
+      urls: null,
       isVideo: true,
       isImportantInCache: false,
       destinationFile: file,
@@ -156,7 +157,7 @@ class ThumbnailManager {
 
   Future<File?> _getYoutubeThumbnail({
     required String itemId,
-    List<String>? urls,
+    required List<String>? urls,
     required bool isVideo,
     required bool lowerResYTID,
     required bool isTemp,
@@ -170,13 +171,9 @@ class ThumbnailManager {
     if (activeRequest != null) return activeRequest;
 
     final links = <String>[];
-    if (isVideo && (urls == null || urls.isEmpty)) {
-      final yth = YoutiPieVideoThumbnail(itemId);
-      if (lowerResYTID) {
-        links.addAll(yth.allQualitiesExceptHighest);
-      } else {
-        links.addAll(yth.allQualitiesByHighest);
-      }
+    if (isVideo) {
+      final yth = lowerResYTID ? YoutiPieVideoThumbnail.mixLow(itemId) : YoutiPieVideoThumbnail.mix(itemId);
+      links.addAll(yth);
     }
     if (urls != null) links.addAll(urls);
     if (links.isEmpty) return null;

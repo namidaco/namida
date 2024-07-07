@@ -80,13 +80,13 @@ class YoutubeAccountController {
           _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'));
           return false;
         } else {
-          final needsMembership = _operationNeedsMembership[operation] == true;
+          final needsMembership = _operationNeedsMembership[operation] ?? true;
           if (needsMembership) {
             final ms = membership.userMembershipTypeGlobal.value;
             if (ms == null || ms.index < MembershipType.cutie.index) {
               // -- has account but no membership
               _showError(
-                '${lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name}`")}', // no membership to begin with.
+                '${lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown}`")}',
                 manageSubscriptionButton: true,
               );
               return false;

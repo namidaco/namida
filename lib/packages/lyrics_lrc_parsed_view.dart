@@ -284,26 +284,54 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   enabled: false,
                   tag: 'MINIPLAYER_DURATION',
                   child: ObxO(
-                    rx: _currentItemDurationSeconds,
-                    builder: (seconds) {
-                      if (seconds == null || seconds == 0) {
-                        return ObxO(
-                          rx: Player.inst.currentItem,
-                          builder: (currentItem) {
-                            final seconds = currentItem is Selectable ? currentItem.track.duration : 0;
-                            return Text(
-                              seconds.secondsLabel,
-                              style: context.textTheme.displaySmall,
-                            );
-                          },
-                        );
-                      }
-                      return Text(
-                        seconds.secondsLabel,
-                        style: context.textTheme.displaySmall,
-                      );
-                    },
-                  ),
+                      rx: settings.player.displayRemainingDurInsteadOfTotal,
+                      builder: (displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
+                          ? ObxO(
+                              rx: _currentItemDurationSeconds,
+                              builder: (mainSeconds) {
+                                return ObxO(
+                                  rx: Player.inst.currentItem,
+                                  builder: (currentItem) {
+                                    return ObxO(
+                                      rx: Player.inst.nowPlayingPosition,
+                                      builder: (toSubtract) {
+                                        if (mainSeconds == 0 && currentItem is Selectable) {
+                                          mainSeconds = currentItem.track.duration;
+                                        }
+                                        final durMS = (mainSeconds ?? 0) * 1000;
+
+                                        final msToDisplay = durMS - toSubtract;
+                                        return Text(
+                                          "- ${msToDisplay.milliSecondsLabel}",
+                                          style: context.textTheme.displaySmall,
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            )
+                          : ObxO(
+                              rx: _currentItemDurationSeconds,
+                              builder: (seconds) {
+                                if (seconds == null || seconds == 0) {
+                                  return ObxO(
+                                    rx: Player.inst.currentItem,
+                                    builder: (currentItem) {
+                                      final seconds = currentItem is Selectable ? currentItem.track.duration : 0;
+                                      return Text(
+                                        seconds.secondsLabel,
+                                        style: context.textTheme.displaySmall,
+                                      );
+                                    },
+                                  );
+                                }
+                                return Text(
+                                  seconds.secondsLabel,
+                                  style: context.textTheme.displaySmall,
+                                );
+                              },
+                            )),
                 ),
                 const Spacer(),
               ],

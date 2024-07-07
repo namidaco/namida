@@ -622,9 +622,8 @@ class SearchSortController {
       reverse: reverse,
       list: trackSearchTemp.value,
       onDone: (sortType, isReverse) {
-        if (!isAuto) {
-          settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
-        }
+        if (!isAuto) settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
+        trackSearchTemp.refresh();
       },
     );
   }

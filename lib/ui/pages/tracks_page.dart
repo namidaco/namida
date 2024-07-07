@@ -42,8 +42,8 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
 
   @override
   void initState() {
-    RefreshLibraryIconController.init(_animationKey, this);
     super.initState();
+    RefreshLibraryIconController.init(_animationKey, this);
   }
 
   @override

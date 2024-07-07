@@ -102,12 +102,19 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
     }
 
     _isRefreshing = true;
-    _animation2.repeat();
-    await execute();
-    await _animation2.fling();
-    _animation2.stop();
-    _isRefreshing = false;
-    onVerticalDragFinish();
+    try {
+      _animation2.repeat();
+      await execute();
+      await _animation2.fling();
+      _animation2.stop();
+      _isRefreshing = false;
+      onVerticalDragFinish();
+    } catch (_) {
+      _animation2.stop();
+      _isRefreshing = false;
+      onVerticalDragFinish();
+      rethrow;
+    }
   }
 
   Widget get pullToRefreshWidget {

@@ -154,7 +154,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
         case _GenerateOperation.sameReleaseDate:
           final id = p['id'] as String;
           final date = p['date'] as DateTime?;
-          final dateReleased = date ?? releaseDateMap[id];
+          final dateReleased = date?.toLocal() ?? releaseDateMap[id];
           if (dateReleased == null) {
             sendPort.send(Exception('Unknown video release date'));
             return;
@@ -207,7 +207,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
               if (id != null && releaseDateMap[id] == null) {
                 DateTime? date;
                 try {
-                  date = PublishTime.fromMap(map['publishedAt']).date;
+                  date = PublishTime.fromMap(map['publishedAt']).date?.toLocal();
                 } catch (_) {}
                 allIds.add(id);
                 allIdsAdded[id] = true;
@@ -227,11 +227,11 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
             if (id != null && releaseDateMap[id] == null) {
               DateTime? date;
               try {
-                date = PublishTime.fromMap(info['publishDate']).date;
+                date = PublishTime.fromMap(info['publishDate']).date?.toLocal();
               } catch (_) {}
               if (date == null) {
                 try {
-                  date = PublishTime.fromMap(info['uploadDate']).date;
+                  date = PublishTime.fromMap(info['uploadDate']).date?.toLocal();
                 } catch (_) {}
               }
               allIds.add(id);

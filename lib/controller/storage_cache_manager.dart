@@ -572,6 +572,7 @@ class _ImageTrimmer {
 
     final partialFiles = <File>[];
     final maxAccessed = DateTime.now();
+    final zDateTime = DateTime(0);
     images.sortBy((e) {
       if (e is File) {
         if (e.path.endsWith('.temp')) {
@@ -583,7 +584,7 @@ class _ImageTrimmer {
           } catch (_) {}
         }
       }
-      return 0;
+      return zDateTime;
     });
     for (int i = 0; i < partialFiles.length; i++) {
       try {
@@ -595,16 +596,21 @@ class _ImageTrimmer {
     excess -= partialFiles.length;
     if (excess <= 0) return;
 
-    for (int i = 0; i < excess; i++) {
+    int imagesLength = images.length;
+    for (int i = 0; i < excess;) {
       final element = images[i];
       if (element is File) {
         try {
           element.deleteSync();
+          i++;
+          imagesLength--;
           continue;
         } catch (_) {}
       }
       // if not continued safely, i-- indicating that we still need to delete more
       i--;
+      imagesLength--;
+      if (imagesLength <= 0) break; // just to be safe that i-- doesnt mess things up
     }
   }
 }

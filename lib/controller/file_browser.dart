@@ -657,6 +657,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
   @override
   void initState() {
+    super.initState();
     NamidaStorage.inst.getStorageDirectories().then((paths) {
       _mainStoragePaths.addAll(paths);
       _fetchFiles(Directory(widget.initialDirectory ?? paths.first));
@@ -678,8 +679,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       }
     }
     _initIconsLookup();
-
-    super.initState();
   }
 
   @override

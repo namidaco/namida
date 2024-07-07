@@ -285,7 +285,7 @@ class YTUtils {
       return text.replaceFirst(topic, '', startIndex).trimAll();
     }
 
-    final date = info?.publishedAt.date;
+    final date = info?.publishedAt.date?.toLocal();
     final description = info?.availableDescription;
     String? title = info?.title;
     String? artist = info?.channelName;

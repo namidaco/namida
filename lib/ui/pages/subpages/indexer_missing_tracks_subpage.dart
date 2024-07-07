@@ -65,9 +65,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 
   @override
   void initState() {
+    super.initState();
     _scrollController = ScrollController();
     Future.delayed(Duration.zero, _fetchMissingTracks);
-    super.initState();
   }
 
   @override
