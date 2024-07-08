@@ -22,8 +22,8 @@ class _Log {
       printer: PrettyPrinter(
         colors: kDebugMode ? true : false,
         printEmojis: true,
-        methodCount: 4,
-        errorMethodCount: 24,
+        methodCount: 48,
+        errorMethodCount: 48,
       ),
       output: _FileOutput(file: File(AppPaths.LOGS), fileClean: File(AppPaths.LOGS_CLEAN)),
     );

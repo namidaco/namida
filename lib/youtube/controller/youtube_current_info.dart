@@ -139,6 +139,7 @@ class _YoutubeCurrentInfoController {
           details: ExecuteDetails.forceRequest(),
         );
         if (newRes != null && _canSafelyModifyMetadata(videoId)) {
+          fetchedSuccessfully = true;
           _currentComments.value = newRes;
           _isCurrentCommentsFromCache.value = false;
         }

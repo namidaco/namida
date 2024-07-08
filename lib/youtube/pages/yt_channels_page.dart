@@ -58,7 +58,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
     if (subCh != null) {
       final sub = YoutubeSubscriptionsController.inst.availableChannels.value[subCh];
-      onRefresh(() => _updateChannel(sub, forceRequest: true), forceShow: true);
+      onRefresh(() => _updateChannel(sub, forceRequest: true), forceProceed: true);
     }
 
     final now = DateTime.now();
@@ -373,7 +373,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                     children: [
                       Listener(
                         onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
-                        onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true), forceShow: true),
+                        onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true)),
                         onPointerCancel: (_) => onVerticalDragFinish(),
                         child: isLoadingInitialStreams
                             ? ShimmerWrapper(

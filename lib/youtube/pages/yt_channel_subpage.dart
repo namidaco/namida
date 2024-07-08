@@ -77,7 +77,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
       (value) {
         if (value != null) {
           setState(() => _channelInfo = value);
-          onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceShow: true);
+          onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceProceed: true);
         }
       },
     );
@@ -249,6 +249,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
       videosCountVSTotalText += ' | ';
       peakDatesText = "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})";
     }
+    final hasMoreStreamsLeft = channelVideoTab?.canFetchNext == true;
     return BackgroundWrapper(
       child: Listener(
         onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
@@ -364,9 +365,9 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                         borderRadius: 8.0,
                         icon: Broken.task_square,
                         text: lang.LOAD_ALL,
-                        enabled: !isLoadingMoreUploads,
+                        enabled: !isLoadingMoreUploads && hasMoreStreamsLeft,
                         disableWhenLoading: false,
-                        showLoadingWhenDisabled: true,
+                        showLoadingWhenDisabled: hasMoreStreamsLeft,
                         onTap: _onLoadAllTap,
                       ),
                     ),

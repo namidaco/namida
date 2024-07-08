@@ -92,12 +92,15 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   bool _isRefreshing = false;
-  Future<void> onRefresh(PullToRefreshCallback execute, {bool forceShow = false}) async {
+
+  /// Normally will not continue if not fully swiped, [forceProceed] forces bypassing that,
+  /// use if action not triggered by user but u want to show refresh indicator.
+  Future<void> onRefresh(PullToRefreshCallback execute, {bool forceProceed = false}) async {
     if (!enablePullToRefresh) return;
     onVerticalDragFinish();
     if (_isRefreshing) return;
     if (animation.value != 1) {
-      if (!forceShow) return;
+      if (!forceProceed) return;
       animation.animateTo(1, duration: const Duration(milliseconds: 50));
     }
 

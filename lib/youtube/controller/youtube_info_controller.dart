@@ -2,9 +2,9 @@ library namidayoutubeinfo;
 
 import 'dart:io';
 
+import 'package:logger/logger.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
-import 'package:namida/controller/logs_controller.dart' as namidalogs;
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -54,7 +54,7 @@ class YoutubeInfoController {
       sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
       checkJSPlayer: true, // wont await.. are we cooked? properly
     );
-    YoutiPie.setLogs(namidalogs.logger.logger);
+    YoutiPie.setLogs(_YTReportingLog());
   }
 
   static Future<bool> ensureJSPlayerInitialized() async {
@@ -64,4 +64,30 @@ class YoutubeInfoController {
 
   static final current = _YoutubeCurrentInfoController._();
   static final utils = _YoutubeInfoUtils._();
+}
+
+class _YTReportingLog extends Logger {
+  static void _showError(String msg, {Object? exception}) {
+    String title = lang.ERROR;
+    if (exception != null) title += ': $exception';
+
+    snackyy(
+      message: msg,
+      title: title,
+      isError: true,
+      displaySeconds: 3,
+      top: false,
+    );
+  }
+
+  @override
+  void e(
+    dynamic message, {
+    DateTime? time,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    _showError(message.toString(), exception: error);
+    super.e(message, time: time, error: error, stackTrace: stackTrace);
+  }
 }

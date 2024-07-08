@@ -344,7 +344,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
       visualDensity: widget.visualDensity,
       title: lang.FOLDER,
       subtitle: widget.subtitle?.call(groupName.value),
-      trailing: NamidaPopupWrapper(
+      trailingRaw: NamidaPopupWrapper(
         childrenDefault: () => [
           NamidaPopupItem(
             icon: Broken.add,
@@ -376,7 +376,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
             final count = availableDirectoriesNames[groupName];
             final countText = count == null || count == 0 ? '' : " ($count)";
             return Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -387,11 +387,15 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                             : Broken.folder,
                     size: 18.0),
                 const SizedBox(width: 6.0),
-                ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
-                  child: Text(
-                    "$title$countText",
-                    style: context.textTheme.displayMedium,
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
+                    child: Text(
+                      "$title$countText",
+                      style: context.textTheme.displayMedium,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 SizedBox(width: widget.trailingPadding),

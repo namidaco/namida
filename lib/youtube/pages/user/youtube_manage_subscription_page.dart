@@ -72,7 +72,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     }
   }
 
-  void _onPatreonLoginTap(BuildContext context) {
+  void _onPatreonLoginTap(BuildContext context, {required SignInDecision signInDecision}) {
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     );
     YoutubeAccountController.membership.claimPatreon(
       pageConfig: pageConfig,
-      signIn: SignInDecision.enabled,
+      signIn: signInDecision,
     );
   }
 
@@ -135,7 +135,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 CustomListTile(
                                   icon: Broken.login_1,
                                   title: lang.SIGN_IN,
-                                  onTap: () => _onPatreonLoginTap(context),
+                                  onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
                                 ),
                               ],
                             ),

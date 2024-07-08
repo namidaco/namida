@@ -94,8 +94,10 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   }
 
   Future<void> _fetchFeedNext() async {
-    _isLoadingNext.value = true;
     final feed = _currentFeed;
+    if (feed.value?.canFetchNext != true) return;
+
+    _isLoadingNext.value = true;
     final fetched = await feed.value?.fetchNext();
     if (fetched == true) feed.refresh();
     _isLoadingNext.value = false;

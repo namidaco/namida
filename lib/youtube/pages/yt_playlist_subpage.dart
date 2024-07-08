@@ -438,21 +438,27 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     if (_isLoadingMoreItems.value) return;
     _isLoadingMoreItems.value = true;
 
+    bool fetched = false;
+
     try {
       if (_playlist.items.isEmpty) {
         final playlist = await YoutubeInfoController.playlist.fetchPlaylist(
           playlistId: _playlist.basicInfo.id,
           details: ExecuteDetails.forceRequest(),
         );
-        if (playlist != null) _playlist = playlist;
+        if (playlist != null) {
+          _playlist = playlist;
+          fetched = true;
+        }
       } else {
-        await _playlist.fetchNext();
+        if (_playlist.canFetchNext) {
+          fetched = await _playlist.fetchNext();
+        }
       }
     } catch (_) {}
 
-    trySortStreams();
     _isLoadingMoreItems.value = false;
-    refreshState();
+    if (fetched) refreshState(trySortStreams);
   }
 
   @override
@@ -650,7 +656,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                               text: lang.LOAD_ALL,
                               enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
                               disableWhenLoading: false,
-                              showLoadingWhenDisabled: true,
+                              showLoadingWhenDisabled: hasMoreStreamsLeft,
                               onTap: () async {
                                 if (_currentFetchAllRes != null) {
                                   _currentFetchAllRes?.cancel();
