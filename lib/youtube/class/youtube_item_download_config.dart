@@ -10,6 +10,8 @@ class YoutubeItemDownloadConfig {
   AudioStream? audioStream;
   final String? prefferedVideoQualityID;
   final String? prefferedAudioQualityID;
+  final bool? fetchMissingAudio;
+  final bool? fetchMissingVideo;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -20,6 +22,8 @@ class YoutubeItemDownloadConfig {
     required this.audioStream,
     required this.prefferedVideoQualityID,
     required this.prefferedAudioQualityID,
+    required this.fetchMissingAudio,
+    required this.fetchMissingVideo,
   });
 
   factory YoutubeItemDownloadConfig.fromJson(Map<String, dynamic> map) {
@@ -40,6 +44,8 @@ class YoutubeItemDownloadConfig {
       audioStream: auds,
       prefferedVideoQualityID: map['prefferedVideoQualityID'],
       prefferedAudioQualityID: map['prefferedAudioQualityID'],
+      fetchMissingAudio: map['fetchMissingAudio'],
+      fetchMissingVideo: map['fetchMissingVideo'],
     );
   }
 
@@ -53,6 +59,8 @@ class YoutubeItemDownloadConfig {
       'audioStream': audioStream?.toMap(),
       'prefferedVideoQualityID': prefferedVideoQualityID,
       'prefferedAudioQualityID': prefferedAudioQualityID,
+      'fetchMissingAudio': fetchMissingAudio,
+      'fetchMissingVideo': fetchMissingVideo,
     };
   }
 

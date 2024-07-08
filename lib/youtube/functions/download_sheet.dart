@@ -651,6 +651,8 @@ Future<void> showDownloadVideoBottomSheet({
                                       audioStream: selectedAudioOnlyStream.value,
                                       prefferedVideoQualityID: selectedVideoOnlyStream.value?.itag.toString(),
                                       prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
+                                      fetchMissingAudio: false,
+                                      fetchMissingVideo: false,
                                     );
                                     if (onConfirmButtonTap != null) {
                                       final accept = onConfirmButtonTap(groupName, itemConfig);

@@ -30,7 +30,6 @@ class YoutubeController {
   static final YoutubeController _instance = YoutubeController._internal();
   YoutubeController._internal();
 
-
   /// {id: <filename, DownloadProgress>{}}
   final downloadsVideoProgressMap = <String, RxMap<String, DownloadProgress>>{}.obs;
 
@@ -540,22 +539,26 @@ class YoutubeController {
         final streams = await completer.future;
 
         // -- video
-        final videos = streams.videoStreams;
-        if (config.prefferedVideoQualityID != null) {
-          config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
-        }
-        if (config.videoStream == null || config.videoStream?.buildUrl()?.isNotEmpty != true) {
-          final webm = config.filename.endsWith('.webm') || config.filename.endsWith('.WEBM');
-          config.videoStream = getPreferredStreamQuality(videos, qualities: preferredQualities, preferIncludeWebm: webm);
+        if (config.fetchMissingVideo == true) {
+          final videos = streams.videoStreams;
+          if (config.prefferedVideoQualityID != null) {
+            config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
+          }
+          if (config.videoStream == null || config.videoStream?.buildUrl()?.isNotEmpty != true) {
+            final webm = config.filename.endsWith('.webm') || config.filename.endsWith('.WEBM');
+            config.videoStream = getPreferredStreamQuality(videos, qualities: preferredQualities, preferIncludeWebm: webm);
+          }
         }
 
-        // -- audio
-        final audios = streams.audioStreams;
-        if (config.prefferedAudioQualityID != null) {
-          config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
-        }
-        if (config.audioStream == null || config.audioStream?.buildUrl()?.isNotEmpty != true) {
-          config.audioStream = audios.firstNonWebm() ?? audios.firstOrNull;
+        if (config.fetchMissingAudio == true) {
+          // -- audio
+          final audios = streams.audioStreams;
+          if (config.prefferedAudioQualityID != null) {
+            config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
+          }
+          if (config.audioStream == null || config.audioStream?.buildUrl()?.isNotEmpty != true) {
+            config.audioStream = audios.firstNonWebm() ?? audios.firstOrNull;
+          }
         }
 
         // -- meta info

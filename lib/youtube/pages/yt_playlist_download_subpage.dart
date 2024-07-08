@@ -101,6 +101,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       audioStream: null,
       prefferedVideoQualityID: null,
       prefferedAudioQualityID: null,
+      fetchMissingAudio: true,
+      fetchMissingVideo: !downloadAudioOnly.value,
     );
   }
 
