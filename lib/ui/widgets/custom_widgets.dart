@@ -3301,7 +3301,8 @@ class NamidaAspectRatio extends StatelessWidget {
 
 class NamidaTabView extends StatefulWidget {
   final int initialIndex;
-  final List<String> tabs;
+  final List<String>? tabs;
+  final List<Widget>? tabWidgets;
   final List<Widget> children;
   final void Function(int index) onIndexChanged;
   final bool isScrollable;
@@ -3310,7 +3311,8 @@ class NamidaTabView extends StatefulWidget {
     super.key,
     required this.children,
     required this.initialIndex,
-    required this.tabs,
+    this.tabs,
+    this.tabWidgets,
     required this.onIndexChanged,
     this.isScrollable = false,
   });
@@ -3353,13 +3355,22 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
           controller: controller,
           isScrollable: widget.isScrollable,
           tabs: widget.tabs
-              .map(
-                (e) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
-                  child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              )
-              .toList(),
+                  ?.map(
+                    (e) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+                      child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
+                  .toList() ??
+              widget.tabWidgets ??
+              widget.children
+                  .map(
+                    (e) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+                      child: Text(e.toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
+                  .toList(),
           splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
           // indicatorPadding: const EdgeInsets.symmetric(horizontal: 32.0),
           indicatorSize: TabBarIndicatorSize.label,

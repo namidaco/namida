@@ -22,9 +22,22 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: NamidaTabView(
-        isScrollable: true,
+        isScrollable: false,
         initialIndex: settings.ytInitialHomePage.value.index,
-        tabs: YTHomePages.values.map((e) => e.toText()).toList(),
+        tabWidgets: YTHomePages.values
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Tooltip(
+                  message: e.toText(),
+                  child: Icon(
+                    e.toIcon(),
+                    size: 18.0,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
         onIndexChanged: (index) {
           settings.save(ytInitialHomePage: YTHomePages.values[index]);
         },

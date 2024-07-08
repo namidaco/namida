@@ -672,6 +672,7 @@ extension InsertionSortingTypeTextIcon on InsertionSortingType {
 
 extension YTHomePagesUils on YTHomePages {
   String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
 extension PlaylistAddDuplicateActionUtils on PlaylistAddDuplicateAction {
@@ -1404,6 +1405,14 @@ class _NamidaConverters {
         FABType.search: Broken.search_normal,
         FABType.shuffle: Broken.shuffle,
         FABType.play: Broken.play_cricle,
+      },
+      YTHomePages: {
+        YTHomePages.home: Broken.home_1,
+        YTHomePages.notifications: Broken.notification_bing,
+        YTHomePages.channels: Broken.profile_2user,
+        YTHomePages.playlists: Broken.music_library_2,
+        YTHomePages.userplaylists: Broken.music_dashboard,
+        YTHomePages.downloads: Broken.import,
       },
     };
 
