@@ -49,9 +49,6 @@ jobs:
           flutter pub get
           flutter pub upgrade
 
-      - name: Modify applicationId
-        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
-
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
@@ -72,7 +69,7 @@ jobs:
       - name: Move arm64-v8a
         run: |
           mkdir -p build_final
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-arm64-v8a.apk
 
       - name: Build APK -> armeabi-v7a
         run: flutter build apk --target-platform android-arm --release
@@ -80,7 +77,26 @@ jobs:
       - name: Move armeabi-v7a
         run: |
           mkdir -p build_final
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-snapshot-armeabi-v7a.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-armeabi-v7a.apk
+
+      - name: Modify applicationId
+        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+
+      - name: (Clone) Build APK -> arm64-v8a
+        run: flutter build apk --target-platform android-arm64 --release
+
+      - name: (Clone) Move arm64-v8a
+        run: |
+          mkdir -p build_final
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-arm64-v8a.apk
+
+      - name: (Clone) Build APK -> armeabi-v7a
+        run: flutter build apk --target-platform android-arm --release
+
+      - name: (Clone) Move armeabi-v7a
+        run: |
+          mkdir -p build_final
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-armeabi-v7a.apk
 
       - name: Get the previous release date
         continue-on-error: true
