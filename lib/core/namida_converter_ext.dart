@@ -1270,6 +1270,7 @@ class _NamidaConverters {
         YTHomePages.notifications: lang.NOTIFICATIONS,
         YTHomePages.channels: lang.CHANNELS,
         YTHomePages.playlists: lang.PLAYLISTS,
+        YTHomePages.userplaylists: '${lang.PLAYLISTS} (${lang.YOUTUBE})',
         YTHomePages.downloads: lang.DOWNLOADS,
       },
       TrackSearchFilter: {

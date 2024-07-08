@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
-import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -24,12 +23,14 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 /// Playlist info is fetched automatically after 3 seconds of being displayed, or after attempting an action.
 class YoutubePlaylistCard extends StatefulWidget {
-  final PlaylistInfoItem playlist;
+  final PlaylistBasicInfo playlist;
   final String? subtitle;
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final bool playOnTap;
-  final String? playingId;
+  final String? firstVideoID;
+  final String Function()? playingId;
+  final bool isMixPlaylist;
 
   const YoutubePlaylistCard({
     super.key,
@@ -38,7 +39,9 @@ class YoutubePlaylistCard extends StatefulWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.playOnTap = false,
-    this.playingId,
+    required this.firstVideoID,
+    required this.playingId,
+    required this.isMixPlaylist,
   });
 
   @override
@@ -46,18 +49,14 @@ class YoutubePlaylistCard extends StatefulWidget {
 }
 
 class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
-  String? get firstVideoID {
-    return widget.playlist.initialVideos.firstOrNull?.id;
-  }
-
   YoutiPiePlaylistResultBase? playlistToFetch;
   Timer? _fetchTimer;
   final _isFetching = Rxn<bool>();
 
   Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) {
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
-    if (widget.playlist.isMix) {
-      final videoId = firstVideoID ?? widget.playingId;
+    if (widget.isMixPlaylist) {
+      final videoId = widget.firstVideoID ?? widget.playingId?.call();
       if (videoId == null) return Future.value(null);
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
@@ -120,14 +119,14 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   Widget build(BuildContext context) {
     final playlist = widget.playlist;
     String countText;
-    if (playlist.isMix) {
+    if (widget.isMixPlaylist) {
       countText = '+25';
     } else {
       countText = playlist.videosCount?.formatDecimalShort() ?? '?';
     }
     final thumbnailUrl = playlist.thumbnails.pick()?.url;
-    final firstVideoID = this.firstVideoID;
-    final goodVideoID = firstVideoID != null && firstVideoID != '';
+    final firstVideoID = widget.firstVideoID;
+    final goodVideoID = firstVideoID != null && firstVideoID.isNotEmpty;
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,

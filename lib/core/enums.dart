@@ -362,6 +362,7 @@ enum YTHomePages {
   notifications,
   channels,
   playlists,
+  userplaylists,
   downloads,
 }
 

@@ -41,6 +41,7 @@ class YoutubeInfoController {
 
   static const video = _VideoInfoController();
   static const playlist = YoutiPie.playlist;
+  static const userplaylist = YoutiPie.userplaylist;
   static const comment = YoutiPie.comment;
   static const search = _SearchInfoController();
   static const feed = YoutiPie.feed;

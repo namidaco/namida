@@ -52,10 +52,13 @@ class YoutubeHomeFeedPage extends StatelessWidget {
             const (PlaylistInfoItem) => YoutubePlaylistCard(
                 key: Key((item as PlaylistInfoItem).id),
                 playlist: item,
+                firstVideoID: item.initialVideos.firstOrNull?.id,
                 thumbnailWidth: thumbnailWidth,
                 thumbnailHeight: thumbnailHeight,
                 subtitle: item.subtitle,
                 playOnTap: true,
+                playingId: null,
+                isMixPlaylist: item.isMix,
               ),
             _ => const YoutubeVideoCardDummy(
                 shimmerEnabled: true,

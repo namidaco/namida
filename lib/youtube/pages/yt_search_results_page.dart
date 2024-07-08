@@ -318,7 +318,10 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                       thumbnailWidth: thumbnailWidth,
                                                       playOnTap: false,
                                                       playlist: item as PlaylistInfoItem,
+                                                      firstVideoID: item.initialVideos.firstOrNull?.id,
                                                       subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
+                                                      isMixPlaylist: item.isMix,
+                                                      playingId: null,
                                                     ),
                                                   const (ChannelInfoItem) => YoutubeChannelCard(
                                                       channel: item as ChannelInfoItem,

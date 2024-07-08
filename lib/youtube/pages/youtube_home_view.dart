@@ -7,6 +7,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_feed_page.dart';
 import 'package:namida/youtube/pages/youtube_notifications_page.dart';
+import 'package:namida/youtube/pages/youtube_user_playlists_page.dart';
 import 'package:namida/youtube/pages/yt_channels_page.dart';
 import 'package:namida/youtube/pages/yt_downloads_page.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
@@ -32,6 +33,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
           YoutubeNotificationsPage(),
           YoutubeChannelsPage(),
           YoutubePlaylistsView(),
+          YoutubePlaylistsPage(),
           YTDownloadsPage(),
         ],
       ),

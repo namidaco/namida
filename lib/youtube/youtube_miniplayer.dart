@@ -868,7 +868,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 playlist: item,
                                                                 subtitle: item.subtitle,
                                                                 playOnTap: true,
-                                                                playingId: currentId,
+                                                                firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                                playingId: () => currentId,
+                                                                isMixPlaylist: item.isMix,
                                                               ),
                                                             _ => dummyVideoCard,
                                                           };

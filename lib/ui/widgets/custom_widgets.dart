@@ -3355,7 +3355,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
           tabs: widget.tabs
               .map(
                 (e) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
                   child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
               )
