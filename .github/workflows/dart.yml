@@ -82,6 +82,11 @@ jobs:
       - name: Modify applicationId
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
 
+      - name: Re-setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
       - name: (Clone) Build APK -> arm64-v8a
         run: flutter build apk --target-platform android-arm64 --release
 
