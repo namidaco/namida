@@ -37,10 +37,10 @@ class _VideoInfoController {
     final res = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
     final cached = res.read();
     if (cached == null || cached.client != _usedClient) return null;
-    if (_requiresJSPlayer) {
+    if (_requiresJSPlayer && bypassJSCheck == false) {
       if (!YoutiPie.cipher.isPrepared) {
         YoutubeInfoController.ensureJSPlayerInitialized();
-        if (bypassJSCheck == false) return null; // the player is not prepared, hence the urls are just useless
+        return null; // the player is not prepared, hence the urls are just useless
       }
     }
     return cached;

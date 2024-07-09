@@ -282,7 +282,7 @@ class _CurrentMembership {
       return;
     }
     userPatreonTier.value = tier;
-    final ms = NamicoSubscriptionManager.usdToMembershipType(tier.ammountUSD);
+    final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
     _updateGlobal(ms);
   }
@@ -294,7 +294,7 @@ class _CurrentMembership {
       return;
     }
     userPatreonTier.value = tier;
-    final ms = NamicoSubscriptionManager.usdToMembershipType(tier.ammountUSD);
+    final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
     _updateGlobal(ms);
   }
@@ -307,7 +307,7 @@ class _CurrentMembership {
       deviceId: deviceId,
     );
     userSupabaseSub.value = sub;
-    final ms = NamicoSubscriptionManager.usdToMembershipType(sub.usd);
+    final ms = sub.toMembershipType();
     userMembershipTypeSupabase.value = ms;
     _updateGlobal(ms);
   }
@@ -320,7 +320,7 @@ class _CurrentMembership {
       deviceId: deviceId,
     );
     userSupabaseSub.value = sub;
-    final ms = NamicoSubscriptionManager.usdToMembershipType(sub.usd);
+    final ms = sub.toMembershipType();
     userMembershipTypeSupabase.value = ms;
     _updateGlobal(ms);
   }
