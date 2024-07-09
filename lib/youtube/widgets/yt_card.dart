@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/color_m.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -19,12 +20,13 @@ class YoutubeCard extends StatelessWidget {
   final String? channelID;
   final bool displayChannelThumbnail;
   final bool displaythirdLineText;
-  final List<Widget> Function(double width, double height)? onTopWidgets;
+  final List<Widget> Function(double width, double height, NamidaColor? imageColors)? onTopWidgets;
   final String? smallBoxText;
   final bool? checkmarkStatus;
   final double thumbnailWidthPercentage;
   final IconData? smallBoxIcon;
   final bool extractColor;
+  final void Function(NamidaColor? color)? onColorReady;
   final List<NamidaPopupItem> Function()? menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
@@ -54,6 +56,7 @@ class YoutubeCard extends StatelessWidget {
     this.thumbnailWidthPercentage = 1.0,
     this.smallBoxIcon,
     this.extractColor = false,
+    this.onColorReady,
     this.menuChildrenDefault,
     this.isCircle = false,
     this.bottomRightWidgets = const [],
@@ -98,10 +101,11 @@ class YoutubeCard extends StatelessWidget {
                     width: thumbnailWidth,
                     height: thumbnailHeight,
                     borderRadius: 10.0,
-                    onTopWidgets: onTopWidgets?.call(thumbnailWidth, thumbnailHeight) ?? [],
+                    onTopWidgets: onTopWidgets == null ? null : (imageColors) => onTopWidgets!(thumbnailWidth, thumbnailHeight, imageColors),
                     smallBoxText: smallBoxText,
                     smallBoxIcon: smallBoxIcon,
                     extractColor: extractColor,
+                    onColorReady: onColorReady,
                     isCircle: isCircle,
                     type: thumbnailType,
                   ),

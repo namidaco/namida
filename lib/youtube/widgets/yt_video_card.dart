@@ -106,9 +106,10 @@ class YoutubeVideoCard extends StatelessWidget {
         smallBoxText: video.durSeconds?.secondsLabel,
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
         menuChildrenDefault: getMenuItems,
+        extractColor: false,
         onTopWidgets: percentageWatched == null
             ? null
-            : (thumbWidth, thumbHeight) => [
+            : (thumbWidth, thumbHeight, imageColors) => [
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -117,7 +118,7 @@ class YoutubeVideoCard extends StatelessWidget {
                       width: thumbWidth * percentageWatched,
                       child: const DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color.fromARGB(190, 255, 20, 20),
+                          color: Color.fromARGB(140, 255, 20, 20),
                         ),
                       ),
                     ),

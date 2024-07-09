@@ -126,19 +126,13 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                   return SliverList.builder(
                                     itemCount: comments.length,
                                     itemBuilder: (context, i) {
-                                      final comment = comments[i];
-                                      return ShimmerWrapper(
-                                        transparent: false,
-                                        shimmerDurationMS: 550,
-                                        shimmerDelayMS: 250,
-                                        shimmerEnabled: comment == null,
-                                        child: YTCommentCard(
-                                          key: Key("${comment == null}_${comment?.commentId}"),
-                                          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                          comment: comment,
-                                          mainList: () => comments,
-                                          videoId: currentId,
-                                        ),
+                                      final comment = comments.items[i];
+                                      return YTCommentCard(
+                                        key: Key(comment.commentId),
+                                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                        comment: comment,
+                                        mainList: () => comments,
+                                        videoId: currentId,
                                       );
                                     },
                                   );

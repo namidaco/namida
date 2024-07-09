@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -190,7 +191,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
             customUrl: videoThumbnail,
             width: thumbnailWidth,
             height: thumbnailHeight,
-            borderRadius: 10.0,
+            borderRadius: 8.0,
           ),
         ),
         NamidaPopupWrapper(

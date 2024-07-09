@@ -27,12 +27,12 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
         tabWidgets: YTHomePages.values
             .map(
               (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Tooltip(
                   message: e.toText(),
                   child: Icon(
                     e.toIcon(),
-                    size: 18.0,
+                    size: 20.0,
                   ),
                 ),
               ),

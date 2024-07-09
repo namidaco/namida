@@ -40,7 +40,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final void Function(File? imageFile)? onImageReady;
   final void Function(NamidaColor? color)? onColorReady;
-  final List<Widget> onTopWidgets;
+  final List<Widget> Function(NamidaColor? color)? onTopWidgets;
   final String? smallBoxText;
   final IconData? smallBoxIcon;
   final bool displayFallbackIcon;
@@ -66,7 +66,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.margin,
     this.onImageReady,
     this.onColorReady,
-    this.onTopWidgets = const <Widget>[],
+    this.onTopWidgets,
     this.smallBoxText,
     this.smallBoxIcon,
     this.displayFallbackIcon = true,
@@ -211,7 +211,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         forceSquared: widget.forceSquared,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: [
-          ...widget.onTopWidgets,
+          ...?widget.onTopWidgets?.call(imageColors),
           if (widget.smallBoxText != null || widget.smallBoxIcon != null)
             Positioned(
               bottom: 0.0,
