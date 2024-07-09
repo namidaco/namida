@@ -43,6 +43,8 @@ class YoutubeInfoController {
   static const playlist = YoutiPie.playlist;
   static const userplaylist = YoutiPie.userplaylist;
   static const comment = YoutiPie.comment;
+  static const commentAction = YoutiPie.commentAction;
+  static const notificationsAction = YoutiPie.notificationsAction;
   static const search = _SearchInfoController();
   static const feed = YoutiPie.feed;
   static const channel = _ChannelInfoController();
@@ -53,7 +55,8 @@ class YoutubeInfoController {
     YoutiPie.initialize(
       dataDirectory: AppDirs.YOUTIPIE_CACHE,
       sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
-      checkJSPlayer: true, // wont await.. are we cooked? properly
+      checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
+      checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
     );
     YoutiPie.setLogs(_YTReportingLog());
   }

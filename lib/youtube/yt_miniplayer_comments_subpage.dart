@@ -111,6 +111,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                         return const YTCommentCard(
                                           margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                           comment: null,
+                                          mainList: null,
                                           videoId: null,
                                         );
                                       },
@@ -135,6 +136,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                           key: Key("${comment == null}_${comment?.commentId}"),
                                           margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                                           comment: comment,
+                                          mainList: () => comments,
                                           videoId: currentId,
                                         ),
                                       );

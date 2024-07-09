@@ -1362,6 +1362,55 @@ class NamidaWheelSlider extends StatelessWidget {
   }
 }
 
+class NamidaLoadingSwitcher extends StatefulWidget {
+  final Widget Function(void Function() startLoading, void Function() stopLoading, bool isLoading) builder;
+  final double? size;
+  const NamidaLoadingSwitcher({super.key, required this.builder, this.size});
+
+  @override
+  State<NamidaLoadingSwitcher> createState() => _NamidaLoadingSwitcherState();
+}
+
+class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
+  bool _isLoading = false;
+
+  void _startLoading() {
+    if (mounted) setState(() => _isLoading = true);
+  }
+
+  void _stopLoading() {
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final child = widget.builder(_startLoading, _stopLoading, _isLoading);
+    return Stack(
+      fit: StackFit.loose,
+      alignment: Alignment.center,
+      children: [
+        AnimatedOpacity(
+          opacity: _isLoading ? 0.5 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: child,
+        ),
+        if (_isLoading)
+          IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: _isLoading ? 0.8 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: SizedBox(
+                width: widget.size,
+                height: widget.size,
+                child: const CircularProgressIndicator(strokeWidth: 2.0),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class NamidaRawLikeButton extends StatelessWidget {
   final double size;
   final Color? enabledColor;

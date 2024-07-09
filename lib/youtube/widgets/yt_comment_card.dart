@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
+import 'package:youtipie/class/result_wrapper/comment_result.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/core/extensions.dart';
@@ -8,20 +11,63 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/namida_read_more.dart';
 import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class YTCommentCard extends StatelessWidget {
+class YTCommentCard extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final String? videoId;
   final CommentInfoItem? comment;
-  const YTCommentCard({super.key, required this.videoId, required this.comment, required this.margin});
+  final YoutiPieCommentResult Function()? mainList;
+
+  const YTCommentCard({
+    super.key,
+    required this.margin,
+    required this.videoId,
+    required this.comment,
+    required this.mainList,
+  });
+
+  @override
+  State<YTCommentCard> createState() => _YTCommentCardState();
+}
+
+class _YTCommentCardState extends State<YTCommentCard> {
+  late final _currentLikeStatus = Rxn<LikeStatus>(widget.comment?.likeStatus);
+
+  @override
+  void dispose() {
+    _currentLikeStatus.close();
+    super.dispose();
+  }
+
+  Future<bool> _onChangeLikeStatus(bool isLiked, LikeAction action, void Function() onStart, void Function() onEnd) async {
+    final comment = this.widget.comment;
+    final mainList = this.widget.mainList;
+    if (comment == null || mainList == null) return isLiked;
+
+    onStart();
+    final res = await YoutubeInfoController.commentAction.changeLikeStatus(
+      comment: comment,
+      mainList: mainList(),
+      action: action,
+    );
+    onEnd();
+    if (res == true) {
+      _currentLikeStatus.value = _currentLikeStatus.value = action.toExpectedStatus();
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final comment = this.widget.comment;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
     final isArtist = comment?.author?.isArtist ?? false;
@@ -44,7 +90,7 @@ class YTCommentCard extends StatelessWidget {
     return Stack(
       children: [
         Padding(
-          padding: margin ?? EdgeInsets.zero,
+          padding: widget.margin ?? EdgeInsets.zero,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: containerColor,
@@ -171,7 +217,7 @@ class YTCommentCard extends StatelessWidget {
                                   : commentContent.rawText == null
                                       ? const SizedBox()
                                       : YoutubeDescriptionWidget(
-                                          videoId: videoId,
+                                          videoId: widget.videoId,
                                           content: commentContent,
                                           linkColor: context.theme.colorScheme.primary.withAlpha(210),
                                           childBuilder: (span) {
@@ -218,7 +264,27 @@ class YTCommentCard extends StatelessWidget {
                           const SizedBox(height: 8.0),
                           Row(
                             children: [
-                              if (comment != null) const Icon(Broken.like_1, size: 16.0),
+                              if (comment != null)
+                                NamidaLoadingSwitcher(
+                                  size: 16.0,
+                                  builder: (startLoading, stopLoading, isLoading) => ObxO(
+                                    rx: _currentLikeStatus,
+                                    builder: (currentLikeStatus) => NamidaRawLikeButton(
+                                      isLiked: currentLikeStatus == LikeStatus.liked,
+                                      likedIcon: Broken.like_filled,
+                                      normalIcon: Broken.like_1,
+                                      size: 16.0,
+                                      onTap: (isLiked) async {
+                                        return _onChangeLikeStatus(
+                                          isLiked,
+                                          isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                          startLoading,
+                                          stopLoading,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
                               if (likeCount == null || likeCount > 0) ...[
                                 const SizedBox(width: 4.0),
                                 NamidaDummyContainer(
@@ -233,7 +299,27 @@ class YTCommentCard extends StatelessWidget {
                                 ),
                               ],
                               const SizedBox(width: 12.0),
-                              const Icon(Broken.dislike, size: 16.0),
+                              if (comment != null)
+                                NamidaLoadingSwitcher(
+                                  size: 16.0,
+                                  builder: (startLoading, stopLoading, isLoading) => ObxO(
+                                    rx: _currentLikeStatus,
+                                    builder: (currentLikeStatus) => NamidaRawLikeButton(
+                                      isLiked: currentLikeStatus == LikeStatus.disliked,
+                                      likedIcon: Broken.dislike_filled,
+                                      normalIcon: Broken.dislike,
+                                      size: 16.0,
+                                      onTap: (isDisLiked) async {
+                                        return _onChangeLikeStatus(
+                                          isDisLiked,
+                                          isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
+                                          startLoading,
+                                          stopLoading,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
                               const SizedBox(width: 16.0),
                               SizedBox(
                                 height: 28.0,
@@ -414,7 +500,11 @@ class YTCommentCardCompact extends StatelessWidget {
               Row(
                 children: [
                   const SizedBox(width: 4.0),
-                  if (comment != null) const Icon(Broken.like_1, size: 12.0),
+                  if (comment != null)
+                    Icon(
+                      comment!.likeStatus == LikeStatus.liked ? Broken.like_filled : Broken.like_1,
+                      size: 12.0,
+                    ),
                   if (likeCount == null || likeCount > 0) ...[
                     const SizedBox(width: 4.0),
                     NamidaDummyContainer(

@@ -64,7 +64,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   }
 
   Future<void> _markAsRead(YoutiPieNotificationResult mainList) async {
-    final marked = await YoutiPie.notificationsAction.markNotficationRead(
+    final marked = await YoutubeInfoController.notificationsAction.markNotficationRead(
       mainList: mainList,
       notification: widget.notification,
     );
