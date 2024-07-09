@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
+import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
+import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -17,16 +20,21 @@ import 'package:namida/youtube/widgets/namida_read_more.dart';
 import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/yt_minplayer_comment_replies_subpage.dart';
 
-class YTCommentCard extends StatefulWidget {
+class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
+  final int bgAlpha;
+  final bool showRepliesBox;
   final String? videoId;
-  final CommentInfoItem? comment;
-  final YoutiPieCommentResult Function()? mainList;
+  final CommentInfoItemBase? comment;
+  final W Function()? mainList;
 
   const YTCommentCard({
     super.key,
     required this.margin,
+    this.bgAlpha = 100,
+    this.showRepliesBox = true,
     required this.videoId,
     required this.comment,
     required this.mainList,
@@ -65,6 +73,22 @@ class _YTCommentCardState extends State<YTCommentCard> {
     }
   }
 
+  void _onRepliesTap({required CommentInfoItem comment, required int? repliesCount}) {
+    final mainList = widget.mainList;
+    if (mainList == null) return;
+    if (mainList is! YoutiPieCommentResult Function()) return;
+    NamidaNavigator.inst.isInYTCommentRepliesSubpage = true;
+    NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
+      YTMiniplayerCommentRepliesSubpage(
+        comment: comment,
+        mainList: mainList,
+        repliesCount: repliesCount,
+        videoId: widget.videoId,
+      ),
+      maintainState: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final comment = this.widget.comment;
@@ -74,11 +98,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final uploadedFrom = comment?.publishedTimeText;
     final commentContent = comment?.content;
     final likeCount = comment?.likesCount;
-    final repliesCount = comment?.repliesCount;
     final isHearted = comment?.isHearted ?? false;
-    final isPinned = comment?.isPinned ?? false;
 
-    final containerColor = context.theme.cardColor.withAlpha(100);
+    final containerColor = context.theme.cardColor.withAlpha(widget.bgAlpha);
     final readmoreColor = context.theme.colorScheme.primary.withAlpha(160);
 
     final authorTextColor = context.theme.colorScheme.onSurface.withAlpha(180);
@@ -131,7 +153,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 2.0),
-                          if (isPinned) ...[
+                          if (comment is CommentInfoItem && comment.isPinned) ...[
                             Row(
                               children: [
                                 const Icon(
@@ -320,25 +342,19 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                     ),
                                   ),
                                 ),
-                              const SizedBox(width: 16.0),
-                              SizedBox(
-                                height: 28.0,
-                                child: TextButton.icon(
-                                  style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                    foregroundColor: context.theme.colorScheme.onSurface.withAlpha(200),
-                                  ),
-                                  onPressed: () {},
-                                  icon: const Icon(Broken.document, size: 16.0),
-                                  label: NamidaButtonText(
-                                    [
-                                      lang.REPLIES,
-                                      if (repliesCount != null) repliesCount,
-                                    ].join(' • '),
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
-                                  ),
+                              if (widget.showRepliesBox && comment is CommentInfoItem) const SizedBox(width: 8.0),
+                              if (widget.showRepliesBox && comment is CommentInfoItem)
+                                NamidaInkWellButton(
+                                  sizeMultiplier: 0.8,
+                                  borderRadius: 6.0,
+                                  onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
+                                  bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.2),
+                                  icon: Broken.document,
+                                  text: [
+                                    lang.REPLIES,
+                                    if (comment.repliesCount != null) comment.repliesCount!,
+                                  ].join(' • '),
                                 ),
-                              ),
                             ],
                           ),
                         ],

@@ -115,8 +115,15 @@ class YoutubeSettings extends SettingSubpageProvider {
 
                   // -- pop comments subpage in case was inside.
                   if (settings.ytTopComments.value == false) {
-                    NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
-                    NamidaNavigator.inst.isInYTCommentsSubpage = false;
+                    if (NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
+                      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
+                      NamidaNavigator.inst.isInYTCommentRepliesSubpage = false;
+                    }
+                    // we need to pop both if required
+                    if (NamidaNavigator.inst.isInYTCommentsSubpage) {
+                      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
+                      NamidaNavigator.inst.isInYTCommentsSubpage = false;
+                    }
                   }
                 },
               ),

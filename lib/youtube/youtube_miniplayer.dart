@@ -196,13 +196,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
         child: Listener(
           behavior: HitTestBehavior.translucent,
           onPointerDown: (event) {
-            if (NamidaNavigator.inst.isInYTCommentsSubpage) return;
+            if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage) return;
             _mpState?.setDragExternally(true);
             _mpState?.saveDragHeightStart();
             _velocity.addPosition(event.timeStamp, event.position);
           },
           onPointerMove: (event) {
-            if (NamidaNavigator.inst.isInYTCommentsSubpage) return;
+            if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage) return;
             if (!_canScrollQueue) {
               _mpState?.onVerticalDragUpdate(event.delta.dy);
               _velocity.addPosition(event.timeStamp, event.position);
@@ -214,7 +214,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             });
           },
           onPointerUp: (event) {
-            if (!NamidaNavigator.inst.isInYTCommentsSubpage) {
+            if (!NamidaNavigator.inst.isInYTCommentsSubpage && !NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
               if (_scrollController.hasClients && _scrollController.position.pixels <= 0) {
                 _mpState?.onVerticalDragEnd(_velocity.getVelocity().pixelsPerSecond.dy);
               }
@@ -1199,7 +1199,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
                                         // ---- if was in comments subpage, and this gets hidden, the route is popped
                                         // ---- same with [isQueueSheetOpen]
-                                        if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isQueueSheetOpen ? true : percentage > 0)
+                                        if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage || NamidaNavigator.inst.isQueueSheetOpen
+                                            ? true
+                                            : percentage > 0)
                                           Expanded(
                                             child: Stack(
                                               fit: StackFit.expand,

@@ -41,6 +41,7 @@ class NamidaNavigator {
 
   bool isytLocalSearchInFullPage = false;
   bool isInYTCommentsSubpage = false;
+  bool isInYTCommentRepliesSubpage = false;
   bool isQueueSheetOpen = false;
 
   final currentWidgetStack = <NamidaRoute>[].obs;
@@ -411,6 +412,9 @@ class NamidaNavigator {
       if (isQueueSheetOpen) {
         ytQueueSheetKey.currentState?.dismissSheet();
         isQueueSheetOpen = false;
+      } else if (isInYTCommentRepliesSubpage) {
+        ytMiniplayerCommentsPageKey.currentState?.pop();
+        isInYTCommentRepliesSubpage = false;
       } else if (isInYTCommentsSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentsSubpage = false;
