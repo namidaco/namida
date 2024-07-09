@@ -55,53 +55,37 @@ jobs:
           VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
           echo ::set-output name=version::"$VERSION"
 
-      - name: Create keystore
+      - name: Create keystore & key.properties
         run: |
           echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
-
-      - name: Create key properties
-        run: |
           echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
 
-      - name: Build APK -> arm64-v8a
-        run: flutter build apk --target-platform android-arm64 --release
-
-      - name: Move arm64-v8a
+      - name: Creating original apks
+        continue-on-error: true
         run: |
           mkdir -p build_final
+          flutter build apk --target-platform android-arm64 --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-arm64-v8a.apk
-
-      - name: Build APK -> armeabi-v7a
-        run: flutter build apk --target-platform android-arm --release
-
-      - name: Move armeabi-v7a
-        run: |
-          mkdir -p build_final
+          flutter build apk --target-platform android-arm --release
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-armeabi-v7a.apk
 
-      - name: Modify applicationId
-        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
-
-      - name: Re-setup dependencies
+      - name: Creating clone repo & apks
         run: |
+          git clone https://github.com/namidaco/namida/ namida-clone
+          cd namida-clone
           flutter clean
           flutter pub get
-
-      - name: (Clone) Build APK -> arm64-v8a
-        run: flutter build apk --target-platform android-arm64 --release
-
-      - name: (Clone) Move arm64-v8a
-        run: |
-          mkdir -p build_final
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-arm64-v8a.apk
-
-      - name: (Clone) Build APK -> armeabi-v7a
-        run: flutter build apk --target-platform android-arm --release
-
-      - name: (Clone) Move armeabi-v7a
-        run: |
-          mkdir -p build_final
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-armeabi-v7a.apk
+          flutter pub upgrade
+          git clone https://github.com/namidaco/namida-translations/ assets/language
+          find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+          echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
+          echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
+          mkdir -p ../build_final
+          flutter build apk --target-platform android-arm64 --release
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-arm64-v8a.apk
+          flutter build apk --target-platform android-arm --release
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version}}-beta-clone-armeabi-v7a.apk
+          cd ../
 
       - name: Get the previous release date
         continue-on-error: true
@@ -113,8 +97,16 @@ jobs:
       - name: Generate Changelog
         continue-on-error: true
         run: |
-          git_log=$(git log --oneline --decorate --no-abbrev-commit --after="$PREVIOUS_RELEASE_DATE")
-          echo "GIT_CHANGELOG=$git_log" >> $GITHUB_ENV
+          REPO_URL="https://github.com/namidaco/namida/commit/"
+          COMMITS=$(git log --pretty=format:"%H %s" --decorate --no-abbrev-commit --after="$PREVIOUS_RELEASE_DATE")
+          CHANGELOG_FILE="CHANGELOG_temp.md"
+          : > $CHANGELOG_FILE
+          while IFS= read -r line; do
+            HASH=$(echo "$line" | awk '{print $1}')
+            MESSAGE=$(echo "$line" | cut -d' ' -f2-)
+            echo "$REPO_URL$HASH $MESSAGE" >> $CHANGELOG_FILE
+          done <<< "$COMMITS"
+          echo "CHANGELOG_FILE=$CHANGELOG_FILE" >> $GITHUB_ENV
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
@@ -123,7 +115,7 @@ jobs:
           make_latest: true
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
-          body: ${{ env.GIT_CHANGELOG }}
+          body_path: ${{ env.CHANGELOG_FILE}}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
