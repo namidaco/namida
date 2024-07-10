@@ -17,6 +17,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -68,7 +69,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   void initState() {
     _groupName.value = widget.playlistName;
     _addAllYTIDsToSelected();
-    _fillConfigMap();
     super.initState();
   }
 
@@ -82,19 +82,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     super.dispose();
   }
 
-  void _fillConfigMap() {
-    widget.ids.loop((e) {
-      final id = e.id;
-      _configMap[id] = _getDummyDownloadConfig(id);
-    });
-  }
-
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id) {
     final videoTitle = widget.infoLookup[id]?.title ?? YoutubeInfoController.utils.getVideoName(id);
     final filename = videoTitle ?? id;
     return YoutubeItemDownloadConfig(
-      id: id,
-      filename: filename,
+      id: DownloadTaskVideoId(videoId: id),
+      groupName: DownloadTaskGroupName(groupName: _groupName.value),
+      filename: DownloadTaskFilename(initialFilename: filename),
       ffmpegTags: {},
       fileDate: null,
       videoStream: null,
@@ -350,8 +344,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           return Obx(
                             () {
                               final isSelected = _selectedList.contains(id);
-                              final filename = _configMap[id]?.filename;
-                              final fileExists = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.valueR}/$filename").existsSync();
+                              final filename = _configMap[id]?.filenameR;
+                              final fileExists = filename == null ? false : File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.valueR}/${filename.filename}").existsSync();
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
@@ -515,7 +509,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         if (!await requestManageStoragePermission()) return;
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
-                          groupName: widget.playlistName,
+                          groupName: DownloadTaskGroupName(groupName: widget.playlistName),
                           itemsConfig: _selectedList.value.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
                           useCachedVersionsIfAvailable: true,
                           autoExtractTitleAndArtist: autoExtractTitleAndArtist,

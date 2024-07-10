@@ -28,6 +28,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -241,6 +242,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                 if (currentItem is! YoutubeID) return const SizedBox();
 
                 final currentId = currentItem.id;
+                final currentIdTask = DownloadTaskVideoId(videoId: currentItem.id);
                 final isUserLiked = favouritesPlaylist.isItemFavourite(currentItem);
 
                 return ObxO(
@@ -563,12 +565,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           const SizedBox(width: 4.0),
                                                           Obx(
                                                             () {
-                                                              final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentId]?.values.firstOrNull;
+                                                              final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentIdTask]?.values.firstOrNull;
                                                               final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
-                                                              final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentId]?.values.firstOrNull;
+                                                              final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentIdTask]?.values.firstOrNull;
                                                               final videoPercText = videoProgress?.percentageText(prefix: lang.VIDEO);
 
-                                                              final isDownloading = YoutubeController.inst.isDownloading[currentId]?.values.any((element) => element) == true;
+                                                              final isDownloading = YoutubeController.inst.isDownloading[currentIdTask]?.values.any((element) => element) == true;
 
                                                               final wasDownloading = videoProgress != null || audioProgress != null;
                                                               final icon = (wasDownloading && !isDownloading)
@@ -587,13 +589,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   if (isDownloading) {
                                                                     YoutubeController.inst.pauseDownloadTask(
                                                                       itemsConfig: [],
-                                                                      videosIds: [currentId],
-                                                                      groupName: '',
+                                                                      videosIds: [currentIdTask],
+                                                                      groupName: const DownloadTaskGroupName.defaulty(),
                                                                     );
                                                                   } else if (wasDownloading) {
                                                                     YoutubeController.inst.resumeDownloadTaskForIDs(
-                                                                      videosIds: [currentId],
-                                                                      groupName: '',
+                                                                      videosIds: [currentIdTask],
+                                                                      groupName: const DownloadTaskGroupName.defaulty(),
                                                                     );
                                                                   } else {
                                                                     await showDownloadVideoBottomSheet(videoId: currentId);

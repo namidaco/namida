@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 
 class NotificationService {
   //Hanle displaying of notifications.
@@ -93,7 +94,7 @@ class NotificationService {
   }
 
   void downloadYoutubeNotification({
-    required String notificationID,
+    required DownloadTaskFilename notificationID,
     required String title,
     required String Function(String progressText) subtitle,
     String? imagePath,
@@ -112,23 +113,23 @@ class NotificationService {
       payload: _youtubeDownloadPayload,
       imagePath: imagePath,
       isInBytes: true,
-      tag: notificationID,
+      tag: notificationID.filename,
       displayTime: displayTime,
     );
   }
 
-  Future<void> removeDownloadingYoutubeNotification({required String notificationID}) async {
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID);
+  Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename notificationID}) async {
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID.filename);
   }
 
   void doneDownloadingYoutubeNotification({
-    required String notificationID,
+    required DownloadTaskFilename notificationID,
     required String videoTitle,
     required String subtitle,
     required bool failed,
     String? imagePath,
   }) async {
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID);
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID.filename);
     _createNotification(
       id: _youtubeDownloadID,
       title: videoTitle,
@@ -139,7 +140,7 @@ class NotificationService {
       payload: _youtubeDownloadPayload,
       imagePath: imagePath,
       isInBytes: true,
-      tag: notificationID,
+      tag: notificationID.filename,
       displayTime: DateTime.now(),
     );
   }

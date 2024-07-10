@@ -14,6 +14,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -104,7 +105,7 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   if (initialItemConfig != null) {
-    updatefilenameOutput(customName: initialItemConfig.filename);
+    updatefilenameOutput(customName: initialItemConfig.filename.filename);
     updateTagsMap(initialItemConfig.ffmpegTags);
   }
 
@@ -643,8 +644,9 @@ Future<void> showDownloadVideoBottomSheet({
                                       : const BoxDecoration(),
                                   onTap: () async {
                                     final itemConfig = YoutubeItemDownloadConfig(
-                                      id: videoId,
-                                      filename: videoOutputFilenameController.text,
+                                      id: DownloadTaskVideoId(videoId: videoId),
+                                      groupName: DownloadTaskGroupName(groupName: groupName),
+                                      filename: DownloadTaskFilename(initialFilename: videoOutputFilenameController.text),
                                       ffmpegTags: tagsMap,
                                       fileDate: videoDateTime,
                                       videoStream: selectedVideoOnlyStream.value,
@@ -666,7 +668,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
                                         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                                        groupName: groupName,
+                                        groupName: DownloadTaskGroupName(groupName: groupName),
                                         itemsConfig: [itemConfig],
                                       );
                                     }

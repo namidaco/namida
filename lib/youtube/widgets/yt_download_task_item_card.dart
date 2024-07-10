@@ -21,6 +21,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -34,7 +35,7 @@ import 'package:namida/youtube/yt_utils.dart';
 class YTDownloadTaskItemCard extends StatelessWidget {
   final List<YoutubeItemDownloadConfig> videos;
   final int index;
-  final String groupName;
+  final DownloadTaskGroupName groupName;
 
   const YTDownloadTaskItemCard({
     super.key,
@@ -120,11 +121,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     final BuildContext context,
     final YoutubeItemDownloadConfig item,
     final StreamInfoItem? info,
-    final String groupName,
+    final DownloadTaskGroupName groupName,
   ) {
-    final videoPage = YoutubeInfoController.video.fetchVideoPageSync(item.id);
-    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(item.id) ?? item.id;
-    final videoSubtitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(item.id) ?? '?';
+    final videoId = item.id.videoId;
+    final videoPage = YoutubeInfoController.video.fetchVideoPageSync(videoId);
+    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(videoId) ?? videoId;
+    final videoSubtitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId) ?? '?';
     final dateMS = info?.publishedAt.date?.millisecondsSinceEpoch;
     final dateText = dateMS?.dateAndClockFormattedOriginal ?? '?';
     final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow()})";
@@ -153,7 +155,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             },
           );
 
-    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName/${item.filename}".replaceAll('//', '/');
+    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}/${item.filename}".replaceAll('//', '/');
 
     List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget, Color? iconColor}) {
       return [
@@ -173,7 +175,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       ];
     }
 
-    final videoId = info?.id ?? '';
     final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
     final videoPageInfo = videoPage?.videoInfo;
     final likesCount = videoPageInfo?.engagement?.likesCount;
@@ -235,12 +236,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                       ),
                       TrackInfoListTile(
                         title: lang.LINK,
-                        value: YTUrlUtils.buildVideoUrl(item.id),
+                        value: YTUrlUtils.buildVideoUrl(videoId),
                         icon: Broken.link_1,
                       ),
                       TrackInfoListTile(
                         title: 'ID',
-                        value: item.id,
+                        value: videoId,
                         icon: Broken.video_square,
                       ),
                       TrackInfoListTile(
@@ -297,7 +298,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     required BuildContext context,
   }) {
     final item = videos[index];
-    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
+    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}";
     final file = File("$itemDirectoryPath/${item.filename}");
 
     final videoStream = item.videoStream;
@@ -388,7 +389,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                   children: [
                     TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
                     TextSpan(
-                      text: item.filename,
+                      text: item.filename.filename,
                       style: context.textTheme.displayMedium,
                     ),
                     TextSpan(text: " ?", style: context.textTheme.displayLarge),
@@ -408,7 +409,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
     await showDownloadVideoBottomSheet(
       showSpecificFileOptionsInEditTagDialog: false,
-      videoId: config.id,
+      videoId: config.id.videoId,
       initialItemConfig: config,
       confirmButtonText: lang.RESTART,
       onConfirmButtonTap: (groupName, newConfig) {
@@ -423,13 +424,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   Future<String> _onRenameIconTap({
     required BuildContext context,
     required YoutubeItemDownloadConfig config,
-    required String groupName,
+    required DownloadTaskGroupName groupName,
   }) async {
     return await showNamidaBottomSheetWithTextField(
       context: context,
-      initalControllerText: config.filename,
+      initalControllerText: config.filename.filename,
       title: lang.RENAME,
-      hintText: config.filename,
+      hintText: config.filename.filename,
       labelText: lang.FILE_NAME,
       validator: (value) {
         if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
@@ -438,7 +439,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
         final filenameClean = YoutubeController.inst.cleanupFilename(value);
         if (value != filenameClean) {
-          const baddiesAll = r'#$|/\!^:"';
+          const baddiesAll = YoutubeController.cleanupFilenameRegex; // should remove \ but whatever
           final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
           return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
         }
@@ -452,7 +453,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         await YoutubeController.inst.renameConfigFilename(
           config: config,
           videoID: config.id,
-          newFilename: text,
+          newFilename: DownloadTaskFilename(initialFilename: text),
           groupName: groupName,
           renameCacheFiles: true,
         );
@@ -465,14 +466,16 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}$groupName");
+    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
     final item = videos[index];
-    final downloadedFile = File("${directory.path}/${item.filename}");
+    final downloadedFile = File("${directory.path}/${item.filename.filename}");
 
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
-    final info = YoutubeInfoController.utils.getStreamInfoSync(item.id);
+    final videoIdWrapper = item.id;
+    final videoId = videoIdWrapper.videoId;
+    final info = YoutubeInfoController.utils.getStreamInfoSync(videoId);
     final duration = info?.durSeconds?.secondsLabel;
 
     final itemIcon = item.videoStream != null
@@ -485,11 +488,11 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        videoId: item.id,
+        videoId: videoId,
         url: info?.buildUrl(),
         channelID: info?.channelId ?? info?.channel.id,
         playlistID: null,
-        idsNamesLookup: {item.id: info?.title},
+        idsNamesLookup: {videoId: info?.title},
         playlistName: '',
         videoYTID: null,
       )..insert(
@@ -499,7 +502,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             title: lang.PLAY_ALL,
             onTap: () {
               YTUtils.expandMiniplayer();
-              Player.inst.playOrPause(index, videos.map((e) => YoutubeID(id: e.id, playlistID: null)), QueueSource.others);
+              Player.inst.playOrPause(index, videos.map((e) => YoutubeID(id: e.id.videoId, playlistID: null)), QueueSource.others);
             },
           ),
         ),
@@ -517,32 +520,33 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             const SizedBox(width: 4.0),
             YoutubeThumbnail(
               type: ThumbnailType.video,
-              key: Key(item.id),
+              key: Key(videoId),
               borderRadius: 8.0,
               isImportantInCache: true,
               width: thumbWidth,
               height: thumbHeight,
-              videoId: item.id,
+              videoId: videoId,
               smallBoxText: duration,
             ),
             const SizedBox(width: 8.0),
             Expanded(
               child: Obx(() {
-                final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
-                final isFetchingData = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
-                final audioP = YoutubeController.inst.downloadsAudioProgressMap[item.id]?[item.filename];
+                final filename = item.filenameR;
+                final isDownloading = YoutubeController.inst.isDownloading[videoIdWrapper]?[filename] ?? false;
+                final isFetchingData = YoutubeController.inst.isFetchingData[videoIdWrapper]?[filename] ?? false;
+                final audioP = YoutubeController.inst.downloadsAudioProgressMap[videoIdWrapper]?[filename];
                 final audioPerc = audioP == null ? null : audioP.progress / audioP.totalProgress;
-                final videoP = YoutubeController.inst.downloadsVideoProgressMap[item.id]?[item.filename];
+                final videoP = YoutubeController.inst.downloadsVideoProgressMap[videoIdWrapper]?[filename];
                 final videoPerc = videoP == null ? null : videoP.progress / videoP.totalProgress;
+                final canDisplayPercentage = audioPerc != null || videoPerc != null;
 
-                final speedB = YoutubeController.inst.currentSpeedsInByte[item.id]?[item.filename];
+                final speedB = YoutubeController.inst.currentSpeedsInByte[videoIdWrapper]?[filename];
                 final cp = videoP?.progress ?? audioP?.progress ?? 0;
                 final ctp = videoP?.totalProgress ?? audioP?.totalProgress ?? 0;
                 final speedText = speedB == null ? '' : ' (${speedB.fileSizeFormatted}/s)';
                 final downloadInfoText = "${cp.fileSizeFormatted}/${ctp == 0 ? '?' : ctp.fileSizeFormatted}$speedText";
-                final canDisplayPercentage = audioPerc != null || videoPerc != null;
 
-                final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
+                final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[filename] != null;
 
                 double finalPercentage = 0.0;
                 if (fileExists) {
@@ -560,7 +564,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                   children: [
                     const SizedBox(height: 6.0),
                     Text(
-                      item.filename,
+                      item.filename.filename,
                       style: context.textTheme.displaySmall,
                     ),
                     const SizedBox(height: 6.0),
@@ -630,8 +634,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                               children: [
                                 Obx(
                                   () {
-                                    final isDownloading = YoutubeController.inst.isDownloading[item.id]?[item.filename] ?? false;
-                                    final isFetching = YoutubeController.inst.isFetchingData[item.id]?[item.filename] ?? false;
+                                    final isDownloading = YoutubeController.inst.isDownloading[videoId]?[item.filename] ?? false;
+                                    final isFetching = YoutubeController.inst.isFetchingData[videoId]?[item.filename] ?? false;
                                     final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
                                     final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
 

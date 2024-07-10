@@ -10,6 +10,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -156,7 +157,7 @@ class YTDownloadsPage extends StatelessWidget {
   set _isOnGoingSelected(bool? val) => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value = val;
   void _updateTempList(bool? forIsGoing) => YTOnGoingFinishedDownloads.inst.updateTempList(forIsGoing);
   void _refreshTempList() => YTOnGoingFinishedDownloads.inst.refreshList();
-  RxList<(String, YoutubeItemDownloadConfig)> get _downloadTasksTempList => YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList;
+  RxList<(DownloadTaskGroupName, YoutubeItemDownloadConfig)> get _downloadTasksTempList => YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList;
 
   @override
   Widget build(BuildContext context) {
@@ -303,7 +304,7 @@ class YTDownloadsPage extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
                                   child: NamidaExpansionTile(
                                     initiallyExpanded: true,
-                                    titleText: groupName == '' ? lang.DEFAULT : groupName,
+                                    titleText: groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
                                     subtitleText: lastEditedAgo,
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -336,7 +337,7 @@ class YTDownloadsPage extends StatelessWidget {
                                               context: context,
                                               operationTitle: lang.CANCEL,
                                               confirmMessage: lang.REMOVE,
-                                              groupTitle: groupName,
+                                              groupTitle: groupName.groupName,
                                               itemsLength: list.length,
                                             );
                                             if (confirmed) {
@@ -374,13 +375,14 @@ class YTDownloadsPage extends StatelessWidget {
                                 );
                               },
                             )
-                          : Obx(
-                              () {
-                                final videos = _downloadTasksTempList.valueR.map((e) => e.$2).toList();
+                          : ObxO(
+                              rx: _downloadTasksTempList,
+                              builder: (downloadTasksTempList) {
+                                final videos = downloadTasksTempList.map((e) => e.$2).toList();
                                 return SliverList.builder(
-                                  itemCount: _downloadTasksTempList.length,
+                                  itemCount: downloadTasksTempList.length,
                                   itemBuilder: (context, index) {
-                                    final groupNameAndItem = _downloadTasksTempList[index];
+                                    final groupNameAndItem = downloadTasksTempList[index];
                                     return YTDownloadTaskItemCard(
                                       videos: videos,
                                       index: index,

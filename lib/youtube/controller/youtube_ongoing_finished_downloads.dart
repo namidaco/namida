@@ -1,5 +1,6 @@
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
@@ -7,7 +8,7 @@ class YTOnGoingFinishedDownloads {
   static final YTOnGoingFinishedDownloads inst = YTOnGoingFinishedDownloads._internal();
   YTOnGoingFinishedDownloads._internal();
 
-  final youtubeDownloadTasksTempList = <(String, YoutubeItemDownloadConfig)>[].obs;
+  final youtubeDownloadTasksTempList = <(DownloadTaskGroupName, YoutubeItemDownloadConfig)>[].obs;
   final isOnGoingSelected = Rxn<bool>();
 
   void refreshList() => updateTempList(isOnGoingSelected.value);
@@ -23,7 +24,7 @@ class YTOnGoingFinishedDownloads {
         smallList?.reverseLoop((v) {
           final fileExist = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] != null;
           final isDownloadingOrFetching = (YoutubeController.inst.isDownloading[v.id]?[v.filename] ?? false) || (YoutubeController.inst.isFetchingData[v.id]?[v.filename] ?? false);
-          if (filter(fileExist, isDownloadingOrFetching)) youtubeDownloadTasksTempList.add((key, v));
+          if (filter(fileExist, isDownloadingOrFetching)) youtubeDownloadTasksTempList.value.add((key, v));
         });
       });
     }
@@ -33,5 +34,7 @@ class YTOnGoingFinishedDownloads {
     } else {
       addToListy(filter: (fileExists, isDownloadingOrFetching) => fileExists && !isDownloadingOrFetching);
     }
+
+    youtubeDownloadTasksTempList.refresh();
   }
 }
