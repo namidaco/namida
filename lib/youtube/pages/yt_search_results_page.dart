@@ -199,6 +199,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                           thumbnailWidthPercentage: 0.6,
                           thumbnailHeight: thumbnailHeightLocal,
                           thumbnailWidth: thumbnailWidthLocal,
+                          showThirdLine: false,
                           isImageImportantInCache: false,
                           video: item,
                           playlistID: null,

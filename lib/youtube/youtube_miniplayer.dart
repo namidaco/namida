@@ -261,7 +261,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                         String? uploadDate;
                         String? uploadDateAgo;
 
-                        final parsedDate = videoInfo?.publishedAt.date ?? videoInfoStream?.publishedAt.date ?? videoInfoStream?.publishDate.date;
+                        final parsedDate = videoInfoStream?.publishedAt.date ?? videoInfoStream?.publishDate.date; // videoInfo?.publishedAt.date aint no way near accurate
 
                         if (parsedDate != null) {
                           uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;

@@ -326,6 +326,7 @@ Future<void> showDownloadVideoBottomSheet({
                           isImportantInCache: true,
                           borderRadius: 10.0,
                           videoId: videoId,
+                          customUrl: videoInfo?.thumbnails.pick()?.url,
                           width: context.width * 0.2,
                           height: context.width * 0.2 * 9 / 16,
                           onImageReady: (imageFile) {

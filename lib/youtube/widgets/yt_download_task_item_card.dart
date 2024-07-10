@@ -31,6 +31,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
+import 'package:youtipie/youtipie.dart';
 
 class YTDownloadTaskItemCard extends StatelessWidget {
   final List<YoutubeItemDownloadConfig> videos;
@@ -526,6 +527,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
               width: thumbWidth,
               height: thumbHeight,
               videoId: videoId,
+              customUrl: info?.liveThumbs.pick()?.url,
               smallBoxText: duration,
             ),
             const SizedBox(width: 8.0),

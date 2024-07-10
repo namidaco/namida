@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -143,6 +144,7 @@ class YTHistoryVideoCard extends StatelessWidget {
                     width: thumbWidth - 3.0,
                     height: thumbHeight - 3.0,
                     videoId: video.id,
+                    customUrl: info?.liveThumbs.pick()?.url,
                     smallBoxText: duration,
                     smallBoxIcon: willSleepAfterThis ? Broken.timer_1 : null,
                   ),

@@ -33,7 +33,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
 
   late final _defaultSorting = YTVideosSorting.date;
   late final _defaultSortingByTop = true;
-  late final sorting = _defaultSorting.obs;
+  late final sorting = Rxn<YTVideosSorting>(_defaultSorting);
   late final sortingByTop = _defaultSortingByTop.obs;
 
   Widget get sortWidget => SingleChildScrollView(

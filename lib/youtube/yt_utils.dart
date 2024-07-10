@@ -179,6 +179,7 @@ class YTUtils {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
+    if (channelID == null || channelID.isEmpty) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,

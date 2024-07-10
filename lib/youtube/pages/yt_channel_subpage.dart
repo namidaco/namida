@@ -243,7 +243,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     final subsCountText = channelInfo?.subscribersCountText;
     final streamsCount = channelInfo?.videosCount;
 
-    String videosCountVSTotalText = "${streamsList?.length ?? '?'} / ${streamsCount ?? '?'}";
+    String videosCountVSTotalText = "${streamsList?.length ?? '?'} / ${streamsCount?.formatDecimalShort() ?? '?'}";
     String? peakDatesText;
     if (streamsPeakDates != null) {
       videosCountVSTotalText += ' | ';

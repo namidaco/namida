@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
@@ -393,6 +394,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             height: thumHeight - 4.0,
                                             isImportantInCache: false,
                                             videoId: id,
+                                            customUrl: info?.liveThumbs.pick()?.url,
                                             smallBoxText: duration,
                                           ),
                                         ),

@@ -73,12 +73,12 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   }
 
   Future<void> _onTapInternal() async {
+    if (widget.notification.isComment) return;
+
     final mainList = widget.mainList();
     Player.inst.playOrPause(
       mainList.items.length - widget.index - 1,
-      mainList.items.reversed.map(
-        (e) => YoutubeID(id: e.id, playlistID: null),
-      ),
+      mainList.items.reversed.where((element) => !element.isComment).map((e) => YoutubeID(id: e.id, playlistID: null)),
       QueueSource.others,
     );
     YTUtils.expandMiniplayer();
@@ -88,6 +88,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   List<NamidaPopupItem> getMenuItems() {
     final mainList = widget.mainList();
     final videoId = widget.notification.id;
+    if (videoId.isEmpty) return [];
+    if (widget.notification.isComment) return [];
     return YTUtils.getVideoCardMenuItems(
       videoId: videoId,
       url: widget.notification.buildUrl(),

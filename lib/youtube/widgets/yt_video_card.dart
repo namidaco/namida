@@ -30,6 +30,7 @@ class YoutubeVideoCard extends StatelessWidget {
   final double fontMultiplier;
   final double thumbnailWidthPercentage;
   final bool dateInsteadOfChannel;
+  final bool showThirdLine;
 
   const YoutubeVideoCard({
     super.key,
@@ -44,6 +45,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.fontMultiplier = 1.0,
     this.thumbnailWidthPercentage = 1.0,
     this.dateInsteadOfChannel = false,
+    this.showThirdLine = true,
   });
 
   List<NamidaPopupItem> getMenuItems() {
@@ -90,7 +92,7 @@ class YoutubeVideoCard extends StatelessWidget {
           if (viewsCountText != null && viewsCountText.isNotEmpty) viewsCountText,
           if (uploadDateAgo != null) uploadDateAgo,
         ].join(' - '),
-        displaythirdLineText: true,
+        displaythirdLineText: showThirdLine,
         thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channel.title,
         displayChannelThumbnail: !dateInsteadOfChannel,
         channelThumbnailUrl: video.channel.thumbnails.pick()?.url,

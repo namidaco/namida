@@ -38,6 +38,11 @@ class ThumbnailManager {
     String? symlinkId,
     bool isTemp = false,
   }) {
+    final dirPrefix = isTemp ? 'temp/' : '';
+
+    if (id != null && id.isNotEmpty) {
+      return File("${AppDirs.YT_THUMBNAILS}$dirPrefix${symlinkId ?? '$id.png'}");
+    }
     String? finalUrl = url;
     final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
     if (imageUrl != null && imageUrl.length > 1) {
@@ -46,15 +51,11 @@ class ThumbnailManager {
       if (finalUrl != null) finalUrl = '${finalUrl.splitLast('/')}.png'; // we need the quality after the =
     }
 
-    final dirPrefix = isTemp ? 'temp/' : '';
+    if (finalUrl != null) {
+      return File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
+    }
 
-    final file = id != null && id != ''
-        ? File("${AppDirs.YT_THUMBNAILS}$dirPrefix${symlinkId ?? '$id.png'}")
-        : finalUrl == null
-            ? null
-            : File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
-
-    return file;
+    return null;
   }
 
   Future<File?> extractVideoThumbnailAndSave({
