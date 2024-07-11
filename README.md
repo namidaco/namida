@@ -177,8 +177,9 @@ Animating Thumbnail        |  Recommends & Listens
 
 # Installation
 
-- Download latest version from [releases](https://github.com/namidaco/namida/releases) page
-- Available variants are arm & arm64
+- Stable downloads: [stable-releases](https://github.com/namidaco/namida/releases)
+- Beta downloads: [beta-releases](https://github.com/namidaco/namida-snapshots/releases)
+- Available variants are `arm` & `arm64`
 
 ### Permission Note:
 
