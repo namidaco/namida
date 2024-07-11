@@ -37,12 +37,14 @@ void showAddToPlaylistSheet({
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   await showModalBottomSheet(
     useRootNavigator: true,
+    isScrollControlled: true,
     backgroundColor: Colors.transparent,
     // ignore: use_build_context_synchronously
     context: context,
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
       return Container(
+        height: context.height * 0.65 + bottomPadding,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.0.multipliedRadius),
           color: context.theme.scaffoldBackgroundColor,

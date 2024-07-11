@@ -79,6 +79,37 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     );
   }
 
+  void _onAddToPlaylist({required YoutubePlaylist playlist, required bool? idsExist}) {
+    if (idsExist == true) {
+      final indexes = <int>[];
+      playlist.tracks.loopAdv((e, index) {
+        if (idsToAdd.contains(e.id)) {
+          indexes.add(index);
+        }
+      });
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          isWarning: true,
+          normalTitleStyle: true,
+          bodyText: "${lang.REMOVE_FROM_PLAYLIST} ${playlist.name.addDQuotation()}?",
+          actions: [
+            const CancelButton(),
+            const SizedBox(width: 6.0),
+            NamidaButton(
+              text: lang.REMOVE.toUpperCase(),
+              onPressed: () {
+                NamidaNavigator.inst.closeDialog();
+                YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
+              },
+            )
+          ],
+        ),
+      );
+    } else {
+      YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
@@ -144,8 +175,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
               rx: YoutubePlaylistController.inst.favouritesPlaylist,
               builder: (favs) {
                 return _HorizontalSliverList(
-                  title: lang.LIKED,
-                  icon: Broken.like_1,
+                  title: lang.FAVOURITES,
+                  icon: Broken.heart_circle,
                   viewAllPage: () => const YTLikedVideosPage(),
                   videos: getFavouriteVideos(favs.value),
                   playlistName: k_PLAYLIST_NAME_FAV,
@@ -255,6 +286,44 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             ),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
+          if (idsToAdd.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ObxOClass(
+                rx: YoutubePlaylistController.inst.favouritesPlaylist,
+                builder: (favouritesPlaylist) => YoutubeCard(
+                  thumbnailType: ThumbnailType.playlist,
+                  isImageImportantInCache: true,
+                  extractColor: true,
+                  thumbnailWidthPercentage: 0.75,
+                  videoId: favouritesPlaylist.value.tracks.firstOrNull?.id,
+                  thumbnailUrl: null,
+                  shimmerEnabled: false,
+                  title: favouritesPlaylist.value.name.translatePlaylistName(),
+                  subtitle: favouritesPlaylist.value.creationDate.dateFormattedOriginal,
+                  displaythirdLineText: true,
+                  thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(favouritesPlaylist.value.modifiedDate).fromNow(),
+                  displayChannelThumbnail: false,
+                  channelThumbnailUrl: '',
+                  thumbnailHeight: playlistThumbnailHeight,
+                  thumbnailWidth: playlistThumbnailWidth,
+                  onTap: () {
+                    final idsExists = favouritesPlaylist.isSubItemFavourite(idsToAdd.first);
+                    _onAddToPlaylist(
+                      playlist: favouritesPlaylist.value,
+                      idsExist: idsExists,
+                    );
+                  },
+                  smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
+                  smallBoxIcon: Broken.play_cricle,
+                  checkmarkStatus: favouritesPlaylist.isSubItemFavourite(idsToAdd.first),
+                  menuChildrenDefault: displayMenu ? () => getMenuItems(favouritesPlaylist.value) : null,
+                ),
+              ),
+            ),
+          if (idsToAdd.isNotEmpty)
+            const SliverToBoxAdapter(
+              child: NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)),
+            ),
           Obx(
             () {
               final playlistsMap = YoutubePlaylistController.inst.playlistsMap.valueR;
@@ -265,7 +334,12 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 itemBuilder: (context, index) {
                   final name = playlistsNames[index];
                   final playlist = playlistsMap[name]!;
-                  final idsExist = idsToAdd.isEmpty ? null : playlist.tracks.firstWhereEff((e) => e.id == idsToAdd.firstOrNull) != null;
+                  bool? idsExist;
+                  if (idsToAdd.isNotEmpty) {
+                    final firstId = idsToAdd.firstOrNull;
+                    if (firstId != null) idsExist = playlist.tracks.firstWhereEff((e) => e.id == firstId) != null;
+                  }
+
                   return NamidaPopupWrapper(
                     childrenDefault: displayMenu ? () => getMenuItems(playlist) : null,
                     openOnTap: false,
@@ -287,34 +361,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       thumbnailWidth: playlistThumbnailWidth,
                       onTap: () {
                         if (idsToAdd.isNotEmpty) {
-                          if (idsExist == true) {
-                            final indexes = <int>[];
-                            playlist.tracks.loopAdv((e, index) {
-                              if (idsToAdd.contains(e.id)) {
-                                indexes.add(index);
-                              }
-                            });
-                            NamidaNavigator.inst.navigateDialog(
-                              dialog: CustomBlurryDialog(
-                                isWarning: true,
-                                normalTitleStyle: true,
-                                bodyText: "${lang.REMOVE_FROM_PLAYLIST} ${playlist.name.addDQuotation()}?",
-                                actions: [
-                                  const CancelButton(),
-                                  const SizedBox(width: 6.0),
-                                  NamidaButton(
-                                    text: lang.REMOVE.toUpperCase(),
-                                    onPressed: () {
-                                      NamidaNavigator.inst.closeDialog();
-                                      YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
-                                    },
-                                  )
-                                ],
-                              ),
-                            );
-                          } else {
-                            YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
-                          }
+                          _onAddToPlaylist(playlist: playlist, idsExist: idsExist);
                         } else {
                           YTNormalPlaylistSubpage(playlistName: playlist.name).navigate();
                         }

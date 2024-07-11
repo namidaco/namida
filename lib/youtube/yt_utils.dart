@@ -259,7 +259,7 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.box_remove,
           title: lang.REMOVE_FROM_PLAYLIST,
-          subtitle: playlistName.translatePlaylistName(liked: true),
+          subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
         ),
       if (moreMenuChildren != null) ...moreMenuChildren,

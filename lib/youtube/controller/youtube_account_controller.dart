@@ -33,6 +33,9 @@ class YoutubeAccountController {
   static const _operationNeedsAccount = <YoutiPieOperation, bool>{
     YoutiPieOperation.fetchNotifications: true,
     YoutiPieOperation.fetchNotificationsNext: true,
+    YoutiPieOperation.markNotificationRead: true,
+    YoutiPieOperation.fetchFeed: true,
+    YoutiPieOperation.fetchFeedNext: true,
     YoutiPieOperation.fetchHistory: true,
     YoutiPieOperation.fetchHistoryNext: true,
     YoutiPieOperation.addVideoToHistory: true,
@@ -77,7 +80,7 @@ class YoutubeAccountController {
       if (_operationNeedsAccount[operation] == true) {
         if (current.activeAccountChannel.value == null) {
           // -- no account
-          _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'));
+          _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
           return false;
         } else {
           final needsMembership = _operationNeedsMembership[operation] ?? true;
@@ -95,6 +98,14 @@ class YoutubeAccountController {
         }
       }
       return true;
+    };
+
+    YoutiPie.onOperationFailNoAccount = (operation) {
+      if (current.activeAccountChannel.value == null) {
+        _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+        return true;
+      }
+      return false;
     };
 
     final patreonSupportTier = NamicoSubscriptionManager.patreon.getUserSupportTierInCacheValid();
@@ -205,7 +216,7 @@ class YoutubeAccountController {
     }
   }
 
-  static void _showError(String msg, {Object? exception, bool manageSubscriptionButton = false}) {
+  static void _showError(String msg, {Object? exception, bool manageSubscriptionButton = false, bool manageAccountButton = false}) {
     String title = lang.ERROR;
     if (exception != null) title += ': $exception';
 
@@ -219,7 +230,12 @@ class YoutubeAccountController {
               lang.MANAGE,
               const YoutubeManageSubscriptionPage().navigate,
             )
-          : null,
+          : manageAccountButton
+              ? (
+                  lang.SIGN_IN,
+                  const YoutubeAccountManagePage().navigate,
+                )
+              : null,
     );
   }
 

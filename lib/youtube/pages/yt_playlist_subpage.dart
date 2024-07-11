@@ -225,7 +225,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          playlistCurrentName.translatePlaylistName(liked: true),
+                                          playlistCurrentName.translatePlaylistName(),
                                           style: context.textTheme.displayLarge,
                                         ),
                                         const SizedBox(height: 6.0),
