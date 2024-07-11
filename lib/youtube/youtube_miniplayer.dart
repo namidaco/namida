@@ -841,11 +841,44 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           ),
                                                         ),
                                                       )
-                                                    : SliverFixedExtentList.builder(
+                                                    : SliverVariedExtentList.builder(
                                                         key: Key("${currentId}_feedlist"),
-                                                        itemExtent: relatedThumbnailItemExtent,
+                                                        itemExtentBuilder: (index, dimensions) {
+                                                          if (page.relatedVideosResult.shortsSection.relatedItemsShortsData[index] != null) return 64.0 * 3 + 24.0 * 2;
+                                                          final item = page.relatedVideosResult.items[index];
+                                                          if (item is StreamInfoItemShort) return 0;
+                                                          return relatedThumbnailItemExtent;
+                                                        },
                                                         itemCount: page.relatedVideosResult.items.length,
                                                         itemBuilder: (context, index) {
+                                                          final shortSection = page.relatedVideosResult.shortsSection.relatedItemsShortsData[index];
+                                                          if (shortSection != null) {
+                                                            const height = 64.0 * 3;
+                                                            const width = height * (9 / 16 * 1.2);
+                                                            const hPadding = 4.0;
+                                                            return SizedBox(
+                                                              height: height,
+                                                              child: ListView.builder(
+                                                                padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
+                                                                scrollDirection: Axis.horizontal,
+                                                                itemExtent: width + hPadding * 2,
+                                                                itemCount: shortSection.length,
+                                                                itemBuilder: (context, index) {
+                                                                  final shortIndex = shortSection[index];
+                                                                  final short = page.relatedVideosResult.items[shortIndex] as StreamInfoItemShort;
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(horizontal: hPadding),
+                                                                    child: YoutubeShortVideoTallCard(
+                                                                      short: short,
+                                                                      thumbnailWidth: width,
+                                                                      thumbnailHeight: height,
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            );
+                                                          }
+
                                                           final item = page.relatedVideosResult.items[index];
                                                           return switch (item.runtimeType) {
                                                             const (StreamInfoItem) => YoutubeVideoCard(

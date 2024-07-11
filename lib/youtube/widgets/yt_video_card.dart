@@ -11,6 +11,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
@@ -204,6 +205,90 @@ class YoutubeShortVideoCard extends StatelessWidget {
             },
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: short.id, context: context),
         menuChildrenDefault: getMenuItems,
+      ),
+    );
+  }
+}
+
+class YoutubeShortVideoTallCard extends StatelessWidget {
+  final StreamInfoItemShort short;
+  final double thumbnailWidth;
+  final double? thumbnailHeight;
+
+  const YoutubeShortVideoTallCard({
+    super.key,
+    required this.short,
+    required this.thumbnailWidth,
+    required this.thumbnailHeight,
+  });
+
+  List<NamidaPopupItem> getMenuItems() {
+    final videoId = short.id;
+    return YTUtils.getVideoCardMenuItems(
+      videoId: videoId,
+      url: short.buildUrl(),
+      channelID: null,
+      playlistID: null,
+      idsNamesLookup: {videoId: short.title},
+    );
+  }
+
+  Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(videoId: short.id);
+
+  @override
+  Widget build(BuildContext context) {
+    final videoId = short.id;
+    final title = short.title;
+    final viewsCountText = short.viewsText;
+    final thumbnail = short.liveThumbs.pick()?.url;
+
+    return NamidaPopupWrapper(
+      openOnTap: false,
+      childrenDefault: getMenuItems,
+      child: NamidaInkWell(
+        bgColor: context.theme.cardColor,
+        borderRadius: 8.0,
+        onTap: _onShortTap,
+        child: YoutubeThumbnail(
+          key: Key(videoId),
+          borderRadius: 8.0,
+          videoId: videoId,
+          customUrl: thumbnail,
+          width: thumbnailWidth,
+          height: thumbnailHeight,
+          isImportantInCache: false,
+          type: ThumbnailType.video,
+          onTopWidgets: (color) {
+            return [
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 12.0),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        viewsCountText,
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          },
+        ),
       ),
     );
   }

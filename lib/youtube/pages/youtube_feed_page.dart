@@ -32,6 +32,47 @@ class YoutubeHomeFeedPage extends StatelessWidget {
           thumbnailWidth: thumbnailWidth,
           thumbnailHeight: thumbnailHeight,
         ),
+        sliverListBuilder: (feed, itemBuilder, dummyCard) {
+          return SliverVariedExtentList.builder(
+            itemExtentBuilder: (index, dimensions) {
+              if (feed.shortsSection.relatedItemsShortsData[index] != null) return 64.0 * 3 + 24.0 * 2;
+              final item = feed.items[index];
+              if (item is StreamInfoItemShort) return 0;
+              return thumbnailItemExtent;
+            },
+            itemCount: feed.items.length,
+            itemBuilder: (context, index) {
+              final shortSection = feed.shortsSection.relatedItemsShortsData[index];
+              if (shortSection != null) {
+                const height = 64.0 * 3;
+                const width = height * (9 / 16 * 1.2);
+                const hPadding = 4.0;
+                return SizedBox(
+                  height: height,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
+                    scrollDirection: Axis.horizontal,
+                    itemExtent: width + hPadding * 2,
+                    itemCount: shortSection.length,
+                    itemBuilder: (context, index) {
+                      final shortIndex = shortSection[index];
+                      final short = feed.items[shortIndex] as StreamInfoItemShort;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: hPadding),
+                        child: YoutubeShortVideoTallCard(
+                          short: short,
+                          thumbnailWidth: width,
+                          thumbnailHeight: height,
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+              return itemBuilder(feed.items[index], index, feed);
+            },
+          );
+        },
         itemBuilder: (item, i, _) {
           return switch (item.runtimeType) {
             const (StreamInfoItem) => YoutubeVideoCard(

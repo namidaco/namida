@@ -17,6 +17,8 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
+typedef YoutubeMainPageFetcherItemBuilder<T, W> = Widget? Function(T item, int index, W list);
+
 class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends StatefulWidget {
   final bool transparentShimmer;
   final String title;
@@ -24,7 +26,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final Future<W?> Function(ExecuteDetails details) networkFetcher;
   final Widget dummyCard;
   final double itemExtent;
-  final Widget? Function(T item, int index, W list) itemBuilder;
+  final YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder;
+  final SliverMultiBoxAdaptorWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
 
   const YoutubeMainPageFetcherAccBase({
     super.key,
@@ -35,6 +38,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.dummyCard,
     required this.itemExtent,
     required this.itemBuilder,
+    this.sliverListBuilder,
   });
 
   @override
@@ -195,14 +199,15 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                                   )
                                 : listItems == null
                                     ? const SliverToBoxAdapter()
-                                    : SliverFixedExtentList.builder(
-                                        itemCount: listItems.items.length,
-                                        itemExtent: widget.itemExtent,
-                                        itemBuilder: (context, i) {
-                                          final item = listItems.items[i];
-                                          return widget.itemBuilder(item, i, listItems);
-                                        },
-                                      ),
+                                    : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
+                                        SliverFixedExtentList.builder(
+                                          itemCount: listItems.items.length,
+                                          itemExtent: widget.itemExtent,
+                                          itemBuilder: (context, i) {
+                                            final item = listItems.items[i];
+                                            return widget.itemBuilder(item, i, listItems);
+                                          },
+                                        ),
                             SliverToBoxAdapter(
                               child: ObxO(
                                 rx: _isLoadingNext,
