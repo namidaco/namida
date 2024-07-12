@@ -198,7 +198,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required YoutubeIDToMediaItemCallback? youtubeIdMediaItem,
   }) {
     youtubeIdMediaItem ??= (index, ql) {
-      return item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, currentItemDuration.value);
+      return item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, currentItemDuration.value);
     };
     final index = currentIndex.value;
     final ql = currentQueue.value.length;
@@ -893,7 +893,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final refresh = _currentItemDuration.value == null && refreshNoti;
           _currentItemDuration.value = duration;
           if (refresh) {
-            refreshNotification(pi, (index, ql) => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
+            refreshNotification(pi, (index, ql) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
           }
         }
         return false;
@@ -915,7 +915,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (checkInterrupted(refreshNoti: false)) return;
       if (info != null) _ytNotificationVideoInfo = info; // we assign cuz later some functions can depend on this
       if (thumbnail != null) _ytNotificationVideoThumbnail = thumbnail;
-      refreshNotification(pi, (index, ql) => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
+      refreshNotification(pi, (index, ql) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
     }
 
     // -- we no longer check if any of these 2 is not null, cuz info like index & queue length needs to be updated asap
@@ -981,7 +981,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     /// different then it will be set later after fetching.
     playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
       item: item,
-      mediaItemFn: () => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+      mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
       checkInterrupted: checkInterrupted,
       index: index,
       canPlayAudioOnly: canPlayAudioOnlyFromCache,
@@ -1139,7 +1139,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         printy(e, isError: true);
         playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
           item: item,
-          mediaItemFn: () => item.toMediaItem(_ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+          mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
           checkInterrupted: checkInterrupted,
           index: index,
           canPlayAudioOnly: canPlayAudioOnlyFromCache,
@@ -1660,29 +1660,32 @@ extension TrackToAudioSourceMediaItem on Selectable {
 }
 
 extension YoutubeIDToMediaItem on YoutubeID {
-  MediaItem toMediaItem(VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) {
-    final vi = videoInfo;
-    final artistAndTitle = vi?.title.splitArtistAndTitle();
-    final videoName = vi?.title;
-    final channelName = vi?.channelName;
+  MediaItem toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) {
+    final id = videoInfo?.id ?? videoId;
+    final videoTitle = videoInfo?.title ?? YoutubeInfoController.utils.getVideoName(videoId);
+    final artistAndTitle = videoInfo?.title.splitArtistAndTitle();
+    final videoChannelTitle = videoInfo?.channelName ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
+    final videoDuration = duration ?? videoInfo?.durSeconds?.seconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId)?.seconds;
 
-    final title = artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoName ?? '';
+    final title = artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoTitle ?? '';
     String? artistName = artistAndTitle?.$1;
-    if ((artistName == '') && channelName != null) {
+    if ((artistName == null || artistName.isEmpty) && videoChannelTitle != null) {
       const topic = '- Topic';
-      final startIndex = (channelName.length - topic.length).withMinimum(0);
-      artistName = channelName.replaceFirst(topic, '', startIndex).trimAll();
+      if (videoChannelTitle.endsWith(topic)) {
+        artistName = videoChannelTitle.substring(0, videoChannelTitle.length - topic.length);
+      }
     }
+
     return MediaItem(
-      id: vi?.id ?? '',
+      id: id,
       title: title,
       artist: artistName,
       album: '',
       genre: '',
-      displayTitle: videoName,
-      displaySubtitle: channelName,
+      displayTitle: videoTitle,
+      displaySubtitle: videoChannelTitle,
       displayDescription: "${currentIndex + 1}/$queueLength",
-      duration: duration ?? vi?.durSeconds?.seconds ?? Duration.zero,
+      duration: videoDuration ?? Duration.zero,
       artUri: Uri.file((thumbnail != null && thumbnail.existsSync()) ? thumbnail.path : AppPaths.NAMIDA_LOGO),
     );
   }
