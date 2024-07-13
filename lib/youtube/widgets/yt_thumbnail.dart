@@ -207,7 +207,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         thumbnailSize: widget.width,
         boxShadow: widget.boxShadow,
         icon: _typeToIcon[widget.type] ?? Broken.musicnote,
-        iconSize: widget.iconSize ?? (widget.customUrl != null ? null : widget.width * 0.3),
+        iconSize: widget.iconSize ?? widget.width * 0.3,
         forceSquared: widget.forceSquared,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: [

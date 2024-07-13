@@ -162,7 +162,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   }) {
     final icon = Icon(
       widget.displayIcon ? widget.icon : null,
-      size: widget.iconSize ?? widget.thumbnailSize / 2,
+      size: widget.iconSize ?? widget.thumbnailSize * 0.5,
     );
     return Container(
       key: key,

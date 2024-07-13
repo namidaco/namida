@@ -61,8 +61,8 @@ class YoutubeID implements Playable, ItemWithDate {
 }
 
 extension YoutubeIDUtils on YoutubeID {
-  File? getThumbnailSync() {
-    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id);
+  File? getThumbnailSync({required bool temp}) {
+    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id, isTemp: temp);
   }
 }
 

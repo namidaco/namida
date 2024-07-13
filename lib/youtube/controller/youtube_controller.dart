@@ -157,7 +157,8 @@ class YoutubeController {
     await _writeTaskGroupToStorage(groupName: groupName);
   }
 
-  VideoStream getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
+  VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
+    if (streams.isEmpty) return null;
     final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value).map((element) => element.settingLabeltoVideoLabel());
     VideoStream? plsLoop(bool webm) {
       for (int i = 0; i < streams.length; i++) {

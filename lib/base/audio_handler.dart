@@ -679,7 +679,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
         VideoStream? sameStream = newStreams?.videoStreams.firstWhereEff((e) => e.itag == stream.itag);
         if (sameStream == null && newStreams != null) {
-          YoutubeController.inst.getPreferredStreamQuality(newStreams.videoStreams, preferIncludeWebm: false);
+          sameStream = YoutubeController.inst.getPreferredStreamQuality(newStreams.videoStreams, preferIncludeWebm: false);
         }
         final sameStreamUrl = sameStream?.buildUrl();
 
@@ -884,7 +884,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
-    _ytNotificationVideoThumbnail = item.getThumbnailSync();
+    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false);
 
     bool checkInterrupted({bool refreshNoti = true}) {
       final curr = currentItem.value;
@@ -922,7 +922,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     onInfoOrThumbObtained(info: _ytNotificationVideoInfo, thumbnail: _ytNotificationVideoThumbnail);
 
     if (_ytNotificationVideoThumbnail == null) {
-      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) => onInfoOrThumbObtained(thumbnail: thumbFile));
+      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) {
+        thumbFile ??= item.getThumbnailSync(temp: true);
+        if (thumbFile != null) onInfoOrThumbObtained(thumbnail: thumbFile);
+      });
     }
 
     Future<void> plsplsplsPlay(bool wasPlayingFromCache, bool sourceChanged) async {
@@ -1050,7 +1053,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final videoStreams = streamsResult?.videoStreams ?? [];
 
         if (audiostreams.isEmpty) {
-          snackyy(message: 'Error playing video, empty audio streams', top: false, isError: true);
+          if (!okaySetFromCache()) snackyy(message: 'Error playing video, empty audio streams', top: false, isError: true);
           return;
         }
 

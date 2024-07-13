@@ -310,10 +310,14 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     String? uploadDate;
                     String? uploadDateAgo;
 
-                    final parsedDate = videoInfoStream?.publishedAt.date ?? videoInfoStream?.publishDate.date; // videoInfo?.publishedAt.date aint no way near accurate
-
+                    DateTime? parsedDate = videoInfoStream?.publishedAt.date ?? videoInfoStream?.publishDate.date; // videoInfo?.publishedAt.date aint no way near accurate
+                    bool accurateDate = true;
+                    if (parsedDate == null) {
+                      parsedDate = videoInfo?.publishedAt.date;
+                      accurateDate = false;
+                    }
                     if (parsedDate != null) {
-                      uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;
+                      if (accurateDate) uploadDate = parsedDate.millisecondsSinceEpoch.dateFormattedOriginal;
                       uploadDateAgo = Jiffy.parseFromDateTime(parsedDate).fromNow();
                     } else {
                       // uploadDateAgo = videoInfo?.publishedFromText; // warcrime
@@ -832,7 +836,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           ),
                                                         ),
                                                         const SizedBox(width: 12.0),
-                                                        YTSubscribeButton(channelID: channelID),
+                                                        YTSubscribeButton(
+                                                          channelID: channelID,
+                                                          listenable: YoutubeInfoController.current.currentVideoPage,
+                                                          retrieveInfo: () => YoutubeInfoController.current.currentVideoPage.value?.channelInfo,
+                                                          mainPage: () => YoutubeInfoController.current.currentVideoPage.value,
+                                                          mainChannelInfo: null,
+                                                        ),
                                                         const SizedBox(width: 20.0),
                                                       ],
                                                     ),

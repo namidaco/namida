@@ -8,6 +8,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -96,8 +97,22 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     }
   }
 
+  bool get _hasConnection => ConnectivityController.inst.hasConnection;
+  void _showNetworkError() {
+    snackyy(
+      title: lang.ERROR,
+      message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
+      isError: true,
+      top: false,
+    );
+  }
+
   /// TODO(youtipie): might be faster using rss feed, but limited to 15 vid.
   Future<void> _fetchAllChannelsStreams({required bool forceRequest}) async {
+    if (!_hasConnection) {
+      _showNetworkError();
+      return;
+    }
     setState(() {
       isLoadingInitialStreams = true;
       _allStreamsList = [];
@@ -132,7 +147,16 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       _allChannelsStreamsProgress.value = i / idsLength;
       final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: null);
       if (channelPage == null) {
+        if (!_hasConnection) {
+          await Future.delayed(const Duration(seconds: 7));
+          if (!_hasConnection) {
+            _showNetworkError();
+            break;
+          }
+        }
+
         if (pageFetchErrors < 3) {
+          pageFetchErrors++;
           reportError('failed to fetch channel page for $channelID');
           continue;
         } else {
@@ -158,13 +182,12 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       }
       printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${videosPage.length} videos');
       if (channel != null) {
-        _allChannelsStreamsProgress.value = 0.0;
-        _allChannelsStreamsLoading.value = false;
-        return;
+        break;
       }
       YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
       streams.addAll(videosPage.items);
     }
+
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     _allChannelsStreamsProgress.value = 0.0;
     _allChannelsStreamsLoading.value = false;

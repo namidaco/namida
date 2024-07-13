@@ -140,11 +140,13 @@ class YoutubeDescriptionWidgetManager {
     if (surroundWithBG) {
       Widget child = Text(sw.text);
 
+      double hmargin = 0.0;
       double vpadding = 2.0;
       double hpadding = 4.0;
       double br = 4.0;
 
       if (_latestAttachment != null) {
+        hmargin += 4.0;
         vpadding += 2.0;
         hpadding += 2.0;
         br += 4.0;
@@ -182,9 +184,9 @@ class YoutubeDescriptionWidgetManager {
         );
       }
 
-      if (addVMargin) {
+      if (addVMargin || hmargin > 0) {
         child = Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          padding: EdgeInsets.symmetric(vertical: addVMargin ? 2.0 : 0, horizontal: hmargin),
           child: child,
         );
       }

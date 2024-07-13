@@ -603,14 +603,11 @@ class _ImageTrimmer {
         try {
           element.deleteSync();
           i++;
-          imagesLength--;
-          continue;
         } catch (_) {}
       }
-      // if not continued safely, i-- indicating that we still need to delete more
-      i--;
+      // i--; // this made things non-safe
       imagesLength--;
-      if (imagesLength <= 0) break; // just to be safe that i-- doesnt mess things up
+      if (imagesLength <= 0) break; // to be safe that i++ wasnt called enough.
     }
   }
 }

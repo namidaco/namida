@@ -264,25 +264,49 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
                 bottom: 0,
                 left: 0,
                 child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 12.0),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        viewsCountText,
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+                  child: SizedBox(
+                    width: thumbnailWidth,
+                    height: thumbnailHeight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: context.textTheme.displayMedium?.copyWith(
+                            fontSize: 12.0,
+                            color: Colors.white70,
+                            shadows: [
+                              const BoxShadow(
+                                spreadRadius: 1.0,
+                                blurRadius: 12.0,
+                                color: Colors.black38,
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          viewsCountText,
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontSize: 11.0,
+                            color: Colors.white60,
+                            shadows: [
+                              const BoxShadow(
+                                spreadRadius: 1.0,
+                                blurRadius: 12.0,
+                                color: Colors.black38,
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
