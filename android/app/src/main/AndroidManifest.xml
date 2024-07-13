@@ -74,6 +74,16 @@
                     android:scheme="http"
                     android:pathPrefix="/" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.SEND" />
+                <data
+                    android:host="patreonauth.github.com"
+                    android:scheme="https"
+                    android:pathPrefix="/namidaco" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

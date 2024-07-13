@@ -288,6 +288,18 @@ Future<void> _initializeIntenties() async {
   }
 
   Future<void> playFiles(List<SharedFile> files) async {
+    // -- deep links
+    if (files.length == 1) {
+      final linkRaw = files.first.value;
+      if (linkRaw != null) {
+        final link = linkRaw.replaceAll(r'\', '');
+        if (link.startsWith('https://patreonauth.github.com/namidaco')) {
+          final link = linkRaw.replaceAll(r'\', '');
+          YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
+          return;
+        }
+      }
+    }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       if (files.isNotEmpty) {
         final paths = <String>[];
@@ -295,7 +307,7 @@ Future<void> _initializeIntenties() async {
         files.loop((f) {
           final realPath = f.realPath;
           if (realPath != null) {
-            final path = realPath.replaceAll('\\', '');
+            final path = realPath.replaceAll(r'\', '');
             if (kM3UPlaylistsExtensions.any((ext) => path.endsWith(ext))) {
               m3uPaths.add(path);
             } else {

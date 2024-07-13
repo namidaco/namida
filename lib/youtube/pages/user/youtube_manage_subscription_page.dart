@@ -124,6 +124,36 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                               initiallyExpanded: true,
                               icon: Broken.wallet_2,
                               titleText: 'Patreon',
+                              trailing: ObxO(
+                                rx: YoutubeAccountController.membership.userPatreonTier,
+                                builder: (userPatreonTier) {
+                                  final imageUrl = userPatreonTier?.imageUrl;
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(width: 8.0),
+                                      SizedBox(
+                                        width: 24.0,
+                                        height: 24.0,
+                                        child: YoutubeThumbnail(
+                                          key: ValueKey(imageUrl),
+                                          width: 24.0,
+                                          customUrl: imageUrl,
+                                          isImportantInCache: false,
+                                          type: ThumbnailType.channel,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Broken.arrow_down_2,
+                                          size: 20.0,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                               subtitle: ObxO(
                                 rx: YoutubeAccountController.membership.userMembershipTypePatreon,
                                 builder: (userMembershipTypePatreon) => Text(

@@ -34,36 +34,39 @@ class MembershipCard extends StatelessWidget {
           child: ObxO(
             rx: YoutubeAccountController.membership.userSupabaseSub,
             builder: (userSupabaseSub) => ObxO(
-              rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-              builder: (userMembershipType) {
-                userMembershipType ??= MembershipType.unknown;
-                String text = userMembershipType.name.capitalizeFirst();
-                if (displayName) {
-                  final username = userSupabaseSub?.name;
-                  if (username != null && username.isNotEmpty) text += ' - $username';
-                }
+              rx: YoutubeAccountController.membership.userPatreonTier,
+              builder: (userPatreonTier) => ObxO(
+                rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
+                builder: (userMembershipType) {
+                  userMembershipType ??= MembershipType.unknown;
+                  String text = userMembershipType.name.capitalizeFirst();
+                  if (displayName) {
+                    final username = userSupabaseSub?.name ?? userPatreonTier?.userName;
+                    if (username != null && username.isNotEmpty) text += ' - $username';
+                  }
 
-                Widget child = Text(
-                  text,
-                  style: context.textTheme.displayLarge,
-                );
-
-                if (userMembershipType == MembershipType.owner) {
-                  child = Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Broken.crown,
-                        size: 20.0,
-                      ),
-                      const SizedBox(width: 8.0),
-                      child,
-                    ],
+                  Widget child = Text(
+                    text,
+                    style: context.textTheme.displayLarge,
                   );
-                }
 
-                return child;
-              },
+                  if (userMembershipType == MembershipType.owner) {
+                    child = Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Broken.crown,
+                          size: 20.0,
+                        ),
+                        const SizedBox(width: 8.0),
+                        child,
+                      ],
+                    );
+                  }
+
+                  return child;
+                },
+              ),
             ),
           ),
         ),

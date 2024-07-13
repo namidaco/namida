@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:async';
+
 import 'package:namico_login_manager/namico_login_manager.dart';
 import 'package:namico_subscription_manager/class/supabase_sub.dart';
 import 'package:namico_subscription_manager/class/support_tier.dart';
@@ -14,6 +16,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
@@ -281,6 +284,8 @@ class _CurrentMembership {
   final userMembershipTypeSupabase = Rxn<MembershipType>();
   final userMembershipTypePatreon = Rxn<MembershipType>();
 
+  Completer<String?>? redirectUrlCompleter;
+
   void _updateGlobal(MembershipType ms) {
     final current = userMembershipTypeGlobal.value;
     if (current == null || ms.index > current.index) {
@@ -289,14 +294,25 @@ class _CurrentMembership {
   }
 
   Future<void> claimPatreon({required LoginPageConfiguration pageConfig, required SignInDecision signIn}) async {
+    redirectUrlCompleter?.completeIfWasnt();
+    redirectUrlCompleter = Completer<String?>();
     final tier = await NamicoSubscriptionManager.patreon.getUserSupportTier(
+      redirectUrlCompleter: redirectUrlCompleter,
       pageConfig: pageConfig,
       signIn: signIn,
     );
+    redirectUrlCompleter = null;
+
     if (tier == null) {
-      YoutubeAccountController._showError(lang.MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER);
+      YoutubeAccountController._showError(lang.FAILED);
       return;
     }
+
+    if (tier.ammountUSD == null) {
+      YoutubeAccountController._showError(lang.MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER);
+      // -- do not return, assign info
+    }
+
     userPatreonTier.value = tier;
     final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
