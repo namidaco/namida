@@ -163,6 +163,28 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     super.dispose();
   }
 
+  Future<bool> _confirmRemoveLike() async {
+    bool confirmed = false;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: lang.CONFIRM,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.REMOVE.toUpperCase(),
+            onPressed: () async {
+              NamidaNavigator.inst.closeDialog();
+              confirmed = true;
+            },
+          ),
+        ],
+      ),
+    );
+    return confirmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     const space1sb = 8.0;
@@ -572,6 +594,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     disabledColor: context.theme.iconTheme.color,
                                                                     size: 24.0,
                                                                     onTap: (isLiked) async {
+                                                                      if (isLiked) {
+                                                                        final confirmed = await _confirmRemoveLike();
+                                                                        if (!confirmed) return isLiked;
+                                                                      }
                                                                       return _onChangeLikeStatus(
                                                                         page,
                                                                         isLiked,
