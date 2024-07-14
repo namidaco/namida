@@ -125,12 +125,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       action: action,
     );
     onEnd();
+
     if (res == true) {
       _currentVideoLikeStatus.value = _currentVideoLikeStatus.value = action.toExpectedStatus();
-      return true;
-    } else {
-      return false;
+      return !isLiked;
     }
+
+    return isLiked;
   }
 
   void _onPageChanged() {
@@ -755,7 +756,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     },
                                                     child: Row(
                                                       children: [
-                                                        const SizedBox(width: 18.0),
+                                                        const SizedBox(width: 16.0),
                                                         NamidaDummyContainer(
                                                           width: 42.0,
                                                           height: 42.0,
@@ -838,12 +839,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                         const SizedBox(width: 12.0),
                                                         YTSubscribeButton(
                                                           channelID: channelID,
-                                                          listenable: YoutubeInfoController.current.currentVideoPage,
-                                                          retrieveInfo: () => YoutubeInfoController.current.currentVideoPage.value?.channelInfo,
-                                                          mainPage: () => YoutubeInfoController.current.currentVideoPage.value,
-                                                          mainChannelInfo: null,
+                                                          mainChannelInfo: YoutubeInfoController.current.currentChannelPage,
                                                         ),
-                                                        const SizedBox(width: 20.0),
+                                                        const SizedBox(width: 12.0),
                                                       ],
                                                     ),
                                                   ),

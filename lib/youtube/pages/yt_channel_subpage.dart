@@ -57,7 +57,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
         subscribed: false,
       );
 
-  YoutiPieChannelPageResult? _channelInfo;
+  final _channelInfo = Rxn<YoutiPieChannelPageResult?>(); // rx is accessed only in subscribe button. keep using setState().
   YoutiPieFetchAllRes? _currentFetchAllRes;
 
   @override
@@ -68,7 +68,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
     final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
     if (channelInfoCache != null) {
-      _channelInfo = channelInfoCache;
+      _channelInfo.value = channelInfoCache;
       fetchChannelStreams(channelInfoCache);
     }
 
@@ -76,7 +76,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
       (value) {
         if (value != null) {
-          setState(() => _channelInfo = value);
+          setState(() => _channelInfo.value = value);
           onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceProceed: true);
         }
       },
@@ -213,7 +213,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
   @override
   Widget build(BuildContext context) {
-    final channelInfo = _channelInfo;
+    final channelInfo = _channelInfo.value;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
@@ -344,7 +344,10 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                             ),
                           ),
                           const SizedBox(width: 4.0),
-                          YTSubscribeButton(channelID: channelID),
+                          YTSubscribeButton(
+                            channelID: channelID,
+                            mainChannelInfo: _channelInfo,
+                          ),
                           const SizedBox(width: 12.0),
                         ],
                       ),

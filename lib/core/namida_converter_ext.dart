@@ -687,6 +687,10 @@ extension CommentsSortTypeUtils on CommentsSortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension ChannelNotificationsUtils on ChannelNotifications {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -1304,6 +1308,11 @@ class _NamidaConverters {
       CommentsSortType: {
         CommentsSortType.top: lang.TOP,
         CommentsSortType.newest: lang.NEWEST,
+      },
+      ChannelNotifications: {
+        ChannelNotifications.all: lang.ALL,
+        ChannelNotifications.personalized: lang.PERSONALIZED,
+        ChannelNotifications.none: lang.NONE,
       },
     };
 

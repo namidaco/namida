@@ -67,10 +67,10 @@ class _YTCommentCardState extends State<YTCommentCard> {
     onEnd();
     if (res == true) {
       _currentLikeStatus.value = _currentLikeStatus.value = action.toExpectedStatus();
-      return true;
-    } else {
-      return false;
+      return !isLiked;
     }
+
+    return isLiked;
   }
 
   void _onRepliesTap({required CommentInfoItem comment, required int? repliesCount}) {

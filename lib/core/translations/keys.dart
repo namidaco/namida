@@ -461,6 +461,7 @@ abstract class LanguageKeys {
   String get PERCENTAGE => _getKey('PERCENTAGE');
   String get PERFORMANCE_MODE => _getKey('PERFORMANCE_MODE');
   String get PERFORMANCE_NOTE => _getKey('PERFORMANCE_NOTE');
+  String get PERSONALIZED => _getKey('PERSONALIZED');
   String get PICK_COLORS_FROM_DEVICE_WALLPAPER => _getKey('PICK_COLORS_FROM_DEVICE_WALLPAPER');
   String get PICK_FROM_STORAGE => _getKey('PICK_FROM_STORAGE');
   String get PINNED => _getKey('PINNED');

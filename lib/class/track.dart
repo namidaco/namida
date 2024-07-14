@@ -472,7 +472,7 @@ extension TrackUtils on Track {
   set duration(int value) {
     final trx = Indexer.inst.allTracksMappedByPath.value[this];
     if (trx != null) {
-      Indexer.inst.allTracksMappedByPath.value[this] = trx.copyWith(duration: value);
+      Indexer.inst.allTracksMappedByPath[this] = trx.copyWith(duration: value);
       Indexer.inst.allTracksMappedByPath.refresh();
     }
   }

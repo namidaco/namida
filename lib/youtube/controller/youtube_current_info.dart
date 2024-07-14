@@ -7,6 +7,7 @@ class _YoutubeCurrentInfoController {
   bool get _canShowComments => settings.youtubeStyleMiniplayer.value;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
+  RxBaseCore<YoutiPieChannelPageResult?> get currentChannelPage => _currentChannelPage;
   RxBaseCore<YoutiPieCommentResult?> get currentComments => _currentComments;
   RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
   RxBaseCore<bool> get isLoadingInitialComments => _isLoadingInitialComments;
@@ -20,6 +21,7 @@ class _YoutubeCurrentInfoController {
   final currentCachedQualities = <NamidaVideo>[].obs;
 
   final _currentVideoPage = Rxn<YoutiPieVideoPageResult>();
+  final _currentChannelPage = Rxn<YoutiPieChannelPageResult>();
   final _currentRelatedVideos = Rxn<YoutiPieRelatedVideosResult>();
   final _currentComments = Rxn<YoutiPieCommentResult>();
   final currentYTStreams = Rxn<VideoStreamsResult>();
@@ -39,6 +41,7 @@ class _YoutubeCurrentInfoController {
   void resetAll() {
     currentCachedQualities.clear();
     _currentVideoPage.value = null;
+    _currentChannelPage.value = null;
     _currentRelatedVideos.value = null;
     _currentComments.value = null;
     currentYTStreams.value = null;
@@ -52,6 +55,11 @@ class _YoutubeCurrentInfoController {
     final vidcache = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
     final vidPageCached = vidcache.read();
     _currentVideoPage.value = vidPageCached;
+
+    final chId = vidPageCached?.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
+    final chPage = chId == null ? null : YoutiPie.cacheBuilder.forChannel(channelId: chId).read();
+    _currentChannelPage.value = chPage;
+
     final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId);
     _currentRelatedVideos.value = relatedcache.read() ?? vidPageCached?.relatedVideosResult;
     return vidPageCached != null;
@@ -80,6 +88,7 @@ class _YoutubeCurrentInfoController {
     if (requestPage) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
       _currentVideoPage.value = null;
+      _currentChannelPage.value = null;
     }
     if (requestComments) {
       _currentComments.value = null;
@@ -92,8 +101,23 @@ class _YoutubeCurrentInfoController {
     final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest());
     _isLoadingVideoPage.value = false;
 
+    if (page != null) {
+      final chId = page.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
+      if (chId != null) {
+        YoutubeInfoController.channel.fetchChannelInfo(channelId: page.channelInfo?.id, details: ExecuteDetails.forceRequest()).then(
+          (chPage) {
+            if (_canSafelyModifyMetadata(videoId)) {
+              _currentChannelPage.value = chPage;
+            }
+          },
+        );
+      }
+    }
+
     if (_canSafelyModifyMetadata(videoId)) {
-      if (requestPage) _currentVideoPage.value = page; // page is still requested cuz comments need it
+      if (requestPage) {
+        _currentVideoPage.value = page; // page is still requested cuz comments need it
+      }
       if (requestComments) {
         final commentsContinuation = page?.commentResult.continuation;
         if (commentsContinuation != null && _canShowComments) {
@@ -106,6 +130,7 @@ class _YoutubeCurrentInfoController {
           if (_canSafelyModifyMetadata(videoId)) {
             _isLoadingInitialComments.value = false;
             _currentVideoPage.refresh();
+            _currentChannelPage.refresh();
             _currentComments.value = comm;
             _isCurrentCommentsFromCache.value = false;
             _initialCommentsContinuation = comm?.continuation;

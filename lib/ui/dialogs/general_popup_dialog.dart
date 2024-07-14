@@ -1026,7 +1026,7 @@ Future<void> showGeneralPopupDialog(
                               },
                             ),
 
-                            isSingle && tracks.first == Player.inst.currentItem.value
+                            isSingle && tracks.first == Player.inst.currentTrack?.track
                                 ? NamidaOpacity(
                                     opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
                                     child: IgnorePointer(

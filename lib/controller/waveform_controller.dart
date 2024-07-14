@@ -48,7 +48,7 @@ class WaveformController {
       Future.delayed(const Duration(milliseconds: 800)),
     ]);
 
-    if (stillPlaying(path)) {
+    if (waveformData.isNotEmpty && stillPlaying(path)) {
       // ----- Updating [_currentWaveform]
       const maxWaveformCount = 2000;
       final numberOfScales = duration.inMilliseconds ~/ 50;
