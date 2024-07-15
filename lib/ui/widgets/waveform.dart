@@ -43,7 +43,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
     vsync: this,
     lowerBound: 0.0,
     upperBound: 1.0,
-    value: 1.0,
+    value: WaveformController.inst.isWaveformUIEnabled.value ? 1.0 : 0.0,
     duration: Duration(milliseconds: widget.durationInMilliseconds),
     reverseDuration: Duration(milliseconds: widget.durationInMilliseconds),
   );
@@ -97,52 +97,55 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
           return Center(
             child: AnimatedBuilder(
               animation: _animation,
-              builder: (context, _) => Stack(
-                children: [
-                  NamidaWaveBars(
-                    heightPercentage: _animation.value,
-                    decorationBox: decorationBoxBehind,
-                    waveList: downscaled,
-                    barWidth: barWidth,
-                    barMinHeight: widget.barsMinHeight,
-                    barMaxHeight: widget.barsMaxHeight,
-                  ),
-                  Obx(
-                    () {
-                      final seekValue = MiniPlayerController.inst.seekValue.valueR;
-                      final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
-                      final durInMs = _currentDurationInMSR;
-                      final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                      return ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (Rect bounds) {
-                          return LinearGradient(
-                            tileMode: TileMode.decal,
-                            stops: [0.0, percentage, percentage + 0.005, 1.0],
-                            colors: [
-                              Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
-                              Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
-                              Colors.transparent,
-                              Colors.transparent,
-                            ],
-                          ).createShader(bounds);
-                        },
-                        child: SizedBox(
-                          width: namida.width - 16.0 / 2,
-                          child: NamidaWaveBars(
-                            heightPercentage: _animation.value,
-                            decorationBox: decorationBoxFront,
-                            waveList: downscaled,
-                            barWidth: barWidth,
-                            barMinHeight: widget.barsMinHeight,
-                            barMaxHeight: widget.barsMaxHeight,
+              builder: (context, _) {
+                final colors = [
+                  Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
+                  Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
+                  Colors.transparent,
+                  Colors.transparent,
+                ];
+                return Stack(
+                  children: [
+                    NamidaWaveBars(
+                      heightPercentage: _animation.value,
+                      decorationBox: decorationBoxBehind,
+                      waveList: downscaled,
+                      barWidth: barWidth,
+                      barMinHeight: widget.barsMinHeight,
+                      barMaxHeight: widget.barsMaxHeight,
+                    ),
+                    Obx(
+                      () {
+                        final seekValue = MiniPlayerController.inst.seekValue.valueR;
+                        final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
+                        final durInMs = _currentDurationInMSR;
+                        final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                        return ShaderMask(
+                          blendMode: BlendMode.srcIn,
+                          shaderCallback: (Rect bounds) {
+                            return LinearGradient(
+                              tileMode: TileMode.decal,
+                              stops: [0.0, percentage, percentage + 0.005, 1.0],
+                              colors: colors,
+                            ).createShader(bounds);
+                          },
+                          child: SizedBox(
+                            width: namida.width - 16.0 / 2,
+                            child: NamidaWaveBars(
+                              heightPercentage: _animation.value,
+                              decorationBox: decorationBoxFront,
+                              waveList: downscaled,
+                              barWidth: barWidth,
+                              barMinHeight: widget.barsMinHeight,
+                              barMaxHeight: widget.barsMaxHeight,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           );
         });

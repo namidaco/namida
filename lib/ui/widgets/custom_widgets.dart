@@ -3133,7 +3133,7 @@ class ShimmerWrapper extends StatelessWidget {
 class LazyLoadListView extends StatefulWidget {
   final ScrollController? scrollController;
   final int extend;
-  final FutureOr<void> Function() onReachingEnd;
+  final FutureOr<bool> Function() onReachingEnd;
   final Widget Function(ScrollController controller) listview;
   final bool requiresNetwork;
 

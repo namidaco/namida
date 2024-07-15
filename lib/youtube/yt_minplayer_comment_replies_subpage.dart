@@ -223,7 +223,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                     child: ListView.builder(
                                       padding: EdgeInsets.zero,
                                       physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: 10,
+                                      itemCount: repliesCount?.withMaximum(20) ?? 10,
                                       shrinkWrap: true,
                                       itemBuilder: (context, index) {
                                         return const YTCommentCard(

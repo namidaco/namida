@@ -225,17 +225,18 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       ChannelNotifications.all => Icon(
           Broken.notification_bing,
           size: iconSize,
+          color: context.defaultIconColor(),
         ),
       ChannelNotifications.personalized => Icon(
           Broken.notification_1,
           size: iconSize,
+          color: context.defaultIconColor(),
         ),
       ChannelNotifications.none => StackedIcon(
           baseIcon: Broken.notification_1,
           secondaryIcon: Broken.slash,
           iconSize: iconSize,
           secondaryIconSize: 11.0,
-          disableColor: true,
         ),
       null => null,
     };

@@ -92,7 +92,7 @@ class YoutubeAccountController {
             if (ms == null || ms.index < MembershipType.cutie.index) {
               // -- has account but no membership
               _showError(
-                '${lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown}`")}',
+                '${lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown.name}`")}',
                 manageSubscriptionButton: true,
               );
               return false;
@@ -276,6 +276,12 @@ class YoutubeAccountController {
 
 class _CurrentMembership {
   _CurrentMembership._();
+
+  String? get getUsernameGlobal {
+    String? name = userSupabaseSub.value?.name;
+    if (name == null || name.isEmpty) name = userPatreonTier.value?.userName;
+    return name;
+  }
 
   final userSupabaseSub = Rxn<SupabaseSub>();
   final userPatreonTier = Rxn<SupportTier>();

@@ -8,6 +8,7 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -72,6 +73,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   }
 
   Future<void> _forceFetch() async {
+    if (!ConnectivityController.inst.hasConnection) return;
     _fetchTimer?.cancel();
     _isFetching.value = true;
     final value = await _fetchFunction(forceRequest: true);

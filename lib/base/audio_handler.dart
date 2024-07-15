@@ -785,9 +785,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return WaveformController.inst.generateWaveform(
           path: audioPath,
           duration: dur,
-          stillPlaying: (path) =>
-              currentItem.value is YoutubeID && currentItem.value == video && (_nextSeekSetAudioCache != null && path == _nextSeekSetAudioCache?.path) ||
-              (currentCachedAudio.value != null && path == currentCachedAudio.value?.file.path),
+          stillPlaying: (path) => video == currentItem.value,
         );
       }
     }
@@ -817,7 +815,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             WaveformController.inst.generateWaveform(
               path: audioCacheFile.path,
               duration: dur,
-              stillPlaying: (path) => currentItem.value is YoutubeID && _nextSeekSetAudioCache != null && path == _nextSeekSetAudioCache?.path,
+              stillPlaying: (path) {
+                final curr = currentItem.value;
+                return curr is YoutubeID && curr.id == vId;
+              },
             );
           }
         }
@@ -974,7 +975,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           WaveformController.inst.generateWaveform(
             path: audioDetails.file.path,
             duration: dur,
-            stillPlaying: (path) => currentItem.value is YoutubeID && path == currentCachedAudio.value?.file.path,
+            stillPlaying: (path) {
+              final curr = currentItem.value;
+              return curr is YoutubeID && curr.id == item.id;
+            },
           );
         }
       }

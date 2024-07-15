@@ -31,48 +31,54 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     snackyy(message: exception.toString(), isError: true, displaySeconds: 3);
   }
 
+  void _showMembershipChangeSnack(MembershipType? oldMS) {
+    final newMS = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
+    if (newMS == null) {
+      if (oldMS != null) snackyy(message: lang.MEMBERSHIP_UNKNOWN, isError: true, top: false);
+    } else if (oldMS == newMS) {
+      final name = YoutubeAccountController.membership.getUsernameGlobal;
+      String trailing = '';
+      if (name != null && name.isNotEmpty) trailing += '$name ';
+      snackyy(message: '${lang.MEMBERSHIP_DIDNT_CHANGE}, `${newMS.name}` $trailing', top: false);
+    } else {
+      final name = YoutubeAccountController.membership.getUsernameGlobal;
+      String trailing = '';
+      if (name != null && name.isNotEmpty) trailing += '$name ';
+      if (newMS.index <= MembershipType.none.index) {
+        trailing = ':(';
+      } else if (newMS == MembershipType.owner) {
+        trailing = 'o7';
+      } else {
+        trailing = ':D';
+      }
+      snackyy(
+        message: '${lang.MEMBERSHIP_ENJOY_NEW}, `${newMS.name}` $trailing',
+        borderColor: Colors.green.withOpacity(0.8),
+        top: false,
+      );
+    }
+  }
+
+  Future<void> _onPossibleMemebershipChange(Future<void> Function() fn) async {
+    final oldMS = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
+    try {
+      await fn();
+      _showMembershipChangeSnack(oldMS);
+    } catch (e) {
+      _showError('', exception: e);
+    }
+  }
+
   Future<void> _onFreeCouponSubmit(Future<void> Function(String code, String email) fn) async {
     final code = _codeController.text;
     final email = _emailController.text;
     final validated = _formKey.currentState?.validate();
     if (validated ?? (code.isNotEmpty && email.isNotEmpty)) {
-      final old = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
-      try {
-        await fn(code, email);
-
-        final newMS = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
-
-        if (newMS == null) {
-          if (old != null) snackyy(message: lang.MEMBERSHIP_UNKNOWN, isError: true, top: false);
-        } else if (old == newMS) {
-          final name = YoutubeAccountController.membership.userSupabaseSub.value?.name;
-          String trailing = '';
-          if (name != null && name.isNotEmpty) trailing += '$name ';
-          snackyy(message: '${lang.MEMBERSHIP_DIDNT_CHANGE}, `${newMS.name}` $trailing', top: false);
-        } else {
-          final name = YoutubeAccountController.membership.userSupabaseSub.value?.name;
-          String trailing = '';
-          if (name != null && name.isNotEmpty) trailing += '$name ';
-          if (newMS.index <= MembershipType.none.index) {
-            trailing = ':(';
-          } else if (newMS == MembershipType.owner) {
-            trailing = 'o7';
-          } else {
-            trailing = ':D';
-          }
-          snackyy(
-            message: '${lang.MEMBERSHIP_ENJOY_NEW}, `${newMS.name}` $trailing',
-            borderColor: Colors.green.withOpacity(0.8),
-            top: false,
-          );
-        }
-      } catch (e) {
-        _showError('', exception: e);
-      }
+      return _onPossibleMemebershipChange(() => fn(code, email));
     }
   }
 
-  void _onPatreonLoginTap(BuildContext context, {required SignInDecision signInDecision}) {
+  Future<void> _onPatreonLoginTap(BuildContext context, {required SignInDecision signInDecision}) async {
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,9 +96,12 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
         NamidaNavigator.inst.navigateToRoot(page, opaque: opaque);
       },
     );
-    YoutubeAccountController.membership.claimPatreon(
-      pageConfig: pageConfig,
-      signIn: signInDecision,
+
+    return _onPossibleMemebershipChange(
+      () => YoutubeAccountController.membership.claimPatreon(
+        pageConfig: pageConfig,
+        signIn: signInDecision,
+      ),
     );
   }
 
