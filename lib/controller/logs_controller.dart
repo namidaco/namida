@@ -46,7 +46,7 @@ class _FileOutput extends LogOutput {
 
   late final IOSink _sink;
 
-  final _cleanLogsMap = <String?, Map<String, int>>{}; // <stackTrace, <error, count>{}>{}
+  // final _cleanLogsMap = <String?, Map<String, int>>{}; // <stackTrace, <error, count>{}>{}
 
   @override
   Future<void> init() async {
@@ -59,9 +59,9 @@ class _FileOutput extends LogOutput {
         await _sink.flush();
       }
     } catch (_) {}
-    try {
-      await fileClean.create();
-    } catch (_) {}
+    // try {
+    //   await fileClean.create();
+    // } catch (_) {}
     return await super.init();
   }
 
@@ -76,18 +76,18 @@ class _FileOutput extends LogOutput {
     } catch (_) {}
   }
 
-  void _writeCleanFile(OutputEvent event) {
-    // -- clean logs
-    final stackString = event.origin.stackTrace.toString();
-    _cleanLogsMap[stackString] ??= <String, int>{};
-    _cleanLogsMap[stackString]!.update("${event.origin.error} => ${event.origin.message}", (value) => value + 1, ifAbsent: () => 1);
-    fileClean.writeAsJson(_cleanLogsMap);
-  }
+  // void _writeCleanFile(OutputEvent event) {
+  //   // -- clean logs
+  //   final stackString = event.origin.stackTrace.toString();
+  //   _cleanLogsMap[stackString] ??= <String, int>{};
+  //   _cleanLogsMap[stackString]!.update("${event.origin.error} => ${event.origin.message}", (value) => value + 1, ifAbsent: () => 1);
+  //   fileClean.writeAsJson(_cleanLogsMap);
+  // }
 
   @override
   void output(OutputEvent event) async {
     _writeMainFile(event);
-    _writeCleanFile(event);
+    // _writeCleanFile(event);
   }
 
   @override
