@@ -96,14 +96,16 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     }
   }
 
-  Future<void> _fetchRepliesNext() async {
+  Future<bool> _fetchRepliesNext() async {
+    bool fetched = false;
     final replies = _currentReplies;
-    if (replies.value?.canFetchNext != true) return;
+    if (replies.value?.canFetchNext != true) return fetched;
 
     _isLoadingMoreReplies.value = true;
-    final fetched = await replies.value?.fetchNext();
+    fetched = await replies.value?.fetchNext() ?? false;
     if (fetched == true) replies.refresh();
     _isLoadingMoreReplies.value = false;
+    return fetched;
   }
 
   @override

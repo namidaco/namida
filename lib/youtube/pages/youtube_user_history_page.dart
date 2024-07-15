@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+import 'package:youtipie/class/chunks/history_chunk.dart';
+import 'package:youtipie/class/publish_time.dart';
+import 'package:youtipie/class/result_wrapper/history_result.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/youtipie.dart';
+
+import 'package:namida/class/route.dart';
+import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/widgets/yt_video_card.dart';
+
+class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_HISTORY_HOSTED_SUBPAGE;
+
+  final void Function(YoutiPieHistoryResult? result)? onListUpdated;
+  const YoutubeUserHistoryPage({super.key, required this.onListUpdated});
+
+  @override
+  Widget build(BuildContext context) {
+    const multiplier = 1;
+    const thumbnailHeight = multiplier * Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
+    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
+
+    const beforeSublistHeight = 24.0;
+    const afterSublistHeight = 16.0;
+
+    const dummyCard = YoutubeVideoCardDummy(
+      thumbnailWidth: thumbnailWidth,
+      thumbnailHeight: thumbnailHeight,
+      shimmerEnabled: true,
+    );
+
+    return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
+      onListUpdated: onListUpdated,
+      transparentShimmer: true,
+      title: lang.HISTORY,
+      cacheReader: YoutiPie.cacheBuilder.forHistoryVideos(),
+      networkFetcher: (details) => YoutubeInfoController.history.fetchHistory(details: details),
+      itemExtent: thumbnailItemExtent,
+      dummyCard: dummyCard,
+      itemBuilder: (chunk, index, list) {
+        final items = chunk.items;
+
+        final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasBeforeAndAfterPadding)
+              SizedBox(
+                height: beforeSublistHeight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Text(
+                    chunk.title,
+                    style: context.textTheme.displayMedium,
+                  ),
+                ),
+              ),
+            SizedBox(
+              height: items.length * thumbnailItemExtent,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                scrollDirection: Axis.vertical,
+                primary: false,
+                physics: const NeverScrollableScrollPhysics(),
+                itemExtent: thumbnailItemExtent,
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return switch (item.runtimeType) {
+                    const (StreamInfoItem) => YoutubeVideoCard(
+                        thumbnailHeight: thumbnailHeight,
+                        thumbnailWidth: thumbnailWidth,
+                        isImageImportantInCache: false,
+                        video: item as StreamInfoItem,
+                        playlistID: null,
+                      ),
+                    const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                        thumbnailHeight: thumbnailHeight,
+                        thumbnailWidth: thumbnailWidth,
+                        short: item as StreamInfoItemShort,
+                        playlistID: null,
+                      ),
+                    _ => dummyCard,
+                  };
+                },
+              ),
+            ),
+            if (hasBeforeAndAfterPadding) const SizedBox(height: afterSublistHeight),
+          ],
+        );
+      },
+      sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
+        itemExtentBuilder: (index, dimensions) {
+          final chunk = listItems.items[index];
+          final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
+          double itemsExtent = chunk.items.length * thumbnailItemExtent;
+          if (hasBeforeAndAfterPadding) {
+            itemsExtent += beforeSublistHeight;
+            itemsExtent += afterSublistHeight;
+          }
+          return itemsExtent;
+        },
+        itemCount: listItems.items.length,
+        itemBuilder: (context, index) {
+          final chunk = listItems.items[index];
+          return itemBuilder(chunk, index, listItems);
+        },
+      ),
+    );
+  }
+}
+
+class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
+  final GlobalKey? pageKey;
+  const YoutubeUserHistoryPageHorizontal({super.key, this.pageKey});
+
+  @override
+  Widget build(BuildContext context) {
+    const multiplier = 1.0;
+    const horizontalHeight = multiplier * Dimensions.youtubeCardItemHeight * 1.6;
+    const thumbnailHeight = multiplier * horizontalHeight * 0.6;
+    const thumbnailWidth = thumbnailHeight * 16 / 9;
+    const thumbnailItemExtent = thumbnailWidth;
+
+    final dummyCard = NamidaInkWell(
+      animationDurationMS: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+      width: thumbnailWidth,
+      height: thumbnailHeight,
+      bgColor: context.theme.cardColor,
+    );
+
+    return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
+      key: pageKey,
+      isHorizontal: true,
+      horizontalHeight: horizontalHeight,
+      enablePullToRefresh: false,
+      transparentShimmer: true,
+      topPadding: 12.0,
+      title: lang.HISTORY,
+      onHeaderTap: YoutubeUserHistoryPage(
+        onListUpdated: (result) {
+          if (result == null) return;
+          (pageKey?.currentState as dynamic)?.updateList(result);
+        },
+      ).navigate,
+      cacheReader: YoutiPie.cacheBuilder.forHistoryVideos(),
+      networkFetcher: (details) => YoutubeInfoController.history.fetchHistory(details: details),
+      itemExtent: thumbnailItemExtent,
+      dummyCard: dummyCard,
+      itemBuilder: (chunk, chunkIndex, list) {
+        final items = chunk.items;
+        return SizedBox(
+          height: horizontalHeight,
+          width: items.length * thumbnailItemExtent,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            primary: false,
+            itemExtent: thumbnailItemExtent,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return YTHistoryVideoCardBase(
+                mainList: items,
+                itemToYTVideoId: (e) {
+                  if (e is StreamInfoItem) {
+                    return (e.id, null);
+                  } else if (e is StreamInfoItemShort) {
+                    return (e.id, null);
+                  }
+                  throw Exception('itemToYTID unknown type');
+                },
+                day: null,
+                index: index,
+                playlistID: null,
+                playlistName: lang.HISTORY,
+                canHaveDuplicates: true,
+                minimalCard: true,
+                info: (item) {
+                  if (item is StreamInfoItem) {
+                    return item;
+                  }
+                  if (item is StreamInfoItemShort) {
+                    return StreamInfoItem(
+                      id: item.id,
+                      title: item.title,
+                      shortDescription: null,
+                      channel: const ChannelInfoItem.anonymous(),
+                      thumbnailGifUrl: null,
+                      publishedFromText: '',
+                      publishedAt: const PublishTime.unknown(),
+                      indexInPlaylist: null,
+                      durSeconds: null,
+                      durText: null,
+                      viewsText: item.viewsText,
+                      viewsCount: item.viewsCount,
+                      percentageWatched: null,
+                      liveThumbs: item.liveThumbs,
+                      isUploaderVerified: null,
+                      badges: null,
+                    );
+                  }
+                  return null;
+                },
+                thumbnailHeight: thumbnailHeight,
+                minimalCardWidth: thumbnailWidth,
+              );
+            },
+          ),
+        );
+      },
+      sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
+        itemExtentBuilder: (index, dimensions) {
+          final chunk = listItems.items[index];
+          return chunk.items.length * thumbnailItemExtent;
+        },
+        itemCount: listItems.items.length,
+        itemBuilder: (context, index) {
+          final chunk = listItems.items[index];
+          return itemBuilder(chunk, index, listItems);
+        },
+      ),
+    );
+  }
+}

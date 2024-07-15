@@ -3152,16 +3152,25 @@ class LazyLoadListView extends StatefulWidget {
 
 class _LazyLoadListViewState extends State<LazyLoadListView> {
   late final ScrollController controller;
-  bool isExecuting = false;
+  bool _isExecuting = false;
+
+  bool? _lastWasSuccess;
+  bool _isInExtendRange = false; // prevent re-execution if latest failed & still in range.
 
   void _scrollListener() async {
-    if (isExecuting) return;
+    if (_isExecuting) return;
 
-    if (controller.offset >= controller.position.maxScrollExtent - widget.extend && !controller.position.outOfRange) {
-      if (widget.requiresNetwork && !ConnectivityController.inst.hasConnection) return;
-      isExecuting = true;
-      await widget.onReachingEnd();
-      isExecuting = false;
+    if (controller.offset >= controller.position.maxScrollExtent - widget.extend) {
+      if (!controller.position.outOfRange) {
+        if (_lastWasSuccess == false && _isInExtendRange) return;
+        _isInExtendRange = true;
+        if (widget.requiresNetwork && !ConnectivityController.inst.hasConnection) return;
+        _isExecuting = true;
+        _lastWasSuccess = await widget.onReachingEnd();
+        _isExecuting = false;
+      }
+    } else {
+      _isInExtendRange = false;
     }
   }
 

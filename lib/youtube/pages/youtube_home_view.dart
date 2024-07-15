@@ -46,7 +46,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
           YoutubeNotificationsPage(),
           YoutubeChannelsPage(),
           YoutubePlaylistsView(),
-          YoutubePlaylistsPage(),
+          YoutubeUserPlaylistsPage(),
           YTDownloadsPage(),
         ],
       ),

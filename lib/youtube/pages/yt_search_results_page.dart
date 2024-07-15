@@ -103,15 +103,17 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     refreshState();
   }
 
-  Future<void> _fetchSearchNextPage() async {
+  Future<bool> _fetchSearchNextPage() async {
+    bool fetched = false;
     final searchRes = _searchResult;
-    if (searchRes == null) return; // return if still fetching first results.
-    if (!searchRes.canFetchNext) return;
-    if (!ConnectivityController.inst.hasConnection) return;
+    if (searchRes == null) return fetched; // return if still fetching first results.
+    if (!searchRes.canFetchNext) return fetched;
+    if (!ConnectivityController.inst.hasConnection) return fetched;
     _isFetchingMoreResults.value = true;
-    await searchRes.fetchNext();
+    fetched = await searchRes.fetchNext();
     _isFetchingMoreResults.value = false;
     refreshState();
+    return fetched;
   }
 
   @override

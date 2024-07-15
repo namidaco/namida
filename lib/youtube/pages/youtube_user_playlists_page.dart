@@ -7,11 +7,12 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
+import 'package:namida/youtube/pages/youtube_user_history_page.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
-class YoutubePlaylistsPage extends StatelessWidget {
-  const YoutubePlaylistsPage({super.key});
+class YoutubeUserPlaylistsPage extends StatelessWidget {
+  const YoutubeUserPlaylistsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +20,13 @@ class YoutubePlaylistsPage extends StatelessWidget {
     const thumbnailHeight = multiplier * Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
-
+    final horizontalHistoryKey = GlobalKey();
+    final horizontalHistory = YoutubeUserHistoryPageHorizontal(pageKey: horizontalHistoryKey);
     return YoutubeMainPageFetcherAccBase<YoutiPieUserPlaylistsResult, PlaylistInfoItemUser>(
         transparentShimmer: true,
+        topPadding: 12.0,
+        pageHeader: horizontalHistory,
+        onPullToRefresh: () => (horizontalHistoryKey.currentState as dynamic)?.forceFetchFeed() as Future<void>,
         title: lang.PLAYLISTS,
         cacheReader: YoutiPie.cacheBuilder.forUserPlaylists(),
         networkFetcher: (details) => YoutubeInfoController.userplaylist.getUserPlaylists(details: details),
@@ -35,7 +40,7 @@ class YoutubePlaylistsPage extends StatelessWidget {
           return YoutubePlaylistCard(
             key: Key(playlist.id),
             playlist: playlist,
-            subtitle: playlist.infoTexts?.join(' - '),
+            subtitle: playlist.infoTexts?.firstOrNull, // the second text is mostly like 'updated today' etc
             thumbnailWidth: thumbnailWidth,
             thumbnailHeight: thumbnailHeight,
             firstVideoID: null,

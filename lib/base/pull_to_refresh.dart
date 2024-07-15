@@ -6,11 +6,43 @@ import 'package:namida/core/utils.dart';
 typedef PullToRefreshCallback = Future<void> Function();
 const double _defaultMaxDistance = 128.0;
 
+class PullToRefreshWidget extends StatelessWidget {
+  final Widget child;
+  final ScrollController controller;
+  final PullToRefreshCallback onRefresh;
+  final PullToRefreshMixin state;
+
+  const PullToRefreshWidget({
+    super.key,
+    required this.child,
+    required this.controller,
+    required this.onRefresh,
+    required this.state,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerMove: (event) => state.onPointerMove(controller, event),
+      onPointerUp: (_) => state.onRefresh(onRefresh),
+      onPointerCancel: (_) => state.onVerticalDragFinish(),
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          child,
+          state.pullToRefreshWidget,
+        ],
+      ),
+    );
+  }
+}
+
 class PullToRefresh extends StatefulWidget {
   final Widget child;
   final ScrollController controller;
   final PullToRefreshCallback onRefresh;
   final double maxDistance;
+  final bool Function()? enablePullToRefresh;
 
   const PullToRefresh({
     super.key,
@@ -18,6 +50,7 @@ class PullToRefresh extends StatefulWidget {
     required this.controller,
     required this.onRefresh,
     this.maxDistance = _defaultMaxDistance,
+    this.enablePullToRefresh,
   });
 
   @override
@@ -29,18 +62,15 @@ class _PullToRefreshState extends State<PullToRefresh> with TickerProviderStateM
   double get maxDistance => widget.maxDistance;
 
   @override
+  bool get enablePullToRefresh => widget.enablePullToRefresh == null ? true : widget.enablePullToRefresh!();
+
+  @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerMove: (event) => onPointerMove(widget.controller, event),
-      onPointerUp: (_) => onRefresh(widget.onRefresh),
-      onPointerCancel: (_) => onVerticalDragFinish(),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          widget.child,
-          pullToRefreshWidget,
-        ],
-      ),
+    return PullToRefreshWidget(
+      state: this,
+      controller: widget.controller,
+      onRefresh: widget.onRefresh,
+      child: widget.child,
     );
   }
 }

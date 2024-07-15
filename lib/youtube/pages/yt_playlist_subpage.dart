@@ -436,8 +436,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     return PlaylistID(id: plId);
   }
 
-  Future<void> _fetch100Video({bool forceRequest = false}) async {
-    if (_isLoadingMoreItems.value) return;
+  Future<bool> _fetch100Video({bool forceRequest = false}) async {
+    if (_isLoadingMoreItems.value) return false;
     _isLoadingMoreItems.value = true;
 
     bool fetched = false;
@@ -461,6 +461,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
 
     _isLoadingMoreItems.value = false;
     if (fetched) refreshState(trySortStreams);
+    return fetched;
   }
 
   @override

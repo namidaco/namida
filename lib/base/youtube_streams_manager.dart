@@ -151,15 +151,16 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
     }
   }
 
-  Future<void> fetchStreamsNextPage() async {
-    if (isLoadingMoreUploads.value) return;
+  Future<bool> fetchStreamsNextPage() async {
+    bool didFetch = false;
+    if (isLoadingMoreUploads.value) return didFetch;
 
     final result = this.listWrapper;
-    if (result == null) return;
-    if (!result.canFetchNext) return;
+    if (result == null) return didFetch;
+    if (!result.canFetchNext) return didFetch;
 
     isLoadingMoreUploads.value = true;
-    final didFetch = await result.fetchNext();
+    didFetch = await result.fetchNext();
     isLoadingMoreUploads.value = false;
 
     if (didFetch) {
@@ -167,6 +168,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
         onListChange(trySortStreams); // refresh state even if will not sort
       }
     }
+    return didFetch;
   }
 
   Future<YoutiPieFetchAllResType?> fetchAllStreams(void Function(YoutiPieFetchAllRes fetchAllRes) controller) async {

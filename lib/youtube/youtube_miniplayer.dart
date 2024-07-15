@@ -384,7 +384,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                   ignoring: !_canScrollQueue,
                                   child: LazyLoadListView(
                                     key: Key("${currentId}_body_lazy_load_list"),
-                                    onReachingEnd: ytTopComments ? () {} : () => YoutubeInfoController.current.updateCurrentComments(currentId),
+                                    onReachingEnd: ytTopComments ? () => false : () => YoutubeInfoController.current.updateCurrentComments(currentId),
                                     extend: 400,
                                     scrollController: _scrollController,
                                     listview: (controller) => Stack(
