@@ -532,6 +532,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     });
 
+    // -- hmm marking local tracks as yt-watched..?
+    // final trackYoutubeId = tr.youtubeID;
+    // if (trackYoutubeId.isNotEmpty) {
+    //   YoutubeInfoController.history.markVideoWatched(videoId: trackYoutubeId, streamResult: null, errorOnMissingParam: false);
+    // }
+
     Duration? duration;
 
     Future<Duration?> setPls() async {
@@ -850,6 +856,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   VideoStreamInfo? _ytNotificationVideoInfo;
   File? _ytNotificationVideoThumbnail;
 
+  /// Shows error if [marked] is not true.
+  void _onVideoMarkWatchResultError(bool? marked) {
+    if (marked != true) {
+      snackyy(message: 'Failed to mark video as watched.', top: false, isError: true);
+    }
+  }
+
   Future<void> onItemPlayYoutubeID(
     Q pi,
     YoutubeID item,
@@ -1023,6 +1036,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (checkInterrupted()) return;
 
+    Completer<bool?>? markedAsWatched;
+
+    // only if was playing
+    if (okaySetFromCache() && (streamsResult != null || !ConnectivityController.inst.hasConnection)) {
+      // -- allow when no connection bcz this function won't try again with no connection,
+      // -- so we force call here and let `markVideoWatched` do the job when there is proper connection.
+      markedAsWatched = Completer<bool?>();
+      markedAsWatched.complete(YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult));
+    }
+
     if (ConnectivityController.inst.hasConnection) {
       try {
         isFetchingInfo.value = true;
@@ -1040,6 +1063,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             snackyy(message: 'Error getting streams', top: false, isError: true);
             return null;
           });
+          if (streamsResult != null) {
+            if (markedAsWatched != null) {
+              // -- older request was initiated, wait to see the value.
+              markedAsWatched.future.then(
+                (marked) {
+                  if (marked != true && streamsResult != null) {
+                    YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
+                  }
+                },
+              );
+            } else {
+              // -- no old requests, force mark
+              YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
+            }
+          }
           duration ??= streamsResult?.audioStreams.firstOrNull?.duration;
           onInfoOrThumbObtained(info: streamsResult?.info);
           if (checkInterrupted(refreshNoti: false)) return; // -- onInfoOrThumbObtained refreshes notification.

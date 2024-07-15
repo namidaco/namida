@@ -1,8 +1,28 @@
 library namidayoutubeinfo;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:logger/logger.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:queue/queue.dart';
+import 'package:youtipie/class/channels/channel_page_about.dart';
+import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/channel_tab.dart';
+import 'package:youtipie/class/channels/tabs/channel_tab_videos_result.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/related_videos_request_params.dart';
+import 'package:youtipie/class/result_wrapper/comment_result.dart';
+import 'package:youtipie/class/result_wrapper/history_result.dart';
+import 'package:youtipie/class/result_wrapper/related_videos_result.dart';
+import 'package:youtipie/class/result_wrapper/search_result.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/class/videos/video_result.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/core/http.dart';
+import 'package:youtipie/youtipie.dart' hide logger;
+
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -14,23 +34,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
-import 'package:youtipie/class/channels/channel_page_about.dart';
-import 'package:youtipie/class/channels/channel_page_result.dart';
-import 'package:youtipie/class/channels/channel_tab.dart';
-import 'package:youtipie/class/channels/tabs/channel_tab_videos_result.dart';
-import 'package:youtipie/class/execute_details.dart';
-import 'package:youtipie/class/related_videos_request_params.dart';
-import 'package:youtipie/class/result_wrapper/comment_result.dart';
-import 'package:youtipie/class/result_wrapper/related_videos_result.dart';
-import 'package:youtipie/class/result_wrapper/search_result.dart';
-import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/class/videos/video_result.dart';
-import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/core/http.dart';
-import 'package:youtipie/youtipie.dart' hide logger;
-
 part 'info_controllers/yt_channel_info_controller.dart';
+part 'info_controllers/yt_history_linker.dart';
 part 'info_controllers/yt_search_info_controller.dart';
 part 'info_controllers/yt_various_utils.dart';
 part 'info_controllers/yt_video_info_controller.dart';
@@ -41,6 +46,7 @@ class YoutubeInfoController {
 
   static const video = _VideoInfoController();
   static const playlist = YoutiPie.playlist;
+  static final history = _YoutubeHistoryLinker(() => YoutiPie.activeAccountDetails.value?.id);
   static const userplaylist = YoutiPie.userplaylist;
   static const comment = YoutiPie.comment;
   static const commentAction = YoutiPie.commentAction;
@@ -58,6 +64,7 @@ class YoutubeInfoController {
       checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
       checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
     );
+    history.init(AppDirs.YOUTIPIE_CACHE);
     YoutiPie.setLogs(_YTReportingLog());
   }
 

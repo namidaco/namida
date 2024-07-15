@@ -68,6 +68,9 @@ dependencies:
   vibration: ^1.8.4
   flutter_displaymode: ^0.6.0
   flutter_udid: ^3.0.0
+  namico_db_wrapper:
+    git:
+      url: https://github.com/namidaco/namico_db_wrapper
 
   # ---- Audio Indexing & Playback ----
   just_audio:

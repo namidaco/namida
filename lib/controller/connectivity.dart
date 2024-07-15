@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
 class ConnectivityController {
@@ -24,8 +26,21 @@ class ConnectivityController {
             connections.contains(ConnectivityResult.other);
         _hasHighConnection.value = highConnection;
         _hasConnection.value = true;
+        if (_onConnectionRestored.isNotEmpty) {
+          _onConnectionRestored.loop((item) => item());
+        }
       }
     });
+  }
+
+  final _onConnectionRestored = <void Function()>[];
+
+  void registerOnConnectionRestored(void Function() fn) {
+    _onConnectionRestored.add(fn);
+  }
+
+  void removeOnConnectionRestored(void Function() fn) {
+    _onConnectionRestored.remove(fn);
   }
 
   bool get hasConnection => _hasConnection.value;
