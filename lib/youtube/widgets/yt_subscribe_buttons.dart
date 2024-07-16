@@ -1,10 +1,15 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -159,24 +164,27 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
             ),
           ),
         ],
-        child: ObxO(
-          rx: tileActiveNoti,
-          builder: (activeNoti) => Column(
-            children: [
-              ...ChannelNotifications.values.map(
-                (e) {
-                  return Padding(
-                    padding: const EdgeInsets.all(3.0),
-                    child: ListTileWithCheckMark(
-                      leading: _notificationsToIcon(e, 24.0),
-                      title: e.toText(),
-                      active: e == activeNoti,
-                      onTap: () => tileActiveNoti.value = e,
-                    ),
-                  );
-                },
-              )
-            ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ObxO(
+            rx: tileActiveNoti,
+            builder: (activeNoti) => Column(
+              children: [
+                ...ChannelNotifications.values.map(
+                  (e) {
+                    return Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: ListTileWithCheckMark(
+                        leading: _notificationsToIcon(e, 24.0),
+                        title: e.toText(),
+                        active: e == activeNoti,
+                        onTap: () => tileActiveNoti.value = e,
+                      ),
+                    );
+                  },
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -242,102 +250,238 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     };
   }
 
+  Future<void> _onAddGroupTap({required bool Function(String text) doesNameExist, required void Function(String text) onAdd}) async {
+    final text = await showNamidaBottomSheetWithTextField(
+      context: context,
+      initalControllerText: '',
+      title: '',
+      hintText: '',
+      labelText: lang.GROUP,
+      validator: (value) {
+        if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+        if (doesNameExist(value)) return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+        return null;
+      },
+      buttonText: lang.ADD,
+      onButtonTap: (text) => true,
+    );
+    if (text != null) onAdd(text);
+  }
+
+  void _showLocalFavouriteChannelsSheet(BuildContext context, String channelId) async {
+    final addedAtFirst = <String, bool>{};
+    final allChannelGroups = <String>[];
+    final currentGroups = (YoutubeSubscriptionsController.inst.getGroupsForChannel(channelId)).obs;
+    currentGroups.loop(
+      (item) {
+        addedAtFirst[item] = true;
+        allChannelGroups.add(item);
+      },
+    );
+    final allGroupsFile = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
+    (allGroupsFile.readAsJsonSync() as List?)?.loop(
+      (item) {
+        item as String;
+        if (addedAtFirst[item] != true) {
+          allChannelGroups.add(item);
+        }
+      },
+    );
+    addedAtFirst.clear();
+
+    bool didChangeCurrentGroups = false;
+
+    await showModalBottomSheet(
+      useRootNavigator: true,
+      context: context,
+      builder: (context) {
+        final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
+        return PopScope(
+          onPopInvoked: (didPop) {
+            if (!didPop) return;
+            if (didChangeCurrentGroups) YoutubeSubscriptionsController.inst.saveFile();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0).add(EdgeInsets.only(bottom: 8.0 + bottomPadding)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(height: 32.0),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Text(
+                      '${lang.CONFIGURE}: ${lang.CHANNEL}',
+                      style: context.textTheme.displayLarge,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32.0),
+                ObxO(
+                  rx: YoutubeSubscriptionsController.inst.availableChannels,
+                  builder: (availableChannels) {
+                    final favouriteChannel = availableChannels[channelId]?.subscribed;
+                    return TextButton(
+                      onPressed: () {
+                        YoutubeSubscriptionsController.inst.toggleChannelSubscription(channelId);
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            favouriteChannel == true ? Broken.tick_square : Broken.video,
+                            size: 28.0,
+                          ),
+                          const SizedBox(width: 8.0),
+                          NamidaButtonText(
+                            favouriteChannel == true ? lang.REMOVE_FROM_FAVOURITES : lang.ADD_TO_FAVOURITES,
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12.0),
+                const NamidaContainerDivider(),
+                const SizedBox(height: 12.0),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            lang.GROUP,
+                            style: context.textTheme.displayLarge,
+                          ),
+                        ),
+                        NamidaInkWellButton(
+                          sizeMultiplier: 1.1,
+                          text: lang.ADD,
+                          icon: Broken.add_circle,
+                          onTap: () => _onAddGroupTap(
+                            doesNameExist: allChannelGroups.contains,
+                            onAdd: (text) {
+                              allChannelGroups.add(text);
+                              allGroupsFile.writeAsJson(allChannelGroups);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                Flexible(
+                  child: SingleChildScrollView(
+                    // scrollDirection: Axis.horizontal,
+                    child: ObxO(
+                      rx: currentGroups,
+                      builder: (activeG) => Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.start,
+                          // direction: Axis.vertical,
+                          children: allChannelGroups
+                              .map(
+                                (e) => Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: ListTileWithCheckMark(
+                                    icon: Broken.smileys,
+                                    title: e,
+                                    active: activeG.contains(e),
+                                    onTap: () {
+                                      didChangeCurrentGroups = true; // we could save here but would be inefficient. we instead save on pop
+                                      currentGroups.addOrRemove(e);
+                                    },
+                                    expanded: false,
+                                  ),
+                                ),
+                              )
+                              .toList()),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: NamidaButton(
+                    text: lang.DONE,
+                    onPressed: Navigator.of(context).pop,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    currentGroups.close.executeAfterDelay();
+  }
+
   @override
   Widget build(BuildContext context) {
     final subscribed = _currentSubscribed == true;
     const iconSize = 20.0;
     final notificationIcon = _notificationsToIcon(_currentNotificationsStatus, iconSize);
 
-    return ObxO(
-      rx: _YTSubscribeButtonManager._activeModifications,
-      builder: (activeModifications) => AnimatedEnabled(
-        enabled: activeModifications[widget.channelID] != true && _currentSubscribed != null,
-        durationMS: 300,
-        child: Row(
-          children: [
-            if (subscribed && notificationIcon != null)
+    return LongPressDetector(
+      onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(context, widget.channelID!),
+      child: ObxO(
+        rx: _YTSubscribeButtonManager._activeModifications,
+        builder: (activeModifications) => AnimatedEnabled(
+          enabled: activeModifications[widget.channelID] != true && _currentSubscribed != null,
+          durationMS: 300,
+          child: Row(
+            children: [
+              if (subscribed && notificationIcon != null)
+                NamidaLoadingSwitcher(
+                  size: iconSize,
+                  builder: (startLoading, stopLoading, isLoading) => NamidaIconButton(
+                    horizontalPadding: 4.0,
+                    onPressed: () {
+                      final info = widget.mainChannelInfo.value;
+                      if (info == null) return;
+                      _onNotificationsTap();
+                    },
+                    icon: null,
+                    child: notificationIcon,
+                  ),
+                ),
               NamidaLoadingSwitcher(
-                size: iconSize,
-                builder: (startLoading, stopLoading, isLoading) => NamidaIconButton(
-                  horizontalPadding: 4.0,
-                  onPressed: () {
+                size: 24.0,
+                builder: (startLoading, stopLoading, isLoading) => TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                  ),
+                  child: NamidaButtonText(
+                    subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
+                  ),
+                  onPressed: () async {
                     final info = widget.mainChannelInfo.value;
                     if (info == null) return;
-                    _onNotificationsTap();
+                    if (subscribed) {
+                      final confirmed = await _confirmUnsubscribe();
+                      if (!confirmed) return;
+                    }
+                    _onChangeSubscribeStatus(
+                      subscribed,
+                      startLoading,
+                      stopLoading,
+                    );
                   },
-                  icon: null,
-                  child: notificationIcon,
                 ),
               ),
-            NamidaLoadingSwitcher(
-              size: 24.0,
-              builder: (startLoading, stopLoading, isLoading) => TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
-                ),
-                child: NamidaButtonText(
-                  subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
-                ),
-                onPressed: () async {
-                  final info = widget.mainChannelInfo.value;
-                  if (info == null) return;
-                  if (subscribed) {
-                    final confirmed = await _confirmUnsubscribe();
-                    if (!confirmed) return;
-                  }
-                  _onChangeSubscribeStatus(
-                    subscribed,
-                    startLoading,
-                    stopLoading,
-                  );
-                },
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class YTSubscribeButtonLocal extends StatelessWidget {
-  final String? channelID;
-  const YTSubscribeButtonLocal({super.key, required this.channelID});
-
-  @override
-  Widget build(BuildContext context) {
-    return ObxO(
-      rx: YoutubeSubscriptionsController.inst.availableChannels,
-      builder: (availableChannels) {
-        final disabled = channelID == null;
-        final subscribed = availableChannels[channelID ?? '']?.subscribed ?? false;
-        return AnimatedOpacity(
-          opacity: disabled ? 0.5 : 1.0,
-          duration: const Duration(milliseconds: 300),
-          child: TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
-            ),
-            child: Row(
-              children: [
-                Icon(subscribed ? Broken.tick_square : Broken.video, size: 20.0),
-                const SizedBox(width: 8.0),
-                NamidaButtonText(
-                  subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
-                ),
-              ],
-            ),
-            onPressed: () async {
-              final chid = channelID;
-              if (chid != null) {
-                await YoutubeSubscriptionsController.inst.toggleChannelSubscription(chid);
-              }
-            },
-          ),
-        );
-      },
     );
   }
 }

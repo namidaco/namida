@@ -21,6 +21,7 @@ abstract class LanguageKeys {
   String get ADD_MORE_FROM_THIS_ARTIST => _getKey('ADD_MORE_FROM_THIS_ARTIST');
   String get ADD_MORE_FROM_THIS_FOLDER => _getKey('ADD_MORE_FROM_THIS_FOLDER');
   String get ADD_MORE_FROM_TO_QUEUE => _getKey('ADD_MORE_FROM_TO_QUEUE');
+  String get ADD_TO_FAVOURITES => _getKey('ADD_TO_FAVOURITES');
   String get ADD_TO_PLAYLIST => _getKey('ADD_TO_PLAYLIST');
   String get ADD => _getKey('ADD');
   String get ADDED => _getKey('ADDED');
@@ -275,6 +276,7 @@ abstract class LanguageKeys {
   String get GO_TO_CHANNEL => _getKey('GO_TO_CHANNEL');
   String get GO_TO_FOLDER => _getKey('GO_TO_FOLDER');
   String get GRANT_STORAGE_PERMISSION => _getKey('GRANT_STORAGE_PERMISSION');
+  String get GROUP => _getKey('GROUP');
   String get GROUP_ARTWORKS_BY_ALBUM => _getKey('GROUP_ARTWORKS_BY_ALBUM');
   String get GUIDE => _getKey('GUIDE');
   String get HEIGHT_OF_ALBUM_TILE => _getKey('HEIGHT_OF_ALBUM_TILE');
@@ -518,6 +520,7 @@ abstract class LanguageKeys {
   String get REMOVE_WHITESPACES => _getKey('REMOVE_WHITESPACES');
   String get REMOVE => _getKey('REMOVE');
   String get REMOVED => _getKey('REMOVED');
+  String get REMOVE_FROM_FAVOURITES => _getKey('REMOVE_FROM_FAVOURITES');
   String get RENAME => _getKey('RENAME');
   String get RENAME_PLAYLIST => _getKey('RENAME_PLAYLIST');
   String get REORDERABLE => _getKey('REORDERABLE');

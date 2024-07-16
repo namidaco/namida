@@ -2,12 +2,14 @@ class YoutubeSubscription {
   final String title;
   final String channelID;
   final bool? subscribed;
+  final List<String> groups;
   DateTime? lastFetched;
 
   YoutubeSubscription({
     String? title,
     required this.channelID,
     required this.subscribed,
+    this.groups = const [],
     this.lastFetched,
   }) : title = title ?? '';
 
@@ -16,6 +18,7 @@ class YoutubeSubscription {
       title: json['title'] ?? '',
       channelID: json['channelID'] ?? '',
       subscribed: json['subscribed'],
+      groups: (json['groups'] as List?)?.cast<String>() ?? [],
       lastFetched: DateTime.fromMillisecondsSinceEpoch(json['lastFetched'] ?? 0),
     );
   }
@@ -25,6 +28,7 @@ class YoutubeSubscription {
       "title": title,
       "channelID": channelID,
       "subscribed": subscribed,
+      "groups": groups,
       "lastFetched": lastFetched?.millisecondsSinceEpoch,
     };
   }

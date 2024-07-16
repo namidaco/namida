@@ -195,6 +195,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppPaths.FAVOURITES_PLAYLIST,
                   AppPaths.YT_LIKES_PLAYLIST,
                   AppPaths.YT_SUBSCRIPTIONS,
+                  AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
                 ];
 
                 final totalDirs = [

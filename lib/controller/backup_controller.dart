@@ -56,6 +56,7 @@ class BackupController {
           AppPaths.LATEST_QUEUE,
           AppPaths.YT_LIKES_PLAYLIST,
           AppPaths.YT_SUBSCRIPTIONS,
+          AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
           AppDirs.PLAYLISTS,
           AppDirs.HISTORY_PLAYLIST,
           AppDirs.QUEUES,

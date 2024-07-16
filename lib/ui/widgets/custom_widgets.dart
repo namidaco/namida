@@ -768,6 +768,7 @@ class ListTileWithCheckMark extends StatelessWidget {
   final Widget? leading;
   final double? iconSize;
   final bool dense;
+  final bool expanded;
 
   const ListTileWithCheckMark({
     super.key,
@@ -776,18 +777,38 @@ class ListTileWithCheckMark extends StatelessWidget {
     this.onTap,
     this.title,
     this.subtitle = '',
-    this.icon,
+    this.icon = Broken.arrange_circle,
     this.tileColor,
     this.titleWidget,
     this.leading,
     this.iconSize,
     this.dense = false,
+    this.expanded = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final tileAlpha = context.isDarkMode ? 5 : 20;
     final br = BorderRadius.circular(14.0.multipliedRadius);
+    final titleWidgetFinal = Padding(
+      padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleWidget ??
+              Text(
+                title ?? lang.REVERSE_ORDER,
+                style: context.textTheme.displayMedium,
+              ),
+          if (subtitle != '')
+            Text(
+              subtitle,
+              style: context.textTheme.displaySmall,
+            )
+        ],
+      ),
+    );
     return Material(
         borderRadius: br,
         color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(tileAlpha), context.theme.cardTheme.color!),
@@ -797,33 +818,22 @@ class ListTileWithCheckMark extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
             child: Row(
+              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
               children: [
-                leading ??
-                    Icon(
-                      icon ?? Broken.arrange_circle,
-                      size: iconSize,
-                    ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        titleWidget ??
-                            Text(
-                              title ?? lang.REVERSE_ORDER,
-                              style: context.textTheme.displayMedium,
-                            ),
-                        if (subtitle != '')
-                          Text(
-                            subtitle,
-                            style: context.textTheme.displaySmall,
-                          )
-                      ],
-                    ),
+                if (leading != null)
+                  leading!
+                else if (icon != null)
+                  Icon(
+                    icon,
+                    size: iconSize,
                   ),
-                ),
+                expanded
+                    ? Expanded(
+                        child: titleWidgetFinal,
+                      )
+                    : Flexible(
+                        child: titleWidgetFinal,
+                      ),
                 activeRx != null
                     ? ObxO(
                         rx: activeRx!,

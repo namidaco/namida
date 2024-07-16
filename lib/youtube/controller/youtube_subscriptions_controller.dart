@@ -35,6 +35,11 @@ class YoutubeSubscriptionsController {
     return newSubscribed;
   }
 
+  List<String> getGroupsForChannel(String channelId) {
+    final sub = availableChannels.value[channelId] ??= YoutubeSubscription(channelID: channelId, subscribed: false);
+    return sub.groups;
+  }
+
   Future<void> sortByLastFetched() async {
     _availableChannels.sortBy((e) => e.value.lastFetched ?? DateTime(0));
     await saveFile();
