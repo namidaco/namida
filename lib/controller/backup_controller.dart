@@ -53,6 +53,7 @@ class BackupController {
           AppPaths.SETTINGS,
           AppPaths.SETTINGS_EQUALIZER,
           AppPaths.SETTINGS_PLAYER,
+          AppPaths.SETTINGS_YOUTUBE,
           AppPaths.LATEST_QUEUE,
           AppPaths.YT_LIKES_PLAYLIST,
           AppPaths.YT_SUBSCRIPTIONS,

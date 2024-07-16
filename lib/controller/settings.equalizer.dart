@@ -1,7 +1,4 @@
-import 'package:namida/base/settings_file_writer.dart';
-import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
+part of 'settings_controller.dart';
 
 class EqualizerSettings with SettingsFileWriter {
   static final EqualizerSettings inst = EqualizerSettings._internal();

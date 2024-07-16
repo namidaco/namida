@@ -20,6 +20,8 @@ enum _YoutubeSettingKeys {
   manageYourAccounts,
   youtubeStyleMiniplayer,
   rememberAudioOnly,
+  showShortsIn,
+  showMixesIn,
   topComments,
   preferNewComments,
   dimMiniplayerAfter,
@@ -41,6 +43,8 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
         _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
+        _YoutubeSettingKeys.showShortsIn: [lang.SHOW_SHORT_VIDEOS_IN],
+        _YoutubeSettingKeys.showMixesIn: [lang.SHOW_MIX_PLAYLISTS_IN],
         _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
@@ -144,6 +148,39 @@ class YoutubeSettings extends SettingSubpageProvider {
                 value: settings.ytPreferNewComments.valueR,
                 onChanged: (isTrue) => settings.save(ytPreferNewComments: !isTrue),
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.showShortsIn,
+            child: _ShowItemInListTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.showShortsIn),
+              title: lang.SHOW_SHORT_VIDEOS_IN,
+              icon: Broken.video_vertical,
+              activeMapRx: settings.youtube.ytVisibleShorts,
+              getValues: () => YTVisibleShortPlaces.values,
+              toText: (item) => item.toText(),
+              getIconsLookup: () => {
+                YTVisibleShortPlaces.homeFeed: Broken.home,
+                YTVisibleShortPlaces.relatedVideos: Broken.activity,
+                YTVisibleShortPlaces.history: Broken.refresh,
+                YTVisibleShortPlaces.search: Broken.search_favorite,
+              },
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.showMixesIn,
+            child: _ShowItemInListTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.showMixesIn),
+              title: lang.SHOW_MIX_PLAYLISTS_IN,
+              icon: Broken.radar_1,
+              activeMapRx: settings.youtube.ytVisibleMixes,
+              getValues: () => YTVisibleMixesPlaces.values,
+              toText: (item) => item.toText(),
+              getIconsLookup: () => {
+                YTVisibleMixesPlaces.homeFeed: Broken.home,
+                YTVisibleMixesPlaces.relatedVideos: Broken.activity,
+                YTVisibleMixesPlaces.search: Broken.search_favorite,
+              },
             ),
           ),
           getItemWrapper(
@@ -368,6 +405,90 @@ class YoutubeSettings extends SettingSubpageProvider {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
+  final Color? bgColor;
+  final String title;
+  final IconData icon;
+  final RxMap<Enum, bool> activeMapRx;
+  final List<E> Function() getValues;
+  final String Function(E item) toText;
+  final Map<Enum, IconData> Function() getIconsLookup;
+
+  const _ShowItemInListTile({
+    super.key,
+    required this.bgColor,
+    required this.title,
+    required this.icon,
+    required this.activeMapRx,
+    required this.getValues,
+    required this.toText,
+    required this.getIconsLookup,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: activeMapRx,
+      builder: (activeMap) {
+        final activeElements = getValues().where((element) => activeMap[element] ?? true).map((e) => toText(e));
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: icon,
+          title: title,
+          subtitle: activeElements.join(', '),
+          onTap: () {
+            bool didModify = false;
+            final iconsLookup = getIconsLookup();
+            NamidaNavigator.inst.navigateDialog(
+              dialog: PopScope(
+                onPopInvoked: (didPop) {
+                  if (!didPop) return;
+                  if (didModify) settings.youtube.save();
+                },
+                child: CustomBlurryDialog(
+                  icon: icon,
+                  normalTitleStyle: true,
+                  title: title,
+                  actions: [
+                    NamidaButton(
+                      text: lang.DONE,
+                      onPressed: NamidaNavigator.inst.closeDialog,
+                    )
+                  ],
+                  child: ObxO(
+                    rx: activeMapRx,
+                    builder: (activeMap) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: getValues().map(
+                          (e) {
+                            return Padding(
+                              padding: const EdgeInsets.all(3.0),
+                              child: ListTileWithCheckMark(
+                                title: toText(e),
+                                icon: iconsLookup[e],
+                                active: activeMap[e] ?? true,
+                                onTap: () {
+                                  didModify = true;
+                                  activeMapRx[e] = !(activeMapRx[e] ?? true);
+                                },
+                              ),
+                            );
+                          },
+                        ).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

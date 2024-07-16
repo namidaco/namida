@@ -386,3 +386,16 @@ enum YTSeekActionMode {
   expandedMiniplayer,
   all,
 }
+
+enum YTVisibleShortPlaces {
+  homeFeed,
+  search,
+  history,
+  relatedVideos,
+}
+
+enum YTVisibleMixesPlaces {
+  homeFeed,
+  search,
+  relatedVideos,
+}

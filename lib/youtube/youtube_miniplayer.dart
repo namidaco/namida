@@ -959,74 +959,94 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       ),
                                                     ),
                                                   )
-                                                : SliverVariedExtentList.builder(
-                                                    key: Key("${currentId}_feedlist"),
-                                                    itemExtentBuilder: (index, dimensions) {
-                                                      if (page.relatedVideosResult.shortsSection.relatedItemsShortsData[index] != null) return 64.0 * 3 + 24.0 * 2;
-                                                      final item = page.relatedVideosResult.items[index];
-                                                      if (item is StreamInfoItemShort) return 0;
-                                                      return relatedThumbnailItemExtent;
-                                                    },
-                                                    itemCount: page.relatedVideosResult.items.length,
-                                                    itemBuilder: (context, index) {
-                                                      final shortSection = page.relatedVideosResult.shortsSection.relatedItemsShortsData[index];
-                                                      if (shortSection != null) {
-                                                        const height = 64.0 * 3;
-                                                        const width = height * (9 / 16 * 1.2);
-                                                        const hPadding = 4.0;
-                                                        return SizedBox(
-                                                          height: height,
-                                                          child: ListView.builder(
-                                                            padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
-                                                            scrollDirection: Axis.horizontal,
-                                                            itemExtent: width + hPadding * 2,
-                                                            itemCount: shortSection.length,
-                                                            itemBuilder: (context, index) {
-                                                              final shortIndex = shortSection[index];
-                                                              final short = page.relatedVideosResult.items[shortIndex] as StreamInfoItemShort;
-                                                              return Padding(
-                                                                padding: const EdgeInsets.symmetric(horizontal: hPadding),
-                                                                child: YoutubeShortVideoTallCard(
-                                                                  short: short,
-                                                                  thumbnailWidth: width,
-                                                                  thumbnailHeight: height,
-                                                                ),
-                                                              );
+                                                : ObxO(
+                                                    rx: settings.youtube.ytVisibleShorts,
+                                                    builder: (visibleShorts) {
+                                                      final isShortsVisible = visibleShorts[YTVisibleShortPlaces.relatedVideos] ?? true;
+                                                      return ObxO(
+                                                        rx: settings.youtube.ytVisibleMixes,
+                                                        builder: (visibleMixes) {
+                                                          final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.relatedVideos] ?? true;
+                                                          return SliverVariedExtentList.builder(
+                                                            key: Key("${currentId}_feedlist"),
+                                                            itemExtentBuilder: (index, dimensions) {
+                                                              if (isShortsVisible && page.relatedVideosResult.shortsSection.relatedItemsShortsData[index] != null) {
+                                                                return 64.0 * 3 + 24.0 * 2;
+                                                              }
+                                                              final item = page.relatedVideosResult.items[index];
+                                                              if (item is StreamInfoItemShort) return 0;
+                                                              if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
+                                                              return relatedThumbnailItemExtent;
                                                             },
-                                                          ),
-                                                        );
-                                                      }
+                                                            itemCount: page.relatedVideosResult.items.length,
+                                                            itemBuilder: (context, index) {
+                                                              final shortSection = page.relatedVideosResult.shortsSection.relatedItemsShortsData[index];
+                                                              if (shortSection != null) {
+                                                                if (isShortsVisible == false) return const SizedBox();
+                                                                const height = 64.0 * 3;
+                                                                const width = height * (9 / 16 * 1.2);
+                                                                const hPadding = 4.0;
+                                                                return SizedBox(
+                                                                  height: height,
+                                                                  child: ListView.builder(
+                                                                    padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
+                                                                    scrollDirection: Axis.horizontal,
+                                                                    itemExtent: width + hPadding * 2,
+                                                                    itemCount: shortSection.length,
+                                                                    itemBuilder: (context, index) {
+                                                                      final shortIndex = shortSection[index];
+                                                                      final short = page.relatedVideosResult.items[shortIndex] as StreamInfoItemShort;
+                                                                      return Padding(
+                                                                        padding: const EdgeInsets.symmetric(horizontal: hPadding),
+                                                                        child: YoutubeShortVideoTallCard(
+                                                                          short: short,
+                                                                          thumbnailWidth: width,
+                                                                          thumbnailHeight: height,
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                );
+                                                              }
 
-                                                      final item = page.relatedVideosResult.items[index];
-                                                      return switch (item.runtimeType) {
-                                                        const (StreamInfoItem) => YoutubeVideoCard(
-                                                            key: Key((item as StreamInfoItem).id),
-                                                            thumbnailHeight: relatedThumbnailHeight,
-                                                            thumbnailWidth: relatedThumbnailWidth,
-                                                            isImageImportantInCache: false,
-                                                            video: item,
-                                                            playlistID: null,
-                                                          ),
-                                                        const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                                            key: Key("${(item as StreamInfoItemShort?)?.id}"),
-                                                            thumbnailHeight: relatedThumbnailHeight,
-                                                            thumbnailWidth: relatedThumbnailWidth,
-                                                            short: item as StreamInfoItemShort,
-                                                            playlistID: null,
-                                                          ),
-                                                        const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                                            key: Key((item as PlaylistInfoItem).id),
-                                                            thumbnailHeight: relatedThumbnailHeight,
-                                                            thumbnailWidth: relatedThumbnailWidth,
-                                                            playlist: item,
-                                                            subtitle: item.subtitle,
-                                                            playOnTap: true,
-                                                            firstVideoID: item.initialVideos.firstOrNull?.id,
-                                                            playingId: () => currentId,
-                                                            isMixPlaylist: item.isMix,
-                                                          ),
-                                                        _ => dummyVideoCard,
-                                                      };
+                                                              final item = page.relatedVideosResult.items[index];
+                                                              return switch (item.runtimeType) {
+                                                                const (StreamInfoItem) => YoutubeVideoCard(
+                                                                    key: Key((item as StreamInfoItem).id),
+                                                                    thumbnailHeight: relatedThumbnailHeight,
+                                                                    thumbnailWidth: relatedThumbnailWidth,
+                                                                    isImageImportantInCache: false,
+                                                                    video: item,
+                                                                    playlistID: null,
+                                                                  ),
+                                                                const (StreamInfoItemShort) => !isShortsVisible
+                                                                    ? const SizedBox.shrink()
+                                                                    : YoutubeShortVideoCard(
+                                                                        key: Key("${(item as StreamInfoItemShort?)?.id}"),
+                                                                        thumbnailHeight: relatedThumbnailHeight,
+                                                                        thumbnailWidth: relatedThumbnailWidth,
+                                                                        short: item as StreamInfoItemShort,
+                                                                        playlistID: null,
+                                                                      ),
+                                                                const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
+                                                                    ? const SizedBox.shrink()
+                                                                    : YoutubePlaylistCard(
+                                                                        key: Key(item.id),
+                                                                        thumbnailHeight: relatedThumbnailHeight,
+                                                                        thumbnailWidth: relatedThumbnailWidth,
+                                                                        playlist: item,
+                                                                        subtitle: item.subtitle,
+                                                                        playOnTap: true,
+                                                                        firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                                        playingId: () => currentId,
+                                                                        isMixPlaylist: item.isMix,
+                                                                      ),
+                                                                _ => dummyVideoCard,
+                                                              };
+                                                            },
+                                                          );
+                                                        },
+                                                      );
                                                     },
                                                   ),
 

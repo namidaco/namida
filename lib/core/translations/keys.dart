@@ -503,6 +503,7 @@ abstract class LanguageKeys {
   String get RECENT_ARTISTS => _getKey('RECENT_ARTISTS');
   String get RECENT_LISTENS => _getKey('RECENT_LISTENS');
   String get REFRESH_ON_STARTUP => _getKey('REFRESH_ON_STARTUP');
+  String get RELATED_VIDEOS => _getKey('RELATED_VIDEOS');
   String get REMEMBER_AUDIO_ONLY_MODE => _getKey('REMEMBER_AUDIO_ONLY_MODE');
   String get REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK => _getKey('REPLACE_ALL_LISTENS_WITH_ANOTHER_TRACK');
   String get RE_INDEX_SUBTITLE => _getKey('RE_INDEX_SUBTITLE');
@@ -577,7 +578,9 @@ abstract class LanguageKeys {
   String get SHOULD_PAUSE => _getKey('SHOULD_PAUSE');
   String get SHOULD_PAUSE_NOTE => _getKey('SHOULD_PAUSE_NOTE');
   String get SHOW_HIDE_UNKNOWN_FIELDS => _getKey('SHOW_HIDE_UNKNOWN_FIELDS');
+  String get SHOW_MIX_PLAYLISTS_IN => _getKey('SHOW_MIX_PLAYLISTS_IN');
   String get SHOW_MORE => _getKey('SHOW_MORE');
+  String get SHOW_SHORT_VIDEOS_IN => _getKey('SHOW_SHORT_VIDEOS_IN');
   String get SHOW_WEBM => _getKey('SHOW_WEBM');
   String get SHUFFLE => _getKey('SHUFFLE');
   String get SHUFFLE_ALL => _getKey('SHUFFLE_ALL');

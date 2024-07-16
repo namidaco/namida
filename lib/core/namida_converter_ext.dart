@@ -691,6 +691,14 @@ extension ChannelNotificationsUtils on ChannelNotifications {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension YTVisibleShortPlacesUtils on YTVisibleShortPlaces {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
+extension YTVisibleMixesPlacesUtils on YTVisibleMixesPlaces {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -1313,6 +1321,17 @@ class _NamidaConverters {
         ChannelNotifications.all: lang.ALL,
         ChannelNotifications.personalized: lang.PERSONALIZED,
         ChannelNotifications.none: lang.NONE,
+      },
+      YTVisibleShortPlaces: {
+        YTVisibleShortPlaces.homeFeed: lang.HOME,
+        YTVisibleShortPlaces.relatedVideos: lang.RELATED_VIDEOS,
+        YTVisibleShortPlaces.history: lang.HISTORY,
+        YTVisibleShortPlaces.search: lang.SEARCH,
+      },
+      YTVisibleMixesPlaces: {
+        YTVisibleMixesPlaces.homeFeed: lang.HOME,
+        YTVisibleMixesPlaces.relatedVideos: lang.RELATED_VIDEOS,
+        YTVisibleMixesPlaces.search: lang.SEARCH,
       },
     };
 

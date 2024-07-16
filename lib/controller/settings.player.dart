@@ -1,15 +1,7 @@
-// ignore_for_file: invalid_use_of_protected_member
+part of 'settings_controller.dart';
 
-import 'package:namida/core/utils.dart';
-
-import 'package:namida/base/settings_file_writer.dart';
-import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
-
-class PlayerSettings with SettingsFileWriter {
-  static final PlayerSettings inst = PlayerSettings._internal();
-  PlayerSettings._internal();
+class _PlayerSettings with SettingsFileWriter {
+  _PlayerSettings._internal();
 
   final enableVolumeFadeOnPlayPause = true.obs;
   final playFadeDurInMilli = 300.obs;

@@ -6,11 +6,13 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
-import 'package:namida/controller/settings.equalizer.dart';
-import 'package:namida/controller/settings.player.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+
+part 'settings.youtube.dart';
+part 'settings.player.dart';
+part 'settings.equalizer.dart';
 
 final settings = _SettingsController._internal();
 
@@ -18,7 +20,8 @@ class _SettingsController with SettingsFileWriter {
   _SettingsController._internal();
 
   EqualizerSettings get equalizer => EqualizerSettings.inst;
-  PlayerSettings get player => PlayerSettings.inst;
+  final player = _PlayerSettings._internal();
+  final youtube = _YoutubeSettings._internal();
 
   final selectedLanguage = kDefaultLang.obs;
   final themeMode = ThemeMode.system.obs;
