@@ -139,7 +139,9 @@ class _YoutubeHistoryLinker {
     _pendingRequestsCompleter = null;
   }
 
-  Future<bool?> markVideoWatched({required String videoId, required VideoStreamsResult? streamResult, bool errorOnMissingParam = true}) async {
+  Future<YTMarkVideoWatchedResult> markVideoWatched({required String videoId, required VideoStreamsResult? streamResult, bool errorOnMissingParam = true}) async {
+    if (_dbOpenedAccId == null) return YTMarkVideoWatchedResult.noAccount; // no acc signed in
+
     if (_hasPendingRequests) {
       executePendingRequests();
     }
@@ -167,10 +169,13 @@ class _YoutubeHistoryLinker {
       }
     }
     if (added) {
-      return added;
+      return YTMarkVideoWatchedResult.marked;
     } else {
+      // -- the handling of executing pending requests is different.
+      // -- even if `added` is false due to missing params/etc, it will
+      // -- properly get removed while exeuting pending.
       _addPendingRequest(videoId: videoId, streamResult: streamResult);
-      return null;
+      return YTMarkVideoWatchedResult.addedAsPending;
     }
   }
 
@@ -182,4 +187,10 @@ class _YoutubeHistoryLinker {
     final cache = YoutiPie.cacheBuilder.forHistoryVideos();
     return cache.read();
   }
+}
+
+enum YTMarkVideoWatchedResult {
+  noAccount,
+  marked,
+  addedAsPending,
 }

@@ -422,12 +422,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     );
   }
 
-  Future<String> _onRenameIconTap({
+  Future<void> _onRenameIconTap({
     required BuildContext context,
     required YoutubeItemDownloadConfig config,
     required DownloadTaskGroupName groupName,
   }) async {
-    return await showNamidaBottomSheetWithTextField(
+    await showNamidaBottomSheetWithTextField(
       context: context,
       initalControllerText: config.filename.filename,
       title: lang.RENAME,

@@ -277,7 +277,7 @@ class CustomListTile extends StatelessWidget {
           maxLines: subtitle != null ? 4 : 5,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: subtitle != null
+        subtitle: subtitle?.isNotEmpty == true
             ? Text(
                 subtitle!,
                 style: context.theme.textTheme.displaySmall,

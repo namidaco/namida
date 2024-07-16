@@ -26,7 +26,7 @@ part 'youtube_manage_subscription_page.dart';
 
 class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   @override
-  RouteType get route => RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
+  RouteType get route => RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE;
 
   const YoutubeAccountManagePage({super.key});
 

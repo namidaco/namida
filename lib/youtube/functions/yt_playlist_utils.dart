@@ -53,7 +53,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
     return deleted;
   }
 
-  Future<String> showRenamePlaylistSheet({
+  Future<String?> showRenamePlaylistSheet({
     required BuildContext context,
     required String playlistName,
   }) async {

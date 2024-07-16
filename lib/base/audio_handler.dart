@@ -857,8 +857,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   File? _ytNotificationVideoThumbnail;
 
   /// Shows error if [marked] is not true.
-  void _onVideoMarkWatchResultError(bool? marked) {
-    if (marked != true) {
+  void _onVideoMarkWatchResultError(YTMarkVideoWatchedResult marked) {
+    if (marked == YTMarkVideoWatchedResult.addedAsPending) {
       snackyy(message: 'Failed to mark video as watched.', top: false, isError: true);
     }
   }
@@ -1036,13 +1036,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (checkInterrupted()) return;
 
-    Completer<bool?>? markedAsWatched;
+    Completer<YTMarkVideoWatchedResult>? markedAsWatched;
 
     // only if was playing
     if (okaySetFromCache() && (streamsResult != null || !ConnectivityController.inst.hasConnection)) {
       // -- allow when no connection bcz this function won't try again with no connection,
       // -- so we force call here and let `markVideoWatched` do the job when there is proper connection.
-      markedAsWatched = Completer<bool?>();
+      markedAsWatched = Completer<YTMarkVideoWatchedResult>();
       markedAsWatched.complete(YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult));
     }
 

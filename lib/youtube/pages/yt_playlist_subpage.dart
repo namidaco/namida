@@ -280,11 +280,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                           title: lang.RENAME_PLAYLIST,
                                           onTap: () async {
                                             final newName = await playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
-                                            if (context.mounted) {
-                                              refreshState(() {
-                                                playlistCurrentName = newName;
-                                              });
-                                            }
+                                            if (newName == null) return;
+                                            refreshState(() => playlistCurrentName = newName);
                                           },
                                         ),
                                         NamidaPopupItem(

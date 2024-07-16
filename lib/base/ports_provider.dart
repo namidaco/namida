@@ -20,6 +20,8 @@ class IsolateFunctionReturnBuild<T> {
 }
 
 mixin PortsProvider<E> {
+  bool get isInitialized => _isInitialized ?? false;
+
   Completer<SendPort>? _portCompleter;
   ReceivePort? _recievePort;
   StreamSubscription? _streamSub;

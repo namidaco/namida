@@ -194,6 +194,7 @@ class ThumbnailManager {
 
 class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   final _downloadCompleters = <String, Completer<File?>?>{}; // item id
+  final _requestsCountForId = <String, int>{}; // item id
   final _shouldRetry = <String, bool>{}; // item id
   final _notFoundThumbnails = <String, bool?>{}; // item id
 
@@ -213,8 +214,12 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       if (onNotFound != null) onNotFound();
       return null;
     }
+
+    _requestsCountForId.update(id, (value) => value++, ifAbsent: () => 1);
+
     if (forceRequest == false && _downloadCompleters[id] != null) {
       final res = await _downloadCompleters[id]!.future;
+      _requestsCountForId.update(id, (value) => value--);
       if (res != null || _shouldRetry[id] != true) {
         return res;
       }
@@ -231,11 +236,13 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       'destinationFile': destinationFile,
       'symlinkId': symlinkId,
     };
-    await initialize();
+    if (!isInitialized) await initialize();
     await sendPort(p);
     final res = await _downloadCompleters[id]?.future;
 
-    if (_notFoundThumbnails[id] == true) {
+    _requestsCountForId.update(id, (value) => value--);
+
+    if (res == null && _notFoundThumbnails[id] == true) {
       if (onNotFound != null) onNotFound();
       return null;
     }
@@ -244,9 +251,13 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
   Future<void> stopDownload({required String? id}) async {
     if (id == null) return;
-    _onFileFinish(id, null, null, true);
-    final p = {'id': id, 'stop': true};
-    await sendPort(p);
+    final otherActiveRequests = _requestsCountForId[id];
+    if (otherActiveRequests == null || otherActiveRequests <= 1) {
+      // -- only close if active requests only 1
+      _onFileFinish(id, null, null, true);
+      final p = {'id': id, 'stop': true};
+      await sendPort(p);
+    }
   }
 
   static Future<void> _prepareDownloadResources(SendPort sendPort) async {
@@ -428,8 +439,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
   void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted) {
     if (notfound != null) _notFoundThumbnails[itemId] = notfound;
-    _downloadCompleters[itemId]?.completeIfWasnt(downloadedFile);
     _shouldRetry[itemId] = aborted;
+    _downloadCompleters[itemId]?.completeIfWasnt(downloadedFile);
   }
 }
 

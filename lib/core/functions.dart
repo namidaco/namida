@@ -604,7 +604,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   );
 }
 
-Future<String> showNamidaBottomSheetWithTextField({
+Future<String?> showNamidaBottomSheetWithTextField({
   required BuildContext context,
   bool isScrollControlled = true,
   bool useRootNavigator = true,
@@ -624,6 +624,8 @@ Future<String> showNamidaBottomSheetWithTextField({
 
   final focusNode = FocusNode();
   focusNode.requestFocus();
+
+  String? finalText;
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   await showModalBottomSheet(
@@ -674,8 +676,11 @@ Future<String> showNamidaBottomSheetWithTextField({
                       ),
                       onTap: () async {
                         if (formKey.currentState!.validate()) {
-                          final canPop = await onButtonTap(controller.text);
-                          if (canPop && context.mounted) context.safePop();
+                          final didAgree = await onButtonTap(controller.text);
+                          if (didAgree) {
+                            finalText = controller.text;
+                            if (context.mounted) context.safePop();
+                          }
                         }
                       },
                     ),
@@ -688,9 +693,8 @@ Future<String> showNamidaBottomSheetWithTextField({
       );
     },
   );
-  final t = controller.text;
   controller.disposeAfterAnimation(also: focusNode.dispose);
-  return t;
+  return finalText;
 }
 
 // Returns a [0-1] scale representing how much similar both are.

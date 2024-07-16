@@ -39,6 +39,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final bool isHorizontal;
   final double? horizontalHeight;
   final double topPadding;
+  final double? bottomPadding;
   final Future<void> Function()? onPullToRefresh;
   final bool enablePullToRefresh;
   final void Function(W? result)? onListUpdated;
@@ -58,6 +59,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     this.isHorizontal = false,
     this.horizontalHeight,
     this.topPadding = 24.0,
+    this.bottomPadding,
     this.onPullToRefresh,
     this.enablePullToRefresh = true,
     this.onListUpdated,
@@ -101,17 +103,19 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-
+  void _onInit({bool forceRequest = false}) async {
     bool needNewRequest = false;
-    final lastFetchedTime = _resultsFetchTime[W];
-    if (_hasConnection) {
-      if (lastFetchedTime == null) {
-        needNewRequest = true;
-      } else if (lastFetchedTime.difference(DateTime.now()).abs() > const Duration(seconds: 180)) {
-        needNewRequest = true;
+
+    if (forceRequest) {
+      needNewRequest = true;
+    } else {
+      final lastFetchedTime = _resultsFetchTime[W];
+      if (_hasConnection) {
+        if (lastFetchedTime == null) {
+          needNewRequest = true;
+        } else if (lastFetchedTime.difference(DateTime.now()).abs() > const Duration(seconds: 180)) {
+          needNewRequest = true;
+        }
       }
     }
 
@@ -129,12 +133,24 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     } else {
       _fetchFeed();
     }
+  }
+
+  void _onAccChanged() {
+    _onInit(forceRequest: true);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _onInit();
+    YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
   }
 
   @override
   void dispose() {
     if (widget.onListUpdated != null) _currentFeed.removeListener(_onListUpdated);
+    YoutubeAccountController.current.removeOnAccountChanged(_onAccChanged);
 
     _controller.dispose();
     _isLoadingCurrentFeed.close();
@@ -165,6 +181,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _resultsFetchTime[W] = DateTime.now();
     if (val != null) {
       _currentFeed.value = val;
+      _lastFetchWasCached.value = false;
     } else {
       _lastFetchWasCached.value = true;
     }
@@ -227,7 +244,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       );
     }
 
-    final pagePadding = EdgeInsets.only(top: widget.topPadding, bottom: Dimensions.inst.globalBottomPaddingTotalR);
+    final pagePadding = EdgeInsets.only(top: widget.topPadding, bottom: widget.bottomPadding ?? Dimensions.inst.globalBottomPaddingTotalR);
 
     final EdgeInsets firstPadding;
     final EdgeInsets lastPadding;
@@ -256,6 +273,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                   padding: pagePadding,
                   child: Column(
                     children: [
+                      if (widget.pageHeader != null) widget.pageHeader!,
                       Align(
                         alignment: Alignment.centerLeft,
                         child: header,
