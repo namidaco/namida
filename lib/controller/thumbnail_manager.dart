@@ -284,7 +284,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         final destinationFile = p['destinationFile'] as File;
         final symlinkId = p['symlinkId'] as String?;
 
-        if (forceRequest == true && destinationFile.existsSync()) {
+        if (forceRequest == false && destinationFile.existsSync()) {
           final res = _YTThumbnailDownloadResult(
             url: null,
             urlPath: null,
@@ -299,68 +299,94 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         }
 
         requesters[id] ??= {};
+        bool? notfound;
+        _YTThumbnailDownloadResult? downloadedRes;
+        final destinationFileTemp = File("${destinationFile.path}.temp");
+        destinationFileTemp.createSync(recursive: true);
+        final fileStream = destinationFileTemp.openWrite(mode: FileMode.write);
+
+        Future<void> diposeIdRequestResources() async {
+          if (requesters[id] != null) {
+            for (final r in requesters[id]!.values) {
+              r.close();
+            }
+            requesters[id] = null;
+          }
+          try {
+            await fileStream.flush();
+            await fileStream.close(); // closing file.
+          } catch (_) {}
+          destinationFileTemp.delete().catchError((_) => File(''));
+        }
+
         for (final url in urls) {
           final urlPath = url.substring(url.lastIndexOf('/') + 1);
           requesters[id]?[urlPath] = HttpClientWrapper();
 
-          final destinationFileTemp = File("${destinationFile.path}.temp");
-          destinationFileTemp.createSync(recursive: true);
-          final fileStream = destinationFileTemp.openWrite(mode: FileMode.write);
-          final downloadedRes = await httpManager.executeQueued(() async {
+          downloadedRes = await httpManager.executeQueued(() async {
             final requester = requesters[id]?[urlPath];
-
-            Future<void> onDownloadFinish() async {
-              try {
-                requester?.close();
-                requesters[id] = null;
-              } catch (_) {}
-              try {
-                await fileStream.flush();
-                await fileStream.close(); // closing file.
-              } catch (_) {}
-              destinationFileTemp.delete().catchError((_) => File(''));
-            }
 
             if (requester == null || requester.isClosed) {
               // -- client closed, return true to break the loop
-              onDownloadFinish();
-              final res = _YTThumbnailDownloadResult(url: url, urlPath: urlPath, itemId: id, file: destinationFile, isTempFile: isTemp, aborted: true, notfound: null);
+              final res = _YTThumbnailDownloadResult(
+                url: url,
+                urlPath: urlPath,
+                itemId: id,
+                file: destinationFile,
+                isTempFile: isTemp,
+                aborted: true,
+                notfound: null,
+              );
               return res;
             }
 
             try {
               final response = await requester.getUrl(Uri.parse(url));
-              final bool notfound = response.statusCode == 404;
+              notfound = response.statusCode == 404;
+              if (notfound == true) throw Exception('not found'); // as if request failed.
+
               File? newFile;
-              if (!notfound) {
-                final downloadStream = response.asBroadcastStream();
-                await fileStream.addStream(downloadStream);
-                newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
-                if (symlinkId != null) {
-                  Link("${newFile.parent.path}/$symlinkId").create(newFile.path).catchError((_) => Link(''));
-                }
-                if (deleteOldExtracted) {
-                  File("${destinationFile.parent.path}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
-                }
+              final downloadStream = response.asBroadcastStream();
+              await fileStream.addStream(downloadStream);
+              newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
+              if (symlinkId != null) {
+                Link("${newFile.parent.path}/$symlinkId").create(newFile.path).catchError((_) => Link(''));
+              }
+              if (deleteOldExtracted) {
+                File("${destinationFile.parent.path}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
               }
 
-              final res = _YTThumbnailDownloadResult(url: url, urlPath: urlPath, itemId: id, file: newFile, isTempFile: isTemp, aborted: false, notfound: notfound);
+              final res = _YTThumbnailDownloadResult(
+                url: url,
+                urlPath: urlPath,
+                itemId: id,
+                file: newFile,
+                isTempFile: isTemp,
+                aborted: false,
+                notfound: false,
+              );
               return res;
             } catch (_) {
               return null;
-            } finally {
-              onDownloadFinish();
             }
           });
 
-          if (downloadedRes != null) {
-            sendPort.send(downloadedRes); // break loop and return
-            return;
-          }
+          if (downloadedRes != null) break; // break loop
         }
 
-        final res = _YTThumbnailDownloadResult(url: null, urlPath: null, itemId: id, file: null, isTempFile: isTemp, aborted: true, notfound: null);
-        sendPort.send(res); // if nothing succeeded, return the latest failed res
+        diposeIdRequestResources();
+
+        downloadedRes ??= _YTThumbnailDownloadResult(
+          url: null,
+          urlPath: null,
+          itemId: id,
+          file: null,
+          isTempFile: isTemp,
+          aborted: true,
+          notfound: notfound,
+        );
+
+        sendPort.send(downloadedRes);
       }
     }
 
@@ -403,7 +429,6 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted) {
     if (notfound != null) _notFoundThumbnails[itemId] = notfound;
     _downloadCompleters[itemId]?.completeIfWasnt(downloadedFile);
-    _downloadCompleters[itemId] = null;
     _shouldRetry[itemId] = aborted;
   }
 }

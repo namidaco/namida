@@ -43,6 +43,7 @@ class HttpClientWrapper {
   }
 
   Future<void> close() async {
+    if (_closed) return;
     _closed = true;
     _client.close(force: true);
   }
