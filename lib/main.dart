@@ -293,7 +293,7 @@ Future<void> _initializeIntenties() async {
       final linkRaw = files.first.value;
       if (linkRaw != null) {
         final link = linkRaw.replaceAll(r'\', '');
-        if (link.startsWith('https://patreonauth.github.com/namidaco')) {
+        if (link.startsWith('app://com.msob7y.namida.patreonauth')) {
           final link = linkRaw.replaceAll(r'\', '');
           YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
           return;

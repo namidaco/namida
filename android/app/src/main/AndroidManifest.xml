@@ -80,9 +80,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.SEND" />
                 <data
-                    android:host="patreonauth.github.com"
-                    android:scheme="https"
-                    android:pathPrefix="/namidaco" />
+                    android:host="com.msob7y.namida.patreonauth"
+                    android:scheme="app" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

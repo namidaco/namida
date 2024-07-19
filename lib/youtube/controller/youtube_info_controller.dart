@@ -32,6 +32,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
 part 'info_controllers/yt_channel_info_controller.dart';
@@ -66,6 +67,15 @@ class YoutubeInfoController {
     );
     history.init(AppDirs.YOUTIPIE_CACHE);
     YoutiPie.setLogs(_YTReportingLog());
+
+    YoutubeAccountController.current.addOnAccountChanged(() {
+      final currentId = Player.inst.currentVideo?.id;
+      current.resetAll();
+      if (currentId != null) {
+        current.updateVideoPageSync(currentId);
+        current.updateCurrentCommentsSync(currentId);
+      }
+    });
   }
 
   static Future<bool> ensureJSPlayerInitialized() async {

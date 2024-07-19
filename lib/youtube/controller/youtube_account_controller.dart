@@ -33,35 +33,6 @@ class YoutubeAccountController {
   /// functions to be called after stable connection is obtained.
   static final _pendingRequests = <String, Future<void> Function()>{};
 
-  static const _operationNeedsAccount = <YoutiPieOperation, bool>{
-    YoutiPieOperation.fetchNotifications: true,
-    YoutiPieOperation.fetchNotificationsNext: true,
-    YoutiPieOperation.markNotificationRead: true,
-    YoutiPieOperation.fetchFeed: true,
-    YoutiPieOperation.fetchFeedNext: true,
-    YoutiPieOperation.fetchHistory: true,
-    YoutiPieOperation.fetchHistoryNext: true,
-    YoutiPieOperation.addVideoToHistory: true,
-    YoutiPieOperation.createPlaylist: true,
-    YoutiPieOperation.editPlaylist: true,
-    YoutiPieOperation.deletePlaylist: true,
-    YoutiPieOperation.fetchUserPlaylists: true,
-    YoutiPieOperation.fetchUserPlaylistsNext: true,
-    YoutiPieOperation.addHostedPlaylistToLibrary: true,
-    YoutiPieOperation.removeHostedPlaylistFromLibrary: true,
-    YoutiPieOperation.changeVideoLikeStatus: true,
-    YoutiPieOperation.changeCommentLikeStatus: true,
-    YoutiPieOperation.changeReplyLikeStatus: true,
-    YoutiPieOperation.changeChannelSubscriptionStatus: true,
-    YoutiPieOperation.changeChannelNotificationStatus: true,
-    YoutiPieOperation.createComment: true,
-    YoutiPieOperation.editComment: true,
-    YoutiPieOperation.deleteComment: true,
-    YoutiPieOperation.createReply: true,
-    YoutiPieOperation.editReply: true,
-    YoutiPieOperation.deleteReply: true,
-  };
-
   /// By default, all account operations need membership, these are exceptions.
   static const _operationNeedsMembership = <YoutiPieOperation, bool>{
     YoutiPieOperation.addVideoToHistory: false,
@@ -80,7 +51,7 @@ class YoutubeAccountController {
     };
 
     YoutiPie.canExecuteOperation = (operation) {
-      if (_operationNeedsAccount[operation] == true) {
+      if (operation.requiresAccount) {
         if (current.activeAccountChannel.value == null) {
           // -- no account
           _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
@@ -141,23 +112,23 @@ class YoutubeAccountController {
   }
 
   static Future<void> _executePendingRequests() async {
-    final hasConnection = ConnectivityController.inst.hasConnection;
-    if (hasConnection) {
+    if (_pendingRequests.isEmpty) return;
+    if (ConnectivityController.inst.hasConnection) {
       _executePendingRequestsImmediate();
     } else {
-      await Future.delayed(const Duration(seconds: 20)); // we aint adding callbacks, we then will check with each request if there is pending requests
-      _executePendingRequestsImmediate();
+      ConnectivityController.inst.registerOnConnectionRestored(_executePendingRequestsImmediate);
     }
   }
 
   static Future<void> _executePendingRequestsImmediate() async {
     final copy = Map<String, Future<void> Function()>.from(_pendingRequests);
     for (final e in copy.entries) {
-      try {
-        final fn = e.value;
-        await fn();
+      e.value().then((value) {
         _pendingRequests.remove(e.key);
-      } catch (_) {}
+        if (_pendingRequests.isEmpty) {
+          ConnectivityController.inst.removeOnConnectionRestored(_executePendingRequestsImmediate);
+        }
+      }).catchError((_) {});
     }
   }
 
