@@ -256,10 +256,13 @@ extension FavouriteYoutubeID on YoutubeID {
 }
 
 extension PLNAME on String {
-  String translatePlaylistName() => replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED)
-      .replaceFirst(k_PLAYLIST_NAME_FAV, lang.FAVOURITES)
-      .replaceFirst(k_PLAYLIST_NAME_HISTORY, lang.HISTORY)
-      .replaceFirst(k_PLAYLIST_NAME_MOST_PLAYED, lang.MOST_PLAYED);
+  String translatePlaylistName() {
+    final name = this;
+    if (name == k_PLAYLIST_NAME_FAV) return lang.FAVOURITES;
+    if (name == k_PLAYLIST_NAME_HISTORY) return lang.HISTORY;
+    if (name == k_PLAYLIST_NAME_MOST_PLAYED) return lang.MOST_PLAYED;
+    return name.replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED);
+  }
 }
 
 extension EnumUtils<E extends Enum> on E {

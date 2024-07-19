@@ -138,6 +138,7 @@ void mainInitialization() async {
   await Future.wait([
     settings.equalizer.prepareSettingsFile(),
     settings.player.prepareSettingsFile(),
+    settings.youtube.prepareSettingsFile(),
     settings.prepareSettingsFile(),
   ]);
 

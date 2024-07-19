@@ -42,102 +42,94 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
       shimmerEnabled: true,
     );
 
-    return ObxO(
-      rx: settings.youtube.ytVisibleShorts,
-      builder: (visibleShorts) {
-        final isShortsVisible = visibleShorts[YTVisibleShortPlaces.history] ?? true;
-        return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
-          onListUpdated: onListUpdated,
-          transparentShimmer: true,
-          title: lang.HISTORY,
-          cacheReader: YoutiPie.cacheBuilder.forHistoryVideos(),
-          networkFetcher: (details) => YoutubeInfoController.history.fetchHistory(details: details),
-          itemExtent: thumbnailItemExtent,
-          dummyCard: dummyCard,
-          itemBuilder: (chunk, index, list) {
-            final items = chunk.items;
-            int itemsLengthWithoutHiddens = items.length;
-            if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
-            if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
+    const isShortsVisible = false;
 
-            final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
+    return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
+      onListUpdated: onListUpdated,
+      transparentShimmer: true,
+      title: lang.HISTORY,
+      cacheReader: YoutiPie.cacheBuilder.forHistoryVideos(),
+      networkFetcher: (details) => YoutubeInfoController.history.fetchHistory(details: details),
+      itemExtent: thumbnailItemExtent,
+      dummyCard: dummyCard,
+      itemBuilder: (chunk, index, list) {
+        final items = chunk.items;
+        int itemsLengthWithoutHiddens = items.length;
+        if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
+        if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (hasBeforeAndAfterPadding)
-                  SizedBox(
-                    height: beforeSublistHeight,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Text(
-                        chunk.title,
-                        style: context.textTheme.displayMedium,
-                      ),
-                    ),
-                  ),
-                SizedBox(
-                  height: itemsLengthWithoutHiddens * thumbnailItemExtent,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    scrollDirection: Axis.vertical,
-                    primary: false,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemExtent: isShortsVisible ? thumbnailItemExtent : null,
-                    // -- we use extent builder only if shorts are hidden
-                    itemExtentBuilder: isShortsVisible
-                        ? null
-                        : (index, dimensions) {
-                            final item = items[index];
-                            if (item is StreamInfoItemShort) return 0;
-                            return thumbnailItemExtent;
-                          },
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return switch (item.runtimeType) {
-                        const (StreamInfoItem) => YoutubeVideoCard(
-                            thumbnailHeight: thumbnailHeight,
-                            thumbnailWidth: thumbnailWidth,
-                            isImageImportantInCache: false,
-                            video: item as StreamInfoItem,
-                            playlistID: null,
-                          ),
-                        const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                            thumbnailHeight: thumbnailHeight,
-                            thumbnailWidth: thumbnailWidth,
-                            short: item as StreamInfoItemShort,
-                            playlistID: null,
-                          ),
-                        _ => dummyCard,
-                      };
-                    },
+        final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasBeforeAndAfterPadding)
+              SizedBox(
+                height: beforeSublistHeight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Text(
+                    chunk.title,
+                    style: context.textTheme.displayMedium,
                   ),
                 ),
-                if (hasBeforeAndAfterPadding) const SizedBox(height: afterSublistHeight),
-              ],
-            );
-          },
-          sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
-            itemExtentBuilder: (index, dimensions) {
-              final chunk = listItems.items[index];
-              final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
-              double itemsExtent = chunk.items.length * thumbnailItemExtent;
-              if (hasBeforeAndAfterPadding) {
-                itemsExtent += beforeSublistHeight;
-                itemsExtent += afterSublistHeight;
-              }
-              return itemsExtent;
-            },
-            itemCount: listItems.items.length,
-            itemBuilder: (context, index) {
-              final chunk = listItems.items[index];
-              return itemBuilder(chunk, index, listItems);
-            },
-          ),
+              ),
+            SizedBox(
+              height: itemsLengthWithoutHiddens * thumbnailItemExtent,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                scrollDirection: Axis.vertical,
+                primary: false,
+                physics: const NeverScrollableScrollPhysics(),
+                itemExtentBuilder: (index, dimensions) {
+                  final item = items[index];
+                  if (item is StreamInfoItemShort) return 0;
+                  return thumbnailItemExtent;
+                },
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return switch (item.runtimeType) {
+                    const (StreamInfoItem) => YoutubeVideoCard(
+                        thumbnailHeight: thumbnailHeight,
+                        thumbnailWidth: thumbnailWidth,
+                        isImageImportantInCache: false,
+                        video: item as StreamInfoItem,
+                        playlistID: null,
+                      ),
+                    const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                        thumbnailHeight: thumbnailHeight,
+                        thumbnailWidth: thumbnailWidth,
+                        short: item as StreamInfoItemShort,
+                        playlistID: null,
+                      ),
+                    _ => dummyCard,
+                  };
+                },
+              ),
+            ),
+            if (hasBeforeAndAfterPadding) const SizedBox(height: afterSublistHeight),
+          ],
         );
       },
+      sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
+        itemExtentBuilder: (index, dimensions) {
+          final chunk = listItems.items[index];
+          final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
+          double itemsExtent = chunk.items.length * thumbnailItemExtent;
+          if (hasBeforeAndAfterPadding) {
+            itemsExtent += beforeSublistHeight;
+            itemsExtent += afterSublistHeight;
+          }
+          return itemsExtent;
+        },
+        itemCount: listItems.items.length,
+        itemBuilder: (context, index) {
+          final chunk = listItems.items[index];
+          return itemBuilder(chunk, index, listItems);
+        },
+      ),
     );
   }
 }

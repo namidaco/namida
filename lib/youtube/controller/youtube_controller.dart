@@ -200,7 +200,11 @@ class YoutubeController {
           final filename = entry.key;
           final title = titleCallback(videoId) ?? videoId;
           final speedB = speedInBytes(filename, entry.value.progress);
-          currentSpeedsInByte.value[videoId] ??= <DownloadTaskFilename, int>{}.obs;
+          if (currentSpeedsInByte.value[videoId] == null) {
+            currentSpeedsInByte.value[videoId] = <DownloadTaskFilename, int>{}.obs;
+            currentSpeedsInByte.refresh();
+          }
+
           currentSpeedsInByte.value[videoId]![filename] = speedB;
           NotificationService.inst.downloadYoutubeNotification(
             notificationID: entry.key,
@@ -322,14 +326,20 @@ class YoutubeController {
               final aFile = File("$saveDirPath/.tempa_${ytitem.filename.filename}");
               final vFile = File("$saveDirPath/.tempv_${ytitem.filename.filename}");
               if (aFile.existsSync()) {
-                downloadsAudioProgressMap.value[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+                if (downloadsAudioProgressMap.value[ytitem.id] == null) {
+                  downloadsAudioProgressMap.value[ytitem.id] = <DownloadTaskFilename, DownloadProgress>{}.obs;
+                  downloadsAudioProgressMap.refresh();
+                }
                 downloadsAudioProgressMap.value[ytitem.id]![ytitem.filename] = DownloadProgress(
                   progress: aFile.fileSizeSync() ?? 0,
                   totalProgress: 0,
                 );
               }
               if (vFile.existsSync()) {
-                downloadsVideoProgressMap.value[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+                if (downloadsVideoProgressMap.value[ytitem.id] == null) {
+                  downloadsVideoProgressMap.value[ytitem.id] = <DownloadTaskFilename, DownloadProgress>{}.obs;
+                  downloadsVideoProgressMap.refresh();
+                }
                 downloadsVideoProgressMap.value[ytitem.id]![ytitem.filename] = DownloadProgress(
                   progress: vFile.fileSizeSync() ?? 0,
                   totalProgress: 0,
@@ -564,8 +574,10 @@ class YoutubeController {
       } else {
         YoutubeInfoController.video.fetchVideoStreams(videoID.videoId).then((value) => completer.completeIfWasnt(value));
       }
-
-      isFetchingData.value[videoID] ??= <DownloadTaskFilename, bool>{}.obs;
+      if (isFetchingData.value[videoID] == null) {
+        isFetchingData.value[videoID] = <DownloadTaskFilename, bool>{}.obs;
+        isFetchingData.refresh();
+      }
       isFetchingData.value[videoID]![config.filename] = true;
 
       try {
@@ -604,11 +616,11 @@ class YoutubeController {
         }
       } catch (e) {
         // -- force break
-        isFetchingData[videoID]?[config.filename] = false;
+        isFetchingData.value[videoID]?[config.filename] = false;
         return;
       }
 
-      isFetchingData[videoID]?[config.filename] = false;
+      isFetchingData.value[videoID]?[config.filename] = false;
       _updateDownloadTask(groupName: groupName, itemsConfig: [config]); // to refresh with new data
 
       final downloadedFile = await _downloadYoutubeVideoRaw(
@@ -782,7 +794,10 @@ class YoutubeController {
       );
     }
 
-    isDownloading.value[id] ??= <DownloadTaskFilename, bool>{}.obs;
+    if (isDownloading.value[id] == null) {
+      isDownloading.value[id] = <DownloadTaskFilename, bool>{}.obs;
+      isDownloading.refresh();
+    }
     isDownloading.value[id]![finalFilenameWrapper] = true;
 
     _startNotificationTimer();
@@ -832,8 +847,10 @@ class YoutubeController {
           isVideoFileCached = true;
         } else {
           int bytesLength = 0;
-
-          downloadsVideoProgressMap.value[id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+          if (downloadsVideoProgressMap.value[id] == null) {
+            downloadsVideoProgressMap.value[id] = <DownloadTaskFilename, DownloadProgress>{}.obs;
+            downloadsVideoProgressMap.refresh();
+          }
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
             url: videoStream.buildUrl() ?? '',
@@ -885,7 +902,10 @@ class YoutubeController {
         } else {
           int bytesLength = 0;
 
-          downloadsAudioProgressMap.value[id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+          if (downloadsAudioProgressMap.value[id] == null) {
+            downloadsAudioProgressMap.value[id] = <DownloadTaskFilename, DownloadProgress>{}.obs;
+            downloadsAudioProgressMap.refresh();
+          }
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
             url: audioStream.buildUrl() ?? '',

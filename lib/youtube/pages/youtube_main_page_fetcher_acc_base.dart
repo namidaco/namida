@@ -33,6 +33,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final double itemExtent;
   final YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder;
   final RenderObjectWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
+  final bool showRefreshInsteadOfRefreshing;
 
   final Widget? pageHeader;
   final void Function()? onHeaderTap;
@@ -54,6 +55,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.itemExtent,
     required this.itemBuilder,
     this.sliverListBuilder,
+    this.showRefreshInsteadOfRefreshing = false,
     this.pageHeader,
     this.onHeaderTap,
     this.isHorizontal = false,
@@ -91,6 +93,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   final _isLoadingCurrentFeed = false.obs;
   final _isLoadingNext = false.obs;
   final _lastFetchWasCached = false.obs;
+  final _refreshButtonShown = false.obs;
   final _currentFeed = Rxn<W>();
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
@@ -105,6 +108,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   void _onInit({bool forceRequest = false}) async {
     bool needNewRequest = false;
+    bool preferPromptRefreshing = false;
 
     if (forceRequest) {
       needNewRequest = true;
@@ -113,8 +117,11 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       if (_hasConnection) {
         if (lastFetchedTime == null) {
           needNewRequest = true;
+          _refreshButtonShown.value = true;
         } else if (lastFetchedTime.difference(DateTime.now()).abs() > const Duration(seconds: 180)) {
           needNewRequest = true;
+          _refreshButtonShown.value = true;
+          if (widget.showRefreshInsteadOfRefreshing) preferPromptRefreshing = true;
         }
       }
     }
@@ -124,10 +131,14 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       _currentFeed.value = cachedFeed;
       _lastFetchWasCached.value = true;
       if (needNewRequest) {
-        if (widget.enablePullToRefresh) {
-          onRefresh(_fetchFeedSilent, forceProceed: true);
+        if (preferPromptRefreshing) {
+          _refreshButtonShown.value = true;
         } else {
-          _fetchFeedSilent();
+          if (widget.enablePullToRefresh) {
+            onRefresh(_fetchFeedSilent, forceProceed: true);
+          } else {
+            _fetchFeedSilent();
+          }
         }
       }
     } else {
@@ -163,6 +174,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     if (!_hasConnection) return _showNetworkError();
 
     _lastFetchWasCached.value = false;
+    _refreshButtonShown.value = false;
     _isLoadingCurrentFeed.value = true;
     final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
     _resultsFetchTime[W] = DateTime.now();
@@ -171,6 +183,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       _currentFeed.value = val;
     } else {
       _lastFetchWasCached.value = true;
+      _refreshButtonShown.value = true;
     }
   }
 
@@ -182,6 +195,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     if (val != null) {
       _currentFeed.value = val;
       _lastFetchWasCached.value = false;
+      _refreshButtonShown.value = false;
     } else {
       _lastFetchWasCached.value = true;
     }
@@ -212,7 +226,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
         ),
         const SizedBox(width: 12.0),
         ObxO(
-          rx: _lastFetchWasCached,
+          rx: _refreshButtonShown,
           builder: (value) => value
               ? NamidaIconButton(
                   icon: Broken.refresh,

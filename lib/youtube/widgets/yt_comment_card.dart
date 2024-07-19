@@ -97,7 +97,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final isArtist = comment?.author?.isArtist ?? false;
     final uploadedFrom = comment?.publishedTimeText;
     final commentContent = comment?.content;
-    final likeCount = comment?.likesCount;
     final isHearted = comment?.isHearted ?? false;
 
     final containerColor = context.theme.cardColor.withAlpha(widget.bgAlpha);
@@ -284,78 +283,79 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           },
                                         )),
                           const SizedBox(height: 8.0),
-                          Row(
-                            children: [
-                              if (comment != null)
-                                NamidaLoadingSwitcher(
-                                  size: 16.0,
-                                  builder: (startLoading, stopLoading, isLoading) => ObxO(
-                                    rx: _currentLikeStatus,
-                                    builder: (currentLikeStatus) => NamidaRawLikeButton(
-                                      isLiked: currentLikeStatus == LikeStatus.liked,
-                                      likedIcon: Broken.like_filled,
-                                      normalIcon: Broken.like_1,
+                          ObxO(
+                            rx: _currentLikeStatus,
+                            builder: (currentLikeStatus) {
+                              int? likeCount = comment?.likesCount;
+                              if (likeCount != null && currentLikeStatus == LikeStatus.liked) likeCount++;
+                              return Row(
+                                children: [
+                                  if (comment != null)
+                                    NamidaLoadingSwitcher(
                                       size: 16.0,
-                                      onTap: (isLiked) async {
-                                        return _onChangeLikeStatus(
-                                          isLiked,
-                                          isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                          startLoading,
-                                          stopLoading,
-                                        );
-                                      },
+                                      builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                        isLiked: currentLikeStatus == LikeStatus.liked,
+                                        likedIcon: Broken.like_filled,
+                                        normalIcon: Broken.like_1,
+                                        size: 16.0,
+                                        onTap: (isLiked) async {
+                                          return _onChangeLikeStatus(
+                                            isLiked,
+                                            isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                            startLoading,
+                                            stopLoading,
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              if (likeCount == null || likeCount > 0) ...[
-                                const SizedBox(width: 4.0),
-                                NamidaDummyContainer(
-                                  width: 18.0,
-                                  height: 8.0,
-                                  borderRadius: 4.0,
-                                  shimmerEnabled: likeCount == null,
-                                  child: Text(
-                                    likeCount?.formatDecimalShort() ?? '?',
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w300),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 12.0),
-                              if (comment != null)
-                                NamidaLoadingSwitcher(
-                                  size: 16.0,
-                                  builder: (startLoading, stopLoading, isLoading) => ObxO(
-                                    rx: _currentLikeStatus,
-                                    builder: (currentLikeStatus) => NamidaRawLikeButton(
-                                      isLiked: currentLikeStatus == LikeStatus.disliked,
-                                      likedIcon: Broken.dislike_filled,
-                                      normalIcon: Broken.dislike,
+                                  if (likeCount == null || likeCount > 0) ...[
+                                    const SizedBox(width: 4.0),
+                                    NamidaDummyContainer(
+                                      width: 18.0,
+                                      height: 8.0,
+                                      borderRadius: 4.0,
+                                      shimmerEnabled: likeCount == null,
+                                      child: Text(
+                                        likeCount?.formatDecimalShort() ?? '?',
+                                        style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 12.0),
+                                  if (comment != null)
+                                    NamidaLoadingSwitcher(
                                       size: 16.0,
-                                      onTap: (isDisLiked) async {
-                                        return _onChangeLikeStatus(
-                                          isDisLiked,
-                                          isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                          startLoading,
-                                          stopLoading,
-                                        );
-                                      },
+                                      builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                        isLiked: currentLikeStatus == LikeStatus.disliked,
+                                        likedIcon: Broken.dislike_filled,
+                                        normalIcon: Broken.dislike,
+                                        size: 16.0,
+                                        onTap: (isDisLiked) async {
+                                          return _onChangeLikeStatus(
+                                            isDisLiked,
+                                            isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
+                                            startLoading,
+                                            stopLoading,
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              if (widget.showRepliesBox && comment is CommentInfoItem) const SizedBox(width: 8.0),
-                              if (widget.showRepliesBox && comment is CommentInfoItem)
-                                NamidaInkWellButton(
-                                  sizeMultiplier: 0.8,
-                                  borderRadius: 6.0,
-                                  onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
-                                  bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.2),
-                                  icon: Broken.document,
-                                  text: [
-                                    lang.REPLIES,
-                                    if (comment.repliesCount != null) comment.repliesCount!,
-                                  ].join(' • '),
-                                ),
-                            ],
+                                  if (widget.showRepliesBox && comment is CommentInfoItem) const SizedBox(width: 8.0),
+                                  if (widget.showRepliesBox && comment is CommentInfoItem)
+                                    NamidaInkWellButton(
+                                      sizeMultiplier: 0.8,
+                                      borderRadius: 6.0,
+                                      onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
+                                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.2),
+                                      icon: Broken.document,
+                                      text: [
+                                        lang.REPLIES,
+                                        if (comment.repliesCount != null) comment.repliesCount!,
+                                      ].join(' • '),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ],
                       ),

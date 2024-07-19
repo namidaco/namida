@@ -110,6 +110,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
 
   @override
   Widget build(BuildContext context) {
+    if (widget.notification.isRead == true && _isNowRead.value == false) _isNowRead.value = true; // after refreshing response and was read outside
+
     final thumbnailWidth = this.widget.thumbnailWidth;
     final thumbnailHeight = this.widget.thumbnailHeight;
 

@@ -57,8 +57,16 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
         subscribed: false,
       );
 
-  final _channelInfo = Rxn<YoutiPieChannelPageResult?>(); // rx is accessed only in subscribe button. keep using setState().
+  final _channelInfoSubButton = Rxn<YoutiPieChannelPageResult>(); // rx is accessed only in subscribe button. keep using setState().
+  YoutiPieChannelPageResult? _channelInfo; // bcz accessing [_channelInfoSubButton] doesnt update widget tree
   YoutiPieFetchAllRes? _currentFetchAllRes;
+
+  @override
+  Future<bool> fetchStreamsNextPage() async {
+    final res = await super.fetchStreamsNextPage();
+    if (res && mounted && listWrapper != null) setState(() => updatePeakDates(listWrapper!.items));
+    return res;
+  }
 
   @override
   void initState() {
@@ -68,7 +76,8 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
     final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
     if (channelInfoCache != null) {
-      _channelInfo.value = channelInfoCache;
+      _channelInfoSubButton.value = channelInfoCache;
+      _channelInfo = channelInfoCache;
       fetchChannelStreams(channelInfoCache);
     }
 
@@ -76,7 +85,8 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
       (value) {
         if (value != null) {
-          setState(() => _channelInfo.value = value);
+          _channelInfoSubButton.value = value;
+          if (mounted) setState(() => _channelInfo = value);
           onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceProceed: true);
         }
       },
@@ -213,7 +223,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
   @override
   Widget build(BuildContext context) {
-    final channelInfo = _channelInfo.value;
+    final channelInfo = _channelInfo;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
@@ -346,7 +356,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
                           const SizedBox(width: 4.0),
                           YTSubscribeButton(
                             channelID: channelID,
-                            mainChannelInfo: _channelInfo,
+                            mainChannelInfo: _channelInfoSubButton,
                           ),
                           const SizedBox(width: 12.0),
                         ],

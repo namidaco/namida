@@ -805,7 +805,11 @@ extension RouteUtils on NamidaRoute {
       );
     }
 
-    final shouldShowInitialActions = route != RouteType.PAGE_stats && route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
+    final shouldShowInitialActions = route != RouteType.PAGE_stats &&
+        route != RouteType.SETTINGS_page &&
+        route != RouteType.SETTINGS_subpage &&
+        route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
+        route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
     final shouldShowProgressPercentage = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
 
     final name = this.name;
@@ -939,6 +943,7 @@ extension RouteUtils on NamidaRoute {
       // ---- Playlist Tracks ----
       getAnimatedCrossFade(
         child: ObxO(
+          key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
           rx: PlaylistController.inst.canReorderTracks,
           builder: (reorderable) => NamidaAppBarIcon(
             tooltip: () => PlaylistController.inst.canReorderTracks.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,

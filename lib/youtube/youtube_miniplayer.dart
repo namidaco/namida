@@ -856,85 +856,88 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
                                             if (ytTopComments)
                                               SliverToBoxAdapter(
-                                                child: ObxO(
-                                                  rx: YoutubeInfoController.current.currentComments,
-                                                  builder: (comments) => ShimmerWrapper(
-                                                    shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
-                                                    child: NamidaInkWell(
-                                                      key: Key("${currentId}_top_comments_highlight"),
-                                                      bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacity(0.4), mainTheme.cardColor),
-                                                      margin: const EdgeInsets.symmetric(horizontal: 18.0),
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                                                      onTap: () {
-                                                        NamidaNavigator.inst.isInYTCommentsSubpage = true;
-                                                        NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
-                                                          const YTMiniplayerCommentsSubpage(),
-                                                          maintainState: false,
-                                                        );
-                                                      },
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.start,
-                                                            children: [
-                                                              const Icon(
-                                                                Broken.document,
-                                                                size: 16.0,
-                                                              ),
-                                                              const SizedBox(width: 8.0),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  [
-                                                                    lang.COMMENTS,
-                                                                    if (comments?.commentsCount != null) comments!.commentsCount!.formatDecimalShort(),
-                                                                  ].join(' • '),
-                                                                  style: mainTextTheme.displaySmall,
-                                                                  textAlign: TextAlign.start,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(top: 8.0),
+                                                  child: ObxO(
+                                                    rx: YoutubeInfoController.current.currentComments,
+                                                    builder: (comments) => ShimmerWrapper(
+                                                      shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
+                                                      child: NamidaInkWell(
+                                                        key: Key("${currentId}_top_comments_highlight"),
+                                                        bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacity(0.4), mainTheme.cardColor),
+                                                        margin: const EdgeInsets.symmetric(horizontal: 18.0),
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                                                        onTap: () {
+                                                          NamidaNavigator.inst.isInYTCommentsSubpage = true;
+                                                          NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
+                                                            const YTMiniplayerCommentsSubpage(),
+                                                            maintainState: false,
+                                                          );
+                                                        },
+                                                        child: Column(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.start,
+                                                              children: [
+                                                                const Icon(
+                                                                  Broken.document,
+                                                                  size: 16.0,
                                                                 ),
-                                                              ),
-                                                              ObxO(
-                                                                rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
-                                                                builder: (commFromCache) {
-                                                                  commFromCache ??= false;
-                                                                  return NamidaIconButton(
-                                                                    horizontalPadding: 0.0,
-                                                                    tooltip: commFromCache ? () => lang.CACHE : null,
-                                                                    icon: Broken.refresh,
-                                                                    iconSize: 22.0,
-                                                                    onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(
-                                                                      currentId,
-                                                                      newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
-                                                                      initial: true,
-                                                                    ),
-                                                                    child: commFromCache
-                                                                        ? StackedIcon(
-                                                                            baseIcon: Broken.refresh,
-                                                                            secondaryIcon: Broken.global,
-                                                                            iconSize: 20.0,
-                                                                            secondaryIconSize: 12.0,
-                                                                            baseIconColor: defaultIconColor,
-                                                                            secondaryIconColor: defaultIconColor,
-                                                                          )
-                                                                        : Icon(
-                                                                            Broken.refresh,
-                                                                            color: defaultIconColor,
-                                                                            size: 20.0,
-                                                                          ),
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
-                                                          ObxO(
-                                                            rx: YoutubeInfoController.current.isLoadingInitialComments,
-                                                            builder: (loading) => ShimmerWrapper(
-                                                              shimmerEnabled: loading,
-                                                              child: YTCommentCardCompact(comment: loading ? null : comments?.items.firstOrNull),
+                                                                const SizedBox(width: 8.0),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    [
+                                                                      lang.COMMENTS,
+                                                                      if (comments?.commentsCount != null) comments!.commentsCount!.formatDecimalShort(),
+                                                                    ].join(' • '),
+                                                                    style: mainTextTheme.displaySmall,
+                                                                    textAlign: TextAlign.start,
+                                                                  ),
+                                                                ),
+                                                                ObxO(
+                                                                  rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
+                                                                  builder: (commFromCache) {
+                                                                    commFromCache ??= false;
+                                                                    return NamidaIconButton(
+                                                                      horizontalPadding: 0.0,
+                                                                      tooltip: commFromCache ? () => lang.CACHE : null,
+                                                                      icon: Broken.refresh,
+                                                                      iconSize: 22.0,
+                                                                      onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(
+                                                                        currentId,
+                                                                        newSortType: YoutubeMiniplayerUiController.inst.currentCommentSort.value,
+                                                                        initial: true,
+                                                                      ),
+                                                                      child: commFromCache
+                                                                          ? StackedIcon(
+                                                                              baseIcon: Broken.refresh,
+                                                                              secondaryIcon: Broken.global,
+                                                                              iconSize: 20.0,
+                                                                              secondaryIconSize: 12.0,
+                                                                              baseIconColor: defaultIconColor,
+                                                                              secondaryIconColor: defaultIconColor,
+                                                                            )
+                                                                          : Icon(
+                                                                              Broken.refresh,
+                                                                              color: defaultIconColor,
+                                                                              size: 20.0,
+                                                                            ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ],
                                                             ),
-                                                          )
-                                                        ],
+                                                            const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
+                                                            ObxO(
+                                                              rx: YoutubeInfoController.current.isLoadingInitialComments,
+                                                              builder: (loading) => ShimmerWrapper(
+                                                                shimmerEnabled: loading,
+                                                                child: YTCommentCardCompact(comment: loading ? null : comments?.items.firstOrNull),
+                                                              ),
+                                                            )
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),

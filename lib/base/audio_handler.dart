@@ -1724,7 +1724,7 @@ extension YoutubeIDToMediaItem on YoutubeID {
     return MediaItem(
       id: id,
       title: title,
-      artist: artistName,
+      artist: artistName ?? videoChannelTitle ?? UnknownTags.ARTIST,
       album: '',
       genre: '',
       displayTitle: videoTitle,

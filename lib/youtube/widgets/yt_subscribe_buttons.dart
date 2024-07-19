@@ -291,8 +291,10 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
     bool didChangeCurrentGroups = false;
 
+    await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
     await showModalBottomSheet(
       useRootNavigator: true,
+      // ignore: use_build_context_synchronously
       context: context,
       builder: (context) {
         final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
