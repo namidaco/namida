@@ -1,7 +1,8 @@
 import 'dart:io';
 
-import 'package:animated_background/animated_background.dart';
 import 'package:flutter/material.dart';
+
+import 'package:animated_background/animated_background.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';

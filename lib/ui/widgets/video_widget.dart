@@ -4,9 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
-import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
@@ -27,6 +26,8 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';

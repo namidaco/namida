@@ -2,6 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/extensions.dart' hide ListUtils;
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -22,11 +29,6 @@ import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
-import 'package:youtipie/class/streams/audio_stream.dart';
-import 'package:youtipie/class/streams/video_stream.dart';
-import 'package:youtipie/class/streams/video_stream_info.dart';
-import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/extensions.dart' hide ListUtils;
 
 /// [onConfirmButtonTap] should return wether to pop sheet or not.
 Future<void> showDownloadVideoBottomSheet({

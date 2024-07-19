@@ -1,8 +1,9 @@
 /// source: https://github.com/watery-desert/loading_animation_widget
 library;
 
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
 
 const double _kGapAngle = math.pi / 12;
 const double _kMinAngle = math.pi / 36;

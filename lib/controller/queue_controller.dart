@@ -1,8 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:namida/core/utils.dart';
-
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -10,6 +8,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 class QueueController {

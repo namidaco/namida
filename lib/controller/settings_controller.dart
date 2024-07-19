@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/core/utils.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
@@ -9,6 +8,7 @@ import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 part 'settings.youtube.dart';
 part 'settings.player.dart';

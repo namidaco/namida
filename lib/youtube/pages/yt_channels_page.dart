@@ -1,5 +1,6 @@
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
+
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';

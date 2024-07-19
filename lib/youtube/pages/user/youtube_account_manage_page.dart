@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
+
 import 'package:jiffy/jiffy.dart';
 import 'package:namico_login_manager/namico_login_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';

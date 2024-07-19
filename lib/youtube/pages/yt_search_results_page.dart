@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';

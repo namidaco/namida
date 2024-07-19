@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import 'package:lrc/lrc.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 

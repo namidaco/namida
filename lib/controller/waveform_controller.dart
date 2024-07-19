@@ -1,8 +1,8 @@
-import 'package:namida/core/utils.dart';
 import 'package:waveform_extractor/waveform_extractor.dart';
 
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class WaveformController {
   static WaveformController get inst => _instance;

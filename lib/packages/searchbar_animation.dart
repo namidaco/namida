@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class SearchBarAnimation extends StatefulWidget {

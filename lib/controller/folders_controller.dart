@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:namida/core/utils.dart';
-
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -9,6 +7,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 class Folders {
   static final Folders inst = Folders._();

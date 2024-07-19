@@ -3,7 +3,6 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -11,6 +10,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/keys.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 
 Language get lang => Language.inst;

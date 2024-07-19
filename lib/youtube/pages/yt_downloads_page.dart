@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'package:flutter/material.dart';
+
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/controller/current_color.dart';

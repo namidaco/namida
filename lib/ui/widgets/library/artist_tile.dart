@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/core/utils.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/dialogs/common_dialogs.dart';
 
 class ArtistTile extends StatelessWidget {
   final String name;

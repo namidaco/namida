@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 

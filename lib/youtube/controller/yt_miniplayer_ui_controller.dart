@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'package:youtipie/core/enum.dart';
+
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
-import 'package:youtipie/core/enum.dart';
 
 class YoutubeMiniplayerUiController {
   static final inst = YoutubeMiniplayerUiController._();

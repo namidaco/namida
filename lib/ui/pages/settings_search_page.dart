@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class SettingsSearchPage extends StatelessWidget {

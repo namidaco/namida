@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:vibration/vibration.dart';
 
 import 'package:namida/controller/current_color.dart';

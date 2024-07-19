@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:namida/class/route.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
+
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/namida_channel_storage.dart';
@@ -14,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';

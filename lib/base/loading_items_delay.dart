@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import 'package:namida/core/extensions.dart';
 
 mixin LoadingItemsDelayMixin<T extends StatefulWidget> on State<T> {

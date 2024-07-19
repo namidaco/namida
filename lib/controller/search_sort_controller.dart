@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:namida/core/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -20,6 +19,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 
 class SearchSortController {
   static SearchSortController get inst => _instance;

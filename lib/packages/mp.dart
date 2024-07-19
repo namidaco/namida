@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Used to retain state for cases like navigating after pip mode.

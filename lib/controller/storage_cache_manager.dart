@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:checkmark/checkmark.dart';
 import 'package:flutter/material.dart';
+
+import 'package:checkmark/checkmark.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/class/track.dart';

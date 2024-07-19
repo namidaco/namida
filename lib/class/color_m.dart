@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:namida/core/extensions.dart';
 
 class NamidaColor {

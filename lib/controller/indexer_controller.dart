@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:namida/core/utils.dart';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -26,6 +26,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class Indexer {

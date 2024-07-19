@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+
 import 'package:namida/core/extensions.dart';
 
 mixin SettingsFileWriter {

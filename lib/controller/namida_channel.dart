@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 /// The new flutter update, calls AppLifecycleState.inactive whenever the app
 /// loses focus, like swiping notification center, not ideal for what we need.

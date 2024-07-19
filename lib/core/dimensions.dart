@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'package:flutter/material.dart';
-import 'package:namida/class/track.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';

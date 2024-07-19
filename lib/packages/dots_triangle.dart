@@ -1,8 +1,9 @@
 /// source: https://github.com/watery-desert/loading_animation_widget
 library;
 
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
 
 class DotsTriangle extends StatefulWidget {
   final double size;
