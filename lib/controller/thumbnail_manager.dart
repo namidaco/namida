@@ -86,7 +86,6 @@ class ThumbnailManager {
     String? customUrl,
     bool isImportantInCache = true,
     String? symlinkId,
-    VoidCallback? onNotFound,
   }) async {
     if (id == null && customUrl == null) return null;
 
@@ -118,7 +117,6 @@ class ThumbnailManager {
       isTemp: isTemp,
       forceRequest: false,
       lowerResYTID: false,
-      onNotFound: onNotFound,
     );
 
     return downloaded;
@@ -146,7 +144,6 @@ class ThumbnailManager {
       isTemp: isTemp,
       forceRequest: false,
       lowerResYTID: lowerResYTID,
-      onNotFound: onNotFound,
     );
 
     return downloaded;
@@ -166,7 +163,6 @@ class ThumbnailManager {
     required bool isImportantInCache,
     required File destinationFile,
     required String? symlinkId,
-    required VoidCallback? onNotFound,
   }) async {
     final activeRequest = _thumbnailDownloader.resultForId(itemId);
     if (activeRequest != null) return activeRequest;
@@ -187,7 +183,6 @@ class ThumbnailManager {
       destinationFile: destinationFile,
       symlinkId: symlinkId,
       isTemp: isTemp,
-      onNotFound: onNotFound,
     );
   }
 }
@@ -208,12 +203,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     required bool isImportantInCache,
     required File destinationFile,
     required String? symlinkId,
-    required VoidCallback? onNotFound,
   }) async {
-    if (_notFoundThumbnails[id] == true) {
-      if (onNotFound != null) onNotFound();
-      return null;
-    }
+    if (_notFoundThumbnails[id] == true) return null;
 
     _requestsCountForId.update(id, (value) => value++, ifAbsent: () => 1);
 
@@ -241,11 +232,6 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     final res = await _downloadCompleters[id]?.future;
 
     _requestsCountForId.update(id, (value) => value--);
-
-    if (res == null && _notFoundThumbnails[id] == true) {
-      if (onNotFound != null) onNotFound();
-      return null;
-    }
     return res;
   }
 

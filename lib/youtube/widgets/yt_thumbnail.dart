@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:namida/core/utils.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/color_m.dart';
@@ -12,6 +11,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -89,7 +89,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
   String? imagePath;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
-  final _thumbnailNotFound = false.obs;
 
   Timer? _dontTouchMeImFetchingThumbnail;
 
@@ -105,7 +104,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (widget.customUrl != null) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!);
     _dontTouchMeImFetchingThumbnail?.cancel();
     _dontTouchMeImFetchingThumbnail = null;
-    _thumbnailNotFound.close();
     super.dispose();
   }
 
@@ -114,8 +112,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (imagePath != null && imageColors != null) return;
     _dontTouchMeImFetchingThumbnail = null;
     _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
-
-    void onThumbnailNotFound() => _thumbnailNotFound.value = true;
 
     if (imagePath == null) {
       final videoId = widget.videoId;
@@ -144,10 +140,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
               id: videoId,
               isImportantInCache: true,
-              onNotFound: onThumbnailNotFound,
             );
           } else {
-            res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId, onNotFound: onThumbnailNotFound);
+            res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId);
           }
         } else {
           // for channels/playlists -> default
@@ -155,7 +150,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             customUrl: widget.customUrl,
             symlinkId: widget.urlSymLinkId,
             isImportantInCache: widget.isImportantInCache,
-            onNotFound: onThumbnailNotFound,
           );
         }
       }
@@ -258,29 +252,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
                 ),
               ),
             ),
-          ObxO(
-            rx: _thumbnailNotFound,
-            builder: (notFound) => notFound
-                ? Positioned(
-                    top: 0.0,
-                    right: 0.0,
-                    child: Container(
-                      clipBehavior: Clip.hardEdge,
-                      margin: const EdgeInsets.all(2.0),
-                      padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-                        color: Colors.black.withOpacity(0.3),
-                      ),
-                      child: Icon(
-                        Broken.danger,
-                        size: 12.0,
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                  )
-                : const SizedBox(),
-          )
         ],
         displayIcon: widget.displayFallbackIcon,
       ),
