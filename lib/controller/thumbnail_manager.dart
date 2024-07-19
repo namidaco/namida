@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
+
 import 'package:youtipie/class/thumbnail.dart';
 
 import 'package:namida/base/ports_provider.dart';
@@ -14,6 +15,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class ThumbnailManager {
   static final ThumbnailManager inst = ThumbnailManager._internal();
@@ -35,13 +37,24 @@ class ThumbnailManager {
   File? imageUrlToCacheFile({
     required String? id,
     required String? url,
+    required ThumbnailType type,
     String? symlinkId,
     bool isTemp = false,
   }) {
     final dirPrefix = isTemp ? 'temp/' : '';
 
-    if (id != null && id.isNotEmpty) {
-      return File("${AppDirs.YT_THUMBNAILS}$dirPrefix${symlinkId ?? '$id.png'}");
+    final goodId = id != null && id.isNotEmpty;
+    if (goodId || type == ThumbnailType.video) {
+      String? filename;
+      if (symlinkId != null) {
+        filename = symlinkId;
+      } else if (goodId) {
+        filename = '$id.png';
+      } else if (url != null) {
+        filename = url.splitLast('/').substring(0, 11); // custom urls like dAdjsaB_GKL_hqdefault.jpg
+      }
+      if (filename == null || filename.isEmpty) return null;
+      return File("${AppDirs.YT_THUMBNAILS}$dirPrefix$filename");
     }
     String? finalUrl = url;
     final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
@@ -74,9 +87,14 @@ class ThumbnailManager {
     return fileExists ? file : null;
   }
 
-  File? getYoutubeThumbnailFromCacheSync({String? id, String? customUrl, bool isTemp = false}) {
+  File? getYoutubeThumbnailFromCacheSync({
+    String? id,
+    String? customUrl,
+    bool isTemp = false,
+    required ThumbnailType type,
+  }) {
     if (id == null && customUrl == null) return null;
-    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp);
+    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
     if (file != null && file.existsSync()) return file;
     return null;
   }
@@ -86,18 +104,19 @@ class ThumbnailManager {
     String? customUrl,
     bool isImportantInCache = true,
     String? symlinkId,
+    required ThumbnailType type,
   }) async {
     if (id == null && customUrl == null) return null;
 
     final isTemp = isImportantInCache ? false : true;
 
-    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp);
+    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
     if (file == null) return null;
     if (file.existsSync()) return file;
 
     if (symlinkId != null) {
       try {
-        final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp);
+        final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp, type: type);
         if (symlinkfile != null && symlinkfile.existsSync()) {
           final targetFilePath = Link.fromUri(symlinkfile.uri).targetSync();
           final targetFile = File(targetFilePath);
@@ -132,7 +151,7 @@ class ThumbnailManager {
     }
     final bool lowerResYTID = isTemp;
 
-    final file = imageUrlToCacheFile(id: videoId, url: null, isTemp: isTemp);
+    final file = imageUrlToCacheFile(id: videoId, url: null, isTemp: isTemp, type: ThumbnailType.video);
     if (file == null) return null;
     final downloaded = await _getYoutubeThumbnail(
       itemId: videoId,

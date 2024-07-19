@@ -120,12 +120,14 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         id: videoId,
         customUrl: widget.customUrl,
         isTemp: false,
+        type: widget.type,
       );
       if (res == null && (!widget.isImportantInCache || widget.preferLowerRes)) {
         res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
           id: videoId,
           customUrl: widget.customUrl,
           isTemp: true,
+          type: widget.type,
         );
       }
 
@@ -140,6 +142,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
               id: videoId,
               isImportantInCache: true,
+              type: widget.type,
             );
           } else {
             res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId);
@@ -150,6 +153,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             customUrl: widget.customUrl,
             symlinkId: widget.urlSymLinkId,
             isImportantInCache: widget.isImportantInCache,
+            type: widget.type,
           );
         }
       }

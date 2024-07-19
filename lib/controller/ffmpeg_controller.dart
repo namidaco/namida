@@ -14,6 +14,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaFFMPEG {
   static NamidaFFMPEG get inst => _instance;
@@ -280,7 +281,7 @@ class NamidaFFMPEG {
 
         File? cachedThumbnail;
 
-        cachedThumbnail = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: ytId);
+        cachedThumbnail = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: ytId, type: ThumbnailType.video);
 
         if (cachedThumbnail == null) {
           currentFailed++;

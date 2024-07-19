@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -10,6 +11,7 @@ import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/thumbnail.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/core/extensions.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
@@ -32,7 +34,6 @@ import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/widgets/yt_videos_actions_bar.dart';
-import 'package:youtipie/core/extensions.dart';
 
 class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -101,7 +102,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
   }
 
   File? _getThumbFileForCache(String url, {required bool temp}) {
-    return ThumbnailManager.inst.imageUrlToCacheFile(id: null, url: url, isTemp: temp);
+    return ThumbnailManager.inst.imageUrlToCacheFile(id: null, url: url, isTemp: temp, type: ThumbnailType.channel);
   }
 
   void _onImageTap({

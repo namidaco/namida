@@ -10,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YoutubeID implements Playable, ItemWithDate {
   final String id;
@@ -61,8 +62,8 @@ class YoutubeID implements Playable, ItemWithDate {
 }
 
 extension YoutubeIDUtils on YoutubeID {
-  File? getThumbnailSync({required bool temp}) {
-    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id, isTemp: temp);
+  File? getThumbnailSync({required bool temp, required ThumbnailType type}) {
+    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id, isTemp: temp, type: type);
   }
 }
 

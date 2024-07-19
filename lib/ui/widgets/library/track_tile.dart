@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/core/utils.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -13,10 +11,11 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/ui/widgets/artwork.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class TrackTile extends StatelessWidget {
   final int index;

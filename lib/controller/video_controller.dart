@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
@@ -24,6 +25,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaVideoWidget extends StatelessWidget {
   final bool enableControls;
@@ -287,7 +289,7 @@ class VideoController {
     // saving video thumbnail
     final id = erabaretaVideo?.ytID;
     if (id != null) {
-      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
+      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id, type: ThumbnailType.video);
     }
 
     return erabaretaVideo;

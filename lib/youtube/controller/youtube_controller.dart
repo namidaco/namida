@@ -24,6 +24,7 @@ import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class _YTNotificationDataHolder {
@@ -38,7 +39,7 @@ class _YTNotificationDataHolder {
   }
 
   File? imageCallback(DownloadTaskVideoId videoId) {
-    return _imagesLookupTemp[videoId] ??= ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId.videoId);
+    return _imagesLookupTemp[videoId] ??= ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId.videoId, type: ThumbnailType.video);
   }
 
   void clearAll() {
@@ -645,6 +646,7 @@ class YoutubeController {
           final thumbnailFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
             id: videoID.videoId,
             isImportantInCache: true,
+            type: ThumbnailType.video,
           );
           await YTUtils.writeAudioMetadata(
             videoId: videoID.videoId,

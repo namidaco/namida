@@ -4,9 +4,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
@@ -21,6 +22,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
 Color get playerStaticColorLight => Color(settings.staticColor.valueR);
@@ -185,7 +187,7 @@ class CurrentColor {
       getColorPalette: () async {
         if (_colorsMapYTID[id] != null) return _colorsMapYTID[id]!;
 
-        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id);
+        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id, type: ThumbnailType.video);
         if (image != null && stillPlaying()) {
           final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
           if (color != null && stillPlaying()) {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -37,6 +38,7 @@ import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YTUtils {
   static void expandMiniplayer() {
@@ -319,7 +321,7 @@ class YTUtils {
     required File? thumbnailFile,
     required Map<String, String?> tagsMap,
   }) async {
-    final thumbnail = thumbnailFile ?? await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: videoId);
+    final thumbnail = thumbnailFile ?? await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: videoId, type: ThumbnailType.video);
     if (thumbnail != null) {
       await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
     }

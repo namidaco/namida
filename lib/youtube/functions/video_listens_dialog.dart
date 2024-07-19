@@ -8,6 +8,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [], Color? colorScheme}) async {
@@ -15,7 +16,7 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
-      final image = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId);
+      final image = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId, type: ThumbnailType.video);
       if (image != null) {
         final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
         return color?.color;

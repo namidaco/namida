@@ -43,6 +43,7 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
@@ -898,7 +899,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
-    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false);
+    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false, type: ThumbnailType.video);
 
     bool checkInterrupted({bool refreshNoti = true}) {
       final curr = currentItem.value;
@@ -936,8 +937,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     onInfoOrThumbObtained(info: _ytNotificationVideoInfo, thumbnail: _ytNotificationVideoThumbnail);
 
     if (_ytNotificationVideoThumbnail == null) {
-      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id).then((thumbFile) {
-        thumbFile ??= item.getThumbnailSync(temp: true);
+      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id, type: ThumbnailType.video).then((thumbFile) {
+        thumbFile ??= item.getThumbnailSync(temp: true, type: ThumbnailType.video);
         if (thumbFile != null) onInfoOrThumbObtained(thumbnail: thumbFile);
       });
     }
