@@ -38,6 +38,7 @@ class YoutubeAccountController {
     YoutiPieOperation.addVideoToHistory: false,
     YoutiPieOperation.fetchUserPlaylists: false,
     YoutiPieOperation.fetchUserPlaylistsNext: false,
+    YoutiPieOperation.getPlaylistsForVideo: false,
   };
 
   static void initialize() {

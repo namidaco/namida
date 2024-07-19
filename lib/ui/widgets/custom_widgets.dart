@@ -1375,7 +1375,14 @@ class NamidaWheelSlider extends StatelessWidget {
 class NamidaLoadingSwitcher extends StatefulWidget {
   final Widget Function(void Function() startLoading, void Function() stopLoading, bool isLoading) builder;
   final double? size;
-  const NamidaLoadingSwitcher({super.key, required this.builder, this.size});
+  final bool showLoading;
+
+  const NamidaLoadingSwitcher({
+    super.key,
+    required this.builder,
+    this.size,
+    this.showLoading = true,
+  });
 
   @override
   State<NamidaLoadingSwitcher> createState() => _NamidaLoadingSwitcherState();
@@ -1404,7 +1411,7 @@ class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
           duration: const Duration(milliseconds: 200),
           child: child,
         ),
-        if (_isLoading)
+        if (_isLoading && widget.showLoading)
           IgnorePointer(
             child: AnimatedOpacity(
               opacity: _isLoading ? 0.8 : 0.0,
@@ -1412,7 +1419,7 @@ class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
               child: SizedBox(
                 width: widget.size,
                 height: widget.size,
-                child: const CircularProgressIndicator(strokeWidth: 2.0),
+                child: widget.size == null ? const CircularProgressIndicator(strokeWidth: 4.0) : const CircularProgressIndicator(strokeWidth: 2.0),
               ),
             ),
           ),
@@ -2818,6 +2825,7 @@ class NamidaInkWellButton extends StatelessWidget {
   final bool showLoadingWhenDisabled;
   final bool disableWhenLoading;
   final double sizeMultiplier;
+  final Widget? trailing;
 
   const NamidaInkWellButton({
     super.key,
@@ -2832,6 +2840,7 @@ class NamidaInkWellButton extends StatelessWidget {
     this.showLoadingWhenDisabled = true,
     this.disableWhenLoading = true,
     this.sizeMultiplier = 1.0,
+    this.trailing,
   });
 
   @override
@@ -2875,6 +2884,7 @@ class NamidaInkWellButton extends StatelessWidget {
                   ),
                 ),
               if (textGood) const SizedBox(width: 4.0),
+              if (trailing != null) trailing!,
             ],
           ),
         ),

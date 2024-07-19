@@ -515,6 +515,69 @@ class NamidaOnTaps {
       ),
     );
   }
+
+  Future<PlaylistAddDuplicateAction?> showDuplicatedDialogAction(List<PlaylistAddDuplicateAction> duplicationActions, {bool displayTitle = true}) async {
+    final actionRx = Rxn<PlaylistAddDuplicateAction>();
+    PlaylistAddDuplicateAction? actionToUse;
+    await NamidaNavigator.inst.navigateDialog(
+      onDismissing: () {
+        actionRx.close();
+      },
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: lang.CONFIRM,
+        actions: [
+          TextButton(
+            onPressed: NamidaNavigator.inst.closeDialog,
+            child: NamidaButtonText(lang.CANCEL),
+          ),
+          ObxO(
+            rx: actionRx,
+            builder: (action) => NamidaButton(
+              enabled: action != null,
+              text: lang.CONFIRM,
+              onPressed: () {
+                actionToUse = actionRx.value;
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (displayTitle)
+                Text(
+                  lang.DUPLICATED_ITEMS_ADDING,
+                  style: namida.textTheme.displayMedium,
+                ),
+              if (displayTitle) const SizedBox(height: 12.0),
+              Column(
+                children: duplicationActions
+                    .map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: ObxO(
+                          rx: actionRx,
+                          builder: (act) => ListTileWithCheckMark(
+                            active: act == e,
+                            title: e.toText(),
+                            onTap: () => actionRx.value = e,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return actionToUse;
+  }
 }
 
 Future<void> showCalendarDialog<T extends ItemWithDate, E>({
@@ -613,11 +676,13 @@ Future<String?> showNamidaBottomSheetWithTextField({
   String? initalControllerText,
   required String hintText,
   required String labelText,
+  int? maxLength,
   required String? Function(String? value)? validator,
   required String buttonText,
   TextStyle? buttonTextStyle,
   Color? buttonColor,
   required FutureOr<bool> Function(String text) onButtonTap,
+  Widget Function(FormState formState)? extraItemsBuilder,
 }) async {
   final controller = TextEditingController(text: initalControllerText);
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -640,54 +705,60 @@ Future<String?> showNamidaBottomSheetWithTextField({
         padding: const EdgeInsets.symmetric(horizontal: 28.0).add(EdgeInsets.only(bottom: 18.0 + bottomPadding)),
         child: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: context.textTheme.displayLarge,
-              ),
-              const SizedBox(height: 18.0),
-              CustomTagTextField(
-                focusNode: focusNode,
-                controller: controller,
-                hintText: hintText,
-                labelText: labelText,
-                validator: validator,
-              ),
-              const SizedBox(height: 18.0),
-              Row(
-                children: [
-                  SizedBox(width: context.width * 0.1),
-                  CancelButton(onPressed: context.safePop),
-                  SizedBox(width: context.width * 0.1),
-                  Expanded(
-                    child: NamidaInkWell(
-                      borderRadius: 12.0,
-                      padding: const EdgeInsets.all(12.0),
-                      height: 48.0,
-                      bgColor: buttonColor ?? CurrentColor.inst.color,
-                      decoration: const BoxDecoration(),
-                      child: Center(
-                        child: Text(
-                          buttonText,
-                          style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+          child: NamidaLoadingSwitcher(
+            builder: (startLoading, stopLoading, isLoading) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: context.textTheme.displayLarge,
+                ),
+                const SizedBox(height: 18.0),
+                CustomTagTextField(
+                  focusNode: focusNode,
+                  controller: controller,
+                  hintText: hintText,
+                  labelText: labelText,
+                  validator: validator,
+                  maxLength: maxLength,
+                ),
+                if (extraItemsBuilder != null) extraItemsBuilder(formKey.currentState!),
+                const SizedBox(height: 18.0),
+                Row(
+                  children: [
+                    SizedBox(width: context.width * 0.1),
+                    CancelButton(onPressed: context.safePop),
+                    SizedBox(width: context.width * 0.1),
+                    Expanded(
+                      child: NamidaInkWell(
+                        borderRadius: 12.0,
+                        padding: const EdgeInsets.all(12.0),
+                        height: 48.0,
+                        bgColor: buttonColor ?? CurrentColor.inst.color,
+                        decoration: const BoxDecoration(),
+                        child: Center(
+                          child: Text(
+                            buttonText,
+                            style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+                          ),
                         ),
-                      ),
-                      onTap: () async {
-                        if (formKey.currentState!.validate()) {
-                          final didAgree = await onButtonTap(controller.text);
-                          if (didAgree) {
-                            finalText = controller.text;
-                            if (context.mounted) context.safePop();
+                        onTap: () async {
+                          if (formKey.currentState!.validate()) {
+                            startLoading();
+                            final didAgree = await onButtonTap(controller.text);
+                            stopLoading();
+                            if (didAgree) {
+                              finalText = controller.text;
+                              if (context.mounted) context.safePop();
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       );

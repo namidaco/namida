@@ -6,7 +6,10 @@ class _YoutubeSettings with SettingsFileWriter {
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
 
-  void save() {
+  int addToPlaylistsTabIndex = 0;
+
+  void save({int? addToPlaylistsTabIndex}) {
+    if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     _writeToStorage();
   }
 
@@ -26,6 +29,7 @@ class _YoutubeSettings with SettingsFileWriter {
     try {
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? {};
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? {};
+      addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? 0;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -35,6 +39,7 @@ class _YoutubeSettings with SettingsFileWriter {
   Object get jsonToWrite => <String, dynamic>{
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
+        'addToPlaylistsTabIndex ': addToPlaylistsTabIndex,
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();

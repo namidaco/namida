@@ -18,7 +18,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -79,7 +78,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
             track: e,
             source: source,
           );
-      final action = await _showDuplicatedDialogAction(duplicationActions);
+      final action = await NamidaOnTaps.inst.showDuplicatedDialogAction(duplicationActions);
       switch (action) {
         case PlaylistAddDuplicateAction.justAddEverything:
           playlist.tracks.addAll(convertTracks(tracks));
@@ -131,67 +130,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     );
 
     super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
-  }
-
-  Future<PlaylistAddDuplicateAction?> _showDuplicatedDialogAction(List<PlaylistAddDuplicateAction> duplicationActions) async {
-    final action = Rxn<PlaylistAddDuplicateAction>();
-    await NamidaNavigator.inst.navigateDialog(
-      onDismissing: () {
-        action.close();
-      },
-      dialog: CustomBlurryDialog(
-        normalTitleStyle: true,
-        title: lang.CONFIRM,
-        actions: [
-          TextButton(
-            onPressed: () {
-              action.value = null;
-              NamidaNavigator.inst.closeDialog();
-            },
-            child: NamidaButtonText(lang.CANCEL),
-          ),
-          ObxO(
-            rx: action,
-            builder: (action) => NamidaButton(
-              enabled: action != null,
-              text: lang.CONFIRM,
-              onPressed: NamidaNavigator.inst.closeDialog,
-            ),
-          ),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                lang.DUPLICATED_ITEMS_ADDING,
-                style: namida.textTheme.displayMedium,
-              ),
-              const SizedBox(height: 12.0),
-              Column(
-                children: duplicationActions
-                    .map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.all(3.0),
-                        child: ObxO(
-                          rx: action,
-                          builder: (act) => ListTileWithCheckMark(
-                            active: act == e,
-                            title: e.toText(),
-                            onTap: () => action.value = e,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    return action.value;
   }
 
   bool favouriteButtonOnPressed(Track track) {

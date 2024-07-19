@@ -490,9 +490,11 @@ abstract class LanguageKeys {
   String get PREVIOUS_BUTTON_REPLAYS => _getKey('PREVIOUS_BUTTON_REPLAYS');
   String get PREVIOUS_BUTTON_REPLAYS_SUBTITLE => _getKey('PREVIOUS_BUTTON_REPLAYS_SUBTITLE');
   String get PRIORITIZE_EMBEDDED_LYRICS => _getKey('PRIORITIZE_EMBEDDED_LYRICS');
+  String get PRIVATE => _getKey('PRIVATE');
   String get PROGRESS => _getKey('PROGRESS');
   String get PROMPT_INDEXING_REFRESH => _getKey('PROMPT_INDEXING_REFRESH');
   String get PROMPT_TO_CHANGE_TRACK_PATH => _getKey('PROMPT_TO_CHANGE_TRACK_PATH');
+  String get PUBLIC => _getKey('PUBLIC');
   String get QUEUE => _getKey('QUEUE');
   String get QUEUES => _getKey('QUEUES');
   String get RANDOM => _getKey('RANDOM');
@@ -670,6 +672,7 @@ abstract class LanguageKeys {
   String get UNDO_CHANGES => _getKey('UNDO_CHANGES');
   String get UNDO => _getKey('UNDO');
   String get UNLIMITED => _getKey('UNLIMITED');
+  String get UNLISTED => _getKey('UNLISTED');
   String get UNLOCK => _getKey('UNLOCK');
   String get UPDATE => _getKey('UPDATE');
   String get UPDATE_DIRECTORY_PATH => _getKey('UPDATE_DIRECTORY_PATH');

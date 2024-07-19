@@ -654,6 +654,10 @@ extension YTVisibleMixesPlacesUtils on YTVisibleMixesPlaces {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension PlaylistPrivacyUtils on PlaylistPrivacy {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -1292,6 +1296,11 @@ class _NamidaConverters {
         YTVisibleMixesPlaces.homeFeed: lang.HOME,
         YTVisibleMixesPlaces.relatedVideos: lang.RELATED_VIDEOS,
         YTVisibleMixesPlaces.search: lang.SEARCH,
+      },
+      PlaylistPrivacy: {
+        PlaylistPrivacy.public: lang.PUBLIC,
+        PlaylistPrivacy.unlisted: lang.UNLISTED,
+        PlaylistPrivacy.private: lang.PRIVATE,
       },
     };
 
