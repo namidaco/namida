@@ -29,6 +29,7 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 class MainPage extends StatelessWidget {
   final AnimationController animation;
@@ -256,7 +257,7 @@ class NamidaSearchBar extends StatelessWidget {
     try {
       final ytPlaylistId = NamidaLinkUtils.extractPlaylistId(val);
       if (ytPlaylistId != null && ytPlaylistId != '') {
-        OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(playlistId: ytPlaylistId);
+        YTHostedPlaylistSubpage.fromId(playlistId: ytPlaylistId).navigate();
         return;
       }
     } catch (_) {}

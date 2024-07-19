@@ -3,12 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
-import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:youtipie/class/result_wrapper/playlist_result.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
@@ -57,7 +55,6 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
-import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
@@ -407,48 +404,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 
-  Future<void> executePlaylist({required String playlistId, YoutiPiePlaylistResult? playlist}) async {
-    final plInfo = playlist ?? await YoutiPie.playlist.fetchPlaylist(playlistId: playlistId);
-    if (plInfo == null) {
-      snackyy(title: lang.ERROR, message: 'error retrieving playlist info, check your connection?');
-      return;
-    }
-    final didFetch = await plInfo.info.fetchAllPlaylistStreams(showProgressSheet: true, playlist: plInfo);
-    if (!didFetch) {
-      snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
-      return;
-    }
-
-    final streams = plInfo.items;
-
-    final plID = PlaylistID(id: playlistId);
-    Iterable<YoutubeID> getPlayables() => streams.map((e) => YoutubeID(id: e.id, playlistID: plID));
-
-    switch (this) {
-      case OnYoutubeLinkOpenAction.showDownload:
-        plInfo.info.showPlaylistDownloadSheet(showProgressSheet: true, playlistToFetch: plInfo);
-      case OnYoutubeLinkOpenAction.addToPlaylist:
-        showAddToPlaylistSheet(ids: streams.map((e) => e.id), idsNamesLookup: {});
-      case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
-      case OnYoutubeLinkOpenAction.playNext:
-        await Player.inst.addToQueue(getPlayables(), insertNext: true);
-      case OnYoutubeLinkOpenAction.playLast:
-        await Player.inst.addToQueue(getPlayables(), insertNext: false);
-      case OnYoutubeLinkOpenAction.playAfter:
-        await Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
-      case OnYoutubeLinkOpenAction.alwaysAsk:
-        _showAskDialog(
-          (action) => action.executePlaylist(playlistId: playlistId, playlist: plInfo),
-          playlistToOpen: plInfo,
-          playlistToAddAs: plInfo,
-        );
-
-      default:
-        null;
-    }
-  }
-
   Future<void> execute(Iterable<String> ids) async {
     Iterable<YoutubeID> getPlayables() => ids.map((e) => YoutubeID(id: e, playlistID: null));
     switch (this) {
@@ -480,8 +435,8 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutiPiePlaylistResult? playlistToOpen, YoutiPiePlaylistResult? playlistToAddAs}) {
-    String playlistNameToAddAs = playlistToAddAs?.info.title ?? '';
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutiPiePlaylistResultBase? playlistToOpen, YoutiPiePlaylistResultBase? playlistToAddAs}) {
+    String playlistNameToAddAs = playlistToAddAs?.basicInfo.title ?? '';
     String suffix = '';
     int suffixIndex = 1;
     while (ytplc.YoutubePlaylistController.inst.playlistsMap.value["$playlistNameToAddAs$suffix"] != null) {

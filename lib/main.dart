@@ -18,6 +18,7 @@ import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -53,6 +54,7 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 void main() {
   runZonedGuarded(
@@ -341,7 +343,7 @@ Future<void> _initializeIntenties() async {
             settings.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else if (ytPlaylistsIds.isNotEmpty) {
             for (final plid in ytPlaylistsIds) {
-              await OnYoutubeLinkOpenAction.alwaysAsk.executePlaylist(playlistId: plid);
+              YTHostedPlaylistSubpage.fromId(playlistId: plid).navigate();
             }
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links

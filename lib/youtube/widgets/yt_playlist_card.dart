@@ -54,17 +54,17 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   Timer? _fetchTimer;
   final _isFetching = Rxn<bool>();
 
-  Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) {
+  Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) async {
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
     if (widget.isMixPlaylist) {
       final videoId = widget.firstVideoID ?? widget.playingId?.call();
-      if (videoId == null) return Future.value(null);
+      if (videoId == null) return null;
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
-        mixId: 'RD$videoId',
         details: executeDetails,
       );
     } else {
+      if (widget.playlist.videosCountText == 'No videos') return null; // empty user playlists
       return YoutubeInfoController.playlist.fetchPlaylist(
         playlistId: widget.playlist.id,
         details: executeDetails,

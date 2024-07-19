@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:namida/base/pull_to_refresh.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -363,22 +364,27 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
 
   final YoutiPiePlaylistResultBase playlist;
+  final bool isMixPlaylist;
 
   const YTHostedPlaylistSubpage({
     super.key,
     required this.playlist,
-  });
+  }) : isMixPlaylist = playlist is YoutiPieMixPlaylistResult;
 
   YTHostedPlaylistSubpage.fromId({
     super.key,
     required String playlistId,
-  }) : playlist = _EmptyPlaylistResult(playlistId: playlistId);
+  })  : playlist = _EmptyPlaylistResult(playlistId: playlistId),
+        isMixPlaylist = playlistId.startsWith('RD') && playlistId.length == 13;
 
   @override
   State<YTHostedPlaylistSubpage> createState() => _YTHostedPlaylistSubpageState();
 }
 
-class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with YoutubeStreamsManager {
+class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with YoutubeStreamsManager, TickerProviderStateMixin, PullToRefreshMixin {
+  @override
+  double get maxDistance => 64.0;
+
   @override
   List<StreamInfoItem> get streamsList => _playlist.items;
 
@@ -412,7 +418,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     _controller = ScrollController();
     sorting.value = null; // we eventually need to implement playlist sort if account is signed in.
     super.initState();
-    _fetch100Video();
+
+    onRefresh(() => _fetch100Video(forceRequest: _playlist is YoutiPiePlaylistResult), forceProceed: true);
   }
 
   @override
@@ -440,18 +447,30 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     bool fetched = false;
 
     try {
-      if (forceRequest || _playlist.items.isEmpty) {
-        final playlist = await YoutubeInfoController.playlist.fetchPlaylist(
-          playlistId: _playlist.basicInfo.id,
-          details: ExecuteDetails.forceRequest(),
-        );
-        if (playlist != null) {
-          _playlist = playlist;
+      final currentPlaylist = _playlist;
+      if (forceRequest || currentPlaylist.items.isEmpty) {
+        YoutiPiePlaylistResultBase? newPlaylist;
+        if (widget.isMixPlaylist) {
+          final mixId = currentPlaylist.basicInfo.id;
+          final mixVideoId = mixId.substring(2);
+          newPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
+            videoId: mixVideoId,
+            mixId: mixId,
+            details: ExecuteDetails.forceRequest(),
+          );
+        } else {
+          newPlaylist = await YoutubeInfoController.playlist.fetchPlaylist(
+            playlistId: currentPlaylist.basicInfo.id,
+            details: ExecuteDetails.forceRequest(),
+          );
+        }
+        if (newPlaylist != null) {
+          _playlist = newPlaylist;
           fetched = true;
         }
       } else {
-        if (_playlist.canFetchNext) {
-          fetched = await _playlist.fetchNext();
+        if (currentPlaylist.canFetchNext) {
+          fetched = await currentPlaylist.fetchNext();
         }
       }
     } catch (_) {}
@@ -492,8 +511,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(
-        child: PullToRefresh(
-          maxDistance: 64.0,
+        child: PullToRefreshWidget(
+          state: this,
           controller: _controller,
           onRefresh: () => _fetch100Video(forceRequest: true),
           child: LazyLoadListView(
