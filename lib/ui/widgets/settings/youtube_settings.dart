@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:youtipie/core/http.dart';
+
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -535,8 +537,37 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
           children: [
             CustomSwitchListTile(
               value: settings.youtube.markVideoWatched,
-              onChanged: (isTrue) => settings.youtube.save(markVideoWatched: !isTrue),
+              onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
               title: 'mark_video_watched'.toUpperCase(),
+            ),
+            CustomListTile(
+              title: 'innertube_client'.toUpperCase(),
+              trailing: NamidaPopupWrapper(
+                  childrenDefault: () => [
+                        InnertubeClients.tvEmbedded,
+                        InnertubeClients.web,
+                        InnertubeClients.ios,
+                        InnertubeClients.android,
+                        InnertubeClients.mweb,
+                        InnertubeClients.webEmbedded,
+                        InnertubeClients.iosEmbedded,
+                        InnertubeClients.androidEmbedded,
+                        InnertubeClients.webCreator,
+                        InnertubeClients.iosCreator,
+                        InnertubeClients.androidCreator,
+                      ]
+                          .map(
+                            (e) => NamidaPopupItem(
+                              icon: Broken.video_octagon,
+                              title: e.name,
+                              onTap: () {
+                                setState(() => settings.youtube.save(innertubeClient: e));
+                              },
+                            ),
+                          )
+                          .toList(),
+                  child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT)),
+              onTap: () {},
             ),
           ],
         ),

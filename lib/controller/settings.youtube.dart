@@ -6,15 +6,18 @@ class _YoutubeSettings with SettingsFileWriter {
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
 
-  bool markVideoWatched = true;
   int addToPlaylistsTabIndex = 0;
+  bool markVideoWatched = true;
+  InnertubeClients? innertubeClient;
 
   void save({
     int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
+    InnertubeClients? innertubeClient,
   }) {
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
+    if (innertubeClient != null) this.innertubeClient = innertubeClient;
     _writeToStorage();
   }
 
@@ -32,10 +35,12 @@ class _YoutubeSettings with SettingsFileWriter {
     final json = await prepareSettingsFile_();
     if (json == null) return;
     try {
+      json as Map;
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? addToPlaylistsTabIndex;
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
+      innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
     } catch (e) {
       printy(e, isError: true);
     }
@@ -45,11 +50,12 @@ class _YoutubeSettings with SettingsFileWriter {
   Object get jsonToWrite => <String, dynamic>{
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
-        'addToPlaylistsTabIndex ': addToPlaylistsTabIndex,
-        'markVideoWatched ': markVideoWatched,
+        'addToPlaylistsTabIndex': addToPlaylistsTabIndex,
+        'markVideoWatched': markVideoWatched,
+        'innertubeClient': innertubeClient?.convertToString,
       };
 
-  Future<void> _writeToStorage() async => await writeToStorage();
+  Future<void> _writeToStorage() => writeToStorage();
 
   @override
   String get filePath => AppPaths.SETTINGS_YOUTUBE;

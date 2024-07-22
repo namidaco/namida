@@ -4,8 +4,15 @@ class _VideoInfoController {
   const _VideoInfoController();
 
   /// tvEmbedded can bypass age restricted and obtain higher quality streams.
-  static const _usedClient = InnertubeClients.tvEmbedded;
-  static const _requiresJSPlayer = true;
+  static const _defaultClient = InnertubeClients.tvEmbedded;
+  static const _defaultRequiresJSPlayer = true;
+
+  InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;
+  bool get _requiresJSPlayer {
+    final userSpecified = settings.youtube.innertubeClient;
+    if (userSpecified == null) return _defaultRequiresJSPlayer;
+    return userSpecified.configuration.requireJSPlayer == true;
+  }
 
   bool get jsPreparedIfRequired => _requiresJSPlayer ? YoutiPie.cipher.isPrepared : true;
 
