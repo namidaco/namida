@@ -140,14 +140,21 @@ class VideoController {
     bool? setOrientations,
   }) async {
     final aspect = Player.inst.videoPlayerInfo.value?.aspectRatio;
+    Widget videoControls = NamidaVideoControls(
+      key: VideoController.inst.videoControlsKeyFullScreen,
+      isLocal: isLocal,
+      onMinimizeTap: NamidaNavigator.inst.exitFullScreen,
+      showControls: true,
+      isFullScreen: true,
+    );
+    if (settings.youtube.whiteVideoBGInLightMode && namida.context?.isDarkMode == false) {
+      videoControls = ColoredBox(
+        color: Colors.white,
+        child: videoControls,
+      );
+    }
     await NamidaNavigator.inst.toggleFullScreen(
-      NamidaVideoControls(
-        key: VideoController.inst.videoControlsKeyFullScreen,
-        isLocal: isLocal,
-        onMinimizeTap: NamidaNavigator.inst.exitFullScreen,
-        showControls: true,
-        isFullScreen: true,
-      ),
+      videoControls,
       setOrientations: setOrientations ?? (aspect == null ? true : aspect > 1),
     );
   }

@@ -569,6 +569,11 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
                   child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT)),
               onTap: () {},
             ),
+            CustomSwitchListTile(
+              value: settings.youtube.whiteVideoBGInLightMode,
+              onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
+              title: 'white_video_bg_in_light_mode'.toUpperCase(),
+            ),
           ],
         ),
       ),

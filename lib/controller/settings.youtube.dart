@@ -9,15 +9,18 @@ class _YoutubeSettings with SettingsFileWriter {
   int addToPlaylistsTabIndex = 0;
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
+  bool whiteVideoBGInLightMode = false;
 
   void save({
     int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
+    bool? whiteVideoBGInLightMode,
   }) {
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null) this.innertubeClient = innertubeClient;
+    if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     _writeToStorage();
   }
 
@@ -41,6 +44,7 @@ class _YoutubeSettings with SettingsFileWriter {
       addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? addToPlaylistsTabIndex;
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
+      whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -53,6 +57,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'addToPlaylistsTabIndex': addToPlaylistsTabIndex,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.convertToString,
+        'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
       };
 
   Future<void> _writeToStorage() => writeToStorage();
