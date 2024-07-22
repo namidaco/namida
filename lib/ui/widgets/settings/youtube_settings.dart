@@ -55,12 +55,34 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
       };
 
+  void _showYTFlagsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flag,
+        title: lang.CONFIGURE,
+        normalTitleStyle: true,
+        actions: [
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: const _YTFlagsOptions(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
       title: lang.YOUTUBE,
       subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
       icon: Broken.video,
+      trailing: NamidaIconButton(
+        icon: Broken.flag,
+        tooltip: () => lang.REFRESH_LIBRARY,
+        onPressed: _showYTFlagsDialog,
+      ),
       child: Column(
         children: [
           getItemWrapper(
@@ -489,6 +511,36 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _YTFlagsOptions extends StatefulWidget {
+  const _YTFlagsOptions();
+
+  @override
+  State<_YTFlagsOptions> createState() => __YTFlagsOptionsState();
+}
+
+class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: context.width,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: context.height * 0.6),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          children: [
+            CustomSwitchListTile(
+              value: settings.youtube.markVideoWatched,
+              onChanged: (isTrue) => settings.youtube.save(markVideoWatched: !isTrue),
+              title: 'mark_video_watched'.toUpperCase(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

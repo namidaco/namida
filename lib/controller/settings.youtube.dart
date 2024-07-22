@@ -6,10 +6,15 @@ class _YoutubeSettings with SettingsFileWriter {
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
 
+  bool markVideoWatched = true;
   int addToPlaylistsTabIndex = 0;
 
-  void save({int? addToPlaylistsTabIndex}) {
+  void save({
+    int? addToPlaylistsTabIndex,
+    bool? markVideoWatched,
+  }) {
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
+    if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     _writeToStorage();
   }
 
@@ -27,9 +32,10 @@ class _YoutubeSettings with SettingsFileWriter {
     final json = await prepareSettingsFile_();
     if (json == null) return;
     try {
-      ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? {};
-      ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? {};
-      addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? 0;
+      ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
+      ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
+      addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? addToPlaylistsTabIndex;
+      markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -40,6 +46,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
         'addToPlaylistsTabIndex ': addToPlaylistsTabIndex,
+        'markVideoWatched ': markVideoWatched,
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();

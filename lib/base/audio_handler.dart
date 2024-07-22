@@ -852,7 +852,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   /// Shows error if [marked] is not true.
   void _onVideoMarkWatchResultError(YTMarkVideoWatchedResult marked) {
     if (marked == YTMarkVideoWatchedResult.addedAsPending) {
-      snackyy(message: 'Failed to mark video as watched.', top: false, isError: true);
+      snackyy(message: 'Failed to mark video as watched, saved as pending.', top: false, isError: true);
     }
   }
 
@@ -1060,7 +1060,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               // -- older request was initiated, wait to see the value.
               markedAsWatched.future.then(
                 (marked) {
-                  if (marked == YTMarkVideoWatchedResult.noAccount && streamsResult != null) {
+                  if ((marked == YTMarkVideoWatchedResult.noAccount || marked == YTMarkVideoWatchedResult.userDenied) && streamsResult != null) {
                     YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
                   }
                 },
