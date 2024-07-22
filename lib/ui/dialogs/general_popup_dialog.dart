@@ -152,15 +152,14 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Future<void> openDialog(Widget widget, {void Function()? onDisposing, bool Function()? tapToDismiss}) async {
+  Future<void> openDialog(Widget Function(ThemeData theme) widgetBuilder, {void Function()? onDisposing, bool Function()? tapToDismiss}) async {
     final color = colorDelightened.value; // we dont react cz main dialog can close and dispose this.
     await NamidaNavigator.inst.navigateDialog(
+      colorScheme: color,
+      lighterDialogColor: true,
       onDisposing: onDisposing,
       tapToDismiss: tapToDismiss,
-      dialog: AnimatedTheme(
-        data: AppThemes.inst.getAppTheme(color, null, true),
-        child: widget,
-      ),
+      dialogBuilder: widgetBuilder,
     );
   }
 
@@ -177,7 +176,7 @@ Future<void> showGeneralPopupDialog(
       onDisposing: () {
         controller.dispose();
       },
-      CustomBlurryDialog(
+      (theme) => CustomBlurryDialog(
         title: title,
         actions: [
           const CancelButton(),
@@ -203,11 +202,9 @@ Future<void> showGeneralPopupDialog(
           children: [
             Text(
               subtitle,
-              style: namida.textTheme.displaySmall,
+              style: theme.textTheme.displaySmall,
             ),
-            const SizedBox(
-              height: 20.0,
-            ),
+            const SizedBox(height: 20.0),
             CustomTagTextField(
               controller: controller,
               hintText: currentMoods.overflow,
@@ -219,68 +216,197 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void setPlaylistMoods() {
-    // function button won't be visible if playlistName == null.
-    if (!shoulShowPlaylistUtils()) return;
-    cancelSkipTimer();
-
-    final pl = PlaylistController.inst.getPlaylist(playlistName!);
-    if (pl == null) return;
-    setMoodsOrTags(
-      pl.moods,
-      (moodsFinal) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: moodsFinal.uniqued()),
-    );
-  }
-
   final stats = tracks.firstOrNull?.stats.obs;
 
-  void setTrackMoods() {
-    if (stats == null) return;
-    setMoodsOrTags(
-      stats.value.moods,
-      (moodsFinal) async {
-        stats.value = await Indexer.inst.updateTrackStats(tracks.first, moods: moodsFinal);
-      },
-    );
+  List<String> splitByCommaList(String listText) {
+    final moodsFinalLookup = <String, bool>{};
+    final moodsPre = listText.split(',');
+    moodsPre.loop((m) {
+      if (m.isNotEmpty && m != ' ') {
+        final cleaned = m.trimAll();
+        moodsFinalLookup[cleaned] ??= true;
+      }
+    });
+    return moodsFinalLookup.keys.toList();
   }
 
-  void setTrackTags() {
+  void setTrackStatsDialog() async {
     if (stats == null) return;
-    cancelSkipTimer();
-    setMoodsOrTags(
-      stats.value.tags,
-      (tagsFinal) async {
-        stats.value = await Indexer.inst.updateTrackStats(tracks.first, tags: tagsFinal);
-      },
-      isTags: true,
-    );
-  }
 
-  void setTrackRating() async {
-    if (stats == null) return;
-    final c = TextEditingController();
+    final initialRating = stats.value.rating;
+    final initialMoods = stats.value.moods.join(', ');
+    final initialTags = stats.value.tags.join(', ');
+
+    final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
+    final moodsController = TextEditingController(text: initialMoods);
+    final tagsController = TextEditingController(text: initialTags);
+
+    final icColor = iconColor.value;
+
+    Widget getItemChip({
+      required ThemeData theme,
+      required TextEditingController controller,
+      String? subtitle,
+      required String hintText,
+      required String labelText,
+      required IconData icon,
+      bool number = false,
+    }) {
+      const iconSize = 24.0;
+      const iconRightPadding = 8.0;
+      Widget fieldWidget = Row(
+        children: [
+          Icon(
+            icon,
+            size: iconSize,
+            color: icColor,
+          ),
+          const SizedBox(width: iconRightPadding),
+          Expanded(
+            child: CustomTagTextField(
+              controller: controller,
+              hintText: hintText,
+              labelText: labelText,
+              keyboardType: number ? TextInputType.number : null,
+            ),
+          ),
+        ],
+      );
+      if (subtitle != null) {
+        fieldWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            fieldWidget,
+            const SizedBox(height: 4.0),
+            Padding(
+              padding: const EdgeInsets.only(left: iconSize + iconRightPadding),
+              child: Text(
+                subtitle,
+                style: theme.textTheme.displaySmall,
+              ),
+            ),
+          ],
+        );
+      }
+      return fieldWidget;
+    }
+
     await openDialog(
       onDisposing: () {
-        c.dispose();
+        ratingController.dispose();
+        moodsController.dispose();
+        tagsController.dispose();
       },
-      CustomBlurryDialog(
-        title: lang.SET_RATING,
+      (theme) => CustomBlurryDialog(
+        title: lang.CONFIGURE,
         actions: [
           const CancelButton(),
           NamidaButton(
             text: lang.SAVE,
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
-              final val = int.tryParse(c.text) ?? 0;
-              stats.value = await Indexer.inst.updateTrackStats(tracks.first, rating: val);
+              final newRating = int.tryParse(ratingController.text);
+              final newMoods = splitByCommaList(moodsController.text);
+              final newTags = splitByCommaList(tagsController.text);
+              stats.value = await Indexer.inst.updateTrackStats(
+                tracks.first,
+                rating: newRating,
+                moods: newMoods,
+                tags: newTags,
+              );
             },
           ),
         ],
-        child: CustomTagTextField(
-          controller: c,
-          hintText: stats.value.rating.toString(),
-          labelText: lang.SET_RATING,
-          keyboardType: TextInputType.number,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: namida.height * 0.6),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            shrinkWrap: true,
+            children: [
+              // -- moods
+              const SizedBox(height: 12.0),
+              getItemChip(
+                theme: theme,
+                controller: moodsController,
+                hintText: initialMoods,
+                labelText: lang.SET_MOODS,
+                icon: Broken.smileys,
+                subtitle: lang.SET_MOODS_SUBTITLE,
+              ),
+
+              // -- tags
+              const SizedBox(height: 24.0),
+              getItemChip(
+                theme: theme,
+                controller: tagsController,
+                hintText: initialTags,
+                labelText: lang.SET_TAGS,
+                icon: Broken.ticket_discount,
+                subtitle: lang.SET_MOODS_SUBTITLE,
+              ),
+
+              // -- rating
+              const SizedBox(height: 24.0),
+              getItemChip(
+                theme: theme,
+                controller: ratingController,
+                hintText: initialRating.toString(),
+                labelText: lang.SET_RATING,
+                icon: Broken.grammerly,
+                number: true,
+              ),
+
+              const SizedBox(height: 4.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void setPlaylistMoods() async {
+    // function button won't be visible if playlistName == null.
+    if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
+
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+
+    final initialMoods = pl.moods.join(', ');
+
+    final playlistMoodsController = TextEditingController(text: initialMoods);
+    await openDialog(
+      onDisposing: () {
+        playlistMoodsController.dispose();
+      },
+      (theme) => CustomBlurryDialog(
+        title: lang.MOODS,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.SAVE,
+            onPressed: () async {
+              final newMoods = splitByCommaList(playlistMoodsController.text);
+              PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods);
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12.0),
+            CustomTagTextField(
+              controller: playlistMoodsController,
+              hintText: initialMoods,
+              labelText: lang.SET_MOODS,
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              lang.SET_MOODS_SUBTITLE,
+              style: theme.textTheme.displaySmall,
+            ),
+          ],
         ),
       ),
     );
@@ -297,7 +423,7 @@ Future<void> showGeneralPopupDialog(
       onDisposing: () {
         controller.dispose();
       },
-      Form(
+      (theme) => Form(
         key: formKey,
         child: CustomBlurryDialog(
           title: lang.RENAME_PLAYLIST,
@@ -399,7 +525,7 @@ Future<void> showGeneralPopupDialog(
         isUpdating.close();
       },
       tapToDismiss: () => !isUpdating.value,
-      CustomBlurryDialog(
+      (theme) => CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
         bodyText: lang.TRACK_PATH_OLD_NEW.replaceFirst('_OLD_NAME_', tracks.first.filenameWOExt).replaceFirst('_NEW_NAME_', newPath.getFilenameWOExt),
@@ -478,7 +604,7 @@ Future<void> showGeneralPopupDialog(
         shouldCleanUp.close();
         txtc.dispose();
       },
-      CustomBlurryDialog(
+      (theme) => CustomBlurryDialog(
         title: lang.CHOOSE,
         actions: [
           const CancelButton(),
@@ -813,7 +939,7 @@ Future<void> showGeneralPopupDialog(
                                       NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path.getFilename).toSet();
                                   if (firstHighMatchesFiles.isNotEmpty) {
                                     await openDialog(
-                                      CustomBlurryDialog(
+                                      (theme) => CustomBlurryDialog(
                                         title: lang.CHOOSE,
                                         actions: [
                                           const CancelButton(),
@@ -1010,50 +1136,38 @@ Future<void> showGeneralPopupDialog(
                                 ),
                               ),
 
-                            SmallListTile(
-                              color: colorDelightened,
-                              compact: false,
-                              title: lang.SHARE,
-                              icon: Broken.share,
-                              trailing: ObxO(
-                                rx: isLoadingFilesToShare,
-                                builder: (loading) => loading ? const LoadingIndicator() : const SizedBox(),
-                              ),
-                              onTap: () async {
-                                isLoadingFilesToShare.value = true;
-                                await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
-                                isLoadingFilesToShare.value = false;
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            ),
-
-                            isSingle && tracks.first == Player.inst.currentTrack?.track
-                                ? NamidaOpacity(
-                                    opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
-                                    child: IgnorePointer(
-                                      ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
-                                      child: SmallListTile(
-                                        color: colorDelightened,
-                                        compact: false,
-                                        title: lang.STOP_AFTER_THIS_TRACK,
-                                        icon: Broken.pause,
-                                        onTap: () {
-                                          NamidaNavigator.inst.closeDialog();
-                                          Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
-                                        },
-                                      ),
-                                    ),
-                                  )
-                                : SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: isSingle ? lang.PLAY : lang.PLAY_ALL,
-                                    icon: Broken.play,
-                                    onTap: () {
-                                      NamidaNavigator.inst.closeDialog();
-                                      Player.inst.playOrPause(0, tracks, source);
-                                    },
+                            if (!isSingle)
+                              SmallListTile(
+                                color: colorDelightened,
+                                compact: false,
+                                title: lang.SHARE,
+                                icon: Broken.share,
+                                trailing: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  child: ObxO(
+                                    rx: isLoadingFilesToShare,
+                                    builder: (loading) => loading ? const LoadingIndicator() : const SizedBox(),
                                   ),
+                                ),
+                                onTap: () async {
+                                  isLoadingFilesToShare.value = true;
+                                  await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                  isLoadingFilesToShare.value = false;
+                                  NamidaNavigator.inst.closeDialog();
+                                },
+                              ),
+
+                            if (!isSingle)
+                              SmallListTile(
+                                color: colorDelightened,
+                                compact: false,
+                                title: lang.PLAY_ALL,
+                                icon: Broken.play_circle,
+                                onTap: () {
+                                  NamidaNavigator.inst.closeDialog();
+                                  Player.inst.playOrPause(0, tracks, source);
+                                },
+                              ),
 
                             if (!isSingle)
                               SmallListTile(
@@ -1191,20 +1305,78 @@ Future<void> showGeneralPopupDialog(
 
                             /// Track Utils
                             /// todo: support for multiple tracks editing
-                            if (isSingle && (playlistName == null || tracksWithDates.firstOrNull != null))
+                            if (isSingle)
                               Row(
                                 children: [
                                   const SizedBox(width: 24.0),
-                                  Expanded(child: bigIcon(Broken.smileys, () => lang.SET_MOODS, setTrackMoods)),
+                                  Expanded(
+                                    child: bigIcon(
+                                      Broken.share,
+                                      iconWidget: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Broken.share,
+                                            color: iconColor,
+                                          ),
+                                          ObxO(
+                                            rx: isLoadingFilesToShare,
+                                            builder: (loading) => Padding(
+                                              padding: const EdgeInsets.only(top: 2.0),
+                                              child: const LoadingIndicator().animateEntrance(
+                                                showWhen: loading,
+                                                allCurves: Curves.fastEaseInToSlowEaseOut,
+                                                durationMS: 200,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      () => lang.SHARE,
+                                      () async {
+                                        isLoadingFilesToShare.value = true;
+                                        await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                        isLoadingFilesToShare.value = false;
+                                        NamidaNavigator.inst.closeDialog();
+                                      },
+                                    ),
+                                  ),
                                   const SizedBox(width: 8.0),
-                                  Expanded(child: bigIcon(Broken.ticket_discount, () => lang.SET_TAGS, setTrackTags)),
+                                  isSingle && tracks.first == Player.inst.currentTrack?.track
+                                      ? bigIcon(
+                                          Broken.pause_circle,
+                                          iconWidget: NamidaOpacity(
+                                            opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
+                                            child: IgnorePointer(
+                                              ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
+                                              child: Icon(
+                                                Broken.pause_circle,
+                                                color: iconColor,
+                                              ),
+                                            ),
+                                          ),
+                                          () => lang.STOP_AFTER_THIS_TRACK,
+                                          () {
+                                            if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
+                                            NamidaNavigator.inst.closeDialog();
+                                            Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
+                                          },
+                                        )
+                                      : bigIcon(
+                                          Broken.play_circle,
+                                          () => isSingle ? lang.PLAY : lang.PLAY_ALL,
+                                          () {
+                                            NamidaNavigator.inst.closeDialog();
+                                            Player.inst.playOrPause(0, tracks, source);
+                                          },
+                                        ),
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: Obx(
                                       () => bigIcon(
                                         Broken.grammerly,
                                         () => lang.SET_RATING,
-                                        setTrackRating,
+                                        setTrackStatsDialog,
                                         subtitle: stats == null || stats.valueR.rating == 0 ? '' : ' ${stats.valueR.rating}%',
                                       ),
                                     ),
