@@ -194,6 +194,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
             key: ValueKey(videoThumbnail),
             isImportantInCache: false,
             customUrl: videoThumbnail,
+            videoId: widget.notification.id, // just as a backup
+            preferLowerRes: true,
             width: thumbnailWidth,
             height: thumbnailHeight,
             borderRadius: 8.0,

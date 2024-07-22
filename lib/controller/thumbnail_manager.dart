@@ -41,8 +41,6 @@ class ThumbnailManager {
     String? symlinkId,
     bool isTemp = false,
   }) {
-    final dirPrefix = isTemp ? 'temp/' : '';
-
     final goodId = id != null && id.isNotEmpty;
     if (goodId || type == ThumbnailType.video) {
       String? filename;
@@ -51,9 +49,36 @@ class ThumbnailManager {
       } else if (goodId) {
         filename = '$id.png';
       } else if (url != null) {
-        filename = url.splitLast('/').substring(0, 11); // custom urls like dAdjsaB_GKL_hqdefault.jpg
+        try {
+          int? indexStart;
+          final index1try = url.indexOf('/vi/shorts/');
+          if (index1try > -1) {
+            indexStart = index1try + 11; // '/vi/shorts/'.length
+          } else {
+            final index2try = url.indexOf('/vi/');
+            if (index2try > -1) {
+              indexStart = index2try + 4; // '/vi/'.length
+            }
+          }
+          if (indexStart != null) {
+            filename = url.substring(indexStart, indexStart + 11); // custom urls like dAdjsaB_GKL_hqdefault.jpg
+          } else {
+            // -- just a backup
+            bool isFirstMatch = false;
+            filename = url.splitLastM(
+              '/',
+              onMatch: (part) {
+                if (isFirstMatch) return part;
+                isFirstMatch = true;
+                return null;
+              },
+            );
+          }
+          isTemp = true;
+        } catch (_) {}
       }
       if (filename == null || filename.isEmpty) return null;
+      final dirPrefix = isTemp ? 'temp/' : '';
       return File("${AppDirs.YT_THUMBNAILS}$dirPrefix$filename");
     }
     String? finalUrl = url;
@@ -65,6 +90,7 @@ class ThumbnailManager {
     }
 
     if (finalUrl != null) {
+      final dirPrefix = isTemp ? 'temp/' : '';
       return File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
     }
 
