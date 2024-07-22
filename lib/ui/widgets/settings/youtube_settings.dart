@@ -574,6 +574,11 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
               title: 'white_video_bg_in_light_mode'.toUpperCase(),
             ),
+            CustomSwitchListTile(
+              value: settings.youtube.enableDimInLightMode,
+              onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
+              title: 'enable_dim_in_light_mode'.toUpperCase(),
+            ),
           ],
         ),
       ),

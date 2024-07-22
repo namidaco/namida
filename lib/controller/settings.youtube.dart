@@ -10,17 +10,20 @@ class _YoutubeSettings with SettingsFileWriter {
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
   bool whiteVideoBGInLightMode = false;
+  bool enableDimInLightMode = true;
 
   void save({
     int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool? whiteVideoBGInLightMode,
+    bool? enableDimInLightMode,
   }) {
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null) this.innertubeClient = innertubeClient;
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
+    if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
     _writeToStorage();
   }
 
@@ -45,6 +48,7 @@ class _YoutubeSettings with SettingsFileWriter {
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
+      enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -58,6 +62,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.convertToString,
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
+        'enableDimInLightMode': enableDimInLightMode,
       };
 
   Future<void> _writeToStorage() => writeToStorage();
