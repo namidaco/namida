@@ -142,8 +142,7 @@ Future<void> showDownloadVideoBottomSheet({
 
   final streamsInCache = YoutubeInfoController.video.fetchVideoStreamsSync(videoId);
   if (streamsInCache != null) {
-    final expired = streamsInCache.hasExpired();
-    if (expired == true || expired == null || streamsInCache.audioStreams.isEmpty) {
+    if (streamsInCache.hasExpired() || streamsInCache.audioStreams.isEmpty) {
       YoutubeInfoController.video.fetchVideoStreams(videoId).then(onStreamsObtained);
     } else {
       onStreamsObtained(streamsInCache);
@@ -656,8 +655,8 @@ Future<void> showDownloadVideoBottomSheet({
                                       audioStream: selectedAudioOnlyStream.value,
                                       prefferedVideoQualityID: selectedVideoOnlyStream.value?.itag.toString(),
                                       prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
-                                      fetchMissingAudio: false,
-                                      fetchMissingVideo: false,
+                                      fetchMissingAudio: selectedAudioOnlyStream.value != null,
+                                      fetchMissingVideo: selectedVideoOnlyStream.value != null,
                                     );
                                     if (onConfirmButtonTap != null) {
                                       final accept = onConfirmButtonTap(groupName, itemConfig);

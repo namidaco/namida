@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
@@ -307,7 +308,7 @@ class VideoController {
     if (v != null) {
       currentVideo.value = v;
       await Player.inst.setVideo(
-        source: v.path,
+        source: AudioVideoSource.file(v.path),
         loopingAnimation: canLoopVideo(v, track.duration),
         isFile: true,
       );

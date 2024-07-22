@@ -3,8 +3,16 @@ part of namidayoutubeinfo;
 class _VideoInfoController {
   const _VideoInfoController();
 
-  static const _usedClient = InnertubeClients.ios; // TODO: tvEmbedded should be used to bypass age restricted and obtain higher quality streams.
-  static const _requiresJSPlayer = false;
+  /// tvEmbedded can bypass age restricted and obtain higher quality streams.
+  static const _usedClient = InnertubeClients.tvEmbedded;
+  static const _requiresJSPlayer = true;
+
+  bool get jsPreparedIfRequired => _requiresJSPlayer ? YoutiPie.cipher.isPrepared : true;
+
+  Future<bool> ensureJSPlayerInitialized() async {
+    if (YoutiPie.cipher.isPrepared) return true;
+    return YoutiPie.cipher.prepareJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
+  }
 
   Future<YoutiPieVideoPageResult?> fetchVideoPage(String videoId, {ExecuteDetails? details}) async {
     final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
@@ -22,7 +30,7 @@ class _VideoInfoController {
     if (_requiresJSPlayer) {
       // -- await preparing before returning result
       if (!YoutiPie.cipher.isPrepared) {
-        await YoutubeInfoController.ensureJSPlayerInitialized();
+        await ensureJSPlayerInitialized();
       }
     }
     return res;
@@ -39,7 +47,7 @@ class _VideoInfoController {
     if (cached == null || cached.client != _usedClient) return null;
     if (_requiresJSPlayer && bypassJSCheck == false) {
       if (!YoutiPie.cipher.isPrepared) {
-        YoutubeInfoController.ensureJSPlayerInitialized();
+        ensureJSPlayerInitialized();
         return null; // the player is not prepared, hence the urls are just useless
       }
     }

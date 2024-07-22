@@ -28,6 +28,7 @@ class StorageCacheManager {
 
   Future<void> trimExtraFiles() async {
     await Future.wait([
+      _VideoTrimmer()._trimExcessVideoCache(),
       _ImageTrimmer()._trimExcessImageCache(),
       _ImageTrimmer()._trimExcessImageCacheTemp(),
       _AudioTrimmer()._trimExcessAudioCache(),
@@ -418,25 +419,57 @@ class StorageCacheManager {
 }
 
 class _VideoTrimmer {
+  int get _videosMaxCacheInMB => settings.videosMaxCacheInMB.value;
+
+  Future<int> _trimExcessVideoCache() async {
+    final totalMaxBytes = _videosMaxCacheInMB * 1024 * 1024;
+    final paramters = {
+      'maxBytes': totalMaxBytes,
+      'dirPath': AppDirs.VIDEOS_CACHE,
+      'dirPathTemp': AppDirs.VIDEOS_CACHE_TEMP,
+    };
+    return await _trimExcessVideoCacheIsolate.thready(paramters);
+  }
+
+  static int _trimExcessVideoCacheIsolate(Map map) {
+    final maxBytes = map['maxBytes'] as int;
+    final dirPath = map['dirPath'] as String;
+    final dirPathTemp = map['dirPathTemp'] as String;
+
+    final videos = Directory(dirPath).listSyncSafe();
+    final videosTemp = Directory(dirPathTemp).listSyncSafe();
+    videos.sortBy((e) {
+      try {
+        return e.statSync().accessed;
+      } catch (_) {
+        return 0;
+      }
+    });
+    final videosFinal = [...videosTemp, ...videos];
+    return _Trimmer._trimExcessCache(videosFinal, maxBytes);
+  }
+
   static Map<File, int> _getTempVideosForID(Map params) {
     final id = params['id'] as String;
     final tempDir = params['temp'] as String;
     final normalDir = params['normal'] as String;
 
+    final sep = Platform.pathSeparator;
+
     final filesMap = <File, int>{};
-    void checkFile(FileSystemEntity e) {
+    void checkFileAndAdd(FileSystemEntity e) {
       if (e is File) {
-        final filename = e.path.splitLast(Platform.pathSeparator);
+        final filename = e.path.splitLast(sep);
         if (filename.startsWith(id)) {
           filesMap[e] = e.statSync().size;
         }
       }
     }
 
-    Directory(tempDir).listSyncSafe().loop((e) => checkFile(e));
+    Directory(tempDir).listSyncSafe().loop(checkFileAndAdd);
     Directory(normalDir).listSyncSafe().loop((e) {
       if (e.path.endsWith('.download')) {
-        checkFile(e);
+        checkFileAndAdd(e);
       }
     });
     return filesMap;
@@ -511,12 +544,14 @@ class _AudioTrimmer {
     final id = params['id'] as String;
     final dirPath = params['dirPath'] as String;
 
+    final sep = Platform.pathSeparator;
+
     final filesMap = <File, int>{};
 
     Directory(dirPath).listSyncSafe().loop((e) {
       if (e.path.endsWith('.part')) {
         if (e is File) {
-          final filename = e.path.splitLast(Platform.pathSeparator);
+          final filename = e.path.splitLast(sep);
           if (filename.startsWith(id)) {
             filesMap[e] = e.statSync().size;
           }

@@ -464,8 +464,7 @@ class YoutubeController {
   }
 
   void _breakRetrievingInfoRequest(YoutubeItemDownloadConfig c) {
-    final err = Exception('Download was canceled by the user');
-    _completersVAI[c]?.completeErrorIfWasnt(err);
+    _completersVAI[c]?.completeErrorIfWasnt(Exception('Download was canceled by the user'));
   }
 
   Future<void> cancelDownloadTask({
@@ -568,6 +567,8 @@ class YoutubeController {
     Future<void> downloady(YoutubeItemDownloadConfig config) async {
       final videoID = config.id;
 
+      _completersVAI[config]?.completeIfWasnt(null);
+
       final completer = _completersVAI[config] = Completer<VideoStreamsResult>();
       final streamResultSync = YoutubeInfoController.video.fetchVideoStreamsSync(videoID.videoId);
       if (streamResultSync != null && streamResultSync.hasExpired() == false) {
@@ -582,6 +583,8 @@ class YoutubeController {
       isFetchingData.value[videoID]![config.filename] = true;
 
       try {
+        if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+
         final streams = await completer.future;
 
         // -- video
@@ -590,7 +593,8 @@ class YoutubeController {
           if (config.prefferedVideoQualityID != null) {
             config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
           }
-          if (config.videoStream == null || config.videoStream?.buildUrl()?.isNotEmpty != true) {
+          // `config.videoStream?.buildUrl()?.host.isNotEmpty != true` means if null || empty || fkedup then assign
+          if (config.videoStream == null || config.videoStream?.buildUrl()?.host.isNotEmpty != true) {
             final webm = config.filename.filename.endsWith('.webm') || config.filename.filename.endsWith('.WEBM');
             config.videoStream = getPreferredStreamQuality(videos, qualities: preferredQualities, preferIncludeWebm: webm);
           }
@@ -602,7 +606,7 @@ class YoutubeController {
           if (config.prefferedAudioQualityID != null) {
             config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
           }
-          if (config.audioStream == null || config.audioStream?.buildUrl()?.isNotEmpty != true) {
+          if (config.audioStream == null || config.audioStream?.buildUrl()?.host.isNotEmpty != true) {
             config.audioStream = audios.firstNonWebm() ?? audios.firstOrNull;
           }
         }
@@ -840,6 +844,8 @@ class YoutubeController {
 
     bool skipAudio = false; // if video fails or stopped
 
+    if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+
     try {
       // --------- Downloading Choosen Video.
       if (videoStream != null) {
@@ -855,7 +861,7 @@ class YoutubeController {
           }
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
-            url: videoStream.buildUrl() ?? '',
+            url: videoStream.buildUrl(),
             targetSize: videoStream.sizeInBytes,
             filename: finalFilenameWrapper,
             destinationFilePath: _getTempVideoPath(
@@ -910,7 +916,7 @@ class YoutubeController {
           }
           final downloadedFile = await _checkFileAndDownload(
             groupName: groupName,
-            url: audioStream.buildUrl() ?? '',
+            url: audioStream.buildUrl(),
             targetSize: audioStream.sizeInBytes,
             filename: finalFilenameWrapper,
             destinationFilePath: _getTempAudioPath(
@@ -1018,7 +1024,7 @@ class YoutubeController {
 
   /// the file returned may not be complete if the client was closed.
   Future<File> _checkFileAndDownload({
-    required String url,
+    required Uri? url,
     required int targetSize,
     required DownloadTaskGroupName groupName,
     required DownloadTaskFilename filename,
@@ -1076,8 +1082,7 @@ class YoutubeController {
 
       // --------- Downloading Choosen Video.
       String getVPath(bool isTemp) {
-        final dir = isTemp ? AppDirs.VIDEOS_CACHE_TEMP : null;
-        return erabaretaStream.cachePath(id, directory: dir);
+        return isTemp ? erabaretaStream.cachePathTemp(id) : erabaretaStream.cachePath(id);
       }
 
       final erabaretaStreamSizeInBytes = erabaretaStream.sizeInBytes;
@@ -1106,6 +1111,9 @@ class YoutubeController {
 
         _downloadManager.stopDownload(file: _latestSingleDownloadingFile); // disposing old download process
         _latestSingleDownloadingFile = file;
+
+        if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+
         downloaded = await _downloadManager.download(
           url: erabaretaStream.buildUrl(),
           file: file,
@@ -1158,14 +1166,14 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
   Future<bool> download({
-    required String? url,
+    required Uri? url,
     required File file,
     String? moveTo,
     int? moveToRequiredBytes,
     required int downloadStartRange,
     required void Function(int downloadedBytesLength) downloadingStream,
   }) async {
-    if (url == null || url.isEmpty) return false;
+    if (url == null || url.host.isEmpty) return false;
 
     final filePath = file.path;
     _downloadCompleters[filePath]?.completeIfWasnt(false);
@@ -1240,7 +1248,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           }
         } else {
           final filePath = p['filePath'] as String;
-          final url = p['url'] as String;
+          final url = p['url'] as Uri;
           final downloadStartRange = p['downloadStartRange'] as int;
           final moveTo = p['moveTo'] as String?;
           final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
@@ -1255,7 +1263,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           if (requester == null) return; // always non null tho
           try {
             final headers = {'range': 'bytes=$downloadStartRange-'};
-            final response = await requester.getUrlWithHeaders(Uri.parse(url), headers);
+            final response = await requester.getUrlWithHeaders(url, headers);
             final downloadStream = response.asBroadcastStream();
 
             await for (final data in downloadStream) {

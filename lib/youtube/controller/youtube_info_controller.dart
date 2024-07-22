@@ -78,11 +78,6 @@ class YoutubeInfoController {
     });
   }
 
-  static Future<bool> ensureJSPlayerInitialized() async {
-    if (YoutiPie.cipher.isPrepared) return true;
-    return YoutiPie.cipher.prepareJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
-  }
-
   static final current = _YoutubeCurrentInfoController._();
   static final utils = _YoutubeInfoUtils._();
 }

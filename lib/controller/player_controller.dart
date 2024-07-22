@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -170,6 +171,9 @@ class Player {
 
     _audioHandler.videoPlayerInfo.removeListener(videoInfoListener);
     _audioHandler.videoPlayerInfo.addListener(videoInfoListener);
+    _audioHandler.onVideoError = (e, _) {
+      if (e is PlatformException) snackyy(message: e.details.toString().substring(0, 164), title: '${lang.ERROR}: ${e.message}', isError: true, top: false);
+    };
 
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.player.skipSilenceEnabled.value);
@@ -587,7 +591,7 @@ class Player {
     return _audioHandler.tryGenerateWaveform(video);
   }
 
-  Future<void> setVideo({required String source, String cacheKey = '', bool loopingAnimation = false, required bool isFile}) async {
+  Future<void> setVideo({required AudioVideoSource source, String cacheKey = '', bool loopingAnimation = false, required bool isFile}) async {
     await _audioHandler.setVideoSource(source: source, cacheKey: cacheKey, loopingAnimation: loopingAnimation, isFile: isFile);
   }
 

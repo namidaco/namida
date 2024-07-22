@@ -197,30 +197,34 @@ extension CacheGetterAudio on AudioStream {
     return "$id${languageText}_${audio.bitrate}.${audio.codecInfo.container}";
   }
 
-  String cachePath(String id, {String? directory}) {
-    return p.join(directory ?? AppDirs.AUDIOS_CACHE, cacheKey(id));
+  String cachePath(String id) {
+    return p.join(AppDirs.AUDIOS_CACHE, cacheKey(id));
   }
 
-  File? getCachedFile(String? id, {String? directory}) {
+  File? getCachedFile(String? id) {
     if (id == null) return null;
-    final path = cachePath(id, directory: directory);
+    final path = cachePath(id);
     return File(path).existsSync() ? File(path) : null;
   }
 }
 
 extension CacheGetterVideo on VideoStream {
-  String cacheKey(String id, {String? directory}) {
+  String cacheKey(String id) {
     final video = this;
     return "${id}_${video.qualityLabel}.${video.codecInfo.container}";
   }
 
-  String cachePath(String id, {String? directory}) {
-    return p.join(directory ?? AppDirs.VIDEOS_CACHE, cacheKey(id));
+  String cachePath(String id) {
+    return p.join(AppDirs.VIDEOS_CACHE, cacheKey(id));
   }
 
-  File? getCachedFile(String? id, {String? directory}) {
+  String cachePathTemp(String id) {
+    return p.join(AppDirs.VIDEOS_CACHE_TEMP, cacheKey(id));
+  }
+
+  File? getCachedFile(String? id) {
     if (id == null) return null;
-    final path = cachePath(id, directory: directory);
+    final path = cachePath(id);
     return File(path).existsSync() ? File(path) : null;
   }
 }
