@@ -66,7 +66,7 @@ Future<void> showGeneralPopupDialog(
   (String, String)? albumToAddFrom,
   String? heroTag,
   String? additionalHero,
-  IconData trailingIcon = Broken.arrow_right_3,
+  IconData? trailingIcon,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -769,6 +769,10 @@ Future<void> showGeneralPopupDialog(
         )
       : null;
 
+  final hasHeaderTap = isSingle;
+
+  if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
+
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       numberOfRepeats.close();
@@ -884,8 +888,8 @@ Future<void> showGeneralPopupDialog(
                             ),
                           ),
                           const SizedBox(width: 16.0),
-                          Icon(trailingIcon),
-                          const SizedBox(width: 16.0),
+                          if (trailingIcon != null) Icon(trailingIcon),
+                          if (trailingIcon != null) const SizedBox(width: 16.0),
                         ],
                       ),
                     ),

@@ -8,32 +8,15 @@ environment:
   flutter: ^3.22.0
 
 dependency_overrides:
-  just_audio:
-    path: C:\Programming\Flutter\Forks\just_audio\just_audio
   just_audio_platform_interface:
-    path: C:\Programming\Flutter\Forks\just_audio\just_audio_platform_interface
-  basic_audio_handler:
-    path: C:\Programming\Flutter\_NEW_2023_Used_Packages\basic_audio_handler
-
-  # just_audio_platform_interface:
-  #   git:
-  #     url: https://github.com/MSOB7YY/just_audio
-  #     path: just_audio_platform_interface/
-  #     ref: video
+    git:
+      url: https://github.com/MSOB7YY/just_audio
+      path: just_audio_platform_interface/
+      ref: video
   on_audio_query_platform_interface:
     git:
       url: https://github.com/MSOB7YY/on_audio_query
       path: packages/on_audio_query_platform_interface
-  nampack:
-    path: ../_NEW_2023_Used_Packages/nampack
-  namico_login_manager:
-    path: ../_NEW_2023_Used_Packages/namico_login_manager
-  namico_subscription_manager:
-    path: ../_NEW_2023_Used_Packages/namico_subscription_manager
-  youtipie:
-    path: ../_NEW_2023_Used_Packages/youtipie
-  namico_db_wrapper:
-    path: ../_NEW_2023_Used_Packages/namico_db_wrapper
 
 dependencies:
   flutter:
