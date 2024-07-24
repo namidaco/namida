@@ -340,20 +340,21 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                       scrollController: MiniPlayerController.inst.queueScrollController,
                       itemCount: queueLength,
                       itemExtent: widget.queueItemExtent,
-                      onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
-                      onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
+                      onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                      onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
                       onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                      onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
                       padding: padding,
                       itemBuilder: (context, i) {
                         final childWK = widget.itemBuilder(context, i, currentIndex, queue);
                         return FadeDismissible(
                           key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
-                          onDismissed: (direction) {
-                            Player.inst.removeFromQueueWithUndo(i);
-                            MiniPlayerController.inst.invokeDoneReordering();
+                          onDismissed: (direction) async {
+                            await Player.inst.removeFromQueueWithUndo(i);
+                            Player.inst.invokeQueueModifyLockRelease();
                           },
-                          onDismissStart: (_) => MiniPlayerController.inst.invokeStartReordering(),
-                          onDismissEnd: (_) => MiniPlayerController.inst.invokeDoneReordering(),
+                          onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+                          onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
                           child: childWK.$1,
                         );
                       },

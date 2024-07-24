@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/route.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -254,7 +253,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
             color: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor),
             child: Listener(
               onPointerMove: (event) {
-                if (MiniPlayerController.inst.isReorderingQueue) return;
+                if (Player.inst.isModifyingQueue) return;
                 if (event.delta.dy > 0) {
                   if (_queueScrollController.hasClients) {
                     if (_queueScrollController.position.pixels <= 0) {
@@ -276,7 +275,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onVerticalDragUpdate: (event) {
-                  if (MiniPlayerController.inst.isReorderingQueue) return;
+                  if (Player.inst.isModifyingQueue) return;
                   _updateCanScrollQueue(false);
                   _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clamp(0, 1);
                   if (_bigBoxDrag > 0.0 && _bigBoxDrag < 1.0) {
@@ -361,20 +360,21 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               scrollController: _queueScrollController,
                               itemCount: queue.length,
                               itemExtent: Dimensions.youtubeCardItemExtent,
-                              onReorderStart: (index) => MiniPlayerController.inst.invokeStartReordering(),
-                              onReorderEnd: (index) => MiniPlayerController.inst.invokeDoneReordering(),
+                              onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                              onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
                               onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                              onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
                               physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
                               itemBuilder: (context, i) {
                                 final video = queue[i] as YoutubeID;
                                 return FadeDismissible(
                                   key: Key("Diss_${video.id}_$i"),
-                                  onDismissed: (direction) {
-                                    Player.inst.removeFromQueueWithUndo(i);
-                                    MiniPlayerController.inst.invokeDoneReordering();
+                                  onDismissed: (direction) async {
+                                    await Player.inst.removeFromQueueWithUndo(i);
+                                    Player.inst.invokeQueueModifyLockRelease();
                                   },
-                                  onDismissStart: (_) => MiniPlayerController.inst.invokeStartReordering(),
-                                  onDismissEnd: (_) => MiniPlayerController.inst.invokeDoneReordering(),
+                                  onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+                                  onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
                                   child: YTHistoryVideoCard(
                                     key: Key("${i}_${video.id}"),
                                     videos: queue,

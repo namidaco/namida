@@ -37,10 +37,7 @@ class MiniPlayerController {
   final isPlayPauseButtonHighlighted = false.obs;
 
   /// Prevents Listener while reorderding or dismissing items inside queue.
-  bool isReorderingQueue = false;
-
-  Completer<void>? reorderingQueueCompleter;
-  Completer<void>? reorderingQueueCompleterPlayer;
+  bool get _isModifyingQueue => Player.inst.isModifyingQueue;
 
   /// Icon that represents the direction of the current track
   final arrowIcon = Broken.cd.obso;
@@ -100,17 +97,6 @@ class MiniPlayerController {
     }
     animation.reset();
     verticalSnapping();
-  }
-
-  void invokeStartReordering() {
-    isReorderingQueue = true;
-    reorderingQueueCompleter ??= Completer<void>();
-  }
-
-  void invokeDoneReordering() {
-    isReorderingQueue = false;
-    reorderingQueueCompleter?.completeIfWasnt();
-    reorderingQueueCompleter = null;
   }
 
   late AnimationController animation;
@@ -178,7 +164,7 @@ class MiniPlayerController {
   }
 
   void onPointerDown(PointerDownEvent event) {
-    if (isReorderingQueue) return;
+    if (_isModifyingQueue) return;
     if (event.position.dy >= screenSize.height - _deadSpace) return;
 
     _velocity.addPosition(event.timeStamp, event.position);
@@ -192,7 +178,7 @@ class MiniPlayerController {
   bool _isInsideQueue() => _offset >= maxOffset * 2 && (queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0);
 
   void onPointerMove(PointerMoveEvent event) {
-    if (isReorderingQueue) return;
+    if (_isModifyingQueue) return;
     if (event.position.dy >= screenSize.height - _deadSpace) return;
 
     _velocity.addPosition(event.timeStamp, event.position);
@@ -221,7 +207,7 @@ class MiniPlayerController {
   }
 
   void gestureDetectorOnVerticalDragUpdate(DragUpdateDetails details) {
-    if (isReorderingQueue) return;
+    if (_isModifyingQueue) return;
     if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
 

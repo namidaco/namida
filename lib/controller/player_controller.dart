@@ -136,6 +136,8 @@ class Player {
     _audioHandler.positionListener = fn;
   }
 
+  bool get isModifyingQueue => _audioHandler.isModifyingQueue;
+
   // -- error playing track
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
   RxBaseCore<int> get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;
@@ -283,6 +285,18 @@ class Player {
 
   Future<void> setVolume(double volume) async {
     await _audioHandler.setVolume(volume);
+  }
+
+  void invokeQueueModifyLock() {
+    _audioHandler.invokeQueueModifyLock();
+  }
+
+  void invokeQueueModifyLockRelease() {
+    _audioHandler.invokeQueueModifyLockRelease();
+  }
+
+  void invokeQueueModifyOnModifyCancel() {
+    _audioHandler.invokeQueueModifyLockRelease(isCanceled: true);
   }
 
   void reorderTrack(int oldIndex, int newIndex) {

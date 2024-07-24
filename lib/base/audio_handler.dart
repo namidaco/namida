@@ -216,7 +216,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ================================== QueueManager Overriden ====================================
 
   @override
-  void onIndexChanged(int newIndex, Q newItem) async {
+  void onIndexChanged(int newIndex, Q newItem) {
     refreshNotification(newItem);
     newItem._execute(
       selectable: (finalItem) {
@@ -231,8 +231,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onQueueChanged() async {
-    super.onQueueChanged();
+  Future<void> onQueueChanged() async {
+    await super.onQueueChanged();
     if (currentQueue.value.isEmpty) {
       CurrentColor.inst.resetCurrentPlayingTrack();
       if (MiniPlayerController.inst.isInQueue) MiniPlayerController.inst.snapToMini();
@@ -248,14 +248,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onReorderItems(int currentIndex, Q itemDragged) async {
-    // usually not needed, since [beforePlaying] already assign if miniplayer is reordering.
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer ??= Completer<void>();
-
+  Future<void> onReorderItems(int currentIndex, Q itemDragged) async {
     await super.onReorderItems(currentIndex, itemDragged);
+
     refreshNotification();
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer = null;
 
     await itemDragged._execute(
       selectable: (finalItem) {
@@ -265,19 +261,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
 
     await QueueController.inst.updateLatestQueue(currentQueue.value);
-  }
-
-  @override
-  FutureOr<void> beforeRemovingPlayingItemFromQueue(bool wasLatest) async {
-    MiniPlayerController.inst.reorderingQueueCompleter?.completeIfWasnt();
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
-  }
-
-  @override
-  FutureOr<void> removeFromQueue(int index, bool startPlayingIfRemovedCurrent) async {
-    await super.removeFromQueue(index, startPlayingIfRemovedCurrent);
-    MiniPlayerController.inst.reorderingQueueCompleter?.completeIfWasnt();
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
   @override
@@ -318,56 +301,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  FutureOr<void> beforePlaying() async {
-    super.beforePlaying(); // saving last position.
-    // _audioShouldBeLoading ??= Completer<void>();
+  Future<void> beforeSkippingToItem() async {
+    await super.beforeSkippingToItem(); // saving last position & waiting for reorder/removing.
     NamidaNavigator.inst.popAllMenus();
-    ScrollSearchController.inst.unfocusKeyboard();
-
-    /// -- Adding videos that may have been cached to VideoController cache map,
-    /// for the sake of playing videos without connection, usually videos are added automatically
-    /// on restart but this keeps things up-to-date.
-    ///
-    /// also adds newly cached audios.
-    void fn() async {
-      final prevVideoInfo = YoutubeInfoController.current.currentYTStreams.value?.info;
-
-      String? vId = prevVideoInfo?.id;
-      if (vId == null) {
-        final curr = currentItem.value;
-        if (curr is YoutubeID) vId = curr.id;
-      }
-      if (vId != null) {
-        // -- Video handling
-        final prevStream = currentVideoStream.value;
-        if (prevStream != null) {
-          final maybeCached = prevStream.getCachedFile(vId);
-          if (maybeCached != null) {
-            VideoController.inst.addYTVideoToCacheMap(
-              vId,
-              NamidaVideo(
-                path: maybeCached.path,
-                ytID: vId,
-                height: prevStream.height,
-                width: prevStream.width,
-                sizeInBytes: prevStream.sizeInBytes,
-                frameratePrecise: prevStream.fps.toDouble(),
-                creationTimeMS: (prevVideoInfo?.publishedAt.date ?? prevVideoInfo?.publishDate.date)?.millisecondsSinceEpoch ?? 0,
-                durationMS: prevStream.duration.inMilliseconds,
-                bitrate: prevStream.bitrate,
-              ),
-            );
-          }
-        }
-      }
-    }
-
-    currentItem.value?._execute(
-      selectable: (finalItems) async => fn(),
-      youtubeID: (finalItem) async => fn(),
-    );
-    await MiniPlayerController.inst.reorderingQueueCompleter?.future; // wait if reordering
-    await MiniPlayerController.inst.reorderingQueueCompleterPlayer?.future; // wait if updating lists after reordering
   }
 
   @override
@@ -497,8 +433,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       },
     );
-
-    MiniPlayerController.inst.reorderingQueueCompleterPlayer?.completeIfWasnt();
   }
 
   Timer? _playErrorSkipTimer;

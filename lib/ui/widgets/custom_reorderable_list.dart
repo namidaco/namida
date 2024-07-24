@@ -102,6 +102,7 @@ class ReorderableList extends StatefulWidget {
     required this.itemBuilder,
     required this.itemCount,
     required this.onReorder,
+    required this.onReorderCancel,
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
@@ -156,6 +157,11 @@ class ReorderableList extends StatefulWidget {
   /// of the items.
   /// {@endtemplate}
   final ReorderCallback onReorder;
+
+  /// {@template flutter.widgets.reorderable_list.onReorderCancel}
+  /// Called when item is placed in its original place again, ie: `oldIndex` == `newIndex`.
+  /// {@endtemplate}
+  final VoidCallback? onReorderCancel;
 
   /// {@template flutter.widgets.reorderable_list.onReorderStart}
   /// A callback that is called when an item drag has started.
@@ -394,6 +400,7 @@ class ReorderableListState extends State<ReorderableList> {
             itemBuilder: widget.itemBuilder,
             itemCount: widget.itemCount,
             onReorder: widget.onReorder,
+            onReorderCancel: widget.onReorderCancel,
             onReorderStart: widget.onReorderStart,
             onReorderEnd: widget.onReorderEnd,
             proxyDecorator: widget.proxyDecorator,
@@ -438,6 +445,7 @@ class SliverReorderableList extends StatefulWidget {
     this.findChildIndexCallback,
     required this.itemCount,
     required this.onReorder,
+    this.onReorderCancel,
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
@@ -466,6 +474,9 @@ class SliverReorderableList extends StatefulWidget {
 
   /// {@macro flutter.widgets.reorderable_list.onReorder}
   final ReorderCallback onReorder;
+
+  /// {@macro flutter.widgets.reorderable_list.onReorderCancel}
+  final VoidCallback? onReorderCancel;
 
   /// {@macro flutter.widgets.reorderable_list.onReorderStart}
   final void Function(int)? onReorderStart;
@@ -790,6 +801,8 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     final int toIndex = _insertIndex!;
     if (fromIndex != toIndex) {
       widget.onReorder.call(fromIndex, toIndex);
+    } else {
+      widget.onReorderCancel?.call();
     }
     _dragReset();
   }
@@ -938,6 +951,8 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     void reorder(int startIndex, int endIndex) {
       if (startIndex != endIndex) {
         widget.onReorder(startIndex, endIndex);
+      } else {
+        widget.onReorderCancel?.call();
       }
     }
 

@@ -2147,6 +2147,7 @@ class FadeDismissible extends StatefulWidget {
   final void Function(DismissDirection onDismissed) onDismissed;
   final void Function(DragStartDetails details)? onDismissStart;
   final void Function(DragEndDetails details)? onDismissEnd;
+  final void Function(DragEndDetails details)? onDismissCancel;
   final DismissDirection direction;
   final Duration dismissDuration;
   final Duration settleDuration;
@@ -2165,6 +2166,7 @@ class FadeDismissible extends StatefulWidget {
     required this.onDismissed,
     this.onDismissStart,
     this.onDismissEnd,
+    this.onDismissCancel,
     this.direction = DismissDirection.horizontal,
     this.dismissDuration = const Duration(milliseconds: 300),
     this.settleDuration = const Duration(milliseconds: 300),
@@ -2227,8 +2229,8 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 
   Future<void> _resetToMiddle(DragEndDetails d) async {
+    if (widget.onDismissCancel != null) widget.onDismissCancel!(d);
     await _animation.animateTo(0, duration: widget.settleDuration, curve: widget.settleCurve);
-    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
   }
 
   Widget buildChild(bool draggable, Widget child, double maxWidth) {
@@ -2440,6 +2442,7 @@ class NamidaCircularPercentage extends StatelessWidget {
 class NamidaListView extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final ReorderCallback? onReorder;
+  final VoidCallback? onReorderCancel;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
@@ -2457,6 +2460,7 @@ class NamidaListView extends StatelessWidget {
     this.widgetsInColumn,
     this.padding,
     this.onReorder,
+    this.onReorderCancel,
     required this.itemBuilder,
     required this.itemCount,
     required this.itemExtent,
@@ -2485,6 +2489,7 @@ class NamidaListView extends StatelessWidget {
       itemCount: itemCount,
       itemExtent: itemExtent,
       onReorder: onReorder,
+      onReorderCancel: onReorderCancel,
       onReorderStart: onReorderStart,
       onReorderEnd: onReorderEnd,
       padding: padding,
@@ -2497,6 +2502,7 @@ class NamidaListViewRaw extends StatelessWidget {
   final Widget Function(Widget list) listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;
   final ReorderCallback? onReorder;
+  final VoidCallback? onReorderCancel;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
@@ -2516,6 +2522,7 @@ class NamidaListViewRaw extends StatelessWidget {
     required this.listBuilder,
     required this.itemBuilder,
     this.onReorder,
+    this.onReorderCancel,
     this.onReorderStart,
     this.onReorderEnd,
     this.header,
@@ -2567,6 +2574,7 @@ class NamidaListViewRaw extends StatelessWidget {
                   itemBuilder: itemBuilder,
                   itemCount: itemCount,
                   onReorder: onReorder!,
+                  onReorderCancel: onReorderCancel,
                   onReorderStart: onReorderStart,
                   onReorderEnd: onReorderEnd,
                 )
@@ -2598,7 +2606,8 @@ class NamidaListViewRaw extends StatelessWidget {
 
 class NamidaSliverReorderableList extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
-  final ReorderCallback? onReorder;
+  final ReorderCallback onReorder;
+  final VoidCallback? onReorderCancel;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final double? itemExtent;
@@ -2607,7 +2616,8 @@ class NamidaSliverReorderableList extends StatelessWidget {
   const NamidaSliverReorderableList({
     super.key,
     required this.itemBuilder,
-    this.onReorder,
+    required this.onReorder,
+    this.onReorderCancel,
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
@@ -2630,7 +2640,8 @@ class NamidaSliverReorderableList extends StatelessWidget {
       itemExtent: itemExtent,
       itemBuilder: _reorderableItemBuilder,
       itemCount: itemCount,
-      onReorder: onReorder!,
+      onReorder: onReorder,
+      onReorderCancel: onReorderCancel,
       proxyDecorator: (child, index, animation) => child,
       onReorderStart: onReorderStart,
       onReorderEnd: onReorderEnd,
