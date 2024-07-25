@@ -752,6 +752,9 @@ class SearchSortController {
       case GroupSortType.composer:
         sortThis((e) => e.value.composer.toLowerCase());
         break;
+      case GroupSortType.label:
+        sortThis((e) => e.value.recordLabel.toLowerCase());
+        break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value.first.dateModified);
         break;

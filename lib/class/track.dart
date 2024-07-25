@@ -193,6 +193,7 @@ class TrackExtended {
   final int discNo;
   final String language;
   final String lyrics;
+  final String label;
 
   const TrackExtended({
     required this.title,
@@ -220,6 +221,7 @@ class TrackExtended {
     required this.discNo,
     required this.language,
     required this.lyrics,
+    required this.label,
   });
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
@@ -277,6 +279,7 @@ class TrackExtended {
       discNo: json['discNo'] ?? 0,
       language: json['language'] ?? '',
       lyrics: json['lyrics'] ?? '',
+      label: json['label'] ?? '',
     );
   }
 
@@ -304,6 +307,7 @@ class TrackExtended {
       'discNo': discNo,
       'language': language,
       'lyrics': lyrics,
+      'label': label,
     };
   }
 
@@ -394,6 +398,7 @@ extension TrackExtUtils on TrackExtended {
       discNo: tag.discNumber.getIntValue() ?? discNo,
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
+      label: tag.recordLabel ?? label,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -434,6 +439,7 @@ extension TrackExtUtils on TrackExtended {
     int? discNo,
     String? language,
     String? lyrics,
+    String? label,
   }) {
     return TrackExtended(
       title: title ?? this.title,
@@ -461,6 +467,7 @@ extension TrackExtUtils on TrackExtended {
       discNo: discNo ?? this.discNo,
       language: language ?? this.language,
       lyrics: lyrics ?? this.lyrics,
+      label: label ?? this.label,
     );
   }
 }
@@ -503,6 +510,7 @@ extension TrackUtils on Track {
   int get discNo => toTrackExt().discNo;
   String get language => toTrackExt().language;
   String get lyrics => toTrackExt().lyrics;
+  String get label => toTrackExt().label;
   TrackStats get stats => Indexer.inst.trackStatsMap[this] ?? TrackStats(kDummyTrack, 0, [], [], 0);
 
   String get filename => path.getFilename;

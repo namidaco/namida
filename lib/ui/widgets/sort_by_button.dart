@@ -169,6 +169,7 @@ class SortByMenuAlbums extends StatelessWidget {
           GroupSortType.dateModified,
           GroupSortType.artistsList,
           GroupSortType.composer,
+          GroupSortType.label,
           GroupSortType.shuffle,
         ].map(
           (e) => ObxO(

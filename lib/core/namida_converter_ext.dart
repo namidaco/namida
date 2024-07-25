@@ -1082,6 +1082,7 @@ class _NamidaConverters {
         GroupSortType.artistsList: lang.ARTIST,
         GroupSortType.genresList: lang.GENRES,
         GroupSortType.composer: lang.COMPOSER,
+        GroupSortType.label: lang.RECORD_LABEL,
         GroupSortType.dateModified: lang.DATE_MODIFIED,
         GroupSortType.duration: lang.DURATION,
         GroupSortType.numberOfTracks: lang.NUMBER_OF_TRACKS,

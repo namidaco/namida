@@ -35,6 +35,7 @@ enum GroupSortType {
   genresList,
   dateModified,
   composer,
+  label,
   duration,
   numberOfTracks,
   albumsCount,

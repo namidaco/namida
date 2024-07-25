@@ -141,6 +141,15 @@ extension TracksUtils on List<Track> {
     }
     return '';
   }
+
+  String get recordLabel {
+    if (isEmpty) return '';
+    for (int i = length - 1; i >= 0; i--) {
+      final aa = this[i].label;
+      if (aa != '') return aa;
+    }
+    return '';
+  }
 }
 
 extension StringListJoiner on Iterable<String?> {

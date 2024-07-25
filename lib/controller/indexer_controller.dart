@@ -462,6 +462,7 @@ class Indexer {
         discNo: 0,
         language: '',
         lyrics: '',
+        label: '',
       );
       if (!trackInfo.hasError) {
         int durationInSeconds = trackInfo.length ?? 0;
@@ -1206,6 +1207,7 @@ class Indexer {
         discNo: disc ?? 0,
         language: '',
         lyrics: '',
+        label: '',
       );
       tracks.add((trext, e.id));
       _backupMediaStoreIDS[trext.pathToImage] = (trext.toTrack(), e.id);
