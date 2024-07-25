@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/extensions.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -1128,10 +1129,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           }
                                         }
 
+                                        var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                        var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+
                                         return _getQualityChip(
                                           title: element.qualityLabel,
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                          thirdLine: element.bitrateText(),
+                                          thirdLine: "${element.bitrateText()}$codecIdentifierText",
                                           onPlay: (isSelected) {
                                             if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(

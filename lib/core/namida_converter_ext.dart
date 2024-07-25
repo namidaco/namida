@@ -8,6 +8,7 @@ import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/core/extensions.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
@@ -211,7 +212,9 @@ extension CacheGetterAudio on AudioStream {
 extension CacheGetterVideo on VideoStream {
   String cacheKey(String id) {
     final video = this;
-    return "${id}_${video.qualityLabel}.${video.codecInfo.container}";
+    var codecIdentifier = codecInfo.codecIdentifierIfCustom();
+    var suffix = codecIdentifier != null ? '-$codecIdentifier' : '';
+    return "${id}_${video.qualityLabel}$suffix.${video.codecInfo.container}";
   }
 
   String cachePath(String id) {

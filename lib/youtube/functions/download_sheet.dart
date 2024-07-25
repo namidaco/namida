@@ -543,11 +543,15 @@ Future<void> showDownloadVideoBottomSheet({
                                         return Obx(
                                           () {
                                             final cacheFile = element.getCachedFile(videoId);
+
+                                            var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                            var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+
                                             return getQualityButton(
                                               selected: selectedVideoOnlyStream.valueR == element,
                                               cacheExists: cacheFile != null,
                                               title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
-                                              subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                              subtitle: "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText",
                                               onTap: () {
                                                 selectedVideoOnlyStream.value = element;
                                                 onVideoSelectionChanged();
