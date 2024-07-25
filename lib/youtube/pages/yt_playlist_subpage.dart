@@ -436,11 +436,6 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     return await _playlist.basicInfo.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: _playlist);
   }
 
-  PlaylistID get _getPlaylistID {
-    final plId = _playlist.basicInfo.id;
-    return PlaylistID(id: plId);
-  }
-
   Future<bool> _fetch100Video({bool forceRequest = false}) async {
     if (_isLoadingMoreItems.value) return false;
     _isLoadingMoreItems.value = true;
@@ -460,8 +455,11 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
             details: ExecuteDetails.forceRequest(),
           );
         } else {
+          String? plId;
+          if (currentPlaylist is YoutiPiePlaylistResult) plId = currentPlaylist.playlistId;
+          plId ??= currentPlaylist.basicInfo.id;
           newPlaylist = await YoutubeInfoController.playlist.fetchPlaylist(
-            playlistId: currentPlaylist.basicInfo.id,
+            playlistId: plId,
             details: ExecuteDetails.forceRequest(),
           );
         }
@@ -495,6 +493,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     String? description;
     String uploaderTitleAndViews = '';
     String? thumbnailUrl;
+    String? plId;
+
     if (playlist is YoutiPiePlaylistResult) {
       description = playlist.info.description;
       final uploaderTitle = playlist.info.uploader?.title;
@@ -505,7 +505,10 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
         if (viewsCountText != null) viewsCountText,
       ].join(' - ');
       thumbnailUrl = playlist.info.thumbnails.pick()?.url;
+      plId = playlist.playlistId;
     }
+    plId ??= playlist.basicInfo.id;
+    final plIdWrapper = PlaylistID(id: plId);
     final firstID = playlist.items.firstOrNull?.id;
     final hasMoreStreamsLeft = playlist.canFetchNext;
     return AnimatedTheme(
@@ -713,7 +716,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                           thumbnailWidth: itemsThumbnailWidth,
                           isImageImportantInCache: false,
                           video: item,
-                          playlistID: _getPlaylistID,
+                          playlistID: plIdWrapper,
                           playlist: playlist,
                           index: index,
                         );

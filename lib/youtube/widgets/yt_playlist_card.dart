@@ -105,12 +105,12 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     super.dispose();
   }
 
-  List<NamidaPopupItem> getMenuItems(PlaylistBasicInfo playlist) {
+  List<NamidaPopupItem> getMenuItems() {
     if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
 
     final playlistToFetch = this.playlistToFetch;
     if (playlistToFetch == null) return [];
-    return playlist.getPopupMenuItems(
+    return widget.playlist.getPopupMenuItems(
       playlistToFetch: playlistToFetch,
       showProgressSheet: true,
       displayPlay: !widget.playOnTap,
@@ -133,7 +133,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,
-      childrenDefault: () => getMenuItems(playlist),
+      childrenDefault: getMenuItems,
       child: YoutubeCard(
         thumbnailHeight: widget.thumbnailHeight,
         thumbnailWidth: widget.thumbnailWidth,
@@ -178,7 +178,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
             },
           ),
         ],
-        menuChildrenDefault: () => getMenuItems(playlist),
+        menuChildrenDefault: getMenuItems,
       ),
     );
   }

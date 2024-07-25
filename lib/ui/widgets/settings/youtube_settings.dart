@@ -544,28 +544,35 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               title: 'innertube_client'.toUpperCase(),
               trailing: NamidaPopupWrapper(
                   childrenDefault: () => [
-                        InnertubeClients.tvEmbedded,
-                        InnertubeClients.web,
-                        InnertubeClients.ios,
-                        InnertubeClients.android,
-                        InnertubeClients.mweb,
-                        InnertubeClients.webEmbedded,
-                        InnertubeClients.iosEmbedded,
-                        InnertubeClients.androidEmbedded,
-                        InnertubeClients.webCreator,
-                        InnertubeClients.iosCreator,
-                        InnertubeClients.androidCreator,
-                      ]
-                          .map(
-                            (e) => NamidaPopupItem(
-                              icon: Broken.video_octagon,
-                              title: e.name,
-                              onTap: () {
-                                setState(() => settings.youtube.save(innertubeClient: e));
-                              },
-                            ),
-                          )
-                          .toList(),
+                        NamidaPopupItem(
+                          icon: Broken.video_horizontal,
+                          title: lang.DEFAULT,
+                          onTap: () {
+                            setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
+                          },
+                        ),
+                        ...[
+                          InnertubeClients.tvEmbedded,
+                          InnertubeClients.web,
+                          InnertubeClients.ios,
+                          InnertubeClients.android,
+                          InnertubeClients.mweb,
+                          InnertubeClients.webEmbedded,
+                          InnertubeClients.iosEmbedded,
+                          InnertubeClients.androidEmbedded,
+                          InnertubeClients.webCreator,
+                          InnertubeClients.iosCreator,
+                          InnertubeClients.androidCreator,
+                        ].map(
+                          (e) => NamidaPopupItem(
+                            icon: Broken.video_octagon,
+                            title: e.name,
+                            onTap: () {
+                              setState(() => settings.youtube.save(innertubeClient: e));
+                            },
+                          ),
+                        ),
+                      ],
                   child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT)),
               onTap: () {},
             ),

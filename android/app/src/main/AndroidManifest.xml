@@ -80,7 +80,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.SEND" />
                 <data
-                    android:host="com.msob7y.namida.patreonauth"
+                    android:host="patreonauth.msob7y.namida"
                     android:scheme="app" />
             </intent-filter>
             <intent-filter>

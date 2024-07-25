@@ -174,7 +174,6 @@ class AppPaths {
 
   static String get LOGS => _getLogsFile('');
   static String get LOGS_TAGGER => _getLogsFile('_tagger');
-  static String get LOGS_CLEAN => _getLogsFile('_clean');
 
   static String _getLogsFile(String identifier) {
     final suffix = getLogsSuffix() ?? '_unknown';
@@ -480,6 +479,7 @@ const kDummyExtendedTrack = TrackExtended(
   discNo: 0,
   language: "",
   lyrics: "",
+  label: "",
 );
 
 /// Unknown Tag Fields

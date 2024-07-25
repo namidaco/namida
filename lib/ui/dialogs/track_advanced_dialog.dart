@@ -671,7 +671,7 @@ class _TracksSearchTemp with PortsProvider<Map> {
   _TracksSearchTemp(this._onResult);
 
   void search(String text) async {
-    await initialize();
+    if (!isInitialized) await initialize();
     final p = {'text': text, 'temp': true};
     await sendPort(p);
   }

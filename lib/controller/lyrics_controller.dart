@@ -264,7 +264,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     _completer?.completeIfWasnt([]);
     _completer = Completer<List<LyricsModel>>();
 
-    await initialize();
+    if (!isInitialized) await initialize();
     final p = customQuery != null && customQuery.isNotEmpty ? customQuery : queries;
     await sendPort(p);
     final res = await _completer?.future ?? [];

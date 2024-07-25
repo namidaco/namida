@@ -958,7 +958,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             title: audioTrack?.displayName ?? '?',
                                             subtitle: " • ${audioTrack?.langCode ?? 0}",
                                             onPlay: (isSelected) {
-                                              if (!isSelected) {
+                                              if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
                                                 Player.inst.onItemPlayYoutubeIDSetAudio(
                                                   stream: element,
                                                   mainStreams: streams,
@@ -1113,10 +1113,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       } else {
                                         final id = Player.inst.currentVideoR?.id;
                                         final cachedFile = id == null ? null : element.getCachedFile(id);
-                                        bool isSelected = settings.ytIsAudioOnlyMode.valueR
-                                            ? false
-                                            : (element.itag == Player.inst.currentVideoStream.valueR?.itag ||
-                                                (Player.inst.currentCachedVideo.valueR != null && cachedFile?.path == Player.inst.currentCachedVideo.valueR?.path));
+                                        bool isSelected = false;
                                         if (settings.ytIsAudioOnlyMode.valueR) {
                                           isSelected = false;
                                         } else {
@@ -1125,8 +1122,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             isSelected = element.itag == currentVS.itag;
                                           } else {
                                             final currentCachedV = Player.inst.currentCachedVideo.valueR;
-                                            if (currentCachedV != null) {
-                                              isSelected = cachedFile?.path == currentCachedV.path;
+                                            if (currentCachedV != null && cachedFile != null) {
+                                              isSelected = cachedFile.path == currentCachedV.path;
                                             }
                                           }
                                         }
@@ -1136,7 +1133,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                           thirdLine: element.bitrateText(),
                                           onPlay: (isSelected) {
-                                            if (!isSelected) {
+                                            if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(
                                                 mainStreams: streams,
                                                 stream: element,

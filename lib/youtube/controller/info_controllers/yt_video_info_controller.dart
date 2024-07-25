@@ -3,8 +3,10 @@ part of namidayoutubeinfo;
 class _VideoInfoController {
   const _VideoInfoController();
 
-  /// tvEmbedded can bypass age restricted and obtain higher quality streams.
-  static const _defaultClient = InnertubeClients.tvEmbedded;
+  /// tvEmbedded can bypass age restricted and obtain higher quality streams,
+  /// but doesnt work with many vids, web is more stable and can also obtain higher quality streams.
+  /// On a better implementation, we would tv first and check result before using web, etc.
+  static const _defaultClient = InnertubeClients.web;
   static const _defaultRequiresJSPlayer = true;
 
   InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;

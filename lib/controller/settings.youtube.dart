@@ -16,12 +16,13 @@ class _YoutubeSettings with SettingsFileWriter {
     int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
+    bool setDefaultInnertubeClient = false,
     bool? whiteVideoBGInLightMode,
     bool? enableDimInLightMode,
   }) {
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
-    if (innertubeClient != null) this.innertubeClient = innertubeClient;
+    if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
     _writeToStorage();

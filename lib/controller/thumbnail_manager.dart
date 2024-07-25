@@ -41,6 +41,8 @@ class ThumbnailManager {
     String? symlinkId,
     bool isTemp = false,
   }) {
+    final dirPrefix = isTemp ? 'temp/' : '';
+
     final goodId = id != null && id.isNotEmpty;
     if (goodId || type == ThumbnailType.video) {
       String? filename;
@@ -48,7 +50,7 @@ class ThumbnailManager {
         filename = symlinkId;
       } else if (goodId) {
         filename = '$id.png';
-      } else if (url != null) {
+      } else if (url != null && isTemp) {
         try {
           int? indexStart;
           final index1try = url.indexOf('/vi/shorts/');
@@ -74,11 +76,9 @@ class ThumbnailManager {
               },
             );
           }
-          isTemp = true;
         } catch (_) {}
       }
       if (filename == null || filename.isEmpty) return null;
-      final dirPrefix = isTemp ? 'temp/' : '';
       return File("${AppDirs.YT_THUMBNAILS}$dirPrefix$filename");
     }
     String? finalUrl = url;
@@ -90,7 +90,6 @@ class ThumbnailManager {
     }
 
     if (finalUrl != null) {
-      final dirPrefix = isTemp ? 'temp/' : '';
       return File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
     }
 

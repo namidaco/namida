@@ -1193,7 +1193,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
       'downloadStartRange': downloadStartRange,
       'progressPort': progressPort.sendPort,
     };
-    await initialize();
+    if (!isInitialized) await initialize();
     await sendPort(p);
     final res = await _downloadCompleters[filePath]?.future ?? false;
     _onFileFinish(filePath, null);
