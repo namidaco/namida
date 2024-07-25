@@ -624,6 +624,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final shouldShowSeekBar = widget.isFullScreen;
     final view = View.of(context);
 
+    String? channelOverlayUrl;
+
+    if (widget.isFullScreen && settings.youtube.showChannelWatermarkFullscreen.value) {
+      final channelOverlay = YoutubeInfoController.current.currentYTStreams.value?.overlay;
+      channelOverlayUrl = channelOverlay?.overlays.pick()?.url;
+    }
+
     return Listener(
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > context.width / 2;
@@ -1653,6 +1660,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ],
             ],
+
+            if (channelOverlayUrl != null)
+              Positioned(
+                right: 12.0,
+                bottom: 12.0,
+                child: _YTChannelOverlayThumbnail(
+                  channelOverlayUrl: channelOverlayUrl,
+                ),
+              ),
           ],
         ),
       ),
@@ -1767,6 +1783,47 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
               ),
             )
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _YTChannelOverlayThumbnail extends StatefulWidget {
+  final String channelOverlayUrl;
+  const _YTChannelOverlayThumbnail({required this.channelOverlayUrl});
+
+  @override
+  State<_YTChannelOverlayThumbnail> createState() => __YTChannelOverlayThumbnailState();
+}
+
+class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail> {
+  bool _isHighlighted = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final channelOverlayUrl = widget.channelOverlayUrl;
+    return TapDetector(
+      onTap: null,
+      initializer: (instance) {
+        instance
+          ..onTapDown = (d) {
+            if (mounted) setState(() => _isHighlighted = true);
+          }
+          ..onTapUp = (d) {
+            if (mounted) setState(() => _isHighlighted = false);
+          };
+      },
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: _isHighlighted ? 1 : 0.35,
+        child: YoutubeThumbnail(
+          key: ValueKey(channelOverlayUrl),
+          width: 38.0,
+          isImportantInCache: true,
+          borderRadius: 0,
+          type: ThumbnailType.channel,
+          customUrl: channelOverlayUrl,
         ),
       ),
     );

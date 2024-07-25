@@ -75,18 +75,19 @@ Future<bool> _buildAPK({required bool verbose}) async {
 
 Future<bool> _runGitAdd({required String oldLine, required String newLine, required List<String> args}) async {
   bool added = false;
+  bool executedFirstCommand = false;
   final success = await _runProcess(
     program: 'git',
     command: 'add pubspec.yaml -p',
     onOutput: (data, stdinStream) {
-      final requiredChangeDetect = "-$oldLine\n+$newLine";
-      if (data.contains(requiredChangeDetect)) {
-        stdinStream.writeln('y');
-        added = true;
-        print('git: added version change');
-      } else {
-        stdinStream.writeln('n');
-      }
+      if (executedFirstCommand) return;
+      executedFirstCommand = true;
+      stdinStream.writeln('s');
+      stdinStream.writeln('/');
+      stdinStream.writeln('^version: ');
+      stdinStream.writeln('y');
+      stdinStream.writeln('q');
+      added = true;
     },
   );
   return success && added;

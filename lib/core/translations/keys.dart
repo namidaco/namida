@@ -579,6 +579,7 @@ abstract class LanguageKeys {
   String get SHOULD_DUCK_NOTE => _getKey('SHOULD_DUCK_NOTE');
   String get SHOULD_PAUSE => _getKey('SHOULD_PAUSE');
   String get SHOULD_PAUSE_NOTE => _getKey('SHOULD_PAUSE_NOTE');
+  String get SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN => _getKey('SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN');
   String get SHOW_HIDE_UNKNOWN_FIELDS => _getKey('SHOW_HIDE_UNKNOWN_FIELDS');
   String get SHOW_MIX_PLAYLISTS_IN => _getKey('SHOW_MIX_PLAYLISTS_IN');
   String get SHOW_MORE => _getKey('SHOW_MORE');

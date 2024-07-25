@@ -5,6 +5,7 @@ class _YoutubeSettings with SettingsFileWriter {
 
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
+  final showChannelWatermarkFullscreen = true.obs;
 
   int addToPlaylistsTabIndex = 0;
   bool markVideoWatched = true;
@@ -13,6 +14,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool enableDimInLightMode = true;
 
   void save({
+    bool? showChannelWatermarkFullscreen,
     int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
@@ -20,6 +22,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? whiteVideoBGInLightMode,
     bool? enableDimInLightMode,
   }) {
+    if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
@@ -43,6 +46,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (json == null) return;
     try {
       json as Map;
+      showChannelWatermarkFullscreen.value = json['showChannelWatermarkFullscreen'] ?? showChannelWatermarkFullscreen.value;
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? addToPlaylistsTabIndex;
@@ -57,6 +61,7 @@ class _YoutubeSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
+        'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen,
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
         'addToPlaylistsTabIndex': addToPlaylistsTabIndex,
