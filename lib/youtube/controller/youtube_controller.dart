@@ -180,7 +180,7 @@ class YoutubeController {
   }
 
   void _loopMapAndPostNotification({
-    required Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>> bigMap,
+    required Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, bool>> downloadingMap,
     required int Function(DownloadTaskFilename key, int progress) speedInBytes,
     required DateTime startTime,
     required bool isAudio,
@@ -188,35 +188,41 @@ class YoutubeController {
     required File? Function(DownloadTaskVideoId videoId) imageCallback,
   }) {
     final downloadingText = isAudio ? "Audio" : "Video";
-    for (final bigEntry in bigMap.entries.toList()) {
+    for (final bigEntry in downloadingMap.entries.toList()) {
       final map = bigEntry.value.value;
       final videoId = bigEntry.key;
       for (final entry in map.entries.toList()) {
-        final p = entry.value.progress;
-        final tp = entry.value.totalProgress;
-        final percentage = p / tp;
-        if (percentage.isNaN || percentage.isInfinite || percentage >= 1) {
-          map.remove(entry.key);
-        } else {
-          final filename = entry.key;
-          final title = titleCallback(videoId) ?? videoId;
-          final speedB = speedInBytes(filename, entry.value.progress);
-          if (currentSpeedsInByte.value[videoId] == null) {
-            currentSpeedsInByte.value[videoId] = <DownloadTaskFilename, int>{}.obs;
-            currentSpeedsInByte.refresh();
-          }
+        final filename = entry.key;
+        final progressInfo = (isAudio ? downloadsAudioProgressMap : downloadsVideoProgressMap).value[videoId]?.value[filename];
+        if (progressInfo == null) continue;
 
-          currentSpeedsInByte.value[videoId]![filename] = speedB;
-          NotificationService.inst.downloadYoutubeNotification(
-            notificationID: entry.key,
-            title: "Downloading $downloadingText: $title",
-            progress: p,
-            total: tp,
-            subtitle: (progressText) => "$progressText (${speedB.fileSizeFormatted}/s)",
-            imagePath: imageCallback(videoId)?.path,
-            displayTime: startTime,
-          );
+        final p = progressInfo.progress;
+        final tp = progressInfo.totalProgress;
+        final percentage = p / tp;
+        if (percentage >= 1 || percentage.isNaN || percentage.isInfinite) continue;
+
+        final isRunning = entry.value;
+        if (isRunning == false) downloadingMap[videoId]?.remove(filename); // to ensure next iteration wont post pause again --^
+
+        final title = titleCallback(videoId) ?? videoId;
+        final speedB = speedInBytes(filename, progressInfo.progress);
+        if (currentSpeedsInByte.value[videoId] == null) {
+          currentSpeedsInByte.value[videoId] = <DownloadTaskFilename, int>{}.obs;
+          currentSpeedsInByte.refresh();
         }
+
+        currentSpeedsInByte.value[videoId]![filename] = speedB;
+        var keyword = isRunning ? 'Downloading' : 'Paused';
+        NotificationService.inst.downloadYoutubeNotification(
+          notificationID: entry.key,
+          title: "$keyword $downloadingText: $title",
+          progress: p,
+          total: tp,
+          subtitle: (progressText) => "$progressText (${speedB.fileSizeFormatted}/s)",
+          imagePath: imageCallback(videoId)?.path,
+          displayTime: startTime,
+          isRunning: isRunning,
+        );
       }
     }
   }
@@ -273,7 +279,7 @@ class YoutubeController {
         _loopMapAndPostNotification(
           startTime: startTime,
           isAudio: false,
-          bigMap: downloadsVideoProgressMap.value,
+          downloadingMap: isDownloading.value,
           speedInBytes: (key, newProgress) {
             final previousProgress = _notificationData._speedMapVideo[key] ?? 0;
             final speed = newProgress - previousProgress;
@@ -286,7 +292,7 @@ class YoutubeController {
         _loopMapAndPostNotification(
           startTime: startTime,
           isAudio: true,
-          bigMap: downloadsAudioProgressMap.value,
+          downloadingMap: isDownloading.value,
           speedInBytes: (key, newProgress) {
             final previousProgress = _notificationData._speedMapAudio[key] ?? 0;
             final speed = newProgress - previousProgress;

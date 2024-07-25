@@ -102,6 +102,7 @@ class NotificationService {
     required int progress,
     required int total,
     required DateTime displayTime,
+    required bool isRunning,
   }) {
     _createProgressNotification(
       id: _youtubeDownloadID,
@@ -116,6 +117,7 @@ class NotificationService {
       isInBytes: true,
       tag: notificationID.filename,
       displayTime: displayTime,
+      ongoing: isRunning,
     );
   }
 
@@ -236,6 +238,7 @@ class NotificationService {
     String? imagePath,
     String? tag,
     required DateTime? displayTime,
+    bool ongoing = true,
   }) {
     final p = progress / maxProgress;
     final sub = isInBytes ? '${progress.fileSizeFormatted} / ${maxProgress.fileSizeFormatted}' : '${progress.formatDecimal()} / ${maxProgress.formatDecimal()}';
@@ -259,7 +262,7 @@ class NotificationService {
           priority: Priority.high,
           onlyAlertOnce: true,
           showProgress: true,
-          ongoing: true,
+          ongoing: ongoing,
           visibility: NotificationVisibility.public,
           styleInformation: BigTextStyleInformation(subtitle(sub)), // this gets displayed instead of subtitle
           largeIcon: pic,
