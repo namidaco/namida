@@ -7,45 +7,35 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
 class NotificationService {
-  //Hanle displaying of notifications.
-  static final NotificationService _notificationService = NotificationService._internal();
   static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-  factory NotificationService() => NotificationService._internal();
-
-  static NotificationService get inst => _notificationService;
-
-  NotificationService._internal() {
-    init();
-  }
 
   static Future<void> cancelAll() async {
     try {
-      await _flutterLocalNotificationsPlugin.cancelAll();
+      return _flutterLocalNotificationsPlugin.cancelAll();
     } catch (_) {}
   }
 
-  final _historyImportID = 1;
+  static const _historyImportID = 1;
   static const _historyImportPayload = 'history_import';
-  final _historyImportChannelName = 'History Import';
-  final _historyImportChannelDescription = 'Imports Tracks to History from a source';
+  static const _historyImportChannelName = 'History Import';
+  static const _historyImportChannelDescription = 'Imports Tracks to History from a source';
 
-  final _youtubeDownloadID = 2;
-  final _youtubeDownloadPayload = 'youtube_download';
-  final _youtubeDownloadChannelName = 'Downloads';
-  final _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
+  static const _youtubeDownloadID = 2;
+  static const _youtubeDownloadPayload = 'youtube_download';
+  static const _youtubeDownloadChannelName = 'Downloads';
+  static const _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
 
-  static Future<void> init() async {
-    await _flutterLocalNotificationsPlugin.initialize(
+  static Future<bool?> init() {
+    return _flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_musicnote'),
       ),
-      onDidReceiveBackgroundNotificationResponse: (details) => _onDidReceiveLocalNotification(details),
-      onDidReceiveNotificationResponse: (details) => _onDidReceiveLocalNotification(details),
+      onDidReceiveBackgroundNotificationResponse: _onDidReceiveLocalNotification,
+      onDidReceiveNotificationResponse: _onDidReceiveLocalNotification,
     );
   }
 
-  void mediaNotification({
+  static void mediaNotification({
     required String title,
     required String subText,
     required String subtitle,
@@ -94,7 +84,7 @@ class NotificationService {
     );
   }
 
-  void downloadYoutubeNotification({
+  static void downloadYoutubeNotification({
     required DownloadTaskFilename notificationID,
     required String title,
     required String Function(String progressText) subtitle,
@@ -121,11 +111,11 @@ class NotificationService {
     );
   }
 
-  Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename notificationID}) async {
+  static Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename notificationID}) async {
     await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID.filename);
   }
 
-  void doneDownloadingYoutubeNotification({
+  static void doneDownloadingYoutubeNotification({
     required DownloadTaskFilename notificationID,
     required String videoTitle,
     required String subtitle,
@@ -148,7 +138,7 @@ class NotificationService {
     );
   }
 
-  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
+  static void importHistoryNotification(int parsed, int total, DateTime displayTime) {
     _createProgressNotification(
       id: _historyImportID,
       progress: parsed,
@@ -163,7 +153,7 @@ class NotificationService {
     );
   }
 
-  void doneImportingHistoryNotification(int totalParsed, int totalAdded) {
+  static void doneImportingHistoryNotification(int totalParsed, int totalAdded) {
     _createNotification(
       id: _historyImportID,
       title: 'Done importing history',
@@ -183,7 +173,7 @@ class NotificationService {
     }
   }
 
-  void _createNotification({
+  static void _createNotification({
     required int id,
     required String title,
     required String body,
@@ -225,7 +215,7 @@ class NotificationService {
     );
   }
 
-  void _createProgressNotification({
+  static void _createProgressNotification({
     required int id,
     required int progress,
     required int maxProgress,

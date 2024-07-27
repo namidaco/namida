@@ -202,6 +202,7 @@ void mainInitialization() async {
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
+  NotificationService.init();
   NotificationService.cancelAll();
   FlutterVolumeController.updateShowSystemUI(false);
   CurrentColor.inst.initialize();
@@ -297,7 +298,7 @@ Future<void> _initializeIntenties() async {
       final linkRaw = files.first.value;
       if (linkRaw != null) {
         final link = linkRaw.replaceAll(r'\', '');
-        if (link.startsWith('app://com.msob7y.namida.patreonauth')) {
+        if (link.startsWith('app://patreonauth.msob7y.namida')) {
           final link = linkRaw.replaceAll(r'\', '');
           YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
           return;

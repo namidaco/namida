@@ -165,57 +165,6 @@ Future<void> showGeneralPopupDialog(
 
   void cancelSkipTimer() => Player.inst.cancelPlayErrorSkipTimer();
 
-  void setMoodsOrTags(List<String> initialMoods, void Function(List<String> moodsFinal) saveFunction, {bool isTags = false}) async {
-    final controller = TextEditingController();
-    final currentMoods = initialMoods.join(', ');
-    controller.text = currentMoods;
-
-    final title = isTags ? lang.SET_TAGS : lang.SET_MOODS;
-    final subtitle = lang.SET_MOODS_SUBTITLE;
-    await openDialog(
-      onDisposing: () {
-        controller.dispose();
-      },
-      (theme) => CustomBlurryDialog(
-        title: title,
-        actions: [
-          const CancelButton(),
-          NamidaButton(
-            text: lang.SAVE,
-            onPressed: () async {
-              List<String> moodsPre = controller.text.split(',');
-              List<String> moodsFinal = [];
-              moodsPre.loop((m) {
-                if (!m.contains(',') && m != ' ' && m.isNotEmpty) {
-                  moodsFinal.add(m.trimAll());
-                }
-              });
-
-              saveFunction(moodsFinal.uniqued());
-
-              NamidaNavigator.inst.closeDialog();
-            },
-          ),
-        ],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              subtitle,
-              style: theme.textTheme.displaySmall,
-            ),
-            const SizedBox(height: 20.0),
-            CustomTagTextField(
-              controller: controller,
-              hintText: currentMoods.overflow,
-              labelText: title,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   final stats = tracks.firstOrNull?.stats.obs;
 
   List<String> splitByCommaList(String listText) {

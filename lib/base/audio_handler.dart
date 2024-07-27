@@ -592,14 +592,67 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       Future<void> setVideoLockCache(VideoStream stream) async {
         final url = stream.buildUrl();
         if (url == null) throw Exception('null url');
-        await setVideoSource(
+
+        final cachedAudioPath = currentCachedAudio.value?.file.path;
+        final curritem = currentItem.value;
+
+        AudioVideoSource? activeAudioSource;
+        if (cachedAudioPath != null) {
+          activeAudioSource = AudioVideoSource.file(
+            cachedAudioPath,
+            tag: curritem is YoutubeID
+                ? curritem.toMediaItem(
+                    videoId,
+                    _ytNotificationVideoInfo,
+                    _ytNotificationVideoThumbnail,
+                    currentIndex.value,
+                    currentQueue.value.length,
+                    currentItemDuration.value,
+                  )
+                : null,
+          );
+        } else {
+          AudioStream? audioStream = currentAudioStream.value;
+          if (audioStream == null) {
+            final streamRes = YoutubeInfoController.video.fetchVideoStreamsSync(videoId)?.audioStreams;
+            if (streamRes != null) audioStream = YoutubeController.inst.getPreferredAudioStream(streamRes);
+          }
+          if (audioStream != null) {
+            final url = audioStream.buildUrl();
+            if (url != null) {
+              activeAudioSource = LockCachingAudioSource(
+                url,
+                cacheFile: File(audioStream.cachePath(videoId)),
+                tag: mediaItem,
+                onCacheDone: (cacheFile) async => await _onAudioCacheDone(videoId, cacheFile),
+              );
+            }
+          }
+        }
+        final videoOptions = VideoSourceOptions(
           source: LockCachingVideoSource(
             url,
             cacheFile: File(stream.cachePath(videoId)),
             onCacheDone: (cacheFile) async => await _onVideoCacheDone(videoId, cacheFile),
           ),
-          cacheKey: stream.cacheKey(videoId),
+          loop: false,
+          videoOnly: false,
         );
+        // -- setting completely new source is needed as a workaround to internal source error
+        //    where settings LockCachingVideoSource only throws source_not_found exception.
+        // -- its not likely for activeAudioSource to be null but just in case
+        activeAudioSource != null
+            ? await setSource(
+                activeAudioSource,
+                item: curritem,
+                startPlaying: () => wasPlaying,
+                videoOptions: videoOptions,
+                keepOldVideoSource: true,
+                cachedAudioPath: cachedAudioPath,
+              )
+            : await setVideoSource(
+                source: videoOptions.source,
+              );
         refreshNotification();
       }
 
@@ -1065,8 +1118,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (checkInterrupted()) return;
         final prefferedVideoStream = _isAudioOnlyPlayback || videoStreams.isEmpty ? null : YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
-        final prefferedAudioStream =
-            audiostreams.firstWhereEff((e) => !e.isWebm && e.audioTrack?.langCode == 'en') ?? audiostreams.firstWhereEff((e) => !e.isWebm) ?? audiostreams.firstOrNull;
+        final prefferedAudioStream = YoutubeController.inst.getPreferredAudioStream(audiostreams);
         final prefferedAudioStreamUrl = prefferedAudioStream?.buildUrl();
         final prefferedVideoStreamUrl = prefferedVideoStream?.buildUrl();
         if (prefferedAudioStreamUrl != null || prefferedVideoStreamUrl != null) {
@@ -1122,13 +1174,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           if (checkInterrupted()) return;
 
           if (shouldResetAudioSource && prefferedAudioStream != null && prefferedAudioStreamUrl != null) {
+            final audioSource = LockCachingAudioSource(
+              prefferedAudioStreamUrl,
+              cacheFile: File(prefferedAudioStream.cachePath(item.id)),
+              tag: mediaItem,
+              onCacheDone: (cacheFile) async => await _onAudioCacheDone(item.id, cacheFile),
+            );
             duration = await setSource(
-              LockCachingAudioSource(
-                prefferedAudioStreamUrl,
-                cacheFile: File(prefferedAudioStream.cachePath(item.id)),
-                tag: mediaItem,
-                onCacheDone: (cacheFile) async => await _onAudioCacheDone(item.id, cacheFile),
-              ),
+              audioSource,
               item: pi,
               startPlaying: startPlaying,
               videoOptions: videoOptions,
@@ -1660,7 +1713,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   // ------- video -------
 
-  Future<void> setVideoSource({required AudioVideoSource source, String cacheKey = '', bool loopingAnimation = false, bool isFile = false}) async {
+  Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false}) async {
     if (isFile && source is UriSource) File.fromUri(source.uri).setLastAccessedTry(DateTime.now());
     final videoOptions = VideoSourceOptions(
       source: source,

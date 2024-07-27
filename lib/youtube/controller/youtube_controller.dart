@@ -151,11 +151,15 @@ class YoutubeController {
       }
     }
 
-    NotificationService.inst.removeDownloadingYoutubeNotification(notificationID: oldFilename);
+    NotificationService.removeDownloadingYoutubeNotification(notificationID: oldFilename);
 
     YTOnGoingFinishedDownloads.inst.refreshList();
 
     await _writeTaskGroupToStorage(groupName: groupName);
+  }
+
+  AudioStream? getPreferredAudioStream(List<AudioStream> audiostreams) {
+    return audiostreams.firstWhereEff((e) => !e.isWebm && e.audioTrack?.langCode == 'en') ?? audiostreams.firstWhereEff((e) => !e.isWebm) ?? audiostreams.firstOrNull;
   }
 
   VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
@@ -187,11 +191,12 @@ class YoutubeController {
     required String? Function(DownloadTaskVideoId videoId) titleCallback,
     required File? Function(DownloadTaskVideoId videoId) imageCallback,
   }) {
+    List<void Function()>? pendingFnsAfterLoop;
     final downloadingText = isAudio ? "Audio" : "Video";
-    for (final bigEntry in downloadingMap.entries.toList()) {
+    for (final bigEntry in downloadingMap.entries) {
       final map = bigEntry.value.value;
       final videoId = bigEntry.key;
-      for (final entry in map.entries.toList()) {
+      for (final entry in map.entries) {
         final filename = entry.key;
         final progressInfo = (isAudio ? downloadsAudioProgressMap : downloadsVideoProgressMap).value[videoId]?.value[filename];
         if (progressInfo == null) continue;
@@ -202,7 +207,12 @@ class YoutubeController {
         if (percentage >= 1 || percentage.isNaN || percentage.isInfinite) continue;
 
         final isRunning = entry.value;
-        if (isRunning == false) downloadingMap[videoId]?.remove(filename); // to ensure next iteration wont post pause again --^
+        if (isRunning == false) {
+          pendingFnsAfterLoop ??= [];
+          pendingFnsAfterLoop.add(() {
+            downloadingMap[videoId]?.remove(filename); // to ensure next iteration wont post pause again --^
+          });
+        }
 
         final title = titleCallback(videoId) ?? videoId;
         final speedB = speedInBytes(filename, progressInfo.progress);
@@ -213,7 +223,7 @@ class YoutubeController {
 
         currentSpeedsInByte.value[videoId]![filename] = speedB;
         var keyword = isRunning ? 'Downloading' : 'Paused';
-        NotificationService.inst.downloadYoutubeNotification(
+        NotificationService.downloadYoutubeNotification(
           notificationID: entry.key,
           title: "$keyword $downloadingText: $title",
           progress: p,
@@ -224,6 +234,10 @@ class YoutubeController {
           isRunning: isRunning,
         );
       }
+    }
+    if (pendingFnsAfterLoop != null) {
+      pendingFnsAfterLoop.loop((fn) => fn());
+      pendingFnsAfterLoop = null;
     }
   }
 
@@ -237,7 +251,7 @@ class YoutubeController {
   }) {
     if (downloadedFile == null) {
       if (!canceledByUser) {
-        NotificationService.inst.doneDownloadingYoutubeNotification(
+        NotificationService.doneDownloadingYoutubeNotification(
           notificationID: nameIdentifier,
           videoTitle: videoTitle,
           subtitle: 'Download Failed',
@@ -247,19 +261,18 @@ class YoutubeController {
       }
     } else {
       final size = downloadedFile.fileSizeFormatted();
-      NotificationService.inst.doneDownloadingYoutubeNotification(
+      NotificationService.doneDownloadingYoutubeNotification(
         notificationID: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
         subtitle: size == null ? '' : 'Downloaded: $size',
         imagePath: _notificationData.imageCallback(videoId)?.path,
         failed: false,
       );
+      // -- remove progress only if succeeded.
+      downloadsVideoProgressMap[videoId]?.remove(filename);
+      downloadsAudioProgressMap[videoId]?.remove(filename);
     }
     _tryCancelDownloadNotificationTimer();
-
-    // this removes progress when pausing.
-    // downloadsVideoProgressMap[videoId]?.remove(filename);
-    // downloadsAudioProgressMap[videoId]?.remove(filename);
   }
 
   Timer? _downloadNotificationTimer;
@@ -909,6 +922,8 @@ class YoutubeController {
 
       // --------- Downloading Choosen Audio.
       if (skipAudio == false && audioStream != null) {
+        downloadsVideoProgressMap[id]?.remove(finalFilenameWrapper); // remove video progress so that audio progress is shown
+
         final filecache = audioStream.getCachedFile(id.videoId);
         if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: audioStream.sizeInBytes)) {
           audioFile = filecache;

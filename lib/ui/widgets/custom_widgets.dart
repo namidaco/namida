@@ -217,6 +217,7 @@ class CustomListTile extends StatelessWidget {
   final TextStyle? titleStyle;
   final double borderR;
   final Color? bgColor;
+  final double verticalPadding;
 
   const CustomListTile({
     super.key,
@@ -237,6 +238,7 @@ class CustomListTile extends StatelessWidget {
     this.titleStyle,
     this.borderR = 20.0,
     this.bgColor,
+    this.verticalPadding = 0.0,
   });
 
   @override
@@ -253,7 +255,7 @@ class CustomListTile extends StatelessWidget {
         ),
         visualDensity: visualDensity,
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: verticalPadding),
         minVerticalPadding: 8.0,
         leading: icon != null
             ? SizedBox(
@@ -711,7 +713,7 @@ class SmallListTile extends StatelessWidget {
                         size: 18.0,
                       ),
           ),
-      visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.0, vertical: -2.0) : const VisualDensity(horizontal: -1.0, vertical: -1.0)),
+      visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.2, vertical: -2.2) : const VisualDensity(horizontal: -1.2, vertical: -1.2)),
       title: Text(
         title,
         style: context.textTheme.displayMedium?.copyWith(

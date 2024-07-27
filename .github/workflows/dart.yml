@@ -107,9 +107,9 @@ jobs:
           done <<< "$COMMITS"
 
           # Encode special characters
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          CHANGELOG="${CHANGELOG//$'%'/%25}"
+          CHANGELOG="${CHANGELOG//$'\n'/%0A}"
+          CHANGELOG="${CHANGELOG//$'\r'/%0D}"
           echo "CHANGELOG=$CHANGELOG" >> $GITHUB_ENV
 
       - name: Creating Snapshot Release at namida-snapshots
@@ -119,7 +119,8 @@ jobs:
           make_latest: true
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
-          body: ${{ env.CHANGELOG}}
+          body: |
+            ${{ env.CHANGELOG }}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}

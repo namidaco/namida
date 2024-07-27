@@ -871,7 +871,7 @@ class SearchSortController {
         sortThis((e) => e.value[0].artistsList.join().toLowerCase());
         break;
       case GroupSortType.genresList:
-        sortThis((e) => e.value[0].genresList.join().toLowerCase());
+        sortThis((e) => e.key.toLowerCase());
         break;
       case GroupSortType.composer:
         sortThis((e) => e.value.composer.toLowerCase());
