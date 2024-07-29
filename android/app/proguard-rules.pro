@@ -1,15 +1,5 @@
--keep class com.google.android.exoplayer2.** { *; }
+-keep class androidx.media3.** { *; }
 
-## Rules for NewPipeExtractor
--keep class org.schabi.newpipe.extractor.timeago.patterns.** { *; }
--keep class org.mozilla.javascript.** { *; }
--keep class org.mozilla.classfile.ClassFileWriter
--dontwarn org.mozilla.javascript.tools.**
-
--dontobfuscate
-
--keep class org.schabi.newpipe.extractor.** { *; }
--keep class org.ocpsoft.prettytime.i18n.** { *; }
 
 # Rules for OkHttp. Copy paste from https://github.com/square/okhttp
 -dontwarn okhttp3.**
@@ -29,7 +19,6 @@
 -dontwarn android.arch.persistence.room.paging.LimitOffsetDataSource
 
 
--keep class com.artxdev.** { *; }
 -keep class com.namidaco.** { *; }
 -keep class org.jaudiotagger.** { *; }
 
