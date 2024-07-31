@@ -723,11 +723,14 @@ extension RouteUtils on NamidaRoute {
   Widget? toTitle(BuildContext context) {
     Widget getTextWidget(String t) => Text(t, style: context.textTheme.titleLarge);
     Widget? finalWidget;
+    bool displaySettingSearch = false;
     switch (route) {
       case RouteType.SETTINGS_page:
+        displaySettingSearch = true;
         finalWidget = getTextWidget(lang.SETTINGS);
         break;
       case RouteType.SETTINGS_subpage:
+        displaySettingSearch = true;
         finalWidget = getTextWidget(name ?? '');
         break;
       case RouteType.SEARCH_albumResults:
@@ -748,7 +751,7 @@ extension RouteUtils on NamidaRoute {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      child: (route == RouteType.SETTINGS_page || route == RouteType.SETTINGS_subpage)
+      child: displaySettingSearch //
           ? NamidaSettingSearchBar(closedChild: finalWidget)
           : finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );

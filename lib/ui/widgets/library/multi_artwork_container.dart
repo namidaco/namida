@@ -15,6 +15,7 @@ class MultiArtworkContainer extends StatelessWidget {
   final String heroTag;
   final bool fallbackToFolderCover;
   final bool reduceQuality;
+  final bool enableHero;
 
   const MultiArtworkContainer({
     super.key,
@@ -26,6 +27,7 @@ class MultiArtworkContainer extends StatelessWidget {
     required this.heroTag,
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
+    this.enableHero = true,
   });
 
   @override
@@ -48,6 +50,7 @@ class MultiArtworkContainer extends StatelessWidget {
         ],
       ),
       child: NamidaHero(
+        enabled: enableHero,
         tag: heroTag,
         child: Container(
           clipBehavior: Clip.antiAlias,

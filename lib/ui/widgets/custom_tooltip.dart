@@ -809,7 +809,8 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
     // If message is empty then no need to create a tooltip overlay to show
     // the empty black container so just return the wrapped child as is or
     // empty container if child is not specified.
-    if (!widget.enabled) {
+    bool enabled = widget.enabled && (widget.richMessage != null || widget.message != null);
+    if (!enabled) {
       return widget.child ?? const SizedBox.shrink();
     }
     assert(debugCheckHasOverlay(context));

@@ -203,21 +203,7 @@ class SearchPage extends StatelessWidget {
                             padding: const EdgeInsets.all(64.0).add(const EdgeInsets.only(bottom: 64.0)),
                             width: context.width,
                             height: context.height,
-                            child: NamidaOpacity(
-                              opacity: 0.8,
-                              child: TweenAnimationBuilder(
-                                tween: Tween<double>(begin: 4.0, end: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? 4.0 : 12.0),
-                                duration: const Duration(milliseconds: 500),
-                                child: Image.asset('assets/namida_icon.png', cacheHeight: 100, scale: 0.4),
-                                builder: (context, value, child) => ImageFiltered(
-                                  imageFilter: ImageFilter.blur(
-                                    sigmaX: value,
-                                    sigmaY: value,
-                                  ),
-                                  child: child,
-                                ),
-                              ),
-                            ),
+                            child: const SizedBox(),
                           )
                         : NamidaScrollbarWithController(
                             key: const Key('fullsearch'),

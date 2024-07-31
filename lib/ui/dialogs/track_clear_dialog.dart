@@ -15,6 +15,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
   final hasLRCLyricsCached = tracks.hasLRCLyricsCached;
   final hasTXTLyricsCached = tracks.hasTXTLyricsCached;
   NamidaNavigator.inst.navigateDialog(
+    colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
       normalTitleStyle: true,

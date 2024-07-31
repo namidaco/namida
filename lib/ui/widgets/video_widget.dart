@@ -626,7 +626,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     String? channelOverlayUrl;
 
-    if (widget.isFullScreen && settings.youtube.showChannelWatermarkFullscreen.value) {
+    if (widget.isFullScreen && !NamidaChannel.inst.isInPip.value && settings.youtube.showChannelWatermarkFullscreen.value) {
       final channelOverlay = YoutubeInfoController.current.currentYTStreams.value?.overlay;
       channelOverlayUrl = channelOverlay?.overlays.pick()?.url;
     }
@@ -1667,6 +1667,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 bottom: 12.0,
                 child: _YTChannelOverlayThumbnail(
                   channelOverlayUrl: channelOverlayUrl,
+                  ignoreTouches: _isVisible,
                 ),
               ),
           ],
@@ -1791,7 +1792,8 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
 
 class _YTChannelOverlayThumbnail extends StatefulWidget {
   final String channelOverlayUrl;
-  const _YTChannelOverlayThumbnail({required this.channelOverlayUrl});
+  final bool ignoreTouches;
+  const _YTChannelOverlayThumbnail({required this.channelOverlayUrl, required this.ignoreTouches});
 
   @override
   State<_YTChannelOverlayThumbnail> createState() => __YTChannelOverlayThumbnailState();
@@ -1803,27 +1805,33 @@ class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail>
   @override
   Widget build(BuildContext context) {
     final channelOverlayUrl = widget.channelOverlayUrl;
-    return TapDetector(
-      onTap: null,
-      initializer: (instance) {
-        instance
-          ..onTapDown = (d) {
-            if (mounted) setState(() => _isHighlighted = true);
-          }
-          ..onTapUp = (d) {
-            if (mounted) setState(() => _isHighlighted = false);
-          };
-      },
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: _isHighlighted ? 1 : 0.35,
-        child: YoutubeThumbnail(
-          key: ValueKey(channelOverlayUrl),
-          width: 38.0,
-          isImportantInCache: true,
-          borderRadius: 0,
-          type: ThumbnailType.channel,
-          customUrl: channelOverlayUrl,
+    return IgnorePointer(
+      ignoring: widget.ignoreTouches,
+      child: TapDetector(
+        onTap: null,
+        initializer: (instance) {
+          instance
+            ..onTapDown = (d) {
+              if (mounted) setState(() => _isHighlighted = true);
+            }
+            ..onTapUp = (d) {
+              if (mounted) setState(() => _isHighlighted = false);
+            }
+            ..onTapCancel = () {
+              if (mounted) setState(() => _isHighlighted = false);
+            };
+        },
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: _isHighlighted ? 1 : 0.35,
+          child: YoutubeThumbnail(
+            key: ValueKey(channelOverlayUrl),
+            width: 38.0,
+            isImportantInCache: true,
+            borderRadius: 0,
+            type: ThumbnailType.channel,
+            customUrl: channelOverlayUrl,
+          ),
         ),
       ),
     );

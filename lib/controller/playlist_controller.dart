@@ -12,6 +12,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -133,10 +134,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
   }
 
-  bool favouriteButtonOnPressed(Track track) {
-    return super.toggleTrackFavourite(
+  bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true}) {
+    final res = super.toggleTrackFavourite(
       TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
     );
+    if (refreshNotification) {
+      final currentItem = Player.inst.currentItem.value;
+      if (currentItem is Selectable && currentItem.track == track) {
+        Player.inst.refreshNotification();
+      }
+    }
+    return res;
   }
 
   Future<void> replaceTracksDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {

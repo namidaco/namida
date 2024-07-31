@@ -7,6 +7,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -84,14 +85,21 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
     return newtracks;
   }
 
-  bool favouriteButtonOnPressed(String videoId) {
-    return super.toggleTrackFavourite(
+  bool favouriteButtonOnPressed(String videoId, {bool refreshNotification = true}) {
+    final res = super.toggleTrackFavourite(
       YoutubeID(
         id: videoId,
         watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
         playlistID: favouritesPlaylist.value.playlistID,
       ),
     );
+    if (refreshNotification) {
+      final currentItem = Player.inst.currentItem.value;
+      if (currentItem is YoutubeID && currentItem.id == videoId) {
+        Player.inst.refreshNotification();
+      }
+    }
+    return res;
   }
 
   void sortYTPlaylists({GroupSortType? sortBy, bool? reverse}) {

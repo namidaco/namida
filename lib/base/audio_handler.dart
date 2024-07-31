@@ -1396,7 +1396,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void onNotificationFavouriteButtonPressed(Q item) {
     item._execute(
       selectable: (finalItem) {
-        final newStat = PlaylistController.inst.favouriteButtonOnPressed(finalItem.track);
+        final newStat = PlaylistController.inst.favouriteButtonOnPressed(finalItem.track, refreshNotification: false);
         _notificationUpdateItemSelectable(
           item: finalItem,
           itemIndex: currentIndex.value,
@@ -1405,7 +1405,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         );
       },
       youtubeID: (finalItem) {
-        final newStat = YoutubePlaylistController.inst.favouriteButtonOnPressed(finalItem.id);
+        final newStat = YoutubePlaylistController.inst.favouriteButtonOnPressed(finalItem.id, refreshNotification: false);
         _notificationUpdateItemYoutubeID(
           item: finalItem,
           itemIndex: currentIndex.value,
@@ -1568,12 +1568,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> seek(Duration position) async {
-    Future<void> plsSeek() async => await super.seek(position);
+    Future<void> plsSeek() => super.seek(position);
 
     await currentItem.value?._execute(
-      selectable: (finalItem) async {
-        await plsSeek();
-      },
+      selectable: (finalItem) => plsSeek(),
       youtubeID: (finalItem) async {
         final wasPlaying = isPlaying.value;
         File? cachedAudioFile = _nextSeekSetAudioCache?.getFileIfPlaying(finalItem.id);

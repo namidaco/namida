@@ -78,8 +78,9 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(width: 8.0),
                                     NamidaIconButton(
-                                      horizontalPadding: 8.0,
+                                      horizontalPadding: 0.0,
                                       icon: Broken.sort,
                                       onPressed: () {
                                         NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.folder);

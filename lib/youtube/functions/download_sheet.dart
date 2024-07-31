@@ -266,8 +266,9 @@ Future<void> showDownloadVideoBottomSheet({
                 style: style ?? context.textTheme.displaySmall,
               ),
             ),
-          ],
-          const Spacer(),
+            const SizedBox(width: 8.0),
+          ] else
+            const Spacer(),
           if (hasWebm)
             NamidaIconButton(
               tooltip: () => lang.SHOW_WEBM,

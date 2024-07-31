@@ -72,12 +72,13 @@ class EditDeleteController {
     int deleted = 0;
     int size = 0;
     files.loop((e) {
+      final file = File(e);
       int s = 0;
       try {
-        s = File(e).lengthSync();
+        s = file.lengthSync();
       } catch (_) {}
       try {
-        File(e).deleteSync();
+        file.deleteSync();
         deleted++;
         size += s;
       } catch (_) {}

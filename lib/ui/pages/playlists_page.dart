@@ -124,6 +124,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             if (!isInsideDialog)
                               SliverToBoxAdapter(
                                 child: NamidaHero(
+                                  enabled: enableHero,
                                   tag: 'PlaylistPage_TopRow',
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -170,6 +171,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           SizedBox(width: defaultCardHorizontalPadding),
                                           Expanded(
                                             child: NamidaHero(
+                                              enabled: enableHero,
                                               tag: 'DPC_history',
                                               child: ObxO(
                                                 rx: HistoryController.inst.totalHistoryItemsCount,
@@ -187,6 +189,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           SizedBox(width: defaultCardHorizontalPaddingCenter),
                                           Expanded(
                                             child: NamidaHero(
+                                              enabled: enableHero,
                                               tag: 'DPC_mostplayed',
                                               child: Obx(
                                                 () => DefaultPlaylistCard(
@@ -209,6 +212,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           SizedBox(width: defaultCardHorizontalPadding),
                                           Expanded(
                                             child: NamidaHero(
+                                              enabled: enableHero,
                                               tag: 'DPC_favs',
                                               child: ObxOClass(
                                                 rx: PlaylistController.inst.favouritesPlaylist,
@@ -225,6 +229,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           SizedBox(width: defaultCardHorizontalPaddingCenter),
                                           Expanded(
                                             child: NamidaHero(
+                                              enabled: enableHero,
                                               tag: 'DPC_queues',
                                               child: Obx(
                                                 () => DefaultPlaylistCard(
@@ -250,6 +255,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             if (isInsideDialog)
                               SliverToBoxAdapter(
                                 child: PlaylistTile(
+                                  enableHero: enableHero,
                                   playlistName: k_PLAYLIST_NAME_FAV,
                                   onTap: () => PlaylistController.inst.addTracksToPlaylist(
                                     PlaylistController.inst.favouritesPlaylist.value,
@@ -276,6 +282,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: PlaylistTile(
+                                      enableHero: enableHero,
                                       playlistName: key,
                                       onTap: tracksToAdd != null
                                           ? () => PlaylistController.inst.addTracksToPlaylist(playlist, tracksToAdd)
@@ -300,6 +307,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
                                     child: MultiArtworkCard(
+                                      enableHero: enableHero,
                                       dimensions: cardDimensions,
                                       heroTag: 'playlist_${playlist.name}',
                                       tracks: playlist.tracks.toTracks(),

@@ -84,13 +84,18 @@ class SearchSortController {
     final enabledSearches = settings.activeSearchMediaTypes;
 
     _searchTracks(text, temp: true);
-    if (enabledSearches.contains(MediaType.album)) _searchMediaType(type: MediaType.album, text: text, temp: true);
-    if (enabledSearches.contains(MediaType.artist)) _searchMediaType(type: MediaType.artist, text: text, temp: true);
-    if (enabledSearches.contains(MediaType.albumArtist)) _searchMediaType(type: MediaType.albumArtist, text: text, temp: true);
-    if (enabledSearches.contains(MediaType.composer)) _searchMediaType(type: MediaType.composer, text: text, temp: true);
-    if (enabledSearches.contains(MediaType.genre)) _searchMediaType(type: MediaType.genre, text: text, temp: true);
-    if (enabledSearches.contains(MediaType.playlist)) _searchPlaylists(text, temp: true);
-    if (enabledSearches.contains(MediaType.folder)) _searchMediaType(type: MediaType.folder, text: text, temp: true);
+
+    final int length = enabledSearches.length;
+    for (int i = 0; i < length; i++) {
+      var es = enabledSearches[i];
+      if (es == MediaType.track) {
+        // -- we always search
+      } else if (es == MediaType.playlist) {
+        _searchPlaylists(text, temp: true);
+      } else {
+        _searchMediaType(type: es, text: text, temp: true);
+      }
+    }
   }
 
   void searchMedia(String text, MediaType? media) {

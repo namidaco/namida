@@ -16,6 +16,7 @@ class MultiArtworkCard extends StatelessWidget {
   final void Function()? showMenuFunction;
   final (double, double, double) dimensions;
   final List<Widget> widgetsInStack;
+  final bool enableHero;
 
   const MultiArtworkCard({
     super.key,
@@ -27,6 +28,7 @@ class MultiArtworkCard extends StatelessWidget {
     required this.heroTag,
     required this.dimensions,
     this.widgetsInStack = const [],
+    this.enableHero = true,
   });
 
   @override
@@ -49,7 +51,7 @@ class MultiArtworkCard extends StatelessWidget {
                 MultiArtworks(
                   borderRadius: 12.0,
                   heroTag: heroTag,
-                  disableHero: false,
+                  disableHero: !enableHero,
                   tracks: tracks.toImageTracks(),
                   thumbnailSize: thumbnailSize,
                   iconSize: 92.0 - 14 * gridCount,
@@ -64,6 +66,7 @@ class MultiArtworkCard extends StatelessWidget {
                       children: [
                         if (name != '')
                           NamidaHero(
+                            enabled: enableHero,
                             tag: 'line1_$heroTag',
                             child: Text(
                               name.overflow,
@@ -72,6 +75,7 @@ class MultiArtworkCard extends StatelessWidget {
                             ),
                           ),
                         NamidaHero(
+                          enabled: enableHero,
                           tag: 'line2_$heroTag',
                           child: Text(
                             [tracks.displayTrackKeyword, if (tracks.totalDurationInS != 0) tracks.totalDurationFormatted].join(' - '),

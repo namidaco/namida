@@ -14,11 +14,13 @@ import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 class PlaylistTile extends StatelessWidget {
   final String playlistName;
   final void Function()? onTap;
+  final bool enableHero;
 
   const PlaylistTile({
     super.key,
     required this.playlistName,
     this.onTap,
+    this.enableHero = true,
   });
 
   @override
@@ -46,6 +48,7 @@ class PlaylistTile extends StatelessWidget {
                   children: [
                     MultiArtworkContainer(
                       heroTag: hero,
+                      enableHero: enableHero,
                       size: Dimensions.playlistThumbnailSize,
                       tracks: tracksRaw.toImageTracks(),
                     ),
@@ -55,6 +58,7 @@ class PlaylistTile extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           NamidaHero(
+                            enabled: enableHero,
                             tag: 'line1_$hero',
                             child: Text(
                               playlist.name.translatePlaylistName(),
@@ -63,6 +67,7 @@ class PlaylistTile extends StatelessWidget {
                             ),
                           ),
                           NamidaHero(
+                            enabled: enableHero,
                             tag: 'line2_$hero',
                             child: Text(
                               [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
@@ -72,6 +77,7 @@ class PlaylistTile extends StatelessWidget {
                           ),
                           if (playlist.moods.isNotEmpty)
                             NamidaHero(
+                              enabled: enableHero,
                               tag: 'line3_$hero',
                               child: Text(
                                 playlist.moods.join(', ').overflow,
