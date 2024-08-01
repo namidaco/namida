@@ -625,10 +625,10 @@ class StatsContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: context.theme.cardTheme.color?.withAlpha(200),
-        borderRadius: BorderRadius.circular(22.0.multipliedRadius),
+        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 5.0),
       child: child ??

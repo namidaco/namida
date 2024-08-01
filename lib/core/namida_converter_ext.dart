@@ -51,7 +51,6 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
-import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
@@ -816,19 +815,6 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: route == RouteType.PAGE_queue,
       ),
-
-      // -- Stats Icon
-      getAnimatedCrossFade(
-          child: NamidaAppBarIcon(
-            icon: Broken.chart_21,
-            onPressed: () {
-              SettingsSubPage(
-                title: lang.STATS,
-                child: const StatsSection(),
-              ).navigate();
-            },
-          ),
-          shouldShow: shouldShowInitialActions),
 
       // -- Parsing Json Icon
       getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
