@@ -1197,6 +1197,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     if (url == null || url.host.isEmpty) return false;
 
     final filePath = file.path;
+    if (_downloadCompleters[filePath] != null) return _downloadCompleters[filePath]!.future;
     _downloadCompleters[filePath]?.completeIfWasnt(false);
     _downloadCompleters[filePath] = Completer<bool>();
 
@@ -1291,7 +1292,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
               fileStream.add(data);
               progressPort.send(data.length);
             }
-            bool? movedSuccessfully;
+            bool movedSuccessfully = false;
             if (moveTo != null && moveToRequiredBytes != null) {
               try {
                 final fileStats = file.statSync();
@@ -1301,11 +1302,11 @@ class _YTDownloadManager with PortsProvider<SendPort> {
                     moveTo,
                     goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,
                   );
-                  if (movedFile == null) movedSuccessfully = false;
+                  movedSuccessfully = movedFile != null;
                 }
               } catch (_) {}
             }
-            return sendPort.send(MapEntry(filePath, movedSuccessfully ?? true));
+            return sendPort.send(MapEntry(filePath, movedSuccessfully));
           } catch (_) {
             // client force closed
             return sendPort.send(MapEntry(filePath, false));
@@ -1340,7 +1341,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   void _onFileFinish(String path, bool? value) {
     if (value != null) _downloadCompleters[path]?.completeIfWasnt(value);
-    _downloadCompleters[path] = null;
+    _downloadCompleters[path] = null; // important
     _progressPorts[path]?.close();
     _progressPorts[path] = null;
   }

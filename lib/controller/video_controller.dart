@@ -370,7 +370,7 @@ class VideoController {
   }) async {
     final tr = Player.inst.currentTrack?.track;
     if (tr == null) return null;
-    final dv = await fetchVideoFromYoutube(id, stream: stream, mainStreams: mainStreams);
+    final dv = await fetchVideoFromYoutube(id, stream: stream, mainStreams: mainStreams, canContinue: () => settings.enableVideoPlayback.value);
     if (!settings.enableVideoPlayback.value) return null;
     if (_canExecuteForCurrentTrackOnly(tr)) {
       currentVideo.value = dv;
@@ -392,6 +392,7 @@ class VideoController {
     String? id, {
     VideoStreamsResult? mainStreams,
     VideoStream? stream,
+    required bool Function() canContinue,
   }) async {
     _downloadTimerCancel();
     if (id == null || id == '') return null;
@@ -410,7 +411,7 @@ class VideoController {
     _downloadTimer = Timer.periodic(const Duration(seconds: 1), (_) => updateCurrentBytes());
 
     VideoStream? streamToUse = stream;
-    if (stream == null || mainStreams?.hasExpired() != false) {
+    if (stream == null || (mainStreams?.hasExpired() ?? true)) {
       // expired null or true
       mainStreams = await YoutubeInfoController.video.fetchVideoStreams(id);
       if (mainStreams != null) {
@@ -419,7 +420,7 @@ class VideoController {
       }
     }
 
-    if (streamToUse == null) {
+    if (streamToUse == null || !canContinue()) {
       if (_canExecuteForCurrentTrackOnly(initialTrack)) {
         currentDownloadedBytes.value = null;
         _downloadTimerCancel();

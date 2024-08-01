@@ -29,27 +29,31 @@ class _VideoInfoController {
     return res;
   }
 
-  /// By default, this will force a network request since most implementations use this as fallback to [fetchVideoPageSync].
+  YoutiPieVideoPageResult? fetchVideoPageSync(String videoId) {
+    final res = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
+    return res.read();
+  }
+
+  /// By default, this will force a network request since most implementations use this as fallback to [fetchVideoStreamsSync].
   Future<VideoStreamsResult?> fetchVideoStreams(String videoId, {bool forceRequest = true}) async {
-    final res = await YoutiPie.video.fetchVideoStreams(
-      id: videoId,
-      details: forceRequest ? ExecuteDetails.forceRequest() : null,
-      client: _usedClient,
-    );
+    // -- preparing jsplayer *before* fetching streams is important, fetching *after* will return non-working urls.
     if (_requiresJSPlayer) {
       // -- await preparing before returning result
       if (!YoutiPie.cipher.isPrepared) {
         await ensureJSPlayerInitialized();
       }
     }
+    final res = await YoutiPie.video.fetchVideoStreams(
+      id: videoId,
+      details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      client: _usedClient,
+    );
     return res;
   }
 
-  YoutiPieVideoPageResult? fetchVideoPageSync(String videoId) {
-    final res = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
-    return res.read();
-  }
-
+  /// Returns cached streams result if exist. you need to ensure that urls didn't expire ![VideoStreamsResult.hasExpired] before consuming them.
+  ///
+  /// Enable [bypassJSCheck] if you gurantee using [VideoStreamsResult.info] only.
   VideoStreamsResult? fetchVideoStreamsSync(String videoId, {bool bypassJSCheck = false}) {
     final res = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
     final cached = res.read();
