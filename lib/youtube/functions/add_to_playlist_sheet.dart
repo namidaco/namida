@@ -275,7 +275,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   Future<void> _onPlaylistTap(PlaylistForVideoItem pl, void Function() onStart, void Function() onEnd) async {
     if (isSingle) {
       if ((_newContainsVideo[pl.playlistId] ?? pl.containsVideo) == true) {
-        _onRemoveFromPlaylistTap(pl, onStart, onEnd);
+        final confirmed = await _confirmRemoveVideos();
+        if (confirmed) _onRemoveFromPlaylistTap(pl, onStart, onEnd);
       } else {
         _onAddToPlaylistTap(pl, onStart, onEnd);
       }
@@ -283,9 +284,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       if (_newContainsVideo[pl.playlistId] == true) {
         // -- already added all videos
         final confirmed = await _confirmRemoveVideos();
-        if (confirmed) {
-          _onRemoveFromPlaylistTap(pl, onStart, onEnd);
-        }
+        if (confirmed) _onRemoveFromPlaylistTap(pl, onStart, onEnd);
       } else {
         final action = await NamidaOnTaps.inst
             .showDuplicatedDialogAction([PlaylistAddDuplicateAction.addAllAndRemoveOldOnes, PlaylistAddDuplicateAction.justAddEverything], displayTitle: false);
