@@ -277,6 +277,7 @@ class NamidaSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SearchBarAnimation(
       key: searchBarKey,
+      initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value, // TODO:
       isSearchBoxOnRightSide: true,
       textAlignToRight: false,
       durationInMilliSeconds: 300,

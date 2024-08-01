@@ -7,6 +7,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -32,6 +33,7 @@ enum _ExtraSettingsKeys {
   lyricsSource,
   immersiveMode,
   swipeToOpenDrawer,
+  alwaysExpandedSearchbar,
   enableClipboardMonitoring,
   extractAllPalettes,
 }
@@ -57,6 +59,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
         _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
+        _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
         _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
         _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
       };
@@ -371,6 +374,26 @@ class ExtrasSettings extends SettingSubpageProvider {
                 onChanged: (isTrue) {
                   settings.save(swipeableDrawer: !isTrue);
                   NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(!isTrue);
+                },
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.alwaysExpandedSearchbar,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.alwaysExpandedSearchbar),
+                // icon: Broken.scroll,
+                leading: const StackedIcon(
+                  baseIcon: Broken.scroll,
+                  secondaryIcon: Broken.search_normal,
+                  secondaryIconSize: 12.0,
+                ),
+                title: lang.ALWAYS_EXPANDED_SEARCHBAR,
+                value: settings.alwaysExpandedSearchbar.valueR,
+                onChanged: (isTrue) {
+                  settings.save(alwaysExpandedSearchbar: !isTrue);
+                  ScrollSearchController.inst.searchBarKey.currentState?.setAlwaysExpanded(!isTrue);
                 },
               ),
             ),

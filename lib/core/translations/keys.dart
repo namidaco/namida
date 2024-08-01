@@ -42,6 +42,7 @@ abstract class LanguageKeys {
   String get ALL_TIME => _getKey('ALL_TIME');
   String get ALWAYS => _getKey('ALWAYS');
   String get ALWAYS_ASK => _getKey('ALWAYS_ASK');
+  String get ALWAYS_EXPANDED_SEARCHBAR => _getKey('ALWAYS_EXPANDED_SEARCHBAR');
   String get ALWAYS_RESTORE => _getKey('ALWAYS_RESTORE');
   String get ANIMATING_THUMBNAIL_INTENSITY => _getKey('ANIMATING_THUMBNAIL_INTENSITY');
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => _getKey('ANIMATING_THUMBNAIL_INVERSED_SUBTITLE');

@@ -168,6 +168,7 @@ class _SettingsController with SettingsFileWriter {
   final artworkGestureDoubleTapLRC = true.obs;
   final previousButtonReplays = false.obs;
   final refreshOnStartup = false.obs;
+  final alwaysExpandedSearchbar = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -431,6 +432,7 @@ class _SettingsController with SettingsFileWriter {
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
+      alwaysExpandedSearchbar.value = json['alwaysExpandedSearchbar'] ?? alwaysExpandedSearchbar.value;
 
       final tagFieldsToEditStorage = json['tagFieldsToEdit'];
       if (tagFieldsToEditStorage is List) {
@@ -621,6 +623,7 @@ class _SettingsController with SettingsFileWriter {
         'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
         'previousButtonReplays': previousButtonReplays.value,
         'refreshOnStartup': refreshOnStartup.value,
+        'alwaysExpandedSearchbar': alwaysExpandedSearchbar.value,
         'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.convertToString),
         'wakelockMode': wakelockMode.value.convertToString,
         'localVideoMatchingType': localVideoMatchingType.value.convertToString,
@@ -793,6 +796,7 @@ class _SettingsController with SettingsFileWriter {
     bool? artworkGestureDoubleTapLRC,
     bool? previousButtonReplays,
     bool? refreshOnStartup,
+    bool? alwaysExpandedSearchbar,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -1019,6 +1023,7 @@ class _SettingsController with SettingsFileWriter {
     if (artworkGestureDoubleTapLRC != null) this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
+    if (alwaysExpandedSearchbar != null) this.alwaysExpandedSearchbar.value = alwaysExpandedSearchbar;
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d) {
         if (!this.tagFieldsToEdit.contains(d)) {
