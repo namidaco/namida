@@ -59,6 +59,41 @@ void showTrackAdvancedDialog({
 
   final firstTracksDirectoryPath = tracksUniqued.first.track.path.getDirectoryPath;
 
+  void showTrackDeletePermanentlyDialog(List<Selectable> tracks, Color colorScheme) {
+    late final isDeleting = false.obs;
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        isDeleting.close();
+      },
+      tapToDismiss: () => !isDeleting.value,
+      colorScheme: colorScheme,
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        normalTitleStyle: true,
+        isWarning: true,
+        bodyText: lang.CONFIRM,
+        actions: [
+          const CancelButton(),
+          ObxO(
+            rx: isDeleting,
+            builder: (deleting) => AnimatedEnabled(
+              enabled: !deleting,
+              child: NamidaButton(
+                text: lang.DELETE.toUpperCase(),
+                onPressed: () async {
+                  isDeleting.value = true;
+                  await EditDeleteController.inst.deleteTracksFromStoragePermanently(tracks);
+                  isDeleting.value = false;
+                  NamidaNavigator.inst.closeDialog(2);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       willUpdateArtwork.close();
@@ -86,6 +121,13 @@ void showTrackAdvancedDialog({
                 onTap: () => showTrackClearDialog(tracks, colorScheme),
               ),
             ),
+          ),
+          CustomListTile(
+            passedColor: colorScheme,
+            title: lang.DELETE,
+            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', tracks.displayTrackKeyword),
+            icon: Broken.danger,
+            onTap: () => showTrackDeletePermanentlyDialog(tracks, colorScheme),
           ),
           if (sourcesMap.isNotEmpty)
             CustomListTile(

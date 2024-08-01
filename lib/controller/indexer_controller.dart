@@ -627,6 +627,26 @@ class Indexer {
     }
   }
 
+  /// Removes track entries from related lists, this doesNOT delete tracks from system or remove stats entries
+  Future<void> onDeleteTracksFromStoragePermanently(List<Selectable> tracksToDelete) async {
+    if (tracksToDelete.isEmpty) return;
+    tracksToDelete.loop(
+      (trS) {
+        final tr = trS.track;
+        allTracksMappedByYTID.remove(tr.youtubeID);
+        _currentFileNamesMap.remove(tr.path.getFilename);
+        tracksInfoList.value.remove(tr);
+        SearchSortController.inst.trackSearchList.value.remove(tr);
+        SearchSortController.inst.trackSearchTemp.value.remove(tr);
+        _removeThisTrackFromAlbumGenreArtistEtc(tr);
+      },
+    );
+    SearchSortController.inst.trackSearchList.refresh();
+    SearchSortController.inst.trackSearchTemp.refresh();
+    Folders.inst.currentFolder.refresh();
+    await _saveTrackFileToStorage();
+  }
+
   Future<void> reindexTracks({
     required List<Track> tracks,
     bool updateArtwork = false,

@@ -21,6 +21,13 @@ class EditDeleteController {
   static final EditDeleteController _instance = EditDeleteController._internal();
   EditDeleteController._internal();
 
+  Future<void> deleteTracksFromStoragePermanently(List<Selectable> tracksToDelete) async {
+    if (!await requestManageStoragePermission()) return;
+    final files = tracksToDelete.map((e) => e.track.path).toList();
+    await Isolate.run(() => _deleteAllIsolate(files));
+    await Indexer.inst.onDeleteTracksFromStoragePermanently(tracksToDelete);
+  }
+
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {
     final videosToDelete = <NamidaVideo>[];
     tracks.loop((e) {

@@ -141,6 +141,7 @@ abstract class LanguageKeys {
   String get DEFAULT_LIBRARY_TAB => _getKey('DEFAULT_LIBRARY_TAB');
   String get DEFAULT => _getKey('DEFAULT');
   String get DEFAULT_DOWNLOAD_LOCATION => _getKey('DEFAULT_DOWNLOAD_LOCATION');
+  String get DELETE_N_TRACKS_FROM_STORAGE => _getKey('DELETE_N_TRACKS_FROM_STORAGE');
   String get DELETE_PLAYLIST => _getKey('DELETE_PLAYLIST');
   String get DELETE => _getKey('DELETE');
   String get DELETE_FILE_CACHE_SUBTITLE => _getKey('DELETE_FILE_CACHE_SUBTITLE');
