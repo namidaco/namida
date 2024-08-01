@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -5,7 +7,9 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -21,6 +25,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -57,10 +62,158 @@ class PlaylistsPage extends StatefulWidget with NamidaRouteWidget {
 class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateMixin, PullToRefreshMixin {
   bool get _shouldAnimate => widget.animateTiles && LibraryTab.playlists.shouldAnimateTiles;
 
+  void _closeDialog() => NamidaNavigator.inst.closeDialog();
+
+  Future<void> _importPlaylists({required bool keepSynced, required bool pickFolder}) async {
+    Set<String> playlistsFilesPath;
+    final m3uExtensions = kM3UPlaylistsExtensions.toList();
+    if (pickFolder) {
+      final dirs = await NamidaFileBrowser.pickDirectories(note: "${lang.IMPORT} (${lang.FOLDERS})");
+      playlistsFilesPath = {};
+      for (final d in dirs) {
+        final subfiles = await d.listAllIsolate(recursive: true);
+        subfiles.loop(
+          (f) {
+            if (f is File) {
+              var path = f.path;
+              if (m3uExtensions.any((ext) => path.endsWith(ext))) {
+                playlistsFilesPath.add(path);
+              }
+            }
+          },
+        );
+      }
+    } else {
+      final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT, allowedExtensions: m3uExtensions);
+      playlistsFilesPath = playlistsFiles.map((f) => f.path).toSet();
+    }
+    if (playlistsFilesPath.isNotEmpty) {
+      final importedCount = await PlaylistController.inst.prepareM3UPlaylists(forPaths: playlistsFilesPath, addAsM3U: keepSynced);
+      PlaylistController.inst.sortPlaylists();
+      String countText;
+      bool hadError;
+      if (importedCount != null) {
+        if (importedCount < playlistsFilesPath.length) {
+          hadError = true;
+          countText = '${importedCount.formatDecimal()}/${playlistsFilesPath.length.formatDecimal()}';
+        } else {
+          hadError = false;
+          countText = importedCount.formatDecimal();
+        }
+        snackyy(
+          message: lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst(
+            '_NUM_',
+            countText,
+          ),
+          borderColor: (hadError ? Colors.orange : Colors.green).withOpacity(0.6),
+        );
+      } else {
+        snackyy(
+          message: lang.ERROR,
+          isError: true,
+        );
+      }
+    }
+  }
+
+  void _onAddPlaylistsTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        normalTitleStyle: true,
+        title: lang.CHOOSE,
+        actions: const [
+          CancelButton(),
+        ],
+        child: Column(
+          children: [
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
+              icon: Broken.shuffle,
+              title: lang.RANDOM,
+              subtitle: lang.GENERATE_RANDOM_PLAYLIST,
+              onTap: () {
+                _closeDialog();
+                final numbers = PlaylistController.inst.generateRandomPlaylist();
+                if (numbers == 0) {
+                  snackyy(title: lang.ERROR, message: lang.NO_ENOUGH_TRACKS);
+                }
+              },
+            ),
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
+              icon: Broken.import_1,
+              title: lang.IMPORT,
+              subtitle: lang.PLAYLISTS_IMPORT_M3U_NATIVE,
+              trailing: NamidaIconButton(
+                tooltip: () => lang.FOLDER,
+                icon: Broken.folder_2,
+                onPressed: () {
+                  _closeDialog();
+                  _importPlaylists(keepSynced: false, pickFolder: true);
+                },
+              ),
+              onTap: () async {
+                _closeDialog();
+                _importPlaylists(keepSynced: false, pickFolder: false);
+              },
+            ),
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
+              icon: Broken.add_circle,
+              title: lang.CREATE,
+              subtitle: lang.CREATE_NEW_PLAYLIST,
+              onTap: () {
+                _closeDialog();
+                showSettingDialogWithTextField(
+                  title: lang.CREATE_NEW_PLAYLIST,
+                  addNewPlaylist: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onPlaylistButtonConfigTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        normalTitleStyle: true,
+        title: lang.CONFIGURE,
+        actions: const [
+          CancelButton(),
+        ],
+        child: Column(
+          children: [
+            ObxO(
+              rx: settings.enableM3USyncStartup,
+              builder: (m3usyncstartup) => CustomSwitchListTile(
+                visualDensity: VisualDensity.compact,
+                leading: const StackedIcon(
+                  baseIcon: Broken.music_library_2,
+                  secondaryIcon: Broken.refresh_square_2,
+                  secondaryIconSize: 12.0,
+                ),
+                title: lang.PLAYLISTS_IMPORT_M3U_SYNCED_AUTO_IMPORT,
+                subtitle: lang.PLAYLISTS_IMPORT_M3U_SYNCED,
+                onChanged: (isTrue) => settings.save(enableM3USyncStartup: !isTrue),
+                value: m3usyncstartup,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tracksToAdd = widget.tracksToAdd;
     final isInsideDialog = tracksToAdd != null;
+    final enableHero = !isInsideDialog;
     final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
     final defaultCardHorizontalPadding = context.width * 0.045;
     final defaultCardHorizontalPaddingCenter = context.width * 0.035;
@@ -86,7 +239,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               children: [
                 Obx(
                   () => ExpandableBox(
-                    enableHero: widget.enableHero,
+                    enableHero: widget.enableHero && enableHero,
                     gridWidget: isInsideDialog
                         ? null
                         : ChangeGridCountWidget(
@@ -132,22 +285,28 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       children: [
                                         const SizedBox(width: 12.0),
-                                        ObxO(
-                                          rx: PlaylistController.inst.playlistsMap,
-                                          builder: (playlistsMap) => Text(
-                                            playlistsMap.length.displayPlaylistKeyword,
-                                            style: context.textTheme.displayLarge,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
+                                        Expanded(
+                                          child: ObxO(
+                                            rx: PlaylistController.inst.playlistsMap,
+                                            builder: (playlistsMap) => Text(
+                                              playlistsMap.length.displayPlaylistKeyword,
+                                              style: context.textTheme.displayLarge,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 12.0),
-                                        const Expanded(
-                                          child: GeneratePlaylistButton(),
+                                        NamidaButton(
+                                          icon: Broken.add,
+                                          text: lang.ADD,
+                                          onPressed: _onAddPlaylistsTap,
                                         ),
                                         const SizedBox(width: 8.0),
-                                        const Expanded(
-                                          child: CreatePlaylistButton(),
+                                        NamidaButton(
+                                          icon: Broken.setting_4,
+                                          iconSize: 20.0,
+                                          onPressed: _onPlaylistButtonConfigTap,
                                         ),
                                         const SizedBox(width: 8.0),
                                       ],

@@ -999,24 +999,6 @@ class CreatePlaylistButton extends StatelessWidget {
   }
 }
 
-class GeneratePlaylistButton extends StatelessWidget {
-  const GeneratePlaylistButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaButton(
-      icon: Broken.shuffle,
-      text: lang.RANDOM,
-      onPressed: () {
-        final numbers = PlaylistController.inst.generateRandomPlaylist();
-        if (numbers == 0) {
-          snackyy(title: lang.ERROR, message: lang.NO_ENOUGH_TRACKS);
-        }
-      },
-    );
-  }
-}
-
 class MoreIcon extends StatelessWidget {
   final void Function()? onPressed;
   final void Function()? onLongPress;

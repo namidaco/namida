@@ -268,6 +268,7 @@ abstract class LanguageKeys {
   String get GENERATE_FROM_DATES_SUBTITLE => _getKey('GENERATE_FROM_DATES_SUBTITLE');
   String get GENERATE_FROM_DATES => _getKey('GENERATE_FROM_DATES');
   String get GENERATE => _getKey('GENERATE');
+  String get GENERATE_RANDOM_PLAYLIST => _getKey('GENERATE_RANDOM_PLAYLIST');
   String get GENRE => _getKey('GENRE');
   String get GENRES => _getKey('GENRES');
   String get GOOD_LOOKING => _getKey('GOOD_LOOKING');
@@ -469,6 +470,9 @@ abstract class LanguageKeys {
   String get PINNED => _getKey('PINNED');
   String get PITCH => _getKey('PITCH');
   String get PLAIN => _getKey('PLAIN');
+  String get PLAYLISTS_IMPORT_M3U_NATIVE => _getKey('PLAYLISTS_IMPORT_M3U_NATIVE');
+  String get PLAYLISTS_IMPORT_M3U_SYNCED => _getKey('PLAYLISTS_IMPORT_M3U_SYNCED');
+  String get PLAYLISTS_IMPORT_M3U_SYNCED_AUTO_IMPORT => _getKey('PLAYLISTS_IMPORT_M3U_SYNCED_AUTO_IMPORT');
   String get PLAY_AFTER_NEXT_PREV => _getKey('PLAY_AFTER_NEXT_PREV');
   String get PLAY_AFTER => _getKey('PLAY_AFTER');
   String get PLAY_ALL => _getKey('PLAY_ALL');

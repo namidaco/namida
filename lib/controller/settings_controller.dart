@@ -156,6 +156,7 @@ class _SettingsController with SettingsFileWriter {
   final extractFeatArtistFromTitle = true.obs;
   final groupArtworksByAlbum = false.obs;
   final enableM3USync = false.obs;
+  final enableM3USyncStartup = true.obs;
   final prioritizeEmbeddedLyrics = true.obs;
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = false.obs;
@@ -418,6 +419,7 @@ class _SettingsController with SettingsFileWriter {
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
+      enableM3USyncStartup.value = json['enableM3USyncStartup'] ?? enableM3USyncStartup.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
@@ -607,6 +609,7 @@ class _SettingsController with SettingsFileWriter {
         'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
         'groupArtworksByAlbum': groupArtworksByAlbum.value,
         'enableM3USync': enableM3USync.value,
+        'enableM3USyncStartup': enableM3USyncStartup.value,
         'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
         'swipeableDrawer': swipeableDrawer.value,
         'dismissibleMiniplayer': dismissibleMiniplayer.value,
@@ -778,6 +781,7 @@ class _SettingsController with SettingsFileWriter {
     bool? extractFeatArtistFromTitle,
     bool? groupArtworksByAlbum,
     bool? enableM3USync,
+    bool? enableM3USyncStartup,
     bool? prioritizeEmbeddedLyrics,
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
@@ -1003,6 +1007,7 @@ class _SettingsController with SettingsFileWriter {
     if (extractFeatArtistFromTitle != null) this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
     if (groupArtworksByAlbum != null) this.groupArtworksByAlbum.value = groupArtworksByAlbum;
     if (enableM3USync != null) this.enableM3USync.value = enableM3USync;
+    if (enableM3USyncStartup != null) this.enableM3USyncStartup.value = enableM3USyncStartup;
     if (prioritizeEmbeddedLyrics != null) this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;

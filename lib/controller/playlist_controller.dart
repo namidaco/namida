@@ -252,14 +252,22 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   final _m3uPlaylistsCompleter = Completer<bool>();
   Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
 
-  Future<void> prepareM3UPlaylists({Set<String> forPaths = const {}}) async {
-    try {
-      final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
+  bool _addedM3UPlaylists = false;
+  Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true}) async {
+    if (forPaths.isEmpty && addAsM3U && !settings.enableM3USyncStartup.value) {
+      if (_addedM3UPlaylists) PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+      _addedM3UPlaylists = false;
+      return null;
+    }
 
+    if (addAsM3U) _addedM3UPlaylists = true;
+
+    try {
       late final Set<String> allPaths;
       if (forPaths.isNotEmpty) {
         allPaths = forPaths;
       } else {
+        final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
         final parameters = {
           'allAvailableDirectories': allAvailableDirectories,
           'directoriesToExclude': <String>[],
@@ -278,8 +286,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
       final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
       final infoMap = resBoth['infoMap'] as Map<String, String?>;
 
-      // -- removing old m3u playlists
-      PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+      // -- removing old m3u playlists (only if preparing all)
+      if (forPaths.isEmpty) {
+        PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+      }
 
       for (final e in paths.entries) {
         try {
@@ -287,12 +297,20 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
           final m3uPath = e.value.$1;
           final trs = e.value.$2;
           final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
-          PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: m3uPath, creationDate: creationDate);
+          PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: addAsM3U ? m3uPath : null, creationDate: creationDate);
         } catch (_) {}
       }
-      _pathsM3ULookup = infoMap;
+
+      if (_pathsM3ULookup.isEmpty) {
+        _pathsM3ULookup = infoMap;
+      } else {
+        _pathsM3ULookup.addAll(infoMap);
+      }
+
+      return paths.length;
     } catch (_) {}
     if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
+    return null;
   }
 
   /// saves each track m3u info for writing back
