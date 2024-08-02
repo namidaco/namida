@@ -2645,6 +2645,7 @@ class NamidaTracksList extends StatelessWidget {
   final ScrollController? scrollController;
   final EdgeInsets? padding;
   final bool Function()? isTrackSelectable;
+  final void Function()? onTap;
   final ScrollPhysics? physics;
   final QueueSource queueSource;
   final bool displayTrackNumber;
@@ -2664,6 +2665,7 @@ class NamidaTracksList extends StatelessWidget {
     this.padding,
     required this.queueLength,
     this.isTrackSelectable,
+    this.onTap,
     this.physics,
     required this.queueSource,
     this.displayTrackNumber = false,
@@ -2674,39 +2676,63 @@ class NamidaTracksList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimationLimiter(
-      child: NamidaListView(
-        header: header,
-        widgetsInColumn: widgetsInColumn,
-        scrollController: scrollController,
-        itemCount: queueLength,
-        itemExtent: Dimensions.inst.trackTileItemExtent,
-        padding: padding,
-        physics: physics,
-        scrollConfig: scrollConfig,
-        itemBuilder: itemBuilder ??
-            (context, i) {
-              if (queue != null) {
-                final track = queue![i];
+    if (itemBuilder != null) {
+      return AnimationLimiter(
+        child: NamidaListView(
+          header: header,
+          widgetsInColumn: widgetsInColumn,
+          scrollController: scrollController,
+          itemCount: queueLength,
+          itemExtent: Dimensions.inst.trackTileItemExtent,
+          padding: padding,
+          physics: physics,
+          scrollConfig: scrollConfig,
+          itemBuilder: itemBuilder!,
+        ),
+      );
+    } else if (queue != null) {
+      final queue = this.queue!;
+      final thirdLineText = this.thirdLineText;
+      return AnimationLimiter(
+        child: TrackTilePropertiesProvider(
+          configs: TrackTilePropertiesConfigs(
+            queueSource: queueSource,
+            draggableThumbnail: false,
+            selectable: isTrackSelectable,
+            displayTrackNumber: displayTrackNumber,
+          ),
+          builder: (properties) {
+            return NamidaListView(
+              header: header,
+              widgetsInColumn: widgetsInColumn,
+              scrollController: scrollController,
+              itemCount: queueLength,
+              itemExtent: Dimensions.inst.trackTileItemExtent,
+              padding: padding,
+              physics: physics,
+              scrollConfig: scrollConfig,
+              itemBuilder: (context, i) {
+                final track = queue[i];
                 return AnimatingTile(
                   key: ValueKey(i),
                   position: i,
                   shouldAnimate: shouldAnimate,
                   child: TrackTile(
+                    properties: properties,
                     index: i,
                     trackOrTwd: track,
-                    draggableThumbnail: false,
-                    selectable: isTrackSelectable,
-                    queueSource: queueSource,
-                    displayTrackNumber: displayTrackNumber,
-                    thirdLineText: thirdLineText == null ? '' : thirdLineText!(track),
+                    onTap: onTap,
+                    thirdLineText: thirdLineText == null ? null : thirdLineText(track),
                   ),
                 );
-              }
-              return const Text('PASS A QUEUE OR USE ITEM BUILDER');
-            },
-      ),
-    );
+              },
+            );
+          },
+        ),
+      );
+    } else {
+      return const Text('PASS A QUEUE OR USE ITEM BUILDER');
+    }
   }
 }
 

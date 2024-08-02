@@ -154,17 +154,20 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaMiniPlayerBase(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
-      itemBuilder: (context, i, currentIndex, queue) {
+      trackTileConfigs: const TrackTilePropertiesConfigs(
+        displayRightDragHandler: true,
+        draggableThumbnail: true,
+        queueSource: QueueSource.playerQueue,
+      ),
+      itemBuilder: (context, i, currentIndex, queue, properties) {
         final track = queue[i] as Selectable;
         final key = Key("${i}_${track.track.path}");
         return (
           TrackTile(
+            properties: properties!,
             key: key,
             index: i,
             trackOrTwd: track,
-            displayRightDragHandler: true,
-            draggableThumbnail: true,
-            queueSource: QueueSource.playerQueue,
             cardColorOpacity: 0.5,
             fadeOpacity: i < currentIndex ? 0.3 : 0.0,
             onPlaying: () {
@@ -350,7 +353,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaMiniPlayerBase<YoutubeID>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
-      itemBuilder: (context, i, currentIndex, queue) {
+      itemBuilder: (context, i, currentIndex, queue, _) {
         final video = queue[i] as YoutubeID;
         final key = Key("${i}_${video.id}");
         return (

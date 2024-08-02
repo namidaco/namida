@@ -963,33 +963,38 @@ class _MixesCardState extends State<_MixesCard> {
                     color: context.theme.cardColor,
                     borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                   ),
-                  child: ListView.builder(
-                    itemExtent: Dimensions.inst.trackTileItemExtent,
-                    itemCount: widget.tracks.length,
-                    itemBuilder: (context, index) {
-                      final tr = widget.tracks[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          color: context.theme.scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                        ),
-                        child: TrackTile(
-                          queueSource: QueueSource.homePageItem,
-                          onTap: () {
-                            Player.inst.playOrPause(
-                              index,
-                              widget.tracks,
-                              QueueSource.homePageItem,
-                              homePageItem: HomePageItems.mixes,
-                            );
-                          },
-                          trackOrTwd: tr,
-                          index: index,
-                        ),
-                      );
-                    },
+                  child: TrackTilePropertiesProvider(
+                    configs: const TrackTilePropertiesConfigs(
+                      queueSource: QueueSource.homePageItem,
+                    ),
+                    builder: (properties) => ListView.builder(
+                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                      itemCount: widget.tracks.length,
+                      itemBuilder: (context, index) {
+                        final tr = widget.tracks[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: context.theme.scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                          ),
+                          child: TrackTile(
+                            properties: properties,
+                            onTap: () {
+                              Player.inst.playOrPause(
+                                index,
+                                widget.tracks,
+                                QueueSource.homePageItem,
+                                homePageItem: HomePageItems.mixes,
+                              );
+                            },
+                            trackOrTwd: tr,
+                            index: index,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

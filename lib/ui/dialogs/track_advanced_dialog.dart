@@ -674,29 +674,34 @@ void showLibraryTracksChooseDialog({
             Expanded(
               child: NamidaScrollbar(
                 controller: scrollController,
-                child: Obx(
-                  () => ListView.builder(
-                    controller: scrollController,
-                    padding: EdgeInsets.zero,
-                    itemCount: allTracksList.length,
-                    itemExtent: Dimensions.inst.trackTileItemExtent,
-                    itemBuilder: (context, i) {
-                      final tr = allTracksList.value[i];
-                      return TrackTile(
-                        trackOrTwd: tr,
-                        index: i,
-                        queueSource: QueueSource.playlist,
-                        onTap: () => onTrackTap(tr),
-                        onRightAreaTap: () => onTrackTap(tr),
-                        trailingWidget: ObxO(
-                          rx: selectedTrack,
-                          builder: (selectedTrack) => NamidaCheckMark(
-                            size: 22.0,
-                            active: selectedTrack == tr,
+                child: TrackTilePropertiesProvider(
+                  configs: const TrackTilePropertiesConfigs(
+                    queueSource: QueueSource.others,
+                  ),
+                  builder: (properties) => Obx(
+                    () => ListView.builder(
+                      controller: scrollController,
+                      padding: EdgeInsets.zero,
+                      itemCount: allTracksList.length,
+                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                      itemBuilder: (context, i) {
+                        final tr = allTracksList.value[i];
+                        return TrackTile(
+                          properties: properties,
+                          trackOrTwd: tr,
+                          index: i,
+                          onTap: () => onTrackTap(tr),
+                          onRightAreaTap: () => onTrackTap(tr),
+                          trailingWidget: ObxO(
+                            rx: selectedTrack,
+                            builder: (selectedTrack) => NamidaCheckMark(
+                              size: 22.0,
+                              active: selectedTrack == tr,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

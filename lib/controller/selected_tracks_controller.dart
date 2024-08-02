@@ -19,6 +19,7 @@ class SelectedTracksController {
   SelectedTracksController._internal();
 
   RxBaseCore<List<Selectable>> get selectedTracks => _tracksOrTwdList;
+  RxBaseCore<Map<Track, bool>> get existingTracksMap => _allTracksHashCodes;
 
   final selectedPlaylistsNames = <Track, String>{};
 

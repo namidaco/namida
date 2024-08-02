@@ -26,106 +26,110 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
     final sysNavBar = MediaQuery.paddingOf(context).bottom;
     return AnimatedBuilder(
       animation: animation,
-      child: Obx(
-        () {
-          final SelectedTracksController stc = SelectedTracksController.inst;
-          final selectedTracks = stc.selectedTracks.valueR;
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            child: selectedTracks.isNotEmpty
-                ? Center(
-                    child: Container(
-                      width: context.width,
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
-                            onTapDown: (value) => stc.isExpanded.value = true,
-                            onTapUp: (value) => stc.isExpanded.value = false,
-                            onTapCancel: () => stc.isExpanded.value = !stc.isExpanded.value,
+      child: TrackTilePropertiesProvider(
+        configs: const TrackTilePropertiesConfigs(
+          displayRightDragHandler: true,
+          queueSource: QueueSource.selectedTracks,
+        ),
+        builder: (properties) => Obx(
+          () {
+            final SelectedTracksController stc = SelectedTracksController.inst;
+            final selectedTracks = stc.selectedTracks.valueR;
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: selectedTracks.isNotEmpty
+                  ? Center(
+                      child: Container(
+                        width: context.width,
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
+                              onTapDown: (value) => stc.isExpanded.value = true,
+                              onTapUp: (value) => stc.isExpanded.value = false,
+                              onTapCancel: () => stc.isExpanded.value = !stc.isExpanded.value,
 
-                            // dragging upwards or downwards
-                            onPanEnd: (details) {
-                              if (details.velocity.pixelsPerSecond.dy < 0) {
-                                stc.isMenuMinimized.value = false;
-                              } else if (details.velocity.pixelsPerSecond.dy > 0) {
-                                stc.isMenuMinimized.value = true;
-                              }
-                            },
-                            child: AnimatedSizedBox(
-                              duration: const Duration(seconds: 1),
-                              curve: Curves.fastLinearToSlowEaseIn,
-                              height: stc.isMenuMinimized.valueR
-                                  ? stc.isExpanded.valueR
-                                      ? 80
-                                      : 85
-                                  : stc.isExpanded.valueR
-                                      ? 425
-                                      : 430,
-                              width: stc.isExpanded.valueR ? 375 : 380,
-                              decoration: BoxDecoration(
-                                color: Color.alphaBlend(context.theme.colorScheme.surface.withAlpha(160), context.theme.scaffoldBackgroundColor),
-                                borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: context.theme.shadowColor.withAlpha(30),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: stc.isMenuMinimized.valueR
-                                    ? const FittedBox(child: SelectedTracksRow())
-                                    : Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          const FittedBox(child: SelectedTracksRow()),
-                                          const SizedBox(
-                                            height: 20,
-                                          ),
-                                          Expanded(
-                                            child: Container(
-                                              clipBehavior: Clip.antiAlias,
-                                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                              child: NamidaListView(
-                                                itemExtent: Dimensions.inst.trackTileItemExtent,
-                                                itemCount: selectedTracks.length,
-                                                onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                                padding: EdgeInsets.zero,
-                                                itemBuilder: (context, i) {
-                                                  return FadeDismissible(
-                                                    key: ValueKey(selectedTracks[i]),
-                                                    onDismissed: (direction) => stc.removeTrack(i),
-                                                    child: TrackTile(
-                                                      key: Key('$i${selectedTracks[i]}'),
-                                                      index: i,
-                                                      trackOrTwd: selectedTracks[i],
-                                                      displayRightDragHandler: true,
-                                                      queueSource: QueueSource.selectedTracks,
-                                                    ),
-                                                  );
-                                                },
+                              // dragging upwards or downwards
+                              onPanEnd: (details) {
+                                if (details.velocity.pixelsPerSecond.dy < 0) {
+                                  stc.isMenuMinimized.value = false;
+                                } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                                  stc.isMenuMinimized.value = true;
+                                }
+                              },
+                              child: AnimatedSizedBox(
+                                duration: const Duration(seconds: 1),
+                                curve: Curves.fastLinearToSlowEaseIn,
+                                height: stc.isMenuMinimized.valueR
+                                    ? stc.isExpanded.valueR
+                                        ? 80
+                                        : 85
+                                    : stc.isExpanded.valueR
+                                        ? 425
+                                        : 430,
+                                width: stc.isExpanded.valueR ? 375 : 380,
+                                decoration: BoxDecoration(
+                                  color: Color.alphaBlend(context.theme.colorScheme.surface.withAlpha(160), context.theme.scaffoldBackgroundColor),
+                                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: context.theme.shadowColor.withAlpha(30),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: stc.isMenuMinimized.valueR
+                                      ? const FittedBox(child: SelectedTracksRow())
+                                      : Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            const FittedBox(child: SelectedTracksRow()),
+                                            const SizedBox(
+                                              height: 20,
+                                            ),
+                                            Expanded(
+                                              child: Container(
+                                                clipBehavior: Clip.antiAlias,
+                                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                                child: NamidaListView(
+                                                  itemExtent: Dimensions.inst.trackTileItemExtent,
+                                                  itemCount: selectedTracks.length,
+                                                  onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
+                                                  padding: EdgeInsets.zero,
+                                                  itemBuilder: (context, i) {
+                                                    return FadeDismissible(
+                                                      key: ValueKey(selectedTracks[i]),
+                                                      onDismissed: (direction) => stc.removeTrack(i),
+                                                      child: TrackTile(
+                                                        properties: properties,
+                                                        index: i,
+                                                        trackOrTwd: selectedTracks[i],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        ),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                : null,
-          );
-        },
+                    )
+                  : null,
+            );
+          },
+        ),
       ),
       builder: (context, child) {
         if (animation.value == 1.0) return const SizedBox();

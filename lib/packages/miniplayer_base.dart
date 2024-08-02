@@ -35,6 +35,7 @@ import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 
@@ -94,7 +95,7 @@ class MiniplayerInfoData<T, E> {
 
 class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final double queueItemExtent;
-  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue) itemBuilder;
+  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties) itemBuilder;
   final int Function(E currentItem)? getDurationMS;
   final String Function(int number) itemsKeyword;
   final void Function(E currentItem) onAddItemsTap;
@@ -106,6 +107,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final Widget Function(E item, double bcp) currentImageBuilder;
   final MiniplayerInfoData Function(E item) textBuilder;
   final bool canShowBuffering;
+  final TrackTilePropertiesConfigs? trackTileConfigs;
 
   const NamidaMiniPlayerBase({
     super.key,
@@ -122,6 +124,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
     required this.currentImageBuilder,
     required this.textBuilder,
     required this.canShowBuffering,
+    this.trackTileConfigs,
   });
 
   @override
@@ -150,6 +153,20 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
     } else {
       return index;
     }
+  }
+
+  Widget _queueItemBuilder(BuildContext context, int i, int currentIndex, List<Playable> queue, {TrackTileProperties? trackTileProperties}) {
+    final childWK = widget.itemBuilder(context, i, currentIndex, queue, trackTileProperties);
+    return FadeDismissible(
+      key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
+      onDismissed: (direction) async {
+        await Player.inst.removeFromQueueWithUndo(i);
+        Player.inst.invokeQueueModifyLockRelease();
+      },
+      onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+      onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
+      child: childWK.$1,
+    );
   }
 
   @override
@@ -310,6 +327,21 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
 
     final maxQueueHeight = MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0;
 
+    Widget queueListChild;
+    if (widget.trackTileConfigs != null) {
+      queueListChild = TrackTilePropertiesProvider(
+        configs: widget.trackTileConfigs!,
+        builder: (properties) => _QueueListChildWrapper(
+          queueItemExtent: widget.queueItemExtent,
+          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties),
+        ),
+      );
+    } else {
+      queueListChild = _QueueListChildWrapper(
+        queueItemExtent: widget.queueItemExtent,
+        itemBuilder: _queueItemBuilder,
+      );
+    }
     final queueChild = SafeArea(
       bottom: false,
       child: SizedBox(
@@ -326,41 +358,7 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                   topLeft: Radius.circular(32.0.multipliedRadius),
                   topRight: Radius.circular(32.0.multipliedRadius),
                 ),
-                child: Obx(
-                  () {
-                    final queue = Player.inst.currentQueue.valueR;
-                    final queueLength = queue.length;
-                    if (queueLength == 0) return const SizedBox();
-                    final currentIndex = Player.inst.currentIndex.valueR;
-                    final padding =
-                        EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.valueR + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom);
-
-                    return NamidaListView(
-                      key: const Key('minikuru'),
-                      scrollController: MiniPlayerController.inst.queueScrollController,
-                      itemCount: queueLength,
-                      itemExtent: widget.queueItemExtent,
-                      onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                      onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                      onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                      onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                      padding: padding,
-                      itemBuilder: (context, i) {
-                        final childWK = widget.itemBuilder(context, i, currentIndex, queue);
-                        return FadeDismissible(
-                          key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
-                          onDismissed: (direction) async {
-                            await Player.inst.removeFromQueueWithUndo(i);
-                            Player.inst.invokeQueueModifyLockRelease();
-                          },
-                          onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
-                          onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
-                          child: childWK.$1,
-                        );
-                      },
-                    );
-                  },
-                ),
+                child: queueListChild,
               ),
             ),
             Container(
@@ -1459,6 +1457,43 @@ class _MPQualityButton extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _QueueListChildWrapper extends StatelessWidget {
+  final double queueItemExtent;
+  final Widget Function(BuildContext context, int index, int currentIndex, List<Playable> queue) itemBuilder;
+
+  const _QueueListChildWrapper({
+    super.key,
+    required this.queueItemExtent,
+    required this.itemBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () {
+        final queue = Player.inst.currentQueue.valueR;
+        final queueLength = queue.length;
+        if (queueLength == 0) return const SizedBox();
+        final currentIndex = Player.inst.currentIndex.valueR;
+        final padding = EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.valueR + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom);
+
+        return NamidaListView(
+          key: const Key('minikuru'),
+          scrollController: MiniPlayerController.inst.queueScrollController,
+          itemCount: queueLength,
+          itemExtent: queueItemExtent,
+          onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+          onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+          onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+          onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+          padding: padding,
+          itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
+        );
+      },
     );
   }
 }

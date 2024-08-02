@@ -111,35 +111,40 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
             ),
             Expanded(
               child: AnimationLimiter(
-                child: ObxO(
-                  rx: SearchSortController.inst.trackSearchList,
-                  builder: (trackSearchList) => NamidaListViewRaw(
-                    itemExtent: Dimensions.inst.trackTileItemExtent,
-                    itemCount: trackSearchList.length,
-                    scrollController: LibraryTab.tracks.scrollController,
-                    scrollStep: Dimensions.inst.trackTileItemExtent,
-                    itemBuilder: (context, i) {
-                      final track = trackSearchList[i];
-                      return AnimatingTile(
-                        key: Key("$i${track.path}"),
-                        position: i,
-                        shouldAnimate: _shouldAnimate,
-                        child: TrackTile(
-                          index: i,
-                          trackOrTwd: track,
-                          draggableThumbnail: false,
-                          queueSource: QueueSource.allTracks,
-                        ),
-                      );
-                    },
-                    listBuilder: (list) {
-                      return Stack(
-                        children: [
-                          list,
-                          pullToRefreshWidget,
-                        ],
-                      );
-                    },
+                child: TrackTilePropertiesProvider(
+                  configs: const TrackTilePropertiesConfigs(
+                    draggableThumbnail: false,
+                    queueSource: QueueSource.allTracks,
+                  ),
+                  builder: (properties) => ObxO(
+                    rx: SearchSortController.inst.trackSearchList,
+                    builder: (trackSearchList) => NamidaListViewRaw(
+                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                      itemCount: trackSearchList.length,
+                      scrollController: LibraryTab.tracks.scrollController,
+                      scrollStep: Dimensions.inst.trackTileItemExtent,
+                      itemBuilder: (context, i) {
+                        final track = trackSearchList[i];
+                        return AnimatingTile(
+                          key: Key("$i${track.path}"),
+                          position: i,
+                          shouldAnimate: _shouldAnimate,
+                          child: TrackTile(
+                            properties: properties,
+                            index: i,
+                            trackOrTwd: track,
+                          ),
+                        );
+                      },
+                      listBuilder: (list) {
+                        return Stack(
+                          children: [
+                            list,
+                            pullToRefreshWidget,
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

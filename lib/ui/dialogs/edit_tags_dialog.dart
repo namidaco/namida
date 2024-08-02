@@ -627,28 +627,33 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       SizedBox(
         width: namida.width,
         height: namida.height * 0.5,
-        child: ListView.builder(
-          itemCount: tracks.length,
-          itemBuilder: (context, index) {
-            final tr = tracks.value[index];
-            return ObxO(
-              rx: tracks,
-              builder: (tracksRaw) => TrackTile(
-                index: index,
-                trackOrTwd: tr,
-                queueSource: QueueSource.allTracks,
-                onTap: () {
-                  if (!tracksRaw.contains(tr)) tracks.add(tr);
-                },
-                bgColor: tracksRaw.contains(tr) ? null : Colors.black.withAlpha(0),
-                trailingWidget: IconButton(
-                  icon: const Icon(Broken.close_circle),
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => tracks.remove(tr),
+        child: TrackTilePropertiesProvider(
+          configs: const TrackTilePropertiesConfigs(
+            queueSource: QueueSource.others,
+          ),
+          builder: (properties) => ListView.builder(
+            itemCount: tracks.length,
+            itemBuilder: (context, index) {
+              final tr = tracks.value[index];
+              return ObxO(
+                rx: tracks,
+                builder: (tracksRaw) => TrackTile(
+                  properties: properties,
+                  index: index,
+                  trackOrTwd: tr,
+                  onTap: () {
+                    if (!tracksRaw.contains(tr)) tracks.add(tr);
+                  },
+                  bgColor: tracksRaw.contains(tr) ? null : Colors.black.withAlpha(0),
+                  trailingWidget: IconButton(
+                    icon: const Icon(Broken.close_circle),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => tracks.remove(tr),
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     ],
@@ -784,17 +789,10 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                   width: namida.width,
                                   child: NamidaTracksList(
                                     padding: EdgeInsets.zero,
+                                    queue: failedEditsTracks.value,
                                     queueLength: failedEditsTracks.length,
                                     queueSource: QueueSource.others,
-                                    itemBuilder: (context, i) {
-                                      return TrackTile(
-                                        key: Key(i.toString()),
-                                        trackOrTwd: failedEditsTracks[i],
-                                        index: i,
-                                        queueSource: QueueSource.others,
-                                        onTap: () {},
-                                      );
-                                    },
+                                    onTap: () {},
                                   ),
                                 ),
                               ),
