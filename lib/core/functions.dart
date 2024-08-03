@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:namico_subscription_manager/core/enum.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -39,6 +40,7 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
@@ -255,11 +257,10 @@ class NamidaOnTaps {
                     itemCount: allSorts.length,
                     itemExtent: null,
                     onReorder: (oldIndex, newIndex) {
-                      if (newIndex > oldIndex) {
-                        newIndex -= 1;
-                      }
-                      final item = allSorts.removeAt(oldIndex);
-                      allSorts.insertSafe(newIndex, item);
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      allSorts.value.move(oldIndex, newIndex);
+                      allSorts.refresh();
+
                       final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
                       sorters.value = activeSorts;
                       settings.updateMediaItemsTrackSorting(media, activeSorts);
@@ -1518,6 +1519,8 @@ class TracksAddOnTap {
 class SussyBaka {
   static void monetize({required void Function() onEnable}) {
     if (settings.didSupportNamida) return onEnable();
+    final membership = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
+    if (membership != null && membership.index >= MembershipType.cutie.index) return onEnable();
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,

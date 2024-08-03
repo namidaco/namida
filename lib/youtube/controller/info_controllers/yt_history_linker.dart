@@ -23,7 +23,7 @@ class _YoutubeHistoryLinker {
     _dbOpenedAccId = accId;
     _pendingRequestsDBIdle?.close();
     if (accId == null) return;
-    _pendingRequestsDBIdle = DBWrapper.open(_dbDirectory, 'pending_history_$accId');
+    _pendingRequestsDBIdle = DBWrapper.open(_dbDirectory, 'pending_history_$accId')..claimFreeSpace();
     _pendingRequestsCompleter?.completeIfWasnt();
     _pendingRequestsCompleter = null;
     executePendingRequests();

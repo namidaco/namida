@@ -517,6 +517,7 @@ class YoutubeController {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
+        NotificationService.removeDownloadingYoutubeNotification(notificationID: c.filename);
         if (!keepInListIfRemoved) {
           youtubeDownloadTasksMap[groupName]?.remove(c.filename);
           youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);

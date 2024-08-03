@@ -125,7 +125,7 @@ void showTrackAdvancedDialog({
           CustomListTile(
             passedColor: colorScheme,
             title: lang.DELETE,
-            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', tracks.displayTrackKeyword),
+            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', tracks.displayTrackKeyword.addDQuotation()),
             icon: Broken.danger,
             onTap: () => showTrackDeletePermanentlyDialog(tracks, colorScheme),
           ),

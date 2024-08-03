@@ -3,10 +3,11 @@ part of namidayoutubeinfo;
 class _VideoInfoController {
   const _VideoInfoController();
 
-  /// tvEmbedded can bypass age restricted and obtain higher quality streams,
+  /// tv_embedded can bypass age restricted and obtain higher quality streams,
   /// but doesnt work with many vids, web is more stable and can also obtain higher quality streams.
-  /// On a better implementation, we would tv first and check result before using web, etc.
-  static const _defaultClient = InnertubeClients.web;
+  /// internally, a set of fallbacks is used before returning null result.
+  /// the fallback clients can be modified using [YoutiPie.setDefaultClients].
+  static const _defaultClient = InnertubeClients.tv_embedded;
   static const _defaultRequiresJSPlayer = true;
 
   InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;
@@ -45,6 +46,7 @@ class _VideoInfoController {
     }
     final res = await YoutiPie.video.fetchVideoStreams(
       id: videoId,
+      onRequestingWithClientRequiringJS: ensureJSPlayerInitialized,
       details: forceRequest ? ExecuteDetails.forceRequest() : null,
       client: _usedClient,
     );

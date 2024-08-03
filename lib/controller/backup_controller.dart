@@ -35,7 +35,7 @@ class BackupController {
     final interval = _defaultAutoBackupInterval;
     if (interval <= 0) return;
 
-    if (!await requestManageStoragePermission(request: false)) return;
+    if (!await requestManageStoragePermission(request: false, showError: false)) return;
 
     final sortedBackupFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
     final latestBackup = sortedBackupFiles.firstOrNull;

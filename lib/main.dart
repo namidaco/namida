@@ -428,7 +428,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
   return p.isGranted;
 }
 
-Future<bool> requestManageStoragePermission({bool request = true}) async {
+Future<bool> requestManageStoragePermission({bool request = true, bool showError = true}) async {
   Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
   if (NamidaDeviceInfo.sdkVersion < 30) {
     await createDir();
@@ -440,7 +440,7 @@ Future<bool> requestManageStoragePermission({bool request = true}) async {
   }
 
   if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-    snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE, isError: true);
+    if (showError) snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE, isError: true);
     return false;
   }
   await createDir();

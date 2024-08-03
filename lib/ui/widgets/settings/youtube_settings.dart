@@ -570,19 +570,26 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
                             setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
                           },
                         ),
-                        ...[
-                          InnertubeClients.tvEmbedded,
+                        ...{
+                          InnertubeClients.tv_embedded,
                           InnertubeClients.web,
                           InnertubeClients.ios,
-                          InnertubeClients.android,
+                          InnertubeClients.tv,
                           InnertubeClients.mweb,
-                          InnertubeClients.webEmbedded,
-                          InnertubeClients.iosEmbedded,
-                          InnertubeClients.androidEmbedded,
-                          InnertubeClients.webCreator,
-                          InnertubeClients.iosCreator,
-                          InnertubeClients.androidCreator,
-                        ].map(
+                          InnertubeClients.android,
+                          InnertubeClients.web_embedded,
+                          InnertubeClients.web_creator,
+                          InnertubeClients.web_music,
+                          InnertubeClients.web_safari,
+                          InnertubeClients.ios_creator,
+                          InnertubeClients.ios_music,
+                          InnertubeClients.android_creator,
+                          InnertubeClients.android_music,
+                          InnertubeClients.android_producer,
+                          InnertubeClients.android_testsuite,
+                          InnertubeClients.android_vr,
+                          InnertubeClients.mediaconnect,
+                        }.map(
                           (e) => NamidaPopupItem(
                             icon: Broken.video_octagon,
                             title: e.name,
