@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
 
+import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -300,23 +301,62 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 }
 
-class NamidaMiniPlayerYoutubeID extends StatelessWidget {
+class NamidaMiniPlayerYoutubeID extends StatefulWidget {
   const NamidaMiniPlayerYoutubeID({super.key});
+
+  @override
+  State<NamidaMiniPlayerYoutubeID> createState() => _NamidaMiniPlayerYoutubeIDState();
+}
+
+class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
+  final _videoLikeManager = YtVideoLikeManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _videoLikeManager.init();
+  }
+
+  @override
+  void dispose() {
+    _videoLikeManager.dispose();
+    super.dispose();
+  }
 
   void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) {
     final vidpage = YoutubeInfoController.video.fetchVideoPageSync(video.id);
     final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id);
     final popUpItems = NamidaPopupWrapper(
-      childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        videoId: video.id,
-        url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),
-        channelID: vidpage?.channelInfo?.id,
-        playlistID: null,
-        idsNamesLookup: {video.id: vidpage?.videoInfo?.title ?? vidstreams?.info?.title},
-        playlistName: '',
-        videoYTID: video,
-        copyUrl: true,
-      ),
+      childrenDefault: () {
+        final defaultItems = YTUtils.getVideoCardMenuItems(
+          videoId: video.id,
+          url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),
+          channelID: vidpage?.channelInfo?.id,
+          playlistID: null,
+          idsNamesLookup: {video.id: vidpage?.videoInfo?.title ?? vidstreams?.info?.title},
+          playlistName: '',
+          videoYTID: video,
+          copyUrl: true,
+        );
+        final clearItem = NamidaPopupItem(
+          icon: Broken.trash,
+          title: lang.CLEAR,
+          onTap: () {
+            YTUtils().showVideoClearDialog(context, video.id, CurrentColor.inst.miniplayerColor);
+          },
+        );
+        final isFavourite = video.isFavourite;
+        final favouriteItem = NamidaPopupItem(
+          icon: isFavourite ? Broken.heart_tick : Broken.heart,
+          title: lang.FAVOURITES,
+          onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
+        );
+        final items = <NamidaPopupItem>[];
+        items.add(favouriteItem);
+        items.addAll(defaultItems);
+        items.add(clearItem);
+        return items;
+      },
     ).convertItems(context);
     NamidaNavigator.inst.showMenu(
       context: context,
@@ -346,6 +386,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
       onMenuOpen: (d) => _openMenu(context, video, d),
       likedIcon: Broken.like_filled,
       normalIcon: Broken.like_1,
+      ytLikeManager: _videoLikeManager,
     );
   }
 

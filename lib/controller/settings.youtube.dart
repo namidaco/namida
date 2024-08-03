@@ -61,7 +61,7 @@ class _YoutubeSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen,
+        'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen.value,
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
         'addToPlaylistsTabIndex': addToPlaylistsTabIndex,

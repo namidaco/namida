@@ -4,10 +4,10 @@ class _VideoInfoController {
   const _VideoInfoController();
 
   /// tv_embedded can bypass age restricted and obtain higher quality streams,
-  /// but doesnt work with many vids, web is more stable and can also obtain higher quality streams.
+  /// but doesnt work with many vids, web clients are more stable and can also obtain higher quality streams.
   /// internally, a set of fallbacks is used before returning null result.
   /// the fallback clients can be modified using [YoutiPie.setDefaultClients].
-  static const _defaultClient = InnertubeClients.tv_embedded;
+  static const _defaultClient = InnertubeClients.mweb;
   static const _defaultRequiresJSPlayer = true;
 
   InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;

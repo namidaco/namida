@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/execute_details.dart';
@@ -38,8 +40,19 @@ class YoutubeSearchResultsPage extends StatefulWidget {
 }
 
 class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with AutomaticKeepAliveClientMixin<YoutubeSearchResultsPage> {
+  Timer? _keepAliveTimer;
+
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => _wantKeepAlive;
+
+  bool _wantKeepAlive = true;
+
+  void _keepDead() {
+    _keepAliveTimer?.cancel();
+    if (mounted) return; // return if mounted again
+    _wantKeepAlive = false;
+    updateKeepAlive();
+  }
 
   String get currentSearchText => _latestSearched ?? widget.searchText;
   String? _latestSearched;
@@ -75,6 +88,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   void dispose() {
     _isFetchingMoreResults.close();
     YTLocalSearchController.inst.removeOnSearchDone(_searchListenerKey);
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = Timer(const Duration(seconds: 20), _keepDead);
     super.dispose();
   }
 

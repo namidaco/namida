@@ -727,7 +727,7 @@ class VideoController {
   /// - Detects: `new files`.
   /// - DOES NOT handle: `deleted` & `needs-to-be-updated` files.
   /// - Returns a map with **new videos only**.
-  /// - **New**: excludes files ending with `.download`
+  /// - **New**: excludes files ending with `.part`
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
     final newIds = await _checkForNewVideosInCacheIsolate.thready({
       'dirPath': AppDirs.VIDEOS_CACHE,
@@ -759,7 +759,8 @@ class VideoController {
     for (final df in dir.listSyncSafe()) {
       if (df is File) {
         final filename = df.path.getFilename;
-        if (filename.endsWith('.download')) continue; // first thing first
+        if (filename.endsWith('.part')) continue; // first thing first
+        if (filename.endsWith('.mime')) continue; // second thing second
 
         final id = filename.substring(0, 11);
         final videosInMap = idsMap[id];

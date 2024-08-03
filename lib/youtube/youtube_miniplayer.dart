@@ -7,11 +7,11 @@ import 'package:jiffy/jiffy.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
-import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -115,31 +115,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _isTitleExpanded.value = false;
   }
 
-  late final _currentVideoLikeStatus = Rxn<LikeStatus>();
-
-  Future<bool> _onChangeLikeStatus(YoutiPieVideoPageResult? page, bool isLiked, LikeAction action, void Function() onStart, void Function() onEnd) async {
-    if (page == null) return isLiked;
-
-    onStart();
-    final res = await YoutiPie.videoAction.changeLikeStatus(
-      videoPage: page,
-      engagement: page.videoInfo?.engagement,
-      action: action,
-    );
-    onEnd();
-
-    if (res == true) {
-      _currentVideoLikeStatus.value = _currentVideoLikeStatus.value = action.toExpectedStatus();
-      return !isLiked;
-    }
-
-    return isLiked;
-  }
-
-  void _onPageChanged() {
-    final page = YoutubeInfoController.current.currentVideoPage.value;
-    _currentVideoLikeStatus.value = page?.videoInfo?.engagement?.likeStatus;
-  }
+  final _videoLikeManager = YtVideoLikeManager();
 
   @override
   void initState() {
@@ -150,8 +126,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       _shouldShowGlowUnderVideo.value = hasScrolledEnough;
     });
     YoutubeInfoController.current.onVideoPageReset = _onVideoPageReset;
-    _onPageChanged(); // fill initial values
-    YoutubeInfoController.current.currentVideoPage.addListener(_onPageChanged);
+    _videoLikeManager.init();
   }
 
   @override
@@ -161,31 +136,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _numberOfRepeats.close();
     _isTitleExpanded.close();
     _shouldShowGlowUnderVideo.close();
-    YoutubeInfoController.current.currentVideoPage.removeListener(_onPageChanged);
-    _currentVideoLikeStatus.close();
+    _videoLikeManager.dispose();
     super.dispose();
-  }
-
-  Future<bool> _confirmRemoveLike() async {
-    bool confirmed = false;
-    await NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        isWarning: true,
-        normalTitleStyle: true,
-        bodyText: lang.CONFIRM,
-        actions: [
-          const CancelButton(),
-          NamidaButton(
-            text: lang.REMOVE.toUpperCase(),
-            onPressed: () async {
-              NamidaNavigator.inst.closeDialog();
-              confirmed = true;
-            },
-          ),
-        ],
-      ),
-    );
-    return confirmed;
   }
 
   @override
@@ -451,7 +403,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           final defaultItems = YTUtils.getVideoCardMenuItems(
                                                             videoId: videoId,
                                                             url: videoInfo?.buildUrl(),
-                                                            channelID: channelID,
+                                                            channelID: null,
+                                                            displayGoToChannel: false,
                                                             playlistID: null,
                                                             idsNamesLookup: {videoId: videoTitle},
                                                           );
@@ -578,7 +531,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     children: [
                                                       const SizedBox(width: 4.0),
                                                       ObxO(
-                                                        rx: _currentVideoLikeStatus,
+                                                        rx: _videoLikeManager.currentVideoLikeStatus,
                                                         builder: (currentLikeStatus) {
                                                           final isUserLiked = currentLikeStatus == LikeStatus.liked;
                                                           final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
@@ -600,17 +553,15 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     normalIcon: Broken.like_1,
                                                                     disabledColor: context.theme.iconTheme.color,
                                                                     size: 24.0,
-                                                                    onTap: (isLiked) async {
-                                                                      if (isLiked) {
-                                                                        final confirmed = await _confirmRemoveLike();
-                                                                        if (!confirmed) return isLiked;
-                                                                      }
-                                                                      return _onChangeLikeStatus(
-                                                                        page,
-                                                                        isLiked,
-                                                                        isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                                        startLoading,
-                                                                        stopLoading,
+                                                                    onTap: (isLiked) {
+                                                                      return _videoLikeManager.onLikeClicked(
+                                                                        YTVideoLikeParamters(
+                                                                          page: page,
+                                                                          isActive: isLiked,
+                                                                          action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                                                          onStart: startLoading,
+                                                                          onEnd: stopLoading,
+                                                                        ),
                                                                       );
                                                                     },
                                                                   ),
@@ -622,7 +573,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       ),
                                                       const SizedBox(width: 4.0),
                                                       ObxO(
-                                                        rx: _currentVideoLikeStatus,
+                                                        rx: _videoLikeManager.currentVideoLikeStatus,
                                                         builder: (currentLikeStatus) {
                                                           final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
                                                           const int? videoDislikeCount = null; // should have a value if ReturnYoutubeDislikes implemented.
@@ -634,24 +585,23 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               smallIconWidget: FittedBox(
                                                                 child: NamidaLoadingSwitcher(
                                                                   size: 24.0,
-                                                                  builder: (startLoading, stopLoading, isLoading) => ObxO(
-                                                                    rx: _currentVideoLikeStatus,
-                                                                    builder: (currentLikeStatus) => NamidaRawLikeButton(
-                                                                      isLiked: isUserDisLiked,
-                                                                      likedIcon: Broken.dislike_filled,
-                                                                      normalIcon: Broken.dislike,
-                                                                      disabledColor: context.theme.iconTheme.color,
-                                                                      size: 24.0,
-                                                                      onTap: (isDisLiked) async {
-                                                                        return _onChangeLikeStatus(
-                                                                          page,
-                                                                          isDisLiked,
-                                                                          isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                                                          startLoading,
-                                                                          stopLoading,
-                                                                        );
-                                                                      },
-                                                                    ),
+                                                                  builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                                                    isLiked: isUserDisLiked,
+                                                                    likedIcon: Broken.dislike_filled,
+                                                                    normalIcon: Broken.dislike,
+                                                                    disabledColor: context.theme.iconTheme.color,
+                                                                    size: 24.0,
+                                                                    onTap: (isDisLiked) async {
+                                                                      return _videoLikeManager.onDisLikeClicked(
+                                                                        YTVideoLikeParamters(
+                                                                          page: page,
+                                                                          isActive: isDisLiked,
+                                                                          action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
+                                                                          onStart: startLoading,
+                                                                          onEnd: stopLoading,
+                                                                        ),
+                                                                      );
+                                                                    },
                                                                   ),
                                                                 ),
                                                               ),

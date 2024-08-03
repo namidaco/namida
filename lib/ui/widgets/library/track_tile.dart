@@ -37,50 +37,61 @@ class TrackTilePropertiesProvider extends StatelessWidget {
         queueSource == QueueSource.playerQueue ||
         queueSource == QueueSource.history;
 
+    final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
+    final selectionColorLayer = context.theme.focusColor;
+
     return ObxO(
-      rx: SelectedTracksController.inst.existingTracksMap,
-      builder: (selectedTracksMap) => Obx(
-        () {
-          int? sleepingIndex;
-          if (queueSource == QueueSource.playerQueue) {
-            final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-            if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
-          }
+      rx: settings.forceSquaredTrackThumbnail,
+      builder: (forceSquaredThumbnails) => ObxO(
+        rx: settings.displayThirdRow,
+        builder: (displayThirdRow) => ObxO(
+          rx: settings.displayFavouriteIconInListTile,
+          builder: (displayFavouriteIconInListTile) => ObxO(
+            rx: settings.trackThumbnailSizeinList,
+            builder: (thumbnailSize) => ObxO(
+              rx: settings.trackListTileHeight,
+              builder: (trackTileHeight) => ObxO(
+                rx: SelectedTracksController.inst.existingTracksMap,
+                builder: (selectedTracksMap) => ObxO(
+                  rx: CurrentColor.inst.currentPlayingTrack,
+                  builder: (currentPlayingTrack) => ObxO(
+                    rx: CurrentColor.inst.currentPlayingIndex,
+                    builder: (currentPlayingIndex) => Obx(
+                      () {
+                        int? sleepingIndex;
+                        if (queueSource == QueueSource.playerQueue) {
+                          final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                          if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                        }
 
-          final double thumbnailSize = settings.trackThumbnailSizeinList.valueR;
-          final double trackTileHeight = settings.trackListTileHeight.valueR;
+                        final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
 
-          final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
-          final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
-
-          final selectionColorLayer = context.theme.focusColor;
-
-          final currentPlayingTrack = CurrentColor.inst.currentPlayingTrack.valueR;
-          final currentPlayingIndex = CurrentColor.inst.currentPlayingIndex.valueR;
-
-          final forceSquaredThumbnails = settings.forceSquaredTrackThumbnail.valueR;
-          final displayThirdRow = settings.displayThirdRow.valueR;
-          final displayFavouriteIconInListTile = settings.displayFavouriteIconInListTile.valueR;
-
-          final properties = TrackTileProperties(
-            backgroundColorPlaying: backgroundColorPlaying,
-            backgroundColorNotPlaying: backgroundColorNotPlaying,
-            selectionColorLayer: selectionColorLayer,
-            thumbnailSize: thumbnailSize,
-            trackTileHeight: trackTileHeight,
-            forceSquaredThumbnails: forceSquaredThumbnails,
-            sleepingIndex: sleepingIndex,
-            displayThirdRow: displayThirdRow,
-            displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-            comingFromQueue: comingFromQueue,
-            configs: configs,
-            canHaveDuplicates: canHaveDuplicates,
-            currentPlayingTrack: currentPlayingTrack,
-            currentPlayingIndex: currentPlayingIndex,
-            isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-          );
-          return builder(properties);
-        },
+                        final properties = TrackTileProperties(
+                          backgroundColorPlaying: backgroundColorPlaying,
+                          backgroundColorNotPlaying: backgroundColorNotPlaying,
+                          selectionColorLayer: selectionColorLayer,
+                          thumbnailSize: thumbnailSize,
+                          trackTileHeight: trackTileHeight,
+                          forceSquaredThumbnails: forceSquaredThumbnails,
+                          sleepingIndex: sleepingIndex,
+                          displayThirdRow: displayThirdRow,
+                          displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                          comingFromQueue: comingFromQueue,
+                          configs: configs,
+                          canHaveDuplicates: canHaveDuplicates,
+                          currentPlayingTrack: currentPlayingTrack,
+                          currentPlayingIndex: currentPlayingIndex,
+                          isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                        );
+                        return builder(properties);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

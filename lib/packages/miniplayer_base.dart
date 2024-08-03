@@ -9,8 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:playlist_manager/class/favourite_playlist.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart';
 
+import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -38,6 +40,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class FocusedMenuOptions<E> {
   final bool Function(E currentItem) onOpen;
@@ -75,6 +78,7 @@ class MiniplayerInfoData<T, E> {
   final void Function(TapUpDetails details) onMenuOpen;
   final IconData likedIcon;
   final IconData normalIcon;
+  final YtVideoLikeManager? ytLikeManager;
 
   late final bool firstLineGood;
   late final bool secondLineGood;
@@ -89,6 +93,7 @@ class MiniplayerInfoData<T, E> {
     required this.onMenuOpen,
     required this.likedIcon,
     required this.normalIcon,
+    this.ytLikeManager,
   })  : firstLineGood = firstLine.isNotEmpty,
         secondLineGood = secondLine.isNotEmpty;
 }
@@ -1257,6 +1262,7 @@ class _TrackInfo<T, E> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double opacity = (inverseAboveOne(p) * 10 - 9).clamp(0, 1);
+    final ytLikeManager = textData.ytLikeManager;
 
     return Transform.translate(
       offset: Offset(0, bottomOffset + (-maxOffset / 4.0 * p.clamp(0, 2))),
@@ -1319,16 +1325,43 @@ class _TrackInfo<T, E> extends StatelessWidget {
                             offset: Offset(-100 * (1.0 - cp), 0.0),
                             child: LongPressDetector(
                               onLongPress: textData.onShowAddToPlaylistDialog,
-                              child: ObxOClass(
-                                rx: textData.favouritePlaylist,
-                                builder: (favouritePlaylist) => NamidaRawLikeButton(
-                                  size: 32.0,
-                                  likedIcon: textData.likedIcon,
-                                  normalIcon: textData.normalIcon,
-                                  isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
-                                  onTap: textData.onLikeTap,
-                                ),
-                              ),
+                              child: ytLikeManager != null
+                                  ? ObxO(
+                                      rx: ytLikeManager.currentVideoLikeStatus,
+                                      builder: (currentLikeStatus) {
+                                        final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                                        return NamidaLoadingSwitcher(
+                                          size: 32.0,
+                                          builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                            isLiked: isUserLiked,
+                                            likedIcon: textData.likedIcon,
+                                            normalIcon: textData.normalIcon,
+                                            size: 32.0,
+                                            onTap: (isLiked) async {
+                                              return ytLikeManager.onLikeClicked(
+                                                YTVideoLikeParamters(
+                                                  page: YoutubeInfoController.current.currentVideoPage.value,
+                                                  isActive: isLiked,
+                                                  action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                                  onStart: startLoading,
+                                                  onEnd: stopLoading,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : ObxOClass(
+                                      rx: textData.favouritePlaylist,
+                                      builder: (favouritePlaylist) => NamidaRawLikeButton(
+                                        size: 32.0,
+                                        likedIcon: textData.likedIcon,
+                                        normalIcon: textData.normalIcon,
+                                        isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+                                        onTap: textData.onLikeTap,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

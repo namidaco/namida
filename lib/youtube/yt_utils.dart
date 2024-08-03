@@ -171,6 +171,7 @@ class YTUtils {
     required String videoId,
     required String? url,
     required String? channelID,
+    bool displayGoToChannel = true,
     required PlaylistID? playlistID,
     required Map<String, String?> idsNamesLookup,
     String playlistName = '',
@@ -181,7 +182,7 @@ class YTUtils {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
-    if (channelID == null || channelID.isEmpty) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
+    if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,

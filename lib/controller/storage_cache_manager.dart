@@ -468,7 +468,7 @@ class _VideoTrimmer {
 
     Directory(tempDir).listSyncSafe().loop(checkFileAndAdd);
     Directory(normalDir).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.download')) {
+      if (e.path.endsWith('.part')) {
         checkFileAndAdd(e);
       }
     });
@@ -483,7 +483,7 @@ class _VideoTrimmer {
       size += e.statSync().size;
     });
     Directory(normalDir).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.download')) {
+      if (e.path.endsWith('.part')) {
         size += e.statSync().size;
       }
     });
@@ -501,7 +501,7 @@ class _VideoTrimmer {
       }
     });
     Directory(normalDir).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.download')) {
+      if (e.path.endsWith('.part')) {
         if (e is File) {
           try {
             e.deleteSync();
