@@ -6,6 +6,7 @@ import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
@@ -416,6 +417,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           },
           youtubeID: (finalItem) async {
             await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
+            _tryAddingMixPlaylist(finalItem.id);
           },
         );
       },
@@ -876,6 +878,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void _onVideoMarkWatchResultError(YTMarkVideoWatchedResult marked) {
     if (marked == YTMarkVideoWatchedResult.addedAsPending) {
       snackyy(message: 'Failed to mark video as watched, saved as pending.', top: false, isError: true);
+    }
+  }
+
+  Future<void> _tryAddingMixPlaylist(String videoId) async {
+    if (!settings.youtube.autoStartRadio.value) return;
+
+    if (currentQueue.length == 1) {
+      bool checkInterrupted() {
+        final currItem = currentItem.value;
+        return currItem is! YoutubeID || currItem.id != videoId;
+      }
+
+      if (checkInterrupted()) return;
+
+      final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
+        videoId: videoId,
+        details: ExecuteDetails.forceRequest(),
+      );
+
+      if (checkInterrupted()) return;
+
+      final playlistId = mixPlaylist?.mixId;
+      final playlistIdWrapper = playlistId == null ? null : PlaylistID(id: playlistId);
+      final items = mixPlaylist?.items;
+      if (items != null && items.isNotEmpty) {
+        final itemsMapped = (items.firstOrNull?.id == videoId ? items.skip(1) : items).map(
+          (e) => YoutubeID(id: e.id, playlistID: playlistIdWrapper) as Q,
+        );
+        addToQueue(itemsMapped);
+      }
     }
   }
 
