@@ -239,6 +239,7 @@ class _SettingsController with SettingsFileWriter {
     QueueInsertionType.rating: const QueueInsertion(numberOfTracks: 20, insertNext: false, sortBy: InsertionSortingType.rating),
     QueueInsertionType.sameReleaseDate: const QueueInsertion(numberOfTracks: 30, insertNext: true, sortBy: InsertionSortingType.listenCount),
     QueueInsertionType.algorithm: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
+    QueueInsertionType.mix: const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none),
   }.obs;
 
   final homePageItems = <HomePageItems>[

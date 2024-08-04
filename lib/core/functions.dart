@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/class/execute_details.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -40,6 +42,7 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -884,6 +887,7 @@ class TracksAddOnTap {
     showAddItemsToQueueDialog(
       onDisposing: null,
       context: context,
+      disabledSorts: null,
       tiles: (getAddTracksTile) {
         return [
           getAddTracksTile(
@@ -1221,12 +1225,17 @@ class TracksAddOnTap {
     final currentVideoName = YoutubeInfoController.utils.getVideoName(currentVideoId) ?? currentVideoId;
 
     final isLoadingVideoDate = false.obs;
+    final isLoadingMixPlaylist = false.obs;
 
     NamidaYTGenerator.inst.initialize();
     showAddItemsToQueueDialog(
       onDisposing: () {
         isLoadingVideoDate.close();
+        isLoadingMixPlaylist.close();
       },
+      disabledSorts: () => [
+        InsertionSortingType.rating, // cuz we have no rating system for yt
+      ],
       context: context,
       tiles: (getAddTracksTile) {
         return [
@@ -1280,6 +1289,45 @@ class TracksAddOnTap {
                 },
               );
             },
+          ),
+          ObxO(
+            rx: isLoadingMixPlaylist,
+            builder: (isLoading) => AnimatedEnabled(
+              enabled: !isLoading,
+              child: getAddTracksTile(
+                title: lang.MIX,
+                subtitle: lang.MIX_PLAYLIST_GENERATED_BY_YOUTUBE,
+                icon: Broken.radar_1,
+                insertionType: QueueInsertionType.mix,
+                onTap: (insertionType) async {
+                  isLoadingMixPlaylist.value = true;
+                  final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
+                    videoId: currentVideoId,
+                    details: ExecuteDetails.forceRequest(),
+                  );
+                  isLoadingMixPlaylist.value = false;
+
+                  if (Player.inst.currentVideo?.id != currentVideoId) return;
+
+                  final playlistId = mixPlaylist?.mixId;
+                  final items = mixPlaylist?.items;
+                  if (items != null && items.isNotEmpty) {
+                    final videos = (items.firstOrNull?.id == currentVideoId ? items.skip(1) : items).map(
+                      (e) => YoutubeID(id: e.id, playlistID: playlistId == null ? null : PlaylistID(id: playlistId)),
+                    );
+                    Player.inst
+                        .addToQueue(
+                          videos,
+                          insertNext: true,
+                          insertionType: insertionType,
+                          emptyTracksMessage: lang.FAILED,
+                        )
+                        .closeDialog();
+                  }
+                },
+                trailingRaw: isLoading ? const LoadingIndicator() : null,
+              ),
+            ),
           ),
           const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
           Obx(
@@ -1350,6 +1398,7 @@ class TracksAddOnTap {
   Future<void> showAddItemsToQueueDialog({
     required BuildContext context,
     required void Function()? onDisposing,
+    required List<InsertionSortingType> Function()? disabledSorts,
     required List<Widget> Function(
             Widget Function({
               required String title,
@@ -1442,20 +1491,24 @@ class TracksAddOnTap {
                         ),
                       ),
                       itemBuilder: (context) {
-                        return <PopupMenuEntry<InsertionSortingType>>[
-                          ...InsertionSortingType.values.map(
-                            (e) => PopupMenuItem(
-                              value: e,
-                              child: Row(
-                                children: [
-                                  Icon(e.toIcon(), size: 20.0),
-                                  const SizedBox(width: 8.0),
-                                  Text(e.toText()),
-                                ],
+                        final disabledOnes = disabledSorts != null ? disabledSorts() : null;
+                        final iterables = disabledOnes == null || disabledOnes.isEmpty
+                            ? InsertionSortingType.values
+                            : InsertionSortingType.values.where((element) => !disabledOnes.contains(element));
+                        return iterables
+                            .map(
+                              (e) => PopupMenuItem(
+                                value: e,
+                                child: Row(
+                                  children: [
+                                    Icon(e.toIcon(), size: 20.0),
+                                    const SizedBox(width: 8.0),
+                                    Text(e.toText()),
+                                  ],
+                                ),
                               ),
-                            ),
-                          )
-                        ];
+                            )
+                            .toList();
                       },
                       onSelected: (value) => sortBy.value = value,
                     ),
@@ -1481,6 +1534,7 @@ class TracksAddOnTap {
         subtitle: subtitle,
         icon: icon,
         maxSubtitleLines: 22,
+        visualDensity: VisualDensity.compact,
         onTap: () => onTap(insertionType),
         trailingRaw: trailingRaw ??
             Obx(

@@ -16,7 +16,7 @@ class QueueInsertion {
     return QueueInsertion(
       numberOfTracks: map["numberOfTracks"],
       insertNext: map["insertNext"],
-      sortBy: InsertionSortingType.values.getEnum(map['sortBy']) ?? InsertionSortingType.random,
+      sortBy: InsertionSortingType.values.getEnum(map['sortBy']) ?? InsertionSortingType.none,
     );
   }
 

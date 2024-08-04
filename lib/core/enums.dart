@@ -268,12 +268,14 @@ enum QueueInsertionType {
   rating,
   sameReleaseDate,
   algorithm,
+  mix,
 }
 
 enum InsertionSortingType {
   random,
   listenCount,
   rating,
+  none,
 }
 
 enum LocalVideoMatchingType {

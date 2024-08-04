@@ -388,7 +388,9 @@ abstract class LanguageKeys {
   String get MINUTES => _getKey('MINUTES');
   String get MISSING_ENTRIES => _getKey('MISSING_ENTRIES');
   String get MISSING_TRACKS => _getKey('MISSING_TRACKS');
+  String get MIX => _getKey('MIX');
   String get MIXES => _getKey('MIXES');
+  String get MIX_PLAYLIST_GENERATED_BY_YOUTUBE => _getKey('MIX_PLAYLIST_GENERATED_BY_YOUTUBE');
   String get MONTH => _getKey('MONTH');
   String get MONTHS => _getKey('MONTHS');
   String get MOOD => _getKey('MOOD');

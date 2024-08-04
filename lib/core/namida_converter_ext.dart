@@ -578,7 +578,7 @@ extension ThemeUtils on ThemeMode {
 }
 
 extension QueueInsertionTypeToQI on QueueInsertionType {
-  QueueInsertion toQueueInsertion() => settings.queueInsertion[this]!;
+  QueueInsertion toQueueInsertion() => settings.queueInsertion[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none);
 
   /// NOTE: Modifies the original list.
   List<Selectable> shuffleOrSort(List<Selectable> tracks) {
@@ -595,9 +595,7 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
         tracks.sortByReverse((e) => e.track.stats.rating);
       case InsertionSortingType.random:
         tracks.shuffle();
-
-      default:
-        null;
+      case InsertionSortingType.none: // do nothing
     }
 
     return tracks;
@@ -619,8 +617,8 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
       case InsertionSortingType.random:
         videos.shuffle();
 
-      default:
-        null;
+      case InsertionSortingType.rating: // no ratings yet
+      case InsertionSortingType.none: // do nothing
     }
 
     return videos;
@@ -1186,6 +1184,7 @@ class _NamidaConverters {
         InsertionSortingType.listenCount: lang.TOTAL_LISTENS,
         InsertionSortingType.random: lang.RANDOM,
         InsertionSortingType.rating: lang.RATING,
+        InsertionSortingType.none: lang.DEFAULT,
       },
       MostPlayedTimeRange: {
         MostPlayedTimeRange.custom: lang.CUSTOM,
@@ -1379,6 +1378,7 @@ class _NamidaConverters {
         InsertionSortingType.listenCount: Broken.award,
         InsertionSortingType.random: Broken.format_circle,
         InsertionSortingType.rating: Broken.grammerly,
+        InsertionSortingType.none: Broken.cd,
       },
       OnYoutubeLinkOpenAction: {
         OnYoutubeLinkOpenAction.showDownload: Broken.import,
