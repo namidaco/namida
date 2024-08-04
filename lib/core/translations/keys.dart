@@ -534,6 +534,7 @@ abstract class LanguageKeys {
   String get REMOVE => _getKey('REMOVE');
   String get REMOVED => _getKey('REMOVED');
   String get REMOVE_FROM_FAVOURITES => _getKey('REMOVE_FROM_FAVOURITES');
+  String get REMOVE_FROM_LIBRARY => _getKey('REMOVE_FROM_LIBRARY');
   String get RENAME => _getKey('RENAME');
   String get RENAME_PLAYLIST => _getKey('RENAME_PLAYLIST');
   String get REORDERABLE => _getKey('REORDERABLE');
@@ -563,6 +564,7 @@ abstract class LanguageKeys {
   String get SAMPLE_RATE => _getKey('SAMPLE_RATE');
   String get SAVE => _getKey('SAVE');
   String get SAVED_IN => _getKey('SAVED_IN');
+  String get SAVE_TO_LIBRARY => _getKey('SAVE_TO_LIBRARY');
   String get SCALE_MULTIPLIER => _getKey('SCALE_MULTIPLIER');
   String get SEARCH => _getKey('SEARCH');
   String get SEARCH_YOUTUBE => _getKey('SEARCH_YOUTUBE');

@@ -153,7 +153,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
   @override
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
-    final bigThumbWidth = context.width - horizontalBigThumbPadding * 2;
+    final maxWidth = context.width;
+    final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
     Color? threeCColor;
     late final threeC = ObxO(
       rx: YoutubePlaylistController.inst.canReorderVideos,
@@ -179,8 +180,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                         YoutubeThumbnail(
                           type: ThumbnailType.playlist,
                           key: Key("$firstID"),
-                          width: context.width,
-                          height: context.width * 9 / 16,
+                          width: maxWidth,
+                          height: maxWidth * 9 / 16,
                           compressed: true,
                           isImportantInCache: false,
                           videoId: firstID,
@@ -482,7 +483,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   @override
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
-    final bigThumbWidth = context.width - horizontalBigThumbPadding * 2;
+    final maxWidth = context.width;
+    final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
     final playlist = _playlist;
 
     const itemsThumbnailHeight = Dimensions.youtubeThumbnailHeight;
@@ -533,8 +535,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                         YoutubeThumbnail(
                           type: ThumbnailType.playlist,
                           key: Key("$firstID"),
-                          width: context.width,
-                          height: context.width * 9 / 16,
+                          width: maxWidth,
+                          height: maxWidth * 9 / 16,
                           compressed: true,
                           isImportantInCache: false,
                           preferLowerRes: true,

@@ -21,6 +21,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
@@ -247,7 +248,30 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 
     Future<List<YoutubeID>> fetchAllIDs() async => await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
 
+    final isInYTOnlineLibrary = playlistToFetch is YoutiPiePlaylistResult ? playlistToFetch.info.isInLibrary.value : null;
     return [
+      if (playlistToFetch is YoutiPiePlaylistResult && isInYTOnlineLibrary != null)
+        NamidaPopupItem(
+          icon: Broken.archive,
+          title: isInYTOnlineLibrary ? lang.REMOVE_FROM_LIBRARY : lang.SAVE_TO_LIBRARY,
+          onTap: () async {
+            bool? didSuccess;
+            if (isInYTOnlineLibrary) {
+              didSuccess = await YoutubeInfoController.userplaylist.removeHostedPlaylistFromLibrary(
+                playlist: playlistToFetch,
+              );
+            } else {
+              didSuccess = await YoutubeInfoController.userplaylist.addHostedPlaylistToLibrary(
+                playlist: playlistToFetch,
+              );
+            }
+            if (didSuccess == true) {
+              snackyy(title: lang.SUCCEEDED, message: (isInYTOnlineLibrary ? lang.REMOVED : lang.ADDED).capitalizeFirst(), borderColor: Colors.green.withOpacity(0.5));
+            } else {
+              snackyy(title: lang.ERROR, message: lang.FAILED, isError: true);
+            }
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.music_playlist,
         title: lang.ADD_TO_PLAYLIST,
