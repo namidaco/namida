@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
-import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 
 import 'package:namida/controller/connectivity.dart';
@@ -371,10 +371,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                                   isMixPlaylist: item.isMix,
                                                                   playingId: null,
                                                                 ),
-                                                          const (ChannelInfoItem) => YoutubeChannelCard(
-                                                              channel: item as ChannelInfoItem,
-                                                              subscribersCount: null,
-                                                              thumbnailSize: context.width * 0.18,
+                                                          const (YoutiPieChannelInfo) => YoutubeChannelCard(
+                                                              channel: item as YoutiPieChannelInfo,
+                                                              thumbnailSize: thumbnailHeight,
                                                             ),
                                                           _ => const YoutubeVideoCardDummy(
                                                               shimmerEnabled: true,
