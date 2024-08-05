@@ -550,7 +550,13 @@ class TrackTileManager {
     if (trackItem == null || trackItem == TrackTileItem.none) {
       val = '';
     } else {
-      val = _getTrackItemValue(trackItem, trackPre);
+      final fn = _lookup[trackItem];
+      if (fn != null) {
+        final track = trackPre.toTrackExt();
+        val = fn(track);
+      } else {
+        val = '';
+      }
     }
 
     _infoMap[trackPre] ??= {};
@@ -559,72 +565,45 @@ class TrackTileManager {
     return val;
   }
 
-  static String _getTrackItemValue(TrackTileItem trackItem, Track trackPre) {
-    final track = trackPre.toTrackExt();
-    switch (trackItem) {
-      case TrackTileItem.title:
-        return track.title.overflow;
-      case TrackTileItem.artists:
-        return track.originalArtist.overflow;
-      case TrackTileItem.album:
-        return track.album.overflow;
-      case TrackTileItem.albumArtist:
-        return track.albumArtist.overflow;
-      case TrackTileItem.genres:
-        return track.genresList.take(4).join(', ').overflow;
-      case TrackTileItem.duration:
-        return track.duration.secondsLabel;
-      case TrackTileItem.year:
-        return track.year.yearFormatted;
-      case TrackTileItem.trackNumber:
-        return track.trackNo.toString();
-      case TrackTileItem.discNumber:
-        return track.discNo.toString();
-      case TrackTileItem.fileNameWOExt:
-        return trackPre.filenameWOExt.overflow;
-      case TrackTileItem.extension:
-        return trackPre.extension;
-      case TrackTileItem.fileName:
-        return trackPre.filename.overflow;
-      case TrackTileItem.folder:
-        return trackPre.folderName.overflow;
-      case TrackTileItem.path:
-        return track.path.formatPath();
-      case TrackTileItem.channels:
-        return track.channels.channelToLabel ?? '';
-      case TrackTileItem.comment:
-        return track.comment.overflow;
-      case TrackTileItem.composer:
-        return track.composer.overflow;
-      case TrackTileItem.dateAdded:
-        return track.dateAdded.dateFormatted;
-      case TrackTileItem.format:
-        return track.format;
-      case TrackTileItem.sampleRate:
-        return '${track.sampleRate}Hz';
-      case TrackTileItem.size:
-        return track.size.fileSizeFormatted;
-      case TrackTileItem.bitrate:
-        return "${(track.bitrate)} kps";
-      case TrackTileItem.dateModified:
-        final finalDate = track.dateModified.dateFormatted;
-        final finalClock = track.dateModified.clockFormatted;
-        return '$finalDate, $finalClock';
-      case TrackTileItem.dateModifiedClock:
-        final finalClock = track.dateModified.clockFormatted;
-        return finalClock;
-      case TrackTileItem.dateModifiedDate:
-        final finalDate = track.dateModified.dateFormatted;
-        return finalDate;
-      // -- stats
-      case TrackTileItem.rating:
-        return "${track.stats.rating}%";
-      case TrackTileItem.moods:
-        return track.stats.moods.join(', ');
-      case TrackTileItem.tags:
-        return track.stats.tags.join(', ');
-      default:
-        return '';
-    }
-  }
+  static final _lookup = <TrackTileItem, String Function(TrackExtended track)>{
+    TrackTileItem.title: (track) => track.title.overflow,
+    TrackTileItem.artists: (track) => track.originalArtist.overflow,
+    TrackTileItem.album: (track) => track.album.overflow,
+    TrackTileItem.albumArtist: (track) => track.albumArtist.overflow,
+    TrackTileItem.genres: (track) => track.genresList.take(4).join(', ').overflow,
+    TrackTileItem.duration: (track) => track.duration.secondsLabel,
+    TrackTileItem.year: (track) => track.year.yearFormatted,
+    TrackTileItem.trackNumber: (track) => track.trackNo.toString(),
+    TrackTileItem.discNumber: (track) => track.discNo.toString(),
+    TrackTileItem.fileNameWOExt: (track) => track.filenameWOExt.overflow,
+    TrackTileItem.extension: (track) => track.extension,
+    TrackTileItem.fileName: (track) => track.filename.overflow,
+    TrackTileItem.folder: (track) => track.folderName.overflow,
+    TrackTileItem.path: (track) => track.path.formatPath(),
+    TrackTileItem.channels: (track) => track.channels.channelToLabel ?? '',
+    TrackTileItem.comment: (track) => track.comment.overflow,
+    TrackTileItem.composer: (track) => track.composer.overflow,
+    TrackTileItem.dateAdded: (track) => track.dateAdded.dateFormatted,
+    TrackTileItem.format: (track) => track.format,
+    TrackTileItem.sampleRate: (track) => '${track.sampleRate}Hz',
+    TrackTileItem.size: (track) => track.size.fileSizeFormatted,
+    TrackTileItem.bitrate: (track) => "${(track.bitrate)} kps",
+    TrackTileItem.dateModified: (track) {
+      final finalDate = track.dateModified.dateFormatted;
+      final finalClock = track.dateModified.clockFormatted;
+      return '$finalDate, $finalClock';
+    },
+    TrackTileItem.dateModifiedClock: (track) {
+      final finalClock = track.dateModified.clockFormatted;
+      return finalClock;
+    },
+    TrackTileItem.dateModifiedDate: (track) {
+      final finalDate = track.dateModified.dateFormatted;
+      return finalDate;
+    },
+    // -- stats
+    TrackTileItem.rating: (track) => "${track.stats.rating}%",
+    TrackTileItem.moods: (track) => track.stats.moods.join(', '),
+    TrackTileItem.tags: (track) => track.stats.tags.join(', '),
+  };
 }
