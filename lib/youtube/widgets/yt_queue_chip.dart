@@ -48,6 +48,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   double _screenHeight = 0;
 
+  bool get isOpened => _smallBoxAnimation.value == 1 && _bigBoxAnimation.value == 0;
+  void openSheet() => _animateSmallToBig();
   void dismissSheet() => _animateBigToSmall();
 
   @override
