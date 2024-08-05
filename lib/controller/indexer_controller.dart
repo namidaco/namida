@@ -645,11 +645,11 @@ class Indexer {
         _removeThisTrackFromAlbumGenreArtistEtc(tr);
       },
     );
-    recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
     Folders.inst.currentFolder.refresh();
     await _saveTrackFileToStorage();
+    recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
   }
 
   Future<void> reindexTracks({

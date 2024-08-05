@@ -37,6 +37,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final bool showRefreshInsteadOfRefreshing;
 
   final Widget? pageHeader;
+  final Widget? headerTrailing;
   final void Function()? onHeaderTap;
   final bool isHorizontal;
   final double? horizontalHeight;
@@ -45,6 +46,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final Future<void> Function()? onPullToRefresh;
   final bool enablePullToRefresh;
   final void Function(W? result)? onListUpdated;
+  final void Function(Rxn<W> wrapper)? onInitState;
+  final void Function(Rxn<W> wrapper)? onDispose;
 
   const YoutubeMainPageFetcherAccBase({
     super.key,
@@ -58,6 +61,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     this.sliverListBuilder,
     this.showRefreshInsteadOfRefreshing = false,
     this.pageHeader,
+    this.headerTrailing,
     this.onHeaderTap,
     this.isHorizontal = false,
     this.horizontalHeight,
@@ -66,6 +70,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     this.onPullToRefresh,
     this.enablePullToRefresh = true,
     this.onListUpdated,
+    this.onInitState,
+    this.onDispose,
   });
 
   @override
@@ -80,7 +86,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   @override
   double get maxDistance => 64.0;
 
-  Future<void> forceFetchFeed() => _fetchFeed();
+  Future<void> forceFetchFeed() => _fetchFeedSilent();
   void updateList(W? list) {
     _currentFeed.value = list;
     _lastFetchWasCached.value = false;
@@ -154,6 +160,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   @override
   void initState() {
     super.initState();
+    widget.onInitState?.call(_currentFeed);
     _onInit();
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
@@ -161,6 +168,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   @override
   void dispose() {
+    widget.onDispose?.call(_currentFeed);
     if (widget.onListUpdated != null) _currentFeed.removeListener(_onListUpdated);
     YoutubeAccountController.current.removeOnAccountChanged(_onAccChanged);
 
@@ -235,6 +243,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                 )
               : const SizedBox(),
         ),
+        if (widget.headerTrailing != null) widget.headerTrailing!,
         if (widget.onHeaderTap != null) const SizedBox(width: 12.0),
         if (widget.onHeaderTap != null) const Icon(Broken.arrow_right_3),
       ],

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
-import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/core/enum.dart';
@@ -58,7 +57,6 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
-import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
@@ -442,17 +440,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {YoutiPiePlaylistResultBase? playlistToOpen, YoutiPiePlaylistResultBase? playlistToAddAs}) {
-    String playlistNameToAddAs = playlistToAddAs?.basicInfo.title ?? '';
-    String suffix = '';
-    int suffixIndex = 1;
-    while (ytplc.YoutubePlaylistController.inst.playlistsMap.value["$playlistNameToAddAs$suffix"] != null) {
-      suffixIndex++;
-      suffix = ' ($suffixIndex)';
-    }
-    playlistNameToAddAs += suffix;
-
-    final didAddToPlaylist = false.obs;
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap) {
     final isItemEnabled = <OnYoutubeLinkOpenAction, bool>{
       OnYoutubeLinkOpenAction.playNext: true,
       OnYoutubeLinkOpenAction.playAfter: true,
@@ -463,7 +451,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
 
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
-        didAddToPlaylist.close();
         isItemEnabled.close();
       },
       dialog: CustomBlurryDialog(
@@ -474,12 +461,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         ],
         child: Column(
           children: [
-            if (playlistToOpen != null)
-              CustomListTile(
-                icon: Broken.export_2,
-                title: lang.OPEN,
-                onTap: YTHostedPlaylistSubpage(playlist: playlistToOpen).navigate,
-              ),
             ...[
               OnYoutubeLinkOpenAction.showDownload,
               OnYoutubeLinkOpenAction.play,
@@ -510,22 +491,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                 );
               },
             ),
-            if (playlistNameToAddAs != '')
-              Obx(
-                () => CustomListTile(
-                  enabled: !didAddToPlaylist.valueR,
-                  icon: Broken.add_square,
-                  title: lang.ADD_AS_A_NEW_PLAYLIST,
-                  subtitle: playlistNameToAddAs,
-                  onTap: () {
-                    didAddToPlaylist.value = true;
-                    ytplc.YoutubePlaylistController.inst.addNewPlaylist(
-                      playlistNameToAddAs,
-                      videoIds: playlistToAddAs?.items.map((e) => e.id),
-                    );
-                  },
-                ),
-              ),
           ],
         ),
       ),

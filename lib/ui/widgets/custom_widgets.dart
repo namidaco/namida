@@ -1357,8 +1357,20 @@ class NamidaWheelSlider extends StatelessWidget {
   }
 }
 
+class NamidaLoadingController {
+  final void Function() startLoading;
+  final void Function() stopLoading;
+  bool isLoading;
+
+  NamidaLoadingController({
+    required this.startLoading,
+    required this.stopLoading,
+    required this.isLoading,
+  });
+}
+
 class NamidaLoadingSwitcher extends StatefulWidget {
-  final Widget Function(void Function() startLoading, void Function() stopLoading, bool isLoading) builder;
+  final Widget Function(NamidaLoadingController loadingController) builder;
   final double? size;
   final bool showLoading;
 
@@ -1374,32 +1386,37 @@ class NamidaLoadingSwitcher extends StatefulWidget {
 }
 
 class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
-  bool _isLoading = false;
+  late final loadingController = NamidaLoadingController(
+    startLoading: _startLoading,
+    stopLoading: _stopLoading,
+    isLoading: false,
+  );
 
   void _startLoading() {
-    if (mounted) setState(() => _isLoading = true);
+    if (mounted) setState(() => loadingController.isLoading = true);
   }
 
   void _stopLoading() {
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) setState(() => loadingController.isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final child = widget.builder(_startLoading, _stopLoading, _isLoading);
+    final child = widget.builder(loadingController);
+    final isLoading = loadingController.isLoading;
     return Stack(
       fit: StackFit.loose,
       alignment: Alignment.center,
       children: [
         AnimatedOpacity(
-          opacity: _isLoading ? 0.5 : 1.0,
+          opacity: isLoading ? 0.5 : 1.0,
           duration: const Duration(milliseconds: 200),
           child: child,
         ),
-        if (_isLoading && widget.showLoading)
+        if (isLoading && widget.showLoading)
           IgnorePointer(
             child: AnimatedOpacity(
-              opacity: _isLoading ? 0.8 : 0.0,
+              opacity: isLoading ? 0.8 : 0.0,
               duration: const Duration(milliseconds: 200),
               child: SizedBox(
                 width: widget.size,

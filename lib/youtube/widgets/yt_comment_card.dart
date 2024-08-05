@@ -294,7 +294,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                   if (comment != null)
                                     NamidaLoadingSwitcher(
                                       size: 16.0,
-                                      builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                      builder: (loadingController) => NamidaRawLikeButton(
                                         isLiked: currentLikeStatus == LikeStatus.liked,
                                         likedIcon: Broken.like_filled,
                                         normalIcon: Broken.like_1,
@@ -303,8 +303,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           return _onChangeLikeStatus(
                                             isLiked,
                                             isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                            startLoading,
-                                            stopLoading,
+                                            loadingController.startLoading,
+                                            loadingController.stopLoading,
                                           );
                                         },
                                       ),
@@ -326,7 +326,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                   if (comment != null)
                                     NamidaLoadingSwitcher(
                                       size: 16.0,
-                                      builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                      builder: (loadingController) => NamidaRawLikeButton(
                                         isLiked: currentLikeStatus == LikeStatus.disliked,
                                         likedIcon: Broken.dislike_filled,
                                         normalIcon: Broken.dislike,
@@ -335,8 +335,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           return _onChangeLikeStatus(
                                             isDisLiked,
                                             isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                            startLoading,
-                                            stopLoading,
+                                            loadingController.startLoading,
+                                            loadingController.stopLoading,
                                           );
                                         },
                                       ),

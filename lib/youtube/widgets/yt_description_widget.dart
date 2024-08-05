@@ -120,7 +120,7 @@ class YoutubeDescriptionWidgetManager {
     } else if (sw.channelId != null) {
       onTap = YTChannelSubpage(channelID: sw.channelId!, channel: null).navigate;
     } else if (sw.playlistId != null) {
-      onTap = YTHostedPlaylistSubpage.fromId(playlistId: sw.playlistId!).navigate;
+      onTap = YTHostedPlaylistSubpage.fromId(playlistId: sw.playlistId!, userPlaylist: null).navigate;
     } else if (sw.link != null) {
       onTap = () => NamidaLinkUtils.openLink(sw.link!);
     }

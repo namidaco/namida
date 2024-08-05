@@ -9,6 +9,7 @@ import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
@@ -366,16 +367,19 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
 
   final YoutiPiePlaylistResultBase playlist;
+  final PlaylistInfoItemUser? userPlaylist;
   final bool isMixPlaylist;
 
   const YTHostedPlaylistSubpage({
     super.key,
     required this.playlist,
+    required this.userPlaylist,
   }) : isMixPlaylist = playlist is YoutiPieMixPlaylistResult;
 
   YTHostedPlaylistSubpage.fromId({
     super.key,
     required String playlistId,
+    required this.userPlaylist,
   })  : playlist = _EmptyPlaylistResult(playlistId: playlistId),
         isMixPlaylist = playlistId.startsWith('RD') && playlistId.length == 13;
 
@@ -414,6 +418,14 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   YoutiPieFetchAllRes? _currentFetchAllRes;
 
   late YoutiPiePlaylistResultBase _playlist;
+
+  late final YoutiPiePlaylistEditCallbacks _playlistInfoEditUpdater = YoutiPiePlaylistEditCallbacks(
+    oldPlaylist: () => _playlist,
+    newPlaylistCallback: (newPlaylist) {
+      refreshState(() => _playlist = newPlaylist);
+    },
+  );
+
   @override
   void initState() {
     _playlist = widget.playlist;
@@ -421,13 +433,22 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     sorting.value = null; // we eventually need to implement playlist sort if account is signed in.
     super.initState();
 
+    final cached = YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: _playlist.basicInfo.id).read();
+    if (cached != null) {
+      _playlist = cached;
+      refreshState(trySortStreams);
+    }
+
     onRefresh(() => _fetch100Video(forceRequest: _playlist is YoutiPiePlaylistResult), forceProceed: true);
+
+    YtUtilsPlaylist.activePlaylists.add(_playlistInfoEditUpdater);
   }
 
   @override
   void dispose() {
     _isLoadingMoreItems.close();
     disposeResources();
+    YtUtilsPlaylist.activePlaylists.remove(_playlistInfoEditUpdater);
     super.dispose();
   }
 
@@ -491,7 +512,6 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     const itemsThumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const itemsThumbnailItemExtent = itemsThumbnailHeight + 8.0 * 2;
 
-    final videosCount = playlist.basicInfo.videosCount;
     String? description;
     String uploaderTitleAndViews = '';
     String? thumbnailUrl;
@@ -509,6 +529,16 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
       thumbnailUrl = playlist.info.thumbnails.pick()?.url;
       plId = playlist.playlistId;
     }
+
+    String? videosCountTextFinal;
+    final videosCount = playlist.basicInfo.videosCount;
+    if (playlist is YoutiPieMixPlaylistResult) {
+      videosCountTextFinal = videosCount?.displayVideoKeyword;
+    } else if (playlist is YoutiPiePlaylistResult) {
+      videosCountTextFinal = videosCount?.displayVideoKeyword;
+    }
+    videosCountTextFinal ??= playlist.basicInfo.videosCountText ?? '?';
+
     plId ??= playlist.basicInfo.id;
     final plIdWrapper = PlaylistID(id: plId);
     final firstID = playlist.items.firstOrNull?.id;
@@ -592,7 +622,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         ),
                                         const SizedBox(height: 6.0),
                                         Text(
-                                          videosCount == null ? '+25' : videosCount.displayVideoKeyword,
+                                          videosCountTextFinal ?? '',
                                           style: context.textTheme.displaySmall,
                                         ),
                                         if (uploaderTitleAndViews.isNotEmpty == true) ...[
@@ -645,7 +675,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                   NamidaPopupWrapper(
                                     openOnLongPress: false,
                                     childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
+                                      context: context,
                                       playlistToFetch: _playlist,
+                                      userPlaylist: widget.userPlaylist,
                                       showProgressSheet: true,
                                       displayDownloadItem: false,
                                       displayShuffle: false,

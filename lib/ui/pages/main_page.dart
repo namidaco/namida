@@ -257,7 +257,7 @@ class NamidaSearchBar extends StatelessWidget {
     try {
       final ytPlaylistId = NamidaLinkUtils.extractPlaylistId(val);
       if (ytPlaylistId != null && ytPlaylistId != '') {
-        YTHostedPlaylistSubpage.fromId(playlistId: ytPlaylistId).navigate();
+        YTHostedPlaylistSubpage.fromId(playlistId: ytPlaylistId, userPlaylist: null).navigate();
         return;
       }
     } catch (_) {}

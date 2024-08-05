@@ -672,24 +672,50 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   );
 }
 
+class BottomSheetTextFieldConfig {
+  final String? initalControllerText;
+  final String hintText;
+  final String labelText;
+  final int? maxLength;
+  final String? Function(String? value)? validator;
+
+  const BottomSheetTextFieldConfig({
+    this.initalControllerText,
+    required this.hintText,
+    required this.labelText,
+    this.maxLength,
+    required this.validator,
+  });
+}
+
+class BottomSheetTextFieldConfigWC extends BottomSheetTextFieldConfig {
+  final TextEditingController controller;
+
+  const BottomSheetTextFieldConfigWC({
+    required this.controller,
+    required super.hintText,
+    required super.labelText,
+    super.maxLength,
+    required super.validator,
+  }) : super(initalControllerText: null);
+}
+
 Future<String?> showNamidaBottomSheetWithTextField({
   required BuildContext context,
   bool isScrollControlled = true,
   bool useRootNavigator = true,
   bool showDragHandle = true,
   required String title,
-  String? initalControllerText,
-  required String hintText,
-  required String labelText,
-  int? maxLength,
-  required String? Function(String? value)? validator,
+  required BottomSheetTextFieldConfig textfieldConfig,
+  List<BottomSheetTextFieldConfigWC>? extraTextfieldsConfig,
   required String buttonText,
   TextStyle? buttonTextStyle,
   Color? buttonColor,
   required FutureOr<bool> Function(String text) onButtonTap,
   Widget Function(FormState formState)? extraItemsBuilder,
+  Rx<bool>? isInitiallyLoading,
 }) async {
-  final controller = TextEditingController(text: initalControllerText);
+  final localController = textfieldConfig is BottomSheetTextFieldConfigWC ? textfieldConfig.controller : TextEditingController(text: textfieldConfig.initalControllerText);
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   final focusNode = FocusNode();
@@ -706,12 +732,12 @@ Future<String?> showNamidaBottomSheetWithTextField({
     isScrollControlled: isScrollControlled,
     builder: (context) {
       final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
-      return Padding(
+      final child = Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28.0).add(EdgeInsets.only(bottom: 18.0 + bottomPadding)),
         child: Form(
           key: formKey,
           child: NamidaLoadingSwitcher(
-            builder: (startLoading, stopLoading, isLoading) => Column(
+            builder: (loadingController) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
@@ -721,11 +747,22 @@ Future<String?> showNamidaBottomSheetWithTextField({
                 const SizedBox(height: 18.0),
                 CustomTagTextField(
                   focusNode: focusNode,
-                  controller: controller,
-                  hintText: hintText,
-                  labelText: labelText,
-                  validator: validator,
-                  maxLength: maxLength,
+                  controller: localController,
+                  hintText: textfieldConfig.hintText,
+                  labelText: textfieldConfig.labelText,
+                  validator: textfieldConfig.validator,
+                  maxLength: textfieldConfig.maxLength,
+                ),
+                ...?extraTextfieldsConfig?.map(
+                  (e) {
+                    return CustomTagTextField(
+                      controller: e.controller,
+                      hintText: e.hintText,
+                      labelText: e.labelText,
+                      validator: e.validator,
+                      maxLength: e.maxLength,
+                    );
+                  },
                 ),
                 if (extraItemsBuilder != null) extraItemsBuilder(formKey.currentState!),
                 const SizedBox(height: 18.0),
@@ -749,11 +786,11 @@ Future<String?> showNamidaBottomSheetWithTextField({
                         ),
                         onTap: () async {
                           if (formKey.currentState!.validate()) {
-                            startLoading();
-                            final didAgree = await onButtonTap(controller.text);
-                            stopLoading();
+                            loadingController.startLoading();
+                            final didAgree = await onButtonTap(localController.text);
+                            loadingController.stopLoading();
                             if (didAgree) {
-                              finalText = controller.text;
+                              finalText = localController.text;
                               if (context.mounted) context.safePop();
                             }
                           }
@@ -767,9 +804,37 @@ Future<String?> showNamidaBottomSheetWithTextField({
           ),
         ),
       );
+      return isInitiallyLoading != null
+          ? ObxO(
+              rx: isInitiallyLoading,
+              builder: (initiallyLoading) {
+                return Stack(
+                  children: [
+                    AnimatedEnabled(
+                      enabled: !initiallyLoading,
+                      child: child,
+                    ),
+                    if (initiallyLoading)
+                      const Positioned(
+                        top: 0,
+                        right: 32.0,
+                        child: SizedBox(
+                          width: 32.0,
+                          height: 32.0,
+                          child: CircularProgressIndicator(strokeWidth: 4.0),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            )
+          : child;
     },
   );
-  controller.disposeAfterAnimation(also: focusNode.dispose);
+  Future.delayed(const Duration(milliseconds: 2000), () {
+    if (localController is! BottomSheetTextFieldConfigWC) localController.dispose();
+    focusNode.dispose();
+  });
   return finalText;
 }
 

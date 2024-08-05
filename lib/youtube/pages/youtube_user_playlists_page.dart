@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/result_wrapper/playlist_user_result.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -9,8 +10,10 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
 import 'package:namida/youtube/pages/youtube_user_history_page.dart';
@@ -39,8 +42,34 @@ class YoutubeUserPlaylistsPage extends StatelessWidget {
             horizontalHistory,
           ],
         ),
+        onInitState: (wrapper) {
+          YtUtilsPlaylist.activeUserPlaylistsList = wrapper;
+        },
+        onDispose: (wrapper) {
+          YtUtilsPlaylist.activeUserPlaylistsList = null;
+        },
         onPullToRefresh: () => (horizontalHistoryKey.currentState as dynamic)?.forceFetchFeed() as Future<void>,
         title: lang.PLAYLISTS,
+        headerTrailing: NamidaIconButton(
+          icon: Broken.add_circle,
+          iconSize: 22.0,
+          onPressed: () {
+            YtUtilsPlaylist().promptCreatePlaylist(
+              context: context,
+              onButtonConfirm: (playlistTitle, privacy) async {
+                privacy ??= PlaylistPrivacy.private;
+                final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(
+                  mainList: YtUtilsPlaylist.activeUserPlaylistsList,
+                  title: playlistTitle,
+                  initialVideoIds: [],
+                  privacy: privacy,
+                );
+                if (newPlaylistId != null) return true;
+                return false;
+              },
+            );
+          },
+        ),
         cacheReader: YoutiPie.cacheBuilder.forUserPlaylists(),
         networkFetcher: (details) => YoutubeInfoController.userplaylist.getUserPlaylists(details: details),
         itemExtent: thumbnailItemExtent,
@@ -53,11 +82,11 @@ class YoutubeUserPlaylistsPage extends StatelessWidget {
           return YoutubePlaylistCard(
             key: Key(playlist.id),
             playlist: playlist,
-            subtitle: playlist.infoTexts?.firstOrNull, // the second text is mostly like 'updated today' etc
+            subtitle: playlist.infoTexts?.join(' - '), // the second text is mostly like 'updated today' etc
             thumbnailWidth: thumbnailWidth,
             thumbnailHeight: thumbnailHeight,
             firstVideoID: null,
-            isMixPlaylist: false, // TODO: is it possible?
+            isMixPlaylist: playlist.isMix,
             playingId: null,
             playOnTap: false,
           );

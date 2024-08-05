@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -58,8 +59,8 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) async {
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
     if (widget.isMixPlaylist) {
-      final videoId = widget.firstVideoID ?? widget.playingId?.call();
-      if (videoId == null) return null;
+      final videoId = widget.firstVideoID ?? widget.playingId?.call() ?? widget.playlist.id.substring(2);
+      if (videoId.isEmpty) return null;
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
         details: executeDetails,
@@ -96,7 +97,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   @override
   void initState() {
     super.initState();
-    _fetchInitial();
+    _fetchTimer = Timer(const Duration(seconds: 1), _fetchInitial);
   }
 
   @override
@@ -105,13 +106,20 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     super.dispose();
   }
 
+  PlaylistInfoItemUser? get _userPlaylist {
+    final pl = widget.playlist;
+    return pl is PlaylistInfoItemUser ? pl : null;
+  }
+
   List<NamidaPopupItem> getMenuItems() {
     if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
 
     final playlistToFetch = this.playlistToFetch;
     if (playlistToFetch == null) return [];
     return widget.playlist.getPopupMenuItems(
+      context: context,
       playlistToFetch: playlistToFetch,
+      userPlaylist: _userPlaylist,
       showProgressSheet: true,
       displayPlay: !widget.playOnTap,
       displayOpenPlaylist: widget.playOnTap,
@@ -123,9 +131,9 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     final playlist = widget.playlist;
     String countText;
     if (widget.isMixPlaylist) {
-      countText = '+25';
+      countText = playlist.videosCount?.formatDecimalShort() ?? '+25';
     } else {
-      countText = playlist.videosCount?.formatDecimalShort() ?? '?';
+      countText = playlist.videosCount?.formatDecimalShort() ?? (widget.playlist.videosCountText == 'No videos' ? '0' : '?');
     }
     final thumbnailUrl = playlist.thumbnails.pick()?.url;
     final firstVideoID = widget.firstVideoID;
@@ -148,16 +156,24 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
         subtitle: widget.subtitle ?? '',
         thirdLineText: '',
         onTap: () async {
-          if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
-
           final playlistToFetch = this.playlistToFetch;
-          if (playlistToFetch == null) return;
           if (widget.playOnTap) {
-            final videos = await playlist.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlistToFetch);
-            if (videos.isEmpty) return;
-            Player.inst.playOrPause(0, videos, QueueSource.others);
+            if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
+            if (playlistToFetch != null) {
+              final videos = await playlist.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlistToFetch);
+              if (videos.isEmpty) return;
+              Player.inst.playOrPause(0, videos, QueueSource.others);
+            }
           } else {
-            YTHostedPlaylistSubpage(playlist: playlistToFetch).navigate();
+            playlistToFetch != null
+                ? YTHostedPlaylistSubpage(
+                    playlist: playlistToFetch,
+                    userPlaylist: _userPlaylist,
+                  ).navigate()
+                : YTHostedPlaylistSubpage.fromId(
+                    playlistId: playlist.id,
+                    userPlaylist: _userPlaylist,
+                  ).navigate();
           }
         },
         displayChannelThumbnail: false,

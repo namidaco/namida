@@ -254,15 +254,17 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
   Future<void> _onAddGroupTap({required bool Function(String text) doesNameExist, required void Function(String text) onAdd}) async {
     final text = await showNamidaBottomSheetWithTextField(
       context: context,
-      initalControllerText: '',
       title: '',
-      hintText: '',
-      labelText: lang.GROUP,
-      validator: (value) {
-        if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
-        if (doesNameExist(value)) return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
-        return null;
-      },
+      textfieldConfig: BottomSheetTextFieldConfig(
+        initalControllerText: '',
+        hintText: '',
+        labelText: lang.GROUP,
+        validator: (value) {
+          if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+          if (doesNameExist(value)) return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+          return null;
+        },
+      ),
       buttonText: lang.ADD,
       onButtonTap: (text) => true,
     );
@@ -442,22 +444,19 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           child: Row(
             children: [
               if (subscribed && notificationIcon != null)
-                NamidaLoadingSwitcher(
-                  size: iconSize,
-                  builder: (startLoading, stopLoading, isLoading) => NamidaIconButton(
-                    horizontalPadding: 4.0,
-                    onPressed: () {
-                      final info = widget.mainChannelInfo.value;
-                      if (info == null) return;
-                      _onNotificationsTap();
-                    },
-                    icon: null,
-                    child: notificationIcon,
-                  ),
+                NamidaIconButton(
+                  horizontalPadding: 4.0,
+                  onPressed: () {
+                    final info = widget.mainChannelInfo.value;
+                    if (info == null) return;
+                    _onNotificationsTap();
+                  },
+                  icon: null,
+                  child: notificationIcon,
                 ),
               NamidaLoadingSwitcher(
                 size: 24.0,
-                builder: (startLoading, stopLoading, isLoading) => TextButton(
+                builder: (loadingController) => TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -475,8 +474,8 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                     }
                     _onChangeSubscribeStatus(
                       subscribed,
-                      startLoading,
-                      stopLoading,
+                      loadingController.startLoading,
+                      loadingController.stopLoading,
                     );
                   },
                 ),

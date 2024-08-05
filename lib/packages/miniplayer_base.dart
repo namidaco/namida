@@ -1332,7 +1332,7 @@ class _TrackInfo<T, E> extends StatelessWidget {
                                         final isUserLiked = currentLikeStatus == LikeStatus.liked;
                                         return NamidaLoadingSwitcher(
                                           size: 32.0,
-                                          builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                          builder: (loadingController) => NamidaRawLikeButton(
                                             isLiked: isUserLiked,
                                             likedIcon: textData.likedIcon,
                                             normalIcon: textData.normalIcon,
@@ -1343,8 +1343,8 @@ class _TrackInfo<T, E> extends StatelessWidget {
                                                   page: YoutubeInfoController.current.currentVideoPage.value,
                                                   isActive: isLiked,
                                                   action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                  onStart: startLoading,
-                                                  onEnd: stopLoading,
+                                                  onStart: loadingController.startLoading,
+                                                  onEnd: loadingController.stopLoading,
                                                 ),
                                               );
                                             },

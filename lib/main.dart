@@ -345,7 +345,7 @@ Future<void> _initializeIntenties() async {
             settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else if (ytPlaylistsIds.isNotEmpty) {
             for (final plid in ytPlaylistsIds) {
-              YTHostedPlaylistSubpage.fromId(playlistId: plid).navigate();
+              YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
             }
           } else {
             final existing = paths.where((element) => File(element).existsSync()); // this for sussy links

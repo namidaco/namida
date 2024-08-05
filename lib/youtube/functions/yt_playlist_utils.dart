@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/result_wrapper/playlist_user_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -16,17 +23,185 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
+
+class YtUtilsPlaylist {
+  static Rxn<YoutiPieUserPlaylistsResult>? activeUserPlaylistsList;
+  static final activePlaylists = <YoutiPiePlaylistEditCallbacks>[];
+
+  Future<void> promptCreatePlaylist({
+    required BuildContext context,
+    required FutureOr<bool> Function(String title, PlaylistPrivacy? privacy) onButtonConfirm,
+  }) =>
+      _promptCreateOrEditPlaylist(
+        context: context,
+        isEdit: false,
+        playlistId: null,
+        initialTitle: null,
+        initialDescription: null,
+        initialPrivacy: null,
+        onButtonConfirm: (text, _, privacy) => onButtonConfirm(text, privacy),
+      );
+
+  Future<void> promptEditPlaylist({
+    required BuildContext context,
+    required YoutiPiePlaylistResult playlist,
+    required PlaylistInfoItemUser userPlaylist,
+    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
+  }) =>
+      _promptCreateOrEditPlaylist(
+        context: context,
+        isEdit: true,
+        playlistId: playlist.info.id.isNotEmpty ? playlist.info.id : userPlaylist.id,
+        initialTitle: playlist.info.title.isNotEmpty ? playlist.info.title : userPlaylist.title,
+        initialDescription: playlist.info.description,
+        initialPrivacy: playlist.info.privacy ?? userPlaylist.privacy,
+        onButtonConfirm: onButtonConfirm,
+      );
+
+  Future<void> _promptCreateOrEditPlaylist({
+    required BuildContext context,
+    required bool isEdit,
+    required String? playlistId,
+    required String? initialTitle,
+    required String? initialDescription,
+    required PlaylistPrivacy? initialPrivacy,
+    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
+  }) async {
+    final privacyIconsLookup = {
+      PlaylistPrivacy.public: Broken.global,
+      PlaylistPrivacy.unlisted: Broken.link,
+      PlaylistPrivacy.private: Broken.lock_1,
+    };
+    final privacyRx = (isEdit ? initialPrivacy : PlaylistPrivacy.private).obs;
+    final titleController = TextEditingController(text: initialTitle);
+    final descriptionController = isEdit ? TextEditingController(text: initialDescription) : null;
+
+    Rx<bool>? isInitiallyLoading;
+    // final shouldLoadEditInfo = isEdit && playlistId != null && (initialTitle == null || initialTitle.isEmpty || initialPrivacy == null);
+    final shouldLoadEditInfo = isEdit && playlistId != null; // we prefer always loading live info for better cross-device sync
+
+    if (shouldLoadEditInfo) {
+      isInitiallyLoading = true.obs;
+      isInitiallyLoading.value = true;
+      Future<void> fillEditInfo() async {
+        try {
+          final plEditInfo = await YoutubeInfoController.userplaylist.getPlaylistEditInfo(playlistId);
+          if (plEditInfo != null) {
+            try {
+              titleController.text = plEditInfo.title;
+            } catch (_) {}
+            try {
+              if (plEditInfo.description != null) descriptionController?.text = plEditInfo.description!;
+            } catch (_) {}
+            if (plEditInfo.privacy != null) privacyRx.value = plEditInfo.privacy!;
+          }
+        } catch (_) {}
+
+        isInitiallyLoading?.value = false;
+      }
+
+      fillEditInfo();
+    }
+
+    await showNamidaBottomSheetWithTextField(
+      context: context,
+      title: lang.CONFIGURE,
+      isInitiallyLoading: isInitiallyLoading,
+      textfieldConfig: BottomSheetTextFieldConfigWC(
+        controller: titleController,
+        hintText: initialTitle ?? '',
+        maxLength: YoutubeInfoController.userplaylist.MAX_PLAYLIST_NAME,
+        labelText: lang.NAME,
+        validator: (value) {
+          if (value == null || value.isEmpty) return lang.PLEASE_ENTER_A_NAME;
+          return YoutubeInfoController.userplaylist.validatePlaylistTitle(value);
+        },
+      ),
+      extraTextfieldsConfig: descriptionController == null
+          ? null
+          : [
+              BottomSheetTextFieldConfigWC(
+                controller: descriptionController,
+                hintText: initialDescription ?? '',
+                maxLength: YoutubeInfoController.userplaylist.MAX_PLAYLIST_DESCRIPTION,
+                labelText: lang.DESCRIPTION,
+                validator: (value) => null,
+              ),
+            ],
+      extraItemsBuilder: (formState) => Column(
+        children: [
+          const SizedBox(height: 12.0),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ObxO(
+              rx: privacyRx,
+              builder: (privacy) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: PlaylistPrivacy.values.map(
+                  (e) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: NamidaInkWellButton(
+                        icon: privacyIconsLookup[e],
+                        text: e.toText(),
+                        bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(privacy == e ? 0.5 : 0.2),
+                        onTap: () => privacyRx.value = e,
+                        trailing: const SizedBox(
+                          width: 16.0,
+                          height: 16.0,
+                          child: Checkbox.adaptive(
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                            ),
+                            value: true,
+                            onChanged: null,
+                          ),
+                        ).animateEntrance(
+                          showWhen: privacy == e,
+                          allCurves: Curves.fastLinearToSlowEaseIn,
+                          durationMS: 300,
+                        ),
+                      ),
+                    );
+                  },
+                ).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      buttonText: isEdit ? lang.SAVE : lang.ADD,
+      onButtonTap: (title) async {
+        if (title.isEmpty) return false;
+        final description = descriptionController?.text;
+        return onButtonConfirm(title, description, privacyRx.value);
+      },
+    );
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      privacyRx.close();
+      try {
+        titleController.dispose();
+      } catch (_) {}
+      try {
+        descriptionController?.dispose();
+      } catch (_) {}
+    });
+  }
+}
 
 extension YoutubePlaylistShare on YoutubePlaylist {
   Future<void> shareVideos() async => await tracks.shareVideos();
@@ -61,11 +236,13 @@ extension YoutubePlaylistShare on YoutubePlaylist {
   }) async {
     return await showNamidaBottomSheetWithTextField(
       context: context,
-      initalControllerText: playlistName,
       title: lang.RENAME_PLAYLIST,
-      hintText: playlistName,
-      labelText: lang.NAME,
-      validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
+      textfieldConfig: BottomSheetTextFieldConfig(
+        initalControllerText: playlistName,
+        hintText: playlistName,
+        labelText: lang.NAME,
+        validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
+      ),
       buttonText: lang.SAVE,
       onButtonTap: (text) async {
         final didRename = await YoutubePlaylistController.inst.renamePlaylist(playlistName, text);
@@ -234,8 +411,10 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
   }
 
   List<NamidaPopupItem> getPopupMenuItems({
+    required BuildContext context,
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlistToFetch,
+    required PlaylistInfoItemUser? userPlaylist,
     bool displayDownloadItem = true,
     bool displayShuffle = true,
     bool displayPlay = true,
@@ -243,10 +422,26 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
   }) {
     final playlist = this;
     final videosCount = playlist.videosCount;
-    final countText = videosCount == null || videosCount < 0 ? "+25" : videosCount.formatDecimalShort();
+    String? countText;
+    if (playlistToFetch is YoutiPieMixPlaylistResult) {
+      countText = videosCount?.formatDecimalShort() ?? '+25';
+    } else if (playlistToFetch is YoutiPiePlaylistResult) {
+      countText = videosCount?.formatDecimalShort();
+    }
+    countText ??= '?';
+
     final playAfterVid = YTUtils.getPlayerAfterVideo();
 
     Future<List<YoutubeID>> fetchAllIDs() async => await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
+
+    String playlistNameToAddAs = playlistToFetch.basicInfo.title;
+    String suffix = '';
+    int suffixIndex = 1;
+    while (YoutubePlaylistController.inst.playlistsMap.value["$playlistNameToAddAs$suffix"] != null) {
+      suffixIndex++;
+      suffix = ' ($suffixIndex)';
+    }
+    playlistNameToAddAs += suffix;
 
     final isInYTOnlineLibrary = playlistToFetch is YoutiPiePlaylistResult ? playlistToFetch.info.isInLibrary.value : null;
     return [
@@ -254,6 +449,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         NamidaPopupItem(
           icon: Broken.archive,
           title: isInYTOnlineLibrary ? lang.REMOVE_FROM_LIBRARY : lang.SAVE_TO_LIBRARY,
+          trailing: const Icon(Broken.global, size: 14.0),
           onTap: () async {
             bool? didSuccess;
             if (isInYTOnlineLibrary) {
@@ -270,6 +466,23 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
             } else {
               snackyy(title: lang.ERROR, message: lang.FAILED, isError: true);
             }
+          },
+        ),
+      if (playlistNameToAddAs != '')
+        NamidaPopupItem(
+          icon: Broken.add_square,
+          title: lang.ADD_AS_A_NEW_PLAYLIST,
+          subtitle: playlistNameToAddAs,
+          onTap: () async {
+            final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
+            if (!didFetch) {
+              snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+              return;
+            }
+            YoutubePlaylistController.inst.addNewPlaylist(
+              playlistNameToAddAs,
+              videoIds: playlistToFetch.items.map((e) => e.id),
+            );
           },
         ),
       NamidaPopupItem(
@@ -296,6 +509,32 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           );
         },
       ),
+      if (userPlaylist != null &&
+          playlistToFetch is YoutiPiePlaylistResult &&
+          (playlistToFetch.info.id.length == 34 || playlistToFetch.info.id.length == 36) && // exludes mixes & defaults (WL & LL)
+          playlistToFetch.info.uploader?.id == YoutubeAccountController.current.activeAccountChannel.value?.id)
+        NamidaPopupItem(
+          icon: Broken.edit_2,
+          title: lang.EDIT,
+          onTap: () async {
+            YtUtilsPlaylist().promptEditPlaylist(
+              context: context,
+              playlist: playlistToFetch,
+              userPlaylist: userPlaylist,
+              onButtonConfirm: (playlistTitle, description, privacy) async {
+                final didEdit = await YoutubeInfoController.userplaylist.editPlaylist(
+                  mainList: YtUtilsPlaylist.activeUserPlaylistsList,
+                  playlists: YtUtilsPlaylist.activePlaylists,
+                  playlistId: playlistToFetch.info.id,
+                  title: playlistTitle,
+                  description: description,
+                  privacy: privacy,
+                );
+                return didEdit == true;
+              },
+            );
+          },
+        ),
       NamidaPopupItem(
         icon: Broken.share,
         title: lang.SHARE,
@@ -317,7 +556,10 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         NamidaPopupItem(
           icon: Broken.export_2,
           title: lang.OPEN,
-          onTap: YTHostedPlaylistSubpage(playlist: playlistToFetch).navigate,
+          onTap: YTHostedPlaylistSubpage(
+            playlist: playlistToFetch,
+            userPlaylist: userPlaylist,
+          ).navigate,
         ),
       if (displayPlay)
         NamidaPopupItem(

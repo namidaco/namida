@@ -547,7 +547,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               smallIconWidget: FittedBox(
                                                                 child: NamidaLoadingSwitcher(
                                                                   size: 24.0,
-                                                                  builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                                                  builder: (loadingController) => NamidaRawLikeButton(
                                                                     isLiked: isUserLiked,
                                                                     likedIcon: Broken.like_filled,
                                                                     normalIcon: Broken.like_1,
@@ -559,8 +559,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                           page: page,
                                                                           isActive: isLiked,
                                                                           action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                                          onStart: startLoading,
-                                                                          onEnd: stopLoading,
+                                                                          onStart: loadingController.startLoading,
+                                                                          onEnd: loadingController.stopLoading,
                                                                         ),
                                                                       );
                                                                     },
@@ -585,7 +585,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               smallIconWidget: FittedBox(
                                                                 child: NamidaLoadingSwitcher(
                                                                   size: 24.0,
-                                                                  builder: (startLoading, stopLoading, isLoading) => NamidaRawLikeButton(
+                                                                  builder: (loadingController) => NamidaRawLikeButton(
                                                                     isLiked: isUserDisLiked,
                                                                     likedIcon: Broken.dislike_filled,
                                                                     normalIcon: Broken.dislike,
@@ -597,8 +597,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                           page: page,
                                                                           isActive: isDisLiked,
                                                                           action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                                                          onStart: startLoading,
-                                                                          onEnd: stopLoading,
+                                                                          onStart: loadingController.startLoading,
+                                                                          onEnd: loadingController.stopLoading,
                                                                         ),
                                                                       );
                                                                     },

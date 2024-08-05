@@ -430,24 +430,26 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   }) async {
     await showNamidaBottomSheetWithTextField(
       context: context,
-      initalControllerText: config.filename.filename,
       title: lang.RENAME,
-      hintText: config.filename.filename,
-      labelText: lang.FILE_NAME,
-      validator: (value) {
-        if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+      textfieldConfig: BottomSheetTextFieldConfig(
+        initalControllerText: config.filename.filename,
+        hintText: config.filename.filename,
+        labelText: lang.FILE_NAME,
+        validator: (value) {
+          if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
 
-        if (value.startsWith('.')) return "${lang.FILENAME_SHOULDNT_START_WITH} .";
+          if (value.startsWith('.')) return "${lang.FILENAME_SHOULDNT_START_WITH} .";
 
-        final filenameClean = YoutubeController.inst.cleanupFilename(value);
-        if (value != filenameClean) {
-          const baddiesAll = YoutubeController.cleanupFilenameRegex; // should remove \ but whatever
-          final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
-          return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
-        }
+          final filenameClean = YoutubeController.inst.cleanupFilename(value);
+          if (value != filenameClean) {
+            const baddiesAll = YoutubeController.cleanupFilenameRegex; // should remove \ but whatever
+            final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
+            return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
+          }
 
-        return null;
-      },
+          return null;
+        },
+      ),
       buttonText: lang.SAVE,
       onButtonTap: (text) async {
         final wasDownloading = YoutubeController.inst.isDownloading[config.id]?[config.filename] ?? false;

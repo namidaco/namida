@@ -22,6 +22,7 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
@@ -129,10 +130,12 @@ void showAddToPlaylistSheet({
                                 final text = await showNamidaBottomSheetWithTextField(
                                   context: context,
                                   title: lang.CONFIGURE,
-                                  initalControllerText: '',
-                                  hintText: '',
-                                  labelText: lang.NAME,
-                                  validator: (value) => pc.YoutubePlaylistController.inst.validatePlaylistName(value),
+                                  textfieldConfig: BottomSheetTextFieldConfig(
+                                    initalControllerText: '',
+                                    hintText: '',
+                                    labelText: lang.NAME,
+                                    validator: (value) => pc.YoutubePlaylistController.inst.validatePlaylistName(value),
+                                  ),
                                   buttonText: lang.ADD,
                                   onButtonTap: (text) => true,
                                 );
@@ -336,7 +339,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     }
     return NamidaLoadingSwitcher(
       showLoading: false,
-      builder: (startLoading, stopLoading, isLoading) => NamidaInkWell(
+      builder: (loadingController) => NamidaInkWell(
         animationDurationMS: 200,
         margin: const EdgeInsets.symmetric(vertical: 4.0),
         width: context.width,
@@ -355,7 +358,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                 )
               : null,
         ),
-        onTap: isLoading ? null : () => _onPlaylistTap(pl, startLoading, stopLoading),
+        onTap: loadingController.isLoading ? null : () => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -400,7 +403,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               SizedBox(
                 width: 22.0,
                 height: 22.0,
-                child: isLoading
+                child: loadingController.isLoading
                     ? const Padding(
                         padding: EdgeInsets.all(2.0),
                         child: CircularProgressIndicator(strokeWidth: 2.0),
@@ -410,7 +413,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                             padding: const EdgeInsets.all(2.0),
                             child: Checkbox.adaptive(
                               value: _newContainsVideo[pl.playlistId] ?? pl.containsVideo,
-                              onChanged: (value) => _onPlaylistTap(pl, startLoading, stopLoading),
+                              onChanged: (value) => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
                             ),
                           )
                         : _newContainsVideo[pl.playlistId] == true
@@ -514,77 +517,17 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                   ],
                 ),
                 onTap: () async {
-                  final privacyIconsLookup = {
-                    PlaylistPrivacy.public: Broken.global,
-                    PlaylistPrivacy.unlisted: Broken.link,
-                    PlaylistPrivacy.private: Broken.lock_1,
-                  };
-                  final privacyRx = PlaylistPrivacy.private.obs;
                   const addAsInitial = true;
-                  await showNamidaBottomSheetWithTextField(
+                  YtUtilsPlaylist().promptCreatePlaylist(
                     context: context,
-                    title: lang.CONFIGURE,
-                    initalControllerText: '',
-                    hintText: '',
-                    maxLength: YoutubeInfoController.userplaylist.MAX_PLAYLIST_NAME,
-                    labelText: lang.NAME,
-                    extraItemsBuilder: (formState) => Column(
-                      children: [
-                        const SizedBox(height: 12.0),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ObxO(
-                            rx: privacyRx,
-                            builder: (privacy) => Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: PlaylistPrivacy.values.map(
-                                (e) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                    child: NamidaInkWellButton(
-                                      icon: privacyIconsLookup[e],
-                                      text: e.toText(),
-                                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(privacy == e ? 0.5 : 0.2),
-                                      onTap: () => privacyRx.value = e,
-                                      trailing: const SizedBox(
-                                        width: 16.0,
-                                        height: 16.0,
-                                        child: Checkbox.adaptive(
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(Radius.circular(6.0)),
-                                          ),
-                                          value: true,
-                                          onChanged: null,
-                                        ),
-                                      ).animateEntrance(
-                                        showWhen: privacy == e,
-                                        allCurves: Curves.fastLinearToSlowEaseIn,
-                                        durationMS: 300,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ).toList(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return lang.PLEASE_ENTER_A_NAME;
-                      return YoutubeInfoController.userplaylist.validatePlaylistTitle(value);
-                    },
-                    buttonText: lang.ADD,
-                    onButtonTap: (text) async {
-                      if (text.isEmpty) return false;
-
-                      final playlistTitle = text;
+                    onButtonConfirm: (playlistTitle, privacy) async {
+                      privacy ??= PlaylistPrivacy.private;
                       final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(
+                        mainList: YtUtilsPlaylist.activeUserPlaylistsList,
                         title: playlistTitle,
                         // ignore: dead_code
                         initialVideoIds: addAsInitial ? videosList : [],
-                        privacy: privacyRx.value,
+                        privacy: privacy,
                       );
                       if (newPlaylistId != null) {
                         if (mounted) {
@@ -594,7 +537,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                               PlaylistForVideoItem(
                                 playlistId: newPlaylistId,
                                 playlistTitle: playlistTitle,
-                                privacy: privacyRx.value,
+                                privacy: privacy,
                                 containsVideo: addAsInitial,
                               ),
                             );
@@ -606,9 +549,6 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                       return false;
                     },
                   );
-                  Future.delayed(const Duration(microseconds: 300), () {
-                    privacyRx.close();
-                  });
                 },
               ),
             ),
