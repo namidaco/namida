@@ -120,8 +120,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
   bool get _isMiniplayerExpanded => MiniPlayerController.inst.animation.value >= 0.95;
 
-  bool get _tapToSeek => widget.isFullscreen ? true : _getSeekActionEnable(mode: settings.ytTapToSeek.value);
-  bool get _userDragToSeek => widget.isFullscreen ? true : _getSeekActionEnable(mode: settings.ytDragToSeek.value);
+  bool get _tapToSeek => widget.isFullscreen ? true : _getSeekActionEnable(mode: settings.youtube.tapToSeek.value);
+  bool get _userDragToSeek => widget.isFullscreen ? true : _getSeekActionEnable(mode: settings.youtube.dragToSeek.value);
 
   bool _dragToSeek = true;
   String _currentSeekStuckWord = '';
@@ -311,7 +311,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             ),
                             child: SizedBox(
                               width: maxWidth *
-                                  ((videoCached && audioCached) || (audioCached && settings.ytIsAudioOnlyMode.valueR)
+                                  ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
                                       ? 1.0
                                       : buffered > Duration.zero && durMS > 0
                                           ? buffered.inMilliseconds / durMS

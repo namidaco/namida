@@ -100,7 +100,6 @@ class _SettingsController with SettingsFileWriter {
   final defaultBackupLocation = AppDirs.BACKUPS.obs;
   final autoBackupIntervalDays = 2.obs;
   final defaultFolderStartupLocation = kStoragePaths.first.obs;
-  final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final enableFoldersHierarchy = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
@@ -142,15 +141,10 @@ class _SettingsController with SettingsFileWriter {
   final videosMaxCacheInMB = (4 * 1024).obs; // 4GB
   final audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
-  final ytMiniplayerDimAfterSeconds = 15.obs;
-  final ytMiniplayerDimOpacity = 0.5.obs;
-  final youtubeStyleMiniplayer = true.obs;
   final hideStatusBarInExpandedMiniplayer = false.obs;
   final displayFavouriteButtonInNotification = false.obs;
   final enableSearchCleanup = true.obs;
   final enableBottomNavBar = true.obs;
-  final ytPreferNewComments = false.obs;
-  final ytAutoExtractVideoTagsFromInfo = true.obs;
   final displayAudioInfoMiniplayer = false.obs;
   final showUnknownFieldsInTrackInfoDialog = true.obs;
   final extractFeatArtistFromTitle = true.obs;
@@ -161,9 +155,6 @@ class _SettingsController with SettingsFileWriter {
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = false.obs;
   final enableClipboardMonitoring = false.obs;
-  final ytIsAudioOnlyMode = false.obs;
-  final ytRememberAudioOnly = false.obs;
-  final ytTopComments = true.obs;
   final artworkGestureScale = false.obs;
   final artworkGestureDoubleTapLRC = true.obs;
   final previousButtonReplays = false.obs;
@@ -208,12 +199,8 @@ class _SettingsController with SettingsFileWriter {
   final enablePip = true.obs;
   final pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
-  final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final performanceMode = PerformanceMode.balanced.obs;
   final floatingActionButton = FABType.none.obs;
-  final ytInitialHomePage = YTHomePages.playlists.obs;
-  final ytTapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
-  final ytDragToSeek = YTSeekActionMode.all.obs;
 
   final trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -379,10 +366,6 @@ class _SettingsController with SettingsFileWriter {
       autoBackupIntervalDays.value = json['autoBackupIntervalDays'] ?? autoBackupIntervalDays.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
 
-      String ytDownloadLocationInStorage = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
-      if (!ytDownloadLocationInStorage.endsWith('/')) ytDownloadLocationInStorage += '/';
-      ytDownloadLocation.value = ytDownloadLocationInStorage;
-
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
@@ -407,15 +390,10 @@ class _SettingsController with SettingsFileWriter {
       videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
       audiosMaxCacheInMB.value = json['audiosMaxCacheInMB'] ?? audiosMaxCacheInMB.value;
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
-      ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
-      ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
-      youtubeStyleMiniplayer.value = json['youtubeStyleMiniplayer'] ?? youtubeStyleMiniplayer.value;
       hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
-      ytPreferNewComments.value = json['ytPreferNewComments'] ?? ytPreferNewComments.value;
-      ytAutoExtractVideoTagsFromInfo.value = json['ytAutoExtractVideoTagsFromInfo'] ?? ytAutoExtractVideoTagsFromInfo.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
@@ -426,9 +404,6 @@ class _SettingsController with SettingsFileWriter {
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
-      ytRememberAudioOnly.value = json['ytRememberAudioOnly'] ?? ytRememberAudioOnly.value;
-      if (ytRememberAudioOnly.value) ytIsAudioOnlyMode.value = json['ytIsAudioOnlyMode'] ?? ytIsAudioOnlyMode.value;
-      ytTopComments.value = json['ytTopComments'] ?? ytTopComments.value;
       artworkGestureScale.value = json['artworkGestureScale'] ?? artworkGestureScale.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
@@ -466,12 +441,8 @@ class _SettingsController with SettingsFileWriter {
       enablePip.value = json['enablePip'] ?? enablePip.value;
       pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
-      onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
-      ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
-      ytTapToSeek.value = YTSeekActionMode.values.getEnum(json['ytTapToSeek']) ?? ytTapToSeek.value;
-      ytDragToSeek.value = YTSeekActionMode.values.getEnum(json['ytDragToSeek']) ?? ytDragToSeek.value;
 
       trackItem.value = getEnumMap_(
             json['trackItem'],
@@ -574,7 +545,6 @@ class _SettingsController with SettingsFileWriter {
         'defaultBackupLocation': defaultBackupLocation.value,
         'autoBackupIntervalDays': autoBackupIntervalDays.value,
         'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
-        'ytDownloadLocation': ytDownloadLocation.value,
         'enableFoldersHierarchy': enableFoldersHierarchy.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
@@ -598,15 +568,10 @@ class _SettingsController with SettingsFileWriter {
         'videosMaxCacheInMB': videosMaxCacheInMB.value,
         'audiosMaxCacheInMB': audiosMaxCacheInMB.value,
         'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
-        'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
-        'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
-        'youtubeStyleMiniplayer': youtubeStyleMiniplayer.value,
         'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
         'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
         'enableSearchCleanup': enableSearchCleanup.value,
         'enableBottomNavBar': enableBottomNavBar.value,
-        'ytPreferNewComments': ytPreferNewComments.value,
-        'ytAutoExtractVideoTagsFromInfo': ytAutoExtractVideoTagsFromInfo.value,
         'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
         'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
         'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
@@ -617,9 +582,6 @@ class _SettingsController with SettingsFileWriter {
         'swipeableDrawer': swipeableDrawer.value,
         'dismissibleMiniplayer': dismissibleMiniplayer.value,
         'enableClipboardMonitoring': enableClipboardMonitoring.value,
-        'ytIsAudioOnlyMode': ytIsAudioOnlyMode.value,
-        'ytRememberAudioOnly': ytRememberAudioOnly.value,
-        'ytTopComments': ytTopComments.value,
         'artworkGestureScale': artworkGestureScale.value,
         'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
         'previousButtonReplays': previousButtonReplays.value,
@@ -631,12 +593,8 @@ class _SettingsController with SettingsFileWriter {
         'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
         'trackPlayMode': trackPlayMode.value.convertToString,
         'onNotificationTapAction': onNotificationTapAction.value.convertToString,
-        'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
         'performanceMode': performanceMode.value.convertToString,
         'floatingActionButton': floatingActionButton.value.convertToString,
-        'ytInitialHomePage': ytInitialHomePage.value.convertToString,
-        'ytTapToSeek': ytTapToSeek.value.convertToString,
-        'ytDragToSeek': ytDragToSeek.value.convertToString,
         'mostPlayedTimeRange': mostPlayedTimeRange.value.convertToString,
         'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
         'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
@@ -741,7 +699,6 @@ class _SettingsController with SettingsFileWriter {
     String? defaultBackupLocation,
     int? autoBackupIntervalDays,
     String? defaultFolderStartupLocation,
-    String? ytDownloadLocation,
     bool? enableFoldersHierarchy,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
@@ -771,15 +728,10 @@ class _SettingsController with SettingsFileWriter {
     int? videosMaxCacheInMB,
     int? audiosMaxCacheInMB,
     int? imagesMaxCacheInMB,
-    int? ytMiniplayerDimAfterSeconds,
-    double? ytMiniplayerDimOpacity,
-    bool? youtubeStyleMiniplayer,
     bool? hideStatusBarInExpandedMiniplayer,
     bool? displayFavouriteButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
-    bool? ytPreferNewComments,
-    bool? ytAutoExtractVideoTagsFromInfo,
     bool? displayAudioInfoMiniplayer,
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
@@ -790,9 +742,6 @@ class _SettingsController with SettingsFileWriter {
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
-    bool? ytIsAudioOnlyMode,
-    bool? ytRememberAudioOnly,
-    bool? ytTopComments,
     bool? artworkGestureScale,
     bool? artworkGestureDoubleTapLRC,
     bool? previousButtonReplays,
@@ -804,12 +753,8 @@ class _SettingsController with SettingsFileWriter {
     bool? localVideoMatchingCheckSameDir,
     TrackPlayMode? trackPlayMode,
     NotificationTapAction? onNotificationTapAction,
-    OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     PerformanceMode? performanceMode,
     FABType? floatingActionButton,
-    YTHomePages? ytInitialHomePage,
-    YTSeekActionMode? ytTapToSeek,
-    YTSeekActionMode? ytDragToSeek,
     MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
@@ -949,10 +894,6 @@ class _SettingsController with SettingsFileWriter {
     if (defaultBackupLocation != null) this.defaultBackupLocation.value = defaultBackupLocation;
     if (autoBackupIntervalDays != null) this.autoBackupIntervalDays.value = autoBackupIntervalDays;
     if (defaultFolderStartupLocation != null) this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
-    if (ytDownloadLocation != null) {
-      if (!ytDownloadLocation.endsWith('/')) ytDownloadLocation += '/';
-      this.ytDownloadLocation.value = ytDownloadLocation;
-    }
     if (enableFoldersHierarchy != null) this.enableFoldersHierarchy.value = enableFoldersHierarchy;
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
@@ -994,18 +935,12 @@ class _SettingsController with SettingsFileWriter {
     if (videosMaxCacheInMB != null) this.videosMaxCacheInMB.value = videosMaxCacheInMB;
     if (audiosMaxCacheInMB != null) this.audiosMaxCacheInMB.value = audiosMaxCacheInMB;
     if (imagesMaxCacheInMB != null) this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
-    if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
-    if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
-    if (youtubeStyleMiniplayer != null) this.youtubeStyleMiniplayer.value = youtubeStyleMiniplayer;
 
     if (hideStatusBarInExpandedMiniplayer != null) this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
 
     if (displayFavouriteButtonInNotification != null) this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
     if (enableSearchCleanup != null) this.enableSearchCleanup.value = enableSearchCleanup;
     if (enableBottomNavBar != null) this.enableBottomNavBar.value = enableBottomNavBar;
-    if (ytPreferNewComments != null) this.ytPreferNewComments.value = ytPreferNewComments;
-
-    if (ytAutoExtractVideoTagsFromInfo != null) this.ytAutoExtractVideoTagsFromInfo.value = ytAutoExtractVideoTagsFromInfo;
 
     if (displayAudioInfoMiniplayer != null) this.displayAudioInfoMiniplayer.value = displayAudioInfoMiniplayer;
     if (showUnknownFieldsInTrackInfoDialog != null) this.showUnknownFieldsInTrackInfoDialog.value = showUnknownFieldsInTrackInfoDialog;
@@ -1017,9 +952,6 @@ class _SettingsController with SettingsFileWriter {
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;
     if (enableClipboardMonitoring != null) this.enableClipboardMonitoring.value = enableClipboardMonitoring;
-    if (ytIsAudioOnlyMode != null) this.ytIsAudioOnlyMode.value = ytIsAudioOnlyMode;
-    if (ytRememberAudioOnly != null) this.ytRememberAudioOnly.value = ytRememberAudioOnly;
-    if (ytTopComments != null) this.ytTopComments.value = ytTopComments;
     if (artworkGestureScale != null) this.artworkGestureScale.value = artworkGestureScale;
     if (artworkGestureDoubleTapLRC != null) this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
@@ -1038,13 +970,9 @@ class _SettingsController with SettingsFileWriter {
 
     if (trackPlayMode != null) this.trackPlayMode.value = trackPlayMode;
     if (onNotificationTapAction != null) this.onNotificationTapAction.value = onNotificationTapAction;
-    if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
     if (performanceMode != null) this.performanceMode.value = performanceMode;
 
     if (floatingActionButton != null) this.floatingActionButton.value = floatingActionButton;
-    if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
-    if (ytTapToSeek != null) this.ytTapToSeek.value = ytTapToSeek;
-    if (ytDragToSeek != null) this.ytDragToSeek.value = ytDragToSeek;
     if (mostPlayedTimeRange != null) this.mostPlayedTimeRange.value = mostPlayedTimeRange;
     if (mostPlayedCustomDateRange != null) this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
     if (mostPlayedCustomisStartOfDay != null) this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;

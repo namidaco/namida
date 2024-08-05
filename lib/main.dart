@@ -342,7 +342,7 @@ Future<void> _initializeIntenties() async {
           }).whereType<String>();
           if (youtubeIds.isNotEmpty) {
             await _waitForFirstBuildContext.future;
-            settings.onYoutubeLinkOpen.value.execute(youtubeIds);
+            settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
           } else if (ytPlaylistsIds.isNotEmpty) {
             for (final plid in ytPlaylistsIds) {
               YTHostedPlaylistSubpage.fromId(playlistId: plid).navigate();

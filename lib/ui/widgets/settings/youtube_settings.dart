@@ -108,9 +108,9 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
                 icon: Broken.video_octagon,
                 title: lang.YOUTUBE_STYLE_MINIPLAYER,
-                value: settings.youtubeStyleMiniplayer.valueR,
+                value: settings.youtube.youtubeStyleMiniplayer.valueR,
                 onChanged: (isTrue) {
-                  settings.save(youtubeStyleMiniplayer: !isTrue);
+                  settings.youtube.save(youtubeStyleMiniplayer: !isTrue);
                   Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
                 },
               ),
@@ -123,8 +123,8 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.rememberAudioOnly),
                 icon: Broken.musicnote,
                 title: lang.REMEMBER_AUDIO_ONLY_MODE,
-                value: settings.ytRememberAudioOnly.valueR,
-                onChanged: (isTrue) => settings.save(ytRememberAudioOnly: !isTrue),
+                value: settings.youtube.rememberAudioOnly.valueR,
+                onChanged: (isTrue) => settings.youtube.save(rememberAudioOnly: !isTrue),
               ),
             ),
           ),
@@ -140,13 +140,13 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.TOP_COMMENTS,
                 subtitle: lang.TOP_COMMENTS_SUBTITLE,
-                value: settings.ytTopComments.valueR,
+                value: settings.youtube.topComments.valueR,
                 onChanged: (isTrue) {
-                  settings.save(ytTopComments: !isTrue);
+                  settings.youtube.save(topComments: !isTrue);
                   YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
 
                   // -- pop comments subpage in case was inside.
-                  if (settings.ytTopComments.value == false) {
+                  if (settings.youtube.topComments.value == false) {
                     if (NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
                       NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
                       NamidaNavigator.inst.isInYTCommentRepliesSubpage = false;
@@ -173,8 +173,8 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.YT_PREFER_NEW_COMMENTS,
                 subtitle: lang.YT_PREFER_NEW_COMMENTS_SUBTITLE,
-                value: settings.ytPreferNewComments.valueR,
-                onChanged: (isTrue) => settings.save(ytPreferNewComments: !isTrue),
+                value: settings.youtube.preferNewComments.valueR,
+                onChanged: (isTrue) => settings.youtube.save(preferNewComments: !isTrue),
               ),
             ),
           ),
@@ -249,7 +249,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.dimMiniplayerAfter,
             child: ObxO(
-              rx: settings.ytMiniplayerDimAfterSeconds,
+              rx: settings.youtube.ytMiniplayerDimAfterSeconds,
               builder: (ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
                 leading: const StackedIcon(
@@ -266,7 +266,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                   initValue: ytMiniplayerDimAfterSeconds,
                   text: "${ytMiniplayerDimAfterSeconds}s",
                   onValueChanged: (val) {
-                    settings.save(ytMiniplayerDimAfterSeconds: val);
+                    settings.youtube.save(ytMiniplayerDimAfterSeconds: val);
                   },
                 ),
               ),
@@ -274,10 +274,11 @@ class YoutubeSettings extends SettingSubpageProvider {
           ),
           getItemWrapper(
             key: _YoutubeSettingKeys.dimIntensity,
-            child: Obx(
-              () => CustomListTile(
+            child: ObxO(
+              rx: settings.youtube.ytMiniplayerDimAfterSeconds,
+              builder: (ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimIntensity),
-                enabled: settings.ytMiniplayerDimAfterSeconds.valueR > 0,
+                enabled: ytMiniplayerDimAfterSeconds > 0,
                 leading: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -309,7 +310,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         const origin = height / 2;
                         return Transform.rotate(
                           origin: const Offset(0, origin),
-                          angle: (settings.ytMiniplayerDimOpacity.valueR * multiplier) - minus,
+                          angle: (settings.youtube.ytMiniplayerDimOpacity.valueR * multiplier) - minus,
                           child: Container(
                             width: 2.0,
                             height: height,
@@ -324,13 +325,16 @@ class YoutubeSettings extends SettingSubpageProvider {
                   ],
                 ),
                 title: lang.DIM_INTENSITY,
-                trailing: NamidaWheelSlider(
-                  totalCount: 100,
-                  initValue: (settings.ytMiniplayerDimOpacity.valueR * 100).round(),
-                  text: "${(settings.ytMiniplayerDimOpacity.valueR * 100).round()}%",
-                  onValueChanged: (val) {
-                    settings.save(ytMiniplayerDimOpacity: val / 100);
-                  },
+                trailing: ObxO(
+                  rx: settings.youtube.ytMiniplayerDimOpacity,
+                  builder: (ytMiniplayerDimOpacity) => NamidaWheelSlider(
+                    totalCount: 100,
+                    initValue: (ytMiniplayerDimOpacity * 100).round(),
+                    text: "${(ytMiniplayerDimOpacity * 100).round()}%",
+                    onValueChanged: (val) {
+                      settings.youtube.save(ytMiniplayerDimOpacity: val / 100);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -354,14 +358,14 @@ class YoutubeSettings extends SettingSubpageProvider {
                             icon: Broken.external_drive,
                             title: e.toText(),
                             onTap: () {
-                              settings.save(ytTapToSeek: e);
+                              settings.youtube.save(tapToSeek: e);
                             },
                           ),
                         )
                         .toList(),
                     child: Obx(
                       () => Text(
-                        settings.ytTapToSeek.valueR.toText(),
+                        settings.youtube.tapToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
                     ),
@@ -377,14 +381,14 @@ class YoutubeSettings extends SettingSubpageProvider {
                             icon: Broken.external_drive,
                             title: e.toText(),
                             onTap: () {
-                              settings.save(ytDragToSeek: e);
+                              settings.youtube.save(dragToSeek: e);
                             },
                           ),
                         )
                         .toList(),
                     child: Obx(
                       () => Text(
-                        settings.ytDragToSeek.valueR.toText(),
+                        settings.youtube.dragToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
                     ),
@@ -405,8 +409,8 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.DOWNLOADS_METADATA_TAGS,
                 subtitle: lang.DOWNLOADS_METADATA_TAGS_SUBTITLE,
-                value: settings.ytAutoExtractVideoTagsFromInfo.valueR,
-                onChanged: (isTrue) => settings.save(ytAutoExtractVideoTagsFromInfo: !isTrue),
+                value: settings.youtube.autoExtractVideoTagsFromInfo.valueR,
+                onChanged: (isTrue) => settings.youtube.save(autoExtractVideoTagsFromInfo: !isTrue),
               ),
             ),
           ),
@@ -417,10 +421,10 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.downloadLocation),
                 title: lang.DEFAULT_DOWNLOAD_LOCATION,
                 icon: Broken.folder_favorite,
-                subtitle: settings.ytDownloadLocation.valueR,
+                subtitle: settings.youtube.ytDownloadLocation.valueR,
                 onTap: () async {
                   final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_DOWNLOAD_LOCATION);
-                  if (path != null) settings.save(ytDownloadLocation: path);
+                  if (path != null) settings.youtube.save(ytDownloadLocation: path);
                 },
               ),
             ),
@@ -432,7 +436,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.onOpeningYTLink),
                 icon: Broken.import_1,
                 title: lang.ON_OPENING_YOUTUBE_LINK,
-                trailingText: settings.onYoutubeLinkOpen.valueR.toText(),
+                trailingText: settings.youtube.onYoutubeLinkOpen.valueR.toText(),
                 onTap: () {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
@@ -446,13 +450,13 @@ class YoutubeSettings extends SettingSubpageProvider {
                             (e) => Padding(
                               padding: const EdgeInsets.all(6.0),
                               child: ObxO(
-                                rx: settings.onYoutubeLinkOpen,
+                                rx: settings.youtube.onYoutubeLinkOpen,
                                 builder: (onYoutubeLinkOpen) => ListTileWithCheckMark(
                                   icon: e.toIcon(),
                                   title: e.toText(),
                                   active: onYoutubeLinkOpen == e,
                                   onTap: () {
-                                    settings.save(onYoutubeLinkOpen: e);
+                                    settings.youtube.save(onYoutubeLinkOpen: e);
                                   },
                                 ),
                               ),

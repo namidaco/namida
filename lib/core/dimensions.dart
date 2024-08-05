@@ -41,7 +41,7 @@ class Dimensions {
   double get globalBottomPaddingEffectiveR {
     final currentItem = Player.inst.currentItem.valueR;
     return (currentItem is YoutubeID
-            ? settings.youtubeStyleMiniplayer.valueR
+            ? settings.youtube.youtubeStyleMiniplayer.valueR
                 ? kYoutubeMiniplayerHeight
                 : _kMiniplayerBottomPadding
             : currentItem is Selectable

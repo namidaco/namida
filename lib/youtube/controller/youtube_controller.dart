@@ -414,7 +414,7 @@ class YoutubeController {
       onMatch: (groupName, config) {
         downloadYoutubeVideos(
           useCachedVersionsIfAvailable: true,
-          autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
+          autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
           keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
           downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
           itemsConfig: [config],
@@ -436,7 +436,7 @@ class YoutubeController {
     if (finalItems.isNotEmpty) {
       await downloadYoutubeVideos(
         useCachedVersionsIfAvailable: true,
-        autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
+        autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
         itemsConfig: finalItems,

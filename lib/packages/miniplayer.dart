@@ -94,7 +94,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
               rx: Player.inst.currentItem,
               builder: (currentItem) => currentItem is YoutubeID
                   ? ObxO(
-                      rx: settings.youtubeStyleMiniplayer,
+                      rx: settings.youtube.youtubeStyleMiniplayer,
                       builder: (youtubeStyleMiniplayer) => AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: youtubeStyleMiniplayer
@@ -437,10 +437,10 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       onMenuOpen: (currentItem, d) => _openMenu(context, currentItem, d),
       focusedMenuOptions: FocusedMenuOptions<YoutubeID>(
         onOpen: (currentItem) => true,
-        onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.ytIsAudioOnlyMode.value),
+        onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
         videoIconBuilder: (currentItem, size, color) => Obx(
           () => Icon(
-            !settings.ytIsAudioOnlyMode.valueR ? Broken.video : Broken.headphone,
+            !settings.youtube.isAudioOnlyMode.valueR ? Broken.video : Broken.headphone,
             size: size,
             color: color,
           ),
@@ -448,7 +448,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         builder: (currentItem) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
           return Obx(() {
-            if (settings.ytIsAudioOnlyMode.valueR) {
+            if (settings.youtube.isAudioOnlyMode.valueR) {
               List<TextSpan>? textChildren;
               if (settings.displayAudioInfoMiniplayer.valueR) {
                 final audioStream = Player.inst.currentAudioStream.valueR;

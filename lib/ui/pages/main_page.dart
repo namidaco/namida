@@ -192,7 +192,7 @@ class MainPage extends StatelessWidget {
                 final currentItem = Player.inst.currentItem.valueR;
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 600),
-                  child: currentItem is Selectable || (currentItem is YoutubeID && !settings.youtubeStyleMiniplayer.valueR)
+                  child: currentItem is Selectable || (currentItem is YoutubeID && !settings.youtube.youtubeStyleMiniplayer.valueR)
                       ? SizedBox(
                           key: const Key('actualglow'),
                           height: 28.0,

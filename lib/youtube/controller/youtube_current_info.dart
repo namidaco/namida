@@ -4,7 +4,7 @@ class _YoutubeCurrentInfoController {
   _YoutubeCurrentInfoController._();
 
   RelatedVideosRequestParams get _relatedVideosParams => const RelatedVideosRequestParams.allowAll(); // -- from settings
-  bool get _canShowComments => settings.youtubeStyleMiniplayer.value;
+  bool get _canShowComments => settings.youtube.youtubeStyleMiniplayer.value;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
   RxBaseCore<YoutiPieChannelPageResult?> get currentChannelPage => _currentChannelPage;

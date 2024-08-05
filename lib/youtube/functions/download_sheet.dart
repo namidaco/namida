@@ -136,7 +136,7 @@ Future<void> showDownloadVideoBottomSheet({
     onVideoSelectionChanged();
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.publishedAt.date;
-    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.ytAutoExtractVideoTagsFromInfo.value);
+    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.youtube.autoExtractVideoTagsFromInfo.value);
     if (initialItemConfig == null) updateTagsMap(meta);
   }
 
@@ -672,7 +672,7 @@ Future<void> showDownloadVideoBottomSheet({
                                       if (context.mounted) context.safePop();
                                       YoutubeController.inst.downloadYoutubeVideos(
                                         useCachedVersionsIfAvailable: true,
-                                        autoExtractTitleAndArtist: settings.ytAutoExtractVideoTagsFromInfo.value,
+                                        autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
                                         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
                                         groupName: DownloadTaskGroupName(groupName: groupName),

@@ -1058,7 +1058,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       VideoController.inst.currentVideo.value = null;
                                       settings.save(enableVideoPlayback: false);
                                     },
-                                    selected: (widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.ytIsAudioOnlyMode.valueR),
+                                    selected: (widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR),
                                     isCached: false,
                                     icon: Broken.musicnote,
                                   ),
@@ -1087,7 +1087,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       },
                                       selected: widget.isLocal
                                           ? VideoController.inst.currentVideo.valueR?.path == element.path
-                                          : settings.ytIsAudioOnlyMode.valueR
+                                          : settings.youtube.isAudioOnlyMode.valueR
                                               ? false
                                               : Player.inst.currentCachedVideo.valueR?.path == element.path,
                                       isCached: true,
@@ -1122,7 +1122,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         final id = Player.inst.currentVideoR?.id;
                                         final cachedFile = id == null ? null : element.getCachedFile(id);
                                         bool isSelected = false;
-                                        if (settings.ytIsAudioOnlyMode.valueR) {
+                                        if (settings.youtube.isAudioOnlyMode.valueR) {
                                           isSelected = false;
                                         } else {
                                           final currentVS = Player.inst.currentVideoStream.valueR;
@@ -1177,7 +1177,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ),
                                     child: Obx(
                                       () {
-                                        final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.ytIsAudioOnlyMode.valueR;
+                                        final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR;
 
                                         String? qt;
                                         if (!isAudio) {

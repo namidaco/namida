@@ -57,7 +57,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
 
   bool useCachedVersionsIfAvailable = true;
-  bool autoExtractTitleAndArtist = settings.ytAutoExtractVideoTagsFromInfo.value;
+  bool autoExtractTitleAndArtist = settings.youtube.autoExtractVideoTagsFromInfo.value;
   bool keepCachedVersionsIfDownloaded = false;
   bool downloadFilesWriteUploadDate = settings.downloadFilesWriteUploadDate.value;
   bool addAudioToLocalLibrary = true;

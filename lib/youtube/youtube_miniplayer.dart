@@ -97,9 +97,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   void startDimTimer() {
     cancelDimTimer();
     if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) return;
-    final int defaultMiniplayerDimSeconds = settings.ytMiniplayerDimAfterSeconds.value;
+    final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
     if (defaultMiniplayerDimSeconds <= 0) return;
-    final double defaultMiniplayerOpacity = settings.ytMiniplayerDimOpacity.value;
+    final double defaultMiniplayerOpacity = settings.youtube.ytMiniplayerDimOpacity.value;
     if (defaultMiniplayerOpacity <= 0) return;
     _dimTimer = Timer(Duration(seconds: defaultMiniplayerDimSeconds), () {
       _canDimMiniplayer.value = true;
@@ -185,7 +185,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             reverseDuration: const Duration(milliseconds: 200),
             child: canDimMiniplayer
                 ? ObxO(
-                    rx: settings.ytMiniplayerDimOpacity,
+                    rx: settings.youtube.ytMiniplayerDimOpacity,
                     builder: (dimOpacity) => Container(
                       color: Colors.black.withOpacity(dimOpacity),
                     ),
@@ -240,7 +240,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     return DefaultTextStyle(
       style: mainTextTheme.displayMedium!,
       child: ObxO(
-        rx: settings.ytTopComments,
+        rx: settings.youtube.topComments,
         builder: (ytTopComments) => ObxO(
           rx: Player.inst.currentItem,
           builder: (currentItem) {

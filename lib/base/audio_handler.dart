@@ -94,14 +94,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   final isFetchingInfo = false.obs;
 
-  bool get _isAudioOnlyPlayback => settings.ytIsAudioOnlyMode.value;
+  bool get _isAudioOnlyPlayback => settings.youtube.isAudioOnlyMode.value;
 
   bool get isCurrentAudioFromCache => _isCurrentAudioFromCache;
   bool _isCurrentAudioFromCache = false;
 
   VideoSourceOptions? _latestVideoOptions;
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
-    settings.save(ytIsAudioOnlyMode: audioOnly);
+    settings.youtube.save(isAudioOnlyMode: audioOnly);
     if (audioOnly) {
       await super.setVideo(null);
     } else {
@@ -766,7 +766,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   _NextSeekCachedFileData? _nextSeekSetVideoCache;
 
   Future<void> tryGenerateWaveform(YoutubeID? video) async {
-    if (video != null && WaveformController.inst.isDummy && !settings.youtubeStyleMiniplayer.value) {
+    if (video != null && WaveformController.inst.isDummy && !settings.youtube.youtubeStyleMiniplayer.value) {
       final audioPath = currentCachedAudio.value?.file.path ?? _nextSeekSetAudioCache?.getFileIfPlaying(video.id)?.path;
       final dur = currentItemDuration.value;
       if (audioPath != null && dur != null) {
@@ -830,7 +830,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> _onAudioCacheAddPendingInfo(String videoId, File audioCacheFile) async {
     // -- generating waveform if needed & if still playing
     final curr = currentItem.value;
-    if (curr is YoutubeID && curr.id == videoId && WaveformController.inst.isDummy && !settings.youtubeStyleMiniplayer.value) {
+    if (curr is YoutubeID && curr.id == videoId && WaveformController.inst.isDummy && !settings.youtube.youtubeStyleMiniplayer.value) {
       final dur = currentItemDuration.value;
       if (dur != null) {
         WaveformController.inst.generateWaveform(
@@ -965,7 +965,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     Future<void> fetchFullVideoPage() async {
-      final requestComments = settings.ytPreferNewComments.value ? true : !hadCachedComments;
+      final requestComments = settings.youtube.preferNewComments.value ? true : !hadCachedComments;
       await YoutubeInfoController.current.updateVideoPage(
         item.id,
         requestPage: !hadCachedVideoPage,
@@ -1028,7 +1028,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     bool generatedWaveform = false;
     void generateWaveform() {
-      if (!generatedWaveform && !settings.youtubeStyleMiniplayer.value) {
+      if (!generatedWaveform && !settings.youtube.youtubeStyleMiniplayer.value) {
         final audioDetails = playedFromCacheDetails.audio;
         final dur = playedFromCacheDetails.duration;
         if (audioDetails != null && dur != null) {
