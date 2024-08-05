@@ -215,6 +215,7 @@ class AppDirs {
   static final THUMBNAILS = '$USER_DATA/Thumbnails/'; // extracted video thumbnails
   static final LYRICS = '$USER_DATA/Lyrics/';
   static final M3UBackup = '$USER_DATA/M3U Backup/'; // backups m3u on first found
+  static final RECENTLY_DELETED = '$USER_DATA/Recently Deleted/'; // stores files that was deleted recently
   static String get LOGS_DIRECTORY => '$USER_DATA/Logs/';
 
   // ================= Internal Storage =================
@@ -254,6 +255,7 @@ class AppDirs {
     THUMBNAILS,
     LYRICS,
     M3UBackup,
+    RECENTLY_DELETED,
     LOGS_DIRECTORY,
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,

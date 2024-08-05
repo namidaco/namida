@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:intl/intl.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -630,9 +631,12 @@ class Indexer {
   /// Removes track entries from related lists, this doesNOT delete tracks from system or remove stats entries
   Future<void> onDeleteTracksFromStoragePermanently(List<Selectable> tracksToDelete) async {
     if (tracksToDelete.isEmpty) return;
+    final recentlyDeltedFile = File("${AppDirs.RECENTLY_DELETED}${DateFormat('yyyy_MM_dd HH_mm_ss').format(DateTime.now())} - (${tracksToDelete.length}).txt");
+    final recentlyDeltedFileWrite = recentlyDeltedFile.openWrite(mode: FileMode.append);
     tracksToDelete.loop(
       (trS) {
         final tr = trS.track;
+        recentlyDeltedFileWrite.writeln(tr.path);
         allTracksMappedByYTID.remove(tr.youtubeID);
         _currentFileNamesMap.remove(tr.path.getFilename);
         tracksInfoList.value.remove(tr);
@@ -641,6 +645,7 @@ class Indexer {
         _removeThisTrackFromAlbumGenreArtistEtc(tr);
       },
     );
+    recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
     Folders.inst.currentFolder.refresh();
