@@ -1,5 +1,153 @@
 # Namida Changelog
 
+## 05/08/2024
+# v3.8.5
+### 🎉 New Features:
+   - 9e3a937: reactive folder scroll icon after pressing "go to folder"
+   - 06be631: undo  player queue track dismiss
+   - f4373fc: undo for yt queue dismiss
+   - 8c450fd: custom dialog on pressing performance mode which also allows changing artwork cache multiplier
+   - 31af954: lyrics for youtube (only when youtube-style miniplayer disabled)
+   - a5badc2: sort folders ending with numbers manually this allows folders like `Music 2` and `Music 12` to be sorted properly based on number not text
+   - 0647e83: long press favourites button to add to playlist in miniplayer ref #223
+   - dda4ca6: "go to channel" icon in track dialog when track has youtube id and channel id
+   - 995eba0: add "mark_video_watched" as a flag in youtube settings
+   - eb651ef: expose innertube client as a flag in yt settings
+   - d1cdc2e: flag to enable white bg for videos
+   - 6812f61: flag to disable dim in light mode
+   - 4a1027a: support play alac/ac3/eac3/dca and other formats ffmpeg is now used to play (vorbis opus flac alac pcm_mulaw pcm_alaw mp3 aac ac3 eac3 dca mlp truehd)
+   - 4006adb: allow importing m3u playlist as normal playlists - and expose auto importing of m3u playlists - this involves redesign of playlists page header closes #217
+   - 9f521e9: delete tracks permanently from track advanced dialog ref #66
+   - 51f4f6a: always expanded searchbar option
+   - 268ec9b: auto start radio when enabled, adds a mix playlist automatically when playing a single track
+   - dfb5dc5: add mix playlist button in add_videos dialog in yt queue. this introduced new InsertionSortingType.none
+- feat(yt):
+   - e82f32a: comments sort (top, newest) this required redesign for comments header, which required Widget implementation for PullToRefresh
+   - 938af52: description and comments native style
+   - 098a604: youtube login support comes with subscription and fixed feed ref #227
+   - c3adcd1: user notifications ref #227
+   - 02c9d8a: display red line under video thumbnails with user watch percentage
+   - f462bce: list user playlists ref #227
+   - 3391ac2: comments like/dislike ref #227
+   - 5fd9a90: comment replies ref #227
+   - c3b6742: video like/dislike - this forced yt local favourite button to be moved to video menu as "favourites" button & favourites playlist tile inside add-to-playlists bottom sheet - also "Liked" Playlist name is reverted to "Favourites"
+   - 34a10fe: channel subscribe & notifications this comes with across-pages safety, hitting the button in a place temoprarely disables other active buttons so damn cool oh ye and a sneaky lil fix ref #227
+   - 0addb27: list user history (horizontal list in playlists page & dedicated vertical page) this includes improvements for lazy list & changes for main fetcher page ref #227
+   - 2d12b32: mark video as watched works flawlessly with connection issues & accounts switching
+   - dfeb7d4: control showing of shorts and mixes in relative places
+   - f8c09f6: add/remove in youtube playlists - supports bulk videos too hehe - a promt while adding bulk (add all & remove old ones, add everything) - create playlist while adding - getPlaylistsForVideo allowed without membership
+   - f017377: show channel watermark in fullscreen (optional) ref #227
+   - 51a818d: allow saving yt playlists to online library
+   - a632fd4: edit yt playlists comes with rework of many yt playlist-related parts
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - 244fdd8: allow m3u8 to open with namida
+   - 4dacb21: some (many) fixes n tweakies
+   - 1491f50: improvements for artist/title extraction from title
+   - 6cd441d: some tweaks
+   - 356d68b: prevent backup/restore while related things are runnning
+   - d3d32e0: add mono icon for monet themes by @sujxl24
+   - 3bb2e12: increase default max video cache to 4gb muhehe
+   - 4d431db: smol fix for video comments while fetching next
+   - 9eed0da: prevent opening indexer missing tracks if related process is running
+   - ebcb12f: better ux when updating tracks/dir paths by disabling dialog tap to dismiss and confirm button while updating
+   - 5e4c3e3: various fixes & tweaks
+   - 7c750b3: favourite button in notification now works for youtube
+   - f0cd073: fixes n tweaksss
+   - 00cae0f: various fixes & tweaks - fix thumbnails in notification (hf) - fix initialization for pullToRefreshMixin - fix tracks search list not refreshing after sorting - properly show remaining duration in lrc fullscreen (if enabled) - ui tweaks for channel page & subpage - properly use PublishTime date as utc
+   - 1f7b860: cutie fixes
+   - 49e9c55: pull to refresh in yt playlists subpage & other tweaks
+   - c746c82: improvements for notification info
+   - 6ac49c7: various tweaks n fixes
+   - 0ebbcd6: tweaks & refinements
+   - 57d437c: 𝓼𝓸𝓶𝓮 𝓻𝓮𝓯𝓲𝓷𝓮𝓶𝓮𝓷𝓽𝓼 
+   - 89ed743: remove failed icon in youtube thumbnail the top right 'danger' icon indicating that no thumbnail was found
+   - 21a476a: open external playlists directly - no more dialog to prompt action, this also speeds up things since it doesnt wait till initial info is fetched - some tweaks for playlist cards too
+   - 8df7c75: force video thumbnails obtained by url to be saved in "YTThumbnails" instead of "YTThumbnails Channels" which is for links (channels/playlists/etc) - this fixes missing notification artwork for these videos
+   - 16cdb22: option to sort albums by record label
+   - 9f48569: freaky adjustments
+   - 0ad3722: allow yt download notifications to be dissmissible when paused
+   - 68457aa: soomee some some
+   - 9778f36: freaky ahh ui tweaks - remove namida logo from empty search menu - update notification heart button after updating inside app - dont display empty tooltips - disable hero effect when opening add_to_playlist dialog - pull_to_refresh animation only if mounted - other minor stuff
+   - b3c08e6: remove stats button and move section to `settings > about` or `sidebar > namida`
+   - 2133df3: various tweaks
+   - 666ee1c: some fixes n tweakies - hide "go to channel" button for playing video menu in yt miniplayer - use network like button instead of local one for youtube videos in local style miniplayer - more items in menu of youtube local style miniplayer - fix cache related thingys - perf smol refactor for TrackTilePropertiesProvider
+   - a8d5978: include channels in yt search
+   - 8ce985a: save recently deleted tracks to a file
+   - c5f19b4: apply "on notification tap" to yt miniplayer too previously it used to open local miniplayer or local miniplayer queue only, now it do the same for yt miniplayer also
+   - b2c9534: re-arrange clients in yt flag settings
+
+- fix:
+   - f8d208c: splitting artists/genres with blacklist
+   - e58be1c: faulty folder path while downloading multiple videos
+   - 36adaee: root fix for yt download location thingies reverts e58be1c
+   - 2433f30: albums & artists pages non-reactiveness
+   - ed56dd7: ui related values
+   - 446ac7f: m3u playlists path extraction
+   - 784263c: dialog popping at startup causing black screen
+   - 4db65a5: downloading video/audio when not needed
+   - e869894: yt download bullshit
+   - 5b2d098: patreon sign in with google
+   - 0cd1510: yt thumbnails not showing for some videos
+   - 71679c2: acc/membership related thingys - proper network fetching if connection was unstable - fix patreon login not redirecting back after authentication - depend internally on operation requires account - refetch current info on account changed
+   - 867aac2: thumbnail related cache files
+   - 3cc047d: build due to local libraries
+   - 2afb697: hide shorts in horizontal history not normal history page
+   - ef65992: fix yt downloads
+   - 312b12a: pull to refresh
+
+- core!:
+   - 569d0c0: migrate some yt settings to their file
+
+- perf:
+   - dad2464: tooltips rework
+   - c556cea: use splitFirst & splitLast methods
+   - a9fb736: migrate to playlist_manager v1.2.0 new implementation for favourites playlist which depends on a lookup map
+   - 43adcf3: detach reactive vars from `TrackTile` and provide using main provider for whole list and internal improvements for tracktile info builders
+
+- chore(yt):
+   - e62f47b: cache & data directories thingys
+   - 554c40f: better channel/playlists streams management
+   - 261d41b: fixes and tweaks
+   - 8bf29ac: fixes etc fixes etc
+   - 4ab32fd: change tabs header to icons cuz starting to get cluttered and hard to reach a page
+   - d84bea7: some tweaks
+   - dd1eb4a: display shorts in horizontal list in feed & related videos
+   - a09eff8: confirm before removing video like
+   - adea6db: show account header in yt playlists page
+   - 38e7bae: confirm before removing video from playlist
+
+- core(yt):
+   - dc1d784: identify av1 & vp9 streams and present them separate cache file
+   - 61bc5df: massive playback fixes & improvements - when playing cached video & streamed audio - adding video/audio info after they are cached - other silly fixes
+
+- core:
+   - ea571a8: upgrade to flutter 3.22.0 + drop getx + migrate to nampack + ReorderableList massive performance optimization + new custom Dismissible implementation + remove font multiplier and use global media query font scaler + no longer saving queue of all tracks as empty + remove search limiter + disable reordering when leaving playlist page + general changes & improvements (lazy to categorize) + more bugs
+   - e4abf82: few fixes/tweaks
+   - a937419: improve ffmpeg info parsing
+   - 895fc4c: shortcut detect non-existing tracks when playing and some playback fixes
+   - cc66282: migrate to youtipie ref #227
+   - 7d1c8bd: disable clean logs
+   - e486433: hot sauce - notification artist fall back to channel name or 'unknown artist' - remembered to load yt settings lmoa - improved perf of translatePlaylistName() - hide app bar stuff in acc & membership subpages - app bar reorder icon for playlist not refreshing due to ghosts - finally properly refresh yt download reactive maps when needed - juust lil top padding for yt top comments card - feed will no longer automatically refresh. and refresh icon is shown after n seconds passed without refreshing - notification read status update properly on refresh - comment likes count increase if liked - channel subpage stuff not refreshing - hide shorts from horizontal youtube (cuz they are not really ordered and they look ugly)
+   - 0d15636: no more slow video loading done by upgrading youtipie decipher & including throttling parameter & using same implementation of audio caching for the video this means excess video cache cleanup is managed manually now ref #252
+   - 402d358: refine track dialog ref 262
+   - 44b767e: manage queue reoder/remove lock mechanism internally & optimize reordering & shuffling all queue by using List.move() instead of removeAt() & insert() & shuffle ranged instead of removing current item, shuffle, put current item
+
+- code:
+   - 3cb5dc9: refactor NamidaPageRoute
+   - 69334c6: refactor DoneButton
+   - 2cbfe9f: refactor navigating to NamidaRouteWidget
+   - a1136c3: organize imports
+- build:
+   - 8b42d4c: unified signature allows for good shi later, but for now users will have to uninstall & install
+   - 07130b0: provide 2 beta versions (org & clone)
+- docs:
+   - ae907f5: update README with stable & beta downloads links
+- git:
+   - 2568167: generate beta changelog manually
+
+
 ## 22/05/2024
 # v2.5.6
 ### 🎉 New Features:
