@@ -75,6 +75,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     positionListener = ItemPositionsListener.create();
     fillLists(widget.initialLrc);
     Player.inst.currentItemDuration.addListener(_itemDurationUpdater);
+    Player.inst.nowPlayingPosition.addListener(_playerPositionListener);
   }
 
   int _itemDurationUpdater() {
@@ -145,16 +146,16 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       ),
     );
     lyrics = timestampsMap.values.map((e) => e.$2).toList();
-    _listenForPosition();
-    _updateHighlightedLine(Player.inst.nowPlayingPosition.value.milliseconds, jump: true);
+    _updateHighlightedLine(Player.inst.nowPlayingPosition.value, jump: true);
   }
 
-  void _listenForPosition() {
-    Player.inst.setPositionListener((ms) => _updateHighlightedLine(ms.milliseconds));
+  void _playerPositionListener() {
+    final position = Player.inst.nowPlayingPosition.value;
+    _updateHighlightedLine(position);
   }
 
-  void _updateHighlightedLine(Duration dur, {bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp <= dur);
+  void _updateHighlightedLine(int durMS, {bool forceAnimate = false, bool jump = false}) {
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _latestUpdatedLine.value = lrcDur?.timestamp;
 
@@ -227,8 +228,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   @override
   void dispose() {
-    Player.inst.setPositionListener(null);
     Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
+    Player.inst.nowPlayingPosition.removeListener(_playerPositionListener);
     _latestUpdatedLineIndex.close();
     _latestUpdatedLine.close();
     _currentItemDurationSeconds.close();
@@ -390,7 +391,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 _scrollTimer = Timer(const Duration(seconds: 3), () {
                                   _canAnimateScroll = true;
                                   if (Player.inst.isPlaying.value) {
-                                    _updateHighlightedLine(Player.inst.nowPlayingPosition.value.milliseconds, forceAnimate: true);
+                                    _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true);
                                   }
                                   if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
                                     refreshState(() => _isCurrentLineEmpty = true);
@@ -453,7 +454,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                         splashFactory: InkSparkle.splashFactory,
                                                         onTap: () {
                                                           Player.inst.seek(lrc.timestamp);
-                                                          _updateHighlightedLine(lrc.timestamp, forceAnimate: true);
+                                                          _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
                                                         },
                                                       ),
                                                     ),

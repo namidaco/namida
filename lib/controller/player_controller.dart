@@ -132,10 +132,6 @@ class Player {
 
   int sleepingItemIndex(int sleepAfterItems, int currentIndex) => sleepAfterItems + currentIndex - 1;
 
-  void setPositionListener(void Function(int ms)? fn) {
-    _audioHandler.positionListener = fn;
-  }
-
   bool get isModifyingQueue => _audioHandler.isModifyingQueue;
 
   // -- error playing track
