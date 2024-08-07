@@ -570,7 +570,7 @@ class TrackTileManager {
     TrackTileItem.artists: (track) => track.originalArtist.overflow,
     TrackTileItem.album: (track) => track.album.overflow,
     TrackTileItem.albumArtist: (track) => track.albumArtist.overflow,
-    TrackTileItem.genres: (track) => track.genresList.take(4).join(', ').overflow,
+    TrackTileItem.genres: (track) => track.originalGenre.overflow,
     TrackTileItem.duration: (track) => track.duration.secondsLabel,
     TrackTileItem.year: (track) => track.year.yearFormatted,
     TrackTileItem.trackNumber: (track) => track.trackNo.toString(),
