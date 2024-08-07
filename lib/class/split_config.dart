@@ -89,19 +89,19 @@ class SplitDelimiter {
 
   List<String> multiSplit(String text, List<String> blacklist) {
     if (_regex == null) return [text];
+    if (blacklist.isNotEmpty && blacklist.any((element) => element == text)) return [text]; // 3 times faster if true, otherwise no difference.
 
     final listToAddLater = <String>[];
-    String filteredString = '';
+    String filteredString = text;
     if (blacklist.isNotEmpty) {
       blacklist.loop((b) {
-        final withoutBL = text.split(b);
+        final withoutBL = filteredString.split(b);
         if (withoutBL.length > 1) {
-          withoutBL.loop((s) => filteredString += s.trim());
+          filteredString = withoutBL.join();
           listToAddLater.add(b);
         }
       });
     }
-    if (filteredString == '') filteredString = text;
 
     final splitted = filteredString.split(_regex).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     splitted.addAll(listToAddLater);
