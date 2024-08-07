@@ -728,6 +728,8 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
 
   Drag? _dragStart(Offset position) {
     assert(_dragInfo == null);
+    if (_dragInfo != null) return null; // already reordering an item.
+
     final _ReorderableItemState item = _items[_dragIndex!]!;
     item.dragging = true;
     widget.onReorderStart?.call(_dragIndex!);
