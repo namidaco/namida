@@ -6,14 +6,20 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 <a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
 </a>
-<a href="https://t.me/namida_official">![](https://img.shields.io/badge/Telegram-Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_official)
+<a href="https://t.me/namida_official">![](https://img.shields.io/badge/Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_officialt&logo=telegram&logoColor=white)
 </a>
-<a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Telegram-Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk)
+<a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk&logo=telegram&logoColor=white)
 </a>
-<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-Server-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT)
+<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT&logo=discord&logoColor=white)
 </a>
 <a href="https://github.com/namidaco/namida/releases">
 ![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
+</a>
+<a href="https://github.com/namidaco/namida/releases">
+[![Hits-of-Code](https://hitsofcode.com/github/namidaco/namida?branch=main)](https://hitsofcode.com/github/namidaco/namida/view?branch=main)
+</a>
+<a href="https://github.com/namidaco/namida/releases">
+[![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/namidaco/namida/badge?style=flat&logo=dart&logoColor=aqua&label=Total%20Lines&color=darkturquoise)](https://ghloc.vercel.app/namidaco/namida?branch=main)
 </a>
 <a href="https://translate.codeberg.org/engage/namida-translations/">
 <img src="https://translate.codeberg.org/widget/namida-translations/namicomp/svg-badge.svg" alt="Translation status" />
