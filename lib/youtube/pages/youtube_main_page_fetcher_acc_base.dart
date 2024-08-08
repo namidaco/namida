@@ -154,7 +154,14 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   }
 
   void _onAccChanged() {
-    _onInit(forceRequest: true);
+    final isSignedIn = YoutubeAccountController.current.activeAccountChannel.value != null;
+    if (isSignedIn) {
+      _onInit(forceRequest: true);
+    } else {
+      _currentFeed.value = null;
+      _lastFetchWasCached.value = false;
+      _refreshButtonShown.value = false;
+    }
   }
 
   @override
