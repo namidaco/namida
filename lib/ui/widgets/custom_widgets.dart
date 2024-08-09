@@ -2064,6 +2064,7 @@ class NamidaLogoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = context.isDarkMode ? const Color(0xd2262729) : const Color(0xd83c3f46);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
       child: NamidaInkWell(
@@ -2080,11 +2081,11 @@ class NamidaLogoContainer extends StatelessWidget {
           height: 54.0,
           padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
           decoration: BoxDecoration(
-            color: context.isDarkMode ? const Color(0xffb9a48b).withAlpha(200) : const Color(0xffdfc6a7).withAlpha(255),
+            color: bgColor,
             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xffdfc6a7).withAlpha(context.isDarkMode ? 40 : 100),
+                color: bgColor.withAlpha(context.isDarkMode ? 40 : 100),
                 spreadRadius: 0.2,
                 blurRadius: 8.0,
                 offset: const Offset(0.0, 4.0),
@@ -2094,7 +2095,7 @@ class NamidaLogoContainer extends StatelessWidget {
           child: Row(
             children: [
               Image.asset(
-                'assets/namida_icon.png',
+                'assets/namida_icon_monet.png',
                 width: 40.0,
                 height: 40.0,
                 cacheHeight: 240,
@@ -2104,7 +2105,7 @@ class NamidaLogoContainer extends StatelessWidget {
               Text(
                 'Namida',
                 style: context.textTheme.displayLarge?.copyWith(
-                  color: Color.alphaBlend(const Color(0xffdfc6a7).withAlpha(90), Colors.white),
+                  color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
                   fontSize: 17.5,
                 ),
               ),

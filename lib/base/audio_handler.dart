@@ -1791,7 +1791,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
       duration: duration ?? Duration(seconds: tr.duration),
-      artUri: Uri.file(File(imagePage).existsSync() ? imagePage : AppPaths.NAMIDA_LOGO),
+      artUri: Uri.file(File(imagePage).existsSync() ? imagePage : AppPaths.NAMIDA_LOGO_MONET),
     );
   }
 }
@@ -1823,7 +1823,7 @@ extension YoutubeIDToMediaItem on YoutubeID {
       displaySubtitle: videoChannelTitle,
       displayDescription: "${currentIndex + 1}/$queueLength",
       duration: videoDuration ?? Duration.zero,
-      artUri: Uri.file((thumbnail != null && thumbnail.existsSync()) ? thumbnail.path : AppPaths.NAMIDA_LOGO),
+      artUri: Uri.file((thumbnail != null && thumbnail.existsSync()) ? thumbnail.path : AppPaths.NAMIDA_LOGO_MONET),
     );
   }
 }

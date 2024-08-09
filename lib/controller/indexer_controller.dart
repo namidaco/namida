@@ -1327,9 +1327,9 @@ class Indexer {
   }
 
   Future<void> _createDefaultNamidaArtwork() async {
-    if (!await File(AppPaths.NAMIDA_LOGO).exists()) {
-      final byteData = await rootBundle.load('assets/namida_icon.png');
-      final file = await File(AppPaths.NAMIDA_LOGO).create(recursive: true);
+    if (!await File(AppPaths.NAMIDA_LOGO_MONET).exists()) {
+      final byteData = await rootBundle.load('assets/namida_icon_monet.png');
+      final file = await File(AppPaths.NAMIDA_LOGO_MONET).create(recursive: true);
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }

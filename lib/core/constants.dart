@@ -189,6 +189,7 @@ class AppPaths {
   static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
   static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
+  static final NAMIDA_LOGO_MONET = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK_MONET.PNG';
 
   // ================= Youtube =================
   static final YT_LIKES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_likes.json';
