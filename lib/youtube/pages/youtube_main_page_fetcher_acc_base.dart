@@ -168,9 +168,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   void initState() {
     super.initState();
     widget.onInitState?.call(_currentFeed);
-    _onInit();
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
+    Future.delayed(Duration.zero, _onInit); // delayed to prevent setState error when snackbar is shown
   }
 
   @override
