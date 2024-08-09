@@ -1520,6 +1520,7 @@ class NamidaIconButton extends StatefulWidget {
   final void Function()? onPressed;
   final void Function(LongPressStartDetails details)? onLongPressStart;
   final void Function()? onLongPressFinish;
+  final void Function()? onLongPress;
   final String Function()? tooltip;
   final bool disableColor;
   final Widget? child;
@@ -1533,6 +1534,7 @@ class NamidaIconButton extends StatefulWidget {
     this.onPressed,
     this.onLongPressStart,
     this.onLongPressFinish,
+    this.onLongPress,
     this.iconSize,
     this.iconColor,
     this.tooltip,
@@ -1558,8 +1560,9 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
         onTapCancel: () => setState(() => isPressed = false),
         onTap: widget.onPressed,
         onLongPressStart: widget.onLongPressStart,
-        onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish,
+        onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish!(),
         onLongPressCancel: widget.onLongPressFinish,
+        onLongPress: widget.onLongPress,
         onLongPressUp: widget.onLongPressFinish,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),

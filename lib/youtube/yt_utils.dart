@@ -210,7 +210,7 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.copy,
           title: lang.COPY,
-          onTap: () => YTUtils().copyCurrentVideoUrl(videoId),
+          onTap: () => YTUtils().copyCurrentVideoUrl(videoId, withTimestamp: false),
         ),
       if (channelID != null && channelID.isNotEmpty)
         NamidaPopupItem(
@@ -662,14 +662,17 @@ class YTUtils {
     );
   }
 
-  void copyCurrentVideoUrl(String videoId) {
+  void copyCurrentVideoUrl(String videoId, {required bool withTimestamp}) {
     if (videoId != '') {
-      final atSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
-      final timeStamp = atSeconds > 0 ? '?t=$atSeconds' : '';
-      final finalUrl = "https://www.youtube.com/watch?v=$videoId$timeStamp";
+      String finalUrl = 'https://www.youtube.com/watch?v=$videoId';
+      if (withTimestamp) {
+        final atSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
+        if (atSeconds > 0) finalUrl += '?t=$atSeconds';
+      }
       Clipboard.setData(ClipboardData(text: finalUrl));
       snackyy(
-        message: lang.COPIED_TO_CLIPBOARD,
+        title: lang.COPIED_TO_CLIPBOARD,
+        message: finalUrl,
         top: false,
         leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
       );
