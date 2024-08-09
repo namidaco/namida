@@ -96,6 +96,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                     content: ListView.builder(
                       padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
                       primary: false,
+                      physics: const NeverScrollableScrollPhysics(),
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: videos.length,
                       itemBuilder: (context, i) {

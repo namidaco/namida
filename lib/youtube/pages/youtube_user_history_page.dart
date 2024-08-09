@@ -195,6 +195,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             primary: false,
+            physics: const NeverScrollableScrollPhysics(),
             itemExtentBuilder: (index, dimensions) {
               final item = items[index];
               if (item is StreamInfoItemShort) return 0;

@@ -329,6 +329,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                     height: itemsLengthWithoutHiddens * thumbnailItemExtent,
                                                     child: ListView.builder(
                                                       primary: false,
+                                                      physics: const NeverScrollableScrollPhysics(),
                                                       itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
                                                       // -- we use extent builder only if shorts/mixes are hidden
                                                       itemExtentBuilder: isShortsVisible && isMixesVisible

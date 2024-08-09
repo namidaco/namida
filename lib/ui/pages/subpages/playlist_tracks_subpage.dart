@@ -144,6 +144,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                         content: ListView.builder(
                           padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
                           primary: false,
+                          physics: const NeverScrollableScrollPhysics(),
                           itemExtent: Dimensions.inst.trackTileItemExtent,
                           itemCount: tracks.length,
                           itemBuilder: (context, i) {
