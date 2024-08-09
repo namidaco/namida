@@ -171,18 +171,6 @@ class CustomizationSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _CustomizationSettingsKeys.displayRemainingDur,
-            child: Obx(
-              () => CustomSwitchListTile(
-                bgColor: getBgColor(_CustomizationSettingsKeys.displayRemainingDur),
-                icon: Broken.timer,
-                title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
-                onChanged: (isTrue) => settings.player.save(displayRemainingDurInsteadOfTotal: !isTrue),
-                value: settings.player.displayRemainingDurInsteadOfTotal.valueR,
-              ),
-            ),
-          ),
-          getItemWrapper(
             key: _CustomizationSettingsKeys.brMultiplier,
             child: Obx(
               () => CustomListTile(
@@ -296,6 +284,18 @@ class CustomizationSettings extends SettingSubpageProvider {
                   );
                   scrollController.disposeAfterAnimation();
                 },
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.displayRemainingDur,
+            child: Obx(
+              () => CustomSwitchListTile(
+                bgColor: getBgColor(_CustomizationSettingsKeys.displayRemainingDur),
+                icon: Broken.timer,
+                title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
+                onChanged: (isTrue) => settings.player.save(displayRemainingDurInsteadOfTotal: !isTrue),
+                value: settings.player.displayRemainingDurInsteadOfTotal.valueR,
               ),
             ),
           ),
