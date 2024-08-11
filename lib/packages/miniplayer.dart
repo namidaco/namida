@@ -584,55 +584,12 @@ class _AnimatingTrackImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ObxO(
-      rx: settings.artworkGestureDoubleTapLRC,
-      builder: (artworkGestureDoubleTapLRC) => DoubleTapDetector(
-        // -- only when lrc view is not visible, to prevent other gestures delaying.
-        onDoubleTap: artworkGestureDoubleTapLRC && Lyrics.inst.currentLyricsLRC.value == null
-            ? () {
-                settings.save(enableLyrics: !settings.enableLyrics.value);
-                Lyrics.inst.updateLyrics(track);
-              }
-            : null,
-        child: GestureDetector(
-          onLongPress: () {
-            Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen();
-          },
-          onScaleStart: (details) {
-            final lrcState = Lyrics.inst.lrcViewKey?.currentState;
-            final lrcVisible = lrcState != null;
-            _isScalingLRC = lrcVisible;
-            _previousScale = lrcVisible ? 1.0 : settings.animatingThumbnailScaleMultiplier.value;
-          },
-          onScaleUpdate: (details) {
-            if (_isScalingLRC || settings.artworkGestureScale.value) {
-              final m = (details.scale * _previousScale);
-              if (_isScalingLRC) {
-                _lrcAdditionalScale.value = m;
-              } else {
-                settings.save(animatingThumbnailScaleMultiplier: m.clamp(0.4, 1.5));
-              }
-            }
-          },
-          onScaleEnd: (details) {
-            final lrcState = Lyrics.inst.lrcViewKey?.currentState;
-            if (lrcState != null) {
-              final pps = details.velocity.pixelsPerSecond;
-              if (pps.dx > 0 || pps.dy > 0) {
-                lrcState.enterFullScreen();
-              }
-            }
-            _lrcAdditionalScale.value = 0.0;
-          },
-          child: _AnimatingThumnailWidget(
-            cp: cp,
-            isLocal: true,
-            fallback: _TrackImage(
-              track: track,
-              cp: cp,
-            ),
-          ),
-        ),
+    return _AnimatingThumnailWidget(
+      cp: cp,
+      isLocal: true,
+      fallback: _TrackImage(
+        track: track,
+        cp: cp,
       ),
     );
   }

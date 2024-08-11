@@ -42,7 +42,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-class FocusedMenuOptions<E> {
+class FocusedMenuOptions<E extends Playable> {
   final bool Function(E currentItem) onOpen;
   final void Function(E currentItem) onPressed;
   final Widget Function(E currentItem, double size, Color color) videoIconBuilder;
@@ -68,7 +68,7 @@ class FocusedMenuOptions<E> {
   });
 }
 
-class MiniplayerInfoData<T, E> {
+class MiniplayerInfoData<T extends Playable, E> {
   final String firstLine;
   final String secondLine;
   final FavouritePlaylist<T, E> favouritePlaylist;
@@ -98,7 +98,7 @@ class MiniplayerInfoData<T, E> {
         secondLineGood = secondLine.isNotEmpty;
 }
 
-class NamidaMiniPlayerBase<E> extends StatefulWidget {
+class NamidaMiniPlayerBase<E extends Playable> extends StatefulWidget {
   final double queueItemExtent;
   final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties) itemBuilder;
   final int Function(E currentItem)? getDurationMS;
@@ -136,7 +136,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   State<NamidaMiniPlayerBase<E>> createState() => _NamidaMiniPlayerBaseState<E>();
 }
 
-class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
+class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPlayerBase<E>> {
   final isMenuOpened = false.obs;
   final isLoadingMore = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
@@ -1121,7 +1121,32 @@ class _NamidaMiniPlayerBaseState<E> extends State<NamidaMiniPlayerBase<E>> {
                                 maxOffset: maxOffset,
                                 child: Padding(
                                   padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                  child: currentImage,
+                                  child: LongPressDetector(
+                                    onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
+                                    child: ObxO(
+                                      rx: settings.artworkGestureDoubleTapLRC,
+                                      builder: (artworkGestureDoubleTapLRC) {
+                                        if (artworkGestureDoubleTapLRC) {
+                                          return ObxO(
+                                            rx: Lyrics.inst.currentLyricsLRC,
+                                            builder: (currentLyricsLRC) {
+                                              // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                              return DoubleTapDetector(
+                                                onDoubleTap: currentLyricsLRC == null
+                                                    ? () {
+                                                        settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                        Lyrics.inst.updateLyrics(currentItem);
+                                                      }
+                                                    : null,
+                                                child: currentImage,
+                                              );
+                                            },
+                                          );
+                                        }
+                                        return currentImage;
+                                      },
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1239,7 +1264,7 @@ class _RawImageContainer extends StatelessWidget {
   }
 }
 
-class _TrackInfo<T, E> extends StatelessWidget {
+class _TrackInfo<T extends Playable, E> extends StatelessWidget {
   final MiniplayerInfoData<T, E> textData;
   final double cp;
   final double qp;
