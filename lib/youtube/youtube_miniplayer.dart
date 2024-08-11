@@ -283,7 +283,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     final channelThumbnail = channel?.thumbnails.pick()?.url;
                     final channelIsVerified = channel?.isVerified ?? false;
                     final channelSubs = channel?.subscribersCount;
-                    final channelID = channel?.id ?? videoInfoStream?.channelId;
+                    String? channelID = channel?.id ?? videoInfoStream?.channelId;
+                    if (channelID == null || channelID.isEmpty) channelID = YoutubeInfoController.utils.getVideoChannelID(currentId);
 
                     final videoViewCount = videoInfo?.viewsCount;
 
@@ -702,9 +703,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   type: MaterialType.transparency,
                                                   child: InkWell(
                                                     onTap: () {
-                                                      final ch = channel ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
-                                                      final chid = ch?.id;
-                                                      if (chid != null) YTChannelSubpage(channelID: chid, channel: ch).navigate();
+                                                      final channelInfo = channel ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
+                                                      String? chid = channel?.id ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.id;
+                                                      if (chid == null || chid.isEmpty) chid = YoutubeInfoController.utils.getVideoChannelID(currentId);
+                                                      if (chid != null) YTChannelSubpage(channelID: chid, channel: channelInfo).navigate();
                                                     },
                                                     child: Row(
                                                       children: [
