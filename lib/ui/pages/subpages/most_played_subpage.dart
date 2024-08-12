@@ -154,7 +154,10 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           icon: Broken.close_circle,
                           iconSize: 14.0,
                           iconColor: textColor,
-                          onPressed: () => _onSelectingTimeRange(mptr: MostPlayedTimeRange.allTime, dateCustom: DateRange.dummy()),
+                          onPressed: () => _onSelectingTimeRange(
+                            mptr: _isEnabled(MostPlayedTimeRange.custom) ? MostPlayedTimeRange.allTime : null,
+                            dateCustom: DateRange.dummy(),
+                          ),
                         ),
                       ).animateEntrance(
                         showWhen: dateRange.oldest != DateTime(0),
