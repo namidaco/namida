@@ -1000,7 +1000,7 @@ Future<void> showGeneralPopupDialog(
                                         (e) => _SmallUnderlinedChip(
                                           text: e.$1,
                                           textTheme: theme.textTheme,
-                                          onTap: () => () => NamidaOnTaps.inst.onAlbumTap(e.$2),
+                                          onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
                                         ),
                                       ),
                                     ],
