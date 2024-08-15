@@ -39,7 +39,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     availableLyrics.add(
       LyricsModel(
         lyrics: embedded,
-        synced: embedded.parseLRC() != null,
+        synced: embedded.isValidLRC(),
         fromInternet: false,
         isInCache: false,
         file: null,

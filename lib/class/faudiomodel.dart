@@ -98,6 +98,53 @@ class FTags {
     this.recordLabel,
   });
 
+  static String? _listToString(List? list) {
+    if (list == null || list.isEmpty) return null;
+    if (list.length == 1) return list[0];
+    return list.join('; ');
+  }
+
+  // -- upper cased are the ones extracted manually.
+  factory FTags.fromMap(Map<String, dynamic> map) {
+    var lyricsList = map["lyrics"] as List?;
+    if (map["LYRICS"] is String) {
+      // -- recreating bcz its fixed length.
+      lyricsList = [
+        map["LYRICS"] as String,
+        ...?lyricsList,
+      ];
+    }
+
+    return FTags(
+      path: map["path"],
+      artwork: FArtwork.fromMap(map),
+      title: _listToString(map["title"]) ?? map["TITLE"],
+      album: _listToString(map["album"]) ?? map["ALBUM"],
+      albumArtist: _listToString(map["albumArtist"]) ?? map["ALBUMARTIST"],
+      artist: _listToString(map["artist"]) ?? map["ARTIST"],
+      composer: _listToString(map["composer"]) ?? map["COMPOSER"],
+      genre: _listToString(map["genre"]) ?? map["GENRE"],
+      trackNumber: map["trackNumber"] ?? map["TRACKNUMBER"],
+      trackTotal: map["trackTotal"] ?? map["TRACKTOTAL"],
+      discNumber: map["discNumber"] ?? map["DISCNUMBER"],
+      discTotal: map["discTotal"] ?? map["DISCTOTAL"],
+      lyrics: lyricsList?.firstWhereEff((e) => e is String ? e.isValidLRC() : false) ?? lyricsList?.firstOrNull,
+      comment: _listToString(map["comment"]) ?? map["COMMENT"],
+      year: _listToString(map["year"]) ?? map["YEAR"],
+      language: _listToString(map["language"]) ?? map["LANGUAGE"],
+      lyricist: _listToString(map["lyricist"]) ?? map["LYRICIST"],
+      djmixer: _listToString(map["djmixer"]) ?? map["DJMIXER"],
+      mixer: _listToString(map["mixer"]) ?? map["MIXER"],
+      mood: _listToString(map["mood"]) ?? map["MOOD"],
+      rating: map["rating"] ?? map["RATING"],
+      remixer: _listToString(map["remixer"]) ?? map["REMIXER"],
+      tags: _listToString(map["tags"]) ?? map["TAGS"],
+      tempo: _listToString(map["tempo"]) ?? map["TEMPO"],
+      country: _listToString(map["country"]) ?? map["COUNTRY"],
+      recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       "path": path,
@@ -163,34 +210,7 @@ class FAudioModel {
 
   factory FAudioModel.fromMap(Map<String, dynamic> map) {
     return FAudioModel(
-      tags: FTags(
-        path: map["path"],
-        artwork: FArtwork.fromMap(map),
-        title: map["title"],
-        album: map["album"],
-        albumArtist: map["albumArtist"],
-        artist: map["artist"],
-        composer: map["composer"],
-        genre: map["genre"],
-        trackNumber: map["trackNumber"],
-        trackTotal: map["trackTotal"],
-        discNumber: map["discNumber"],
-        discTotal: map["discTotal"],
-        lyrics: map["lyrics"],
-        comment: map["comment"],
-        year: map["year"],
-        language: map["language"],
-        lyricist: map["lyricist"],
-        djmixer: map["djmixer"],
-        mixer: map["mixer"],
-        mood: map["mood"],
-        rating: map["rating"],
-        remixer: map["remixer"],
-        tags: map["tags"],
-        tempo: map["tempo"],
-        country: map["country"],
-        recordLabel: map["recordLabel"],
-      ),
+      tags: FTags.fromMap(map),
       length: map["length"],
       bitRate: map["bitRate"],
       channels: map["channels"],

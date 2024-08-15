@@ -402,6 +402,7 @@ extension LRCParsingUtils on String {
     } catch (_) {
       try {
         final res = LRCParserSmart(this).parseLines();
+        if (res.isEmpty) return null;
         final lines = res
             .map(
               (e) => LrcLine(
@@ -415,6 +416,20 @@ extension LRCParsingUtils on String {
       } catch (_) {}
     }
     return null;
+  }
+
+  bool isValidLRC() {
+    bool valid = false;
+    try {
+      valid = Lrc.isValid(this);
+    } catch (_) {}
+    if (!valid) {
+      try {
+        final res = LRCParserSmart(this).parseLines();
+        valid = res.isNotEmpty;
+      } catch (_) {}
+    }
+    return valid;
   }
 }
 

@@ -247,33 +247,50 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
         val tag: Tag? = audioFile.getTag()
         if (tag != null) {
           // -- Tags
-          val year = tag.getFirst(FieldKey.YEAR)
-          val album = tag.getFirst(FieldKey.ALBUM)
-          val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
-          metadata["country"] = tag.getFirst(FieldKey.COUNTRY)
-          metadata["recordLabel"] = tag.getFirst(FieldKey.RECORD_LABEL)
-          metadata["language"] = tag.getFirst(FieldKey.LANGUAGE)
-          metadata["tempo"] = tag.getFirst(FieldKey.TEMPO)
-          metadata["tags"] = tag.getFirst(FieldKey.TAGS)
-          metadata["remixer"] = tag.getFirst(FieldKey.REMIXER)
+          val year = tag.getAll(FieldKey.YEAR)
+          val album = tag.getAll(FieldKey.ALBUM)
+          val albumArtist = tag.getAll(FieldKey.ALBUM_ARTIST)
+          metadata["country"] = tag.getAll(FieldKey.COUNTRY)
+          metadata["recordLabel"] = tag.getAll(FieldKey.RECORD_LABEL)
+          metadata["language"] = tag.getAll(FieldKey.LANGUAGE)
+          metadata["tempo"] = tag.getAll(FieldKey.TEMPO)
+          metadata["tags"] = tag.getAll(FieldKey.TAGS)
+          metadata["remixer"] = tag.getAll(FieldKey.REMIXER)
           metadata["rating"] = tag.getFirst(FieldKey.RATING)
-          metadata["mood"] = tag.getFirst(FieldKey.MOOD)
-          metadata["mixer"] = tag.getFirst(FieldKey.MIXER)
-          metadata["djmixer"] = tag.getFirst(FieldKey.DJMIXER)
-          metadata["lyricist"] = tag.getFirst(FieldKey.LYRICIST)
-          metadata["lyrics"] = tag.getFirst(FieldKey.LYRICS)
+          metadata["mood"] = tag.getAll(FieldKey.MOOD)
+          metadata["mixer"] = tag.getAll(FieldKey.MIXER)
+          metadata["djmixer"] = tag.getAll(FieldKey.DJMIXER)
+          metadata["lyricist"] = tag.getAll(FieldKey.LYRICIST)
+          metadata["lyrics"] = tag.getAll(FieldKey.LYRICS)
           metadata["discTotal"] = tag.getFirst(FieldKey.DISC_TOTAL)
           metadata["discNumber"] = tag.getFirst(FieldKey.DISC_NO)
           metadata["trackTotal"] = tag.getFirst(FieldKey.TRACK_TOTAL)
           metadata["trackNumber"] = tag.getFirst(FieldKey.TRACK)
           metadata["year"] = year
-          metadata["comment"] = tag.getFirst(FieldKey.COMMENT)
-          metadata["genre"] = tag.getFirst(FieldKey.GENRE)
-          metadata["composer"] = tag.getFirst(FieldKey.COMPOSER)
-          metadata["artist"] = tag.getFirst(FieldKey.ARTIST)
+          metadata["comment"] = tag.getAll(FieldKey.COMMENT)
+          metadata["genre"] = tag.getAll(FieldKey.GENRE)
+          metadata["composer"] = tag.getAll(FieldKey.COMPOSER)
+          metadata["artist"] = tag.getAll(FieldKey.ARTIST)
           metadata["albumArtist"] = albumArtist
           metadata["album"] = album
-          metadata["title"] = tag.getFirst(FieldKey.TITLE)
+          metadata["title"] = tag.getAll(FieldKey.TITLE)
+
+          try {
+            // -- filling missing id3v2 fields `TXXX`
+            val txxxRegex = """Description="([^"]*)"; Text="([^"]*)";""".toRegex()
+
+            tag.getFields("TXXX").forEach {
+              txxxRegex.findAll(it.toString()).forEach { matchResult ->
+                try {
+                  val key = matchResult.groupValues[1]
+                  if (metadata[key] == null) {
+                    val value = matchResult.groupValues[2]
+                    metadata[key] = value
+                  }
+                } catch (_: Exception) {}
+              }
+            }
+          } catch (_: Exception) {}
 
           if (extractArtwork) {
             try {
@@ -407,16 +424,16 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             newTag.setField(newTag.createArtworkField(getImageData()))
           } else if (newTag is FlacTag) {
             newTag.setField(
-                newTag.createArtworkField(
-                    getImageData(),
-                    PictureTypes.DEFAULT_ID,
-                    ImageFormats.MIME_TYPE_JPEG,
-                    "artwork",
-                    0,
-                    0,
-                    24,
-                    0
-                )
+                    newTag.createArtworkField(
+                            getImageData(),
+                            PictureTypes.DEFAULT_ID,
+                            ImageFormats.MIME_TYPE_JPEG,
+                            "artwork",
+                            0,
+                            0,
+                            24,
+                            0
+                    )
             )
           } else if (newTag is VorbisCommentTag) {
             val base64image = Base64.getEncoder().encodeToString(getImageData())
@@ -424,11 +441,11 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             newTag.setField(newTag.createField(VorbisCommentFieldKey.COVERARTMIME, "image/png"))
           } else {
             val cover =
-                if (artworkIsPath) ArtworkFactory.createArtworkFromFile(File(artwork as String))
-                else
-                    ArtworkFactory.createArtworkFromMetadataBlockDataPicture(
-                        MetadataBlockDataPicture(ByteBuffer.wrap(artwork as ByteArray))
-                    )
+                    if (artworkIsPath) ArtworkFactory.createArtworkFromFile(File(artwork as String))
+                    else
+                            ArtworkFactory.createArtworkFromMetadataBlockDataPicture(
+                                    MetadataBlockDataPicture(ByteBuffer.wrap(artwork as ByteArray))
+                            )
             newTag.setField(cover)
           }
         } else {
