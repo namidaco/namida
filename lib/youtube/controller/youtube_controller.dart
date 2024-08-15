@@ -1156,7 +1156,7 @@ class YoutubeController {
           sizeInBytes: erabaretaStreamSizeInBytes,
           frameratePrecise: erabaretaStream.fps.toDouble(),
           creationTimeMS: creationDate?.millisecondsSinceEpoch ?? 0,
-          durationMS: erabaretaStream.duration.inMilliseconds,
+          durationMS: erabaretaStream.duration?.inMilliseconds ?? 0,
           bitrate: erabaretaStream.bitrate,
         );
       }

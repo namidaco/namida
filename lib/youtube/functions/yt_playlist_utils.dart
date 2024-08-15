@@ -618,7 +618,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 class _DisposableWidget extends StatefulWidget {
   final Widget child;
   final void Function() onDispose;
-  const _DisposableWidget({super.key, required this.child, required this.onDispose});
+  const _DisposableWidget({required this.child, required this.onDispose});
 
   @override
   State<_DisposableWidget> createState() => __DisposableWidgetState();

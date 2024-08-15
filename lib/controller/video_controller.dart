@@ -444,7 +444,7 @@ class VideoController {
             sizeInBytes: choosenStream.sizeInBytes,
             frameratePrecise: choosenStream.fps.toDouble(),
             creationTimeMS: 0,
-            durationMS: choosenStream.duration.inMilliseconds,
+            durationMS: choosenStream.duration?.inMilliseconds ?? 0,
             bitrate: choosenStream.bitrate,
           );
         }

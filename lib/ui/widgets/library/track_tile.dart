@@ -517,24 +517,28 @@ class TrackTileManager {
 
   static String joinTrackItems(TrackTilePosition? p1, TrackTilePosition? p2, TrackTilePosition? p3, Track track) {
     var buffer = StringBuffer();
+    bool needsSeparator = false;
     if (p1 != null) {
       var info = getChoosenTrackTileItem(p1, track);
       if (info.isNotEmpty) {
         buffer.write(info);
+        needsSeparator = true;
       }
     }
     if (p2 != null) {
       var info = getChoosenTrackTileItem(p2, track);
       if (info.isNotEmpty) {
-        buffer.write(_separator);
+        if (needsSeparator) buffer.write(_separator);
         buffer.write(info);
+        needsSeparator = true;
       }
     }
     if (p3 != null && settings.displayThirdItemInEachRow.value) {
       var info = getChoosenTrackTileItem(p3, track);
       if (info.isNotEmpty) {
-        buffer.write(_separator);
+        if (needsSeparator) buffer.write(_separator);
         buffer.write(info);
+        needsSeparator = true;
       }
     }
     return buffer.toString();
