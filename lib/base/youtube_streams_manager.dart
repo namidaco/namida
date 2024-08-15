@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -15,7 +16,7 @@ enum YTVideosSorting {
   duration,
 }
 
-mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
+mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   List<StreamInfoItem>? get streamsList;
   W? get listWrapper;
   ScrollController get scrollController;
@@ -32,7 +33,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<StreamInfoItem>> {
     sortingByTop.close();
   }
 
-  late final _defaultSorting = YTVideosSorting.date;
+  late final YTVideosSorting? _defaultSorting = null;
   late final _defaultSortingByTop = true;
   late final sorting = Rxn<YTVideosSorting>(_defaultSorting);
   late final sortingByTop = _defaultSortingByTop.obs;

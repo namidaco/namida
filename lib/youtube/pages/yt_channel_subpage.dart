@@ -1,21 +1,32 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:youtipie/class/channels/channel_home_section.dart';
+import 'package:youtipie/class/channels/channel_info.dart';
+import 'package:youtipie/class/channels/channel_items_sort.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/channel_tab.dart';
+import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/thumbnail.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/extensions.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
@@ -26,14 +37,22 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:namida/youtube/widgets/yt_channel_card.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_subscribe_buttons.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/widgets/yt_videos_actions_bar.dart';
+
+part 'yt_channel_subpage_tab.dart';
+part 'yt_channel_subpage_videos_tab.dart';
 
 class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -48,7 +67,7 @@ class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
   State<YTChannelSubpage> createState() => _YTChannelSubpageState();
 }
 
-class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> with TickerProviderStateMixin, PullToRefreshMixin {
+class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProviderStateMixin, PullToRefreshMixin {
   @override
   double get maxDistance => 64.0;
 
@@ -62,24 +81,69 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
   YoutiPieChannelPageResult? _channelInfo; // bcz accessing [_channelInfoSubButton] doesnt update widget tree
   YoutiPieFetchAllRes? _currentFetchAllRes;
 
-  @override
-  Future<bool> fetchStreamsNextPage() async {
-    final res = await super.fetchStreamsNextPage();
-    if (res && mounted && listWrapper != null) setState(() => updatePeakDates(listWrapper!.items));
-    return res;
+  final _tabsGlobalKeys = <int, GlobalKey>{};
+  final _tabLastFetched = <int, DateTime>{};
+
+  late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
+
+  late final _itemsScrollController = ScrollController();
+  late final _scrollControllersOffsets = <int, double>{};
+  int _tabIndex = 0;
+
+  void _setTabIndex(YoutiPieChannelPageResult res) {
+    final length = res.tabs.length;
+    int? videosTabIndex;
+    for (int i = 0; i < length; i++) {
+      final tab = res.tabs[i];
+      if (tab.initiallySelected) _tabIndex = i;
+
+      if (videosTabIndex == null && tab.isVideosTab()) {
+        videosTabIndex = i;
+        _tabsGlobalKeys[i] = GlobalKey<_YTChannelVideosTabState>();
+      } else {
+        _tabsGlobalKeys[i] = GlobalKey<_YTChannelSubpageTabState>();
+      }
+    }
+    if (videosTabIndex != null) _tabIndex = videosTabIndex;
+  }
+
+  bool _animatedFully = false;
+  final _scrollThreshold = 100;
+  double _latestAnimation = 1.0;
+  void _scrollAnimationListener() {
+    final scroll = _itemsScrollController.positions.lastOrNull;
+    if (scroll != null) {
+      final isDownwards = scroll.userScrollDirection == ScrollDirection.reverse;
+      double position = scroll.pixels;
+      position += _scrollControllersOffsets[_tabIndex] ?? 0; // this also important to prevent jumping
+
+      final p = (position - _scrollThreshold) / 100;
+      final pc = (1 - p).clamp(0.0, 1.0);
+      if (isDownwards && pc > 0 && pc > _latestAnimation) return; // prevent jumping from hidden to visible (after switching to new tab)
+
+      if (!_animatedFully) {
+        _latestAnimation = pc;
+        _scrollAnimation.animateTo(pc, duration: Duration.zero);
+      }
+
+      if (pc == 0.0 || pc == 1.0) {
+        _animatedFully = true;
+      } else {
+        _animatedFully = false;
+      }
+    }
   }
 
   @override
   void initState() {
     super.initState();
 
-    channel = ch;
-
     final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
     if (channelInfoCache != null) {
       _channelInfoSubButton.value = channelInfoCache;
       _channelInfo = channelInfoCache;
-      fetchChannelStreams(channelInfoCache);
+      _setTabIndex(channelInfoCache);
+      _fetchCurrentTab(channelInfoCache);
     }
 
     // -- always get new info.
@@ -87,18 +151,40 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
       (value) {
         if (value != null) {
           _channelInfoSubButton.value = value;
+          _setTabIndex(value);
           if (mounted) setState(() => _channelInfo = value);
-          onRefresh(() => fetchChannelStreams(value, forceRequest: true), forceProceed: true);
+          onRefresh(() => _fetchCurrentTab(value, forceRequest: true), forceProceed: true);
         }
       },
     );
+
+    _itemsScrollController.addListener(_scrollAnimationListener);
   }
 
   @override
   void dispose() {
+    _itemsScrollController.dispose();
+    _scrollAnimation.dispose();
     _currentFetchAllRes?.cancel();
     _currentFetchAllRes = null;
+    _tabLastFetched.clear();
     super.dispose();
+  }
+
+  Future<void> _fetchCurrentTab(YoutiPieChannelPageResult channelInfo, {bool? forceRequest}) async {
+    if (_tabsGlobalKeys.isEmpty) return;
+    final currentKeyState = _tabsGlobalKeys[_tabIndex]?.currentState;
+    forceRequest ??= _shouldForceRequestTab(_tabIndex);
+    if (currentKeyState is _YTChannelVideosTabState) {
+      await currentKeyState.fetchChannelStreams(channelInfo, forceRequest: forceRequest);
+    } else if (currentKeyState is _YTChannelSubpageTabState) {
+      await currentKeyState.fetchTabAndUpdate(forceRequest: forceRequest);
+    }
+  }
+
+  bool _shouldForceRequestTab(int tabIndex) {
+    final diff = _tabLastFetched[tabIndex]?.difference(DateTime.now());
+    return diff == null ? true : diff.abs() > const Duration(seconds: 180);
   }
 
   File? _getThumbFileForCache(String url, {required bool temp}) {
@@ -121,7 +207,7 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     );
     if (isPfp) {
       final cf = _getThumbFileForCache(channelID, temp: false);
-      if (cf != null) files.add((channelID, cf));
+      if (cf != null && cf.existsSync()) files.add((channelID, cf));
     }
     if (files.isEmpty) return;
 
@@ -182,42 +268,6 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
     return '${isPfp}_${channelID}_$url';
   }
 
-  void _showSnack(YoutiPieFetchAllResType type) {
-    String message;
-    Color color;
-    switch (type) {
-      case YoutiPieFetchAllResType.success:
-        message = lang.SUCCEEDED;
-        color = Colors.green;
-      case YoutiPieFetchAllResType.fail:
-        message = lang.FAILED;
-        color = Colors.red;
-      case YoutiPieFetchAllResType.alreadyCanceled:
-        message = lang.CANCELED;
-        color = Colors.red;
-      case YoutiPieFetchAllResType.alreadyDone:
-        message = lang.DONE;
-        color = Colors.green;
-      case YoutiPieFetchAllResType.inProgress:
-        message = lang.PROGRESS;
-        color = Colors.orange;
-    }
-    snackyy(
-      message: "${lang.FETCHING_OF_ALL_VIDEOS}: $message",
-      borderColor: color.withOpacity(0.5),
-    );
-  }
-
-  Future<void> _onLoadAllTap() async {
-    if (_currentFetchAllRes != null) {
-      _currentFetchAllRes?.cancel();
-      _currentFetchAllRes = null;
-    } else {
-      final result = await fetchAllStreams((fetchAllRes) => _currentFetchAllRes = fetchAllRes);
-      if (result != null) _showSnack(result);
-    }
-  }
-
   void _addNull<E>(List<E> list, E? item) {
     if (item != null) list.add(item);
   }
@@ -225,9 +275,6 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
   @override
   Widget build(BuildContext context) {
     final channelInfo = _channelInfo;
-    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
-    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
-    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final channelID = channelInfo?.id ?? ch.channelID;
 
     final pfps = <YoutiPieThumbnail>[];
@@ -252,251 +299,166 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
 
     final subsCount = channelInfo?.subscribersCount;
     final subsCountText = channelInfo?.subscribersCountText;
-    final streamsCount = channelInfo?.videosCount;
 
-    String videosCountVSTotalText = "${streamsList?.length ?? '?'} / ${streamsCount?.formatDecimalShort() ?? '?'}";
-    String? peakDatesText;
-    if (streamsPeakDates != null) {
-      videosCountVSTotalText += ' | ';
-      peakDatesText = "${streamsPeakDates!.oldest.millisecondsSinceEpoch.dateFormattedOriginal} (${Jiffy.parseFromDateTime(streamsPeakDates!.oldest).fromNow()})";
-    }
-    final hasMoreStreamsLeft = channelVideoTab?.canFetchNext == true;
+    final bannerWidget = TapDetector(
+      onTap: () => _onImageTap(
+        context: context,
+        channelID: channelID,
+        imagesList: banners,
+        isPfp: false,
+      ),
+      child: NamidaHero(
+        tag: _getHeroTag(channelID, false, bannerUrl),
+        child: YoutubeThumbnail(
+          type: ThumbnailType.channel, // banner akshully
+          key: Key('${channelID}_$bannerUrl'),
+          width: context.width,
+          compressed: false,
+          isImportantInCache: false,
+          customUrl: bannerUrl,
+          borderRadius: 0,
+          displayFallbackIcon: false,
+          height: bannerHeight,
+        ),
+      ),
+    );
+
+    final header = AnimatedBuilder(
+      animation: _scrollAnimation,
+      builder: (context, _) {
+        final p = _scrollAnimation.value;
+        return Stack(
+          children: [
+            if (bannerUrl != null)
+              SizedBox(
+                height: p * bannerHeight,
+                child: bannerWidget,
+              ),
+            Padding(
+              padding: (banners.isEmpty ? EdgeInsets.zero : EdgeInsets.only(top: p * bannerHeight * 0.95)),
+              child: Row(
+                children: [
+                  const SizedBox(width: 12.0),
+                  Transform.translate(
+                    offset: banners.isEmpty ? const Offset(0, 0) : Offset(0, p * -bannerHeight * 0.1),
+                    child: TapDetector(
+                      onTap: () => _onImageTap(
+                        context: context,
+                        channelID: channelID,
+                        imagesList: pfps,
+                        isPfp: true,
+                      ),
+                      child: NamidaHero(
+                        tag: _getHeroTag(channelID, true, pfp),
+                        child: YoutubeThumbnail(
+                          type: ThumbnailType.channel,
+                          key: Key('${channelID}_$pfp'),
+                          width: context.width * 0.14,
+                          isImportantInCache: true,
+                          customUrl: pfp,
+                          isCircle: true,
+                          compressed: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 2.0),
+                          child: Text(
+                            channelInfo?.title ?? ch.title,
+                            style: context.textTheme.displayLarge,
+                          ),
+                        ),
+                        const SizedBox(height: 4.0),
+                        Text(
+                          subsCountText ??
+                              (subsCount == null
+                                  ? '? ${lang.SUBSCRIBERS}'
+                                  : [
+                                      subsCount.formatDecimalShort(),
+                                      subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
+                                    ].join(' ')),
+                          style: context.textTheme.displayMedium?.copyWith(
+                            fontSize: 12.0,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+                  YTSubscribeButton(
+                    channelID: channelID,
+                    mainChannelInfo: _channelInfoSubButton,
+                  ),
+                  const SizedBox(width: 12.0),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
     return BackgroundWrapper(
       child: Listener(
-        onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
-        onPointerUp: (_) => channelInfo == null ? null : onRefresh(() => fetchChannelStreams(channelInfo, forceRequest: true)),
+        onPointerMove: (event) => _itemsScrollController.hasClients ? onPointerMove(_itemsScrollController, event) : null,
+        onPointerUp: (_) => channelInfo == null ? null : onRefresh(() => _fetchCurrentTab(channelInfo, forceRequest: true)),
         onPointerCancel: (_) => onVerticalDragFinish(),
         child: Stack(
           alignment: Alignment.topCenter,
           children: [
             Column(
               children: [
-                Stack(
-                  children: [
-                    if (bannerUrl != null)
-                      TapDetector(
-                        onTap: () => _onImageTap(
-                          context: context,
-                          channelID: channelID,
-                          imagesList: banners,
-                          isPfp: false,
-                        ),
-                        child: NamidaHero(
-                          tag: _getHeroTag(channelID, false, bannerUrl),
-                          child: YoutubeThumbnail(
-                            type: ThumbnailType.channel, // banner akshully
-                            key: Key('${channelID}_$bannerUrl'),
-                            width: context.width,
-                            compressed: false,
-                            isImportantInCache: false,
-                            customUrl: bannerUrl,
-                            borderRadius: 0,
-                            displayFallbackIcon: false,
-                            height: bannerHeight,
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: (banners.isEmpty ? EdgeInsets.zero : EdgeInsets.only(top: bannerHeight * 0.95)),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12.0),
-                          Transform.translate(
-                            offset: banners.isEmpty ? const Offset(0, 0) : Offset(0, -bannerHeight * 0.1),
-                            child: TapDetector(
-                              onTap: () => _onImageTap(
-                                context: context,
-                                channelID: channelID,
-                                imagesList: pfps,
-                                isPfp: true,
-                              ),
-                              child: NamidaHero(
-                                tag: _getHeroTag(channelID, true, pfp),
-                                child: YoutubeThumbnail(
-                                  type: ThumbnailType.channel,
-                                  key: Key('${channelID}_$pfp'),
-                                  width: context.width * 0.14,
-                                  isImportantInCache: true,
-                                  customUrl: pfp,
-                                  isCircle: true,
-                                  compressed: false,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 2.0),
-                                  child: Text(
-                                    channelInfo?.title ?? ch.title,
-                                    style: context.textTheme.displayLarge,
-                                  ),
-                                ),
-                                const SizedBox(height: 4.0),
-                                Text(
-                                  subsCountText ??
-                                      (subsCount == null
-                                          ? '? ${lang.SUBSCRIBERS}'
-                                          : [
-                                              subsCount.formatDecimalShort(),
-                                              subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                                            ].join(' ')),
-                                  style: context.textTheme.displayMedium?.copyWith(
-                                    fontSize: 12.0,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 4.0),
-                          YTSubscribeButton(
-                            channelID: channelID,
-                            mainChannelInfo: _channelInfoSubButton,
-                          ),
-                          const SizedBox(width: 12.0),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                header,
                 const SizedBox(height: 4.0),
-                Row(
-                  children: [
-                    const SizedBox(width: 4.0),
-                    Expanded(child: sortWidget),
-                    const SizedBox(width: 4.0),
-                    ObxO(
-                      rx: isLoadingMoreUploads,
-                      builder: (isLoadingMoreUploads) => NamidaInkWellButton(
-                        animationDurationMS: 100,
-                        sizeMultiplier: 0.95,
-                        borderRadius: 8.0,
-                        icon: Broken.task_square,
-                        text: lang.LOAD_ALL,
-                        enabled: !isLoadingMoreUploads && hasMoreStreamsLeft,
-                        disableWhenLoading: false,
-                        showLoadingWhenDisabled: hasMoreStreamsLeft,
-                        onTap: _onLoadAllTap,
-                      ),
-                    ),
-                    const SizedBox(width: 4.0),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  children: [
-                    const SizedBox(width: 8.0),
-                    Expanded(
-                      child: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        runSpacing: 4.0,
-                        children: [
-                          NamidaInkWell(
-                            borderRadius: 6.0,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Broken.video_square, size: 16.0),
-                                const SizedBox(width: 4.0),
-                                Text(
-                                  videosCountVSTotalText,
-                                  style: context.textTheme.displayMedium,
-                                ),
-                                if (peakDatesText != null)
-                                  Text(
-                                    peakDatesText,
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 4.0),
-                    YTVideosActionBar(
-                      title: channelInfo?.title ?? ch.title,
-                      urlBuilder: channelInfo?.buildUrl,
-                      barOptions: const YTVideosActionBarOptions(
-                        addToPlaylist: false,
-                        playLast: false,
-                      ),
-                      videosCallback: () => streamsList
-                          ?.map((e) => YoutubeID(
-                                id: e.id,
-                                playlistID: null,
-                              ))
-                          .toList(),
-                      infoLookupCallback: () {
-                        final streamsList = this.streamsList;
-                        if (streamsList == null) return null;
-                        final m = <String, StreamInfoItem>{};
-                        streamsList.loop((e) => m[e.id] = e);
-                        return m;
-                      },
-                    ),
-                    const SizedBox(width: 8.0),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Expanded(
-                  child: NamidaScrollbar(
-                    controller: uploadsScrollController,
-                    child: isLoadingInitialStreams
-                        ? ShimmerWrapper(
-                            shimmerEnabled: true,
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount: 15,
-                              itemBuilder: (context, index) {
-                                return const YoutubeVideoCardDummy(
-                                  shimmerEnabled: true,
-                                  thumbnailHeight: thumbnailHeight,
-                                  thumbnailWidth: thumbnailWidth,
-                                  thumbnailWidthPercentage: 0.8,
-                                );
-                              },
-                            ),
-                          )
-                        : LazyLoadListView(
-                            scrollController: uploadsScrollController,
-                            onReachingEnd: fetchStreamsNextPage,
-                            listview: (controller) {
-                              final streamsList = this.streamsList;
-                              if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                              return ListView.builder(
-                                padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
-                                controller: controller,
-                                itemExtent: thumbnailItemExtent,
-                                itemCount: streamsList.length,
-                                itemBuilder: (context, index) {
-                                  final item = streamsList[index];
-                                  return YoutubeVideoCard(
-                                    key: Key(item.id),
-                                    thumbnailHeight: thumbnailHeight,
-                                    thumbnailWidth: thumbnailWidth,
-                                    isImageImportantInCache: false,
-                                    video: item,
-                                    playlistID: null,
-                                    thumbnailWidthPercentage: 0.8,
-                                    dateInsteadOfChannel: true,
-                                  );
-                                },
+                channelInfo?.tabs == null
+                    ? YTChannelVideosTab(
+                        scrollController: _itemsScrollController,
+                        channelInfo: _channelInfo,
+                        localChannel: ch,
+                      )
+                    : Expanded(
+                        child: NamidaTabView(
+                          isScrollable: true,
+                          compact: true,
+                          tabs: channelInfo!.tabs.map((e) => e.title).toList(),
+                          initialIndex: _tabIndex,
+                          onIndexChanged: (index) {
+                            try {
+                              _scrollControllersOffsets[_tabIndex] ??= _itemsScrollController.offset;
+                            } catch (_) {}
+
+                            _tabIndex = index;
+                            _fetchCurrentTab(channelInfo);
+                          },
+                          children: channelInfo.tabs.mapIndexed((e, i) {
+                            if (e.isVideosTab()) {
+                              return YTChannelVideosTab(
+                                key: _tabsGlobalKeys[i],
+                                scrollController: _itemsScrollController,
+                                channelInfo: _channelInfo,
+                                localChannel: ch,
                               );
-                            },
-                          ),
-                  ),
-                ),
+                            }
+                            return YTChannelSubpageTab(
+                              key: _tabsGlobalKeys[i],
+                              scrollController: _itemsScrollController,
+                              channelId: channelID,
+                              tab: e,
+                              tabFetcher: (fetch) => onRefresh(fetch, forceProceed: true),
+                              onSuccessFetch: () => _tabLastFetched[i] = DateTime.now(),
+                              shouldForceRequest: () => _shouldForceRequestTab(i),
+                            );
+                          }).toList(),
+                        ),
+                      ),
               ],
             ),
             pullToRefreshWidget,
@@ -504,5 +466,14 @@ class _YTChannelSubpageState extends YoutubeChannelController<YTChannelSubpage> 
         ),
       ),
     );
+  }
+}
+
+extension _ListMapper<E> on List<E> {
+  Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
+    final length = this.length;
+    for (int i = 0; i < length; i++) {
+      yield toElement(this[i], i);
+    }
   }
 }

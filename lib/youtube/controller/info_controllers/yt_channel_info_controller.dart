@@ -23,13 +23,11 @@ class _ChannelInfoController {
     return res.read();
   }
 
-  Future<YoutiPieChannelTabVideosResult?> fetchChannelTab({required String channelId, required ChannelTab tab, ExecuteDetails? details}) async {
-    final res = await YoutiPie.channel.fetchChannelTab(channelId: channelId, tab: tab, details: details);
-    if (res is YoutiPieChannelTabVideosResult) return res;
-    return null;
+  Future<YoutiPieChannelTabResult?> fetchChannelTab({required String channelId, required ChannelTab tab, YoutiPieChannelItemsSort? sort, ExecuteDetails? details}) {
+    return YoutiPie.channel.fetchChannelTab(channelId: channelId, tab: tab, sort: sort, details: details);
   }
 
-  YoutiPieChannelTabVideosResult? fetchChannelTabSync({required String channelId, required ChannelTab tab}) {
+  YoutiPieChannelTabResult? fetchChannelTabSync({required String channelId, required ChannelTab tab}) {
     final res = YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: tab);
     return res.read();
   }

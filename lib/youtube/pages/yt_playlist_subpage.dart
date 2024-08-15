@@ -428,9 +428,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
 
   @override
   void initState() {
+    // we eventually need to implement playlist sort if account is signed in.
     _playlist = widget.playlist;
     _controller = ScrollController();
-    sorting.value = null; // we eventually need to implement playlist sort if account is signed in.
     super.initState();
 
     final cached = YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: _playlist.basicInfo.id).read();

@@ -34,6 +34,7 @@ class YoutubePlaylistCard extends StatefulWidget {
   final String? firstVideoID;
   final String Function()? playingId;
   final bool isMixPlaylist;
+  final bool minimalCard;
 
   const YoutubePlaylistCard({
     super.key,
@@ -45,6 +46,7 @@ class YoutubePlaylistCard extends StatefulWidget {
     required this.firstVideoID,
     required this.playingId,
     required this.isMixPlaylist,
+    this.minimalCard = false,
   });
 
   @override
@@ -126,6 +128,29 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     );
   }
 
+  void _onCardTap() async {
+    final playlist = widget.playlist;
+    final playlistToFetch = this.playlistToFetch;
+    if (widget.playOnTap) {
+      if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
+      if (playlistToFetch != null) {
+        final videos = await playlist.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlistToFetch);
+        if (videos.isEmpty) return;
+        Player.inst.playOrPause(0, videos, QueueSource.others);
+      }
+    } else {
+      playlistToFetch != null
+          ? YTHostedPlaylistSubpage(
+              playlist: playlistToFetch,
+              userPlaylist: _userPlaylist,
+            ).navigate()
+          : YTHostedPlaylistSubpage.fromId(
+              playlistId: playlist.id,
+              userPlaylist: _userPlaylist,
+            ).navigate();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final playlist = widget.playlist;
@@ -138,64 +163,68 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     final thumbnailUrl = playlist.thumbnails.pick()?.url;
     final firstVideoID = widget.firstVideoID;
     final goodVideoID = firstVideoID != null && firstVideoID.isNotEmpty;
+    final bottomRightWidgets = [
+      ObxO(
+        rx: _isFetching,
+        builder: (value) {
+          if (value == true) {
+            return ThreeArchedCircle(
+              color: Colors.red.withOpacity(0.4),
+              size: 12.0,
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    ];
     return NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: true,
       childrenDefault: getMenuItems,
-      child: YoutubeCard(
-        thumbnailHeight: widget.thumbnailHeight,
-        thumbnailWidth: widget.thumbnailWidth,
-        thumbnailType: ThumbnailType.playlist,
-        isImageImportantInCache: false,
-        extractColor: true,
-        borderRadius: 12.0,
-        videoId: goodVideoID ? firstVideoID : null,
-        thumbnailUrl: goodVideoID ? null : thumbnailUrl,
-        shimmerEnabled: false,
-        title: playlist.title,
-        subtitle: widget.subtitle ?? '',
-        thirdLineText: '',
-        onTap: () async {
-          final playlistToFetch = this.playlistToFetch;
-          if (widget.playOnTap) {
-            if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
-            if (playlistToFetch != null) {
-              final videos = await playlist.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlistToFetch);
-              if (videos.isEmpty) return;
-              Player.inst.playOrPause(0, videos, QueueSource.others);
-            }
-          } else {
-            playlistToFetch != null
-                ? YTHostedPlaylistSubpage(
-                    playlist: playlistToFetch,
-                    userPlaylist: _userPlaylist,
-                  ).navigate()
-                : YTHostedPlaylistSubpage.fromId(
-                    playlistId: playlist.id,
-                    userPlaylist: _userPlaylist,
-                  ).navigate();
-          }
-        },
-        displayChannelThumbnail: false,
-        displaythirdLineText: false,
-        smallBoxText: countText,
-        smallBoxIcon: Broken.play_cricle,
-        bottomRightWidgets: [
-          ObxO(
-            rx: _isFetching,
-            builder: (value) {
-              if (value == true) {
-                return ThreeArchedCircle(
-                  color: Colors.red.withOpacity(0.4),
-                  size: 12.0,
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-        menuChildrenDefault: getMenuItems,
-      ),
+      child: widget.minimalCard
+          ? YoutubeCardMinimal(
+              thumbnailHeight: widget.thumbnailHeight,
+              thumbnailWidth: widget.thumbnailWidth,
+              thumbnailType: ThumbnailType.playlist,
+              isImageImportantInCache: false,
+              extractColor: false,
+              borderRadius: 8.0,
+              fontMultiplier: 0.9,
+              videoId: goodVideoID ? firstVideoID : null,
+              thumbnailUrl: goodVideoID ? null : thumbnailUrl,
+              shimmerEnabled: false,
+              title: playlist.title,
+              subtitle: widget.subtitle ?? '',
+              thirdLineText: '',
+              onTap: _onCardTap,
+              displayChannelThumbnail: false,
+              displaythirdLineText: false,
+              smallBoxText: countText,
+              smallBoxIcon: Broken.play_cricle,
+              bottomRightWidgets: bottomRightWidgets,
+              menuChildrenDefault: getMenuItems,
+            )
+          : YoutubeCard(
+              thumbnailHeight: widget.thumbnailHeight,
+              thumbnailWidth: widget.thumbnailWidth,
+              thumbnailType: ThumbnailType.playlist,
+              isImageImportantInCache: false,
+              extractColor: true,
+              borderRadius: 12.0,
+              videoId: goodVideoID ? firstVideoID : null,
+              thumbnailUrl: goodVideoID ? null : thumbnailUrl,
+              shimmerEnabled: false,
+              title: playlist.title,
+              subtitle: widget.subtitle ?? '',
+              thirdLineText: '',
+              onTap: _onCardTap,
+              displayChannelThumbnail: false,
+              displaythirdLineText: false,
+              smallBoxText: countText,
+              smallBoxIcon: Broken.play_cricle,
+              bottomRightWidgets: bottomRightWidgets,
+              menuChildrenDefault: getMenuItems,
+            ),
     );
   }
 }

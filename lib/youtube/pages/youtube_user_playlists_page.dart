@@ -21,8 +21,15 @@ import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
-class YoutubeUserPlaylistsPage extends StatelessWidget {
+class YoutubeUserPlaylistsPage extends StatefulWidget {
   const YoutubeUserPlaylistsPage({super.key});
+
+  @override
+  State<YoutubeUserPlaylistsPage> createState() => _YoutubeUserPlaylistsPageState();
+}
+
+class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
+  final horizontalHistoryKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +37,6 @@ class YoutubeUserPlaylistsPage extends StatelessWidget {
     const thumbnailHeight = multiplier * Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
-    final horizontalHistoryKey = GlobalKey();
     final horizontalHistory = YoutubeUserHistoryPageHorizontal(pageKey: horizontalHistoryKey);
     return YoutubeMainPageFetcherAccBase<YoutiPieUserPlaylistsResult, PlaylistInfoItemUser>(
         transparentShimmer: true,

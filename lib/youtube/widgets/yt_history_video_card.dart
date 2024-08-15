@@ -221,6 +221,9 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       ),
       child: Obx(
         () {
+          final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
+          final displayDateText = dateText != null && dateText.isNotEmpty;
+
           bool willSleepAfterThis = false;
           if (fromPlayerQueue) {
             final sleepconfig = Player.inst.sleepTimerConfig.valueR;
@@ -277,14 +280,14 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     children: [
                       Text(
                         videoTitle,
-                        maxLines: minimalCard ? 1 : 2,
+                        maxLines: minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: context.textTheme.displayMedium?.copyWith(
                           fontSize: minimalCard ? 12.0 : null,
                           color: itemsColor7,
                         ),
                       ),
-                      if (videoChannel != null)
+                      if (displayVideoChannel)
                         Text(
                           videoChannel,
                           maxLines: 1,
@@ -294,7 +297,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                             color: itemsColor6,
                           ),
                         ),
-                      if (dateText != null && dateText.isNotEmpty)
+                      if (displayDateText)
                         Text(
                           dateText,
                           maxLines: 1,

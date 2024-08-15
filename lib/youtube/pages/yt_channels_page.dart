@@ -37,14 +37,23 @@ class YoutubeChannelsPage extends StatefulWidget {
 }
 
 class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> with TickerProviderStateMixin, PullToRefreshMixin {
+  
+  
+  @override
+  String? get channelID => channel?.channelID;
+  
+  @override
+  ScrollController get scrollController => _uploadsScrollController;
+
   @override
   double get maxDistance => 64.0;
 
   @override
-  List<StreamInfoItem>? get streamsList => _allStreamsList ?? channelVideoTab?.items;
+  List<StreamInfoItem>? get streamsList => _allStreamsList ?? channelVideoTab?.items.cast();
 
   List<StreamInfoItem>? _allStreamsList;
 
+  late final ScrollController _uploadsScrollController;
   late final ScrollController _horizontalListController;
 
   final _allChannelsStreamsProgress = 0.0.obs;
@@ -55,6 +64,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   @override
   void initState() {
     super.initState();
+
+    _uploadsScrollController = ScrollController();
     _horizontalListController = ScrollController();
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
@@ -65,18 +76,20 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     final now = DateTime.now();
     allChannelFetchOldestDate = DateTime(now.year, now.month, now.day - 32).obs;
+    
   }
 
   @override
   void dispose() {
     _horizontalListController.dispose();
+    _uploadsScrollController.dispose();
     _allChannelsStreamsProgress.close();
     _allChannelsStreamsLoading.close();
     super.dispose();
   }
 
   Future<void> _updateChannel(YoutubeSubscription? sub, {required bool forceRequest}) async {
-    if (uploadsScrollController.hasClients) uploadsScrollController.jumpTo(0);
+    if (_uploadsScrollController.hasClients) _uploadsScrollController.jumpTo(0);
     setState(() {
       isLoadingInitialStreams = true;
       channel = sub;
@@ -177,7 +190,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         reportError('failed to fetch initial videos for $channelID');
         continue;
       }
-      while (!enoughStreams(videosPage.items)) {
+      while (!enoughStreams(videosPage.items.cast())) {
         final didFetch = await videosPage.fetchNext();
         if (!didFetch) break;
       }
@@ -186,7 +199,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         break;
       }
       YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
-      streams.addAll(videosPage.items);
+      streams.addAll(videosPage.items.cast());
     }
 
     YoutubeSubscriptionsController.inst.sortByLastFetched();
@@ -391,19 +404,19 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                   ],
                 )
               : NamidaScrollbar(
-                  controller: uploadsScrollController,
+                  controller: _uploadsScrollController,
                   child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
                       Listener(
-                        onPointerMove: (event) => onPointerMove(uploadsScrollController, event),
+                        onPointerMove: (event) => onPointerMove(_uploadsScrollController, event),
                         onPointerUp: (_) => channel == null ? null : onRefresh(() => _updateChannel(channel!, forceRequest: true)),
                         onPointerCancel: (_) => onVerticalDragFinish(),
                         child: isLoadingInitialStreams
                             ? ShimmerWrapper(
                                 shimmerEnabled: true,
                                 child: ListView.builder(
-                                  controller: uploadsScrollController,
+                                  controller: _uploadsScrollController,
                                   padding: EdgeInsets.zero,
                                   itemCount: 15,
                                   itemBuilder: (context, index) {
@@ -417,7 +430,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 ),
                               )
                             : LazyLoadListView(
-                                scrollController: uploadsScrollController,
+                                scrollController: _uploadsScrollController,
                                 onReachingEnd: fetchStreamsNextPage,
                                 listview: (controller) {
                                   final streamsList = this.streamsList;

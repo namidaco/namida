@@ -3427,6 +3427,7 @@ class NamidaTabView extends StatefulWidget {
   final List<Widget> children;
   final void Function(int index) onIndexChanged;
   final bool isScrollable;
+  final bool compact;
 
   const NamidaTabView({
     super.key,
@@ -3436,6 +3437,7 @@ class NamidaTabView extends StatefulWidget {
     this.tabWidgets,
     required this.onIndexChanged,
     this.isScrollable = false,
+    this.compact = false,
   });
 
   @override
@@ -3469,16 +3471,17 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final itemsPadding = widget.compact ? const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0) : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0);
     return Column(
       children: [
         TabBar(
-          indicatorWeight: 3.0,
+          indicatorWeight: widget.compact ? 1.0 : 3.0,
           controller: controller,
           isScrollable: widget.isScrollable,
           tabs: widget.tabs
                   ?.map(
                     (e) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+                      padding: itemsPadding,
                       child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
                   )
@@ -3487,13 +3490,12 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
               widget.children
                   .map(
                     (e) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+                      padding: itemsPadding,
                       child: Text(e.toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
                   )
                   .toList(),
           splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          // indicatorPadding: const EdgeInsets.symmetric(horizontal: 32.0),
           indicatorSize: TabBarIndicatorSize.label,
         ),
         Expanded(

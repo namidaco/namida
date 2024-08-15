@@ -232,3 +232,170 @@ class YoutubeCard extends StatelessWidget {
     );
   }
 }
+
+class YoutubeCardMinimal extends StatelessWidget {
+  final String? videoId;
+  final String? thumbnailUrl;
+  final void Function()? onTap;
+  final double borderRadius;
+  final bool shimmerEnabled;
+  final String title;
+  final String subtitle;
+  final String thirdLineText;
+  final String? channelThumbnailUrl;
+  final String? channelID;
+  final bool displayChannelThumbnail;
+  final bool displaythirdLineText;
+  final List<Widget> Function(double width, double height, NamidaColor? imageColors)? onTopWidgets;
+  final String? smallBoxText;
+  final double thumbnailWidthPercentage;
+  final IconData? smallBoxIcon;
+  final bool extractColor;
+  final void Function(NamidaColor? color)? onColorReady;
+  final List<NamidaPopupItem> Function()? menuChildrenDefault;
+  final bool isCircle;
+  final List<Widget> bottomRightWidgets;
+  final bool isImageImportantInCache;
+  final double? thumbnailWidth;
+  final double? thumbnailHeight;
+  final double fontMultiplier;
+  final ThumbnailType thumbnailType;
+
+  const YoutubeCardMinimal({
+    super.key,
+    required this.videoId,
+    required this.thumbnailUrl,
+    this.onTap,
+    this.borderRadius = 12.0,
+    required this.shimmerEnabled,
+    this.title = '',
+    this.subtitle = '',
+    required this.thirdLineText,
+    this.channelThumbnailUrl,
+    this.channelID,
+    this.displayChannelThumbnail = true,
+    this.displaythirdLineText = true,
+    this.onTopWidgets,
+    this.smallBoxText,
+    this.thumbnailWidthPercentage = 1.0,
+    this.smallBoxIcon,
+    this.extractColor = false,
+    this.onColorReady,
+    this.menuChildrenDefault,
+    this.isCircle = false,
+    this.bottomRightWidgets = const [],
+    required this.isImageImportantInCache,
+    this.thumbnailWidth,
+    this.thumbnailHeight,
+    this.fontMultiplier = 1.0,
+    required this.thumbnailType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
+    final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          NamidaInkWell(
+            bgColor: context.theme.cardColor,
+            borderRadius: borderRadius,
+            onTap: onTap,
+            width: thumbnailWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NamidaDummyContainer(
+                  width: thumbnailWidth,
+                  height: thumbnailHeight,
+                  shimmerEnabled: shimmerEnabled,
+                  child: YoutubeThumbnail(
+                    key: Key("${videoId}_$thumbnailUrl"),
+                    isImportantInCache: isImageImportantInCache,
+                    videoId: videoId,
+                    customUrl: thumbnailUrl,
+                    width: thumbnailWidth,
+                    height: thumbnailHeight,
+                    borderRadius: 10.0,
+                    onTopWidgets: onTopWidgets == null ? null : (imageColors) => onTopWidgets!(thumbnailWidth, thumbnailHeight, imageColors),
+                    smallBoxText: smallBoxText,
+                    smallBoxIcon: smallBoxIcon,
+                    extractColor: extractColor,
+                    onColorReady: onColorReady,
+                    isCircle: isCircle,
+                    type: thumbnailType,
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      NamidaDummyContainer(
+                        width: context.width,
+                        height: 10.0,
+                        borderRadius: 4.0,
+                        shimmerEnabled: shimmerEnabled && title == '',
+                        child: Text(
+                          title,
+                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      NamidaDummyContainer(
+                        width: context.width,
+                        height: 8.0,
+                        borderRadius: 4.0,
+                        shimmerEnabled: shimmerEnabled && subtitle == '',
+                        child: Text(
+                          subtitle,
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 13.0 * fontMultiplier,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+              ],
+            ),
+          ),
+          if (bottomRightWidgets.isNotEmpty)
+            Positioned(
+              bottom: 6.0,
+              right: 6.0 + 6 * 2 + 4.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: bottomRightWidgets,
+              ),
+            ),
+          if (!shimmerEnabled && menuChildrenDefault != null)
+            Positioned(
+              bottom: 0.0,
+              right: 0.0,
+              child: NamidaPopupWrapper(
+                childrenDefault: menuChildrenDefault,
+                child: const Padding(
+                  padding: EdgeInsets.all(6.0),
+                  child: MoreIcon(iconSize: 14.0),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

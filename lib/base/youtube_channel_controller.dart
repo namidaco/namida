@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/channels/channel_page_result.dart';
-import 'package:youtipie/class/channels/tabs/channel_tab_videos_result.dart';
+import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/youtipie.dart';
@@ -13,15 +13,15 @@ import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
-abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager<YoutiPieChannelTabVideosResult> {
-  @override
-  List<StreamInfoItem>? get streamsList => channelVideoTab?.items;
+abstract class YoutubeChannelController<T extends StatefulWidget> extends State<T> with YoutubeStreamsManager<YoutiPieChannelTabResult> {
+  /// Mainly used for initial fetching of cached info.
+  String? get channelID;
 
   @override
-  YoutiPieChannelTabVideosResult? get listWrapper => channelVideoTab;
+  List<StreamInfoItem>? get streamsList => channelVideoTab?.items.cast();
 
   @override
-  ScrollController get scrollController => uploadsScrollController;
+  YoutiPieChannelTabResult? get listWrapper => channelVideoTab;
 
   @override
   Color? get sortChipBGColor => CurrentColor.inst.color;
@@ -33,18 +33,35 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   void onListChange(void Function() fn) => refreshState(fn);
 
   @override
-  bool canRefreshList(YoutiPieChannelTabVideosResult result) => result.channelId == channel?.channelID;
+  bool canRefreshList(YoutiPieChannelTabResult result) => result.channelId == channel?.channelID;
 
-  late final ScrollController uploadsScrollController = ScrollController();
   YoutubeSubscription? channel;
-  YoutiPieChannelTabVideosResult? channelVideoTab;
+  YoutiPieChannelTabResult? channelVideoTab;
   ({DateTime oldest, DateTime newest})? streamsPeakDates;
 
   bool isLoadingInitialStreams = true;
 
   @override
+  void initState() {
+    final channelID = this.channelID;
+    if (channelID != null) {
+      final cachedChannelInfoV = YoutubeInfoController.channel.fetchChannelInfoSync(channelID)?.tabs.getVideosTab();
+      if (cachedChannelInfoV != null) {
+        final tabResultCache = YoutubeInfoController.channel.fetchChannelTabSync(channelId: channelID, tab: cachedChannelInfoV);
+        if (tabResultCache != null) {
+          channelVideoTab = tabResultCache;
+          isLoadingInitialStreams = false;
+          final st = tabResultCache.items;
+          updatePeakDates(st.cast());
+        }
+      }
+    }
+
+    super.initState();
+  }
+
+  @override
   void dispose() {
-    uploadsScrollController.dispose();
     isLoadingMoreUploads.close();
     disposeResources();
     super.dispose();
@@ -70,7 +87,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   Future<void> fetchChannelStreams(YoutiPieChannelPageResult channelPage, {bool forceRequest = false}) async {
     final tab = channelPage.tabs.getVideosTab();
-    YoutiPieChannelTabVideosResult? newResult;
+    YoutiPieChannelTabResult? newResult;
     final channelID = channelPage.id;
 
     if (tab != null) {
@@ -81,7 +98,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
         // -- but data like viewsCount will not be updated sadly.
 
         final st = newResult.items;
-        updatePeakDates(st);
+        updatePeakDates(st.cast());
         YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
       }
     }
