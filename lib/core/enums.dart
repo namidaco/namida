@@ -89,6 +89,8 @@ enum TrackTileItem {
   rating,
   tags,
   moods,
+  listenCount,
+  latestListenDate,
 }
 
 enum TrackSearchFilter {

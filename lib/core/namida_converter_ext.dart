@@ -1077,6 +1077,8 @@ class _NamidaConverters {
         TrackTileItem.rating: lang.RATING,
         TrackTileItem.moods: lang.MOODS,
         TrackTileItem.tags: lang.TAGS,
+        TrackTileItem.listenCount: lang.TOTAL_LISTENS,
+        TrackTileItem.latestListenDate: lang.RECENT_LISTENS,
       },
       QueueSource: {
         QueueSource.allTracks: lang.TRACKS,

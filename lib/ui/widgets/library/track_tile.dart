@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:jiffy/jiffy.dart';
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
@@ -609,5 +612,11 @@ class TrackTileManager {
     TrackTileItem.rating: (track) => "${track.stats.rating}%",
     TrackTileItem.moods: (track) => track.stats.moods.join(', '),
     TrackTileItem.tags: (track) => track.stats.tags.join(', '),
+    TrackTileItem.listenCount: (track) => HistoryController.inst.topTracksMapListens[track]?.length.formatDecimal() ?? '0',
+    TrackTileItem.latestListenDate: (track) {
+      final date = HistoryController.inst.topTracksMapListens[track]?.lastOrNull;
+      if (date == null) return '';
+      return Jiffy.parseFromDateTime(date.milliSecondsSinceEpoch).fromNow();
+    },
   };
 }
