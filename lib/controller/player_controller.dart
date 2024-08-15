@@ -537,6 +537,7 @@ class Player {
   }
 
   Future<void> skipToQueueItem(int index) async {
+    _audioHandler.setPlayWhenReady(true);
     _audioHandler.skipToQueueItem(index, andPlay: true);
   }
 
