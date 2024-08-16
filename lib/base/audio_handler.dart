@@ -1456,7 +1456,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final newFiles = <AudioCacheDetails>[];
 
-    for (final fe in Directory(dirPath).listSyncSafe()) {
+    final allFiles = Directory(dirPath).listSyncSafe();
+    final allLength = allFiles.length;
+    for (int i = 0; i < allLength; i++) {
+      final fe = allFiles[i];
       final filename = fe.path.getFilename;
       final goodID = filename.startsWith(id);
       final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime');
@@ -1464,6 +1467,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       if (isGood) {
         final details = _parseAudioCacheDetailsFromFile(fe);
         newFiles.add(details);
+        break; // since its not likely to find other audios
       }
     }
     return newFiles;
