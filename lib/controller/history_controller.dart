@@ -11,11 +11,15 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class HistoryController with HistoryManager<TrackWithDate, Track> {
   static HistoryController get inst => _instance;
   static final HistoryController _instance = HistoryController._internal();
-  HistoryController._internal();
+  HistoryController._internal() {
+    onTopItemsMapModified = TrackTileManager.onTrackItemPropChange;
+    latestUpdatedMostPlayedItem.addListener(() => TrackTileManager.rebuildTrackInfo(latestUpdatedMostPlayedItem.value! /* not null bet */));
+  }
 
   @override
   double daysToSectionExtent(List<int> days) {

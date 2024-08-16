@@ -940,6 +940,10 @@ class Indexer {
     List<String>? moods,
     int? lastPositionInMs,
   }) async {
+    if (rating != null || tags != null || moods != null) {
+      TrackTileManager.onTrackItemPropChange();
+    }
+
     rating ??= track.stats.rating;
     tags ??= track.stats.tags;
     moods ??= track.stats.moods;
@@ -952,7 +956,6 @@ class Indexer {
   }
 
   Future<void> _saveTrackStatsFileToStorage() async {
-    TrackTileManager.onTrackItemPropChange();
     await File(AppPaths.TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
   }
 

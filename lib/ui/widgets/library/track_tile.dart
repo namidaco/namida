@@ -43,6 +43,8 @@ class TrackTilePropertiesProvider extends StatelessWidget {
     final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = context.theme.focusColor;
 
+    final listenToTopHistoryItems = settings.trackItem.values.any((element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate);
+
     return ObxO(
       rx: settings.forceSquaredTrackThumbnail,
       builder: (forceSquaredThumbnails) => ObxO(
@@ -55,39 +57,43 @@ class TrackTilePropertiesProvider extends StatelessWidget {
               rx: settings.trackListTileHeight,
               builder: (trackTileHeight) => ObxO(
                 rx: SelectedTracksController.inst.existingTracksMap,
-                builder: (selectedTracksMap) => ObxO(
-                  rx: CurrentColor.inst.currentPlayingTrack,
-                  builder: (currentPlayingTrack) => ObxO(
-                    rx: CurrentColor.inst.currentPlayingIndex,
-                    builder: (currentPlayingIndex) => Obx(
-                      () {
-                        int? sleepingIndex;
-                        if (queueSource == QueueSource.playerQueue) {
-                          final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                          if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
-                        }
+                builder: (selectedTracksMap) => _ObxPrefer(
+                  rx: HistoryController.inst.topTracksMapListens,
+                  enabled: listenToTopHistoryItems,
+                  builder: (_) => ObxO(
+                    rx: CurrentColor.inst.currentPlayingTrack,
+                    builder: (currentPlayingTrack) => ObxO(
+                      rx: CurrentColor.inst.currentPlayingIndex,
+                      builder: (currentPlayingIndex) => Obx(
+                        () {
+                          int? sleepingIndex;
+                          if (queueSource == QueueSource.playerQueue) {
+                            final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                            if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                          }
 
-                        final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
+                          final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
 
-                        final properties = TrackTileProperties(
-                          backgroundColorPlaying: backgroundColorPlaying,
-                          backgroundColorNotPlaying: backgroundColorNotPlaying,
-                          selectionColorLayer: selectionColorLayer,
-                          thumbnailSize: thumbnailSize,
-                          trackTileHeight: trackTileHeight,
-                          forceSquaredThumbnails: forceSquaredThumbnails,
-                          sleepingIndex: sleepingIndex,
-                          displayThirdRow: displayThirdRow,
-                          displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                          comingFromQueue: comingFromQueue,
-                          configs: configs,
-                          canHaveDuplicates: canHaveDuplicates,
-                          currentPlayingTrack: currentPlayingTrack,
-                          currentPlayingIndex: currentPlayingIndex,
-                          isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                        );
-                        return builder(properties);
-                      },
+                          final properties = TrackTileProperties(
+                            backgroundColorPlaying: backgroundColorPlaying,
+                            backgroundColorNotPlaying: backgroundColorNotPlaying,
+                            selectionColorLayer: selectionColorLayer,
+                            thumbnailSize: thumbnailSize,
+                            trackTileHeight: trackTileHeight,
+                            forceSquaredThumbnails: forceSquaredThumbnails,
+                            sleepingIndex: sleepingIndex,
+                            displayThirdRow: displayThirdRow,
+                            displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                            comingFromQueue: comingFromQueue,
+                            configs: configs,
+                            canHaveDuplicates: canHaveDuplicates,
+                            currentPlayingTrack: currentPlayingTrack,
+                            currentPlayingIndex: currentPlayingIndex,
+                            isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                          );
+                          return builder(properties);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -97,6 +103,18 @@ class TrackTilePropertiesProvider extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ObxPrefer<T> extends StatelessWidget {
+  final RxBaseCore<T> rx;
+  final Widget Function(T? value) builder;
+  final bool enabled;
+  const _ObxPrefer({required this.rx, required this.builder, required this.enabled, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return enabled ? builder(null) : ObxO(rx: rx, builder: builder);
   }
 }
 
@@ -221,15 +239,15 @@ class TrackTile extends StatelessWidget {
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
     final additionalHero = this.additionalHero;
     final thirdLineText = this.thirdLineText;
-    final row1Text = TrackTileManager.joinTrackItems(TrackTilePosition.row1Item1, TrackTilePosition.row1Item2, TrackTilePosition.row1Item3, track);
-    final row2Text = TrackTileManager.joinTrackItems(TrackTilePosition.row2Item1, TrackTilePosition.row2Item2, TrackTilePosition.row2Item3, track);
+    final row1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.first, track);
+    final row2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.second, track);
     final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
         ? thirdLineText
         : properties.displayThirdRow
-            ? TrackTileManager.joinTrackItems(TrackTilePosition.row3Item1, TrackTilePosition.row3Item2, TrackTilePosition.row3Item3, track)
+            ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
             : null;
-    final rightItem1Text = TrackTileManager.getChoosenTrackTileItem(TrackTilePosition.rightItem1, track);
-    final rightItem2Text = TrackTileManager.getChoosenTrackTileItem(TrackTilePosition.rightItem2, track);
+    final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
+    final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
     final willSleepAfterThis = properties.sleepingIndex == index;
 
@@ -507,69 +525,101 @@ class TrackTile extends StatelessWidget {
   }
 }
 
+enum _TrackTileRowOrder {
+  first,
+  second,
+  third,
+
+  right1,
+  right2,
+}
+
 class TrackTileManager {
-  static final _infoMap = <Track, Map<TrackTilePosition, String>>{};
+  const TrackTileManager._();
+
+  static const _rowOrderToPosition = <_TrackTileRowOrder, List<TrackTilePosition>>{
+    _TrackTileRowOrder.first: [TrackTilePosition.row1Item1, TrackTilePosition.row1Item2, TrackTilePosition.row1Item3],
+    _TrackTileRowOrder.second: [TrackTilePosition.row2Item1, TrackTilePosition.row2Item2, TrackTilePosition.row2Item3],
+    _TrackTileRowOrder.third: [TrackTilePosition.row3Item1, TrackTilePosition.row3Item2, TrackTilePosition.row3Item3],
+    _TrackTileRowOrder.right1: [TrackTilePosition.rightItem1],
+    _TrackTileRowOrder.right2: [TrackTilePosition.rightItem2],
+  };
+  static const _rowOrderToPositionWithoutThird = <_TrackTileRowOrder, List<TrackTilePosition>>{
+    _TrackTileRowOrder.first: [TrackTilePosition.row1Item1, TrackTilePosition.row1Item2],
+    _TrackTileRowOrder.second: [TrackTilePosition.row2Item1, TrackTilePosition.row2Item2],
+    _TrackTileRowOrder.third: [TrackTilePosition.row3Item1, TrackTilePosition.row3Item2],
+    _TrackTileRowOrder.right1: [TrackTilePosition.rightItem1],
+    _TrackTileRowOrder.right2: [TrackTilePosition.rightItem2],
+  };
+
+  static final _infoFullMap = <Track, Map<_TrackTileRowOrder, String>?>{};
 
   static void onTrackItemPropChange() {
-    _infoMap.clear();
+    _infoFullMap.clear();
     _separator = _buildSeparator();
+  }
+
+  static void rebuildTrackInfo(Track track) {
+    _infoFullMap[track] = null;
   }
 
   static String _separator = _buildSeparator();
   static String _buildSeparator() => ' ${settings.trackTileSeparator.value} ';
+  static final _buffer = StringBuffer(); // clearing and reusing is more performant
 
-  static String joinTrackItems(TrackTilePosition? p1, TrackTilePosition? p2, TrackTilePosition? p3, Track track) {
-    var buffer = StringBuffer();
-    bool needsSeparator = false;
-    if (p1 != null) {
-      var info = getChoosenTrackTileItem(p1, track);
-      if (info.isNotEmpty) {
-        buffer.write(info);
-        needsSeparator = true;
-      }
-    }
-    if (p2 != null) {
-      var info = getChoosenTrackTileItem(p2, track);
-      if (info.isNotEmpty) {
-        if (needsSeparator) buffer.write(_separator);
-        buffer.write(info);
-        needsSeparator = true;
-      }
-    }
-    if (p3 != null && settings.displayThirdItemInEachRow.value) {
-      var info = getChoosenTrackTileItem(p3, track);
-      if (info.isNotEmpty) {
-        if (needsSeparator) buffer.write(_separator);
-        buffer.write(info);
-        needsSeparator = true;
-      }
-    }
-    return buffer.toString();
+  static String _joinTrackItems(
+    _TrackTileRowOrder rowOrder,
+    Track track,
+  ) {
+    final row = _infoFullMap[track]?[rowOrder];
+    if (row != null) return row;
+
+    final positions = settings.displayThirdItemInEachRow.value ? _rowOrderToPosition[rowOrder] : _rowOrderToPositionWithoutThird[rowOrder];
+    final newRowDetails = _joinTrackItemsInternal(positions!, track);
+    final newRow = newRowDetails.text;
+
+    if (newRowDetails.shouldNotCache) return newRow;
+
+    final innerMap = _infoFullMap[track] ??= {};
+    innerMap[rowOrder] = newRow;
+
+    return newRow;
   }
 
-  static String getChoosenTrackTileItem(TrackTilePosition itemPosition, Track trackPre) {
-    final inf = _infoMap[trackPre]?[itemPosition];
-    if (inf != null) return inf;
+  static ({String text, bool shouldNotCache}) _joinTrackItemsInternal(List<TrackTilePosition> positions, Track track) {
+    _buffer.clear();
 
-    String val;
+    bool needsSeparator = false;
+    bool shouldNotCache = false;
 
-    final trackItem = settings.trackItem.value[itemPosition];
-    if (trackItem == null || trackItem == TrackTileItem.none) {
-      val = '';
-    } else {
-      final fn = _lookup[trackItem];
-      if (fn != null) {
-        final track = trackPre.toTrackExt();
-        val = fn(track);
-      } else {
-        val = '';
+    final length = positions.length;
+    for (int i = 0; i < length; i++) {
+      final itemPosition = positions[i];
+      final trackItem = settings.trackItem.value[itemPosition];
+      if (trackItem == TrackTileItem.latestListenDate) shouldNotCache = true;
+
+      var info = _buildChoosenTrackTileItem(trackItem, track);
+
+      if (info.isNotEmpty) {
+        if (needsSeparator) _buffer.write(_separator);
+        _buffer.write(info);
+        needsSeparator = true;
       }
     }
 
-    _infoMap[trackPre] ??= {};
-    _infoMap[trackPre]![itemPosition] = val;
+    return (text: _buffer.toString(), shouldNotCache: shouldNotCache);
+  }
 
-    return val;
+  static String _buildChoosenTrackTileItem(TrackTileItem? trackItem, Track trackPre) {
+    if (trackItem == null || trackItem == TrackTileItem.none) return '';
+
+    final fn = _lookup[trackItem];
+    if (fn != null) {
+      final track = trackPre.toTrackExt();
+      return fn(track);
+    }
+
+    return '';
   }
 
   static final _lookup = <TrackTileItem, String Function(TrackExtended track)>{
