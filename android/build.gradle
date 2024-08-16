@@ -15,6 +15,9 @@ allprojects {
                     }
                 }
             }
+            android {
+              compileSdkVersion 34
+            }
         }
     }
 }
