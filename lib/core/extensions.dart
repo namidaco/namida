@@ -434,7 +434,8 @@ extension LRCParsingUtils on String {
 }
 
 extension TagFieldsUtils on TagField {
-  bool get isNumeric => this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year;
+  bool get isNumeric =>
+      this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year || this == TagField.rating;
 }
 
 extension WidgetsUtils on Widget {

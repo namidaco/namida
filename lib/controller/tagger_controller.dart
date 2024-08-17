@@ -10,11 +10,13 @@ import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
 
 class FAudioTaggerController {
   static final FAudioTaggerController inst = FAudioTaggerController._internal();
@@ -275,6 +277,7 @@ class FAudioTaggerController {
     void Function(bool didUpdate, String? error, Track track)? onEdit,
     void Function()? onUpdatingTracksStart,
     bool? keepFileDates,
+    void Function(TrackStats newStats)? onStatsEdit,
   }) async {
     if (trimWhiteSpaces) {
       editedTags.updateAll((key, value) => value.trimAll());
@@ -314,6 +317,14 @@ class FAudioTaggerController {
             language: editedTags[TagField.language],
             recordLabel: editedTags[TagField.recordLabel],
             country: editedTags[TagField.country],
+            tags: editedTags[TagField.tags],
+            ratingPercentage: () {
+              final ratingString = editedTags[TagField.rating];
+              if (ratingString != null) {
+                return _ratingStringToPercentage(ratingString);
+              }
+              return null;
+            }(),
           );
 
     final tracksMap = <Track, TrackExtended>{};
@@ -358,7 +369,6 @@ class FAudioTaggerController {
                     FFMPEGTagField.albumArtist: editedTags[TagField.albumArtist],
                     FFMPEGTagField.composer: editedTags[TagField.composer],
                     FFMPEGTagField.genre: editedTags[TagField.genre],
-                    FFMPEGTagField.mood: editedTags[TagField.mood],
                     FFMPEGTagField.year: editedTags[TagField.year],
                     FFMPEGTagField.trackNumber: editedTags[TagField.trackNumber],
                     FFMPEGTagField.discNumber: editedTags[TagField.discNumber],
@@ -371,20 +381,44 @@ class FAudioTaggerController {
                     FFMPEGTagField.language: editedTags[TagField.language],
                     FFMPEGTagField.recordLabel: editedTags[TagField.recordLabel],
                     FFMPEGTagField.country: editedTags[TagField.country],
+
+                    // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
+                    // FFMPEGTagField.mood: editedTags[TagField.mood],
+                    // FFMPEGTagField.tags: editedTags[TagField.tags],
+                    // FFMPEGTagField.rating: editedTags[TagField.rating],
                   };
             didUpdate = await NamidaFFMPEG.inst.editMetadata(
               path: track.path,
               tagsMap: ffmpegTagsMap,
             );
+            snackyy(
+              title: lang.WARNING,
+              message: 'FFMPEG was used. Some tags might not have been updated',
+              isError: true,
+            );
           }
+
           if (didUpdate) {
             final trExt = track.toTrackExt();
             final newTrExt = trExt.copyWithTag(tag: newTags);
             tracksMap[track] = newTrExt;
             if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
+
+            // -- updating app-related stats if needed
           }
           printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
           if (onEdit != null) onEdit(didUpdate, error, track);
+
+          // -- update app-related stats even if tags editing failed.
+          if (editedTags[TagField.mood] != null || editedTags[TagField.tags] != null || editedTags[TagField.rating] != null) {
+            final newStats = await Indexer.inst.updateTrackStats(
+              tracks.first,
+              ratingString: editedTags[TagField.rating],
+              moodsString: editedTags[TagField.mood],
+              tagsString: editedTags[TagField.tags],
+            );
+            onStatsEdit?.call(newStats);
+          }
         },
         keepStats: keepFileDates ?? _defaultKeepFileDates,
       );
@@ -398,6 +432,13 @@ class FAudioTaggerController {
         newArtworkPath: imagePath,
       );
     }
+  }
+
+  double? _ratingStringToPercentage(String ratingString) {
+    if (ratingString.isEmpty) return 0.0;
+    final intval = int.tryParse(ratingString);
+    if (intval == null) return null;
+    return intval / 100;
   }
 
   String getArtworkIdentifierFromInfo(FAudioModel? data, Map<AlbumIdentifier, bool> identifiers) {

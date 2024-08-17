@@ -172,6 +172,8 @@ enum TagField {
   language,
   recordLabel,
   country,
+  rating,
+  tags,
 }
 
 enum WakelockMode {

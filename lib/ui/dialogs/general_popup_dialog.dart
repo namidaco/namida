@@ -20,6 +20,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -165,32 +166,34 @@ Future<void> showGeneralPopupDialog(
 
   void cancelSkipTimer() => Player.inst.cancelPlayErrorSkipTimer();
 
-  final stats = tracks.firstOrNull?.stats.obs;
-
-  List<String> splitByCommaList(String listText) {
-    final moodsFinalLookup = <String, bool>{};
-    final moodsPre = listText.split(',');
-    moodsPre.loop((m) {
-      if (m.isNotEmpty && m != ' ') {
-        final cleaned = m.trimAll();
-        moodsFinalLookup[cleaned] ??= true;
-      }
-    });
-    return moodsFinalLookup.keys.toList();
+  Rx<TrackStats>? statsWrapper;
+  final firstTrack = tracks.firstOrNull;
+  if (firstTrack != null) {
+    statsWrapper = TrackStats(
+      firstTrack,
+      firstTrack.effectiveRating,
+      firstTrack.effectiveTags,
+      firstTrack.effectiveMoods,
+      firstTrack.lastPlayedPositionInMs ?? 0,
+    ).obs;
   }
 
   void setTrackStatsDialog() async {
-    if (stats == null) return;
+    if (statsWrapper == null) return;
+    if (firstTrack == null) return;
+    final stats = statsWrapper.value;
 
-    final initialRating = stats.value.rating;
-    final initialMoods = stats.value.moods.join(', ');
-    final initialTags = stats.value.tags.join(', ');
+    final initialRating = stats.rating;
+    final initialMoods = stats.moods.join(', ');
+    final initialTags = stats.tags.join(', ');
 
     final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
     final moodsController = TextEditingController(text: initialMoods);
     final tagsController = TextEditingController(text: initialTags);
 
     final icColor = iconColor.value;
+
+    final isEditing = false.obs;
 
     Widget getItemChip({
       required ThemeData theme,
@@ -245,25 +248,45 @@ Future<void> showGeneralPopupDialog(
         ratingController.dispose();
         moodsController.dispose();
         tagsController.dispose();
+        isEditing.close();
       },
       (theme) => CustomBlurryDialog(
         title: lang.CONFIGURE,
         actions: [
           const CancelButton(),
-          NamidaButton(
-            text: lang.SAVE,
-            onPressed: () async {
-              NamidaNavigator.inst.closeDialog();
-              final newRating = int.tryParse(ratingController.text);
-              final newMoods = splitByCommaList(moodsController.text);
-              final newTags = splitByCommaList(tagsController.text);
-              stats.value = await Indexer.inst.updateTrackStats(
-                tracks.first,
-                rating: newRating,
-                moods: newMoods,
-                tags: newTags,
-              );
-            },
+          ObxO(
+            rx: isEditing,
+            builder: (editing) => AnimatedEnabled(
+              enabled: !editing,
+              child: NamidaButton(
+                text: lang.SAVE,
+                onPressed: () async {
+                  isEditing.value = true;
+                  await FAudioTaggerController.inst.updateTracksMetadata(
+                    tracks: [firstTrack],
+                    editedTags: {
+                      TagField.rating: ratingController.text,
+                      TagField.mood: moodsController.text,
+                      TagField.tags: tagsController.text,
+                    },
+                    onStatsEdit: (newStats) {
+                      statsWrapper!.value = newStats;
+                    },
+                    onEdit: (didUpdate, error, _) {
+                      if (!didUpdate) {
+                        var msg = lang.METADATA_EDIT_FAILED;
+                        if (error != null) msg += '\n$error';
+                        snackyy(title: lang.WARNING, message: msg, isError: true);
+                      }
+                    },
+                    keepFileDates: true,
+                    trimWhiteSpaces: false, // we did here
+                  );
+                  isEditing.value = false;
+                  NamidaNavigator.inst.closeDialog();
+                },
+              ),
+            ),
           ),
         ],
         child: ConstrainedBox(
@@ -335,7 +358,7 @@ Future<void> showGeneralPopupDialog(
           NamidaButton(
             text: lang.SAVE,
             onPressed: () async {
-              final newMoods = splitByCommaList(playlistMoodsController.text);
+              final newMoods = Indexer.splitByCommaList(playlistMoodsController.text);
               PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods);
               NamidaNavigator.inst.closeDialog();
             },
@@ -726,7 +749,7 @@ Future<void> showGeneralPopupDialog(
     onDisposing: () {
       numberOfRepeats.close();
       isLoadingFilesToShare.close();
-      stats?.close();
+      statsWrapper?.close();
       colorDelightened.close();
       iconColor.close();
     },
@@ -770,7 +793,7 @@ Future<void> showGeneralPopupDialog(
                           const SizedBox(width: 16.0),
                           if (forceSingleArtwork!)
                             NamidaHero(
-                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${tracks.firstOrNull?.path}$additionalHero',
+                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
                               child: ArtworkWidget(
                                 key: Key(tracks.pathToImage),
                                 track: tracks.trackOfImage,
@@ -1325,14 +1348,21 @@ Future<void> showGeneralPopupDialog(
                                         ),
                                   const SizedBox(width: 8.0),
                                   Expanded(
-                                    child: Obx(
-                                      () => bigIcon(
-                                        Broken.grammerly,
-                                        () => lang.SET_RATING,
-                                        setTrackStatsDialog,
-                                        subtitle: stats == null || stats.valueR.rating == 0 ? '' : ' ${stats.valueR.rating}%',
-                                      ),
-                                    ),
+                                    child: statsWrapper == null
+                                        ? bigIcon(
+                                            Broken.grammerly,
+                                            () => lang.SET_RATING,
+                                            setTrackStatsDialog,
+                                          )
+                                        : ObxO(
+                                            rx: statsWrapper,
+                                            builder: (stats) => bigIcon(
+                                              Broken.grammerly,
+                                              () => lang.SET_RATING,
+                                              setTrackStatsDialog,
+                                              subtitle: stats.rating == 0 ? '' : ' ${stats.rating}%',
+                                            ),
+                                          ),
                                   ),
                                   if (isSingle) ...[
                                     const SizedBox(width: 8.0),

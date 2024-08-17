@@ -328,7 +328,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                       metadata["artworkLength"] = artworkBytes.size
                     } catch (_: Exception) {}
                   } else {
-                    metadata["arwork"] = artworkBytes
+                    metadata["artwork"] = artworkBytes
                     metadata["artworkLength"] = artworkBytes.size
                   }
                 }

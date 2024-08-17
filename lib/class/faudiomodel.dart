@@ -69,6 +69,8 @@ class FTags {
   final String? country;
   final String? recordLabel;
 
+  final double? ratingPercentage;
+
   const FTags({
     required this.path,
     required this.artwork,
@@ -96,12 +98,24 @@ class FTags {
     this.tempo,
     this.country,
     this.recordLabel,
+    this.ratingPercentage,
   });
 
   static String? _listToString(List? list) {
     if (list == null || list.isEmpty) return null;
     if (list.length == 1) return list[0];
     return list.join('; ');
+  }
+
+  static double? ratingUnsignedIntToPercentage(String? rating) {
+    if (rating == null) return null;
+    final unsignedInt = int.tryParse(rating);
+    if (unsignedInt == null) return null;
+    return unsignedInt / 255;
+  }
+
+  static int ratingPercentageToUnsignedInt(double ratingPercentage) {
+    return (ratingPercentage * 255).round();
   }
 
   // -- upper cased are the ones extracted manually.
@@ -114,6 +128,8 @@ class FTags {
         ...?lyricsList,
       ];
     }
+
+    final ratingString = map["rating"] ?? map["RATING"];
 
     return FTags(
       path: map["path"],
@@ -136,12 +152,13 @@ class FTags {
       djmixer: _listToString(map["djmixer"]) ?? map["DJMIXER"],
       mixer: _listToString(map["mixer"]) ?? map["MIXER"],
       mood: _listToString(map["mood"]) ?? map["MOOD"],
-      rating: map["rating"] ?? map["RATING"],
+      rating: ratingString,
       remixer: _listToString(map["remixer"]) ?? map["REMIXER"],
       tags: _listToString(map["tags"]) ?? map["TAGS"],
       tempo: _listToString(map["tempo"]) ?? map["TEMPO"],
       country: _listToString(map["country"]) ?? map["COUNTRY"],
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
+      ratingPercentage: ratingUnsignedIntToPercentage(ratingString),
     );
   }
 
@@ -166,7 +183,7 @@ class FTags {
       "djmixer": djmixer,
       "mixer": mixer,
       "mood": mood,
-      "rating": rating,
+      "rating": ratingPercentage != null ? "${ratingPercentageToUnsignedInt(ratingPercentage!)}" : rating,
       "remixer": remixer,
       "tags": tags,
       "tempo": tempo,

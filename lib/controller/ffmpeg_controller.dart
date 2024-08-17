@@ -424,6 +424,10 @@ class FFMPEGTagField {
   static const String recordLabel = 'LABEL';
   static const String country = 'Country';
 
+  // -- NOT TESTED
+  static const String rating = 'rating';
+  static const String tags = 'tags';
+
   static const List<String> values = <String>[
     title,
     artist,
@@ -446,6 +450,8 @@ class FFMPEGTagField {
     language,
     recordLabel,
     country,
+    rating,
+    tags,
   ];
 }
 

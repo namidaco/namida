@@ -194,6 +194,9 @@ class TrackExtended {
   final String language;
   final String lyrics;
   final String label;
+  final double rating;
+  final String? originalTags;
+  final List<String> tagsList;
 
   const TrackExtended({
     required this.title,
@@ -222,6 +225,9 @@ class TrackExtended {
     required this.language,
     required this.lyrics,
     required this.label,
+    required this.rating,
+    required this.originalTags,
+    required this.tagsList,
   });
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
@@ -280,6 +286,12 @@ class TrackExtended {
       language: json['language'] ?? '',
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
+      rating: json['rating'] ?? 0.0,
+      originalTags: json['originalTags'],
+      tagsList: Indexer.splitGeneral(
+        json['originalTags'],
+        config: genresSplitConfig,
+      ),
     );
   }
 
@@ -308,6 +320,8 @@ class TrackExtended {
       'language': language,
       'lyrics': lyrics,
       'label': label,
+      'rating': rating,
+      'originalTags': originalTags,
     };
   }
 
@@ -399,6 +413,9 @@ extension TrackExtUtils on TrackExtended {
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
+      rating: tag.ratingPercentage ?? rating,
+      originalTags: tag.tags ?? originalTags,
+      tagsList: tag.tags != null ? [tag.tags!] : tagsList,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -440,6 +457,9 @@ extension TrackExtUtils on TrackExtended {
     String? language,
     String? lyrics,
     String? label,
+    double? rating,
+    String? originalTags,
+    List<String>? tagsList,
   }) {
     return TrackExtended(
       title: title ?? this.title,
@@ -468,6 +488,9 @@ extension TrackExtUtils on TrackExtended {
       language: language ?? this.language,
       lyrics: lyrics ?? this.lyrics,
       label: label ?? this.label,
+      rating: rating ?? this.rating,
+      originalTags: originalTags ?? this.originalTags,
+      tagsList: tagsList ?? this.tagsList,
     );
   }
 }
@@ -511,7 +534,29 @@ extension TrackUtils on Track {
   String get language => toTrackExt().language;
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;
-  TrackStats get stats => Indexer.inst.trackStatsMap[this] ?? TrackStats(kDummyTrack, 0, [], [], 0);
+
+  int? get lastPlayedPositionInMs => _stats?.lastPositionInMs;
+  TrackStats? get _stats => Indexer.inst.trackStatsMap[this];
+  int get effectiveRating {
+    int? r = _stats?.rating;
+    if (r != null && r > 0) return r;
+    var percentageRatingEmbedded = toTrackExt().rating;
+    return (percentageRatingEmbedded * 100).round();
+  }
+
+  List<String> get effectiveMoods {
+    List<String>? m = _stats?.moods;
+    if (m != null && m.isNotEmpty) return m;
+    var moodsEmbedded = toTrackExt().moodList;
+    return moodsEmbedded;
+  }
+
+  List<String> get effectiveTags {
+    List<String>? s = _stats?.tags;
+    if (s != null && s.isNotEmpty) return s;
+    var tagsEmbedded = toTrackExt().tagsList;
+    return tagsEmbedded;
+  }
 
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;

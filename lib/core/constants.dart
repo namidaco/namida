@@ -483,6 +483,9 @@ const kDummyExtendedTrack = TrackExtended(
   language: "",
   lyrics: "",
   label: "",
+  rating: 0.0,
+  originalTags: null,
+  tagsList: [],
 );
 
 /// Unknown Tag Fields

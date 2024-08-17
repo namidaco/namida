@@ -465,6 +465,9 @@ class Indexer {
         language: '',
         lyrics: '',
         label: '',
+        rating: 0.0,
+        originalTags: null,
+        tagsList: [],
       );
       if (!trackInfo.hasError) {
         int durationInSeconds = trackInfo.length ?? 0;
@@ -495,6 +498,10 @@ class Indexer {
           config: splittersConfigs.generalConfig,
         );
 
+        // -- Split Tags
+        final tagsEmbedded = splitGeneral(
+          tags.tags,
+          config: splittersConfigs.generalConfig,
         );
 
         String? trimOrNull(String? value) => value == null ? value : value.trimAll();
@@ -523,6 +530,9 @@ class Indexer {
           discNo: tags.discNumber.getIntValue(),
           language: tags.language,
           lyrics: tags.lyrics,
+          label: tags.recordLabel,
+          rating: tags.ratingPercentage,
+          tagsList: tagsEmbedded,
         );
 
         // ----- if the title || artist weren't found in the tag fields
@@ -941,22 +951,38 @@ class Indexer {
     }
   }
 
+  static List<String> splitByCommaList(String listText) {
+    final moodsFinalLookup = <String, bool>{};
+    final moodsPre = listText.split(',');
+    moodsPre.loop((m) {
+      if (m.isNotEmpty && m != ' ') {
+        final cleaned = m.trimAll();
+        moodsFinalLookup[cleaned] ??= true;
+      }
+    });
+    return moodsFinalLookup.keys.toList();
+  }
+
   /// Returns new [TrackStats].
   Future<TrackStats> updateTrackStats(
     Track track, {
-    int? rating,
-    List<String>? tags,
-    List<String>? moods,
+    String? ratingString,
+    String? tagsString,
+    String? moodsString,
     int? lastPositionInMs,
   }) async {
-    if (rating != null || tags != null || moods != null) {
+    if (ratingString != null || tagsString != null || moodsString != null) {
       TrackTileManager.onTrackItemPropChange();
     }
 
-    rating ??= track.stats.rating;
-    tags ??= track.stats.tags;
-    moods ??= track.stats.moods;
-    lastPositionInMs ??= track.stats.lastPositionInMs;
+    final rating = ratingString != null
+        ? ratingString.isEmpty
+            ? 0
+            : int.tryParse(ratingString) ?? track.effectiveRating
+        : track.effectiveRating;
+    final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
+    final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
+    lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
     final newStats = TrackStats(track, rating.clamp(0, 100), tags, moods, lastPositionInMs);
     trackStatsMap[track] = newStats;
 
@@ -1222,6 +1248,12 @@ class Indexer {
               mood,
               config: generalSplitConfig,
             );
+      final tag = map['tag'] ?? map['tags'];
+      final tags = tag == null
+          ? <String>[]
+          : Indexer.splitGeneral(
+              tag,
+              config: generalSplitConfig,
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
@@ -1253,6 +1285,9 @@ class Indexer {
         language: '',
         lyrics: '',
         label: '',
+        rating: 0.0,
+        originalTags: tag,
+        tagsList: tags,
       );
       tracks.add((trext, e.id));
       _backupMediaStoreIDS[trext.pathToImage] = (trext.toTrack(), e.id);

@@ -557,7 +557,7 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
           tracks.sortByReverse((e) => HistoryController.inst.topTracksMapListens[e.track]?.length ?? 0);
         }
       case InsertionSortingType.rating:
-        tracks.sortByReverse((e) => e.track.stats.rating);
+        tracks.sortByReverse((e) => e.track.effectiveRating);
       case InsertionSortingType.random:
         tracks.shuffle();
       case InsertionSortingType.none: // do nothing
@@ -577,8 +577,6 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
         } else {
           videos.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
         }
-      // case InsertionSortingType.rating:
-      //   tracks.sortByReverse((e) => e.track.stats.rating);
       case InsertionSortingType.random:
         videos.shuffle();
 
@@ -1119,6 +1117,8 @@ class _NamidaConverters {
         TagField.language: lang.LANGUAGE,
         TagField.recordLabel: lang.RECORD_LABEL,
         TagField.country: lang.COUNTRY,
+        TagField.rating: lang.RATING,
+        TagField.tags: lang.TAGS,
       },
       VideoPlaybackSource: {
         VideoPlaybackSource.auto: lang.AUTO,
@@ -1340,6 +1340,8 @@ class _NamidaConverters {
         TagField.language: Broken.language_circle,
         TagField.recordLabel: Broken.ticket,
         TagField.country: Broken.house,
+        TagField.rating: Broken.grammerly,
+        TagField.tags: Broken.ticket_discount,
       },
       InsertionSortingType: {
         InsertionSortingType.listenCount: Broken.award,
@@ -1400,6 +1402,8 @@ class _NamidaConverters {
       FFMPEGTagField.language: lang.LANGUAGE,
       FFMPEGTagField.recordLabel: lang.RECORD_LABEL,
       FFMPEGTagField.country: lang.COUNTRY,
+      FFMPEGTagField.rating: lang.RATING,
+      FFMPEGTagField.tags: lang.TAGS,
     };
     _ffmpegToIcon = {
       FFMPEGTagField.title: Broken.music,
@@ -1423,6 +1427,8 @@ class _NamidaConverters {
       FFMPEGTagField.language: Broken.language_circle,
       FFMPEGTagField.recordLabel: Broken.ticket,
       FFMPEGTagField.country: Broken.house,
+      FFMPEGTagField.rating: Broken.grammerly,
+      FFMPEGTagField.tags: Broken.ticket_discount,
     };
   }
 

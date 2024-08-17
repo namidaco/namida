@@ -139,7 +139,7 @@ class SearchSortController {
     SortType.duration: (e) => e.duration,
     SortType.sampleRate: (e) => e.sampleRate,
     SortType.size: (e) => e.size,
-    SortType.rating: (e) => e.stats.rating,
+    SortType.rating: (e) => e.effectiveRating,
     SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0,
     SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0,
   };
@@ -714,7 +714,7 @@ class SearchSortController {
         sortThis((e) => e.size);
         break;
       case SortType.rating:
-        sortThis((e) => e.stats.rating);
+        sortThis((e) => e.effectiveRating);
         break;
       case SortType.shuffle:
         list.shuffle();
