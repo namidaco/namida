@@ -422,7 +422,7 @@ class Player {
 
   Future<void> removeFromQueue(int index) async {
     // why [isPlaying] ? imagine removing while paused
-    await _audioHandler.removeFromQueue(index, isPlaying.value && _audioHandler.defaultShouldStartPlayingWhenPaused);
+    await _audioHandler.removeFromQueue(index, isPlaying.value && _audioHandler.defaultShouldStartPlayingOnNextPrev);
   }
 
   Future<void> replaceAllTracksInQueue(Playable oldTrack, Playable newTrack) async {

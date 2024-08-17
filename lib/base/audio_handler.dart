@@ -1619,7 +1619,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
 
   @override
-  bool get defaultShouldStartPlayingWhenPaused => settings.player.playOnNextPrev.value;
+  bool get defaultShouldStartPlayingOnNextPrev => settings.player.playOnNextPrev.value;
 
   @override
   bool get enableVolumeFadeOnPlayPause => settings.player.enableVolumeFadeOnPlayPause.value;
