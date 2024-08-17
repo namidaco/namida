@@ -86,6 +86,12 @@ class NamidaNavigator {
     _printMenus();
     return material.showMenu(
       useRootNavigator: true,
+      popUpAnimationStyle: material.AnimationStyle(
+        duration: const Duration(milliseconds: 400),
+        reverseDuration: const Duration(milliseconds: 200),
+        curve: material.Curves.easeOutQuart,
+        reverseCurve: material.Curves.easeInOutQuad,
+      ),
       context: context,
       position: position,
       items: items,
