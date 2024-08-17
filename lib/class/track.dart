@@ -259,7 +259,7 @@ class TrackExtended {
         config: genresSplitConfig,
       ),
       originalMood: json['originalMood'] ?? '',
-      moodList: Indexer.splitGenre(
+      moodList: Indexer.splitGeneral(
         json['originalMood'],
         config: genresSplitConfig,
       ),

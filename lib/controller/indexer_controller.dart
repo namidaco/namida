@@ -421,6 +421,7 @@ class Indexer {
     required TrackExtended? Function() onMinDurTrigger,
     required TrackExtended? Function() onMinSizeTrigger,
     required TrackExtended? Function(String err) onError,
+    SplitArtistGenreConfigsWrapper? splittersConfigs,
   }) {
     // -- most methods dont throw, except for timeout
     try {
@@ -473,23 +474,27 @@ class Indexer {
 
         final tags = trackInfo.tags;
 
+        splittersConfigs ??= _createSplitConfig();
+
         // -- Split Artists
         final artists = splitArtist(
           title: tags.title,
           originalArtist: tags.artist,
-          config: ArtistsSplitConfig.settings(),
+          config: splittersConfigs.artistsConfig,
         );
 
         // -- Split Genres
         final genres = splitGenre(
           tags.genre,
-          config: GenresSplitConfig.settings(),
+          config: splittersConfigs.genresConfig,
         );
 
-        // -- Split Moods (using same genre splitters)
-        final moods = splitGenre(
+        // -- Split Moods
+        final moods = splitGeneral(
           tags.mood,
-          config: GenresSplitConfig.settings(),
+          config: splittersConfigs.generalConfig,
+        );
+
         );
 
         String? trimOrNull(String? value) => value == null ? value : value.trimAll();
@@ -588,6 +593,7 @@ class Indexer {
     bool checkForDuplicates = true,
     bool tryExtractingFromFilename = true,
   }) async {
+    final splittersConfigs = _createSplitConfig();
     TrackExtended? extractFunction(FAudioModel item) => _convertTagToTrack(
           trackPath: item.tags.path,
           trackInfo: item,
@@ -597,6 +603,7 @@ class Indexer {
           onMinDurTrigger: onMinDurTrigger,
           onMinSizeTrigger: onMinSizeTrigger,
           onError: (_) => null,
+          splittersConfigs: splittersConfigs,
         );
 
     final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
@@ -687,6 +694,7 @@ class Indexer {
       paths: tracksRealPaths,
       overrideArtwork: updateArtwork,
     );
+    final splitConfigs = _createSplitConfig();
     await for (final item in stream) {
       final path = item.tags.path;
       final trext = _convertTagToTrack(
@@ -696,6 +704,7 @@ class Indexer {
         onMinDurTrigger: () => null,
         onMinSizeTrigger: () => null,
         onError: (_) => null,
+        splittersConfigs: splitConfigs,
       );
       if (item.hasError) {
         onProgress(false);
@@ -967,12 +976,8 @@ class Indexer {
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
     /// Reading actual track file.
-    final splitconfig = _SplitArtistGenreConfig(
-      path: AppPaths.TRACKS,
-      artistsConfig: ArtistsSplitConfig.settings(),
-      genresConfig: GenresSplitConfig.settings(),
-    );
-    final tracksResult = await _readTracksFileCompute.thready(splitconfig);
+    final splitconfig = _createSplitConfig();
+
     allTracksMappedByPath.value = tracksResult.$1;
     allTracksMappedByYTID = tracksResult.$2;
     tracksInfoList.value = tracksResult.$3;
@@ -1054,6 +1059,16 @@ class Indexer {
     return config.splitText(
       originalGenre,
       fallback: UnknownTags.GENRE,
+    );
+  }
+
+  static List<String> splitGeneral(
+    String? originalText, {
+    required SplitterConfig config,
+  }) {
+    return config.splitText(
+      originalText,
+      fallback: '',
     );
   }
 
@@ -1182,6 +1197,7 @@ class Indexer {
     final tracks = <(TrackExtended, int)>[];
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final genresSplitConfig = GenresSplitConfig.settings();
+    final generalSplitConfig = GeneralSplitConfig();
     allMusic.loop((e) {
       final map = e.getMap;
       final artist = e.artist;
@@ -1202,9 +1218,10 @@ class Indexer {
       final mood = map['mood'];
       final moods = mood == null
           ? <String>[]
-          : Indexer.splitGenre(
+          : Indexer.splitGeneral(
               mood,
-              config: genresSplitConfig,
+              config: generalSplitConfig,
+            );
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
@@ -1336,16 +1353,13 @@ class Indexer {
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }
-}
 
-class _SplitArtistGenreConfig {
-  final String path;
-  final ArtistsSplitConfig artistsConfig;
-  final GenresSplitConfig genresConfig;
-
-  const _SplitArtistGenreConfig({
-    required this.path,
-    required this.artistsConfig,
-    required this.genresConfig,
-  });
+  static SplitArtistGenreConfigsWrapper _createSplitConfig() {
+    return SplitArtistGenreConfigsWrapper(
+      path: AppPaths.TRACKS,
+      artistsConfig: ArtistsSplitConfig.settings(),
+      genresConfig: GenresSplitConfig.settings(),
+      generalConfig: GeneralSplitConfig(),
+    );
+  }
 }

@@ -1,6 +1,20 @@
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 
+class SplitArtistGenreConfigsWrapper {
+  final String path;
+  final ArtistsSplitConfig artistsConfig;
+  final GenresSplitConfig genresConfig;
+  final GeneralSplitConfig generalConfig;
+
+  const SplitArtistGenreConfigsWrapper({
+    required this.path,
+    required this.artistsConfig,
+    required this.genresConfig,
+    required this.generalConfig,
+  });
+}
+
 class ArtistsSplitConfig extends SplitterConfig {
   final bool addFeatArtist;
 
@@ -67,6 +81,24 @@ class GenresSplitConfig extends SplitterConfig {
       "separators": separators,
       "separatorsBlacklist": separatorsBlacklist,
     };
+  }
+}
+
+class GeneralSplitConfig extends SplitterConfig {
+  GeneralSplitConfig._({
+    required super.separators,
+    required super.separatorsBlacklist,
+  });
+
+  factory GeneralSplitConfig() {
+    final finalSplitters = <String>{};
+    finalSplitters.addAll(settings.trackArtistsSeparators.value);
+    finalSplitters.addAll(settings.trackGenresSeparators.value);
+    finalSplitters.addAll({';', ',', '//', r'\\'});
+    return GeneralSplitConfig._(
+      separators: finalSplitters.toList(),
+      separatorsBlacklist: [],
+    );
   }
 }
 
