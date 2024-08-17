@@ -81,6 +81,7 @@ class NamidaNavigator {
     required RelativeRect position,
     required List<PopupMenuEntry<T>> items,
   }) async {
+    ScrollSearchController.inst.unfocusKeyboard();
     _currentMenusNumber++;
     _printMenus();
     return material.showMenu(
