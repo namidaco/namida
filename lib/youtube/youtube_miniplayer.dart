@@ -1284,7 +1284,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                           height: finalthumbnailHeight,
                                           child: NamidaVideoWidget(
                                             isLocal: false,
-                                            enableControls: percentage > 0.5,
+                                            disableControlsUnderPercentage: 0.5,
                                             onMinimizeTap: () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
                                             swipeUpToFullscreen: true,
                                           ),

@@ -13,6 +13,7 @@ import 'package:youtipie/core/extensions.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -211,6 +212,22 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     await controller.animateTo(target);
   }
 
+  /// disables controls entirely when specified. for example when minplayer is minimized & controls should't be there.
+  void _disableControlsListener() {
+    if (!mounted) return;
+    final value = MiniPlayerController.inst.animation.value;
+    final hideUnder = widget.disableControlsUnderPercentage!;
+    if (value < hideUnder && _isControlsEnabled) {
+      setState(() {
+        _isControlsEnabled = false;
+      });
+    } else if (value >= hideUnder && !_isControlsEnabled) {
+      setState(() {
+        _isControlsEnabled = true;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -252,6 +269,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         },
       );
     }
+
+    if (widget.disableControlsUnderPercentage != null) {
+      MiniPlayerController.inst.animation.addListener(_disableControlsListener);
+    }
   }
 
   final _volumeListenerKey = 'video_widget';
@@ -265,6 +286,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _currentDeviceVolume.close();
     _canShowBrightnessSlider.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
+    MiniPlayerController.inst.animation.removeListener(_disableControlsListener);
     super.dispose();
   }
 
@@ -530,7 +552,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _doubleTapTimer = null;
   }
 
-  bool get _canShowControls => widget.showControls && !NamidaChannel.inst.isInPip.value;
+  late bool _isControlsEnabled = widget.showControls;
+  bool get _canShowControls => _isControlsEnabled && !NamidaChannel.inst.isInPip.value;
 
   EdgeInsets _deviceInsets = EdgeInsets.zero;
 

@@ -30,6 +30,7 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaVideoWidget extends StatelessWidget {
   final bool enableControls;
+  final double? disableControlsUnderPercentage;
   final VoidCallback? onMinimizeTap;
   final bool fullscreen;
   final bool isPip;
@@ -39,7 +40,8 @@ class NamidaVideoWidget extends StatelessWidget {
 
   const NamidaVideoWidget({
     super.key,
-    required this.enableControls,
+    this.enableControls = true,
+    this.disableControlsUnderPercentage,
     this.onMinimizeTap,
     this.fullscreen = false,
     this.isPip = false,
@@ -111,6 +113,7 @@ class NamidaVideoWidget extends StatelessWidget {
             }
           },
           showControls: showControls,
+          disableControlsUnderPercentage: disableControlsUnderPercentage,
           isFullScreen: fullscreen,
         ),
       ),
@@ -126,12 +129,14 @@ class VideoController {
   final videoZoomAdditionalScale = 0.0.obs;
 
   void updateShouldShowControls(double animationValue) {
+    final ytmini = videoControlsKey.currentState;
+    if (ytmini == null) return;
     final isExpanded = animationValue >= 0.95;
     if (isExpanded) {
       // YoutubeMiniplayerUiController.inst.startDimTimer(); // bad experience honestly
     } else {
       // YoutubeMiniplayerUiController.inst.cancelDimTimer();
-      videoControlsKey.currentState?.setControlsVisibily(false);
+      ytmini.setControlsVisibily(false);
     }
   }
 
