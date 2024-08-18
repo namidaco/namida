@@ -537,11 +537,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   }
 
   @override
-  Future<GeneralPlaylist<TrackWithDate>?> prepareFavouritePlaylistFunction() async {
-    return await _prepareFavouritesFile.thready(favouritePlaylistPath);
+  GeneralPlaylist<TrackWithDate>? prepareFavouritePlaylistFunction() {
+    return _prepareFavouritesFile(favouritePlaylistPath);
   }
 
-  static Future<LocalPlaylist?> _prepareFavouritesFile(String path) async {
+  static LocalPlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
       return LocalPlaylist.fromJson(response, TrackWithDate.fromJson);

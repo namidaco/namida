@@ -102,7 +102,7 @@ ${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
     //   if (fileSystem is File) {
     //     if (fileSystem.path.endsWith('.json')) {
     //       final str = await fileSystem.readAsString();
-    //       final map = await jsonDecode(str) as Map<String, dynamic>;
+    //       final map = jsonDecode(str) as Map<String, dynamic>;
     //       map.addAll(argKeysVals);
     //       final sorted = Map<String, dynamic>.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
     //       await fileSystem.writeAsString(encoder.convert(sorted));
@@ -150,7 +150,7 @@ Future<bool> _removeKeys(Iterable<String> keysToRemove) async {
     //   if (fileSystem is File) {
     //     if (fileSystem.path.endsWith('.json')) {
     //       final str = await fileSystem.readAsString();
-    //       final map = await jsonDecode(str) as Map<String, dynamic>;
+    //       final map = jsonDecode(str) as Map<String, dynamic>;
     //       for (final keyToRemove in keysToRemove) {
     //         map.remove(keyToRemove);
     //       }

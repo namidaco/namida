@@ -180,11 +180,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   }
 
   @override
-  Future<YoutubePlaylist?> prepareFavouritePlaylistFunction() async {
-    return await _prepareFavouritesFile.thready(favouritePlaylistPath);
+  YoutubePlaylist? prepareFavouritePlaylistFunction() {
+    return _prepareFavouritesFile(favouritePlaylistPath);
   }
 
-  static Future<YoutubePlaylist?> _prepareFavouritesFile(String path) async {
+  static YoutubePlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
       return YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson));

@@ -138,17 +138,14 @@ void mainInitialization() async {
     AppDirs.INTERNAL_STORAGE,
   ]);
 
-  await Future.wait([
-    settings.equalizer.prepareSettingsFile(),
-    settings.player.prepareSettingsFile(),
-    settings.youtube.prepareSettingsFile(),
-    settings.prepareSettingsFile(),
-  ]);
+  settings.equalizer.prepareSettingsFile();
+  settings.player.prepareSettingsFile();
+  settings.youtube.prepareSettingsFile();
+  settings.prepareSettingsFile();
 
-  await Future.wait([
-    if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
-    Language.initialize(),
-  ]);
+  if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile();
+  await Language.initialize();
+
   ConnectivityController.inst.initialize();
   NamidaChannel.inst.setCanEnterPip(settings.enablePip.value);
 
@@ -179,26 +176,24 @@ void mainInitialization() async {
 
   HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksSubListsAfterHistoryPrepared());
   YoutubeHistoryController.inst.prepareHistoryFile();
-  await Future.wait([
-    PlaylistController.inst.prepareDefaultPlaylistsFile(),
-    if (!shouldShowOnBoarding) QueueController.inst.prepareLatestQueue(),
-    YoutubePlaylistController.inst.prepareDefaultPlaylistsFile(),
-    YoutubeController.inst.loadDownloadTasksInfoFile(),
-    YoutubeSubscriptionsController.inst.loadSubscriptionsFile()
-  ]);
 
+  PlaylistController.inst.prepareDefaultPlaylistsFile();
+  if (!shouldShowOnBoarding) QueueController.inst.prepareLatestQueueSync();
+
+  YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
+  YoutubeSubscriptionsController.inst.loadSubscriptionsFileSync();
+  YoutubeController.inst.loadDownloadTasksInfoFileSync();
   YoutubePlaylistController.inst.prepareAllPlaylists();
 
   YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.
 
-  await _initializeIntenties();
+  _initializeIntenties();
 
-  await Future.wait([
-    SystemChrome.setPreferredOrientations(kDefaultOrientations),
-    NamidaNavigator.inst.setDefaultSystemUI(),
-    FlutterDisplayMode.setHighRefreshRate().catchError((_) {}),
-  ]);
+  SystemChrome.setPreferredOrientations(kDefaultOrientations);
+  NamidaNavigator.inst.setDefaultSystemUI();
+  FlutterDisplayMode.setHighRefreshRate().catchError((_) {});
 
+  //
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
@@ -272,7 +267,7 @@ void _initLifeCycle() {
   });
 }
 
-Future<void> _initializeIntenties() async {
+void _initializeIntenties() {
   Future<void> clearIntentCachedFiles() async {
     final cacheDir = await pp.getTemporaryDirectory();
     await for (final cf in cacheDir.list()) {
@@ -292,7 +287,7 @@ Future<void> _initializeIntenties() async {
     });
   }
 
-  Future<void> playFiles(List<SharedFile> files) async {
+  void playFiles(List<SharedFile> files) {
     // -- deep links
     if (files.length == 1) {
       final linkRaw = files.first.value;
@@ -358,7 +353,7 @@ Future<void> _initializeIntenties() async {
   }
 
   // -- Recieving Initial Android Shared Intent.
-  await playFiles(await FlutterSharingIntent.instance.getInitialSharing());
+  FlutterSharingIntent.instance.getInitialSharing().then(playFiles);
 
   // -- Listening to Android Shared Intents.
   FlutterSharingIntent.instance.getMediaStream().listen(

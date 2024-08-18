@@ -402,7 +402,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 subtitle: "${lang.EXTRACT_FEAT_ARTIST_SUBTITLE} ${lang.INSTANTLY_APPLIES}.",
                 onChanged: (isTrue) async {
                   settings.save(extractFeatArtistFromTitle: !isTrue);
-                  await Indexer.inst.prepareTracksFile();
+                  Indexer.inst.prepareTracksFile();
                 },
                 value: settings.extractFeatArtistFromTitle.valueR,
               ),
@@ -694,7 +694,7 @@ class IndexerSettings extends SettingSubpageProvider {
           ? null
           : () async {
               updatingLibrary.value = true;
-              await Indexer.inst.prepareTracksFile();
+              Indexer.inst.prepareTracksFile();
             },
       durationInMs: 200,
       dialog: CustomBlurryDialog(

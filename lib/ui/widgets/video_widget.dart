@@ -36,6 +36,7 @@ import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaVideoControls extends StatefulWidget {
   final bool showControls;
+  final double? disableControlsUnderPercentage;
   final VoidCallback? onMinimizeTap;
   final bool isFullScreen;
   final bool isLocal;
@@ -43,6 +44,7 @@ class NamidaVideoControls extends StatefulWidget {
   const NamidaVideoControls({
     super.key,
     required this.showControls,
+    this.disableControlsUnderPercentage,
     required this.onMinimizeTap,
     required this.isFullScreen,
     required this.isLocal,

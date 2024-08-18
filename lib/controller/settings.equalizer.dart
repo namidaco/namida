@@ -30,9 +30,10 @@ class EqualizerSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json == null) return;
+  void prepareSettingsFile() {
+    final json = prepareSettingsFile_();
+    if (json is! Map) return;
+
     try {
       preset = json["preset"];
       equalizerEnabled = json["equalizerEnabled"] ?? equalizerEnabled;

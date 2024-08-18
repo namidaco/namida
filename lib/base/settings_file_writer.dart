@@ -11,10 +11,10 @@ mixin SettingsFileWriter {
   Duration get delay => const Duration(seconds: 2);
 
   @protected
-  Future<dynamic> prepareSettingsFile_() async {
-    final file = await File(filePath).create(recursive: true);
+  dynamic prepareSettingsFile_() {
+    final file = File(filePath)..createSync(recursive: true);
     try {
-      return await file.readAsJson();
+      return file.readAsJsonSync();
     } catch (e) {
       printy(e, isError: true);
     }

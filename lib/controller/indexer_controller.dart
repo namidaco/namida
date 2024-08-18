@@ -151,18 +151,18 @@ class Indexer {
     return (null, null);
   }
 
-  Future<void> prepareTracksFile() async {
+  void prepareTracksFile() {
     _fetchMediaStoreTracks(); // to fill ids map
 
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
-    if (await File(AppPaths.TRACKS).existsAndValid()) {
-      await readTrackData();
+    if (File(AppPaths.TRACKS).existsAndValidSync()) {
+      readTrackData();
       _afterIndexing();
     }
 
     /// doesnt exists
     else {
-      await File(AppPaths.TRACKS).create();
+      File(AppPaths.TRACKS).createSync();
       refreshLibraryAndCheckForDiff(forceReIndex: true, useMediaStore: _defaultUseMediaStore);
     }
   }
@@ -994,9 +994,9 @@ class Indexer {
     await File(AppPaths.TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
   }
 
-  Future<void> readTrackData() async {
+  void readTrackData() {
     // reading stats file containing track rating etc.
-    final statsResult = await _readTracksStatsCompute.thready(AppPaths.TRACKS_STATS);
+    final statsResult = _readTracksStatsCompute(AppPaths.TRACKS_STATS);
     trackStatsMap.value = statsResult;
 
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
@@ -1004,6 +1004,7 @@ class Indexer {
     /// Reading actual track file.
     final splitconfig = _createSplitConfig();
 
+    final tracksResult = _readTracksFileCompute(splitconfig);
     allTracksMappedByPath.value = tracksResult.$1;
     allTracksMappedByYTID = tracksResult.$2;
     tracksInfoList.value = tracksResult.$3;
@@ -1011,7 +1012,7 @@ class Indexer {
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
 
-  static Future<Map<Track, TrackStats>> _readTracksStatsCompute(String path) async {
+  static Map<Track, TrackStats> _readTracksStatsCompute(String path) {
     final map = <Track, TrackStats>{};
     final list = File(path).readAsJsonSync() as List?;
     if (list != null) {
@@ -1028,7 +1029,7 @@ class Indexer {
     return map;
   }
 
-  static (Map<Track, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(_SplitArtistGenreConfig config) {
+  static (Map<Track, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(SplitArtistGenreConfigsWrapper config) {
     final map = <Track, TrackExtended>{};
     final idsMap = <String, List<Track>>{};
     final allTracks = <Track>[];

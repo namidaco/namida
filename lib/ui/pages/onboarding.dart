@@ -85,7 +85,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       },
     ));
     Indexer.inst.prepareTracksFile();
-    QueueController.inst.prepareLatestQueue();
+    QueueController.inst.prepareLatestQueueSync();
   }
 
   void _onRestoreBackupIconTap() async {

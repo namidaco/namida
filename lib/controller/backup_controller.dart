@@ -280,7 +280,11 @@ class BackupController {
   }
 
   Future<void> _readNewFiles() async {
-    await settings.prepareSettingsFile();
+    settings.equalizer.prepareSettingsFile();
+    settings.player.prepareSettingsFile();
+    settings.youtube.prepareSettingsFile();
+    settings.prepareSettingsFile();
+
     Indexer.inst.prepareTracksFile();
 
     QueueController.inst.prepareAllQueuesFile();
@@ -289,12 +293,12 @@ class BackupController {
 
     PlaylistController.inst.prepareAllPlaylists();
     HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksSubListsAfterHistoryPrepared());
-    await PlaylistController.inst.prepareDefaultPlaylistsFile();
-    // await QueueController.inst.prepareLatestQueue();
+    PlaylistController.inst.prepareDefaultPlaylistsFile();
+    // await QueueController.inst.prepareLatestQueueSync();
 
     YoutubePlaylistController.inst.prepareAllPlaylists();
     YoutubeHistoryController.inst.prepareHistoryFile();
-    await YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
+    YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
     YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.
   }
 }

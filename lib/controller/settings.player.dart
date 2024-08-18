@@ -119,9 +119,10 @@ class _PlayerSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json == null) return;
+  void prepareSettingsFile() {
+    final json = prepareSettingsFile_();
+    if (json is! Map) return;
+
     try {
       enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
       volume.value = json['volume'] ?? volume.value;

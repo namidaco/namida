@@ -42,7 +42,7 @@ class Language extends LanguageKeys {
 
     // -- Assigning default map, used as a backup in case a key doesnt exist in [lang].
     final path = inst._getAssetPath(kDefaultLang);
-    final map = await jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
+    final map = jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
     _defaultMap = map.cast();
     // ---------
 
@@ -69,7 +69,7 @@ class Language extends LanguageKeys {
   static Future<List<NamidaLanguage>> getAllLanguages() async {
     const path = 'assets/language/langs.json';
     final available = await rootBundle.loadString(path);
-    final availableLangs = await jsonDecode(available) as List?;
+    final availableLangs = jsonDecode(available) as List?;
     return availableLangs?.mapped((e) => NamidaLanguage.fromJson(e)) ?? [];
   }
 
@@ -82,7 +82,7 @@ class Language extends LanguageKeys {
     try {
       late Map<String, dynamic> map;
       try {
-        map = trMap ?? await jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
+        map = trMap ?? jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
       } catch (e) {
         final backupLocal = _backupLocalMaps[lang];
         if (backupLocal != null) {

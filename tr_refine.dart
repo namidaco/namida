@@ -9,7 +9,7 @@ void main(List<String> args) async {
   Future<Map<String, dynamic>?> parseJSONFile(File file) async {
     try {
       final str = await file.readAsString();
-      final langMap = await jsonDecode(str) as Map<String, dynamic>;
+      final langMap = jsonDecode(str) as Map<String, dynamic>;
       return langMap;
     } catch (e) {
       print('Error parsing the map $e');

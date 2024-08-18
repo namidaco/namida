@@ -322,11 +322,11 @@ class YoutubeController {
   static const String cleanupFilenameRegex = r'[*#\$|/\\!^:"]';
   String cleanupFilename(String filename) => filename.replaceAll(RegExp(cleanupFilenameRegex, caseSensitive: false), '_');
 
-  Future<void> loadDownloadTasksInfoFile() async {
-    await for (final f in Directory(AppDirs.YT_DOWNLOAD_TASKS).list()) {
+  void loadDownloadTasksInfoFileSync() {
+    for (final f in Directory(AppDirs.YT_DOWNLOAD_TASKS).listSync()) {
       if (f is File) {
         final groupName = DownloadTaskGroupName(groupName: f.path.getFilename.splitFirst('.'));
-        final res = await f.readAsJson() as Map<String, dynamic>?;
+        final res = f.readAsJsonSync() as Map<String, dynamic>?;
         if (res != null) {
           final fileModified = f.statSync().modified;
           youtubeDownloadTasksMap[groupName] ??= {};

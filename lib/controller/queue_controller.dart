@@ -221,13 +221,13 @@ class QueueController {
   }
 
   /// Assigns the last queue to the [Player]
-  Future<void> prepareLatestQueue() async {
+  void prepareLatestQueueSync() {
     int index = 0;
     final latestQueue = <Playable>[];
 
     // -- Reading file.
     try {
-      final res = await File(AppPaths.LATEST_QUEUE).readAsJson() as Map?;
+      final res = File(AppPaths.LATEST_QUEUE).readAsJsonSync() as Map?;
       if (res != null) {
         final t = res['type'] as String? ?? LibraryCategory.localTracks;
         final items = res['items'] as List;

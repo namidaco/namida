@@ -102,7 +102,7 @@ class ThemeSetting extends SettingSubpageProvider {
                       if (path != null) {
                         try {
                           final st = await File(path).readAsString();
-                          final map = await jsonDecode(st);
+                          final map = jsonDecode(st);
                           final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
                           if (didUpdate) {
                             NamidaNavigator.inst.closeDialog();
