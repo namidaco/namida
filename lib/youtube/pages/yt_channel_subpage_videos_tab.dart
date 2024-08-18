@@ -88,6 +88,8 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
+    final streamsList = this.streamsList;
+
     final channelInfo = widget.channelInfo;
     final streamsCount = channelInfo?.videosCount;
 
@@ -100,6 +102,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     final hasMoreStreamsLeft = channelVideoTab?.canFetchNext == true;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8.0),
@@ -189,49 +192,79 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
         Expanded(
           child: NamidaScrollbar(
             controller: uploadsScrollController,
-            child: isLoadingInitialStreams
-                ? ShimmerWrapper(
-                    shimmerEnabled: true,
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: 15,
-                      itemBuilder: (context, index) {
-                        return const YoutubeVideoCardDummy(
-                          shimmerEnabled: true,
-                          thumbnailHeight: thumbnailHeight,
-                          thumbnailWidth: thumbnailWidth,
-                          thumbnailWidthPercentage: 0.8,
-                        );
-                      },
+            child: LazyLoadListView(
+              scrollController: uploadsScrollController,
+              onReachingEnd: fetchStreamsNextPage,
+              listview: (controller) => CustomScrollView(
+                controller: controller,
+                slivers: [
+                  isLoadingInitialStreams
+                      ? SliverToBoxAdapter(
+                          child: ShimmerWrapper(
+                            shimmerEnabled: true,
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              primary: false,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
+                              itemCount: 10,
+                              itemBuilder: (context, index) {
+                                return const YoutubeVideoCardDummy(
+                                  shimmerEnabled: true,
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                  thumbnailWidthPercentage: 0.8,
+                                );
+                              },
+                            ),
+                          ),
+                        )
+                      : streamsList == null
+                          ? SliverToBoxAdapter(
+                              child: Center(
+                                child: Text(
+                                  lang.ERROR,
+                                  style: context.textTheme.displayLarge,
+                                ),
+                              ),
+                            )
+                          : SliverFixedExtentList.builder(
+                              itemExtent: thumbnailItemExtent,
+                              itemCount: streamsList.length,
+                              itemBuilder: (context, index) {
+                                final item = streamsList[index];
+                                return YoutubeVideoCard(
+                                  key: Key(item.id),
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                  isImageImportantInCache: false,
+                                  video: item,
+                                  playlistID: null,
+                                  thumbnailWidthPercentage: 0.8,
+                                  dateInsteadOfChannel: true,
+                                );
+                              },
+                            ),
+                  SliverToBoxAdapter(
+                    child: ObxO(
+                      rx: isLoadingMoreUploads,
+                      builder: (loading) => loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  LoadingIndicator(),
+                                ],
+                              ),
+                            )
+                          : const SizedBox(),
                     ),
-                  )
-                : LazyLoadListView(
-                    scrollController: uploadsScrollController,
-                    onReachingEnd: fetchStreamsNextPage,
-                    listview: (controller) {
-                      final streamsList = this.streamsList;
-                      if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                      return ListView.builder(
-                        padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
-                        controller: controller,
-                        itemExtent: thumbnailItemExtent,
-                        itemCount: streamsList.length,
-                        itemBuilder: (context, index) {
-                          final item = streamsList[index];
-                          return YoutubeVideoCard(
-                            key: Key(item.id),
-                            thumbnailHeight: thumbnailHeight,
-                            thumbnailWidth: thumbnailWidth,
-                            isImageImportantInCache: false,
-                            video: item,
-                            playlistID: null,
-                            thumbnailWidthPercentage: 0.8,
-                            dateInsteadOfChannel: true,
-                          );
-                        },
-                      );
-                    },
                   ),
+                  kBottomPaddingWidgetSliver,
+                ],
+              ),
+            ),
           ),
         ),
       ],

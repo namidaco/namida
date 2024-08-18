@@ -419,10 +419,12 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                 header,
                 const SizedBox(height: 4.0),
                 channelInfo?.tabs == null
-                    ? YTChannelVideosTab(
-                        scrollController: _itemsScrollController,
-                        channelInfo: _channelInfo,
-                        localChannel: ch,
+                    ? Expanded(
+                        child: YTChannelVideosTab(
+                          scrollController: _itemsScrollController,
+                          channelInfo: _channelInfo,
+                          localChannel: ch,
+                        ),
                       )
                     : Expanded(
                         child: NamidaTabView(
