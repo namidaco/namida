@@ -114,7 +114,7 @@ class _ObxPrefer<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return enabled ? builder(null) : ObxO(rx: rx, builder: builder);
+    return enabled ? ObxO(rx: rx, builder: builder) : builder(null);
   }
 }
 
