@@ -473,7 +473,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   () {
                     final maxInSettings = settings.audiosMaxCacheInMB.valueR;
                     return NamidaWheelSlider(
-                      totalCount: getValue(4 * 1024), // 4 GB
+                      totalCount: getValue(12 * 1024), // 12 GB
                       initValue: getValue(maxInSettings),
                       text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
                       onValueChanged: (val) {
@@ -503,7 +503,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   () {
                     final maxInSettings = settings.videosMaxCacheInMB.valueR;
                     return NamidaWheelSlider(
-                      totalCount: getValue(10 * 1024), // 10 GB
+                      totalCount: getValue(32 * 1024), // 32 GB
                       initValue: getValue(maxInSettings),
                       text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
                       onValueChanged: (val) {
