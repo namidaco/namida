@@ -263,10 +263,10 @@ class VideoController {
     final vpsInSettings = settings.videoPlaybackSource.value;
     switch (vpsInSettings) {
       case VideoPlaybackSource.local:
-        possibleVideos.retainWhere((element) => element.ytID != null); // leave all videos that doesnt have youtube id, i.e: local
+        possibleVideos.retainWhere((element) => element.ytID == null); // leave all videos that doesnt have youtube id, i.e: local
         break;
       case VideoPlaybackSource.youtube:
-        possibleVideos.retainWhere((element) => element.ytID == null); // leave all videos having youtube id
+        possibleVideos.retainWhere((element) => element.ytID != null); // leave all videos having youtube id
         break;
       default:
         null; // VideoPlaybackSource.auto
