@@ -596,6 +596,7 @@ abstract class LanguageKeys {
   String get SHOW_MIX_PLAYLISTS_IN => _getKey('SHOW_MIX_PLAYLISTS_IN');
   String get SHOW_MORE => _getKey('SHOW_MORE');
   String get SHOW_SHORT_VIDEOS_IN => _getKey('SHOW_SHORT_VIDEOS_IN');
+  String get SHOW_VIDEO_ENDCARDS => _getKey('SHOW_VIDEO_ENDCARDS');
   String get SHOW_WEBM => _getKey('SHOW_WEBM');
   String get SHUFFLE => _getKey('SHUFFLE');
   String get SHUFFLE_ALL => _getKey('SHUFFLE_ALL');

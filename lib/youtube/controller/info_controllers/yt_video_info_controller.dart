@@ -7,7 +7,7 @@ class _VideoInfoController {
   /// but doesnt work with many vids, web clients are more stable and can also obtain higher quality streams.
   /// internally, a set of fallbacks is used before returning null result.
   /// the fallback clients can be modified using [YoutiPie.setDefaultClients].
-  static const _defaultClient = InnertubeClients.mweb;
+  static const _defaultClient = InnertubeClients.web_music;
   static const _defaultRequiresJSPlayer = true;
 
   InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;

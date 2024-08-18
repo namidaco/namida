@@ -6,10 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/extensions.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/core/url_utils.dart';
+import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -30,6 +37,9 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -92,6 +102,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       }
     }
   }
+
+  final isEndCardsVisible = true.obs;
 
   void showControlsBriefly() {
     setControlsVisibily(true);
@@ -559,6 +571,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   EdgeInsets _deviceInsets = EdgeInsets.zero;
 
+  final _videoConstraintsKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     final maxWidth = context.width;
@@ -570,6 +584,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final fallbackWidth = inLandscape ? maxHeight * 16 / 9 : maxWidth;
 
     final finalVideoWidget = ObxO(
+        key: _videoConstraintsKey,
         rx: Player.inst.videoPlayerInfo,
         builder: (info) {
           if (info != null && info.isInitialized) {
@@ -649,12 +664,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final shouldShowSeekBar = widget.isFullScreen;
     final view = View.of(context);
 
-    String? channelOverlayUrl;
-
-    if (widget.isFullScreen && !NamidaChannel.inst.isInPip.value && settings.youtube.showChannelWatermarkFullscreen.value) {
-      final channelOverlay = YoutubeInfoController.current.currentYTStreams.value?.overlay;
-      channelOverlayUrl = channelOverlay?.overlays.pick()?.url;
-    }
+    bool showEndcards = settings.youtube.showVideoEndcards.value && _canShowControls;
+    String? channelOverlayUrl = widget.isFullScreen && settings.youtube.showChannelWatermarkFullscreen.value && _canShowControls //
+        ? YoutubeInfoController.current.currentYTStreams.value?.overlay?.overlays.pick()?.url
+        : null;
 
     return Listener(
       onPointerDown: (event) {
@@ -746,6 +759,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ),
             ),
+
+            if (showEndcards)
+              ObxO(
+                rx: isEndCardsVisible,
+                builder: (endcardsvisible) => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: endcardsvisible
+                      ? _YTVideoEndcards(
+                          inFullScreen: widget.isFullScreen,
+                          videoConstraintsKey: _videoConstraintsKey,
+                        )
+                      : null,
+                ),
+              ),
 
             if (_canShowControls) ...[
               // ---- Mask -----
@@ -1865,5 +1892,266 @@ class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail>
         ),
       ),
     );
+  }
+}
+
+class _YTVideoEndcards extends StatefulWidget {
+  final GlobalKey videoConstraintsKey;
+  final bool inFullScreen;
+  const _YTVideoEndcards({required this.videoConstraintsKey, required this.inFullScreen});
+
+  @override
+  State<_YTVideoEndcards> createState() => _YTVideoEndcardsState();
+}
+
+class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
+  List<EndScreenItemBase>? _currentEndcards;
+  late final _fetchedPlaylistsCompleters = <String, Completer<void>?>{};
+  late final _fetchedPlaylists = <String, YoutiPiePlaylistResultBase?>{};
+
+  void _onEndcardsChanged() {
+    final streamRes = YoutubeInfoController.current.currentYTStreams.value;
+    final newEndcards = streamRes?.endscreens;
+    if (newEndcards != _currentEndcards) {
+      setState(() {
+        _currentEndcards = newEndcards;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    _onEndcardsChanged();
+    YoutubeInfoController.current.currentYTStreams.addListener(_onEndcardsChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    YoutubeInfoController.current.currentYTStreams.removeListener(_onEndcardsChanged);
+    super.dispose();
+  }
+
+  List<Widget> _getCustomChildrenVideo(EndScreenItemVideo e) {
+    String? title = e.title;
+    String? subtitle = e.viewsCount?.formatDecimalShort() ?? e.viewsCountText;
+
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Broken.info_circle,
+              size: 20.0,
+            ),
+            const SizedBox(width: 6.0),
+            SizedBox(
+              width: 168.0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.displaySmall,
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: 10.0,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      const NamidaContainerDivider(),
+    ];
+  }
+
+  List<NamidaPopupItem> _getItemChildren(EndScreenItemBase item) {
+    switch (item) {
+      case EndScreenItemVideo():
+        final videoId = item.videoId;
+        if (videoId == null) return [];
+        return YTUtils.getVideoCardMenuItems(
+          videoId: videoId,
+          url: YTUrlUtils.buildVideoUrl(videoId),
+          channelID: null,
+          playlistID: null,
+          idsNamesLookup: {videoId: item.title},
+        );
+      case EndScreenItemChannel():
+        final channelId = item.channelId;
+        final channelTitle = item.title;
+        return [
+          if (channelId != null && channelId.isNotEmpty)
+            NamidaPopupItem(
+              icon: Broken.user,
+              title: lang.GO_TO_CHANNEL,
+              subtitle: channelTitle ?? '',
+              onTap: () {
+                NamidaNavigator.inst.exitFullScreen();
+                YTChannelSubpage(channelID: channelId).navigate();
+              },
+            ),
+        ];
+      case EndScreenItemPlaylist():
+        final fetchedPlaylistC = _fetchedPlaylistsCompleters[item.basicInfo.id];
+        if (fetchedPlaylistC == null) {
+          final completer = _fetchedPlaylistsCompleters[item.basicInfo.id] = Completer<void>();
+          final cachedPlaylist = YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: item.basicInfo.id).read();
+          if (cachedPlaylist != null) {
+            _fetchedPlaylists[item.basicInfo.id] = cachedPlaylist;
+            completer.complete();
+          } else {
+            YoutubeInfoController.playlist.fetchPlaylist(playlistId: item.basicInfo.id).then(
+              (fetchedPlaylist) {
+                _fetchedPlaylists[item.basicInfo.id] = fetchedPlaylist;
+                completer.complete();
+              },
+            );
+          }
+        }
+
+        final fetchedPlaylist = _fetchedPlaylists[item.basicInfo.id];
+        if (fetchedPlaylist == null) {
+          return [
+            NamidaPopupItem(
+              icon: Broken.export_2,
+              title: lang.OPEN,
+              onTap: YTHostedPlaylistSubpage.fromId(
+                playlistId: item.basicInfo.id,
+                userPlaylist: null,
+              ).navigate,
+            ),
+          ];
+        } else {
+          return item.basicInfo.getPopupMenuItems(
+            context: context,
+            displayOpenPlaylist: true,
+            showProgressSheet: true,
+            playlistToFetch: fetchedPlaylist,
+            userPlaylist: null,
+          );
+        }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentEndcards = _currentEndcards;
+    if (currentEndcards == null || currentEndcards.isEmpty) return const SizedBox.shrink();
+
+    final maxWidth = context.width;
+    final maxHeight = context.height;
+    return LayoutBuilder(builder: (context, constraints) {
+      double maxWidthFinal = maxWidth;
+      double maxHeightFinal = maxHeight;
+      final keyContext = widget.videoConstraintsKey.currentContext;
+      if (keyContext != null) {
+        final box = keyContext.findRenderObject() as RenderBox;
+        if (box.size.width < maxWidthFinal) maxWidthFinal = box.size.width;
+        if (box.size.height < maxHeightFinal) maxHeightFinal = box.size.height;
+      }
+      return Stack(
+        alignment: Alignment.center,
+        children: currentEndcards.map(
+          (e) {
+            double leftPadding = e.display.left * maxWidthFinal;
+            double topPadding = e.display.top * maxHeightFinal;
+            if (widget.inFullScreen) {
+              leftPadding += ((maxWidth - maxWidthFinal) / 2);
+              topPadding += ((maxHeight - maxHeightFinal) / 2);
+            }
+
+            final isAvatarShaped = e.type == VideoEndScreenItemType.channel;
+            final url = e.thumbnails.pick()?.url;
+            final width = e.display.width * maxWidthFinal;
+
+            return Positioned(
+              left: leftPadding,
+              top: topPadding,
+              child: ObxO(
+                rx: Player.inst.nowPlayingPosition,
+                builder: (playerPosition) {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: playerPosition < e.startMs || playerPosition > e.endMs
+                        ? const SizedBox.shrink(key: ValueKey(0))
+                        : NamidaPopupWrapper(
+                            key: const ValueKey(1),
+                            openOnTap: true,
+                            openOnLongPress: true,
+                            children: e is EndScreenItemVideo ? () => _getCustomChildrenVideo(e) : null,
+                            childrenDefault: () => _getItemChildren(e),
+                            childrenAfterChildrenDefault: false,
+                            child: YoutubeThumbnail(
+                              key: ValueKey(url),
+                              width: width,
+                              height: width / e.display.aspectRatio,
+                              customUrl: url,
+                              isImportantInCache: false,
+                              isCircle: isAvatarShaped,
+                              forceSquared: !isAvatarShaped,
+                              borderRadius: 6.0,
+                              type: switch (e.type) {
+                                VideoEndScreenItemType.video => ThumbnailType.video,
+                                VideoEndScreenItemType.playlist => ThumbnailType.playlist,
+                                VideoEndScreenItemType.channel => ThumbnailType.channel,
+                                VideoEndScreenItemType.unknown => ThumbnailType.other,
+                              },
+                              onTopWidgets: e is EndScreenItemPlaylist
+                                  ? (_) => [
+                                        Positioned(
+                                          bottom: 2.0,
+                                          right: 2.0,
+                                          child: YtThumbnailOverlayBox(
+                                            text: e.basicInfo.videosCount?.toString() ?? e.basicInfo.videosCountText,
+                                            icon: Broken.play_cricle,
+                                          ),
+                                        ),
+                                      ]
+                                  : null,
+                            ),
+                          ),
+                  );
+                },
+              ),
+            );
+          },
+        ).toList(),
+      );
+    });
+  }
+}
+
+class _EmptyPlaylistResult extends YoutiPiePlaylistResultBase {
+  _EmptyPlaylistResult({
+    required String playlistId,
+  }) : super(
+          basicInfo: PlaylistBasicInfo(id: playlistId, title: '', videosCountText: null, videosCount: null, thumbnails: []),
+          items: [],
+          cacheKey: null,
+          continuation: null,
+        );
+
+  @override
+  Future<bool> fetchNextFunction(ExecuteDetails? details) async {
+    return false;
+  }
+
+  @override
+  Map<String, dynamic> toMap() {
+    return {};
   }
 }

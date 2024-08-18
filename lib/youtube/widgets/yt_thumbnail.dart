@@ -214,50 +214,61 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             Positioned(
               bottom: 0.0,
               right: 0.0,
-              child: Container(
-                clipBehavior: Clip.hardEdge,
-                margin: const EdgeInsets.all(2.0),
-                padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-                  color: Colors.black.withOpacity(0.3),
-                ),
-                child: NamidaBgBlur(
-                  blur: 2.0,
-                  enabled: settings.enableBlurEffect.value,
-                  child: widget.smallBoxIcon != null
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              widget.smallBoxIcon,
-                              size: 15.0,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                            if (widget.smallBoxText != null) ...[
-                              const SizedBox(width: 2.0),
-                              Text(
-                                widget.smallBoxText!,
-                                style: context.textTheme.displaySmall?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ],
-                        )
-                      : Text(
-                          widget.smallBoxText!,
-                          style: context.textTheme.displaySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                ),
+              child: YtThumbnailOverlayBox(
+                text: widget.smallBoxText,
+                icon: widget.smallBoxIcon,
               ),
             ),
         ],
         displayIcon: widget.displayFallbackIcon,
+      ),
+    );
+  }
+}
+
+class YtThumbnailOverlayBox extends StatelessWidget {
+  final String? text;
+  final IconData? icon;
+
+  const YtThumbnailOverlayBox({
+    super.key,
+    required this.text,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      margin: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+        color: Colors.black.withOpacity(0.3),
+      ),
+      child: NamidaBgBlur(
+        blur: 2.0,
+        enabled: settings.enableBlurEffect.value,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null)
+              Icon(
+                icon,
+                size: 15.0,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            if (text != null && icon != null) const SizedBox(width: 2.0),
+            if (text != null)
+              Text(
+                text!,
+                style: context.textTheme.displaySmall?.copyWith(
+                  color: Colors.white.withOpacity(0.8),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

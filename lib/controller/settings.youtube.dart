@@ -6,6 +6,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
   final showChannelWatermarkFullscreen = true.obs;
+  final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
@@ -30,6 +31,7 @@ class _YoutubeSettings with SettingsFileWriter {
 
   void save({
     bool? showChannelWatermarkFullscreen,
+    bool? showVideoEndcards,
     bool? autoStartRadio,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
@@ -52,6 +54,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? enableDimInLightMode,
   }) {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
+    if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
 
     if (ytDownloadLocation != null) {
@@ -95,6 +98,7 @@ class _YoutubeSettings with SettingsFileWriter {
 
     try {
       showChannelWatermarkFullscreen.value = json['showChannelWatermarkFullscreen'] ?? showChannelWatermarkFullscreen.value;
+      showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
       autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
 
       String ytDownloadLocationInStorage = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
@@ -129,6 +133,7 @@ class _YoutubeSettings with SettingsFileWriter {
   @override
   Object get jsonToWrite => <String, dynamic>{
         'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen.value,
+        'showVideoEndcards': showVideoEndcards.value,
         'autoStartRadio': autoStartRadio.value,
         'ytDownloadLocation': ytDownloadLocation.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,

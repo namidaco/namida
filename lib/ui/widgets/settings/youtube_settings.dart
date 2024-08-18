@@ -27,6 +27,7 @@ enum _YoutubeSettingKeys {
   topComments,
   preferNewComments,
   showChannelWatermarkFullscreen,
+  showVideoEndcards,
   autoStartRadio,
   dimMiniplayerAfter,
   dimIntensity,
@@ -52,6 +53,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
         _YoutubeSettingKeys.showChannelWatermarkFullscreen: [lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN],
+        _YoutubeSettingKeys.showVideoEndcards: [lang.SHOW_VIDEO_ENDCARDS],
         _YoutubeSettingKeys.autoStartRadio: [lang.AUTO_START_RADIO, lang.AUTO_START_RADIO_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
@@ -192,6 +194,19 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN,
                 value: showChannelWatermarkFullscreen,
                 onChanged: (isTrue) => settings.youtube.save(showChannelWatermarkFullscreen: !isTrue),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.showVideoEndcards,
+            child: ObxO(
+              rx: settings.youtube.showVideoEndcards,
+              builder: (showVideoEndcards) => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.showVideoEndcards),
+                icon: Broken.card_tick,
+                title: '${lang.SHOW_VIDEO_ENDCARDS} (${lang.BETA})', // beta cuz its available only in some clients like web & web_music
+                value: showVideoEndcards,
+                onChanged: (isTrue) => settings.youtube.save(showVideoEndcards: !isTrue),
               ),
             ),
           ),

@@ -3284,6 +3284,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
   final List<Widget> Function()? children;
   final List<NamidaPopupItem> Function()? childrenDefault;
+  final bool childrenAfterChildrenDefault;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
   final bool openOnTap;
@@ -3294,6 +3295,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     super.key,
     this.child = const MoreIcon(),
     this.children,
+    this.childrenAfterChildrenDefault = true,
     this.childrenDefault,
     this.onTap,
     this.onPop,
@@ -3307,8 +3309,20 @@ class NamidaPopupWrapper extends StatelessWidget {
     NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
   }
 
+  Iterable<PopupMenuItem> _mapChildren(List<Widget> children) {
+    return children.map(
+      (e) => PopupMenuItem(
+        onTap: null,
+        height: 12.0, // this minimum. widget will expand if needed
+        padding: EdgeInsets.zero,
+        child: e,
+      ),
+    );
+  }
+
   List<PopupMenuEntry<dynamic>> convertItems(BuildContext context) {
     return [
+      if (children != null && !childrenAfterChildrenDefault) ..._mapChildren(children!()),
       if (childrenDefault != null)
         ...childrenDefault!().map(
           (e) {
@@ -3346,15 +3360,7 @@ class NamidaPopupWrapper extends StatelessWidget {
             );
           },
         ),
-      if (children != null)
-        ...children!().map(
-          (e) => PopupMenuItem(
-            onTap: null,
-            height: 32.0,
-            padding: EdgeInsets.zero,
-            child: e,
-          ),
-        ),
+      if (children != null && childrenAfterChildrenDefault) ..._mapChildren(children!()),
     ];
   }
 
