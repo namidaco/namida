@@ -11,7 +11,6 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -67,7 +66,7 @@ class YoutubeVideoCard extends StatelessWidget {
     final viewsCount = video.viewsCount;
     String? viewsCountText = video.viewsText;
     if (viewsCount != null) {
-      viewsCountText = "${viewsCount.formatDecimalShort()} ${viewsCount == 0 ? lang.VIEW : lang.VIEWS}";
+      viewsCountText = viewsCount.displayViewsKeywordShort;
     }
 
     DateTime? publishedDate = video.publishedAt.date;

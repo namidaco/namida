@@ -499,7 +499,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             child: Text(
                                                               [
                                                                 if (videoViewCount != null)
-                                                                  "${videoViewCount.formatDecimalShort(isTitleExpanded)} ${videoViewCount == 0 ? lang.VIEW : lang.VIEWS}",
+                                                                  isTitleExpanded ? videoViewCount.displayViewsKeyword : videoViewCount.displayViewsKeywordShort,
                                                                 if (dateToShow != null) dateToShow,
                                                               ].join(' • '),
                                                               style: mainTextTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
@@ -772,12 +772,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   child: ObxO(
                                                                     rx: _isTitleExpanded,
                                                                     builder: (isTitleExpanded) => Text(
-                                                                      channelSubs == null
-                                                                          ? '? ${lang.SUBSCRIBERS}'
-                                                                          : [
-                                                                              channelSubs.formatDecimalShort(isTitleExpanded),
-                                                                              channelSubs < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                                                                            ].join(' '),
+                                                                      channelSubs == null ? '? ${lang.SUBSCRIBERS}' : channelSubs.displaySubscribersKeywordShort,
                                                                       style: mainTextTheme.displaySmall?.copyWith(
                                                                         fontSize: 12.0,
                                                                       ),

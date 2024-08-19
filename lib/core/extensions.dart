@@ -187,6 +187,9 @@ extension DisplayKeywords on int {
   String get displayFolderKeyword => displayKeyword(lang.FOLDER, lang.FOLDERS);
   String get displayPlaylistKeyword => displayKeyword(lang.PLAYLIST, lang.PLAYLISTS);
   String get displayVideoKeyword => displayKeyword(lang.VIDEO, lang.VIDEOS);
+  String get displayViewsKeyword => displayKeyword(lang.VIEW, lang.VIEWS);
+  String get displayViewsKeywordShort => displayKeywordShort(lang.VIEW, lang.VIEWS);
+  String get displaySubscribersKeywordShort => displayKeywordShort(lang.SUBSCRIBER, lang.SUBSCRIBERS);
 }
 
 extension YearDateFormatted on int {

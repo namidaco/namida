@@ -521,7 +521,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
       description = playlist.info.description;
       final uploaderTitle = playlist.info.uploader?.title;
       final viewsCount = playlist.info.viewsCount;
-      final viewsCountText = viewsCount == null ? playlist.info.viewsCountText : "${viewsCount.formatDecimalShort()} ${viewsCount == 0 ? lang.VIEW : lang.VIEWS}";
+      final viewsCountText = viewsCount == null ? playlist.info.viewsCountText : viewsCount.displayViewsKeywordShort;
       uploaderTitleAndViews = [
         if (uploaderTitle != null) uploaderTitle,
         if (viewsCountText != null) viewsCountText,
