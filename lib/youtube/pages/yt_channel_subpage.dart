@@ -2,13 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:youtipie/class/channels/channel_about_link.dart';
 import 'package:youtipie/class/channels/channel_home_section.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/channels/channel_items_sort.dart';
+import 'package:youtipie/class/channels/channel_page_about.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/channels/channel_tab.dart';
 import 'package:youtipie/class/channels/channel_tab_result.dart';
@@ -30,12 +33,14 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -51,6 +56,7 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/widgets/yt_videos_actions_bar.dart';
 
+part 'yt_channel_subpage_about.dart';
 part 'yt_channel_subpage_tab.dart';
 part 'yt_channel_subpage_videos_tab.dart';
 
@@ -84,33 +90,43 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   final _tabsGlobalKeys = <int, GlobalKey>{};
   final _tabLastFetched = <int, DateTime>{};
 
+  final _aboutPageKey = GlobalKey<_YTChannelSubpageAboutState>();
+  DateTime? _aboutPageLastFetched;
+
   late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
 
   late final _itemsScrollController = ScrollController();
   late final _scrollControllersOffsets = <int, double>{};
   int _tabIndex = 0;
 
-  void _setTabIndex(YoutiPieChannelPageResult res) {
+  /// returns tab to be selected possible index.
+  int? _setTabsData(YoutiPieChannelPageResult res) {
+    _tabsGlobalKeys.clear();
+
     final length = res.tabs.length;
-    int? videosTabIndex;
+    int? initiallySelected;
+    int? videoTabIndex;
     for (int i = 0; i < length; i++) {
       final tab = res.tabs[i];
-      if (tab.initiallySelected) _tabIndex = i;
+      if (tab.initiallySelected) initiallySelected = i;
 
-      if (videosTabIndex == null && tab.isVideosTab()) {
-        videosTabIndex = i;
+      if (videoTabIndex == null && tab.isVideosTab()) {
+        videoTabIndex = i;
         _tabsGlobalKeys[i] = GlobalKey<_YTChannelVideosTabState>();
       } else {
         _tabsGlobalKeys[i] = GlobalKey<_YTChannelSubpageTabState>();
       }
     }
-    if (videosTabIndex != null) _tabIndex = videosTabIndex;
+
+    return initiallySelected ?? videoTabIndex;
   }
 
   bool _animatedFully = false;
   final _scrollThreshold = 100;
   double _latestAnimation = 1.0;
   void _scrollAnimationListener() {
+    if (_isAboutTab()) return;
+
     final scroll = _itemsScrollController.positions.lastOrNull;
     if (scroll != null) {
       final isDownwards = scroll.userScrollDirection == ScrollDirection.reverse;
@@ -134,6 +150,10 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     }
   }
 
+  bool _isAboutTab() {
+    return _tabIndex == _tabsGlobalKeys.length - 1 + 1; // last tab
+  }
+
   @override
   void initState() {
     super.initState();
@@ -142,8 +162,11 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     if (channelInfoCache != null) {
       _channelInfoSubButton.value = channelInfoCache;
       _channelInfo = channelInfoCache;
-      _setTabIndex(channelInfoCache);
+      final tabToBeSelected = _setTabsData(channelInfoCache);
+      if (tabToBeSelected != null) _tabIndex = tabToBeSelected;
       _fetchCurrentTab(channelInfoCache);
+    } else {
+      _tabsGlobalKeys[0] = GlobalKey<_YTChannelVideosTabState>();
     }
 
     // -- always get new info.
@@ -151,8 +174,13 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       (value) {
         if (value != null) {
           _channelInfoSubButton.value = value;
-          _setTabIndex(value);
-          if (mounted) setState(() => _channelInfo = value);
+          final tabToBeSelected = _setTabsData(value);
+          if (mounted) {
+            setState(() {
+              if (_tabIndex == 0 && tabToBeSelected != null) _tabIndex = tabToBeSelected; // only set if tab wasnt changed
+              _channelInfo = value;
+            });
+          }
           onRefresh(() => _fetchCurrentTab(value, forceRequest: true), forceProceed: true);
         }
       },
@@ -173,17 +201,23 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
   Future<void> _fetchCurrentTab(YoutiPieChannelPageResult channelInfo, {bool? forceRequest}) async {
     if (_tabsGlobalKeys.isEmpty) return;
-    final currentKeyState = _tabsGlobalKeys[_tabIndex]?.currentState;
+    final currentKeyState = _isAboutTab() ? _aboutPageKey : _tabsGlobalKeys[_tabIndex]?.currentState;
     forceRequest ??= _shouldForceRequestTab(_tabIndex);
     if (currentKeyState is _YTChannelVideosTabState) {
       await currentKeyState.fetchChannelStreams(channelInfo, forceRequest: forceRequest);
     } else if (currentKeyState is _YTChannelSubpageTabState) {
       await currentKeyState.fetchTabAndUpdate(forceRequest: forceRequest);
+    } else if (currentKeyState is _YTChannelSubpageAboutState) {
+      await currentKeyState.fetchAboutAndUpdate(forceRequest: forceRequest);
     }
   }
 
   bool _shouldForceRequestTab(int tabIndex) {
-    final diff = _tabLastFetched[tabIndex]?.difference(DateTime.now());
+    return _didEnoughTimePass(_tabLastFetched[tabIndex]);
+  }
+
+  bool _didEnoughTimePass(DateTime? datetime) {
+    final diff = datetime?.difference(DateTime.now());
     return diff == null ? true : diff.abs() > const Duration(seconds: 180);
   }
 
@@ -376,13 +410,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                         ),
                         const SizedBox(height: 4.0),
                         Text(
-                          subsCountText ??
-                              (subsCount == null
-                                  ? '? ${lang.SUBSCRIBERS}'
-                                  : [
-                                      subsCount.formatDecimalShort(),
-                                      subsCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS,
-                                    ].join(' ')),
+                          subsCountText ?? (subsCount == null ? '? ${lang.SUBSCRIBERS}' : subsCount.displaySubscribersKeywordShort),
                           style: context.textTheme.displayMedium?.copyWith(
                             fontSize: 12.0,
                           ),
@@ -418,49 +446,73 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
               children: [
                 header,
                 const SizedBox(height: 4.0),
-                channelInfo?.tabs == null
-                    ? Expanded(
-                        child: YTChannelVideosTab(
+                Expanded(
+                  child: NamidaTabView(
+                    key: Key("${_tabIndex}_${_tabsGlobalKeys.length}"),
+                    isScrollable: true,
+                    compact: true,
+                    tabs: [
+                      if (channelInfo != null) ...channelInfo.tabs.map((e) => e.title) else lang.VIDEOS,
+                      lang.ABOUT,
+                    ],
+                    initialIndex: _tabIndex,
+                    onIndexChanged: (index) {
+                      try {
+                        _scrollControllersOffsets[_tabIndex] ??= _itemsScrollController.offset;
+                      } catch (_) {}
+
+                      _tabIndex = index;
+                      if (channelInfo != null) _fetchCurrentTab(channelInfo);
+
+                      if (_isAboutTab()) {
+                        if (_scrollAnimation.value < 1.0) {
+                          _scrollAnimation.animateTo(
+                            1.0,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.fastEaseInToSlowEaseOut,
+                          );
+                        }
+                      }
+                    },
+                    children: [
+                      if (channelInfo != null)
+                        ...channelInfo.tabs.mapIndexed((e, i) {
+                          if (e.isVideosTab()) {
+                            return YTChannelVideosTab(
+                              key: _tabsGlobalKeys[i],
+                              scrollController: _itemsScrollController,
+                              channelInfo: _channelInfo,
+                              localChannel: ch,
+                            );
+                          }
+                          return YTChannelSubpageTab(
+                            key: _tabsGlobalKeys[i],
+                            scrollController: _itemsScrollController,
+                            channelId: channelID,
+                            tab: e,
+                            tabFetcher: (fetch) => onRefresh(fetch, forceProceed: true),
+                            onSuccessFetch: () => _tabLastFetched[i] = DateTime.now(),
+                            shouldForceRequest: () => _shouldForceRequestTab(i),
+                          );
+                        })
+                      else
+                        YTChannelVideosTab(
                           scrollController: _itemsScrollController,
                           channelInfo: _channelInfo,
                           localChannel: ch,
                         ),
+                      YTChannelSubpageAbout(
+                        key: _aboutPageKey,
+                        scrollController: _itemsScrollController,
+                        channelId: channelID,
+                        channelInfo: () => channelInfo,
+                        tabFetcher: (fetch) => onRefresh(fetch, forceProceed: true),
+                        onSuccessFetch: () => _aboutPageLastFetched = DateTime.now(),
+                        shouldForceRequest: () => _didEnoughTimePass(_aboutPageLastFetched),
                       )
-                    : Expanded(
-                        child: NamidaTabView(
-                          isScrollable: true,
-                          compact: true,
-                          tabs: channelInfo!.tabs.map((e) => e.title).toList(),
-                          initialIndex: _tabIndex,
-                          onIndexChanged: (index) {
-                            try {
-                              _scrollControllersOffsets[_tabIndex] ??= _itemsScrollController.offset;
-                            } catch (_) {}
-
-                            _tabIndex = index;
-                            _fetchCurrentTab(channelInfo);
-                          },
-                          children: channelInfo.tabs.mapIndexed((e, i) {
-                            if (e.isVideosTab()) {
-                              return YTChannelVideosTab(
-                                key: _tabsGlobalKeys[i],
-                                scrollController: _itemsScrollController,
-                                channelInfo: _channelInfo,
-                                localChannel: ch,
-                              );
-                            }
-                            return YTChannelSubpageTab(
-                              key: _tabsGlobalKeys[i],
-                              scrollController: _itemsScrollController,
-                              channelId: channelID,
-                              tab: e,
-                              tabFetcher: (fetch) => onRefresh(fetch, forceProceed: true),
-                              onSuccessFetch: () => _tabLastFetched[i] = DateTime.now(),
-                              shouldForceRequest: () => _shouldForceRequestTab(i),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             pullToRefreshWidget,

@@ -13,8 +13,8 @@ class _ChannelInfoController {
     return res.read();
   }
 
-  Future<ChannelPageAbout?> fetchChannelAbout({required YoutiPieChannelPageResult channel}) async {
-    final res = await YoutiPie.channel.fetchChannelAbout(channel: channel);
+  Future<ChannelPageAbout?> fetchChannelAbout({required YoutiPieChannelPageResult channel, ExecuteDetails? details}) async {
+    final res = await YoutiPie.channel.fetchChannelAbout(channel: channel, details: details);
     return res;
   }
 

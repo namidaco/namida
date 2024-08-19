@@ -42,13 +42,13 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
     );
 
     if (tabResult != null) widget.onSuccessFetch();
-    if (mounted) {
-      setState(() {
-        _tabResult = tabResult;
-        _currentSort = tabResult?.customSort ?? tabResult?.itemsSort.firstWhereEff((e) => e.initiallySelected);
-        _isLoadingInitial = false;
-      });
-    }
+
+    refreshState(() {
+      _tabResult = tabResult;
+      _currentSort = tabResult?.customSort ?? tabResult?.itemsSort.firstWhereEff((e) => e.initiallySelected);
+      _isLoadingInitial = false;
+    });
+
     return tabResult;
   }
 

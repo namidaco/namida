@@ -2313,24 +2313,27 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
 
 class NamidaSelectableAutoLinkText extends StatelessWidget {
   final String text;
-  const NamidaSelectableAutoLinkText({super.key, required this.text});
+  final double fontScale;
+  const NamidaSelectableAutoLinkText({super.key, required this.text, this.fontScale = 1.0});
 
   @override
   Widget build(BuildContext context) {
     return SelectableAutoLinkText(
       text,
-      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+      style: context.textTheme.displayMedium?.copyWith(
+        fontSize: 13.5 * fontScale,
+      ),
       linkStyle: context.textTheme.displayMedium?.copyWith(
         color: context.theme.colorScheme.primary.withAlpha(210),
-        fontSize: 13.5,
+        fontSize: 13.5 * fontScale,
       ),
       highlightedLinkStyle: TextStyle(
         color: context.theme.colorScheme.primary.withAlpha(220),
         backgroundColor: context.theme.colorScheme.onSurface.withAlpha(40),
-        fontSize: 13.5,
+        fontSize: 13.5 * fontScale,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
-      onTap: (url) async => await NamidaLinkUtils.openLink(url),
+      onTap: (url) async => await NamidaLinkUtils.openLinkPreferNamida(url),
     );
   }
 }
