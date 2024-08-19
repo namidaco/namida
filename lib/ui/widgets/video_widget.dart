@@ -6,12 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
-import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
@@ -1932,6 +1930,12 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     super.dispose();
   }
 
+  void _exitFullScreenIfNeeded() {
+    if (widget.inFullScreen) {
+      NamidaNavigator.inst.exitFullScreen();
+    }
+  }
+
   List<Widget> _getCustomChildrenVideo(EndScreenItemVideo e) {
     String? title = e.title;
     String? subtitle = e.viewsCount?.formatDecimalShort() ?? e.viewsCountText;
@@ -1989,6 +1993,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           channelID: null,
           playlistID: null,
           idsNamesLookup: {videoId: item.title},
+          isInFullScreen: widget.inFullScreen,
         );
       case EndScreenItemChannel():
         final channelId = item.channelId;
@@ -2000,7 +2005,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
               title: lang.GO_TO_CHANNEL,
               subtitle: channelTitle ?? '',
               onTap: () {
-                NamidaNavigator.inst.exitFullScreen();
+                _exitFullScreenIfNeeded();
                 YTChannelSubpage(channelID: channelId).navigate();
               },
             ),
@@ -2029,10 +2034,13 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
             NamidaPopupItem(
               icon: Broken.export_2,
               title: lang.OPEN,
-              onTap: YTHostedPlaylistSubpage.fromId(
-                playlistId: item.basicInfo.id,
-                userPlaylist: null,
-              ).navigate,
+              onTap: () {
+                _exitFullScreenIfNeeded();
+                YTHostedPlaylistSubpage.fromId(
+                  playlistId: item.basicInfo.id,
+                  userPlaylist: null,
+                ).navigate();
+              },
             ),
           ];
         } else {
@@ -2042,6 +2050,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
             showProgressSheet: true,
             playlistToFetch: fetchedPlaylist,
             userPlaylist: null,
+            isInFullScreen: widget.inFullScreen,
           );
         }
     }
@@ -2132,26 +2141,5 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         ).toList(),
       );
     });
-  }
-}
-
-class _EmptyPlaylistResult extends YoutiPiePlaylistResultBase {
-  _EmptyPlaylistResult({
-    required String playlistId,
-  }) : super(
-          basicInfo: PlaylistBasicInfo(id: playlistId, title: '', videosCountText: null, videosCount: null, thumbnails: []),
-          items: [],
-          cacheKey: null,
-          continuation: null,
-        );
-
-  @override
-  Future<bool> fetchNextFunction(ExecuteDetails? details) async {
-    return false;
-  }
-
-  @override
-  Map<String, dynamic> toMap() {
-    return {};
   }
 }

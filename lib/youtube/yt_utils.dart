@@ -178,6 +178,7 @@ class YTUtils {
     YoutubeID? videoYTID,
     bool copyUrl = false,
     List<NamidaPopupItem>? moreMenuChildren,
+    bool isInFullScreen = false,
   }) {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
@@ -216,7 +217,10 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.user,
           title: lang.GO_TO_CHANNEL,
-          onTap: YTChannelSubpage(channelID: channelID).navigate,
+          onTap: () {
+            if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
+            YTChannelSubpage(channelID: channelID!).navigate();
+          },
         ),
       isCurrentlyPlaying
           ? NamidaPopupItem(

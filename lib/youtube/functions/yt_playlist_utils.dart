@@ -419,6 +419,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     bool displayShuffle = true,
     bool displayPlay = true,
     bool displayOpenPlaylist = false,
+    bool isInFullScreen = false,
   }) {
     final playlist = this;
     final videosCount = playlist.videosCount;
@@ -547,19 +548,25 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         NamidaPopupItem(
           icon: Broken.import,
           title: lang.DOWNLOAD,
-          onTap: () => showPlaylistDownloadSheet(
-            showProgressSheet: showProgressSheet,
-            playlistToFetch: playlistToFetch,
-          ),
+          onTap: () {
+            if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
+            showPlaylistDownloadSheet(
+              showProgressSheet: showProgressSheet,
+              playlistToFetch: playlistToFetch,
+            );
+          },
         ),
       if (displayOpenPlaylist)
         NamidaPopupItem(
           icon: Broken.export_2,
           title: lang.OPEN,
-          onTap: YTHostedPlaylistSubpage(
-            playlist: playlistToFetch,
-            userPlaylist: userPlaylist,
-          ).navigate,
+          onTap: () {
+            if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
+            YTHostedPlaylistSubpage(
+              playlist: playlistToFetch,
+              userPlaylist: userPlaylist,
+            ).navigate();
+          },
         ),
       if (displayPlay)
         NamidaPopupItem(
