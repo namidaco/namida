@@ -122,7 +122,7 @@ class YoutubeDescriptionWidgetManager {
     } else if (sw.playlistId != null) {
       onTap = YTHostedPlaylistSubpage.fromId(playlistId: sw.playlistId!, userPlaylist: null).navigate;
     } else if (sw.link != null) {
-      onTap = () => NamidaLinkUtils.openLink(sw.link!);
+      onTap = () => NamidaLinkUtils.openLinkPreferNamida(sw.link!);
     }
 
     final colorized = onTap != null || sw.link != null || sw.hashtag != null;

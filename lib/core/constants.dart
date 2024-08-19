@@ -10,10 +10,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 class NamidaDeviceInfo {
   static int sdkVersion = 21;
@@ -152,8 +156,55 @@ class NamidaLinkUtils {
     return didLaunch;
   }
 
+  static Future<bool> openLinkPreferNamida(String url) {
+    final didOpen = tryOpeningPlaylistOrVideo(url);
+    if (didOpen) return Future.value(true);
+    return openLink(url);
+  }
+
+  static bool tryOpeningPlaylistOrVideo(String url) {
+    final possiblePlaylistId = NamidaLinkUtils.extractPlaylistId(url);
+    if (possiblePlaylistId != null && possiblePlaylistId.isNotEmpty) {
+      YTHostedPlaylistSubpage.fromId(
+        playlistId: possiblePlaylistId,
+        userPlaylist: null,
+      ).navigate();
+      return true;
+    }
+
+    final possibleVideoId = NamidaLinkUtils.extractYoutubeId(url);
+    if (possibleVideoId != null && possibleVideoId.isNotEmpty) {
+      OnYoutubeLinkOpenAction.alwaysAsk.execute([possibleVideoId]);
+      return true;
+    }
+    return false;
+  }
+
+  static String? extractYoutubeLink(String text) {
+    try {
+      return NamidaLinkRegex.youtubeLinkRegex.firstMatch(text)?[0];
+    } catch (_) {}
+    return null;
+  }
+
+  static String? extractYoutubeId(String text) {
+    final link = extractYoutubeLink(text);
+    if (link == null || link.isEmpty) return null;
+
+    try {
+      final possibleId = NamidaLinkRegex.youtubeIdRegex.firstMatch(link)?.group(5);
+      if (possibleId == null || possibleId.length != 11) return '';
+      return possibleId;
+    } catch (_) {}
+
+    return null;
+  }
+
   static String? extractPlaylistId(String playlistUrl) {
-    return NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(playlistUrl)?.group(1);
+    try {
+      return NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(playlistUrl)?.group(1);
+    } catch (_) {}
+    return null;
   }
 }
 

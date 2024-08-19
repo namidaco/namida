@@ -52,6 +52,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
@@ -409,7 +410,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 
-  Future<void> execute(Iterable<String> ids) async {
+  Future<bool> execute(Iterable<String> ids) async {
     Iterable<YoutubeID> getPlayables() => ids.map((e) => YoutubeID(id: e, playlistID: null));
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
@@ -422,25 +423,31 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
             infoLookup: const {},
           ).navigate();
         }
+        return true;
       case OnYoutubeLinkOpenAction.addToPlaylist:
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
+        return true;
       case OnYoutubeLinkOpenAction.play:
         await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
+        return true;
       case OnYoutubeLinkOpenAction.playNext:
-        await Player.inst.addToQueue(getPlayables(), insertNext: true);
+        return Player.inst.addToQueue(getPlayables(), insertNext: true);
       case OnYoutubeLinkOpenAction.playLast:
-        await Player.inst.addToQueue(getPlayables(), insertNext: false);
+        return Player.inst.addToQueue(getPlayables(), insertNext: false);
       case OnYoutubeLinkOpenAction.playAfter:
-        await Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
+        return Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
-        _showAskDialog((action) => action.execute(ids));
-
-      default:
-        null;
+        final videoNamesSubtitle = ids
+                .map((id) => YoutubeInfoController.utils.getVideoName(id) ?? id) //
+                .take(3)
+                .join(', ') +
+            (ids.length > 3 ? '... + ${ids.length - 3}' : '');
+        _showAskDialog((action) => action.execute(ids), title: videoNamesSubtitle);
+        return true;
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap) {
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {String? title}) {
     final isItemEnabled = <OnYoutubeLinkOpenAction, bool>{
       OnYoutubeLinkOpenAction.playNext: true,
       OnYoutubeLinkOpenAction.playAfter: true,
@@ -453,8 +460,23 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       onDisposing: () {
         isItemEnabled.close();
       },
-      dialog: CustomBlurryDialog(
+      dialogBuilder: (theme) => CustomBlurryDialog(
         title: lang.CHOOSE,
+        titleWidgetInPadding: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              lang.CHOOSE,
+              style: theme.textTheme.displayLarge,
+            ),
+            if (title != null && title.isNotEmpty)
+              Text(
+                title,
+                style: theme.textTheme.displaySmall,
+              ),
+          ],
+        ),
         normalTitleStyle: true,
         actions: const [
           DoneButton(),

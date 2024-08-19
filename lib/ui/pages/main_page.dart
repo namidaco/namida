@@ -29,7 +29,6 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
-import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 class MainPage extends StatelessWidget {
   final AnimationController animation;
@@ -254,21 +253,13 @@ class NamidaSearchBar extends StatelessWidget {
   const NamidaSearchBar({super.key, required this.searchBarKey});
 
   void _onSubmitted(String val) {
-    try {
-      final ytPlaylistId = NamidaLinkUtils.extractPlaylistId(val);
-      if (ytPlaylistId != null && ytPlaylistId != '') {
-        YTHostedPlaylistSubpage.fromId(playlistId: ytPlaylistId, userPlaylist: null).navigate();
-        return;
-      }
-    } catch (_) {}
-
-    final ytlink = NamidaLinkRegex.youtubeLinkRegex.firstMatch(val)?[0];
-    final ytID = ytlink?.getYoutubeID;
-
-    if (ytlink != null && ytID != null && ytID != '') {
+    final didOpen = NamidaLinkUtils.tryOpeningPlaylistOrVideo(val);
+    if (didOpen) {
       ScrollSearchController.inst.searchTextEditingController.clear();
-      Player.inst.playOrPause(0, [YoutubeID(id: ytlink.getYoutubeID, playlistID: null)], QueueSource.others);
-    } else if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+      return;
+    }
+
+    if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
       ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
     }
   }
@@ -277,7 +268,7 @@ class NamidaSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SearchBarAnimation(
       key: searchBarKey,
-      initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value, // TODO:
+      initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value,
       isSearchBoxOnRightSide: true,
       textAlignToRight: false,
       durationInMilliSeconds: 300,

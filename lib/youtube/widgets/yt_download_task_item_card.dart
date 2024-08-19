@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:flutter_html/flutter_html.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/core/url_utils.dart';
@@ -135,26 +134,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     final duration = info?.durSeconds?.secondsLabel ?? '?';
     final descriptionWidget = info == null
         ? null
-        : Html(
-            data: info.availableDescription ?? '',
-            style: {
-              '*': Style.fromTextStyle(
-                context.textTheme.displaySmall!.copyWith(
-                  fontSize: 13.0,
-                ),
-              ),
-              'a': Style.fromTextStyle(
-                context.textTheme.displaySmall!.copyWith(
-                  color: context.theme.colorScheme.primary.withAlpha(210),
-                  fontSize: 12.5,
-                ),
-              )
-            },
-            onLinkTap: (url, attributes, element) async {
-              if (url != null) {
-                await NamidaLinkUtils.openLink(url);
-              }
-            },
+        : NamidaSelectableAutoLinkText(
+            text: info.availableDescription ?? '',
           );
 
     final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}/${item.filename}".replaceAll('//', '/');

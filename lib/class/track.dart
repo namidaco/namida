@@ -368,10 +368,16 @@ extension TrackExtUtils on TrackExtended {
   }
 
   String get youtubeLink {
-    final match = comment.isEmpty ? null : NamidaLinkRegex.youtubeLinkRegex.firstMatch(comment)?[0];
-    if (match != null) return match;
-    final match2 = filename.isEmpty ? null : NamidaLinkRegex.youtubeLinkRegex.firstMatch(filename)?[0];
-    if (match2 != null) return match2;
+    var comment = this.comment;
+    if (comment.isNotEmpty) {
+      var link = NamidaLinkUtils.extractYoutubeLink(comment);
+      if (link != null) return link;
+    }
+    var filename = this.filename;
+    if (filename.isNotEmpty) {
+      var link = NamidaLinkUtils.extractYoutubeLink(filename);
+      if (link != null) return link;
+    }
     return '';
   }
 

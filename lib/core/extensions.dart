@@ -338,12 +338,7 @@ extension ConvertPathToTrack on String {
 }
 
 extension YTLinkToID on String {
-  String get getYoutubeID {
-    final match = NamidaLinkRegex.youtubeIdRegex.firstMatch(this);
-    final idAndMore = match?.group(5);
-    final id = idAndMore?.length == 11 ? idAndMore : null;
-    return id ?? '';
-  }
+  String get getYoutubeID => NamidaLinkUtils.extractYoutubeId(this) ?? '';
 }
 
 extension TitleAndArtistUtils on String {
