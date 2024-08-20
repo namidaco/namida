@@ -10,7 +10,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:youtipie/class/channels/channel_about_link.dart';
 import 'package:youtipie/class/channels/channel_home_section.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
-import 'package:youtipie/class/channels/channel_items_sort.dart';
+import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/channels/channel_page_about.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/channels/channel_tab.dart';

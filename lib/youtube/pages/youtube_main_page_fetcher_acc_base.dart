@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/map_serializable.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 
@@ -13,6 +14,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -30,6 +32,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final String title;
   final CacheDetails<W> cacheReader;
   final Future<W?> Function(ExecuteDetails details) networkFetcher;
+  final bool isSortable;
   final Widget dummyCard;
   final double itemExtent;
   final YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder;
@@ -55,6 +58,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.title,
     required this.cacheReader,
     required this.networkFetcher,
+    this.isSortable = false,
     required this.dummyCard,
     required this.itemExtent,
     required this.itemBuilder,
@@ -102,6 +106,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   final _lastFetchWasCached = false.obs;
   final _refreshButtonShown = false.obs;
   final _currentFeed = Rxn<W>();
+  Rxn<YoutiPieItemsSort>? _currentSort;
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
@@ -167,6 +172,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   @override
   void initState() {
     super.initState();
+    if (widget.isSortable) _currentSort = Rxn<YoutiPieItemsSort>();
     widget.onInitState?.call(_currentFeed);
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
@@ -182,6 +188,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _controller.dispose();
     _isLoadingCurrentFeed.close();
     _currentFeed.close();
+    _currentSort?.close();
     _lastFetchWasCached.close();
     super.dispose();
   }
@@ -231,14 +238,79 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   @override
   Widget build(BuildContext context) {
+    Widget headerTitle = Text(
+      widget.title,
+      style: context.textTheme.displayLarge?.copyWith(fontSize: 28.0),
+    );
+    if (widget.isSortable) {
+      headerTitle = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          headerTitle,
+          const SizedBox(height: 2.0),
+          ObxO(
+            rx: _currentFeed,
+            builder: (listItemsPre) {
+              if (listItemsPre is YoutiPieListSorterMixin) {
+                final listItems = listItemsPre as YoutiPieListSorterMixin;
+                final selectedSort = listItems.customSort ?? listItems.itemsSort.firstWhereEff((e) => e.initiallySelected);
+                return NamidaPopupWrapper(
+                  childrenDefault: () {
+                    return (listItems).itemsSort.map(
+                      (s) {
+                        return NamidaPopupItem(
+                          icon: s.title == selectedSort?.title ? Broken.tick_circle : Broken.arrow_swap,
+                          title: s.title,
+                          onTap: () async {
+                            final currentSort = _currentSort;
+                            if (currentSort!.value?.title == s.title) return;
+
+                            final initialSort = currentSort.value;
+
+                            _isLoadingCurrentFeed.value = true;
+                            currentSort.value = s;
+
+                            final didFetch = await listItems.fetchWithNewSort(sort: s, details: ExecuteDetails.forceRequest());
+                            if (currentSort.value?.title != s.title) return; // if interrupted
+
+                            _isLoadingCurrentFeed.value = false;
+
+                            if (didFetch) {
+                              if (mounted) _currentFeed.refresh();
+                            } else {
+                              currentSort.value = initialSort;
+                            }
+                          },
+                        );
+                      },
+                    ).toList();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: ObxO(
+                      rx: _currentSort!,
+                      builder: (sort) => Text(
+                        sort?.title ?? selectedSort?.title ?? '?',
+                        style: context.textTheme.displaySmall?.copyWith(
+                          color: context.theme.colorScheme.secondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ],
+      );
+    }
     Widget header = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
-          child: Text(
-            widget.title,
-            style: context.textTheme.displayLarge?.copyWith(fontSize: 28.0),
-          ),
+          child: headerTitle,
         ),
         const SizedBox(width: 12.0),
         ObxO(

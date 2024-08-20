@@ -232,14 +232,12 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                   ],
                                 ),
                               ],
-                              child: NamidaInkWell(
-                                child: ObxO(
-                                  rx: settings.ytPlaylistSort,
-                                  builder: (ytPlaylistSort) => Text(
-                                    ytPlaylistSort.toText(),
-                                    style: context.textTheme.displaySmall?.copyWith(
-                                      color: context.theme.colorScheme.secondary,
-                                    ),
+                              child: ObxO(
+                                rx: settings.ytPlaylistSort,
+                                builder: (ytPlaylistSort) => Text(
+                                  ytPlaylistSort.toText(),
+                                  style: context.textTheme.displaySmall?.copyWith(
+                                    color: context.theme.colorScheme.secondary,
                                   ),
                                 ),
                               ),

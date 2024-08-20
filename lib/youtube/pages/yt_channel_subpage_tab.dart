@@ -4,7 +4,7 @@ class YTChannelSubpageTab extends StatefulWidget {
   final ScrollController scrollController;
   final String channelId;
   final ChannelTab tab;
-  final Future<void> Function(Future<YoutiPieChannelTabResult?> Function({YoutiPieChannelItemsSort? sort, bool forceRequest}) fetch) tabFetcher;
+  final Future<void> Function(Future<YoutiPieChannelTabResult?> Function({YoutiPieItemsSort? sort, bool forceRequest}) fetch) tabFetcher;
   final bool Function() shouldForceRequest;
   final void Function() onSuccessFetch;
 
@@ -24,11 +24,11 @@ class YTChannelSubpageTab extends StatefulWidget {
 
 class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
   YoutiPieChannelTabResult? _tabResult;
-  YoutiPieChannelItemsSort? _currentSort;
+  YoutiPieItemsSort? _currentSort;
   bool _isLoadingInitial = false;
   final _isLoadingMoreItems = false.obs;
 
-  Future<YoutiPieChannelTabResult?> fetchTabAndUpdate({YoutiPieChannelItemsSort? sort, bool? forceRequest}) async {
+  Future<YoutiPieChannelTabResult?> fetchTabAndUpdate({YoutiPieItemsSort? sort, bool? forceRequest}) async {
     sort ??= _currentSort; // use set sort when refreshing.
     forceRequest ??= widget.shouldForceRequest();
 
@@ -116,7 +116,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                     margin: const EdgeInsets.symmetric(horizontal: 4.0),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     onTap: () async {
-                      if (_currentSort == s) return;
+                      if (_currentSort?.title == s.title) return;
 
                       try {
                         widget.scrollController.jumpTo(0);

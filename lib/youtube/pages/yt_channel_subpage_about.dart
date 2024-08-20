@@ -4,7 +4,7 @@ class YTChannelSubpageAbout extends StatefulWidget {
   final ScrollController scrollController;
   final String channelId;
   final YoutiPieChannelPageResult? Function() channelInfo;
-  final Future<void> Function(Future<ChannelPageAbout?> Function({YoutiPieChannelItemsSort? sort, bool forceRequest}) fetch) tabFetcher;
+  final Future<void> Function(Future<ChannelPageAbout?> Function({YoutiPieItemsSort? sort, bool forceRequest}) fetch) tabFetcher;
   final bool Function() shouldForceRequest;
   final void Function() onSuccessFetch;
 
@@ -26,7 +26,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
   ChannelPageAbout? _aboutResult;
   bool _isLoadingInitial = false;
 
-  Future<ChannelPageAbout?> fetchAboutAndUpdate({YoutiPieChannelItemsSort? sort, bool? forceRequest}) async {
+  Future<ChannelPageAbout?> fetchAboutAndUpdate({YoutiPieItemsSort? sort, bool? forceRequest}) async {
     forceRequest ??= widget.shouldForceRequest();
 
     if (forceRequest == false && _aboutResult != null) return null; // prevent calling widget.onSuccessFetch
