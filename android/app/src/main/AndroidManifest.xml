@@ -21,6 +21,7 @@
         android:label="Namida"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:appCategory="audio"
         android:requestLegacyExternalStorage="true"
         android:supportsPictureInPicture="true"
         android:usesCleartextTraffic="true"
@@ -55,24 +56,20 @@
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="*youtube.com"
-                    android:scheme="https"
-                    android:pathPrefix="/" />
-                <data
-                    android:host="*youtube.com"
-                    android:scheme="http"
-                    android:pathPrefix="/" />
-                <data
-                    android:host="*youtu.be"
-                    android:scheme="https"
-                    android:pathPrefix="/" />
-                <data
-                    android:host="*youtu.be"
-                    android:scheme="http"
-                    android:pathPrefix="/" />
+                
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="*youtube.com" />
+                <data android:host="youtube.com" />
+                <data android:host="m.youtube.com" />
+                <data android:host="www.youtube.com" />
+                <data android:host="music.youtube.com" />
+                <data android:host="youtu.be" />
+                <data android:pathPrefix="/" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
