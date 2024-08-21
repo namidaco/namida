@@ -122,8 +122,12 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
           sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
             itemExtentBuilder: (index, dimensions) {
               final chunk = listItems.items[index];
+              int itemsLengthWithoutHiddens = chunk.items.length;
+              if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
+              if (itemsLengthWithoutHiddens <= 0) return 0;
+
               final hasBeforeAndAfterPadding = chunk.title.isNotEmpty;
-              double itemsExtent = chunk.items.length * thumbnailItemExtent;
+              double itemsExtent = itemsLengthWithoutHiddens * thumbnailItemExtent;
               if (hasBeforeAndAfterPadding) {
                 itemsExtent += beforeSublistHeight;
                 itemsExtent += afterSublistHeight;
