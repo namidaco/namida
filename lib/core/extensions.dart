@@ -9,7 +9,6 @@ import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -53,9 +52,9 @@ extension TracksSelectableUtils on Iterable<Selectable> {
 }
 
 extension TracksWithDatesUtils on List<TrackWithDate> {
-  int get totalDurationInS => fold(0, (previousValue, element) => previousValue + element.track.duration);
+  int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.track.durationMS);
   String get totalDurationFormatted {
-    return totalDurationInS.formattedTime;
+    return (totalDurationInMS ~/ 1000).formattedTime;
   }
 }
 
@@ -73,10 +72,10 @@ extension TracksUtils on List<Track> {
     return size.fileSizeFormatted;
   }
 
-  int get totalDurationInS => fold(0, (previousValue, element) => previousValue + element.duration);
+  int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.durationMS);
 
   String get totalDurationFormatted {
-    return totalDurationInS.formattedTime;
+    return (totalDurationInMS ~/ 1000).formattedTime;
   }
 
   int get year {
@@ -307,36 +306,6 @@ extension TRACKPLAYMODE on TrackPlayMode {
       newQueue.insertSafe(0, trackPre);
     }
     return newQueue;
-  }
-}
-
-extension ConvertPathToTrack on String {
-  Future<TrackExtended?> removeTrackThenExtract({bool onlyIfNewFileExists = true}) async {
-    if (onlyIfNewFileExists && !await File(this).exists()) return null;
-    Indexer.inst.allTracksMappedByPath.value.remove(Track(this));
-    return await Indexer.inst.extractTrackInfo(
-      trackPath: this,
-      onMinDurTrigger: () => null,
-      onMinSizeTrigger: () => null,
-    );
-  }
-
-  Future<TrackExtended?> toTrackExtOrExtract() async {
-    final initial = toTrackExtOrNull();
-    if (initial != null) return initial;
-    return await Indexer.inst.extractTrackInfo(
-      trackPath: this,
-      onMinDurTrigger: () => null,
-      onMinSizeTrigger: () => null,
-    );
-  }
-
-  Track toTrack() => Track(this);
-  Track? toTrackOrNull() => Indexer.inst.allTracksMappedByPath[toTrack()] == null ? null : toTrack();
-  TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[Track(this)];
-
-  TrackExtended toTrackExt() {
-    return toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: getFilenameWOExt, path: this);
   }
 }
 

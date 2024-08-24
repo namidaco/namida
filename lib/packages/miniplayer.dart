@@ -183,7 +183,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           key,
         );
       },
-      getDurationMS: (currentItem) => currentItem.track.duration * 1000,
+      getDurationMS: (currentItem) => currentItem.track.durationMS,
       itemsKeyword: (number) => number.displayTrackKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
       topText: (currentItem) => currentItem.track.album,
@@ -569,9 +569,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   }
 }
 
-double _previousScale = 1.0;
 final _lrcAdditionalScale = 0.0.obs;
-bool _isScalingLRC = false;
 
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;

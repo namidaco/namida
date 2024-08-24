@@ -302,11 +302,11 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       required HttpClientWrapper requester,
     }) async {
       if (customQuery == '' && details == null) return [];
-      String formatTime(int seconds) {
-        final duration = Duration(seconds: seconds);
+      String formatTime(int milliseconds) {
+        final duration = Duration(milliseconds: milliseconds);
         final min = duration.inMinutes.remainder(60);
         final sec = duration.inSeconds.remainder(60);
-        final ms = duration.inMilliseconds.remainder(1000);
+        final ms = milliseconds;
         String pad(int n) => n.toString().padLeft(2, '0');
         final formattedTime = '${pad(min)}:${pad(sec)}.${pad(ms)}';
         return formattedTime;
@@ -342,12 +342,12 @@ class _LRCSearchManager with PortsProvider<SendPort> {
               final artist = jsonRes['artistName'] ?? details?.artist ?? '';
               final album = jsonRes['albumName'] ?? details?.album ?? '';
               final title = jsonRes['trackName'] ?? details?.title ?? '';
-              final dur = (jsonRes['duration'] as num?)?.toInt() ?? details?.durationSeconds ?? 0;
+              final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : details?.durationMS ?? 0;
 
               if (artist != '') lines.add('[ar:$artist]');
               if (album != '') lines.add('[al:$album]');
               if (title != '') lines.add('[ti:$title]');
-              if (dur > 0) lines.add('[length:${formatTime(dur)}]');
+              if (durMS > 0) lines.add('[length:${formatTime(durMS)}]');
               for (final l in syncedLyrics.split('\n')) {
                 lines.add(l);
               }

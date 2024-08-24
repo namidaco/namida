@@ -146,7 +146,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
       _isRefreshing = false;
       onVerticalDragFinish();
     } catch (_) {
-      await _animation2.fling();
+      if (mounted) await _animation2.fling();
       if (mounted) _animation2.stop();
       _isRefreshing = false;
       onVerticalDragFinish();

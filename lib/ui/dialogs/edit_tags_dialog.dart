@@ -4,6 +4,7 @@ import 'package:checkmark/checkmark.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -222,7 +223,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   FTags? tags;
   FArtwork? artwork;
 
-  final infoFull = await FAudioTaggerController.inst.extractMetadata(trackPath: track.path, saveArtworkToCache: false);
+  final infoFull = await FAudioTaggerController.inst.extractMetadata(trackPath: track.path, isVideo: track is Video, saveArtworkToCache: false);
   tags = infoFull.tags;
   artwork = tags.artwork;
   if (infoFull.hasError) {
@@ -505,6 +506,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                       Obx(
                                         () => ArtworkWidget(
                                           key: Key(currentImagePath.valueR),
+                                          icon: track is Video ? Broken.video : Broken.musicnote,
                                           thumbnailSize: namida.width / 3,
                                           bytes: currentImagePath.valueR != '' ? null : artwork?.bytes,
                                           path: currentImagePath.valueR != '' ? currentImagePath.valueR : null,

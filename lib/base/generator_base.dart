@@ -38,7 +38,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     return randomListMap.keys;
   }
 
-  Iterable<E> generateRecommendedItemsFor(E item, E Function(T current) itemToSub) {
+  Iterable<E2> generateRecommendedItemsFor<E2>(E item, E2 Function(T current) itemToSub) {
     final historytracks = historyController.historyTracks.toList();
     if (historytracks.isEmpty) return [];
 
@@ -46,7 +46,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     final max = historytracks.length;
     int clamped(int range) => range.clamp(0, max);
 
-    final Map<E, int> numberOfListensMap = {};
+    final Map<E2, int> numberOfListensMap = {};
 
     for (int i = 0; i <= historytracks.length - 1;) {
       final t = historytracks[i];

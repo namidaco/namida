@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:namida/class/folder.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -25,7 +27,7 @@ class YoutubeVideoHistory {
       title: json['title'] ?? '',
       channel: json['channel'] ?? '',
       channelUrl: json['channelUrl'] ?? '',
-      watches: List<YTWatch>.from((json['watches'] as List? ?? []).map((e) => YTWatch.fromJson(e))),
+      watches: (json['watches'] as List?)?.map((e) => YTWatch.fromJson(e)).toList() ?? [],
     );
   }
 
@@ -191,4 +193,18 @@ extension NamidaVideoUtils on NamidaVideo {
     const prefix = 'EXT_';
     return "${AppDirs.THUMBNAILS}$prefix$name.png";
   }
+}
+
+class Video extends Track {
+  @override
+  VideoFolder get folder => VideoFolder.explicit(folderPath);
+
+  @override
+  Track get track => this;
+
+  const Video.explicit(super.path) : super.explicit();
+}
+
+extension VideoUtils on Video {
+  VideoFolder get folder => VideoFolder.explicit(folderPath);
 }

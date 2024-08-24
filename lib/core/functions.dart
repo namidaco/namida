@@ -123,9 +123,14 @@ class NamidaOnTaps {
     const MostPlayedTracksPage().navigate();
   }
 
-  Future<void> onFolderTap(Folder folder, {Track? trackToScrollTo}) async {
-    ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-    Folders.inst.stepIn(folder, trackToScrollTo: trackToScrollTo);
+  Future<void> onFolderTapNavigate(Folder folder, {Track? trackToScrollTo}) async {
+    if (folder is VideoFolder) {
+      ScrollSearchController.inst.animatePageController(LibraryTab.foldersVideos);
+      Folders.videos.stepIn(folder, trackToScrollTo: trackToScrollTo);
+    } else {
+      ScrollSearchController.inst.animatePageController(LibraryTab.folders);
+      Folders.tracks.stepIn(folder, trackToScrollTo: trackToScrollTo);
+    }
   }
 
   Future<void> onQueueTap(Queue queue) async {
@@ -227,6 +232,7 @@ class NamidaOnTaps {
                 MediaType.artist: [SortType.year, SortType.title],
                 MediaType.genre: [SortType.year, SortType.title],
                 MediaType.folder: [SortType.filename],
+                MediaType.folderVideo: [SortType.filename],
               };
               final defaults = defaultSorts[media] ?? [SortType.year];
               sorters.value = defaults;
@@ -914,13 +920,13 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
             }
           }
 
-          // -- skip if hidden
-          if (path.startsWith('.')) continue;
-
           // -- skip if not in extensions
           if (!extensions.any((ext) => path.endsWith(ext))) {
             continue;
           }
+
+          // -- skip if hidden
+          if (path.getFilename.startsWith('.')) continue;
 
           // -- skip if in nomedia folder & specified to exclude
           if (respectNoMedia && hasNoMedia) {

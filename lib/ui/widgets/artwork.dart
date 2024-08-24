@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -40,7 +41,7 @@ class ArtworkWidget extends StatefulWidget {
   final List<BoxShadow>? boxShadow;
   final bool forceEnableGlow;
   final bool displayIcon;
-  final IconData icon;
+  final IconData? icon;
   final bool isCircle;
   final VoidCallback? onError;
   final bool fallbackToFolderCover;
@@ -69,7 +70,7 @@ class ArtworkWidget extends StatefulWidget {
     this.onTopWidgets = const <Widget>[],
     this.forceEnableGlow = false,
     this.displayIcon = true,
-    this.icon = Broken.musicnote,
+    this.icon,
     this.isCircle = false,
     this.onError,
     this.fallbackToFolderCover = true,
@@ -161,7 +162,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     required final BorderRadiusGeometry? borderRadius,
   }) {
     final icon = Icon(
-      widget.displayIcon ? widget.icon : null,
+      widget.displayIcon ? widget.icon ?? (widget.track is Video ? Broken.video : Broken.musicnote) : null,
       size: widget.iconSize ?? widget.thumbnailSize * 0.5,
     );
     return Container(
@@ -366,7 +367,7 @@ class MultiArtworks extends StatelessWidget {
     this.borderRadius = 8.0,
     required this.heroTag,
     this.disableHero = false,
-    this.iconSize = 29.0,
+    this.iconSize = 24.0,
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
   });

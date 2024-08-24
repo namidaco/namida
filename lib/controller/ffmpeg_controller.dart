@@ -8,6 +8,7 @@ import 'package:ffmpeg_kit_flutter_min/ffprobe_kit.dart';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -21,6 +22,7 @@ class NamidaFFMPEG {
   static final NamidaFFMPEG _instance = NamidaFFMPEG._internal();
   NamidaFFMPEG._internal() {
     FFmpegKitConfig.disableLogs();
+    FFmpegKitConfig.setSessionHistorySize(999);
   }
   final currentOperations = <OperationType, Rx<OperationProgress>>{
     OperationType.imageCompress: OperationProgress().obs,
@@ -275,9 +277,15 @@ class NamidaFFMPEG {
     for (final filee in allFiles) {
       currentProgress++;
       if (filee is File) {
-        final tr = await filee.path.toTrackExtOrExtract();
-        final ytId = tr?.youtubeID;
-        if (tr == null || ytId == null || ytId == '') continue;
+        final tr = Indexer.inst.allTracksMappedByPath[filee.path] ??
+            await Indexer.inst.getTrackInfo(
+              trackPath: filee.path,
+              onMinDurTrigger: () => null,
+              onMinSizeTrigger: () => null,
+            );
+        if (tr == null) continue;
+        final ytId = tr.youtubeID;
+        if (ytId.isEmpty) continue;
 
         File? cachedThumbnail;
 

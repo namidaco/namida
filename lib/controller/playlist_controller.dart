@@ -162,7 +162,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
       },
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,
-        track: Track(getNewPath(old.track.path)),
+        track: Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path)),
         source: old.source,
       ),
     );
@@ -360,7 +360,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
           infoMap[fullPath] = latestInfo;
         }
       }
-      final tracks = fullPaths.map((e) => e.toTrack()).toList();
+      final tracks = fullPaths.map((e) => Track.orVideo(e)).toList();
       if (all[filename] == null) {
         all[filename] = (path, tracks);
       } else {
@@ -397,7 +397,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     for (final trwd in tracks) {
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
-      final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.duration},${trext.originalArtist} - ${trext.title}';
+      final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
       final pathLine = relative ? tr.path.replaceFirst(path.getDirectoryPath, '') : tr.path;
       sink.write("$infoLine\n$pathLine\n");
     }

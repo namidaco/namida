@@ -3,19 +3,35 @@
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/extensions.dart';
 
 final _pathSeparator = Platform.pathSeparator;
+
+class VideoFolder extends Folder {
+  VideoFolder.explicit(super.path) : super.explicit();
+
+  @override
+  String toString() => "VideoFolder(path: $path, tracks: ${tracks().length})";
+}
 
 class Folder {
   final String path;
   late final String folderName;
   late final String _key;
 
-  Folder(this.path)
+  Folder.explicit(this.path)
       : folderName = path.pathReverseSplitter(_pathSeparator),
         _key = _computeKey(path);
+
+  static T fromType<T extends Folder>(String path) {
+    return T == VideoFolder ? VideoFolder.explicit(path) as T : Folder.explicit(path) as T;
+  }
+
+  static T fromTypeParameter<T extends Folder>(Type type, String path) {
+    return type == VideoFolder ? VideoFolder.explicit(path) as T : Folder.explicit(path) as T;
+  }
 
   static String _computeKey(String path) {
     final addAtFirst = !path.startsWith(_pathSeparator);
@@ -58,10 +74,22 @@ class Folder {
   String toString() => "Folder(path: $path, tracks: ${tracks().length})";
 }
 
-extension FolderUtils on Folder {
-  Folder get parent {
+extension FolderUtils<T extends Folder, E extends Track> on Folder {
+  Map<T, List<E>> get _mainFoldersMap {
+    return this is VideoFolder ? Indexer.inst.mainMapFoldersVideos.value as Map<T, List<E>> : Indexer.inst.mainMapFolders.value as Map<T, List<E>>;
+  }
+
+  Folders get _controller {
+    return this is VideoFolder ? Folders.videos : Folders.tracks;
+  }
+
+  void navigate() {
+    _controller.stepIn(this);
+  }
+
+  T get parent {
     final parentPath = FileSystemEntity.parentOf(path);
-    return Folder(parentPath);
+    return Folder.fromTypeParameter(this.runtimeType, parentPath) as T;
   }
 
   /// Checks if any other folders inside library have the same name.
@@ -69,7 +97,7 @@ extension FolderUtils on Folder {
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
     int count = 0;
-    for (final k in Indexer.inst.mainMapFolders.value.keys) {
+    for (final k in _mainFoldersMap.keys) {
       if (k.folderName == folderName) {
         count++;
         if (count > 1) return true;
@@ -78,10 +106,10 @@ extension FolderUtils on Folder {
     return false;
   }
 
-  List<Track> tracks() => Indexer.inst.mainMapFolders.value[this] ?? [];
+  List<E> tracks() => _mainFoldersMap[this] ?? [];
 
-  Iterable<Track> tracksRecusive() sync* {
-    for (final e in Indexer.inst.mainMapFolders.value.entries) {
+  Iterable<E> tracksRecusive() sync* {
+    for (final e in _mainFoldersMap.entries) {
       if (this.isParentOf(e.key)) {
         yield* e.value;
       }
@@ -89,13 +117,13 @@ extension FolderUtils on Folder {
   }
 
   /// checks for the first parent folder that exists in [Indexer.mainMapFolders].
-  Folder? getParentFolder() {
+  T? getParentFolder() {
     final parts = path.split(_pathSeparator);
     parts.removeLast();
 
     while (parts.isNotEmpty) {
-      final f = Folder(parts.join(_pathSeparator));
-      if (Indexer.inst.mainMapFolders.value[f] != null) return f;
+      final f = Folder.fromTypeParameter(this.runtimeType, parts.join(_pathSeparator));
+      if (_mainFoldersMap[f] != null) return f as T;
       parts.removeLast();
     }
 
@@ -103,14 +131,13 @@ extension FolderUtils on Folder {
   }
 
   /// Gets directories inside [this] folder, automatically handles nested folders.
-  List<Folder> getDirectoriesInside() {
-    final foldersMap = Indexer.inst.mainMapFolders;
-    final allInside = <Folder>[];
+  List<F> getDirectoriesInside<F extends Folder>() {
+    final allInside = <F>[];
 
     final splitsCount = this.splitParts().length;
 
-    for (final folder in foldersMap.value.keys) {
-      if (this.isDirectParentOf(folder, splitsCount)) allInside.add(folder);
+    for (final folder in _mainFoldersMap.keys) {
+      if (this.isDirectParentOf(folder, splitsCount)) allInside.add(folder as F);
     }
 
     return allInside;

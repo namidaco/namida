@@ -8,10 +8,12 @@ import 'package:queue/queue.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -169,6 +171,7 @@ class FAudioTaggerController {
             identifiers: identifiersMap,
             extractArtwork: extractArtwork,
             overrideArtwork: overrideArtwork,
+            isVideo: path.isVideo(),
           ).then(onExtract);
         } else {
           try {
@@ -184,7 +187,7 @@ class FAudioTaggerController {
     return streamController.stream;
   }
 
-  final _ffmpegQueue = Queue(timeout: const Duration(seconds: 5)); // concurrent execution can result in being stuck
+  final _ffmpegQueue = Queue(parallel: 1); // concurrent execution can result in being stuck
 
   Future<FAudioModel> extractMetadata({
     required String trackPath,
@@ -195,12 +198,13 @@ class FAudioTaggerController {
     String? cacheDirectoryPath,
     Map<AlbumIdentifier, bool>? identifiers,
     bool overrideArtwork = false,
+    required bool isVideo,
   }) async {
     final artworkDirectory = saveArtworkToCache ? cacheDirectoryPath ?? AppDirs.ARTWORKS : null;
 
     FAudioModel? trackInfo;
 
-    if (tagger) {
+    if (tagger && !isVideo) {
       trackInfo = await _readAllData(
         path: trackPath,
         artworkDirectory: artworkDirectory,
@@ -209,33 +213,55 @@ class FAudioTaggerController {
       );
     }
 
-    if (ffmpeg) {
+    if (ffmpeg || isVideo) {
       if (trackInfo == null || trackInfo.hasError) {
-        // final ffmpegInfo = await NamidaFFMPEG.inst.extractMetadata(trackPath);
-        final ffmpegInfo = await _ffmpegQueue.add(() => NamidaFFMPEG.inst.extractMetadata(trackPath));
-        if (ffmpegInfo != null) trackInfo = ffmpegInfo.toFAudioModel();
+        final ffmpegInfo = await _ffmpegQueue.add(() => NamidaFFMPEG.inst.extractMetadata(trackPath).timeout(const Duration(seconds: 5)).catchError((_) => null));
+        trackInfo = ffmpegInfo == null ? FAudioModel.dummy(trackPath) : ffmpegInfo.toFAudioModel();
+        if (ffmpegInfo != null && isVideo) {
+          try {
+            final stats = File(trackPath).statSync();
+            VideoController.inst.addLocalVideoFileInfoToCacheMap(trackPath, ffmpegInfo, stats);
+          } catch (_) {}
+        }
       }
-      if (extractArtwork && trackInfo != null && !trackInfo.hasError) {
+      if (extractArtwork && !trackInfo.hasError) {
         if (artworkDirectory != null) {
           // specified directory to save in, the file is expected to exist here.
           File? artworkFile = trackInfo.tags.artwork.file;
           if (artworkFile == null || !await artworkFile.exists()) {
             final identifiersMap = identifiers ?? _getIdentifiersMap();
             final filename = _defaultGroupArtworksByAlbum ? getArtworkIdentifierFromInfo(trackInfo, identifiersMap) : trackPath.getFilename;
-            final res = await NamidaFFMPEG.inst.extractAudioThumbnail(
-              audioPath: trackPath,
-              thumbnailSavePath: "$artworkDirectory/$filename.png",
-            );
+            final thumbnailSavePath = "$artworkDirectory/$filename.png";
+            final File? res = isVideo
+                ? await NamidaFFMPEG.inst
+                    .extractVideoThumbnail(
+                      videoPath: trackPath,
+                      thumbnailSavePath: "$artworkDirectory/$filename.png",
+                    )
+                    .then((value) => value ? File(thumbnailSavePath) : null)
+                : await NamidaFFMPEG.inst.extractAudioThumbnail(
+                    audioPath: trackPath,
+                    thumbnailSavePath: thumbnailSavePath,
+                  );
+
             trackInfo.tags.artwork.file = res;
           }
         } else {
           // -- otherwise the artwork should be within info as bytes.
           Uint8List? artworkBytes = trackInfo.tags.artwork.bytes;
           if (artworkBytes == null || artworkBytes.isEmpty) {
-            final tempFile = await NamidaFFMPEG.inst.extractAudioThumbnail(
-              audioPath: trackPath,
-              thumbnailSavePath: "${AppDirs.APP_CACHE}/${trackPath.hashCode}.png",
-            );
+            final tempThumbnailSavePath = "${AppDirs.APP_CACHE}/${trackPath.hashCode}.png";
+            final tempFile = isVideo
+                ? await NamidaFFMPEG.inst
+                    .extractVideoThumbnail(
+                      videoPath: trackPath,
+                      thumbnailSavePath: tempThumbnailSavePath,
+                    )
+                    .then((value) => value ? File(tempThumbnailSavePath) : null)
+                : await NamidaFFMPEG.inst.extractAudioThumbnail(
+                    audioPath: trackPath,
+                    thumbnailSavePath: tempThumbnailSavePath,
+                  );
             trackInfo.tags.artwork.bytes = await tempFile?.readAsBytes();
             tempFile?.tryDeleting();
           }
@@ -283,11 +309,12 @@ class FAudioTaggerController {
       editedTags.updateAll((key, value) => value.trimAll());
     }
 
-    final imageFile = imagePath != '' ? File(imagePath) : null;
+    final imageFile = imagePath.isNotEmpty ? File(imagePath) : null;
 
     String oldComment = '';
     if (commentToInsert != '') {
-      oldComment = await FAudioTaggerController.inst.extractMetadata(trackPath: tracks.first.path).then((value) => value.tags.comment ?? '');
+      final tr = tracks.first;
+      oldComment = await FAudioTaggerController.inst.extractMetadata(trackPath: tr.path, isVideo: tr is Video).then((value) => value.tags.comment ?? '');
     }
     final newTags = commentToInsert != ''
         ? FTags(
@@ -391,6 +418,9 @@ class FAudioTaggerController {
               path: track.path,
               tagsMap: ffmpegTagsMap,
             );
+            if (imageFile != null) {
+              await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: track.path, thumbnailPath: imageFile.path);
+            }
             snackyy(
               title: lang.WARNING,
               message: 'FFMPEG was used. Some tags might not have been updated',
@@ -429,7 +459,7 @@ class FAudioTaggerController {
     if (tracksMap.isNotEmpty) {
       await Indexer.inst.updateTrackMetadata(
         tracksMap: tracksMap,
-        newArtworkPath: imagePath,
+        artworkWasEdited: imageFile != null,
       );
     }
   }

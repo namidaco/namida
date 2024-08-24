@@ -149,16 +149,24 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             // waiting for confirmation before posting to stream
             streamCompleters.get(streamKey)!!.get()
             for (p in paths) {
-              val map =
-                  readAllData(
-                      p,
-                      artworkDirectory,
-                      artworkIdentifiers,
-                      extractArtwork,
-                      overrideArtwork,
-                  )
-              map["path"] = p
-              withContext(Dispatchers.Main) { eventChannel.success(map) }
+              try {
+                withTimeout(6000) {
+                  val map =
+                      readAllData(
+                          p,
+                          artworkDirectory,
+                          artworkIdentifiers,
+                          extractArtwork,
+                          overrideArtwork,
+                      )
+                  map["path"] = p
+                  withContext(Dispatchers.Main) { eventChannel.success(map) }
+                }
+              } catch (_: Exception) {
+                val map = HashMap<String, Any>()
+                map["ERROR_FAULTY"] = true
+                withContext(Dispatchers.Main) { eventChannel.success(map) }
+              }
             }
             withContext(Dispatchers.Main) { eventChannel.endOfStream() }
             _removeLogsUser()
@@ -235,7 +243,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           metadata["bitRate"] = audioHeader.getBitRateAsNumber()
           metadata["sampleRate"] = audioHeader.getSampleRateAsNumber()
           metadata["format"] = audioHeader.getFormat()
-          metadata["length"] = audioHeader.getTrackLength()
+          metadata["durationMS"] = Math.round(audioHeader.getPreciseTrackLength() * 1000)
         }
       } catch (e: Exception) {
         writeError(path, "readAllData", "ERROR_HEADER", e.toString())

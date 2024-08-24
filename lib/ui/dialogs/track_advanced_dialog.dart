@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -94,6 +95,9 @@ void showTrackAdvancedDialog({
     );
   }
 
+  final videosOnlyCount = tracks.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
+  final tracksOnlyCount = tracks.length - videosOnlyCount;
+
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       willUpdateArtwork.close();
@@ -125,7 +129,12 @@ void showTrackAdvancedDialog({
           CustomListTile(
             passedColor: colorScheme,
             title: lang.DELETE,
-            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', tracks.displayTrackKeyword.addDQuotation()),
+            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst(
+                '_NUM_',
+                [
+                  if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
+                  if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
+                ].join(' & ').addDQuotation()),
             icon: Broken.danger,
             onTap: () => showTrackDeletePermanentlyDialog(tracks, colorScheme),
           ),

@@ -18,7 +18,6 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectabl
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -80,8 +79,7 @@ Future<void> showGeneralPopupDialog(
     });
   } else {
     tracks.loop((t) {
-      final existingTrack = t.path.toTrackOrNull();
-      if (existingTrack != null) tracksExisting.add(existingTrack);
+      if (t.hasInfoInLibrary()) tracksExisting.add(t);
     });
   }
 
@@ -170,11 +168,11 @@ Future<void> showGeneralPopupDialog(
   final firstTrack = tracks.firstOrNull;
   if (firstTrack != null) {
     statsWrapper = TrackStats(
-      firstTrack,
-      firstTrack.effectiveRating,
-      firstTrack.effectiveTags,
-      firstTrack.effectiveMoods,
-      firstTrack.lastPlayedPositionInMs ?? 0,
+      track: firstTrack,
+      rating: firstTrack.effectiveRating,
+      tags: firstTrack.effectiveTags,
+      moods: firstTrack.effectiveMoods,
+      lastPositionInMs: firstTrack.lastPlayedPositionInMs ?? 0,
     ).obs;
   }
 
@@ -1099,8 +1097,7 @@ Future<void> showGeneralPopupDialog(
                                 icon: Broken.folder,
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();
-                                  ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-                                  NamidaOnTaps.inst.onFolderTap(availableFolders.first, trackToScrollTo: tracks.first);
+                                  NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);
                                 },
                                 trailing: IconButton(
                                   tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,

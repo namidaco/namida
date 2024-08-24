@@ -44,7 +44,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
       },
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,
-        track: Track(getNewPath(old.track.path)),
+        track: Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path)),
         source: old.source,
       ),
     );

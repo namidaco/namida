@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -18,14 +18,55 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class FoldersPage extends StatelessWidget with NamidaRouteWidget {
+class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget with NamidaRouteWidget {
   @override
-  RouteType get route => RouteType.PAGE_folders;
+  final RouteType route;
+  final Folders foldersController;
+  final LibraryTab tab;
+  final MediaType Function() mediaType;
+  final FoldersPageConfig config;
+  final Type _type;
+  final QueueSource _queueSource;
+  final RxMap<F, List<T>> _foldersMap;
 
-  const FoldersPage({super.key});
+  const FoldersPage._(
+    this._type,
+    this._queueSource,
+    this._foldersMap, {
+    super.key,
+    required this.route,
+    required this.foldersController,
+    required this.tab,
+    required this.mediaType,
+    required this.config,
+  });
+
+  factory FoldersPage.tracks({Key? key}) => FoldersPage._(
+        Folder,
+        QueueSource.folder,
+        Indexer.inst.mainMapFolders as RxMap<F, List<T>>,
+        key: key,
+        route: RouteType.PAGE_folders,
+        foldersController: Folders.tracks,
+        tab: LibraryTab.folders,
+        mediaType: () => MediaType.folder,
+        config: FoldersPageConfig.tracks(),
+      );
+
+  factory FoldersPage.videos({Key? key}) => FoldersPage._(
+        VideoFolder,
+        QueueSource.folderVideos,
+        Indexer.inst.mainMapFoldersVideos as RxMap<F, List<T>>,
+        key: key,
+        route: RouteType.PAGE_folders_videos,
+        foldersController: Folders.videos,
+        tab: LibraryTab.foldersVideos,
+        mediaType: () => MediaType.folderVideo,
+        config: FoldersPageConfig.videos(),
+      );
 
   Widget get iconWidget => ObxO(
-        rx: Folders.inst.isHome,
+        rx: foldersController.isHome,
         builder: (isHome) => SizedBox(
           height: double.infinity,
           child: Icon(
@@ -37,30 +78,30 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController scrollController = LibraryTab.folders.scrollController;
+    final ScrollController scrollController = tab.scrollController;
     final highlighedColor = context.theme.colorScheme.onSurface.withAlpha(40);
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
     return BackgroundWrapper(
       child: ObxO(
-        rx: Folders.inst.indexToScrollTo,
+        rx: foldersController.indexToScrollTo,
         builder: (indexToScrollTo) => TrackTilePropertiesProvider(
-          configs: const TrackTilePropertiesConfigs(
-            queueSource: QueueSource.folder,
+          configs: TrackTilePropertiesConfigs(
+            queueSource: _queueSource,
           ),
           builder: (properties) => Stack(
             children: [
               ObxO(
-                rx: settings.enableFoldersHierarchy,
+                rx: config.enableFoldersHierarchy,
                 builder: (enableFoldersHierarchy) => enableFoldersHierarchy
                     ? Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                             child: ObxO(
-                              rx: Folders.inst.isHome,
+                              rx: foldersController.isHome,
                               builder: (isHome) => ObxO(
-                                rx: Folders.inst.currentFolder,
+                                rx: foldersController.currentFolder,
                                 builder: (currentFolder) {
                                   final pathOfDefault = isHome ? '' : currentFolder?.path;
                                   return CustomListTile(
@@ -68,20 +109,18 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                     icon: isHome ? Broken.home_2 : Broken.folder_2,
                                     title: currentFolder?.path.formatPath() ?? lang.HOME,
                                     titleStyle: context.textTheme.displaySmall,
-                                    onTap: () => Folders.inst.stepOut(),
+                                    onTap: () => foldersController.stepOut(),
                                     trailingRaw: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         ObxO(
-                                          rx: settings.defaultFolderStartupLocation,
+                                          rx: config.defaultFolderStartupLocation,
                                           builder: (defaultFolderStartupLocation) => NamidaIconButton(
                                             horizontalPadding: 8.0,
                                             tooltip: () => lang.SET_AS_DEFAULT,
                                             icon: defaultFolderStartupLocation == pathOfDefault ? Broken.archive_tick : Broken.save_2,
                                             iconSize: 22.0,
-                                            onPressed: () => settings.save(
-                                              defaultFolderStartupLocation: Folders.inst.currentFolder.value?.path ?? '',
-                                            ),
+                                            onPressed: () => config.onDefaultStartupFolderChanged(),
                                           ),
                                         ),
                                         const SizedBox(width: 8.0),
@@ -89,7 +128,7 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                           horizontalPadding: 0.0,
                                           icon: Broken.sort,
                                           onPressed: () {
-                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.folder);
+                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(mediaType());
                                           },
                                         )
                                       ],
@@ -103,9 +142,9 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                             child: NamidaScrollbar(
                               controller: scrollController,
                               child: ObxO(
-                                rx: Folders.inst.isHome,
+                                rx: foldersController.isHome,
                                 builder: (isHome) => ObxO(
-                                  rx: Folders.inst.currentFolder,
+                                  rx: foldersController.currentFolder,
                                   builder: (currentFolder) {
                                     final folderTracks = currentFolder?.tracks() ?? [];
                                     return CustomScrollView(
@@ -116,15 +155,16 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                             itemCount: kStoragePaths.length,
                                             itemBuilder: (context, i) {
                                               final p = kStoragePaths.elementAt(i);
+                                              final f = Folder.fromTypeParameter(_type, p);
                                               return FolderTile(
-                                                folder: Folder(p),
-                                                dummyTracks: Folder(p).tracksRecusive().toList(),
+                                                folder: f,
+                                                dummyTracks: f.tracksRecusive().toList(),
                                               );
                                             },
                                           )
                                         else ...[
                                           ObxO(
-                                            rx: Folders.inst.currentFolderslist,
+                                            rx: foldersController.currentFolderslist,
                                             builder: (currentFolderslist) => SliverList.builder(
                                               itemCount: currentFolderslist.length,
                                               itemBuilder: (context, i) {
@@ -165,7 +205,7 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                           ListTile(
                             leading: iconWidget,
                             title: ObxO(
-                              rx: Folders.inst.currentFolder,
+                              rx: foldersController.currentFolder,
                               builder: (currentFolder) => Text(
                                 currentFolder?.path.formatPath() ?? lang.HOME,
                                 style: context.textTheme.displaySmall,
@@ -173,15 +213,15 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            onTap: () => Folders.inst.stepOut(),
+                            onTap: () => foldersController.stepOut(),
                           ),
                           Expanded(
                             child: NamidaScrollbar(
                               controller: scrollController,
                               child: ObxO(
-                                rx: Folders.inst.isInside,
+                                rx: foldersController.isInside,
                                 builder: (isInside) => ObxO(
-                                  rx: Folders.inst.currentFolder,
+                                  rx: foldersController.currentFolder,
                                   builder: (currentFolder) {
                                     final folderTracks = currentFolder?.tracks() ?? [];
                                     return CustomScrollView(
@@ -189,9 +229,9 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                                       slivers: [
                                         if (!isInside)
                                           ObxO(
-                                            rx: Indexer.inst.mainMapFolders,
+                                            rx: _foldersMap,
                                             builder: (mainMapFolders) {
-                                              final mainMapFoldersKeys = Indexer.inst.mainMapFolders.keys.toList();
+                                              final mainMapFoldersKeys = _foldersMap.keys.toList();
                                               return SliverList.builder(
                                                 itemCount: mainMapFoldersKeys.length,
                                                 itemBuilder: (context, i) {
@@ -241,6 +281,7 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
                             shape: BoxShape.circle,
                           ),
                           child: _SmolIconFolderScroll(
+                            foldersController: foldersController,
                             iconSize: scrollToIconSize,
                             controller: scrollController,
                             indexToScrollTo: indexToScrollTo,
@@ -258,17 +299,18 @@ class FoldersPage extends StatelessWidget with NamidaRouteWidget {
 }
 
 class _SmolIconFolderScroll extends StatefulWidget {
+  final Folders foldersController;
   final double iconSize;
   final int indexToScrollTo;
   final ScrollController controller;
-  const _SmolIconFolderScroll({required this.iconSize, required this.indexToScrollTo, required this.controller});
+  const _SmolIconFolderScroll({required this.foldersController, required this.iconSize, required this.indexToScrollTo, required this.controller});
 
   @override
   State<_SmolIconFolderScroll> createState() => __SmolIconFolderScrollState();
 }
 
 class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
-  double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + Folders.inst.currentFolderslist.length - 2);
+  double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + widget.foldersController.currentFolderslist.length - 2);
 
   IconData _arrowIcon = Broken.cd;
   void _updateIcon(IconData icon) {

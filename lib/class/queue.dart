@@ -1,4 +1,5 @@
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -20,7 +21,13 @@ class Queue {
   /// // Converts empty queue to AllTracksList.
   /// BREAKING(>v2.5.6): no longer reads empty queue as allTracks.
   factory Queue.fromJson(Map<String, dynamic> json) {
-    final finalTracks = (json['tracks'] as List? ?? []).mapped((e) => (e as String).toTrack());
+    final finalTracks = (json['tracks'] as List?)?.map((e) {
+          if (e is Map) {
+            return Track.fromJson(e['t'] as String, isVideo: e['v'] == true);
+          }
+          return Track.fromJson(e as String, isVideo: false);
+        }).toList() ??
+        [];
     return Queue(
       source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
@@ -39,7 +46,14 @@ class Queue {
       'homePageItem': homePageItem?.convertToString,
       'date': date,
       'isFav': isFav,
-      'tracks': tracks.mapped((e) => e.path),
+      'tracks': tracks.map((e) {
+        return e is Video
+            ? {
+                't': e.toJson(),
+                'v': true,
+              }
+            : e.toJson();
+      }).toList(),
     };
   }
 

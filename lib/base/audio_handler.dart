@@ -123,24 +123,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   Future<void> _updateTrackLastPosition(Track track, int lastPositionMS) async {
     /// Saves a starting position in case the remaining was less than 30 seconds.
-    final remaining = (track.duration * 1000) - lastPositionMS;
+    final remaining = track.durationMS - lastPositionMS;
     final positionToSave = remaining <= 30000 ? 0 : lastPositionMS;
 
     await Indexer.inst.updateTrackStats(track, lastPositionInMs: positionToSave);
   }
 
   @override
-  Future<void> tryRestoringLastPosition(Q item) async {
+  FutureOr<void> tryRestoringLastPosition(Q item) {
     if (item is Selectable) {
-      final minValueInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.value * 60;
+      final minValueInSetMinutes = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
 
-      if (minValueInSet >= 0) {
+      if (minValueInSetMinutes >= 0) {
+        final minValueInSetMS = minValueInSetMinutes * 60 * 1000;
         final seekValueInMS = settings.player.seekDurationInSeconds.value * 1000;
         final track = item.track.toTrackExt();
-        final lastPos = track.stats.lastPositionInMs;
+        final lastPos = track.stats?.lastPositionInMs;
         // -- only seek if not at the start of track.
-        if (lastPos >= seekValueInMS && track.duration >= minValueInSet) {
-          await seek(lastPos.milliseconds);
+        if (lastPos != null && lastPos >= seekValueInMS && track.durationMS >= minValueInSetMS) {
+          return seek(lastPos.milliseconds);
         }
       }
     }
@@ -219,13 +220,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onIndexChanged(int newIndex, Q newItem) {
     refreshNotification(newItem);
+    settings.player.save(lastPlayedIndex: newIndex);
     newItem._execute(
       selectable: (finalItem) {
-        settings.player.save(lastPlayedIndices: {LibraryCategory.localTracks: newIndex});
         CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
       youtubeID: (finalItem) {
-        settings.player.save(lastPlayedIndices: {LibraryCategory.youtube: newIndex});
         CurrentColor.inst.updatePlayerColorFromYoutubeID(finalItem);
       },
     );
@@ -359,9 +359,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   FutureOr<int> itemToDurationInSeconds(Q item) async {
     return (await item._execute(
           selectable: (finalItem) async {
-            final dur = finalItem.track.duration;
+            final dur = finalItem.track.durationMS;
             if (dur > 0) {
-              return dur;
+              return dur ~/ 1000;
             } else {
               final ap = AudioPlayer();
               final d = await ap.setFilePath(finalItem.track.path);
@@ -448,17 +448,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
+    final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
     WaveformController.inst.generateWaveform(
       path: tr.path,
-      duration: Duration(seconds: tr.duration),
+      duration: Duration(milliseconds: tr.durationMS),
       stillPlaying: (path) {
         final current = currentItem.value;
         return current is Selectable && path == current.track.path;
       },
     );
-    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
+    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true, handleVideoPlayback: false);
 
     // -- generating artwork in case it wasnt, to be displayed in notification
     File(tr.pathToImage).exists().then((exists) {
@@ -480,10 +481,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Future<Duration?> setPls() async {
       if (!File(tr.path).existsSync()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
       final videoOptions = initialVideo == null
-          ? null
+          ? isVideo
+              ? VideoSourceOptions(
+                  source: AudioVideoSource.file(item.path),
+                  loop: false,
+                  videoOnly: true,
+                )
+              : null
           : VideoSourceOptions(
               source: AudioVideoSource.file(initialVideo.path),
-              loop: VideoController.inst.canLoopVideo(initialVideo, duration?.inSeconds ?? tr.duration),
+              loop: VideoController.inst.canLoopVideo(initialVideo, duration?.inMilliseconds ?? tr.durationMS),
               videoOnly: false,
             );
       final dur = await setSource(
@@ -494,7 +501,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         isVideoFile: true,
       );
 
-      Indexer.inst.updateTrackDuration(tr, dur);
+      if (dur != null) Indexer.inst.updateTrackDuration(tr, dur);
 
       refreshNotification(currentItem.value);
       return dur;
@@ -556,7 +563,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (checkInterrupted()) return;
 
-    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
+    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false, handleVideoPlayback: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
     if (startPlaying()) onPlayRaw();
@@ -1822,7 +1829,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   // ------- video -------
 
-  Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false}) async {
+  Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false, bool videoOnly = false}) async {
     if (isFile && source is UriSource) File.fromUri(source.uri).setLastAccessedTry(DateTime.now());
     final videoOptions = VideoSourceOptions(
       source: source,
@@ -1893,7 +1900,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       artist: artist,
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
-      duration: duration ?? Duration(seconds: tr.duration),
+      duration: duration ?? Duration(milliseconds: tr.durationMS),
       artUri: Uri.file(File(imagePage).existsSync() ? imagePage : AppPaths.NAMIDA_LOGO_MONET),
     );
   }

@@ -514,11 +514,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         YoutubeController.inst.downloadYoutubeVideos(
                           groupName: DownloadTaskGroupName(groupName: widget.playlistName),
                           itemsConfig: _selectedList.value.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
-                          useCachedVersionsIfAvailable: true,
+                          useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
                           autoExtractTitleAndArtist: autoExtractTitleAndArtist,
                           keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
                           downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
-                          addAudioToLocalLibrary: true,
+                          addAudioToLocalLibrary: addAudioToLocalLibrary,
                           deleteOldFile: overrideOldFiles,
                           audioOnly: downloadAudioOnly.value,
                           preferredQualities: () {

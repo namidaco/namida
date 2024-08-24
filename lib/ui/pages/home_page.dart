@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   final _shimmerList = List.filled(20, null, growable: true);
   late bool _isLoading;
 
-  final _recentlyAddedFull = <Track>[];
+  List<Track>? _recentlyAddedFull;
   final _recentlyAdded = <Track>[];
   final _randomTracks = <Track>[];
   final _recentListened = <TrackWithDate>[];
@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void _emptyAll() {
-    _recentlyAddedFull.clear();
+    _recentlyAddedFull?.clear();
     _recentlyAdded.clear();
     _randomTracks.clear();
     _recentListened.clear();
@@ -119,12 +119,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       _isLoading = true;
       await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     }
+
     final timeNow = DateTime.now();
 
     // -- Recently Added --
-    final alltracks = Indexer.inst.recentlyAddedTracks;
+    final alltracks = Indexer.inst.recentlyAddedTracksSorted();
 
-    _recentlyAddedFull.addAll(alltracks);
+    _recentlyAddedFull = alltracks;
     _recentlyAdded.addAll(alltracks.take(40));
 
     // -- Recent Listens --
@@ -136,6 +137,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
           .getMostListensInTimeRange(
             mptr: MostPlayedTimeRange.day3,
             isStartOfDay: false,
+            mainItemToSubItem: (item) => item.track,
           )
           .take(50),
     );
@@ -147,6 +149,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     final oldestYear = oldestDaySinceEpoch == null ? 0 : DateTime.fromMillisecondsSinceEpoch(oldestDaySinceEpoch * 24 * 60 * 60 * 1000).year;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
+
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     // -- Lost Memories Years
@@ -168,6 +171,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       // -- Top Recent Artists --
       e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
     });
+
     _topRecentAlbums.sortByReverse((e) => e.value);
     _topRecentArtists.sortByReverse((e) => e.value);
 
@@ -177,6 +181,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- favs --
     final favs = List<TrackWithDate>.from(PlaylistController.inst.favouritesPlaylist.value.tracks);
+
     favs.shuffle();
 
     // -- supermacy
@@ -190,6 +195,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
       }
     }
+
     _mixes.addAllIfEmpty([
       MapEntry(lang.TOP_RECENTS, _topRecentListened.map((e) => e.key).toList()),
       if (supremacyEntry != null) supremacyEntry,
@@ -210,6 +216,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         newest: DateTime(year, timeNow.month, timeNow.day + 5),
       ),
       isStartOfDay: false,
+      mainItemToSubItem: (item) => item.track,
     );
     currentYearLostMemories = year;
     if (_lostMemoriesScrollController.hasClients) _lostMemoriesScrollController.jumpTo(0);
@@ -332,8 +339,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void _navigateToRecentlyListened() {
-    if (_recentlyAddedFull.isNotEmpty) {
-      RecentlyAddedTracksPage(tracksSorted: _recentlyAddedFull).navigate();
+    final recentlyAdded = _recentlyAddedFull;
+    if (recentlyAdded != null && recentlyAdded.isNotEmpty) {
+      RecentlyAddedTracksPage(tracksSorted: recentlyAdded).navigate();
     }
   }
 
@@ -885,13 +893,18 @@ class _MixesCard extends StatefulWidget {
 
 class _MixesCardState extends State<_MixesCard> {
   Color? _cardColor;
-  Track? track;
+  Track? _track;
 
   @override
   void initState() {
     super.initState();
-    _assignTrack();
-    Future.delayed(const Duration(milliseconds: 500)).then((value) => _extractColor());
+    final track = _track ??= widget.tracks.trackOfImage;
+    if (track != null) {
+      _cardColor = CurrentColor.inst.getTrackColorsSync(track)?.color;
+      if (_cardColor == null) {
+        Future.delayed(const Duration(milliseconds: 500)).then((_) => _extractColor(track));
+      }
+    }
   }
 
   void onMixTap(Widget thumbnailWidget) {
@@ -1005,13 +1018,9 @@ class _MixesCardState extends State<_MixesCard> {
     );
   }
 
-  void _assignTrack() {
-    track ??= widget.tracks.trackOfImage;
-  }
-
-  void _extractColor() {
-    if (track != null && _cardColor == null) {
-      CurrentColor.inst.getTrackColors(track!, useIsolate: true).then((value) {
+  void _extractColor(Track track) {
+    if (_cardColor == null) {
+      CurrentColor.inst.getTrackColors(track, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
       });
     }
@@ -1050,12 +1059,12 @@ class _MixesCardState extends State<_MixesCard> {
       tag: tag,
       child: ArtworkWidget(
         key: Key(tag),
-        track: track,
+        track: _track,
         compressed: false,
         blur: 1.5,
         borderRadius: fullscreen ? 12.0 : 8.0,
         forceSquared: true,
-        path: track?.pathToImage,
+        path: _track?.pathToImage,
         displayIcon: !displayShimmer,
         thumbnailSize: widget.width,
         onTopWidgets: [
@@ -1118,7 +1127,7 @@ class _MixesCardState extends State<_MixesCard> {
 
   @override
   Widget build(BuildContext context) {
-    final displayShimmer = track == null;
+    final displayShimmer = _track == null;
 
     final thumbnailWidget = Stack(
       alignment: Alignment.topCenter,
@@ -1194,7 +1203,6 @@ class _TrackCard extends StatefulWidget {
   final HomePageItems homepageItem;
   final String title;
   final double width;
-  final Color? color;
   final Track? track;
   final String listId;
   final Iterable<Selectable> queue;
@@ -1207,7 +1215,6 @@ class _TrackCard extends StatefulWidget {
     required this.homepageItem,
     required this.title,
     required this.width,
-    this.color,
     required this.track,
     required this.listId,
     required this.queue,
@@ -1224,12 +1231,12 @@ class _TrackCard extends StatefulWidget {
 class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
   Color? _cardColor;
 
-  void _extractColor() async {
+  void _extractColor(Track track) async {
     if (!mounted) return;
     if (!await canStartLoadingItems()) return;
 
-    if (widget.track != null && _cardColor == null) {
-      CurrentColor.inst.getTrackColors(widget.track!, useIsolate: true).then((value) {
+    if (_cardColor == null) {
+      CurrentColor.inst.getTrackColors(track, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
       });
     }
@@ -1238,7 +1245,13 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 500)).then((value) => _extractColor());
+    final track = widget.track;
+    if (track != null) {
+      _cardColor = CurrentColor.inst.getTrackColorsSync(track)?.color;
+      if (_cardColor == null) {
+        Future.delayed(const Duration(milliseconds: 500)).then((_) => _extractColor(track));
+      }
+    }
   }
 
   @override

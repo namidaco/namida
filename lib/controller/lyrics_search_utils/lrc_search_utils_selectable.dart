@@ -47,12 +47,12 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
 
   @override
   List<LRCSearchDetails> searchDetailsQueries() {
-    final durS = trackExt.duration;
+    final durMS = trackExt.durationMS;
     return [
-      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: '', durationSeconds: durS),
-      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: trackExt.album, durationSeconds: durS),
-      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: '', durationSeconds: durS),
-      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: trackExt.album, durationSeconds: durS),
+      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: '', durationMS: durMS),
+      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: trackExt.album, durationMS: durMS),
+      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: '', durationMS: durMS),
+      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: trackExt.album, durationMS: durMS),
     ];
   }
 

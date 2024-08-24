@@ -15,7 +15,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> historyController;
-  final bool Function(MostPlayedTimeRange type) isTimeRangeChipEnabled;
+  final Rx<MostPlayedTimeRange> activeTimeRangeChip;
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
   final double? itemExtent;
   final Widget Function(Widget timeRangeChips, double bottomPadding) header;
@@ -25,7 +25,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   const MostPlayedItemsPage({
     super.key,
     required this.historyController,
-    required this.isTimeRangeChipEnabled,
+    required this.activeTimeRangeChip,
     required this.onSavingTimeRange,
     required this.itemExtent,
     required this.header,
@@ -48,8 +48,6 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     NamidaNavigator.inst.closeDialog();
   }
 
-  bool _isEnabled(MostPlayedTimeRange type) => isTimeRangeChipEnabled(type);
-
   Widget _getChipChild({
     required BuildContext context,
     DateRange? dateCustom,
@@ -60,38 +58,44 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
         ? null
         : "${dateCustom.oldest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.newest)} → ${dateCustom.newest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.oldest)}";
 
-    final textColor = _isEnabled(mptr) ? const Color.fromARGB(200, 255, 255, 255) : null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: TapDetector(
-        onTap: () => _onSelectingTimeRange(
-          dateCustom: dateCustom,
-          mptr: mptr,
-        ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            color: _isEnabled(mptr) ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
-            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          ),
-          child: Row(
-            children: [
-              Text(
-                dateText ?? mptr.toText(),
-                style: context.textTheme.displaySmall?.copyWith(
-                  color: textColor,
-                  fontSize: dateText == null ? null : 12.0,
-                  fontWeight: FontWeight.w600,
-                ),
+      child: ObxO(
+        rx: activeTimeRangeChip,
+        builder: (activeChip) {
+          final isActive = activeChip == mptr;
+          final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
+          return TapDetector(
+            onTap: () => _onSelectingTimeRange(
+              dateCustom: dateCustom,
+              mptr: mptr,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              decoration: BoxDecoration(
+                color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
+                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 2.0),
-                trailing(textColor)!,
-              ]
-            ],
-          ),
-        ),
+              child: Row(
+                children: [
+                  Text(
+                    dateText ?? mptr.toText(),
+                    style: context.textTheme.displaySmall?.copyWith(
+                      color: textColor,
+                      fontSize: dateText == null ? null : 12.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 2.0),
+                    trailing(textColor)!,
+                  ]
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -104,37 +108,40 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 8.0),
-          NamidaInkWell(
-            animationDurationMS: 200,
-            borderRadius: 6.0,
-            bgColor: context.theme.cardTheme.color,
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: _isEnabled(MostPlayedTimeRange.custom) ? Border.all(color: CurrentColor.inst.color) : null,
+          ObxO(
+            rx: activeTimeRangeChip,
+            builder: (activeChip) => NamidaInkWell(
+              animationDurationMS: 200,
+              borderRadius: 6.0,
+              bgColor: context.theme.cardTheme.color,
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                border: activeChip == MostPlayedTimeRange.custom ? Border.all(color: CurrentColor.inst.color) : null,
+              ),
+              child: Row(
+                children: [
+                  const Icon(Broken.calendar, size: 18.0),
+                  const SizedBox(width: 4.0),
+                  Text(
+                    lang.CUSTOM,
+                    style: context.textTheme.displayMedium,
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Icon(Broken.arrow_down_2, size: 14.0),
+                ],
+              ),
+              onTap: () {
+                showCalendarDialog(
+                  title: lang.CHOOSE,
+                  buttonText: lang.CONFIRM,
+                  useHistoryDates: true,
+                  onGenerate: (dates) => _onSelectingTimeRange(
+                    dateCustom: DateRange(oldest: dates.first, newest: dates.last),
+                    mptr: MostPlayedTimeRange.custom,
+                  ),
+                );
+              },
             ),
-            child: Row(
-              children: [
-                const Icon(Broken.calendar, size: 18.0),
-                const SizedBox(width: 4.0),
-                Text(
-                  lang.CUSTOM,
-                  style: context.textTheme.displayMedium,
-                ),
-                const SizedBox(width: 4.0),
-                const Icon(Broken.arrow_down_2, size: 14.0),
-              ],
-            ),
-            onTap: () {
-              showCalendarDialog(
-                title: lang.CHOOSE,
-                buttonText: lang.CONFIRM,
-                useHistoryDates: true,
-                onGenerate: (dates) => _onSelectingTimeRange(
-                  dateCustom: DateRange(oldest: dates.first, newest: dates.last),
-                  mptr: MostPlayedTimeRange.custom,
-                ),
-              );
-            },
           ),
           const SizedBox(width: 4.0),
           Expanded(
@@ -155,7 +162,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           iconSize: 14.0,
                           iconColor: textColor,
                           onPressed: () => _onSelectingTimeRange(
-                            mptr: _isEnabled(MostPlayedTimeRange.custom) ? MostPlayedTimeRange.allTime : null,
+                            mptr: activeTimeRangeChip.value == MostPlayedTimeRange.custom ? MostPlayedTimeRange.allTime : null,
                             dateCustom: DateRange.dummy(),
                           ),
                         ),

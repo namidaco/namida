@@ -113,6 +113,7 @@ enum LibraryTab {
   genres,
   playlists,
   folders,
+  foldersVideos,
   search,
   youtube,
 }
@@ -139,6 +140,7 @@ enum QueueSource {
   genre,
   playlist,
   folder,
+  folderVideos,
   search,
   queuePage,
   playerQueue,
@@ -191,6 +193,7 @@ enum RouteType {
   PAGE_genres,
   PAGE_playlists,
   PAGE_folders,
+  PAGE_folders_videos,
   PAGE_queue,
   PAGE_stats,
   PAGE_about,
@@ -248,6 +251,7 @@ enum MediaType {
 
   /// not used
   folder,
+  folderVideo,
 }
 
 enum VideoPlaybackSource {

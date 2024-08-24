@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 
+import 'package:just_audio/just_audio.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
+import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -204,24 +205,25 @@ class VideoController {
     _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.resolution}_${element.path}");
   }
 
-  Future<void> addVideoFileToCacheMap(String id, File file) async {
-    final mi = await NamidaFFMPEG.inst.extractMetadata(file.path);
+  NamidaVideo addLocalVideoFileInfoToCacheMap(String path, MediaInfo info, FileStat fileStats, {String? ytID}) {
     final nv = _getNVFromFFMPEGMap(
-      mediaInfo: mi,
-      ytID: id,
-      path: file.path,
-      stats: await file.stat(),
+      mediaInfo: info,
+      ytID: ytID,
+      path: path,
+      stats: fileStats,
     );
-    _videoCacheIDMap.addNoDuplicatesForce(id, nv);
+    _videoPathsMap[path] = nv;
+    _saveLocalVideosFile();
+    return nv;
   }
 
   bool doesVideoExistsInCache(String youtubeId) {
-    _videoCacheIDMap.remove('');
+    if (youtubeId.isEmpty) return false;
     return _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
   }
 
   List<NamidaVideo> getNVFromID(String youtubeId, {bool checkForFileIRT = true}) {
-    _videoCacheIDMap.remove('');
+    if (youtubeId.isEmpty) return [];
     return _videoCacheIDMap[youtubeId]?.where((element) => File(element.path).existsSync()).toList() ?? [];
   }
 
@@ -248,13 +250,29 @@ class VideoController {
     });
   }
 
-  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false}) async {
+  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, bool handleVideoPlayback = true}) async {
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = null;
     currentVideo.value = null;
     currentYTStreams.value = null;
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
+    if (track is Video) {
+      final info = _videoPathsMap[track.path];
+      final nv = info ??
+          NamidaVideo(
+              path: track.path,
+              height: 0,
+              width: 0,
+              sizeInBytes: File(track.path).sizeInBytesSync(),
+              frameratePrecise: 0,
+              creationTimeMS: File(track.path).statSync().creationDate.millisecondsSinceEpoch,
+              durationMS: 0,
+              bitrate: 0);
+      currentVideo.value = nv;
+      if (handleVideoPlayback) await Player.inst.setAudioOnlyPlayback(false);
+      return nv;
+    }
 
     final possibleVideos = await _getPossibleVideosFromTrack(track);
     currentPossibleLocalVideos.value = possibleVideos;
@@ -323,15 +341,15 @@ class VideoController {
       currentVideo.value = v;
       await Player.inst.setVideo(
         source: AudioVideoSource.file(v.path),
-        loopingAnimation: canLoopVideo(v, track.duration),
+        loopingAnimation: canLoopVideo(v, track.durationMS),
         isFile: true,
       );
     }
   }
 
   /// loop only if video duration is less than [p] of audio.
-  bool canLoopVideo(NamidaVideo video, int trackDurationInSeconds, {double p = 0.6}) {
-    return video.durationMS > 0 && trackDurationInSeconds > 0 && video.durationMS < (trackDurationInSeconds * 1000) * p;
+  bool canLoopVideo(NamidaVideo video, int trackDurationMS, {double p = 0.6}) {
+    return video.durationMS > 0 && trackDurationMS > 0 && video.durationMS < trackDurationMS * p;
   }
 
   Future<void> toggleVideoPlayback() async {
@@ -480,7 +498,7 @@ class VideoController {
 
   List<String> _getPossibleVideosPathsFromAudioFile(String path) {
     final possibleLocal = <String>[];
-    final trExt = path.toTrackExt();
+    final trExt = Track.explicit(path).toTrackExt();
 
     final valInSett = settings.localVideoMatchingType.value;
     final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
@@ -544,8 +562,6 @@ class VideoController {
       (e) => e.resolution,
       (e) => e.frameratePrecise,
     );
-
-    final videosFile = File(AppPaths.VIDEOS_LOCAL);
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
     for (final l in local) {
@@ -560,17 +576,8 @@ class VideoController {
               idOrFileNameWOExt: l.getFilenameWOExt,
               isExtracted: true,
             );
-            final stats = await File(l).stat();
-            final vid = _getNVFromFFMPEGMap(
-              path: l,
-              mediaInfo: v,
-              stats: stats,
-              ytID: null,
-            );
-            // -- saving extracted info before continuing.
-            _videoPathsMap[l] = vid;
-            videosFile.writeAsJson(_videoPathsMap.values.map((e) => e.toJson()).toList());
-            nv = vid;
+            final newVidInfo = addLocalVideoFileInfoToCacheMap(l, v, File(l).statSync());
+            nv = newVidInfo;
           }
         } catch (e) {
           printy(e, isError: true);
@@ -618,7 +625,8 @@ class VideoController {
 
     await Future.wait([
       fetchCachedVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
-      scanLocalVideos(fillPathsOnly: true, extractIfFileNotFound: false), // this will get paths only and disables extracting whole local videos on startup
+      scanLocalVideos(
+          fillPathsOnly: true, extractIfFileNotFound: false, readCachedLocalFile: true), // this will get paths only and disables extracting whole local videos on startup
     ]);
 
     if (Player.inst.videoPlayerInfo.value?.isInitialized != true) await updateCurrentVideo(Player.inst.currentTrack?.track);
@@ -629,12 +637,22 @@ class VideoController {
     bool forceReScan = false,
     bool extractIfFileNotFound = false,
     required bool fillPathsOnly,
+    bool readCachedLocalFile = false,
   }) async {
     if (fillPathsOnly) {
       localVideoExtractCurrent.value = 0;
       final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
       _allVideoPaths = videos;
       localVideoExtractCurrent.value = null;
+
+      if (readCachedLocalFile) {
+        final videosJson = await _videoLocalMapFileSaver._readFile();
+        videosJson?.loop((e) {
+          final nv = NamidaVideo.fromJson(e);
+          _videoPathsMap[nv.path] = nv;
+        });
+      }
+
       return;
     }
 
@@ -661,15 +679,11 @@ class VideoController {
     localVideoExtractCurrent.value = null;
   }
 
-  Future<bool> _saveCachedVideosFile() async {
-    final file = File(AppPaths.VIDEOS_CACHE);
-    final mapValuesTotal = <Map<String, dynamic>>[];
-    _videoCacheIDMap.values.toList().loop((e) {
-      mapValuesTotal.addAll(e.map((e) => e.toJson()));
-    });
-    final resultFile = await file.writeAsJson(mapValuesTotal);
-    return resultFile != null;
-  }
+  final _videoCacheIDMapFileSaver = _VideoControllerCacheVideosFileSaver._();
+  Future<void> _saveCachedVideosFile() => _videoCacheIDMapFileSaver._writeToStorage();
+
+  final _videoLocalMapFileSaver = _VideoControllerLocalVideosFileSaver._();
+  Future<void> _saveLocalVideosFile() => _videoLocalMapFileSaver._writeToStorage();
 
   /// - Loops the map sent, makes sure that everything exists & valid.
   /// - Detects: `deleted` & `needs-to-be-updated` files
@@ -912,4 +926,38 @@ extension _GlobalPaintBounds on BuildContext {
       return null;
     }
   }
+}
+
+class _VideoControllerCacheVideosFileSaver with SettingsFileWriter {
+  _VideoControllerCacheVideosFileSaver._();
+
+  @override
+  Object get jsonToWrite {
+    final mapValuesTotal = <Map<String, dynamic>>[];
+    for (final e in VideoController.inst._videoCacheIDMap.values) {
+      mapValuesTotal.addAll(e.map((e) => e.toJson()));
+    }
+    return mapValuesTotal;
+  }
+
+  Future<void> _writeToStorage() async => await writeToStorage();
+
+  @override
+  String get filePath => AppPaths.VIDEOS_CACHE;
+}
+
+class _VideoControllerLocalVideosFileSaver with SettingsFileWriter {
+  _VideoControllerLocalVideosFileSaver._();
+
+  @override
+  Object get jsonToWrite {
+    return VideoController.inst._videoPathsMap.values.map((e) => e.toJson()).toList();
+  }
+
+  Future<List?> _readFile() async => await prepareSettingsFile_() as List?;
+
+  Future<void> _writeToStorage() => writeToStorage();
+
+  @override
+  String get filePath => AppPaths.VIDEOS_LOCAL;
 }

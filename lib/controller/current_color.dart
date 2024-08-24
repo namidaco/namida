@@ -237,6 +237,47 @@ class CurrentColor {
     _namidaColorMiniplayer.value = null;
   }
 
+  bool _checkDummyColor(NamidaColor value) => value.palette.isEmpty || (value.palette.length == 1 && value.color == value.palette.first && value.color == value.palette.last);
+
+  NamidaColor _maybeDelightned(NamidaColor? nc, {required bool delightnedAndAlpha, required bool fallbackToPlayerStaticColor}) {
+    if (nc == null || _checkDummyColor(nc)) {
+      // the value is null or dummy color, fetching with current [playerStaticColor].
+      final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
+      return NamidaColor(
+        used: c.lighter,
+        mix: c.lighter,
+        palette: [c.lighter],
+      );
+    } else {
+      // the value is a normal color
+      return NamidaColor(
+        used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
+        mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
+        palette: nc.palette,
+      );
+    }
+  }
+
+  NamidaColor? getTrackColorsSync(
+    Track track, {
+    bool fallbackToPlayerStaticColor = true,
+    bool delightnedAndAlpha = true,
+    bool useIsolate = _defaultUseIsolate,
+  }) {
+    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+
+    final valInMap = _colorsMap[filename];
+
+    if (valInMap != null) {
+      return _maybeDelightned(
+        valInMap,
+        delightnedAndAlpha: delightnedAndAlpha,
+        fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+      );
+    }
+    return null;
+  }
+
   Future<NamidaColor> getTrackColors(
     Track track, {
     bool fallbackToPlayerStaticColor = true,
@@ -244,32 +285,9 @@ class CurrentColor {
     bool useIsolate = _defaultUseIsolate,
     bool forceReCheck = false,
   }) async {
-    bool checkDummyColor(NamidaColor value) => value.palette.isEmpty || (value.palette.length == 1 && value.color == value.palette.first && value.color == value.palette.last);
-
-    NamidaColor maybeDelightned(NamidaColor? nc) {
-      if (nc == null || checkDummyColor(nc)) {
-        // the value is null or dummy color, fetching with current [playerStaticColor].
-        final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
-        return NamidaColor(
-          used: c.lighter,
-          mix: c.lighter,
-          palette: [c.lighter],
-        );
-      } else {
-        // the value is a normal color
-        return NamidaColor(
-          used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
-          mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
-          palette: nc.palette,
-        );
-      }
-    }
-
-    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
-
-    final valInMap = _colorsMap[filename];
-    if (!forceReCheck && valInMap != null) {
-      return maybeDelightned(valInMap);
+    if (!forceReCheck) {
+      final cached = getTrackColorsSync(track);
+      if (cached != null) return cached;
     }
 
     NamidaColor? nc = await extractPaletteFromImage(
@@ -278,7 +296,13 @@ class CurrentColor {
       useIsolate: useIsolate,
     );
 
-    final finalnc = maybeDelightned(nc);
+    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+
+    final finalnc = _maybeDelightned(
+      nc,
+      delightnedAndAlpha: delightnedAndAlpha,
+      fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+    );
     _updateInColorMap(filename, finalnc);
     return finalnc;
   }

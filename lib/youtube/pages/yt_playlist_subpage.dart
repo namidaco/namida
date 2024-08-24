@@ -60,7 +60,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
       itemExtent: Dimensions.youtubeCardItemExtent,
       historyController: YoutubeHistoryController.inst,
       customDateRange: settings.ytMostPlayedCustomDateRange,
-      isTimeRangeChipEnabled: (type) => type == settings.ytMostPlayedTimeRange.value,
+      activeTimeRangeChip: settings.ytMostPlayedTimeRange,
       onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
         settings.save(
           ytMostPlayedTimeRange: mptr,

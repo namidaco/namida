@@ -161,7 +161,7 @@ class JsonToHistoryParser {
     }
 
     Track getDummyTrack(_MissingListenEntry missingListen) {
-      return Track('namida_dummy/${missingListen.source.name}/${missingListen.artistOrChannel} - ${missingListen.title}');
+      return Track.explicit('namida_dummy/${missingListen.source.name}/${missingListen.artistOrChannel} - ${missingListen.title}');
     }
 
     void confirmAddAsDummy({required String confirmMessage, required Future<void> Function() onConfirm}) {
@@ -468,7 +468,7 @@ class JsonToHistoryParser {
     final portLoadingProgress = ReceivePort();
 
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.value.values
+      'tracks': Indexer.inst.allTracksMappedByPath.values
           .map((e) => {
                 'title': e.title,
                 'album': e.album,
@@ -476,6 +476,7 @@ class JsonToHistoryParser {
                 'path': e.path,
                 'filename': e.filename,
                 'comment': e.comment,
+                'v': e.isVideo,
               })
           .toList(),
       'file': file,
@@ -598,7 +599,7 @@ class JsonToHistoryParser {
         String? videoId = NamidaLinkUtils.extractYoutubeId(trMap['comment'] as String);
         videoId ??= NamidaLinkUtils.extractYoutubeId(trMap['filename'] as String);
         if (videoId != null && videoId.isNotEmpty) {
-          tracksIdsMap!.addForce(videoId, Track(trMap['path']));
+          tracksIdsMap!.addForce(videoId, Track.decide(trMap['path'], trMap['v']));
         }
       });
     }
@@ -786,7 +787,7 @@ class JsonToHistoryParser {
             (vh.title.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison) ||
                 vh.channel.cleanUpForComparison.contains(album.cleanUpForComparison) ||
                 vh.channel.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison));
-      }).map((e) => Track(e['path'] ?? ''));
+      }).map((e) => Track.decide(e['path'] ?? '', e['v']));
     }
 
     final tracksToAdd = <TrackWithDate>[];
@@ -837,11 +838,12 @@ class JsonToHistoryParser {
     final portLoadingProgress = ReceivePort();
 
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.value.values
+      'tracks': Indexer.inst.allTracksMappedByPath.values
           .map((e) => {
                 'title': e.title,
                 'artist': e.originalArtist,
                 'path': e.path,
+                'v': e.isVideo,
               })
           .toList(),
       'oldestDay': oldestDate?.toDaysSince1970(),
@@ -985,7 +987,7 @@ class JsonToHistoryParser {
           for (final trMap in tracks) {
             final tr = TrackWithDate(
               dateAdded: date,
-              track: Track(trMap['path'] ?? ''),
+              track: Track.decide(trMap['path'] ?? '', trMap['v']),
               source: TrackSource.lastfm,
             );
             final day = tr.dateTimeAdded.toDaysSince1970();

@@ -506,7 +506,7 @@ const kDefaultLang = NamidaLanguage(
   country: "United States",
 );
 
-const kDummyTrack = Track('');
+const kDummyTrack = Track.explicit('');
 const kDummyExtendedTrack = TrackExtended(
   title: "",
   originalArtist: "",
@@ -519,7 +519,7 @@ const kDummyExtendedTrack = TrackExtended(
   moodList: [],
   composer: "",
   trackNo: 0,
-  duration: 0,
+  durationMS: 0,
   year: 0,
   size: 0,
   dateAdded: 0,
@@ -537,6 +537,7 @@ const kDummyExtendedTrack = TrackExtended(
   rating: 0.0,
   originalTags: null,
   tagsList: [],
+  isVideo: false,
 );
 
 /// Unknown Tag Fields
@@ -556,3 +557,47 @@ const kThemeAnimationDurationMS = 250;
 
 const kMaximumSleepTimerTracks = 40;
 const kMaximumSleepTimerMins = 180;
+
+extension PathTypeUtils on String {
+  bool isVideo() {
+    bool isVideo;
+    var ext = splitLast('.');
+    switch (ext) {
+      case 'mp4':
+      case 'mkv':
+      case 'avi':
+      case 'wmv':
+      case 'flv':
+      case 'mov':
+      case '3gp':
+      case 'ogv':
+      case 'webm':
+      case 'mpg':
+      case 'mpeg':
+      case 'm4v':
+      case 'ts':
+      case 'vob':
+      case 'asf':
+      case 'rm':
+      case 'swf':
+      case 'f4v':
+      case 'divx':
+      case 'm2ts':
+      case 'mts':
+      case 'mpv':
+      case 'mp2':
+      case 'mpe':
+      case 'mpa':
+      case 'mxf':
+      case 'm2v':
+      case 'mpeg1':
+      case 'mpeg2':
+      case 'mpeg4':
+        isVideo = true;
+
+      default:
+        isVideo = false;
+    }
+    return isVideo;
+  }
+}

@@ -207,7 +207,7 @@ class NamidaDialogs {
         tracks.displayTrackKeyword,
         tracks.totalDurationFormatted,
       ].join(' • '),
-      QueueSource.folder,
+      folder is VideoFolder ? QueueSource.folderVideos : QueueSource.folder,
       thirdLineText: tracks.totalSizeFormatted,
       trailingIcon: recursiveTracks ? Broken.cards : Broken.card,
     );

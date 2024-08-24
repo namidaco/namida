@@ -197,7 +197,7 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
               itemExtent: Dimensions.inst.trackTileItemExtent,
               historyController: HistoryController.inst,
               customDateRange: settings.mostPlayedCustomDateRange,
-              isTimeRangeChipEnabled: (type) => type == settings.mostPlayedTimeRange.value,
+              activeTimeRangeChip: settings.mostPlayedTimeRange,
               onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
                 settings.save(
                   mostPlayedTimeRange: mptr,

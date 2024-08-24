@@ -8,6 +8,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -35,7 +36,8 @@ class SearchSortController {
       composerSearchTemp.isNotEmpty ||
       genreSearchTemp.isNotEmpty ||
       playlistSearchTemp.isNotEmpty ||
-      folderSearchTemp.isNotEmpty);
+      folderSearchTemp.isNotEmpty ||
+      folderVideosSearchTemp.isNotEmpty);
 
   final RxList<Track> trackSearchList = <Track>[].obs;
   final RxList<String> playlistSearchList = <String>[].obs;
@@ -57,6 +59,7 @@ class SearchSortController {
     MediaType.composer: <String>[].obs,
     MediaType.genre: <String>[].obs,
     MediaType.folder: <String>[].obs,
+    MediaType.folderVideo: <String>[].obs,
   };
 
   var trackSearchTemp = <Track>[].obs;
@@ -67,10 +70,15 @@ class SearchSortController {
   RxList<String> get composerSearchTemp => _searchMapTemp[MediaType.composer]!;
   RxList<String> get genreSearchTemp => _searchMapTemp[MediaType.genre]!;
   RxList<String> get folderSearchTemp => _searchMapTemp[MediaType.folder]!;
+  RxList<String> get folderVideosSearchTemp => _searchMapTemp[MediaType.folderVideo]!;
 
   RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
   Map<String, List<Track>> get mainMapFolder {
     return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path.getDirectoryName, value));
+  }
+
+  Map<String, List<Video>> get mainMapFolderVideos {
+    return Indexer.inst.mainMapFoldersVideos.map((key, value) => MapEntry(key.path.getDirectoryName, value));
   }
 
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
@@ -136,7 +144,7 @@ class SearchSortController {
     SortType.trackNo: (e) => e.trackNo,
     SortType.discNo: (e) => e.discNo,
     SortType.filename: (e) => e.filename.toLowerCase(),
-    SortType.duration: (e) => e.duration,
+    SortType.duration: (e) => e.durationMS,
     SortType.sampleRate: (e) => e.sampleRate,
     SortType.size: (e) => e.size,
     SortType.rating: (e) => e.effectiveRating,
@@ -177,6 +185,10 @@ class SearchSortController {
       if (enabledSearches[MediaType.genre] ?? false) _prepareMediaPorts(mainMapGenres, MediaType.genre) else SearchPortsProvider.inst.closePorts(MediaType.genre),
       if (enabledSearches[MediaType.playlist] ?? false) _preparePlaylistPorts() else SearchPortsProvider.inst.closePorts(MediaType.playlist),
       if (enabledSearches[MediaType.folder] ?? false) _prepareMediaPorts(mainMapFolder.keys, MediaType.folder) else SearchPortsProvider.inst.closePorts(MediaType.folder),
+      if (enabledSearches[MediaType.folderVideo] ?? false)
+        _prepareMediaPorts(mainMapFolderVideos.keys, MediaType.folderVideo)
+      else
+        SearchPortsProvider.inst.closePorts(MediaType.folderVideo),
     ]);
   }
 
@@ -211,7 +223,7 @@ class SearchSortController {
 
   Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort, {bool sendPrepared = false}) {
     final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.value.values
+      'tracks': Indexer.inst.allTracksMappedByPath.values
           .map((e) => {
                 'title': e.title,
                 'artist': e.originalArtist,
@@ -222,6 +234,7 @@ class SearchSortController {
                 'year': e.year,
                 'comment': e.comment,
                 'path': e.path,
+                'v': e.isVideo,
               })
           .toList(),
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
@@ -288,7 +301,7 @@ class SearchSortController {
         final params = {
           'keys': keysList.toList(),
           'cleanup': _shouldCleanup,
-          'keyIsPath': type == MediaType.folder,
+          'keyIsPath': type == MediaType.folder || type == MediaType.folderVideo,
           'sendPort': itemsSendPort,
         };
 
@@ -356,6 +369,7 @@ class SearchSortController {
       Iterable<String> splitComposer,
       Iterable<String> splitComment,
       String year,
+      bool isVideo,
     })>[];
     for (final trMap in tracks) {
       final path = trMap['path'] as String;
@@ -382,6 +396,7 @@ class SearchSortController {
           splitComposer: splitThis(trMap['composer'], scomposer),
           splitComment: splitThis(trMap['comment'], scomment),
           year: textCleanedForSearch(trMap['year'].toString()),
+          isVideo: trMap['v'] == true,
         ),
       );
     }
@@ -419,7 +434,7 @@ class SearchSortController {
             (scomposer && isMatch(trExt.splitComposer)) ||
             (scomment && isMatch(trExt.splitComment)) ||
             (syear && trExt.year.contains(lctext))) {
-          result.add(Track(trExt.path));
+          result.add(Track.decide(trExt.path, trExt.isVideo));
         }
       });
 
@@ -443,6 +458,8 @@ class SearchSortController {
         keys = Indexer.inst.mainMapGenres.value.keys;
       case MediaType.folder:
         keys = mainMapFolder.keys;
+      case MediaType.folderVideo:
+        keys = mainMapFolderVideos.keys;
       default:
         null;
     }
@@ -705,7 +722,7 @@ class SearchSortController {
         sortThis((e) => e.filename.toLowerCase());
         break;
       case SortType.duration:
-        sortThis((e) => e.duration);
+        sortThis((e) => e.durationMS);
         break;
       case SortType.sampleRate:
         sortThis((e) => e.sampleRate);
@@ -764,7 +781,7 @@ class SearchSortController {
         sortThis((e) => e.value.first.dateModified);
         break;
       case GroupSortType.duration:
-        sortThis((e) => e.value.totalDurationInS);
+        sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
@@ -835,7 +852,7 @@ class SearchSortController {
         sortThis((e) => e.value[0].dateModified);
         break;
       case GroupSortType.duration:
-        sortThis((e) => e.value.totalDurationInS);
+        sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
@@ -885,7 +902,7 @@ class SearchSortController {
         sortThis((e) => e.value[0].dateModified);
         break;
       case GroupSortType.duration:
-        sortThis((e) => e.value.totalDurationInS);
+        sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
         sortThis((e) => e.value.length);
@@ -922,7 +939,7 @@ class SearchSortController {
         sortThis((p) => p.value.modifiedDate);
         break;
       case GroupSortType.duration:
-        sortThis((p) => p.value.tracks.totalDurationInS);
+        sortThis((p) => p.value.tracks.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
         sortThis((p) => p.value.tracks.length);

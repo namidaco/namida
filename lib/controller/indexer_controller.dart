@@ -30,12 +30,13 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-class Indexer {
+class Indexer<T extends Track> {
   static Indexer get inst => _instance;
   static final Indexer _instance = Indexer._internal();
   Indexer._internal();
 
   bool get _defaultUseMediaStore => settings.useMediaStore.value;
+  bool get _includeVideosAsTracks => true; // TODO: settings.includeVideosAsTracks.value
 
   final isIndexing = false.obs;
 
@@ -56,25 +57,37 @@ class Indexer {
   final mainMapAlbumArtists = LibraryItemMap();
   final mainMapComposer = LibraryItemMap();
   final mainMapGenres = LibraryItemMap();
-  final mainMapFolders = <Folder, List<Track>>{}.obs;
+  final mainMapFolders = <Folder, List<T>>{}.obs;
+  final mainMapFoldersVideos = <VideoFolder, List<Video>>{}.obs;
 
-  final RxList<Track> tracksInfoList = <Track>[].obs;
+  final RxList<T> tracksInfoList = <T>[].obs;
 
   /// tracks map used for lookup
-  final allTracksMappedByPath = <Track, TrackExtended>{}.obs;
+  var allTracksMappedByPath = <String, TrackExtended>{};
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
   var allFolderCovers = <String, String>{}; // {directoryPath, imagePath}
-  var allTracksMappedByYTID = <String, List<Track>>{};
+  var allTracksMappedByYTID = <String, List<T>>{};
 
   /// Used to prevent duplicated track (by filename).
   final Map<String, bool> _currentFileNamesMap = {};
 
   late final _audioQuery = OnAudioQuery();
 
-  List<Track> get recentlyAddedTracks {
-    final alltracks = List<Track>.from(tracksInfoList.value);
-    alltracks.sortByReverseAlt((e) => e.dateModified, (e) => e.dateAdded);
+  List<T> recentlyAddedTracksSorted() {
+    final alltracks = <T>[];
+    tracksInfoList.value.loop(
+      (item) {
+        alltracks.insertWithOrder(
+          item,
+          (a, b) {
+            var result = b.dateModified.compareTo(a.dateModified);
+            if (result == 0) result = b.dateAdded.compareTo(a.dateAdded);
+            return result;
+          },
+        );
+      },
+    );
     return alltracks;
   }
 
@@ -123,7 +136,7 @@ class Indexer {
           _artworksMapFullRes[imagePath] = Completer<void>();
           // -- try extracting full res using taggers
           File? file;
-          final res = await FAudioTaggerController.inst.extractMetadata(trackPath: info.$1.path);
+          final res = await FAudioTaggerController.inst.extractMetadata(trackPath: info.$1.path, isVideo: info.$1 is Video);
           file = res.tags.artwork.file;
           if (file == null) {
             artwork = await _audioQuery.queryArtwork(
@@ -213,6 +226,7 @@ class Indexer {
     this.mainMapComposer.clear();
     this.mainMapGenres.clear();
     this.mainMapFolders.clear();
+    this.mainMapFoldersVideos.clear();
 
     final mainMapAlbums = this.mainMapAlbums.value;
     final mainMapArtists = this.mainMapArtists.value;
@@ -220,6 +234,7 @@ class Indexer {
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
     final mainMapFolders = this.mainMapFolders.value;
+    final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
 
     // --- Sorting All Sublists ---
     tracksInfoList.loop((tr) {
@@ -245,7 +260,7 @@ class Indexer {
       });
 
       // -- Assigning Folders
-      mainMapFolders.addForce(tr.folder, tr);
+      tr is Video ? mainMapFoldersVideos.addForce(tr.folder, tr) : mainMapFolders.addForce(tr.folder, tr);
     });
 
     this.mainMapAlbums.refresh();
@@ -254,8 +269,10 @@ class Indexer {
     this.mainMapComposer.refresh();
     this.mainMapGenres.refresh();
     this.mainMapFolders.refresh();
+    this.mainMapFoldersVideos.refresh();
 
-    Folders.inst.onMapChanged(mainMapFolders);
+    Folders.tracks.onMapChanged(mainMapFolders);
+    Folders.videos.onMapChanged(mainMapFoldersVideos);
     _sortAll();
     sortMediaTracksSubLists(MediaType.values);
   }
@@ -263,7 +280,7 @@ class Indexer {
   void sortMediaTracksSubLists(List<MediaType> medias) {
     medias.loop((e) {
       final sorters = SearchSortController.inst.getMediaTracksSortingComparables(e);
-      void sortPls(Iterable<List<Track>> trs, MediaType type) {
+      void sortPls<Tr extends Track>(Iterable<List<Tr>> trs, MediaType type) {
         final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
         if (reverse) {
           for (final e in trs) {
@@ -301,6 +318,10 @@ class Indexer {
           sortPls(mainMapFolders.values, MediaType.folder);
           mainMapFolders.refresh();
           break;
+        case MediaType.folderVideo:
+          sortPls(mainMapFoldersVideos.values, MediaType.folderVideo);
+          mainMapFoldersVideos.refresh();
+          break;
         default:
           null;
       }
@@ -333,18 +354,19 @@ class Indexer {
     trExt.genresList.loop((genre) {
       mainMapGenres.value[genre]?.remove(tr);
     });
-    mainMapFolders[tr.folder]?.remove(tr);
+    tr is Video ? mainMapFoldersVideos[tr.folder]?.remove(tr) : mainMapFolders[tr.folder]?.remove(tr);
 
     _currentFileNamesMap.remove(tr.filename);
   }
 
-  void _addTheseTracksToAlbumGenreArtistEtc(List<Track> tracks) {
+  void _addTheseTracksToAlbumGenreArtistEtc(List<T> tracks) {
     final mainMapAlbums = this.mainMapAlbums.value;
     final mainMapArtists = this.mainMapArtists.value;
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
     final mainMapFolders = this.mainMapFolders.value;
+    final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
 
     final List<String> addedAlbums = [];
     final List<String> addedArtists = [];
@@ -352,6 +374,7 @@ class Indexer {
     final List<String> addedComposers = [];
     final List<String> addedGenres = [];
     final List<Folder> addedFolders = [];
+    final List<Folder> addedFoldersVideos = [];
 
     tracks.loop((tr) {
       final trExt = tr.toTrackExt();
@@ -372,7 +395,7 @@ class Indexer {
       });
 
       // -- Assigning Folders
-      mainMapFolders.addNoDuplicatesForce(tr.folder, tr);
+      tr is Video ? mainMapFoldersVideos.addNoDuplicatesForce(tr.folder, tr) : mainMapFolders.addNoDuplicatesForce(tr.folder, tr);
 
       // --- Adding media that was affected
       addedAlbums.add(trExt.albumIdentifier);
@@ -380,13 +403,14 @@ class Indexer {
       addedAlbumArtists.add(trExt.albumArtist);
       addedComposers.add(trExt.composer);
       addedGenres.addAll(trExt.artistsList);
-      addedFolders.add(tr.folder);
+      tr is Video ? addedFoldersVideos.add(tr.folder) : addedFolders.add(tr.folder);
     });
 
     final albumSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.album);
     final artistSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist);
     final genreSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.genre);
     final folderSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder);
+    final folderVideosSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folderVideo);
 
     void cleanyLoopy<T, E>(MediaType type, List<E> added, Map<E, List<T>> map, List<Comparable<dynamic> Function(T tr)> sorters) {
       if (added.isEmpty) return;
@@ -407,8 +431,10 @@ class Indexer {
     cleanyLoopy(MediaType.composer, addedComposers, mainMapComposer, artistSorters);
     cleanyLoopy(MediaType.genre, addedGenres, mainMapGenres, genreSorters);
     cleanyLoopy(MediaType.folder, addedFolders, mainMapFolders, folderSorters);
+    cleanyLoopy(MediaType.folderVideo, addedFoldersVideos, mainMapFoldersVideos, folderVideosSorters);
 
-    Folders.inst.onMapChanged(mainMapFolders);
+    Folders.tracks.onMapChanged(mainMapFolders);
+    Folders.videos.onMapChanged(mainMapFoldersVideos);
     _sortAll();
   }
 
@@ -450,7 +476,7 @@ class Indexer {
         originalMood: UnknownTags.MOOD,
         moodList: [UnknownTags.MOOD],
         trackNo: 0,
-        duration: 0,
+        durationMS: 0,
         year: 0,
         size: fileStat?.size ?? 0,
         dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
@@ -468,10 +494,11 @@ class Indexer {
         rating: 0.0,
         originalTags: null,
         tagsList: [],
+        isVideo: trackPath.isVideo(),
       );
       if (!trackInfo.hasError) {
-        int durationInSeconds = trackInfo.length ?? 0;
-        if (minDur != 0 && durationInSeconds != 0 && durationInSeconds < minDur) {
+        int durationInMS = trackInfo.durationMS ?? 0;
+        if (minDur != 0 && durationInMS != 0 && durationInMS < minDur * 1000) {
           return onMinDurTrigger();
         }
 
@@ -520,7 +547,7 @@ class Indexer {
           moodList: moods,
           composer: doMagic(tags.composer),
           trackNo: trackInfo.tags.trackNumber.getIntValue(),
-          duration: durationInSeconds,
+          durationMS: durationInMS,
           year: TrackExtended.enforceYearFormat(tags.year),
           comment: tags.comment,
           bitrate: trackInfo.bitRate,
@@ -566,7 +593,7 @@ class Indexer {
     }
   }
 
-  Future<TrackExtended?> extractTrackInfo({
+  Future<TrackExtended?> getTrackInfo({
     required String trackPath,
     int minDur = 0,
     int minSize = 0,
@@ -579,6 +606,7 @@ class Indexer {
     final res = await FAudioTaggerController.inst.extractMetadata(
       trackPath: trackPath,
       overrideArtwork: deleteOldArtwork,
+      isVideo: trackPath.isVideo(),
     );
     if (res.hasError) return null;
     return _convertTagToTrack(
@@ -593,43 +621,9 @@ class Indexer {
     );
   }
 
-  Future<void> extractTracksInfo({
-    required List<String> tracksPath,
-    int minDur = 0,
-    int minSize = 0,
-    required TrackExtended? Function() onMinDurTrigger,
-    required TrackExtended? Function() onMinSizeTrigger,
-    bool deleteOldArtwork = false,
-    bool checkForDuplicates = true,
-    bool tryExtractingFromFilename = true,
-  }) async {
-    final splittersConfigs = _createSplitConfig();
-    TrackExtended? extractFunction(FAudioModel item) => _convertTagToTrack(
-          trackPath: item.tags.path,
-          trackInfo: item,
-          tryExtractingFromFilename: tryExtractingFromFilename,
-          minDur: minDur,
-          minSize: minSize,
-          onMinDurTrigger: onMinDurTrigger,
-          onMinSizeTrigger: onMinSizeTrigger,
-          onError: (_) => null,
-          splittersConfigs: splittersConfigs,
-        );
-
-    final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
-      paths: tracksPath,
-      overrideArtwork: deleteOldArtwork,
-    );
-
-    await for (final item in stream) {
-      final trext = extractFunction(item);
-      if (trext != null) _addTrackToLists(trext, checkForDuplicates, item.tags.artwork);
-    }
-  }
-
   void _addTrackToLists(TrackExtended trackExt, bool checkForDuplicates, FArtwork? artwork) {
-    final tr = trackExt.toTrack();
-    allTracksMappedByPath[tr] = trackExt;
+    final tr = trackExt.asTrack() as T;
+    allTracksMappedByPath[tr.path] = trackExt;
     allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
     _currentFileNamesMap[trackExt.path.getFilename] = true;
     if (checkForDuplicates) {
@@ -639,6 +633,7 @@ class Indexer {
       tracksInfoList.add(tr);
       SearchSortController.inst.trackSearchList.add(tr);
     }
+
     if (artwork != null && artwork.hasArtwork) {
       artworksInStorage.value++;
       if (artwork.size != null) artworksSizeInStorage.value += artwork.size!;
@@ -664,21 +659,22 @@ class Indexer {
     );
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
-    Folders.inst.currentFolder.refresh();
+    Folders.tracks.currentFolder.refresh();
+    Folders.videos.currentFolder.refresh();
     await _saveTrackFileToStorage();
     recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
   }
 
   Future<void> reindexTracks({
-    required List<Track> tracks,
+    required List<T> tracks,
     bool updateArtwork = false,
     required void Function(bool didExtract) onProgress,
     required void Function(int tracksLength) onFinish,
     bool tryExtractingFromFilename = true,
   }) async {
-    final tracksReal = <Track>[];
+    final tracksReal = <T>[];
     final tracksRealPaths = <String>[];
-    final tracksMissing = <Track>[];
+    final tracksMissing = <T>[];
     tracks.loop((tr) {
       bool exists = false;
       try {
@@ -719,7 +715,7 @@ class Indexer {
       if (item.hasError) {
         onProgress(false);
       } else {
-        final tr = Track(path);
+        final tr = Track.orVideo(path);
         allTracksMappedByYTID.remove(tr.youtubeID);
         _currentFileNamesMap.remove(path.getFilename);
         _removeThisTrackFromAlbumGenreArtistEtc(tr);
@@ -728,10 +724,9 @@ class Indexer {
       }
     }
 
-    final finalTrack = <Track>[];
+    final finalTrack = <T>[];
     tracksReal.loop((p) {
-      final tr = p.path.toTrackOrNull();
-      if (tr != null) finalTrack.add(tr);
+      if (p.hasInfoInLibrary()) finalTrack.add(p);
     });
     _addTheseTracksToAlbumGenreArtistEtc(finalTrack);
     Player.inst.refreshNotification();
@@ -740,13 +735,13 @@ class Indexer {
   }
 
   Future<void> updateTrackMetadata({
-    required Map<Track, TrackExtended> tracksMap,
-    String newArtworkPath = '',
+    required Map<T, TrackExtended> tracksMap,
+    bool artworkWasEdited = true,
   }) async {
-    final oldTracks = <Track>[];
-    final newTracks = <Track>[];
+    final oldTracks = <T>[];
+    final newTracks = <T>[];
 
-    if (newArtworkPath != '') {
+    if (artworkWasEdited) {
       imageCache.clear();
       imageCache.clearLiveImages();
       AudioService.evictArtworkCache();
@@ -754,21 +749,16 @@ class Indexer {
 
     for (final e in tracksMap.entries) {
       final ot = e.key;
-      final nt = e.value.toTrack();
+      final nt = e.value.asTrack() as T;
       oldTracks.add(ot);
       newTracks.add(nt);
-      allTracksMappedByPath[ot] = e.value;
+      allTracksMappedByPath[ot.path] = e.value;
       allTracksMappedByYTID.addForce(e.value.youtubeID, ot);
       _currentFileNamesMap.remove(ot.filename);
       _currentFileNamesMap[nt.filename] = true;
 
-      if (newArtworkPath != '') {
-        // await extractTracksArtworks(
-        //   [ot.path],
-        //   forceReExtract: true,
-        //   artworkPaths: {ot.path: newArtworkPath},
-        //   albumIdendifiers: {ot.path: e.value.albumIdentifier},
-        // );
+      if (artworkWasEdited) {
+        // artwork extraction is not our business
         CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
     }
@@ -777,16 +767,16 @@ class Indexer {
     await _sortAndSaveTracks();
   }
 
-  Future<List<Track>> convertPathToTrack(Iterable<String> tracksPathPre) async {
-    final List<Track> finalTracks = <Track>[];
+  Future<List<T>> convertPathsToTracksAndAddToLists(Iterable<String> tracksPathPre) async {
+    final finalTracks = <T>[];
     final tracksToExtract = <String>[];
 
     final orderLookup = <String, int>{};
     int index = 0;
     for (final path in tracksPathPre) {
-      final trInLib = path.toTrackOrNull();
-      if (trInLib != null) {
-        finalTracks.add(trInLib);
+      final infoInLib = allTracksMappedByPath[path];
+      if (infoInLib != null) {
+        finalTracks.add(infoInLib.asTrack() as T);
       } else {
         tracksToExtract.add(path);
       }
@@ -794,7 +784,13 @@ class Indexer {
       index++;
     }
 
+    bool saveToFile = false;
+
     if (tracksToExtract.isNotEmpty) {
+      saveToFile = true;
+
+      final splitConfig = _createSplitConfig();
+
       TrackExtended? extractFunction(FAudioModel item) => _convertTagToTrack(
             trackPath: item.tags.path,
             trackInfo: item,
@@ -802,18 +798,21 @@ class Indexer {
             onMinDurTrigger: () => null,
             onMinSizeTrigger: () => null,
             onError: (_) => null,
+            splittersConfigs: splitConfig,
           );
 
       final stream = await FAudioTaggerController.inst.extractMetadataAsStream(paths: tracksToExtract);
       await for (final item in stream) {
-        finalTracks.add(Track(item.tags.path));
+        final p = item.tags.path;
+        final obj = Track.orVideo(p);
+        finalTracks.add(obj as T);
         final trext = extractFunction(item);
         if (trext != null) _addTrackToLists(trext, true, item.tags.artwork);
       }
     }
 
     _addTheseTracksToAlbumGenreArtistEtc(finalTracks);
-    await _sortAndSaveTracks();
+    if (saveToFile) await _sortAndSaveTracks();
 
     finalTracks.sortBy((e) => orderLookup[e.path] ?? 0);
     return finalTracks;
@@ -895,37 +894,52 @@ class Indexer {
       }
 
       final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
-      final listParts = (Platform.numberOfProcessors ~/ 2).withMinimum(1);
+      final listParts = (Platform.numberOfProcessors ~/ 2.5).withMinimum(1);
       final audioFilesParts = finalAudios.split(listParts);
       final audioFilesCompleters = List.generate(audioFilesParts.length, (_) => Completer<void>());
 
-      Future<void> extractFunction(List<String> chunkList) async {
+      Future<void> extractAll(List<String> chunkList) async {
         if (chunkList.isEmpty) return;
-        await extractTracksInfo(
-          tracksPath: chunkList,
-          minDur: minDur,
-          minSize: minSize,
-          onMinDurTrigger: () {
-            filteredForSizeDurationTracks.value++;
-            return null;
-          },
-          onMinSizeTrigger: () {
-            filteredForSizeDurationTracks.value++;
-            return null;
-          },
-          checkForDuplicates: false,
+
+        final splittersConfigs = _createSplitConfig();
+        TrackExtended? extractFunction(FAudioModel item) => _convertTagToTrack(
+              trackPath: item.tags.path,
+              trackInfo: item,
+              tryExtractingFromFilename: true,
+              minDur: minDur,
+              minSize: minSize,
+              onMinDurTrigger: () {
+                filteredForSizeDurationTracks.value++;
+                return null;
+              },
+              onMinSizeTrigger: () {
+                filteredForSizeDurationTracks.value++;
+                return null;
+              },
+              onError: (_) => null,
+              splittersConfigs: splittersConfigs,
+            );
+
+        final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
+          paths: chunkList,
+          overrideArtwork: false,
         );
+
+        await for (final item in stream) {
+          final trext = extractFunction(item);
+          if (trext != null) _addTrackToLists(trext, false, item.tags.artwork);
+        }
       }
 
       audioFilesParts.loopAdv((part, partIndex) {
-        extractFunction(part).then((value) => audioFilesCompleters[partIndex].complete());
+        extractAll(part).then((value) => audioFilesCompleters[partIndex].complete());
       });
       await Future.wait(audioFilesCompleters.map((e) => e.future).toList());
     }
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
-    tracksInfoList.removeWhere((tr) => (tr.duration != 0 && tr.duration < minDur) || tr.size < minSize);
+    tracksInfoList.removeWhere((tr) => (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize);
 
     /// removes duplicated tracks after a refresh
     if (prevDuplicated) {
@@ -940,13 +954,19 @@ class Indexer {
 
   Future<void> _saveTrackFileToStorage() async {
     TrackTileManager.onTrackItemPropChange();
-    await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.value.map((key) => allTracksMappedByPath[key]?.toJson()).toList());
+    await File(AppPaths.TRACKS).writeAsJson(tracksInfoList.value.map((tr) => allTracksMappedByPath[tr.path]?.toJson()).toList());
   }
 
-  Future<void> updateTrackDuration(Track track, Duration? dur) async {
-    final durInSeconds = dur?.inSeconds ?? 0;
-    if (durInSeconds > 0 && track.duration != durInSeconds) {
-      track.duration = durInSeconds;
+  Future<void> updateTrackDuration(Track track, Duration dur) async {
+    final durInMS = dur.inMilliseconds;
+    if (durInMS > 0 && track.durationMS != durInMS) {
+      final trx = allTracksMappedByPath[track.path];
+      if (trx != null) {
+        allTracksMappedByPath[track.path] = trx.copyWith(durationMS: durInMS);
+        tracksInfoList.refresh();
+        SearchSortController.inst.trackSearchList.refresh();
+        SearchSortController.inst.trackSearchTemp.refresh();
+      }
       await _saveTrackFileToStorage();
     }
   }
@@ -983,7 +1003,13 @@ class Indexer {
     final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
     final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
     lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
-    final newStats = TrackStats(track, rating.clamp(0, 100), tags, moods, lastPositionInMs);
+    final newStats = TrackStats(
+      track: track,
+      rating: rating.clamp(0, 100),
+      tags: tags,
+      moods: moods,
+      lastPositionInMs: lastPositionInMs,
+    );
     trackStatsMap[track] = newStats;
 
     await _saveTrackStatsFileToStorage();
@@ -1005,9 +1031,9 @@ class Indexer {
     final splitconfig = _createSplitConfig();
 
     final tracksResult = _readTracksFileCompute(splitconfig);
-    allTracksMappedByPath.value = tracksResult.$1;
-    allTracksMappedByYTID = tracksResult.$2;
-    tracksInfoList.value = tracksResult.$3;
+    allTracksMappedByPath = tracksResult.$1;
+    allTracksMappedByYTID = tracksResult.$2 as Map<String, List<T>>;
+    tracksInfoList.value = tracksResult.$3 as List<T>;
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
@@ -1029,8 +1055,8 @@ class Indexer {
     return map;
   }
 
-  static (Map<Track, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(SplitArtistGenreConfigsWrapper config) {
-    final map = <Track, TrackExtended>{};
+  static (Map<String, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(SplitArtistGenreConfigsWrapper config) {
+    final map = <String, TrackExtended>{};
     final idsMap = <String, List<Track>>{};
     final allTracks = <Track>[];
     final list = File(config.path).readAsJsonSync() as List?;
@@ -1043,8 +1069,8 @@ class Indexer {
             artistsSplitConfig: config.artistsConfig,
             genresSplitConfig: config.genresConfig,
           );
-          final track = trExt.toTrack();
-          map[track] = trExt;
+          final track = trExt.asTrack();
+          map[track.path] = trExt;
           allTracks.add(track);
           idsMap.addForce(trExt.youtubeID, track);
         } catch (e) {
@@ -1102,12 +1128,12 @@ class Indexer {
   /// (title, artist)
   static (String, String) getTitleAndArtistFromFilename(String filename) {
     final filenameWOEx = filename.replaceAll('_', ' ');
-    final titleAndArtist = <String>[];
+    List<String> titleAndArtist;
 
     /// preferring to split by [' - '], since there are artists that has '-' in their name.
-    titleAndArtist.addAll(filenameWOEx.split(' - '));
+    titleAndArtist = filenameWOEx.split(' - ');
     if (titleAndArtist.length == 1) {
-      titleAndArtist.addAll(filenameWOEx.split('-'));
+      titleAndArtist = filenameWOEx.split('-');
     }
 
     /// in case splitting produced 2 entries or more, it means its high likely to be [artist - title]
@@ -1133,10 +1159,11 @@ class Indexer {
     tracksExcludedByNoMedia.value = 0;
     final allAvailableDirectories = await getAvailableDirectories(forceReCheck: true, strictNoMedia: strictNoMedia);
 
+    final extensions = _includeVideosAsTracks ? {...kAudioFileExtensions, ...kVideoFilesExtensions} : kAudioFileExtensions;
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': settings.directoriesToExclude.value,
-      'extensions': kAudioFileExtensions,
+      'extensions': extensions,
       'imageExtensions': kImageFilesExtensions,
     };
 
@@ -1150,7 +1177,6 @@ class Indexer {
 
     // ignore: invalid_use_of_protected_member
     allAudioFiles.value = allPaths;
-
     allFolderCovers = folderCovers;
 
     printy("Paths Found: ${allPaths.length}");
@@ -1163,6 +1189,7 @@ class Indexer {
       return await _lastAvailableDirectories!.future;
     }
 
+    _lastAvailableDirectories?.completeIfWasnt({});
     _lastAvailableDirectories = null; // for when forceReCheck enabled.
     _lastAvailableDirectories = Completer<Map<Directory, bool>>();
     final parameters = {
@@ -1271,7 +1298,7 @@ class Indexer {
         moodList: moods,
         composer: e.composer ?? '',
         trackNo: e.track ?? 0,
-        duration: e.duration == null ? 0 : e.duration! ~/ 1000,
+        durationMS: e.duration ?? 0, // `e.duration` => milliseconds
         year: TrackExtended.enforceYearFormat(yearString) ?? 0,
         size: e.size,
         dateAdded: e.dateAdded ?? 0,
@@ -1289,9 +1316,10 @@ class Indexer {
         rating: 0.0,
         originalTags: tag,
         tagsList: tags,
+        isVideo: e.data.isVideo(),
       );
       tracks.add((trext, e.id));
-      _backupMediaStoreIDS[trext.pathToImage] = (trext.toTrack(), e.id);
+      _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);
     });
     return tracks;
   }
@@ -1397,5 +1425,28 @@ class Indexer {
       genresConfig: GenresSplitConfig.settings(),
       generalConfig: GeneralSplitConfig(),
     );
+  }
+}
+
+extension _OrderedInsert<T> on List<T> {
+  void insertWithOrder(T item, int Function(T a, T b) compare) {
+    int left = 0;
+    int right = length - 1;
+
+    while (left <= right) {
+      int mid = (left + right) ~/ 2;
+      var midItem = this[mid];
+      if (midItem == item) {
+        // -- If the string is already in the list, dont do anything
+        return;
+      } else if (compare(midItem, item) < 0) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+
+    // If the string is not in the list, insert it at the appropriate position
+    insert(left, item);
   }
 }

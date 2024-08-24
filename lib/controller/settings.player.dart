@@ -41,11 +41,7 @@ class _PlayerSettings with SettingsFileWriter {
     InterruptionType.unknown: InterruptionAction.pause,
   }.obs;
 
-  final lastPlayedIndices = {
-    LibraryCategory.localTracks: 0,
-    LibraryCategory.localVideos: 0,
-    LibraryCategory.youtube: 0,
-  };
+  int lastPlayedIndex = 0;
 
   void save({
     bool? enableVolumeFadeOnPlayPause,
@@ -76,7 +72,7 @@ class _PlayerSettings with SettingsFileWriter {
     RepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
-    Map<String, int>? lastPlayedIndices,
+    int? lastPlayedIndex,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
     if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
@@ -106,11 +102,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
-    if (lastPlayedIndices != null) {
-      for (final e in lastPlayedIndices.entries) {
-        this.lastPlayedIndices[e.key] = e.value;
-      }
-    }
+    if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     _writeToStorage();
   }
 
@@ -160,10 +152,7 @@ class _PlayerSettings with SettingsFileWriter {
             InterruptionAction.doNothing,
           ) ??
           onInterrupted.map((key, value) => MapEntry(key, value));
-      final lpi = json['lastPlayedIndices'];
-      if (lpi is Map) {
-        lastPlayedIndices.assignAll(lpi.cast());
-      }
+      lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -200,7 +189,7 @@ class _PlayerSettings with SettingsFileWriter {
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-        'lastPlayedIndices': lastPlayedIndices,
+        'lastPlayedIndex': lastPlayedIndex,
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();

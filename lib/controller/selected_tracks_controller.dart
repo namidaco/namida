@@ -156,7 +156,7 @@ class SelectedTracksController {
         return firstC && secondC;
       },
       (old) {
-        final newtr = Track(getNewPath(old.track.path));
+        final newtr = Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path));
         if (old is TrackWithDate) {
           return TrackWithDate(
             dateAdded: old.dateAdded,

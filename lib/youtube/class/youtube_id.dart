@@ -12,7 +12,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class YoutubeID implements Playable, ItemWithDate {
+class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
   final String id;
   final YTWatch? watchNull;
   final PlaylistID? playlistID;
@@ -38,6 +38,8 @@ class YoutubeID implements Playable, ItemWithDate {
     );
   }
 
+
+  @override
   Map<String, dynamic> toJson() {
     return {
       "id": id,

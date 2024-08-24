@@ -119,11 +119,24 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableFoldersHierarchy.valueR,
                 onChanged: (p0) {
                   settings.save(enableFoldersHierarchy: !p0);
-                  Folders.inst.onFoldersHierarchyChanged(!p0);
+                  Folders.tracks.onFoldersHierarchyChanged(!p0);
                 },
               ),
             ),
           ),
+          // TODO: Allow later
+          // Obx(
+          //   () => CustomSwitchListTile(
+          //     icon: Broken.folder_open,
+          //     title: lang.ENABLE_FOLDERS_HIERARCHY,
+          //     subtitle: lang.VIDEOS,
+          //     value: settings.enableFoldersHierarchyVideos.valueR,
+          //     onChanged: (p0) {
+          //       settings.save(enableFoldersHierarchyVideos: !p0);
+          //       Folders.videos.onFoldersHierarchyChanged(!p0);
+          //     },
+          //   ),
+          // ),
           getItemWrapper(
             key: _ExtraSettingsKeys.fabType,
             child: Obx(

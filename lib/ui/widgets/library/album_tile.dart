@@ -104,9 +104,7 @@ class AlbumTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  [
-                    album.totalDurationFormatted,
-                  ].join(' - '),
+                  album.totalDurationFormatted,
                   style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),

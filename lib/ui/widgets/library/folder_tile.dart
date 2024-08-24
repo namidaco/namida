@@ -5,7 +5,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -35,7 +34,7 @@ class FolderTile extends StatelessWidget {
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
-        onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
+        onTap: folder.navigate,
         onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),

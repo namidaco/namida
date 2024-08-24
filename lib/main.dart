@@ -205,7 +205,8 @@ void mainInitialization() async {
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
 
   // CurrentColor.inst.generateAllColorPalettes();
-  Folders.inst.onFirstLoad();
+  Folders.tracks.onFirstLoad();
+  Folders.videos.onFirstLoad();
 
   _initLifeCycle();
 }
@@ -365,7 +366,7 @@ void _initializeIntenties() {
 /// returns [true] if played successfully.
 Future<String?> playExternalFiles(Iterable<String> paths) async {
   try {
-    final trs = await Indexer.inst.convertPathToTrack(paths);
+    final trs = await Indexer.inst.convertPathsToTracksAndAddToLists(paths);
     if (trs.isNotEmpty) {
       await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
       return null;

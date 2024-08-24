@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -222,7 +220,9 @@ class SearchPage extends StatelessWidget {
                                     final composerSearchTemp = SearchSortController.inst.composerSearchTemp.valueR;
                                     final genreSearchTemp = SearchSortController.inst.genreSearchTemp.valueR;
                                     final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp.valueR;
-                                    final folderSearchTemp = SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder(f).tracks().isNotEmpty).toList();
+                                    final folderSearchTemp = SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder.explicit(f).tracks().isNotEmpty).toList();
+                                    final folderVideosSearchTemp =
+                                        SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracks().isNotEmpty).toList();
 
                                     return CustomScrollView(
                                       controller: sc,
@@ -358,7 +358,7 @@ class SearchPage extends StatelessWidget {
                                           ),
                                         ],
 
-                                        // == Playlists ==
+                                        // == Folders ==
                                         if (activeList.contains(MediaType.folder) && folderSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
@@ -371,48 +371,33 @@ class SearchPage extends StatelessWidget {
                                             itemExtent: null,
                                             list: folderSearchTemp,
                                             builder: (item) {
-                                              final folder = Folder(item);
+                                              final folder = Folder.explicit(item);
                                               final tracks = folder.tracks();
-
-                                              return NamidaInkWell(
-                                                margin: const EdgeInsets.only(left: 6.0),
-                                                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                                onTap: () => NamidaOnTaps.inst.onFolderTap(folder),
-                                                onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
-                                                borderRadius: 8.0,
-                                                bgColor: context.theme.colorScheme.secondary.withOpacity(0.12),
-                                                child: Row(
-                                                  children: [
-                                                    const SizedBox(width: 4.0),
-                                                    ArtworkWidget(
-                                                      key: Key(tracks.pathToImage),
-                                                      track: tracks.trackOfImage,
-                                                      thumbnailSize: 48.0,
-                                                      path: tracks.pathToImage,
-                                                      forceSquared: true,
-                                                    ),
-                                                    const SizedBox(width: 4.0),
-                                                    Column(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          folder.folderName,
-                                                          style: context.textTheme.displayMedium?.copyWith(
-                                                            fontSize: 13.0,
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          tracks.length.displayTrackKeyword,
-                                                          style: context.textTheme.displaySmall?.copyWith(
-                                                            fontSize: 12.0,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(width: 12.0),
-                                                  ],
-                                                ),
+                                              return _FolderSmallCard(
+                                                folder: folder,
+                                                tracks: tracks,
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                        // == Video Folders ==
+                                        if (activeList.contains(MediaType.folderVideo) && folderVideosSearchTemp.isNotEmpty) ...[
+                                          SliverToBoxAdapter(
+                                            child: SearchPageTitleRow(
+                                              title: '${lang.VIDEOS} • ${folderVideosSearchTemp.length}',
+                                              icon: Broken.folder,
+                                            ),
+                                          ),
+                                          _horizontalSliverList(
+                                            height: 48.0 + 4 * 2,
+                                            itemExtent: null,
+                                            list: folderVideosSearchTemp,
+                                            builder: (item) {
+                                              final folder = VideoFolder.explicit(item);
+                                              final tracks = folder.tracks();
+                                              return _FolderSmallCard(
+                                                folder: folder,
+                                                tracks: tracks,
                                               );
                                             },
                                           ),
@@ -511,6 +496,56 @@ class SearchPage extends StatelessWidget {
             key: ScrollSearchController.inst.ytSearchKey,
             searchText: '',
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FolderSmallCard extends StatelessWidget {
+  final Folder folder;
+  final List<Track> tracks;
+  const _FolderSmallCard({required this.folder, required this.tracks});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaInkWell(
+      margin: const EdgeInsets.only(left: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder),
+      onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
+      borderRadius: 8.0,
+      bgColor: context.theme.colorScheme.secondary.withOpacity(0.12),
+      child: Row(
+        children: [
+          const SizedBox(width: 4.0),
+          ArtworkWidget(
+            key: Key(tracks.pathToImage),
+            track: tracks.trackOfImage,
+            thumbnailSize: 48.0,
+            path: tracks.pathToImage,
+            forceSquared: true,
+          ),
+          const SizedBox(width: 4.0),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                folder.folderName,
+                style: context.textTheme.displayMedium?.copyWith(
+                  fontSize: 13.0,
+                ),
+              ),
+              Text(
+                tracks.length.displayTrackKeyword,
+                style: context.textTheme.displaySmall?.copyWith(
+                  fontSize: 12.0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12.0),
         ],
       ),
     );

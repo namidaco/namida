@@ -89,7 +89,7 @@ class Player {
   }
 
   Duration get getCurrentVideoDuration {
-    Duration? playerDuration = Player.inst.currentItemDuration.value;
+    Duration? playerDuration = currentItemDuration.value;
     if (playerDuration == null || playerDuration == Duration.zero) {
       playerDuration = currentAudioStream.value?.duration ??
           currentVideoStream.value?.duration ??
@@ -447,7 +447,8 @@ class Player {
           return firstC && secondC;
         },
         (old) {
-          final newtr = Track(getNewPath((old as Selectable).track.path));
+          old as Selectable;
+          final newtr = Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path));
           if (old is TrackWithDate) {
             return TrackWithDate(
               dateAdded: old.dateAdded,
@@ -580,12 +581,13 @@ class Player {
     bool shuffle = false,
     bool startPlaying = true,
     bool updateQueue = true,
+    int? maximumItems = 1000,
     void Function(Playable currentItem)? onAssigningCurrentItem,
   }) async {
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
       queue: queue,
-      maximumItems: 1000,
+      maximumItems: maximumItems,
       onIndexAndQueueSame: _audioHandler.togglePlayPause,
       onQueueDifferent: (finalizedQueue) {
         if (updateQueue) {
@@ -609,8 +611,8 @@ class Player {
     return _audioHandler.tryGenerateWaveform(video);
   }
 
-  Future<void> setVideo({required AudioVideoSource source, bool loopingAnimation = false, required bool isFile}) async {
-    await _audioHandler.setVideoSource(source: source, loopingAnimation: loopingAnimation, isFile: isFile);
+  Future<void> setVideo({required AudioVideoSource source, bool loopingAnimation = false, required bool isFile, bool videoOnly = false}) async {
+    await _audioHandler.setVideoSource(source: source, loopingAnimation: loopingAnimation, isFile: isFile, videoOnly: videoOnly);
   }
 
   Future<void> disposeVideo() async {

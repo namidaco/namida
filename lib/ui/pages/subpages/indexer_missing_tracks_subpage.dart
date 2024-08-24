@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -134,8 +135,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       }
 
       indicesProgressMap[allTracks.length] = _LoadingProgress.fillingLibraryTracks;
-      for (final track in Indexer.inst.allTracksMappedByPath.keys) {
-        allTracks[track.path] ??= true;
+      for (final path in Indexer.inst.allTracksMappedByPath.keys) {
+        allTracks[path] ??= true;
       }
 
       indicesProgressMap[allTracks.length] = _LoadingProgress.fillingPlaylistTracks;
@@ -337,7 +338,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                               child: Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
                                                 child: Text(
-                                                  '${HistoryController.inst.topTracksMapListens[Track(path)]?.length ?? 0}',
+                                                  '${(HistoryController.inst.topTracksMapListens[Track.explicit(path)]??HistoryController.inst.topTracksMapListens[Video.explicit(path)])?.length ?? 0}',
                                                   style: textTheme.displaySmall,
                                                 ),
                                               ),

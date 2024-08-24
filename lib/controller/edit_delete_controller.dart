@@ -103,6 +103,7 @@ class EditDeleteController {
     final info = await FAudioTaggerController.inst.extractMetadata(
       trackPath: track.path,
       cacheDirectoryPath: saveDirPath,
+      isVideo: track is Video,
     );
     final imgFile = info.tags.artwork.file;
     if (imgFile != null) return saveDirPath;
@@ -126,25 +127,29 @@ class EditDeleteController {
     }
   }
 
-  Future<void> updateTrackPathInEveryPartOfNamidaBulk(Map<String, String> oldNewPath) async {
-    final newtrlist = await Indexer.inst.convertPathToTrack(oldNewPath.values);
+  Future<void> updateTrackPathInEveryPartOfNamidaBulk<T extends Track>(Map<String, String> oldNewPath) async {
+    final newtrlist = await Indexer.inst.convertPathsToTracksAndAddToLists(oldNewPath.values);
     if (newtrlist.isEmpty) return;
-    final oldNewMap = <Track, Track>{for (final on in oldNewPath.entries) Track(on.key): Track(on.value)};
+    final oldNewTrack = <T, T>{};
+    for (final on in oldNewPath.entries) {
+      final oldTr = Track.orVideo(on.key);
+      final newTr = Track.orVideo(on.value);
+      oldNewTrack[oldTr as T] = newTr as T;
+    }
 
     // -- Player Queue
-    Player.inst.replaceAllTracksInQueueBulk(oldNewMap); // no need to await
+    Player.inst.replaceAllTracksInQueueBulk(oldNewTrack); // no need to await
 
     // -- History
     final daysToSave = <int>[];
     final allHistory = HistoryController.inst.historyMap.value.entries.toList();
 
-    final oldNewTrack = oldNewMap;
     for (final oldNewTrack in oldNewTrack.entries) {
       allHistory.loop((entry) {
         final day = entry.key;
         final trs = entry.value;
         trs.replaceWhere(
-          (e) => e.track == oldNewTrack.key.track,
+          (e) => e.track == oldNewTrack.key,
           (old) => TrackWithDate(
             dateAdded: old.dateAdded,
             track: oldNewTrack.value,
@@ -169,7 +174,7 @@ class EditDeleteController {
   }
 
   Future<void> updateTrackPathInEveryPartOfNamida(Track oldTrack, String newPath) async {
-    final newtrlist = await Indexer.inst.convertPathToTrack([newPath]);
+    final newtrlist = await Indexer.inst.convertPathsToTracksAndAddToLists([newPath]);
     if (newtrlist.isEmpty) return;
     final newTrack = newtrlist.first;
     await Future.wait([

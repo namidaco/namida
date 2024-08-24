@@ -19,7 +19,7 @@ class NamidaColor {
     return NamidaColor(
       used: json['used'] != null ? Color(json['used']) : null,
       mix: Color(json['mix'] ?? 0),
-      palette: List<Color>.from(List<int>.from(json['palette'] ?? []).map((e) => Color(e))),
+      palette: (json['palette'] as List?)?.map((e) => Color(e as int)).toList() ?? [],
     );
   }
 

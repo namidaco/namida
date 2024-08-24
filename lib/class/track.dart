@@ -7,13 +7,14 @@ import 'package:intl/intl.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-class TrackWithDate extends Selectable implements ItemWithDate {
+class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWithDate {
   @override
   Track get track => _track;
 
@@ -31,18 +32,21 @@ class TrackWithDate extends Selectable implements ItemWithDate {
   }) : _track = track;
 
   factory TrackWithDate.fromJson(Map<String, dynamic> json) {
+    final finalTrack = Track.fromJson(json['track'] as String, isVideo: json['v'] == true);
     return TrackWithDate(
       dateAdded: json['dateAdded'] ?? currentTimeMS,
-      track: (json['track'] as String).toTrack(),
+      track: finalTrack,
       source: TrackSource.values.getEnum(json['source']) ?? TrackSource.local,
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'dateAdded': dateAdded,
       'track': _track.path,
       'source': source.convertToString,
+      if (_track is Video) 'v': true,
     };
   }
 
@@ -70,7 +74,7 @@ extension TWDUtils on List<TrackWithDate> {
 
 class TrackStats {
   /// Path of the track.
-  late Track track;
+  final Track track;
 
   /// Rating of the track out of 100.
   int rating = 0;
@@ -84,19 +88,22 @@ class TrackStats {
   /// Last Played Position of the track in Milliseconds.
   int lastPositionInMs = 0;
 
-  TrackStats(
-    this.track,
-    this.rating,
-    this.tags,
-    this.moods,
-    this.lastPositionInMs,
-  );
-  TrackStats.fromJson(Map<String, dynamic> json) {
-    track = Track(json['track'] ?? '');
-    rating = json['rating'] ?? 0;
-    tags = List<String>.from(json['tags'] ?? []);
-    moods = List<String>.from(json['moods'] ?? []);
-    lastPositionInMs = json['lastPositionInMs'] ?? 0;
+  TrackStats({
+    required this.track,
+    required this.rating,
+    required this.tags,
+    required this.moods,
+    required this.lastPositionInMs,
+  });
+
+  factory TrackStats.fromJson(Map<String, dynamic> json) {
+    return TrackStats(
+      track: Track.fromJson(json['track'] ?? '', isVideo: json['v'] == true),
+      rating: json['rating'] ?? 0,
+      tags: (json['tags'] as List?)?.cast<String>() ?? [],
+      moods: (json['moods'] as List?)?.cast<String>() ?? [],
+      lastPositionInMs: json['lastPositionInMs'] ?? 0,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -106,6 +113,7 @@ class TrackStats {
       'tags': tags,
       'moods': moods,
       'lastPositionInMs': lastPositionInMs,
+      if (track is Video) 'v': true,
     };
   }
 
@@ -113,11 +121,13 @@ class TrackStats {
   String toString() => '${track.toString()}, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs';
 }
 
-abstract class Playable {
+abstract class Playable<T extends Object> {
   const Playable();
+
+  T toJson();
 }
 
-abstract class Selectable extends Playable {
+abstract class Selectable<T extends Object> extends Playable<T> {
   const Selectable();
 
   Track get track;
@@ -140,7 +150,13 @@ extension SelectableListUtils on Iterable<Selectable> {
   Iterable<TrackWithDate> get tracksWithDates => whereType<TrackWithDate>();
 }
 
-class Track extends Selectable {
+class Track extends Selectable<String> {
+  Folder get folder => Folder.explicit(folderPath);
+
+  bool hasInfoInLibrary() => toTrackExtOrNull() != null;
+  TrackExtended toTrackExt() => toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path);
+  TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path];
+
   @override
   Track get track => this;
 
@@ -148,7 +164,21 @@ class Track extends Selectable {
   TrackWithDate? get trackWithDate => null;
 
   final String path;
-  const Track(this.path);
+  const Track.explicit(this.path);
+
+  factory Track.decide(String path, bool? isVideo) => isVideo == true ? Video.explicit(path) : Track.explicit(path);
+
+  factory Track.orVideo(String path) {
+    return path.isVideo() ? Video.explicit(path) : Track.explicit(path);
+  }
+
+  static T fromTypeParameter<T extends Track>(Type type, String path) {
+    return type == Video ? Video.explicit(path) as T : Track.explicit(path) as T;
+  }
+
+  factory Track.fromJson(String path, {required bool isVideo}) {
+    return isVideo ? Video.explicit(path) : Track.explicit(path);
+  }
 
   @override
   bool operator ==(other) {
@@ -163,6 +193,9 @@ class Track extends Selectable {
 
   @override
   String toString() => "path: $path";
+
+  @override
+  String toJson() => path;
 }
 
 class TrackExtended {
@@ -178,8 +211,8 @@ class TrackExtended {
   final String composer;
   final int trackNo;
 
-  /// track's duration in seconds.
-  final int duration;
+  /// track's duration in milliseconds.
+  final int durationMS;
   final int year;
   final int size;
   final int dateAdded;
@@ -198,6 +231,8 @@ class TrackExtended {
   final String? originalTags;
   final List<String> tagsList;
 
+  final bool isVideo;
+
   const TrackExtended({
     required this.title,
     required this.originalArtist,
@@ -210,7 +245,7 @@ class TrackExtended {
     required this.moodList,
     required this.composer,
     required this.trackNo,
-    required this.duration,
+    required this.durationMS,
     required this.year,
     required this.size,
     required this.dateAdded,
@@ -228,6 +263,7 @@ class TrackExtended {
     required this.rating,
     required this.originalTags,
     required this.tagsList,
+    required this.isVideo,
   });
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
@@ -271,7 +307,7 @@ class TrackExtended {
       ),
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
-      duration: json['duration'] ?? 0,
+      durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
       year: json['year'] ?? 0,
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,
@@ -292,6 +328,7 @@ class TrackExtended {
         json['originalTags'],
         config: genresSplitConfig,
       ),
+      isVideo: json['v'] ?? false,
     );
   }
 
@@ -305,7 +342,7 @@ class TrackExtended {
       'originalMood': originalMood,
       'composer': composer,
       'trackNo': trackNo,
-      'duration': duration,
+      'durationMS': durationMS,
       'year': year,
       'size': size,
       'dateAdded': dateAdded,
@@ -322,6 +359,7 @@ class TrackExtended {
       'label': label,
       'rating': rating,
       'originalTags': originalTags,
+      'v': isVideo,
     };
   }
 
@@ -338,7 +376,7 @@ class TrackExtended {
 }
 
 extension TrackExtUtils on TrackExtended {
-  Track toTrack() => Track(path);
+  Track asTrack() => isVideo ? Video.explicit(path) : Track.explicit(path);
   bool get hasUnknownTitle => title == UnknownTags.TITLE;
   bool get hasUnknownAlbum => album == '' || album == UnknownTags.ALBUM;
   bool get hasUnknownAlbumArtist => albumArtist == '' || albumArtist == UnknownTags.ALBUMARTIST;
@@ -351,7 +389,6 @@ extension TrackExtUtils on TrackExtended {
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
-  Folder get folder => Folder(folderPath);
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
@@ -383,7 +420,7 @@ extension TrackExtUtils on TrackExtended {
 
   String get youtubeID => youtubeLink.getYoutubeID;
 
-  TrackStats get stats => Indexer.inst.trackStatsMap.value[toTrack()] ?? TrackStats(kDummyTrack, 0, [], [], 0);
+  TrackStats? get stats => Indexer.inst.trackStatsMap.value[asTrack()];
 
   String get yearPreferyyyyMMdd {
     final tostr = year.toString();
@@ -427,10 +464,11 @@ extension TrackExtUtils on TrackExtended {
       bitrate: bitrate,
       channels: channels,
       dateAdded: dateAdded,
-      duration: duration,
+      durationMS: durationMS,
       format: format,
       sampleRate: sampleRate,
       size: size,
+      isVideo: isVideo,
     );
   }
 
@@ -447,8 +485,8 @@ extension TrackExtUtils on TrackExtended {
     String? composer,
     int? trackNo,
 
-    /// track's duration in seconds.
-    int? duration,
+    /// track's duration in milliseconds.
+    int? durationMS,
     int? year,
     int? size,
     int? dateAdded,
@@ -466,6 +504,7 @@ extension TrackExtUtils on TrackExtended {
     double? rating,
     String? originalTags,
     List<String>? tagsList,
+    bool? isVideo,
   }) {
     return TrackExtended(
       title: title ?? this.title,
@@ -479,7 +518,7 @@ extension TrackExtUtils on TrackExtended {
       moodList: moodList ?? this.moodList,
       composer: composer ?? this.composer,
       trackNo: trackNo ?? this.trackNo,
-      duration: duration ?? this.duration,
+      durationMS: durationMS ?? this.durationMS,
       year: year ?? this.year,
       size: size ?? this.size,
       dateAdded: dateAdded ?? this.dateAdded,
@@ -497,22 +536,12 @@ extension TrackExtUtils on TrackExtended {
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
+      isVideo: isVideo ?? this.isVideo,
     );
   }
 }
 
 extension TrackUtils on Track {
-  TrackExtended toTrackExt() => path.toTrackExt();
-  TrackExtended? toTrackExtOrNull() => path.toTrackExtOrNull();
-
-  set duration(int value) {
-    final trx = Indexer.inst.allTracksMappedByPath.value[this];
-    if (trx != null) {
-      Indexer.inst.allTracksMappedByPath[this] = trx.copyWith(duration: value);
-      Indexer.inst.allTracksMappedByPath.refresh();
-    }
-  }
-
   String get yearPreferyyyyMMdd => toTrackExt().yearPreferyyyyMMdd;
 
   String get title => toTrackExt().title;
@@ -526,7 +555,7 @@ extension TrackUtils on Track {
   List<String> get moodList => toTrackExt().moodList;
   String get composer => toTrackExt().composer;
   int get trackNo => toTrackExt().trackNo;
-  int get duration => toTrackExt().duration;
+  int get durationMS => toTrackExt().durationMS;
   int get year => toTrackExt().year;
   int get size => toTrackExt().size;
   int get dateAdded => toTrackExt().dateAdded;
@@ -568,7 +597,6 @@ extension TrackUtils on Track {
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
   String get folderPath => path.getDirectoryName;
-  Folder get folder => Folder(folderPath);
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
@@ -581,7 +609,7 @@ extension TrackUtils on Track {
   String get audioInfoFormatted {
     final trExt = toTrackExt();
     return [
-      trExt.duration.secondsLabel,
+      trExt.durationMS.milliSecondsLabel,
       trExt.size.fileSizeFormatted,
       "${trExt.bitrate} kps",
       "${trExt.sampleRate} hz",

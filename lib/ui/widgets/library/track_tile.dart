@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -238,16 +239,6 @@ class TrackTile extends StatelessWidget {
     final trackWithDate = _twd;
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
     final additionalHero = this.additionalHero;
-    final thirdLineText = this.thirdLineText;
-    final row1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.first, track);
-    final row2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.second, track);
-    final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
-        ? thirdLineText
-        : properties.displayThirdRow
-            ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
-            : null;
-    final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
-    final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
     final willSleepAfterThis = properties.sleepingIndex == index;
 
@@ -271,6 +262,66 @@ class TrackTile extends StatelessWidget {
         );
       }
     }
+    Widget threeLinesColumn;
+    if (trackOrTwd.track.toTrackExtOrNull() == null) {
+      threeLinesColumn = Text(
+        trackOrTwd.track.path,
+        style: context.textTheme.displaySmall?.copyWith(
+          color: textColor?.withAlpha(170),
+        ),
+      );
+    } else {
+      final thirdLineText = this.thirdLineText;
+      final row1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.first, track);
+      final row2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.second, track);
+      final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
+          ? thirdLineText
+          : properties.displayThirdRow
+              ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
+              : null;
+
+      threeLinesColumn = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // check if first row isnt empty
+          if (row1Text != '')
+            Text(
+              row1Text,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: context.textTheme.displayMedium!.copyWith(
+                color: textColor?.withAlpha(170),
+              ),
+            ),
+
+          // check if second row isnt empty
+          if (row2Text != '')
+            Text(
+              row2Text,
+              style: context.textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: textColor?.withAlpha(140),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+          // check if third row isnt empty
+          if (row3Text != null && row3Text != '')
+            Text(
+              row3Text,
+              style: context.textTheme.displaySmall?.copyWith(
+                color: textColor?.withAlpha(130),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      );
+    }
+    final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
+    final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
     return Stack(
       alignment: Alignment.centerRight,
@@ -343,6 +394,8 @@ class TrackTile extends StatelessWidget {
                                     path: track.pathToImage,
                                     forceSquared: properties.forceSquaredThumbnails,
                                     useTrackTileCacheHeight: true,
+                                    icon: track is Video ? Broken.video : Broken.musicnote,
+                                    iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
                                     onTopWidgets: [
                                       if (properties.configs.displayTrackNumber)
                                         Positioned(
@@ -392,52 +445,7 @@ class TrackTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 12.0),
                         Expanded(
-                          child: trackOrTwd.track.toTrackExtOrNull() == null
-                              ? Text(
-                                  trackOrTwd.track.path,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // check if first row isnt empty
-                                    if (row1Text != '')
-                                      Text(
-                                        row1Text,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        style: context.textTheme.displayMedium!.copyWith(
-                                          color: textColor?.withAlpha(170),
-                                        ),
-                                      ),
-
-                                    // check if second row isnt empty
-                                    if (row2Text != '')
-                                      Text(
-                                        row2Text,
-                                        style: context.textTheme.displaySmall?.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                          color: textColor?.withAlpha(140),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-
-                                    // check if third row isnt empty
-                                    if (row3Text != null && row3Text != '')
-                                      Text(
-                                        row3Text,
-                                        style: context.textTheme.displaySmall?.copyWith(
-                                          color: textColor?.withAlpha(130),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
+                          child: threeLinesColumn,
                         ),
                         const SizedBox(width: 6.0),
                         if (properties.displayFavouriteIconInListTile || rightItem1Text != '' || rightItem2Text != '')
@@ -520,6 +528,15 @@ class TrackTile extends StatelessWidget {
             color: Colors.transparent,
           ),
         ),
+        if (track is Video)
+          const Positioned(
+            top: 6.0,
+            right: 6.0,
+            child: Icon(
+              Broken.video,
+              size: 12.0,
+            ),
+          ),
       ],
     );
   }
@@ -628,7 +645,7 @@ class TrackTileManager {
     TrackTileItem.album: (track) => track.album.overflow,
     TrackTileItem.albumArtist: (track) => track.albumArtist.overflow,
     TrackTileItem.genres: (track) => track.originalGenre.overflow,
-    TrackTileItem.duration: (track) => track.duration.secondsLabel,
+    TrackTileItem.duration: (track) => track.durationMS.milliSecondsLabel,
     TrackTileItem.year: (track) => track.year.yearFormatted,
     TrackTileItem.trackNumber: (track) => track.trackNo.toString(),
     TrackTileItem.discNumber: (track) => track.discNo.toString(),
@@ -659,12 +676,12 @@ class TrackTileManager {
       return finalDate;
     },
     // -- stats
-    TrackTileItem.rating: (track) => "${track.stats.rating}%",
-    TrackTileItem.moods: (track) => track.stats.moods.join(', '),
-    TrackTileItem.tags: (track) => track.stats.tags.join(', '),
-    TrackTileItem.listenCount: (track) => HistoryController.inst.topTracksMapListens[track]?.length.formatDecimal() ?? '0',
+    TrackTileItem.rating: (track) => "${track.stats?.rating ?? 0}%",
+    TrackTileItem.moods: (track) => track.stats?.moods.join(', ') ?? '',
+    TrackTileItem.tags: (track) => track.stats?.tags.join(', ') ?? '',
+    TrackTileItem.listenCount: (track) => HistoryController.inst.topTracksMapListens[track.asTrack()]?.length.formatDecimal() ?? '0',
     TrackTileItem.latestListenDate: (track) {
-      final date = HistoryController.inst.topTracksMapListens[track]?.lastOrNull;
+      final date = HistoryController.inst.topTracksMapListens[track.asTrack()]?.lastOrNull;
       if (date == null) return '';
       return Jiffy.parseFromDateTime(date.milliSecondsSinceEpoch).fromNow();
     },

@@ -36,6 +36,8 @@ class MultiArtworkCard extends StatelessWidget {
     final thumbnailSize = dimensions.$1;
     final fontSize = dimensions.$2;
 
+    final totalDurationInMS = tracks.totalDurationInMS;
+
     return GridTile(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: Dimensions.gridHorizontalPadding),
@@ -78,7 +80,10 @@ class MultiArtworkCard extends StatelessWidget {
                           enabled: enableHero,
                           tag: 'line2_$heroTag',
                           child: Text(
-                            [tracks.displayTrackKeyword, if (tracks.totalDurationInS != 0) tracks.totalDurationFormatted].join(' - '),
+                            [
+                              tracks.displayTrackKeyword,
+                              if (totalDurationInMS > 0) totalDurationInMS.formattedTime,
+                            ].join(' - '),
                             style: context.textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w500,
                               fontSize: fontSize * 0.85,

@@ -271,81 +271,87 @@ class ThemeSetting extends SettingSubpageProvider {
             ),
             getItemWrapper(
               key: _ThemeSettingsKeys.defaultColor,
-              child: CustomListTile(
-                bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
-                enabled: !settings.autoColor.value,
-                icon: Broken.bucket,
-                title: lang.DEFAULT_COLOR,
-                subtitle: lang.DEFAULT_COLOR_SUBTITLE,
-                trailingRaw: FittedBox(
-                  child: Obx(
-                    () => CircleAvatar(
-                      minRadius: 12,
-                      backgroundColor: playerStaticColorLight,
-                    ),
-                  ),
-                ),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: Obx(
-                      () => Theme(
-                        data: AppThemes.inst.getAppTheme(playerStaticColorLight),
-                        child: NamidaColorPickerDialog(
-                          initialColor: playerStaticColorLight,
-                          doneText: lang.DONE,
-                          onColorChanged: (value) => _updateColorLight(value),
-                          onDonePressed: NamidaNavigator.inst.closeDialog,
-                          onRefreshButtonPressed: () {
-                            _updateColorLight(kMainColorLight);
-                            NamidaNavigator.inst.closeDialog();
-                          },
-                          cancelButton: false,
-                        ),
+              child: ObxO(
+                rx: settings.autoColor,
+                builder: (autoColor) => CustomListTile(
+                  bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
+                  enabled: !autoColor,
+                  icon: Broken.bucket,
+                  title: lang.DEFAULT_COLOR,
+                  subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                  trailingRaw: FittedBox(
+                    child: Obx(
+                      () => CircleAvatar(
+                        minRadius: 12,
+                        backgroundColor: playerStaticColorLight,
                       ),
                     ),
-                  );
-                },
+                  ),
+                  onTap: () {
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: Obx(
+                        () => Theme(
+                          data: AppThemes.inst.getAppTheme(playerStaticColorLight),
+                          child: NamidaColorPickerDialog(
+                            initialColor: playerStaticColorLight,
+                            doneText: lang.DONE,
+                            onColorChanged: (value) => _updateColorLight(value),
+                            onDonePressed: NamidaNavigator.inst.closeDialog,
+                            onRefreshButtonPressed: () {
+                              _updateColorLight(kMainColorLight);
+                              NamidaNavigator.inst.closeDialog();
+                            },
+                            cancelButton: false,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             getItemWrapper(
               key: _ThemeSettingsKeys.defaultColorDark,
-              child: CustomListTile(
-                bgColor: getBgColor(_ThemeSettingsKeys.defaultColorDark),
-                enabled: !settings.autoColor.value,
-                leading: const StackedIcon(
-                  baseIcon: Broken.bucket,
-                  secondaryIcon: Broken.moon,
-                ),
-                title: "${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})",
-                subtitle: lang.DEFAULT_COLOR_SUBTITLE,
-                trailingRaw: FittedBox(
-                  child: Obx(
-                    () => CircleAvatar(
-                      minRadius: 12,
-                      backgroundColor: playerStaticColorDark,
-                    ),
+              child: ObxO(
+                rx: settings.autoColor,
+                builder: (autoColor) => CustomListTile(
+                  bgColor: getBgColor(_ThemeSettingsKeys.defaultColorDark),
+                  enabled: !autoColor,
+                  leading: const StackedIcon(
+                    baseIcon: Broken.bucket,
+                    secondaryIcon: Broken.moon,
                   ),
-                ),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: Obx(
-                      () => Theme(
-                        data: AppThemes.inst.getAppTheme(playerStaticColorDark),
-                        child: NamidaColorPickerDialog(
-                          initialColor: playerStaticColorDark,
-                          doneText: lang.DONE,
-                          onColorChanged: (value) => _updateColorDark(value),
-                          onDonePressed: NamidaNavigator.inst.closeDialog,
-                          onRefreshButtonPressed: () {
-                            _updateColorDark(kMainColorDark);
-                            NamidaNavigator.inst.closeDialog();
-                          },
-                          cancelButton: false,
-                        ),
+                  title: "${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})",
+                  subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                  trailingRaw: FittedBox(
+                    child: Obx(
+                      () => CircleAvatar(
+                        minRadius: 12,
+                        backgroundColor: playerStaticColorDark,
                       ),
                     ),
-                  );
-                },
+                  ),
+                  onTap: () {
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: Obx(
+                        () => Theme(
+                          data: AppThemes.inst.getAppTheme(playerStaticColorDark),
+                          child: NamidaColorPickerDialog(
+                            initialColor: playerStaticColorDark,
+                            doneText: lang.DONE,
+                            onColorChanged: (value) => _updateColorDark(value),
+                            onDonePressed: NamidaNavigator.inst.closeDialog,
+                            onRefreshButtonPressed: () {
+                              _updateColorDark(kMainColorDark);
+                              NamidaNavigator.inst.closeDialog();
+                            },
+                            cancelButton: false,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             getLanguageTile(context),

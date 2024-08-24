@@ -9,13 +9,18 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
-class Folders {
-  static final Folders inst = Folders._();
-  Folders._();
+class Folders<T extends Folder> {
+  static final Folders<Folder> tracks = Folders.tracks_(LibraryTab.folders, FoldersPageConfig.tracks());
+  static final Folders<VideoFolder> videos = Folders.videos_(LibraryTab.foldersVideos, FoldersPageConfig.videos());
+  Folders.tracks_(this._tab, this._config);
+  Folders.videos_(this._tab, this._config);
 
-  final Rxn<Folder> currentFolder = Rxn<Folder>();
+  final LibraryTab _tab;
+  final FoldersPageConfig _config;
 
-  final RxList<Folder> currentFolderslist = <Folder>[].obs;
+  final Rxn<T> currentFolder = Rxn<T>();
+
+  final RxList<T> currentFolderslist = <T>[].obs;
 
   /// Even with this logic, root paths are invincible.
   final isHome = true.obs;
@@ -23,10 +28,10 @@ class Folders {
   /// Used for non-hierarchy.
   final isInside = false.obs;
 
-  /// Highlights the track that is meant to be navigated to after calling [goToFolder].
+  /// Highlights the track that is meant to be navigated to after calling [stepIn].
   final indexToScrollTo = Rxn<int>();
 
-  final _latestScrollOffset = <Folder?, double>{};
+  final _latestScrollOffset = <T?, double>{};
 
   /// Indicates wether the navigator can go back at this point.
   /// Returns true only if at home, otherwise will call [stepOut] and return false.
@@ -38,7 +43,7 @@ class Folders {
     return true;
   }
 
-  void stepIn(Folder? folder, {Track? trackToScrollTo, double jumpTo = 0}) {
+  void stepIn(T? folder, {Track? trackToScrollTo, double jumpTo = 0}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
       isInside.value = false;
@@ -52,8 +57,7 @@ class Folders {
 
     _saveScrollOffset(currentFolder.value);
 
-    final dirInside = folder.getDirectoriesInside();
-
+    final List<T> dirInside = folder.getDirectoriesInside();
     currentFolderslist.value = dirInside;
     currentFolder.value = folder;
 
@@ -64,46 +68,46 @@ class Folders {
   }
 
   void stepOut() {
-    Folder? folder;
-    if (settings.enableFoldersHierarchy.value) {
-      folder = currentFolder.value?.getParentFolder();
+    T? folder;
+    if (_config.enableFoldersHierarchy.value) {
+      folder = currentFolder.value?.getParentFolder() as T?;
     }
     indexToScrollTo.value = null;
     stepIn(folder, jumpTo: _latestScrollOffset[folder] ?? 0);
   }
 
   void onFirstLoad() {
-    if (settings.enableFoldersHierarchy.value) {
-      final startupPath = settings.defaultFolderStartupLocation.value;
-      stepIn(Folder(startupPath));
+    if (_config.enableFoldersHierarchy.value) {
+      final startupPath = _config.defaultFolderStartupLocation.value;
+      stepIn(Folder.fromType<T>(startupPath));
     }
   }
 
   void onFoldersHierarchyChanged(bool enabled) {
-    Folders.inst.isHome.value = true;
-    Folders.inst.isInside.value = false;
+    isHome.value = true;
+    isInside.value = false;
   }
 
-  void _saveScrollOffset(Folder? folder) {
+  void _saveScrollOffset(T? folder) {
     if (folder == null) return;
     try {
-      _latestScrollOffset[folder] = LibraryTab.folders.scrollController.offset;
+      _latestScrollOffset[folder] = _tab.scrollController.offset;
     } catch (_) {
       _latestScrollOffset[folder] = 0;
     }
   }
 
   void _scrollJump(double to) {
-    if (LibraryTab.folders.scrollController.hasClients) {
+    if (_tab.scrollController.hasClients) {
       try {
-        LibraryTab.folders.scrollController.jumpTo(to);
+        _tab.scrollController.jumpTo(to);
       } catch (_) {}
     }
   }
 
   /// Generates missing folders in between
-  void onMapChanged(Map<Folder, List<Track>> map) {
-    final newFolders = <MapEntry<Folder, List<Track>>>[];
+  void onMapChanged<E extends Track>(Map<T, List<E>> map) {
+    final newFolders = <MapEntry<T, List<E>>>[];
 
     void recursiveIf(bool Function() fn) {
       if (fn()) recursiveIf(fn);
@@ -120,8 +124,9 @@ class Folders {
             f.removeLast();
             return true;
           }
-          if (map[Folder(newPath)] == null) {
-            newFolders.add(MapEntry(Folder(newPath), []));
+          final newFolder = Folder.fromType<T>(newPath);
+          if (map[newFolder] == null) {
+            newFolders.add(MapEntry(newFolder, []));
             f.removeLast();
             return true;
           }
@@ -204,4 +209,39 @@ class _ParsedResult {
     required this.startAtIndex,
     required this.textPart,
   });
+}
+
+class FoldersPageConfig {
+  final Rx<String> defaultFolderStartupLocation;
+  final Rx<bool> enableFoldersHierarchy;
+  final void Function() onDefaultStartupFolderChanged;
+
+  const FoldersPageConfig._({
+    required this.defaultFolderStartupLocation,
+    required this.enableFoldersHierarchy,
+    required this.onDefaultStartupFolderChanged,
+  });
+
+  factory FoldersPageConfig.tracks() {
+    return FoldersPageConfig._(
+      defaultFolderStartupLocation: settings.defaultFolderStartupLocation,
+      enableFoldersHierarchy: settings.enableFoldersHierarchy,
+      onDefaultStartupFolderChanged: () {
+        settings.save(
+          defaultFolderStartupLocation: Folders.tracks.currentFolder.value?.path ?? '',
+        );
+      },
+    );
+  }
+  factory FoldersPageConfig.videos() {
+    return FoldersPageConfig._(
+      defaultFolderStartupLocation: settings.defaultFolderStartupLocationVideos,
+      enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
+      onDefaultStartupFolderChanged: () {
+        settings.save(
+          defaultFolderStartupLocationVideos: Folders.videos.currentFolder.value?.path ?? '',
+        );
+      },
+    );
+  }
 }

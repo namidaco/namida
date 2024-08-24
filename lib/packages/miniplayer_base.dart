@@ -1412,7 +1412,7 @@ class WaveformMiniplayer extends StatelessWidget {
     if (totalDur != null) return totalDur.inMilliseconds;
     final current = Player.inst.currentItem.value;
     if (current is Selectable) {
-      return current.track.duration * 1000;
+      return current.track.durationMS;
     }
     return 0;
   }

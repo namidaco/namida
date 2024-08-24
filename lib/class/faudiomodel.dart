@@ -196,7 +196,7 @@ class FTags {
 
 class FAudioModel {
   final FTags tags;
-  final int? length;
+  final int? durationMS;
   final int? bitRate;
   final String? channels;
   final String? encodingType;
@@ -209,7 +209,7 @@ class FAudioModel {
 
   const FAudioModel({
     required this.tags,
-    this.length,
+    this.durationMS,
     this.bitRate,
     this.channels,
     this.encodingType,
@@ -228,7 +228,7 @@ class FAudioModel {
   factory FAudioModel.fromMap(Map<String, dynamic> map) {
     return FAudioModel(
       tags: FTags.fromMap(map),
-      length: map["length"],
+      durationMS: map["durationMS"],
       bitRate: map["bitRate"],
       channels: map["channels"],
       encodingType: map["encodingType"],
@@ -244,7 +244,7 @@ class FAudioModel {
   Map<String, dynamic> _toMapMini() {
     final tagsMap = tags.toMap();
     tagsMap.addAll(<String, dynamic>{
-      "length": length,
+      "durationMS": durationMS,
       "bitRate": bitRate,
       "channels": channels,
       "encodingType": encodingType,

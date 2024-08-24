@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -16,7 +17,7 @@ class QueueController {
   static final QueueController _instance = QueueController._internal();
   QueueController._internal();
 
-  /// holds all queues mapped & sorted by [date] chronologically & reversly.
+  /// holds all queues mapped & sorted by `date` chronologically & reversly.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
 
   Queue? get _latestQueueInMap => queuesMap.value[_latestAddedQueueDate];
@@ -154,7 +155,7 @@ class QueueController {
           final secondC = trackPath.startsWith(oldDir);
           return firstC && secondC;
         },
-        (old) => Track(old.path.replaceFirst(oldDir, newDir)),
+        (old) => Track.fromTypeParameter(old.runtimeType, old.path.replaceFirst(oldDir, newDir)),
         onMatch: () => queuesToSave.add(q),
       );
     });
@@ -227,21 +228,14 @@ class QueueController {
 
     // -- Reading file.
     try {
-      final res = File(AppPaths.LATEST_QUEUE).readAsJsonSync() as Map?;
-      if (res != null) {
-        final t = res['type'] as String? ?? LibraryCategory.localTracks;
-        final items = res['items'] as List;
-        index = settings.player.lastPlayedIndices[t] ?? 0;
-        switch (t) {
-          case LibraryCategory.localTracks:
-            items.loop((e) => latestQueue.add(Track(e)));
-            break;
-          case LibraryCategory.youtube:
-            items.loop((e) => latestQueue.add(YoutubeID.fromJson(e)));
-            break;
-          // case LibraryCategory.localVideos:
-          // break;
-        }
+      final items = File(AppPaths.LATEST_QUEUE).readAsJsonSync() as List?;
+      if (items != null) {
+        index = settings.player.lastPlayedIndex;
+        items.loop((e) {
+          final type = e['t'] as String;
+          final item = e['p'];
+          latestQueue.add(_LatestQueueSaver._typesBuilderMapLookup[type]?.call(item) ?? Track.explicit(e));
+        });
       }
     } catch (_) {}
 
@@ -253,6 +247,7 @@ class QueueController {
       QueueSource.playerQueue,
       startPlaying: false,
       updateQueue: false,
+      maximumItems: null,
     );
   }
 
@@ -261,26 +256,13 @@ class QueueController {
   }
 
   Future<void> _saveLatestQueueToStorage(List<Playable> items) async {
-    String type = '';
-    final queue = <Object>[];
-    switch (items.firstOrNull.runtimeType) {
-      case const (Selectable):
-      case const (Track):
-      case const (TrackWithDate):
-        type = LibraryCategory.localTracks;
-        items.loop((e) => queue.add((e as Selectable).track.path));
-        break;
+    final queueObjects = <Object>[];
 
-      case const (YoutubeID):
-        type = LibraryCategory.youtube;
-        (items.cast<YoutubeID>()).loop((e) => queue.add(e.toJson()));
-        break;
-    }
-    final map = {
-      'type': type,
-      'items': queue,
-    };
-    await File(AppPaths.LATEST_QUEUE).writeAsJson(map);
+    items.loop((e) => queueObjects.add({
+          'p': e.toJson(),
+          't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+        }));
+    await File(AppPaths.LATEST_QUEUE).writeAsJson(queueObjects);
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
@@ -303,4 +285,22 @@ class QueueController {
   final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
   bool _isLoadingQueues = true;
   bool get isLoadingQueues => _isLoadingQueues;
+}
+
+class _LatestQueueSaver {
+  const _LatestQueueSaver();
+
+  static final _typesBuilderMapLookup = <String, Playable Function(dynamic p)>{
+    'v': (p) => Video.explicit(p),
+    'tr': (p) => Track.explicit(p),
+    'twd': (p) => TrackWithDate.fromJson(p),
+    'ytv': (p) => YoutubeID.fromJson(p),
+  };
+
+  static const _typesMapLookup = <Type, String>{
+    Video: 'v',
+    Track: 'tr',
+    TrackWithDate: 'twd',
+    YoutubeID: 'ytv',
+  };
 }

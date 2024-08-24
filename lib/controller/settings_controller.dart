@@ -100,7 +100,9 @@ class _SettingsController with SettingsFileWriter {
   final defaultBackupLocation = AppDirs.BACKUPS.obs;
   final autoBackupIntervalDays = 2.obs;
   final defaultFolderStartupLocation = kStoragePaths.first.obs;
+  final defaultFolderStartupLocationVideos = kStoragePaths.first.obs;
   final enableFoldersHierarchy = true.obs;
+  final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
   final RxList<String> backupItemslist = [
@@ -256,6 +258,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.artist: [SortType.year, SortType.title],
     MediaType.genre: [SortType.year, SortType.title],
     MediaType.folder: [SortType.filename],
+    MediaType.folderVideo: [SortType.filename],
   }.obs;
 
   final mediaItemsTrackSortingReverse = <MediaType, bool>{
@@ -263,6 +266,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.artist: false,
     MediaType.genre: false,
     MediaType.folder: false,
+    MediaType.folderVideo: false,
   }.obs;
 
   double fontScaleLRC = 1.0;
@@ -365,8 +369,10 @@ class _SettingsController with SettingsFileWriter {
       defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
       autoBackupIntervalDays.value = json['autoBackupIntervalDays'] ?? autoBackupIntervalDays.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
+      defaultFolderStartupLocationVideos.value = json['defaultFolderStartupLocationVideos'] ?? defaultFolderStartupLocationVideos.value;
 
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
+      enableFoldersHierarchyVideos.value = json['enableFoldersHierarchyVideos'] ?? enableFoldersHierarchyVideos.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
       if (json['backupItemslist'] is List) backupItemslist.value = (json['backupItemslist'] as List).cast<String>();
@@ -545,7 +551,9 @@ class _SettingsController with SettingsFileWriter {
         'defaultBackupLocation': defaultBackupLocation.value,
         'autoBackupIntervalDays': autoBackupIntervalDays.value,
         'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
+        'defaultFolderStartupLocationVideos': defaultFolderStartupLocationVideos.value,
         'enableFoldersHierarchy': enableFoldersHierarchy.value,
+        'enableFoldersHierarchyVideos': enableFoldersHierarchyVideos.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
         'backupItemslist': backupItemslist.value,
@@ -699,7 +707,9 @@ class _SettingsController with SettingsFileWriter {
     String? defaultBackupLocation,
     int? autoBackupIntervalDays,
     String? defaultFolderStartupLocation,
+    String? defaultFolderStartupLocationVideos,
     bool? enableFoldersHierarchy,
+    bool? enableFoldersHierarchyVideos,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
     List<String>? backupItemslist,
@@ -894,7 +904,9 @@ class _SettingsController with SettingsFileWriter {
     if (defaultBackupLocation != null) this.defaultBackupLocation.value = defaultBackupLocation;
     if (autoBackupIntervalDays != null) this.autoBackupIntervalDays.value = autoBackupIntervalDays;
     if (defaultFolderStartupLocation != null) this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
+    if (defaultFolderStartupLocationVideos != null) this.defaultFolderStartupLocationVideos.value = defaultFolderStartupLocationVideos;
     if (enableFoldersHierarchy != null) this.enableFoldersHierarchy.value = enableFoldersHierarchy;
+    if (enableFoldersHierarchyVideos != null) this.enableFoldersHierarchyVideos.value = enableFoldersHierarchyVideos;
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
     if (backupItemslist != null) {

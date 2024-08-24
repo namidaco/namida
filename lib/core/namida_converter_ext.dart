@@ -68,6 +68,7 @@ extension MediaTypeUtils on MediaType {
       MediaType.artist || MediaType.albumArtist || MediaType.composer => LibraryTab.artists,
       MediaType.genre => LibraryTab.genres,
       MediaType.folder => LibraryTab.folders,
+      MediaType.folderVideo => LibraryTab.foldersVideos,
       MediaType.playlist => LibraryTab.playlists,
     };
   }
@@ -82,6 +83,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.genres => MediaType.genre,
       LibraryTab.playlists => MediaType.playlist,
       LibraryTab.folders => MediaType.folder,
+      LibraryTab.foldersVideos => MediaType.folderVideo,
       LibraryTab.home => null,
       LibraryTab.search => null,
       LibraryTab.youtube => null,
@@ -113,7 +115,8 @@ extension LibraryTabUtils on LibraryTab {
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),
-      LibraryTab.folders => const FoldersPage(),
+      LibraryTab.folders => FoldersPage.tracks(),
+      LibraryTab.foldersVideos => FoldersPage.videos(),
       LibraryTab.home => const HomePage(),
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.search => const NamidaDummyPage(),
@@ -230,11 +233,11 @@ extension CacheGetterVideo on VideoStream {
   }
 }
 
-extension MediaInfoToFAudioModel on MediaInfo? {
-  FAudioModel? toFAudioModel() {
+extension MediaInfoToFAudioModel on MediaInfo {
+  FAudioModel toFAudioModel() {
     final infoFull = this;
-    final info = infoFull?.format?.tags;
-    if (infoFull == null || info == null) return null;
+    final info = infoFull.format?.tags;
+    if (info == null) return FAudioModel.dummy(path);
     final trackNumberTotal = info.track?.split('/');
     final discNumberTotal = info.disc?.split('/');
     final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
@@ -263,8 +266,9 @@ extension MediaInfoToFAudioModel on MediaInfo? {
         remixer: info.remixer,
         mood: info.mood,
         country: info.country,
+        recordLabel: info.label,
       ),
-      length: infoFull.format?.duration?.inSeconds,
+      durationMS: infoFull.format?.duration?.inMilliseconds,
       bitRate: bitrateThousands?.round(),
       channels: audioStream?.channels == null
           ? null
@@ -333,7 +337,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
         addThese(Player.inst.currentQueue.value.mapAs<Selectable>());
         break;
       case QueueSource.recentlyAdded:
-        addThese(Indexer.inst.recentlyAddedTracks);
+        addThese(Indexer.inst.recentlyAddedTracksSorted());
         break;
       default:
         addThese(SelectedTracksController.inst.getCurrentAllTracks());
@@ -660,7 +664,8 @@ extension RouteUtils on NamidaRoute {
   Iterable<Selectable> tracksInside() {
     return switch (route) {
           RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
-          RouteType.PAGE_folders => Folders.inst.currentFolder.value?.tracks(),
+          RouteType.PAGE_folders => Folders.tracks.currentFolder.value?.tracks(),
+          RouteType.PAGE_folders_videos => Folders.videos.currentFolder.value?.tracks(),
           RouteType.SUBPAGE_albumTracks => name?.getAlbumTracks(),
           RouteType.SUBPAGE_artistTracks => name?.getArtistTracks(),
           RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),
@@ -669,8 +674,8 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_queueTracks => name?.getQueue()?.tracks,
           RouteType.SUBPAGE_playlistTracks => name == null ? null : PlaylistController.inst.getPlaylist(name!)?.tracks,
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
-          RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
-          RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracks,
+          // RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
+          RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracksSorted(),
           _ => [],
         } ??
         [];
@@ -1009,6 +1014,7 @@ class _NamidaConverters {
         LibraryTab.genres: lang.GENRES,
         LibraryTab.playlists: lang.PLAYLISTS,
         LibraryTab.folders: lang.FOLDERS,
+        LibraryTab.foldersVideos: lang.VIDEOS,
         LibraryTab.home: lang.HOME,
         LibraryTab.search: lang.SEARCH,
         LibraryTab.youtube: lang.YOUTUBE,
@@ -1022,6 +1028,7 @@ class _NamidaConverters {
         MediaType.genre: lang.GENRES,
         MediaType.playlist: lang.PLAYLISTS,
         MediaType.folder: lang.FOLDERS,
+        MediaType.folderVideo: lang.VIDEOS,
       },
       AlbumIdentifier: {
         AlbumIdentifier.albumName: lang.NAME,
@@ -1110,6 +1117,7 @@ class _NamidaConverters {
         QueueSource.history: lang.HISTORY,
         QueueSource.mostPlayed: lang.MOST_PLAYED,
         QueueSource.folder: lang.FOLDER,
+        QueueSource.folderVideos: lang.VIDEOS,
         QueueSource.search: lang.SEARCH,
         QueueSource.playerQueue: lang.QUEUE,
         QueueSource.queuePage: lang.QUEUES,
@@ -1338,6 +1346,7 @@ class _NamidaConverters {
         LibraryTab.genres: Broken.smileys,
         LibraryTab.playlists: Broken.music_library_2,
         LibraryTab.folders: Broken.folder,
+        LibraryTab.foldersVideos: Broken.video_play,
         LibraryTab.home: Broken.home_2,
         LibraryTab.search: Broken.search_normal_1,
         LibraryTab.youtube: Broken.video_square,

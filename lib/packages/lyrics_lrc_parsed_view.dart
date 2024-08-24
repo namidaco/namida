@@ -79,20 +79,20 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   int _itemDurationUpdater() {
-    int totalDurSeconds = Player.inst.currentItemDuration.value?.inSeconds ?? 0;
-    if (totalDurSeconds == 0) {
+    int totalDurMS = Player.inst.currentItemDuration.value?.inMilliseconds ?? 0;
+    if (totalDurMS == 0) {
       final current = Player.inst.currentItem.value;
       if (current is Selectable) {
-        totalDurSeconds = current.track.duration;
+        totalDurMS = current.track.durationMS;
       }
     }
-    _currentItemDurationSeconds.value = totalDurSeconds;
-    return totalDurSeconds;
+    _currentItemDurationMS.value = totalDurMS;
+    return totalDurMS;
   }
 
   Lrc? currentLRC;
 
-  final _currentItemDurationSeconds = RxnO<int>();
+  final _currentItemDurationMS = RxnO<int>();
 
   void clearLists() {
     timestampsMap.clear();
@@ -121,8 +121,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           seconds: int.parse(parts[1]),
           milliseconds: int.parse("${parts[2]}0"), // aditional 0 to convert to millis
         );
-        final totalDurSeconds = _itemDurationUpdater();
-        final totalDurMicro = totalDurSeconds * 1000 * 1000;
+        final totalDurMS = _itemDurationUpdater();
+        final totalDurMicro = totalDurMS * 1000;
         cal = totalDurMicro / lyricsDuration.inMicroseconds;
       } catch (_) {}
     }
@@ -232,7 +232,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     Player.inst.nowPlayingPosition.removeListener(_playerPositionListener);
     _latestUpdatedLineIndex.close();
     _latestUpdatedLine.close();
-    _currentItemDurationSeconds.close();
+    _currentItemDurationMS.close();
     super.dispose();
   }
 
@@ -289,20 +289,20 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       rx: settings.player.displayRemainingDurInsteadOfTotal,
                       builder: (displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
                           ? ObxO(
-                              rx: _currentItemDurationSeconds,
-                              builder: (mainSeconds) {
+                              rx: _currentItemDurationMS,
+                              builder: (durMS) {
+                                int finalDurMS = durMS ?? 0;
+
                                 return ObxO(
                                   rx: Player.inst.currentItem,
                                   builder: (currentItem) {
+                                    if (finalDurMS == 0 && currentItem is Selectable) {
+                                      finalDurMS = currentItem.track.durationMS;
+                                    }
                                     return ObxO(
                                       rx: Player.inst.nowPlayingPosition,
                                       builder: (toSubtract) {
-                                        if (mainSeconds == 0 && currentItem is Selectable) {
-                                          mainSeconds = currentItem.track.duration;
-                                        }
-                                        final durMS = (mainSeconds ?? 0) * 1000;
-
-                                        final msToDisplay = durMS - toSubtract;
+                                        final msToDisplay = finalDurMS - toSubtract;
                                         return Text(
                                           "- ${msToDisplay.milliSecondsLabel}",
                                           style: context.textTheme.displaySmall,
@@ -314,22 +314,22 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               },
                             )
                           : ObxO(
-                              rx: _currentItemDurationSeconds,
-                              builder: (seconds) {
-                                if (seconds == null || seconds == 0) {
+                              rx: _currentItemDurationMS,
+                              builder: (milliseconds) {
+                                if (milliseconds == null || milliseconds == 0) {
                                   return ObxO(
                                     rx: Player.inst.currentItem,
                                     builder: (currentItem) {
-                                      final seconds = currentItem is Selectable ? currentItem.track.duration : 0;
+                                      final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
                                       return Text(
-                                        seconds.secondsLabel,
+                                        milliseconds.milliSecondsLabel,
                                         style: context.textTheme.displaySmall,
                                       );
                                     },
                                   );
                                 }
                                 return Text(
-                                  seconds.secondsLabel,
+                                  milliseconds.milliSecondsLabel,
                                   style: context.textTheme.displaySmall,
                                 );
                               },

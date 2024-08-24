@@ -140,7 +140,7 @@ Future<void> showTrackInfoDialog(
     tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}$additionalHero',
     child: ArtworkWidget(
       key: Key(trackExt.pathToImage),
-      track: trackExt.toTrack(),
+      track: trackExt.asTrack(),
       path: trackExt.pathToImage,
       thumbnailSize: 120,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
@@ -358,10 +358,10 @@ Future<void> showTrackInfoDialog(
                               icon: Broken.profile_2user,
                             ),
 
-                          if (shouldShowTheField(trackExt.duration == 0))
+                          if (shouldShowTheField(trackExt.durationMS == 0))
                             TrackInfoListTile(
                               title: lang.DURATION,
-                              value: trackExt.duration.secondsLabel,
+                              value: trackExt.durationMS.milliSecondsLabel,
                               icon: Broken.clock,
                             ),
 
