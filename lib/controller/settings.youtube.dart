@@ -19,11 +19,9 @@ class _YoutubeSettings with SettingsFileWriter {
   final rememberAudioOnly = false.obs;
   final topComments = true.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
-  final ytInitialHomePage = YTHomePages.playlists.obs;
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final dragToSeek = YTSeekActionMode.all.obs;
 
-  int addToPlaylistsTabIndex = 0;
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
   bool whiteVideoBGInLightMode = false;
@@ -43,10 +41,8 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? topComments,
     bool? autoExtractVideoTagsFromInfo,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
-    YTHomePages? ytInitialHomePage,
     YTSeekActionMode? tapToSeek,
     YTSeekActionMode? dragToSeek,
-    int? addToPlaylistsTabIndex,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
@@ -70,11 +66,9 @@ class _YoutubeSettings with SettingsFileWriter {
     if (topComments != null) this.topComments.value = topComments;
     if (autoExtractVideoTagsFromInfo != null) this.autoExtractVideoTagsFromInfo.value = autoExtractVideoTagsFromInfo;
     if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
-    if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
     if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
 
-    if (addToPlaylistsTabIndex != null) this.addToPlaylistsTabIndex = addToPlaylistsTabIndex;
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
@@ -114,13 +108,11 @@ class _YoutubeSettings with SettingsFileWriter {
       if (rememberAudioOnly.value) isAudioOnlyMode.value = json['isAudioOnlyMode'] ?? isAudioOnlyMode.value;
       topComments.value = json['topComments'] ?? topComments.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
-      ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
       tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
       dragToSeek.value = YTSeekActionMode.values.getEnum(json['dragToSeek']) ?? dragToSeek.value;
 
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
-      addToPlaylistsTabIndex = json['addToPlaylistsTabIndex'] ?? addToPlaylistsTabIndex;
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
@@ -145,12 +137,10 @@ class _YoutubeSettings with SettingsFileWriter {
         'rememberAudioOnly': rememberAudioOnly.value,
         'topComments': topComments.value,
         'onYoutubeLinkOpen': onYoutubeLinkOpen.value.convertToString,
-        'ytInitialHomePage': ytInitialHomePage.value.convertToString,
         'tapToSeek': tapToSeek.value.convertToString,
         'dragToSeek': dragToSeek.value.convertToString,
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.convertToString, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.convertToString, value)),
-        'addToPlaylistsTabIndex': addToPlaylistsTabIndex,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.convertToString,
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,

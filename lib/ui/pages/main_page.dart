@@ -512,7 +512,7 @@ class _CustomNavBar extends StatelessWidget {
             final tab = settings.libraryTabs.value[destinationIndex];
             ScrollSearchController.inst.animatePageController(tab);
           },
-          selectedIndex: settings.selectedLibraryTab.valueR.toInt().toIf(0, -1),
+          selectedIndex: settings.extra.selectedLibraryTab.valueR.toInt().toIf(0, -1),
           destinations: [
             ...settings.libraryTabs.valueR.map(
               (e) => NavigationDestination(

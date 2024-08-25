@@ -23,7 +23,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: NamidaTabView(
         isScrollable: false,
-        initialIndex: settings.youtube.ytInitialHomePage.value.index,
+        initialIndex: settings.extra.ytInitialHomePage.value.index,
         tabWidgets: YTHomePages.values
             .map(
               (e) => Padding(
@@ -39,7 +39,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
             )
             .toList(),
         onIndexChanged: (index) {
-          settings.youtube.save(ytInitialHomePage: YTHomePages.values[index]);
+          settings.extra.save(ytInitialHomePage: YTHomePages.values[index]);
         },
         children: const [
           YoutubeHomeFeedPage(),

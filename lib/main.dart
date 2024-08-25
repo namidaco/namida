@@ -138,10 +138,7 @@ void mainInitialization() async {
     AppDirs.INTERNAL_STORAGE,
   ]);
 
-  settings.equalizer.prepareSettingsFile();
-  settings.player.prepareSettingsFile();
-  settings.youtube.prepareSettingsFile();
-  settings.prepareSettingsFile();
+  settings.prepareAllSettings();
 
   if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile();
   await Language.initialize();
@@ -406,7 +403,6 @@ Future<bool> requestStoragePermission({bool request = true}) async {
 Future<bool> requestIgnoreBatteryOptimizations() async {
   final granted = await Permission.ignoreBatteryOptimizations.isGranted;
   if (granted) return true;
-  settings.save(canAskForBatteryOptimizations: true);
   if (!settings.canAskForBatteryOptimizations) return false;
 
   snackyy(

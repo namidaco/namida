@@ -41,8 +41,6 @@ class _PlayerSettings with SettingsFileWriter {
     InterruptionType.unknown: InterruptionAction.pause,
   }.obs;
 
-  int lastPlayedIndex = 0;
-
   void save({
     bool? enableVolumeFadeOnPlayPause,
     bool? infiniyQueueOnNextPrevious,
@@ -72,7 +70,6 @@ class _PlayerSettings with SettingsFileWriter {
     RepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
-    int? lastPlayedIndex,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
     if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
@@ -102,7 +99,6 @@ class _PlayerSettings with SettingsFileWriter {
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
-    if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     _writeToStorage();
   }
 
@@ -152,7 +148,6 @@ class _PlayerSettings with SettingsFileWriter {
             InterruptionAction.doNothing,
           ) ??
           onInterrupted.map((key, value) => MapEntry(key, value));
-      lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -189,7 +184,6 @@ class _PlayerSettings with SettingsFileWriter {
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
-        'lastPlayedIndex': lastPlayedIndex,
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();

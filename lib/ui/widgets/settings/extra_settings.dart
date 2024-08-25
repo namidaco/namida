@@ -186,7 +186,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
                 icon: Broken.receipt_1,
                 title: lang.DEFAULT_LIBRARY_TAB,
-                trailingText: settings.autoLibraryTab.valueR ? lang.AUTO : settings.staticLibraryTab.valueR.toText(),
+                trailingText: settings.extra.autoLibraryTab.valueR ? lang.AUTO : settings.extra.staticLibraryTab.valueR.toText(),
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.DEFAULT_LIBRARY_TAB,
@@ -203,8 +203,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                               () => ListTileWithCheckMark(
                                 title: lang.AUTO,
                                 icon: Broken.recovery_convert,
-                                onTap: () => settings.save(autoLibraryTab: true),
-                                active: settings.autoLibraryTab.valueR,
+                                onTap: () => settings.extra.save(autoLibraryTab: true),
+                                active: settings.extra.autoLibraryTab.valueR,
                               ),
                             ),
                           ),
@@ -217,13 +217,13 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       title: "${e.key + 1}. ${e.value.toText()}",
                                       icon: e.value.toIcon(),
                                       onTap: () {
-                                        settings.save(
+                                        settings.extra.save(
                                           selectedLibraryTab: e.value,
                                           staticLibraryTab: e.value,
                                           autoLibraryTab: false,
                                         );
                                       },
-                                      active: settings.selectedLibraryTab.valueR == e.value,
+                                      active: settings.extra.selectedLibraryTab.valueR == e.value,
                                     ),
                                   ),
                                 ),
@@ -541,7 +541,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                   onTap: () {
                                     if (settings.libraryTabs.length > 3) {
                                       settings.removeFromList(libraryTab1: tab);
-                                      settings.save(selectedLibraryTab: settings.libraryTabs[0]);
+                                      settings.extra.save(selectedLibraryTab: settings.libraryTabs[0]);
                                       subList.add(tab);
                                     } else {
                                       showMinimumItemsSnack(3);

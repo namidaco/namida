@@ -122,7 +122,7 @@ class NamidaDrawer extends StatelessWidget {
                 const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                 ...LibraryTab.values.map(
                   (e) => ObxO(
-                    rx: settings.selectedLibraryTab,
+                    rx: settings.extra.selectedLibraryTab,
                     builder: (selectedLibraryTab) => NamidaDrawerListTile(
                       enabled: selectedLibraryTab == e,
                       title: e.toText(),

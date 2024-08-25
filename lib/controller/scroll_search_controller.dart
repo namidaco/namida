@@ -68,11 +68,11 @@ class ScrollSearchController {
       return;
     }
 
-    final isPageToTheRight = tab.toInt() > settings.selectedLibraryTab.value.toInt();
+    final isPageToTheRight = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
     final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
 
-    _updateScrollPositions(settings.selectedLibraryTab.value, tab);
-    settings.save(selectedLibraryTab: tab);
+    _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab);
+    settings.extra.save(selectedLibraryTab: tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
   }
 
@@ -85,7 +85,7 @@ class ScrollSearchController {
   }
 
   void initialize() {
-    _assignScrollController(settings.selectedLibraryTab.value);
+    _assignScrollController(settings.extra.selectedLibraryTab.value);
   }
 
   void _assignScrollController(LibraryTab tab) {

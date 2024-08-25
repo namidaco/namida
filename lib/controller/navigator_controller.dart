@@ -142,7 +142,7 @@ class NamidaNavigator {
   }
 
   void onFirstLoad() {
-    final initialTab = settings.selectedLibraryTab.value;
+    final initialTab = settings.extra.selectedLibraryTab.value;
     final isSearchTab = initialTab == LibraryTab.search;
     final finalTab = isSearchTab ? settings.libraryTabs.value.first : initialTab;
     navigateTo(finalTab.toWidget(), durationInMs: 0);

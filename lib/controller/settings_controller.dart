@@ -11,18 +11,28 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
-part 'settings.youtube.dart';
-part 'settings.player.dart';
 part 'settings.equalizer.dart';
+part 'settings.extra.dart';
+part 'settings.player.dart';
+part 'settings.youtube.dart';
 
 final settings = _SettingsController._internal();
 
 class _SettingsController with SettingsFileWriter {
   _SettingsController._internal();
 
+  void prepareAllSettings() {
+    this.prepareSettingsFile();
+    this.equalizer.prepareSettingsFile();
+    this.player.prepareSettingsFile();
+    this.youtube.prepareSettingsFile();
+    this.extra.prepareSettingsFile();
+  }
+
   EqualizerSettings get equalizer => EqualizerSettings.inst;
   final player = _PlayerSettings._internal();
   final youtube = _YoutubeSettings._internal();
+  final extra = _ExtraSettings._internal();
 
   final selectedLanguage = kDefaultLang.obs;
   final themeMode = ThemeMode.system.obs;
@@ -30,9 +40,6 @@ class _SettingsController with SettingsFileWriter {
   final autoColor = true.obs;
   final staticColor = kMainColorLight.value.obs;
   final staticColorDark = kMainColorDark.value.obs;
-  final selectedLibraryTab = LibraryTab.tracks.obs;
-  final staticLibraryTab = LibraryTab.tracks.obs;
-  final autoLibraryTab = true.obs;
   final RxList<LibraryTab> libraryTabs = [
     LibraryTab.home,
     LibraryTab.tracks,
@@ -140,8 +147,8 @@ class _SettingsController with SettingsFileWriter {
   final isTrackPlayedSecondsCount = 40.obs;
   final isTrackPlayedPercentageCount = 40.obs;
   final waveformTotalBars = 140.obs;
-  final videosMaxCacheInMB = (4 * 1024).obs; // 4GB
-  final audiosMaxCacheInMB = (2 * 1024).obs; // 2GB
+  final videosMaxCacheInMB = (8 * 1024).obs; // 8GB
+  final audiosMaxCacheInMB = (4 * 1024).obs; // 4GB
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final hideStatusBarInExpandedMiniplayer = false.obs;
   final displayFavouriteButtonInNotification = false.obs;
@@ -287,11 +294,6 @@ class _SettingsController with SettingsFileWriter {
       autoColor.value = json['autoColor'] ?? autoColor.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
       staticColorDark.value = json['staticColorDark'] ?? staticColorDark.value;
-      selectedLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value
-          ? LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value
-          : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
-      staticLibraryTab.value = LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
-      autoLibraryTab.value = json['autoLibraryTab'] ?? autoLibraryTab.value;
       final libraryListFromStorage = json['libraryTabs'];
       if (libraryListFromStorage is List) libraryTabs.value = libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toListy();
 
@@ -489,9 +491,6 @@ class _SettingsController with SettingsFileWriter {
         'autoColor': autoColor.value,
         'staticColor': staticColor.value,
         'staticColorDark': staticColorDark.value,
-        'selectedLibraryTab': selectedLibraryTab.value.convertToString,
-        'staticLibraryTab': staticLibraryTab.value.convertToString,
-        'autoLibraryTab': autoLibraryTab.value,
         'libraryTabs': libraryTabs.mapped((element) => element.convertToString),
         'homePageItems': homePageItems.mapped((element) => element.convertToString),
         'activeArtistType': activeArtistType.value.convertToString,
@@ -644,9 +643,6 @@ class _SettingsController with SettingsFileWriter {
     int? staticColor,
     int? staticColorDark,
     int? searchResultsPlayMode,
-    LibraryTab? selectedLibraryTab,
-    LibraryTab? staticLibraryTab,
-    bool? autoLibraryTab,
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
     MediaType? activeArtistType,
@@ -782,9 +778,6 @@ class _SettingsController with SettingsFileWriter {
     if (autoColor != null) this.autoColor.value = autoColor;
     if (staticColor != null) this.staticColor.value = staticColor;
     if (staticColorDark != null) this.staticColorDark.value = staticColorDark;
-    if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
-    if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
-    if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (libraryTabs != null) {
       libraryTabs.loop((t) {
         if (!this.libraryTabs.contains(t)) {

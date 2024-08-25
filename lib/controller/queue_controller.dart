@@ -230,7 +230,7 @@ class QueueController {
     try {
       final items = File(AppPaths.LATEST_QUEUE).readAsJsonSync() as List?;
       if (items != null) {
-        index = settings.player.lastPlayedIndex;
+        index = settings.extra.lastPlayedIndex;
         items.loop((e) {
           final type = e['t'] as String;
           final item = e['p'];

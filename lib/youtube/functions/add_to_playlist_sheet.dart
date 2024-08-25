@@ -92,9 +92,9 @@ void showAddToPlaylistSheet({
             const SizedBox(height: 6.0),
             Expanded(
               child: NamidaTabView(
-                initialIndex: settings.youtube.addToPlaylistsTabIndex,
+                initialIndex: settings.extra.ytAddToPlaylistsTabIndex,
                 onIndexChanged: (index) {
-                  settings.youtube.save(addToPlaylistsTabIndex: index);
+                  settings.extra.save(ytAddToPlaylistsTabIndex: index);
                 },
                 tabs: [lang.LOCAL, lang.YOUTUBE],
                 children: [
