@@ -296,7 +296,7 @@ class JsonToHistoryParser {
                                                 style: namida.textTheme.displayMedium,
                                               ),
                                               Text(
-                                                "${entry.key.artistOrChannel} - ${entry.key.source.convertToString}",
+                                                "${entry.key.artistOrChannel} - ${entry.key.source.name}",
                                                 maxLines: 1,
                                                 softWrap: false,
                                                 overflow: TextOverflow.ellipsis,

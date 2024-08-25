@@ -24,7 +24,7 @@ class QueueInsertion {
     return {
       "numberOfTracks": numberOfTracks,
       "insertNext": insertNext,
-      "sortBy": sortBy.convertToString,
+      "sortBy": sortBy.name,
     };
   }
 }

@@ -51,10 +51,10 @@ class _ExtraSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'selectedLibraryTab': selectedLibraryTab.value.convertToString,
-        'staticLibraryTab': staticLibraryTab.value.convertToString,
+        'selectedLibraryTab': selectedLibraryTab.value.name,
+        'staticLibraryTab': staticLibraryTab.value.name,
         'autoLibraryTab': autoLibraryTab.value,
-        'ytInitialHomePage': ytInitialHomePage.value.convertToString,
+        'ytInitialHomePage': ytInitialHomePage.value.name,
         'lastPlayedIndex': lastPlayedIndex,
         'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
       };

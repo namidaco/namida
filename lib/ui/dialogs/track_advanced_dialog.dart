@@ -142,7 +142,7 @@ void showTrackAdvancedDialog({
             CustomListTile(
               passedColor: colorScheme,
               title: lang.SOURCE,
-              subtitle: isSingle ? sourcesMap.keys.first.convertToString : sourcesMap.entries.map((e) => '${e.key.convertToString}: ${e.value.formatDecimal()}').join('\n'),
+              subtitle: isSingle ? sourcesMap.keys.first.name : sourcesMap.entries.map((e) => '${e.key.name}: ${e.value.formatDecimal()}').join('\n'),
               icon: Broken.attach_circle,
               onTap: () {},
             ),

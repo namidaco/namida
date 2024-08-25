@@ -45,7 +45,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
     return {
       'dateAdded': dateAdded,
       'track': _track.path,
-      'source': source.convertToString,
+      'source': source.name,
       if (_track is Video) 'v': true,
     };
   }

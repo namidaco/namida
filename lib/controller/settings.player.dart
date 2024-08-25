@@ -178,12 +178,12 @@ class _PlayerSettings with SettingsFileWriter {
         'resumeAfterOnVolume0Pause': resumeAfterOnVolume0Pause.value,
         'resumeAfterWasInterrupted': resumeAfterWasInterrupted.value,
         'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
-        'repeatMode': repeatMode.value.convertToString,
-        'killAfterDismissingApp': killAfterDismissingApp.value.convertToString,
+        'repeatMode': repeatMode.value.name,
+        'killAfterDismissingApp': killAfterDismissingApp.value.name,
         'lockscreenArtwork': lockscreenArtwork.value,
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
-        'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.convertToString, value.convertToString)),
+        'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();

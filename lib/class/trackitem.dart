@@ -46,17 +46,17 @@ class TrackItem {
 
   Map<String, dynamic> toJson() {
     return {
-      'row1Item1': row1Item1.convertToString,
-      'row1Item2': row1Item2.convertToString,
-      'row1Item3': row1Item3.convertToString,
-      'row2Item1': row2Item1.convertToString,
-      'row2Item2': row2Item2.convertToString,
-      'row2Item3': row2Item3.convertToString,
-      'row3Item1': row3Item1.convertToString,
-      'row3Item2': row3Item2.convertToString,
-      'row3Item3': row3Item3.convertToString,
-      'rightItem1': rightItem1.convertToString,
-      'rightItem2': rightItem2.convertToString,
+      'row1Item1': row1Item1.name,
+      'row1Item2': row1Item2.name,
+      'row1Item3': row1Item3.name,
+      'row2Item1': row2Item1.name,
+      'row2Item2': row2Item2.name,
+      'row2Item3': row2Item3.name,
+      'row3Item1': row3Item1.name,
+      'row3Item2': row3Item2.name,
+      'row3Item3': row3Item3.name,
+      'rightItem1': rightItem1.name,
+      'rightItem2': rightItem2.name,
     };
   }
 }

@@ -42,8 +42,8 @@ class Queue {
   /// BREAKING(>v2.5.6): no longer saving allTracks as empty queue.
   Map<String, dynamic> toJson() {
     return {
-      'source': source.convertToString,
-      'homePageItem': homePageItem?.convertToString,
+      'source': source.name,
+      'homePageItem': homePageItem?.name,
       'date': date,
       'isFav': isFav,
       'tracks': tracks.map((e) {

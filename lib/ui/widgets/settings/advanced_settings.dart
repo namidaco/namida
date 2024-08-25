@@ -368,7 +368,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                                 child: Obx(
                                   () => ListTileWithCheckMark(
                                     active: isActive(source),
-                                    title: '${source.convertToString} (${count.formatDecimal()})',
+                                    title: '${source.name} (${count.formatDecimal()})',
                                     onTap: () {
                                       if (isActive(source)) {
                                         sourcesToDelete.remove(source);
