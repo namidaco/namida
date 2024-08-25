@@ -49,10 +49,10 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
         child: AnimationLimiter(
           child: ObxO(
             rx: albumIdentifiers ?? SearchSortController.inst.albumSearchList,
-            builder: (finalAlbums) => Column(
+            builder: (context, finalAlbums) => Column(
               children: [
                 Obx(
-                  () => ExpandableBox(
+                  (context) => ExpandableBox(
                     enableHero: enableHero,
                     gridWidget: ChangeGridCountWidget(
                       currentCount: countPerRow,
@@ -81,7 +81,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                   ),
                 ),
                 Obx(
-                  () {
+                  (context) {
                     settings.albumListTileHeight.valueR;
                     return countPerRow == 1
                         ? Expanded(

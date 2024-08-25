@@ -62,7 +62,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: ObxO(
         rx: activeTimeRangeChip,
-        builder: (activeChip) {
+        builder: (context, activeChip) {
           final isActive = activeChip == mptr;
           final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
           return TapDetector(
@@ -110,7 +110,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
           const SizedBox(width: 8.0),
           ObxO(
             rx: activeTimeRangeChip,
-            builder: (activeChip) => NamidaInkWell(
+            builder: (context, activeChip) => NamidaInkWell(
               animationDurationMS: 200,
               borderRadius: 6.0,
               bgColor: context.theme.cardTheme.color,
@@ -150,7 +150,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               child: Row(
                 children: [
                   Obx(
-                    () {
+                    (context) {
                       final dateRange = customDateRange.valueR;
                       return _getChipChild(
                         context: context,
@@ -194,7 +194,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     const bottomPadding = 0.0;
     return BackgroundWrapper(
       child: Obx(
-        () {
+        (context) {
           final finalListenMap = historyController.currentTopTracksMapListens;
           return NamidaListView(
             itemExtent: itemExtent,

@@ -38,7 +38,7 @@ class PlaylistTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
             child: Obx(
-              () {
+              (context) {
                 PlaylistController.inst.playlistsMap.valueR;
                 final playlist = PlaylistController.inst.getPlaylist(playlistName);
                 if (playlist == null) return const SizedBox();

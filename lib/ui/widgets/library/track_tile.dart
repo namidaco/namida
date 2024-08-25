@@ -48,25 +48,25 @@ class TrackTilePropertiesProvider extends StatelessWidget {
 
     return ObxO(
       rx: settings.forceSquaredTrackThumbnail,
-      builder: (forceSquaredThumbnails) => ObxO(
+      builder: (context, forceSquaredThumbnails) => ObxO(
         rx: settings.displayThirdRow,
-        builder: (displayThirdRow) => ObxO(
+        builder: (context, displayThirdRow) => ObxO(
           rx: settings.displayFavouriteIconInListTile,
-          builder: (displayFavouriteIconInListTile) => ObxO(
+          builder: (context, displayFavouriteIconInListTile) => ObxO(
             rx: settings.trackThumbnailSizeinList,
-            builder: (thumbnailSize) => ObxO(
+            builder: (context, thumbnailSize) => ObxO(
               rx: settings.trackListTileHeight,
-              builder: (trackTileHeight) => ObxO(
+              builder: (context, trackTileHeight) => ObxO(
                 rx: SelectedTracksController.inst.existingTracksMap,
-                builder: (selectedTracksMap) => _ObxPrefer(
+                builder: (context, selectedTracksMap) => _ObxPrefer(
                   rx: HistoryController.inst.topTracksMapListens,
                   enabled: listenToTopHistoryItems,
-                  builder: (_) => ObxO(
+                  builder: (context, _) => ObxO(
                     rx: CurrentColor.inst.currentPlayingTrack,
-                    builder: (currentPlayingTrack) => ObxO(
+                    builder: (context, currentPlayingTrack) => ObxO(
                       rx: CurrentColor.inst.currentPlayingIndex,
-                      builder: (currentPlayingIndex) => Obx(
-                        () {
+                      builder: (context, currentPlayingIndex) => Obx(
+                        (context) {
                           int? sleepingIndex;
                           if (queueSource == QueueSource.playerQueue) {
                             final sleepconfig = Player.inst.sleepTimerConfig.valueR;
@@ -109,13 +109,13 @@ class TrackTilePropertiesProvider extends StatelessWidget {
 
 class _ObxPrefer<T> extends StatelessWidget {
   final RxBaseCore<T> rx;
-  final Widget Function(T? value) builder;
+  final Widget Function(BuildContext context, T? value) builder;
   final bool enabled;
   const _ObxPrefer({required this.rx, required this.builder, required this.enabled, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return enabled ? ObxO(rx: rx, builder: builder) : builder(null);
+    return enabled ? ObxO(rx: rx, builder: builder) : builder(context, null);
   }
 }
 

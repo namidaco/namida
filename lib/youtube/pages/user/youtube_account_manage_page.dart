@@ -42,7 +42,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
         ),
         ObxO(
           rx: YoutubeAccountController.signInProgress,
-          builder: (loginProgress) => loginProgress == null
+          builder: (context, loginProgress) => loginProgress == null
               ? const SizedBox()
               : Text(
                   loginProgress.name,
@@ -103,11 +103,11 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeAccountController.current.signedInAccounts,
-        builder: (signedInAccountsSet) {
+        builder: (context, signedInAccountsSet) {
           final signedInAccounts = signedInAccountsSet.toList();
           return ObxO(
             rx: YoutubeAccountController.current.activeAccountChannel,
-            builder: (currentChannel) => Stack(
+            builder: (context, currentChannel) => Stack(
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -117,7 +117,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                       const SizedBox(height: 24.0),
                       ObxO(
                         rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-                        builder: (userMembershipType) {
+                        builder: (context, userMembershipType) {
                           final hasMembership = userMembershipType != null && userMembershipType.index >= MembershipType.cutie.index;
                           return CustomListTile(
                             borderR: 12.0,
@@ -208,7 +208,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                     child: Align(
                       child: ObxO(
                         rx: YoutubeAccountController.signInProgress,
-                        builder: (loginProgress) => Row(
+                        builder: (context, loginProgress) => Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: loginProgress != null
                               ? [

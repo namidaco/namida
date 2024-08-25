@@ -421,7 +421,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
           const SizedBox(width: 8.0),
           ObxO(
             rx: didRead,
-            builder: (didRead) => NamidaButton(
+            builder: (context, didRead) => NamidaButton(
               enabled: didRead,
               text: lang.CONFIRM,
               onPressed: () {

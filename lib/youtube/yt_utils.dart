@@ -523,7 +523,7 @@ class YTUtils {
                   allSelected.value = false;
                 },
                 trailing: Obx(
-                  () => NamidaCheckMark(
+                  (context) => NamidaCheckMark(
                     size: 16.0,
                     active: pathsToDelete[data.path] == true,
                   ),
@@ -532,7 +532,7 @@ class YTUtils {
             },
           ),
           Obx(
-            () {
+            (context) {
               final size = tempFilesSize.values.fold(0, (p, e) => p + e);
               if (size <= 0) return const SizedBox();
               return SmallListTile(
@@ -554,7 +554,7 @@ class YTUtils {
                 },
                 trailing: ObxO(
                   rx: tempFilesDelete,
-                  builder: (deletetemp) => NamidaCheckMark(
+                  builder: (context, deletetemp) => NamidaCheckMark(
                     size: 16.0,
                     active: deletetemp,
                   ),
@@ -583,7 +583,7 @@ class YTUtils {
         title: lang.CLEAR,
         trailingWidgets: [
           Obx(
-            () => Checkbox.adaptive(
+            (context) => Checkbox.adaptive(
               splashRadius: 28.0,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(
@@ -610,7 +610,7 @@ class YTUtils {
         actions: [
           const CancelButton(),
           Obx(
-            () => NamidaButton(
+            (context) => NamidaButton(
               enabled: deleteTempAudio.valueR || deleteTempVideo.valueR || pathsToDelete.values.any((element) => element),
               text: "${lang.DELETE} (${totalSizeToDelete.valueR.fileSizeFormatted})",
               onPressed: () async {

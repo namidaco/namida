@@ -80,7 +80,7 @@ class ThemeSetting extends SettingSubpageProvider {
       key: _ThemeSettingsKeys.language,
       child: ObxO(
         rx: lang.currentLanguage,
-        builder: (currentLanguage) => CustomListTile(
+        builder: (context, currentLanguage) => CustomListTile(
           bgColor: getBgColor(_ThemeSettingsKeys.language),
           icon: Broken.language_square,
           title: lang.LANGUAGE,
@@ -133,7 +133,7 @@ class ThemeSetting extends SettingSubpageProvider {
                             key: Key(e.code),
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Obx(
-                              () => ListTileWithCheckMark(
+                              (context) => ListTileWithCheckMark(
                                 leading: Container(
                                   padding: const EdgeInsets.all(4.0),
                                   decoration: BoxDecoration(
@@ -201,7 +201,7 @@ class ThemeSetting extends SettingSubpageProvider {
             getItemWrapper(
               key: _ThemeSettingsKeys.autoColoring,
               child: Obx(
-                () => CustomSwitchListTile(
+                (context) => CustomSwitchListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.autoColoring),
                   icon: Broken.colorfilter,
                   title: lang.AUTO_COLORING,
@@ -223,7 +223,7 @@ class ThemeSetting extends SettingSubpageProvider {
               getItemWrapper(
                 key: _ThemeSettingsKeys.wallpaperColors,
                 child: Obx(
-                  () => CustomSwitchListTile(
+                  (context) => CustomSwitchListTile(
                     bgColor: getBgColor(_ThemeSettingsKeys.wallpaperColors),
                     enabled: settings.autoColor.valueR,
                     icon: Broken.gallery_import,
@@ -239,7 +239,7 @@ class ThemeSetting extends SettingSubpageProvider {
             getItemWrapper(
               key: _ThemeSettingsKeys.forceMiniplayerColors,
               child: Obx(
-                () => CustomSwitchListTile(
+                (context) => CustomSwitchListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.forceMiniplayerColors),
                   icon: Broken.slider_horizontal,
                   title: lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS,
@@ -256,7 +256,7 @@ class ThemeSetting extends SettingSubpageProvider {
               key: _ThemeSettingsKeys.pitchBlack,
               child: ObxO(
                 rx: settings.pitchBlack,
-                builder: (pitchBlack) => CustomSwitchListTile(
+                builder: (context, pitchBlack) => CustomSwitchListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.pitchBlack),
                   icon: Broken.mirror,
                   title: lang.USE_PITCH_BLACK,
@@ -273,7 +273,7 @@ class ThemeSetting extends SettingSubpageProvider {
               key: _ThemeSettingsKeys.defaultColor,
               child: ObxO(
                 rx: settings.autoColor,
-                builder: (autoColor) => CustomListTile(
+                builder: (context, autoColor) => CustomListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
                   enabled: !autoColor,
                   icon: Broken.bucket,
@@ -281,7 +281,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   subtitle: lang.DEFAULT_COLOR_SUBTITLE,
                   trailingRaw: FittedBox(
                     child: Obx(
-                      () => CircleAvatar(
+                      (context) => CircleAvatar(
                         minRadius: 12,
                         backgroundColor: playerStaticColorLight,
                       ),
@@ -290,7 +290,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   onTap: () {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: Obx(
-                        () => Theme(
+                        (context) => Theme(
                           data: AppThemes.inst.getAppTheme(playerStaticColorLight),
                           child: NamidaColorPickerDialog(
                             initialColor: playerStaticColorLight,
@@ -314,7 +314,7 @@ class ThemeSetting extends SettingSubpageProvider {
               key: _ThemeSettingsKeys.defaultColorDark,
               child: ObxO(
                 rx: settings.autoColor,
-                builder: (autoColor) => CustomListTile(
+                builder: (context, autoColor) => CustomListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.defaultColorDark),
                   enabled: !autoColor,
                   leading: const StackedIcon(
@@ -325,7 +325,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   subtitle: lang.DEFAULT_COLOR_SUBTITLE,
                   trailingRaw: FittedBox(
                     child: Obx(
-                      () => CircleAvatar(
+                      (context) => CircleAvatar(
                         minRadius: 12,
                         backgroundColor: playerStaticColorDark,
                       ),
@@ -334,7 +334,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   onTap: () {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: Obx(
-                        () => Theme(
+                        (context) => Theme(
                           data: AppThemes.inst.getAppTheme(playerStaticColorDark),
                           child: NamidaColorPickerDialog(
                             initialColor: playerStaticColorDark,
@@ -391,7 +391,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final double containerWidth = width ?? context.width / 2.8;
     return Obx(
-      () {
+      (context) {
         final currentTheme = settings.themeMode.valueR;
         return Container(
           decoration: BoxDecoration(

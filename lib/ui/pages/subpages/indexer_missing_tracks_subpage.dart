@@ -254,7 +254,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           ),
                           ObxO(
                             rx: _loadingProgress,
-                            builder: (progress) => Text(
+                            builder: (context, progress) => Text(
                               "${progress.index + 1}/$_loadingCountTotalSteps",
                               style: context.textTheme.displayMedium,
                               textAlign: TextAlign.center,
@@ -265,7 +265,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       const SizedBox(height: 12.0),
                       ObxO(
                         rx: _loadingProgress,
-                        builder: (progress) => Text(
+                        builder: (context, progress) => Text(
                           "${progress.value}...",
                           style: context.textTheme.displayMedium,
                           textAlign: TextAlign.center,
@@ -298,7 +298,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           return Padding(
                             padding: const EdgeInsets.all(3.0),
                             child: Obx(
-                              () {
+                              (context) {
                                 final suggestion = _missingTracksSuggestions[path];
                                 final isSelected = _selectedTracksToUpdate[path] == true;
                                 final leftColor = context.theme.colorScheme.secondary.withOpacity(0.3);
@@ -338,7 +338,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                               child: Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
                                                 child: Text(
-                                                  '${(HistoryController.inst.topTracksMapListens[Track.explicit(path)]??HistoryController.inst.topTracksMapListens[Video.explicit(path)])?.length ?? 0}',
+                                                  '${(HistoryController.inst.topTracksMapListens[Track.explicit(path)] ?? HistoryController.inst.topTracksMapListens[Video.explicit(path)])?.length ?? 0}',
                                                   style: textTheme.displaySmall,
                                                 ),
                                               ),
@@ -435,7 +435,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                 : Row(
                     children: [
                       Obx(
-                        () {
+                        (context) {
                           final allSelected =
                               _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
                           return FloatingActionButton.small(
@@ -462,7 +462,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       ),
                       const SizedBox(width: 8.0),
                       Obx(
-                        () {
+                        (context) {
                           final totalLength = _selectedTracksToUpdate.length;
                           return FloatingActionButton.extended(
                             heroTag: 'indexer_missing_tracks_fab_hero_extended',
@@ -484,7 +484,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     const SizedBox(width: 8.0),
                                     ObxO(
                                       rx: isUpdating,
-                                      builder: (updating) => AnimatedEnabled(
+                                      builder: (context, updating) => AnimatedEnabled(
                                         enabled: !updating,
                                         child: NamidaButton(
                                           text: lang.UPDATE.toUpperCase(),

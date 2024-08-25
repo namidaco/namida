@@ -116,7 +116,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     return BackgroundWrapper(
       child: ObxO(
         rx: Player.inst.currentItem,
-        builder: (currentItem) {
+        builder: (context, currentItem) {
           if (currentItem is! YoutubeID) return const SizedBox();
           final currentId = currentItem.id;
           return Column(
@@ -145,7 +145,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         const SizedBox(width: 12.0),
                         ObxO(
                           rx: _lastFetchWasCached,
-                          builder: (isRepliesFromCache) => (isRepliesFromCache ?? false)
+                          builder: (context, isRepliesFromCache) => (isRepliesFromCache ?? false)
                               ? StackedIcon(
                                   baseIcon: Broken.note_2,
                                   secondaryIcon: Broken.global,
@@ -215,7 +215,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                           ),
                           ObxO(
                             rx: _isLoadingCurrentReplies,
-                            builder: (loadingInitial) {
+                            builder: (context, loadingInitial) {
                               if (loadingInitial == true) {
                                 return SliverToBoxAdapter(
                                   child: ShimmerWrapper(
@@ -240,7 +240,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                               }
                               return ObxO(
                                 rx: _currentReplies,
-                                builder: (replies) {
+                                builder: (context, replies) {
                                   if (replies == null) return const SliverToBoxAdapter();
                                   return SliverList.builder(
                                     itemCount: replies.length,
@@ -261,7 +261,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                           ),
                           ObxO(
                             rx: _isLoadingMoreReplies,
-                            builder: (isLoadingMore) => isLoadingMore == true
+                            builder: (context, isLoadingMore) => isLoadingMore == true
                                 ? const SliverPadding(
                                     padding: EdgeInsets.all(12.0),
                                     sliver: SliverToBoxAdapter(

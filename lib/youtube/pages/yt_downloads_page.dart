@@ -29,7 +29,7 @@ class YTDownloadsPage extends StatelessWidget {
     required bool? isOnGoing,
   }) {
     return Obx(
-      () {
+      (context) {
         final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
         final color = enabled ? Colors.white.withOpacity(0.7) : null;
         return NamidaInkWell(
@@ -136,7 +136,7 @@ class YTDownloadsPage extends StatelessWidget {
               icon: Broken.flash,
               title: lang.PARALLEL_DOWNLOADS,
               trailing: Obx(
-                () {
+                (context) {
                   final temp = tempCount.valueR;
                   return NamidaWheelSlider(
                     totalCount: 10,
@@ -213,7 +213,7 @@ class YTDownloadsPage extends StatelessWidget {
                 //   tooltip: lang.PARALLEL_DOWNLOADS,
                 //   onPressed: _showParallelDownloadsDialog,
                 //   child: Obx(
-                //     () => StackedIcon(
+                //     (context) => StackedIcon(
                 //       baseIcon: Broken.flash,
                 //       secondaryText: YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.toString(),
                 //     ),
@@ -223,7 +223,7 @@ class YTDownloadsPage extends StatelessWidget {
             ),
           ),
           Obx(
-            () => _isOnGoingSelectedR != null
+            (context) => _isOnGoingSelectedR != null
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: Row(
@@ -286,7 +286,7 @@ class YTDownloadsPage extends StatelessWidget {
           Expanded(
             child: NamidaScrollbarWithController(
               child: (sc) => Obx(
-                () {
+                (context) {
                   final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
                   keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                   return CustomScrollView(
@@ -378,7 +378,7 @@ class YTDownloadsPage extends StatelessWidget {
                             )
                           : ObxO(
                               rx: _downloadTasksTempList,
-                              builder: (downloadTasksTempList) {
+                              builder: (context, downloadTasksTempList) {
                                 final videos = downloadTasksTempList.map((e) => e.$2).toList();
                                 return SliverList.builder(
                                   itemCount: downloadTasksTempList.length,

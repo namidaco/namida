@@ -1062,7 +1062,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       _fetchFiles(Directory(_currentFolderPath));
                     },
                     icon: Obx(
-                      () => Icon(
+                      (context) => Icon(
                         _showHiddenFiles.valueR ? Broken.eye : Broken.eye_slash,
                         size: 20.0,
                         color: _showHiddenFiles.valueR ? null : context.defaultIconColor(),
@@ -1145,13 +1145,13 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       ),
                     const Spacer(),
                     Obx(
-                      () => SortByMenu(
+                      (context) => SortByMenu(
                         title: _sortTypeToName[_sortType.valueR] ?? '',
                         popupMenuChild: () {
                           Widget getTile(IconData icon, String title, _SortType sort) {
                             return ObxO(
                               rx: _sortType,
-                              builder: (currentSort) => SmallListTile(
+                              builder: (context, currentSort) => SmallListTile(
                                 visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
                                 trailing: Padding(
                                   padding: const EdgeInsets.only(right: 4.0),

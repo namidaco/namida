@@ -106,7 +106,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.youtubeStyleMiniplayer,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
                 icon: Broken.video_octagon,
                 title: lang.YOUTUBE_STYLE_MINIPLAYER,
@@ -121,7 +121,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.rememberAudioOnly,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.rememberAudioOnly),
                 icon: Broken.musicnote,
                 title: lang.REMEMBER_AUDIO_ONLY_MODE,
@@ -133,7 +133,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.topComments,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.topComments),
                 leading: const StackedIcon(
                   baseIcon: Broken.document,
@@ -166,7 +166,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.preferNewComments,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.preferNewComments),
                 leading: const StackedIcon(
                   baseIcon: Broken.document,
@@ -184,7 +184,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.showChannelWatermarkFullscreen,
             child: ObxO(
               rx: settings.youtube.showChannelWatermarkFullscreen,
-              builder: (showChannelWatermarkFullscreen) => CustomSwitchListTile(
+              builder: (context, showChannelWatermarkFullscreen) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.showChannelWatermarkFullscreen),
                 leading: const StackedIcon(
                   baseIcon: Broken.profile_circle,
@@ -201,7 +201,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.showVideoEndcards,
             child: ObxO(
               rx: settings.youtube.showVideoEndcards,
-              builder: (showVideoEndcards) => CustomSwitchListTile(
+              builder: (context, showVideoEndcards) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.showVideoEndcards),
                 icon: Broken.card_tick,
                 title: '${lang.SHOW_VIDEO_ENDCARDS} (${lang.BETA})', // beta cuz its available only in some clients like web & web_music
@@ -214,7 +214,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.autoStartRadio,
             child: ObxO(
               rx: settings.youtube.autoStartRadio,
-              builder: (autoStartRadio) => CustomSwitchListTile(
+              builder: (context, autoStartRadio) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.autoStartRadio),
                 leading: const StackedIcon(
                   baseIcon: Broken.radar_1,
@@ -265,7 +265,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.dimMiniplayerAfter,
             child: ObxO(
               rx: settings.youtube.ytMiniplayerDimAfterSeconds,
-              builder: (ytMiniplayerDimAfterSeconds) => CustomListTile(
+              builder: (context, ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
                 leading: const StackedIcon(
                   baseIcon: Broken.moon,
@@ -291,7 +291,7 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.dimIntensity,
             child: ObxO(
               rx: settings.youtube.ytMiniplayerDimAfterSeconds,
-              builder: (ytMiniplayerDimAfterSeconds) => CustomListTile(
+              builder: (context, ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimIntensity),
                 enabled: ytMiniplayerDimAfterSeconds > 0,
                 leading: Stack(
@@ -318,7 +318,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     ),
                     // -- needle
                     Obx(
-                      () {
+                      (context) {
                         const multiplier = 4.5;
                         const minus = multiplier / 2;
                         const height = 7.0;
@@ -342,7 +342,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.DIM_INTENSITY,
                 trailing: ObxO(
                   rx: settings.youtube.ytMiniplayerDimOpacity,
-                  builder: (ytMiniplayerDimOpacity) => NamidaWheelSlider(
+                  builder: (context, ytMiniplayerDimOpacity) => NamidaWheelSlider(
                     totalCount: 100,
                     initValue: (ytMiniplayerDimOpacity * 100).round(),
                     text: "${(ytMiniplayerDimOpacity * 100).round()}%",
@@ -379,7 +379,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         )
                         .toList(),
                     child: Obx(
-                      () => Text(
+                      (context) => Text(
                         settings.youtube.tapToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
@@ -402,7 +402,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         )
                         .toList(),
                     child: Obx(
-                      () => Text(
+                      (context) => Text(
                         settings.youtube.dragToSeek.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
@@ -415,7 +415,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.downloadsMetadataTags,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.downloadsMetadataTags),
                 leading: const StackedIcon(
                   baseIcon: Broken.import,
@@ -432,7 +432,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.downloadLocation,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.downloadLocation),
                 title: lang.DEFAULT_DOWNLOAD_LOCATION,
                 icon: Broken.folder_favorite,
@@ -447,7 +447,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.onOpeningYTLink,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.onOpeningYTLink),
                 icon: Broken.import_1,
                 title: lang.ON_OPENING_YOUTUBE_LINK,
@@ -466,7 +466,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                               padding: const EdgeInsets.all(6.0),
                               child: ObxO(
                                 rx: settings.youtube.onYoutubeLinkOpen,
-                                builder: (onYoutubeLinkOpen) => ListTileWithCheckMark(
+                                builder: (context, onYoutubeLinkOpen) => ListTileWithCheckMark(
                                   icon: e.toIcon(),
                                   title: e.toText(),
                                   active: onYoutubeLinkOpen == e,
@@ -515,7 +515,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: activeMapRx,
-      builder: (activeMap) {
+      builder: (context, activeMap) {
         final activeElements = getValues().where((element) => activeMap[element] ?? true).map((e) => toText(e));
         return CustomListTile(
           bgColor: bgColor,
@@ -543,7 +543,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
                   ],
                   child: ObxO(
                     rx: activeMapRx,
-                    builder: (activeMap) => Padding(
+                    builder: (context, activeMap) => Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
                         children: getValues().map(

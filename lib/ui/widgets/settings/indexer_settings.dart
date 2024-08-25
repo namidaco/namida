@@ -93,7 +93,7 @@ class IndexerSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _IndexerSettingsKeys.useMediaStore,
       child: Obx(
-        () => CustomSwitchListTile(
+        (context) => CustomSwitchListTile(
           bgColor: getBgColor(_IndexerSettingsKeys.useMediaStore),
           icon: Broken.airdrop,
           title: lang.USE_MEDIA_STORE,
@@ -112,7 +112,7 @@ class IndexerSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _IndexerSettingsKeys.groupArtworksByAlbum,
       child: Obx(
-        () => CustomSwitchListTile(
+        (context) => CustomSwitchListTile(
           bgColor: getBgColor(_IndexerSettingsKeys.groupArtworksByAlbum),
           icon: Broken.backward_item,
           title: lang.GROUP_ARTWORKS_BY_ALBUM,
@@ -134,7 +134,7 @@ class IndexerSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _IndexerSettingsKeys.foldersToScan,
       child: Obx(
-        () => AnimatedOpacity(
+        (context) => AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
           opacity: settings.useMediaStore.valueR ? 0.5 : 1.0,
           child: NamidaExpansionTile(
@@ -217,7 +217,7 @@ class IndexerSettings extends SettingSubpageProvider {
       key: _IndexerSettingsKeys.foldersToExclude,
       child: ObxO(
         rx: settings.directoriesToExclude,
-        builder: (directoriesToExclude) => NamidaExpansionTile(
+        builder: (context, directoriesToExclude) => NamidaExpansionTile(
           bgColor: getBgColor(_IndexerSettingsKeys.foldersToExclude),
           initiallyExpanded: initiallyExpanded,
           icon: Broken.folder_minus,
@@ -322,12 +322,12 @@ class IndexerSettings extends SettingSubpageProvider {
             child: FittedBox(
               child: ObxO(
                 rx: Indexer.inst.allAudioFiles,
-                builder: (allAudioFiles) => Row(
+                builder: (context, allAudioFiles) => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ObxO(
                       rx: Indexer.inst.tracksInfoList,
-                      builder: (tracksInfoList) => StatsContainer(
+                      builder: (context, tracksInfoList) => StatsContainer(
                         icon: Broken.info_circle,
                         title: '${lang.TRACKS_INFO} :',
                         value: tracksInfoList.length.formatDecimal(),
@@ -336,7 +336,7 @@ class IndexerSettings extends SettingSubpageProvider {
                     ),
                     ObxO(
                       rx: Indexer.inst.artworksInStorage,
-                      builder: (artworksInStorage) => StatsContainer(
+                      builder: (context, artworksInStorage) => StatsContainer(
                         icon: Broken.image,
                         title: '${lang.ARTWORKS} :',
                         value: artworksInStorage.formatDecimal(),
@@ -358,7 +358,7 @@ class IndexerSettings extends SettingSubpageProvider {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
             child: Obx(
-              () => Text(
+              (context) => Text(
                 '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.valueR}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.valueR}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.valueR}',
                 style: context.textTheme.displaySmall,
               ),
@@ -368,7 +368,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.preventDuplicatedTracks,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.preventDuplicatedTracks),
                 icon: Broken.copy,
                 title: lang.PREVENT_DUPLICATED_TRACKS,
@@ -381,7 +381,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.respectNoMedia,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.respectNoMedia),
                 enabled: !settings.useMediaStore.valueR,
                 icon: Broken.cd,
@@ -395,7 +395,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.extractFtArtist,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.extractFtArtist),
                 icon: Broken.microphone,
                 title: lang.EXTRACT_FEAT_ARTIST,
@@ -412,7 +412,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.albumIdentifiers,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.albumIdentifiers),
                 icon: Broken.arrow_square,
                 title: lang.ALBUM_IDENTIFIERS,
@@ -429,7 +429,7 @@ class IndexerSettings extends SettingSubpageProvider {
                         const CancelButton(),
                         const SizedBox(width: 8.0),
                         Obx(
-                          () {
+                          (context) {
                             return NamidaButton(
                               enabled: settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
                                   tempList.valueR.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
@@ -457,7 +457,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                 child: Padding(
                                   padding: const EdgeInsets.all(6.0),
                                   child: Obx(
-                                    () => ListTileWithCheckMark(
+                                    (context) => ListTileWithCheckMark(
                                       title: e.toText(),
                                       active: tempList.contains(e),
                                       onTap: () {
@@ -481,7 +481,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.artistSeparators,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.artistSeparators),
                 icon: Broken.profile_2user,
                 title: lang.TRACK_ARTISTS_SEPARATOR,
@@ -500,7 +500,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.genreSeparators,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.genreSeparators),
                 icon: Broken.smileys,
                 title: lang.TRACK_GENRES_SEPARATOR,
@@ -519,7 +519,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.minimumFileSize,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.minimumFileSize),
                 icon: Broken.unlimited,
                 title: lang.MIN_FILE_SIZE,
@@ -540,7 +540,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.minimumTrackDur,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.minimumTrackDur),
                 icon: Broken.timer_1,
                 title: lang.MIN_FILE_DURATION,
@@ -562,7 +562,7 @@ class IndexerSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _IndexerSettingsKeys.refreshOnStartup,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.refreshOnStartup),
                 icon: Broken.d_rotate,
                 title: lang.REFRESH_ON_STARTUP,
@@ -633,9 +633,9 @@ class IndexerSettings extends SettingSubpageProvider {
                           const SizedBox(height: 16.0),
                           ObxO(
                             rx: Indexer.inst.artworksSizeInStorage,
-                            builder: (artworksSizeInStorage) => ObxO(
+                            builder: (context, artworksSizeInStorage) => ObxO(
                               rx: clearArtworks,
-                              builder: (active) => ListTileWithCheckMark(
+                              builder: (context, active) => ListTileWithCheckMark(
                                 dense: true,
                                 icon: Broken.trash,
                                 title: lang.CLEAR_IMAGE_CACHE,
@@ -702,7 +702,7 @@ class IndexerSettings extends SettingSubpageProvider {
         actions: [
           if (!isBlackListDialog)
             NamidaButton(
-              textWidget: Obx(() {
+              textWidget: Obx((context) {
                 final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.length : settings.trackGenresSeparatorsBlacklist.length;
                 final t = blLength == 0 ? '' : ' ($blLength)';
                 return Text('${lang.BLACKLIST}$t');
@@ -726,7 +726,7 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           if (isBlackListDialog) const CancelButton(),
           Obx(
-            () => updatingLibrary.valueR
+            (context) => updatingLibrary.valueR
                 ? const LoadingIndicator()
                 : NamidaButton(
                     text: lang.ADD,
@@ -763,7 +763,7 @@ class IndexerSettings extends SettingSubpageProvider {
               height: 12.0,
             ),
             Obx(
-              () => Wrap(
+              (context) => Wrap(
                 children: [
                   ...itemsList.valueR.map(
                     (e) => Container(
@@ -976,7 +976,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
     return NamidaInkWell(
       onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
       child: Obx(
-        () {
+        (context) {
           final paths = FAudioTaggerController.inst.currentPathsBeingExtracted.values;
           return paths.isEmpty
               ? const SizedBox()

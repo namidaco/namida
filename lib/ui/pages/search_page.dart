@@ -139,7 +139,7 @@ class SearchPage extends StatelessWidget {
                   children: [
                     ...MediaType.values.map(
                       (e) => Obx(
-                        () {
+                        (context) {
                           final list = settings.activeSearchMediaTypes.valueR;
                           final isActive = list.contains(e);
                           final isForcelyEnabled = e == MediaType.track;
@@ -193,7 +193,7 @@ class SearchPage extends StatelessWidget {
               ),
               Expanded(
                 child: Obx(
-                  () => AnimatedSwitcher(
+                  (context) => AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: !SearchSortController.inst.isSearching
                         ? Container(
@@ -211,7 +211,7 @@ class SearchPage extends StatelessWidget {
                                   queueSource: QueueSource.search,
                                 ),
                                 builder: (properties) => Obx(
-                                  () {
+                                  (context) {
                                     final activeList = settings.activeSearchMediaTypes.valueR;
 
                                     final albumSearchTemp = SearchSortController.inst.albumSearchTemp.valueR;
@@ -419,7 +419,7 @@ class SearchPage extends StatelessWidget {
                                                       children: () => const [SortByMenuTracksSearch()],
                                                       child: NamidaInkWell(
                                                         child: Obx(
-                                                          () {
+                                                          (context) {
                                                             final isAuto = settings.tracksSortSearchIsAuto.valueR;
                                                             final activeType = isAuto ? settings.tracksSort.valueR : settings.tracksSortSearch.valueR;
                                                             return Text(
@@ -439,7 +439,7 @@ class SearchPage extends StatelessWidget {
                                                         SearchSortController.inst.sortTracksSearch(reverse: !settings.tracksSortSearchReversed.value);
                                                       },
                                                       child: Obx(
-                                                        () {
+                                                        (context) {
                                                           final isAuto = settings.tracksSortSearchIsAuto.valueR;
                                                           final activeReverse = isAuto ? settings.tracksSortReversed.valueR : settings.tracksSortSearchReversed.valueR;
                                                           return Icon(

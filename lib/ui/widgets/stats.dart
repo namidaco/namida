@@ -22,7 +22,7 @@ class StatsSection extends StatelessWidget {
       child: SizedBox(
         width: context.width,
         child: Obx(
-          () {
+          (context) {
             final allTracks = Indexer.inst.tracksInfoList.valueR;
             return Wrap(
               alignment: WrapAlignment.start,
@@ -53,7 +53,7 @@ class StatsSection extends StatelessWidget {
                   value: allTracks.totalDurationFormatted,
                 ),
                 Obx(
-                  () {
+                  (context) {
                     final map = Player.inst.totalListenedTimeInSec;
                     final trSec = map?[LibraryCategory.localTracks] ?? 0;
                     return StatsContainer(
@@ -64,7 +64,7 @@ class StatsSection extends StatelessWidget {
                   },
                 ),
                 Obx(
-                  () {
+                  (context) {
                     final map = Player.inst.totalListenedTimeInSec;
                     final sec = map?[LibraryCategory.youtube] ?? 0;
                     return StatsContainer(

@@ -840,7 +840,7 @@ class ListTileWithCheckMark extends StatelessWidget {
                 activeRx != null
                     ? ObxO(
                         rx: activeRx!,
-                        builder: (active) => NamidaCheckMark(
+                        builder: (context, active) => NamidaCheckMark(
                           size: 18.0,
                           active: active,
                         ),
@@ -1178,7 +1178,7 @@ class CollapsedSettingTileWidget extends StatelessWidget {
     Localizations.localeOf(context);
     return ObxO(
       rx: settings.useSettingCollapsedTiles,
-      builder: (useSettingCollapsedTiles) => CustomSwitchListTile(
+      builder: (context, useSettingCollapsedTiles) => CustomSwitchListTile(
         bgColor: bgColor,
         icon: Broken.archive,
         title: lang.USE_COLLAPSED_SETTING_TILES,
@@ -1499,7 +1499,7 @@ class NamidaLocalLikeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxOClass(
       rx: PlaylistController.inst.favouritesPlaylist,
-      builder: (favouritesPlaylist) => NamidaRawLikeButton(
+      builder: (context, favouritesPlaylist) => NamidaRawLikeButton(
         size: size,
         enabledColor: color,
         disabledColor: color,
@@ -1621,7 +1621,7 @@ class NamidaPartyContainer extends StatelessWidget {
     if (!settings.enablePartyModeColorSwap.value) {
       return ObxO(
         rx: Player.inst.nowPlayingPosition,
-        builder: (nowPlayingPosition) {
+        builder: (context, nowPlayingPosition) {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
           return AnimatedSizedBox(
             duration: const Duration(milliseconds: 400),
@@ -1642,12 +1642,12 @@ class NamidaPartyContainer extends StatelessWidget {
     } else {
       return ObxO(
         rx: Player.inst.nowPlayingPosition,
-        builder: (nowPlayingPosition) {
+        builder: (context, nowPlayingPosition) {
           final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
           return height != null
               ? ObxO(
                   rx: CurrentColor.inst.paletteFirstHalf,
-                  builder: (firstHalf) => Row(
+                  builder: (context, firstHalf) => Row(
                     children: [
                       ...firstHalf.map(
                         (e) => AnimatedSizedBox(
@@ -1670,7 +1670,7 @@ class NamidaPartyContainer extends StatelessWidget {
                 )
               : ObxO(
                   rx: CurrentColor.inst.paletteSecondHalf,
-                  builder: (secondHalf) => Column(
+                  builder: (context, secondHalf) => Column(
                     children: [
                       ...secondHalf.map(
                         (e) => AnimatedSizedBox(
@@ -2305,7 +2305,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
     return widget.draggableRx != null
         ? ObxO(
             rx: widget.draggableRx!,
-            builder: (value) => buildChild(value && widget.direction != DismissDirection.none, child, maxWidth),
+            builder: (context, value) => buildChild(value && widget.direction != DismissDirection.none, child, maxWidth),
           )
         : buildChild(_draggable && widget.direction != DismissDirection.none, child, maxWidth);
   }
@@ -3038,7 +3038,7 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
   }
 }
 
-/// Obx(() => showIf.value ? child : const SizedBox());
+/// Obx((context) => showIf.value ? child : const SizedBox(context));
 class ObxShow extends StatelessWidget {
   final RxBase<bool> showIf;
   final Widget child;
@@ -3053,7 +3053,7 @@ class ObxShow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: showIf,
-      builder: (show) => show ? child : const SizedBox(),
+      builder: (context, show) => show ? child : const SizedBox(),
     );
   }
 }
@@ -3712,7 +3712,7 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
       children: [
         widget.child,
         Obx(
-          () => Positioned(
+          (context) => Positioned(
             right: 14.0,
             top: _selectedChar.valueR.$1 * columnHeight,
             child: Container(
@@ -3858,7 +3858,7 @@ class QueueUtilsRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: tileVPadding),
                 child: ObxO(
                   rx: settings.player.shuffleAllTracks,
-                  builder: (shuffleAllTracks) => SizedBox(
+                  builder: (context, shuffleAllTracks) => SizedBox(
                     height: tileHeight,
                     child: ListTileWithCheckMark(
                       active: shuffleAllTracks == isShuffleAll,
@@ -3937,7 +3937,7 @@ class RepeatModeIconButton extends StatelessWidget {
 
     return ObxO(
       rx: settings.player.repeatMode,
-      builder: (repeatMode) {
+      builder: (context, repeatMode) {
         final icon = repeatMode.toIcon();
 
         final child = Stack(
@@ -3951,7 +3951,7 @@ class RepeatModeIconButton extends StatelessWidget {
             if (repeatMode == RepeatMode.forNtimes)
               ObxO(
                 rx: Player.inst.numberOfRepeats,
-                builder: (numberOfRepeats) => Text(
+                builder: (context, numberOfRepeats) => Text(
                   '$numberOfRepeats',
                   style: context.textTheme.displaySmall?.copyWith(color: iconColor),
                 ),
@@ -4014,7 +4014,7 @@ class EqualizerIconButton extends StatelessWidget {
       stream: Player.inst.equalizer.enabledStream,
       builder: (context, snapshot) {
         return Obx(
-          () {
+          (context) {
             final isSoundModified = settings.player.speed.valueR != 1.0 || settings.player.pitch.valueR != 1.0;
             final enabled = isSoundModified || (snapshot.data ?? false);
             return enabled

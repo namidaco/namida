@@ -84,7 +84,7 @@ Future<void> showTrackInfoDialog(
       },
       dialog: ObxO(
         rx: color,
-        builder: (dialogColor) {
+        builder: (context, dialogColor) {
           final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
           return AnimatedTheme(
             data: theme,
@@ -163,7 +163,7 @@ Future<void> showTrackInfoDialog(
     lighterDialogColor: false,
     dialog: ObxO(
       rx: color,
-      builder: (dialogColor) {
+      builder: (context, dialogColor) {
         final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
         return AnimatedTheme(
           data: theme,
@@ -175,7 +175,7 @@ Future<void> showTrackInfoDialog(
             trailingWidgets: [
               ObxO(
                 rx: settings.showUnknownFieldsInTrackInfoDialog,
-                builder: (showUnknownFieldsInTrackInfoDialog) => NamidaIconButton(
+                builder: (context, showUnknownFieldsInTrackInfoDialog) => NamidaIconButton(
                   tooltip: () => lang.SHOW_HIDE_UNKNOWN_FIELDS,
                   icon: showUnknownFieldsInTrackInfoDialog ? Broken.eye : Broken.eye_slash,
                   iconColor: theme.colorScheme.primary,
@@ -200,7 +200,7 @@ Future<void> showTrackInfoDialog(
               width: namida.width,
               child: ObxO(
                 rx: settings.showUnknownFieldsInTrackInfoDialog,
-                builder: (_) => CustomScrollView(
+                builder: (context, _) => CustomScrollView(
                   slivers: [
                     SliverList(
                       delegate: SliverChildListDelegate(

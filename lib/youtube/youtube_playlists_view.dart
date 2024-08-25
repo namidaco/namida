@@ -128,7 +128,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
           const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
           if (!isMinimalView) ...[
             Obx(
-              () {
+              (context) {
                 final history = YoutubeHistoryController.inst.historyMap.valueR;
                 final length = YoutubeHistoryController.inst.totalHistoryItemsCount.valueR;
                 final lengthDummy = length == -1;
@@ -147,7 +147,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
             Obx(
-              () {
+              (context) {
                 final length = YoutubeHistoryController.inst.totalHistoryItemsCount.valueR;
                 final mostPlayed = YoutubeHistoryController.inst.currentMostPlayedTracks.toList();
                 final listensMap = YoutubeHistoryController.inst.currentTopTracksMapListens.valueR;
@@ -174,7 +174,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
             ObxOClass(
               rx: YoutubePlaylistController.inst.favouritesPlaylist,
-              builder: (favs) {
+              builder: (context, favs) {
                 return _HorizontalSliverList(
                   title: lang.FAVOURITES,
                   icon: Broken.heart_circle,
@@ -197,7 +197,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 children: [
                   Expanded(
                     child: Obx(
-                      () => SearchPageTitleRow(
+                      (context) => SearchPageTitleRow(
                         title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
                         icon: Broken.music_library_2,
                         trailing: const SizedBox(),
@@ -222,7 +222,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                     ].map(
                                       (e) => ObxO(
                                         rx: settings.ytPlaylistSort,
-                                        builder: (ytPlaylistSort) => SmallListTile(
+                                        builder: (context, ytPlaylistSort) => SmallListTile(
                                           title: e.toText(),
                                           active: ytPlaylistSort == e,
                                           onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
@@ -234,7 +234,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                               ],
                               child: ObxO(
                                 rx: settings.ytPlaylistSort,
-                                builder: (ytPlaylistSort) => Text(
+                                builder: (context, ytPlaylistSort) => Text(
                                   ytPlaylistSort.toText(),
                                   style: context.textTheme.displaySmall?.copyWith(
                                     color: context.theme.colorScheme.secondary,
@@ -247,7 +247,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                               onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
                               child: ObxO(
                                 rx: settings.ytPlaylistSortReversed,
-                                builder: (ytPlaylistSortReversed) => Icon(
+                                builder: (context, ytPlaylistSortReversed) => Icon(
                                   ytPlaylistSortReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                   size: 16.0,
                                   color: context.theme.colorScheme.secondary,
@@ -262,7 +262,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   const SizedBox(width: 4.0),
                   ObxO(
                     rx: YoutubeImportController.inst.isImportingPlaylists,
-                    builder: (isImportingPlaylists) => NamidaInkWellButton(
+                    builder: (context, isImportingPlaylists) => NamidaInkWellButton(
                       icon: Broken.add_circle,
                       text: lang.IMPORT,
                       enabled: !isImportingPlaylists,
@@ -289,7 +289,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             SliverToBoxAdapter(
               child: ObxOClass(
                 rx: YoutubePlaylistController.inst.favouritesPlaylist,
-                builder: (favouritesPlaylist) => YoutubeCard(
+                builder: (context, favouritesPlaylist) => YoutubeCard(
                   thumbnailType: ThumbnailType.playlist,
                   isImageImportantInCache: true,
                   extractColor: true,
@@ -324,7 +324,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
               child: NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)),
             ),
           Obx(
-            () {
+            (context) {
               final playlistsMap = YoutubePlaylistController.inst.playlistsMap.valueR;
               final playlistsNames = playlistsMap.keys.toList();
               return SliverFixedExtentList.builder(

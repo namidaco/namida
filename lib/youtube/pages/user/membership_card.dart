@@ -34,11 +34,11 @@ class MembershipCard extends StatelessWidget {
           ),
           child: ObxO(
             rx: YoutubeAccountController.membership.userSupabaseSub,
-            builder: (userSupabaseSub) => ObxO(
+            builder: (context, userSupabaseSub) => ObxO(
               rx: YoutubeAccountController.membership.userPatreonTier,
-              builder: (userPatreonTier) => ObxO(
+              builder: (context, userPatreonTier) => ObxO(
                 rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-                builder: (userMembershipType) {
+                builder: (context, userMembershipType) {
                   userMembershipType ??= MembershipType.unknown;
                   String text = userMembershipType.name.capitalizeFirst();
                   if (displayName) {

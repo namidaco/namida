@@ -251,7 +251,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
           const SizedBox(height: 2.0),
           ObxO(
             rx: _currentFeed,
-            builder: (listItemsPre) {
+            builder: (context, listItemsPre) {
               if (listItemsPre is YoutiPieListSorterMixin) {
                 final listItems = listItemsPre as YoutiPieListSorterMixin;
                 final selectedSort = listItems.customSort ?? listItems.itemsSort.firstWhereEff((e) => e.initiallySelected);
@@ -290,7 +290,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                     padding: const EdgeInsets.symmetric(horizontal: 2.0),
                     child: ObxO(
                       rx: _currentSort!,
-                      builder: (sort) => Text(
+                      builder: (context, sort) => Text(
                         sort?.title ?? selectedSort?.title ?? '?',
                         style: context.textTheme.displaySmall?.copyWith(
                           color: context.theme.colorScheme.secondary,
@@ -315,7 +315,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
         const SizedBox(width: 12.0),
         ObxO(
           rx: _refreshButtonShown,
-          builder: (value) => value
+          builder: (context, value) => value
               ? NamidaIconButton(
                   icon: Broken.refresh,
                   onPressed: _fetchFeed,
@@ -371,7 +371,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                 ]),
         child: ObxO(
           rx: YoutubeAccountController.current.activeAccountChannel,
-          builder: (activeAccountChannel) => activeAccountChannel == null
+          builder: (context, activeAccountChannel) => activeAccountChannel == null
               ? Padding(
                   padding: pagePadding,
                   child: Column(
@@ -398,9 +398,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                 )
               : ObxO(
                   rx: _isLoadingCurrentFeed,
-                  builder: (isLoadingCurrentFeed) => ObxO(
+                  builder: (context, isLoadingCurrentFeed) => ObxO(
                     rx: _currentFeed,
-                    builder: (listItems) {
+                    builder: (context, listItems) {
                       return LazyLoadListView(
                         onReachingEnd: _fetchFeedNext,
                         scrollController: _controller,
@@ -449,7 +449,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                               SliverToBoxAdapter(
                                 child: ObxO(
                                   rx: _isLoadingNext,
-                                  builder: (isLoadingNext) => isLoadingNext
+                                  builder: (context, isLoadingNext) => isLoadingNext
                                       ? const Padding(
                                           padding: EdgeInsets.all(12.0),
                                           child: Center(

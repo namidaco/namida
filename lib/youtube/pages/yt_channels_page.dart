@@ -37,11 +37,9 @@ class YoutubeChannelsPage extends StatefulWidget {
 }
 
 class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannelsPage> with TickerProviderStateMixin, PullToRefreshMixin {
-  
-  
   @override
   String? get channelID => channel?.channelID;
-  
+
   @override
   ScrollController get scrollController => _uploadsScrollController;
 
@@ -76,7 +74,6 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     final now = DateTime.now();
     allChannelFetchOldestDate = DateTime(now.year, now.month, now.day - 32).obs;
-    
   }
 
   @override
@@ -312,7 +309,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                             child: Obx(
-                              () {
+                              (context) {
                                 final oldestDate = allChannelFetchOldestDate.valueR;
                                 return Text(
                                   "${oldestDate.millisecondsSinceEpoch.dateFormattedOriginal} - ${Jiffy.parseFromDateTime(oldestDate).fromNow()}",
@@ -376,7 +373,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                     ),
                     const SizedBox(width: 4.0),
                     Obx(
-                      () => NamidaInkWellButton(
+                      (context) => NamidaInkWellButton(
                         icon: Broken.add_circle,
                         text: lang.IMPORT,
                         enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
@@ -392,7 +389,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                   children: [
                     Center(
                       child: Obx(
-                        () => NamidaInkWellButton(
+                        (context) => NamidaInkWellButton(
                           sizeMultiplier: 2.0,
                           icon: Broken.add_circle,
                           text: lang.IMPORT,
@@ -462,7 +459,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                 ),
         ),
         Obx(
-          () => isLoadingMoreUploads.valueR
+          (context) => isLoadingMoreUploads.valueR
               ? const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Stack(
@@ -476,7 +473,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         ),
         const NamidaContainerDivider(margin: EdgeInsets.only(left: 8.0, right: 8.0)),
         Obx(
-          () => AnimatedSizedBox(
+          (context) => AnimatedSizedBox(
             duration: const Duration(milliseconds: 200),
             width: context.width,
             animateWidth: false,
@@ -490,7 +487,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                 ),
               ),
               child: Obx(
-                () {
+                (context) {
                   final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
                   final totalIDsLength = channelIDS.length;
                   return Row(
@@ -519,7 +516,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 Positioned.fill(
                                   child: FittedBox(
                                     child: Obx(
-                                      () => CircularProgressIndicator(
+                                      (context) => CircularProgressIndicator(
                                         value: _allChannelsStreamsLoading.valueR && _allChannelsStreamsProgress.valueR <= 0 ? null : _allChannelsStreamsProgress.valueR,
                                         strokeWidth: 2.0,
                                       ),

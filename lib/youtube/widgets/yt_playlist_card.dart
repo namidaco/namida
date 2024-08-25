@@ -166,7 +166,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     final bottomRightWidgets = [
       ObxO(
         rx: _isFetching,
-        builder: (value) {
+        builder: (context, value) {
           if (value == true) {
             return ThreeArchedCircle(
               color: Colors.red.withOpacity(0.4),

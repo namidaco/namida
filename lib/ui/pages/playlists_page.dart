@@ -190,7 +190,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           children: [
             ObxO(
               rx: settings.enableM3USyncStartup,
-              builder: (m3usyncstartup) => CustomSwitchListTile(
+              builder: (context, m3usyncstartup) => CustomSwitchListTile(
                 visualDensity: VisualDensity.compact,
                 leading: const StackedIcon(
                   baseIcon: Broken.music_library_2,
@@ -238,7 +238,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             child: Column(
               children: [
                 Obx(
-                  () => ExpandableBox(
+                  (context) => ExpandableBox(
                     enableHero: widget.enableHero && enableHero,
                     gridWidget: isInsideDialog
                         ? null
@@ -271,7 +271,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                   child: Stack(
                     children: [
                       Obx(
-                        () => CustomScrollView(
+                        (context) => CustomScrollView(
                           controller: scrollController,
                           slivers: [
                             if (!isInsideDialog)
@@ -288,7 +288,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         Expanded(
                                           child: ObxO(
                                             rx: PlaylistController.inst.playlistsMap,
-                                            builder: (playlistsMap) => Text(
+                                            builder: (context, playlistsMap) => Text(
                                               playlistsMap.length.displayPlaylistKeyword,
                                               style: context.textTheme.displayLarge,
                                               maxLines: 2,
@@ -334,7 +334,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               tag: 'DPC_history',
                                               child: ObxO(
                                                 rx: HistoryController.inst.totalHistoryItemsCount,
-                                                builder: (count) => DefaultPlaylistCard(
+                                                builder: (context, count) => DefaultPlaylistCard(
                                                   colorScheme: Colors.grey,
                                                   icon: Broken.refresh,
                                                   title: lang.HISTORY,
@@ -351,7 +351,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               enabled: enableHero,
                                               tag: 'DPC_mostplayed',
                                               child: Obx(
-                                                () => DefaultPlaylistCard(
+                                                (context) => DefaultPlaylistCard(
                                                   colorScheme: Colors.green,
                                                   icon: Broken.award,
                                                   title: lang.MOST_PLAYED,
@@ -375,7 +375,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               tag: 'DPC_favs',
                                               child: ObxOClass(
                                                 rx: PlaylistController.inst.favouritesPlaylist,
-                                                builder: (favouritesPlaylist) => DefaultPlaylistCard(
+                                                builder: (context, favouritesPlaylist) => DefaultPlaylistCard(
                                                   colorScheme: Colors.red,
                                                   icon: Broken.heart,
                                                   title: lang.FAVOURITES,
@@ -391,7 +391,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               enabled: enableHero,
                                               tag: 'DPC_queues',
                                               child: Obx(
-                                                () => DefaultPlaylistCard(
+                                                (context) => DefaultPlaylistCard(
                                                   colorScheme: Colors.blue,
                                                   icon: Broken.driver,
                                                   title: lang.QUEUES,

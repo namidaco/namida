@@ -145,7 +145,7 @@ void showAddToPlaylistSheet({
                           ),
                           const SizedBox(width: 12.0),
                           Obx(
-                            () {
+                            (context) {
                               const watchLater = 'Watch Later';
                               pc.YoutubePlaylistController.inst.playlistsMap.valueR;
                               final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);

@@ -255,7 +255,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   tag: 'MINIPLAYER_POSITION',
                   child: ObxO(
                     rx: Player.inst.nowPlayingPosition,
-                    builder: (currentMS) => Text(
+                    builder: (context, currentMS) => Text(
                       currentMS.milliSecondsLabel,
                       style: context.textTheme.displaySmall,
                     ),
@@ -269,7 +269,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 ),
                 ObxO(
                   rx: Player.inst.isPlaying,
-                  builder: (isPlaying) => NamidaIconButton(
+                  builder: (context, isPlaying) => NamidaIconButton(
                     horizontalPadding: 18.0,
                     icon: isPlaying ? Broken.pause : Broken.play,
                     iconSize: 32.0,
@@ -287,21 +287,21 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   tag: 'MINIPLAYER_DURATION',
                   child: ObxO(
                       rx: settings.player.displayRemainingDurInsteadOfTotal,
-                      builder: (displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
+                      builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
                           ? ObxO(
                               rx: _currentItemDurationMS,
-                              builder: (durMS) {
+                              builder: (context, durMS) {
                                 int finalDurMS = durMS ?? 0;
 
                                 return ObxO(
                                   rx: Player.inst.currentItem,
-                                  builder: (currentItem) {
+                                  builder: (context, currentItem) {
                                     if (finalDurMS == 0 && currentItem is Selectable) {
                                       finalDurMS = currentItem.track.durationMS;
                                     }
                                     return ObxO(
                                       rx: Player.inst.nowPlayingPosition,
-                                      builder: (toSubtract) {
+                                      builder: (context, toSubtract) {
                                         final msToDisplay = finalDurMS - toSubtract;
                                         return Text(
                                           "- ${msToDisplay.milliSecondsLabel}",
@@ -315,11 +315,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             )
                           : ObxO(
                               rx: _currentItemDurationMS,
-                              builder: (milliseconds) {
+                              builder: (context, milliseconds) {
                                 if (milliseconds == null || milliseconds == 0) {
                                   return ObxO(
                                     rx: Player.inst.currentItem,
-                                    builder: (currentItem) {
+                                    builder: (context, currentItem) {
                                       final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
                                       return Text(
                                         milliseconds.milliSecondsLabel,
@@ -348,7 +348,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         fullscreen
             ? Positioned.fill(
                 child: Obx(
-                  () => Container(
+                  (context) => Container(
                     color: Color.alphaBlend(
                       CurrentColor.inst.miniplayerColor.withOpacity(0.2),
                       context.isDarkMode ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.5),
@@ -403,7 +403,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 child: Builder(
                                   builder: (context) {
                                     return Obx(
-                                      () {
+                                      (context) {
                                         final lrc = Lyrics.inst.currentLyricsLRC.valueR;
                                         if (lrc == null) {
                                           final text = Lyrics.inst.currentLyricsText.valueR;

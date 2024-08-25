@@ -124,7 +124,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                                 widget.onPopping(_didChangeSort);
                               },
                               icon: Obx(
-                                () => Stack(
+                                (context) => Stack(
                                   alignment: Alignment.center,
                                   children: [
                                     if (YTLocalSearchController.inst.didLoadLookupLists.valueR == false)

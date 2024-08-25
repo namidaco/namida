@@ -461,7 +461,7 @@ class Namida extends StatelessWidget {
         behavior: const ScrollBehaviorModified(),
         child: ObxO(
           rx: settings.selectedLanguage,
-          builder: (selectedLanguage) {
+          builder: (context, selectedLanguage) {
             final codes = selectedLanguage.code.split('_');
             return Localizations(
               locale: Locale(codes.first, codes.last),
@@ -472,7 +472,7 @@ class Namida extends StatelessWidget {
                 GlobalWidgetsLocalizations.delegate,
               ],
               child: Obx(
-                () {
+                (context) {
                   final mode = settings.themeMode.valueR;
                   final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
                   final isLight = !useDarkTheme;
@@ -501,7 +501,7 @@ class Namida extends StatelessWidget {
           visible: !showPipOnly,
           child: ObxO(
             rx: settings.fontScaleFactor,
-            builder: (fontScaleFactor) => MediaQuery(
+            builder: (context, fontScaleFactor) => MediaQuery(
               data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
               child: MaterialApp(
                 color: kDefaultIconLightColor,

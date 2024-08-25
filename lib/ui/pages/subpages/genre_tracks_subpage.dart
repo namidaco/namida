@@ -26,7 +26,7 @@ class GenreTracksPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: Obx(
-        () {
+        (context) {
           Indexer.inst.mainMapGenres.valueR; // to update after sorting
           return NamidaTracksList(
             queueSource: QueueSource.genre,

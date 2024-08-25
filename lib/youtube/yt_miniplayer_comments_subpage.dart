@@ -46,7 +46,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
     return BackgroundWrapper(
       child: ObxO(
         rx: Player.inst.currentItem,
-        builder: (currentItem) {
+        builder: (context, currentItem) {
           if (currentItem is! YoutubeID) return const SizedBox();
           final currentId = currentItem.id;
           return Column(
@@ -97,7 +97,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                         slivers: [
                           ObxO(
                             rx: YoutubeInfoController.current.isLoadingInitialComments,
-                            builder: (loadingInitial) {
+                            builder: (context, loadingInitial) {
                               if (loadingInitial) {
                                 return SliverToBoxAdapter(
                                   child: ShimmerWrapper(
@@ -122,7 +122,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                               }
                               return ObxO(
                                 rx: YoutubeInfoController.current.currentComments,
-                                builder: (comments) {
+                                builder: (context, comments) {
                                   if (comments == null) return const SliverToBoxAdapter();
                                   return SliverList.builder(
                                     itemCount: comments.length,
@@ -143,7 +143,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                           ),
                           ObxO(
                             rx: YoutubeInfoController.current.isLoadingMoreComments,
-                            builder: (isLoadingMoreComments) => isLoadingMoreComments
+                            builder: (context, isLoadingMoreComments) => isLoadingMoreComments
                                 ? const SliverPadding(
                                     padding: EdgeInsets.all(12.0),
                                     sliver: SliverToBoxAdapter(
@@ -189,7 +189,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
         const SizedBox(width: 12.0),
         ObxO(
           rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
-          builder: (isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)
+          builder: (context, isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)
               ? StackedIcon(
                   baseIcon: Broken.document,
                   secondaryIcon: Broken.global,
@@ -207,7 +207,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
         Expanded(
           child: ObxO(
             rx: YoutubeInfoController.current.currentComments,
-            builder: (comments) {
+            builder: (context, comments) {
               final count = comments?.commentsCount;
               return Text(
                 [
@@ -227,7 +227,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
             ...CommentsSortType.values.map(
               (s) => ObxO(
                 rx: YoutubeMiniplayerUiController.inst.currentCommentSort,
-                builder: (currentCommentSort) => NamidaInkWell(
+                builder: (context, currentCommentSort) => NamidaInkWell(
                   borderRadius: 8.0,
                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),

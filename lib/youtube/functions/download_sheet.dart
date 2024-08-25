@@ -313,7 +313,7 @@ Future<void> showDownloadVideoBottomSheet({
           padding: const EdgeInsets.all(18.0).add(EdgeInsets.only(bottom: bottomPadding)),
           child: ObxO(
             rx: videoInfo,
-            builder: (videoInfo) {
+            builder: (context, videoInfo) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -379,9 +379,9 @@ Future<void> showDownloadVideoBottomSheet({
                         const SizedBox(width: 6.0),
                         ObxO(
                           rx: selectedVideoOnlyStream,
-                          builder: (selectedVideo) => ObxO(
+                          builder: (context, selectedVideo) => ObxO(
                             rx: selectedAudioOnlyStream,
-                            builder: (selectedAudio) {
+                            builder: (context, selectedAudio) {
                               if (selectedAudio == null && selectedVideo == null) return const SizedBox();
                               final isWEBM = (selectedAudio?.isWebm == true || selectedVideo?.isWebm == true);
                               return Stack(
@@ -438,14 +438,14 @@ Future<void> showDownloadVideoBottomSheet({
                   Expanded(
                     child: ObxO(
                       rx: streamResult,
-                      builder: (streamResult) {
+                      builder: (context, streamResult) {
                         final hasAudioWebm = streamResult?.audioStreams.firstWhereEff((e) => e.isWebm) != null;
                         final hasVideoWebm = streamResult?.videoStreams.firstWhereEff((e) => e.isWebm) != null;
                         return ListView(
                           shrinkWrap: true,
                           children: [
                             Obx(
-                              () {
+                              (context) {
                                 final e = selectedAudioOnlyStream.valueR;
                                 final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
                                 return getTextWidget(
@@ -480,11 +480,11 @@ Future<void> showDownloadVideoBottomSheet({
                                   )
                                 : ObxO(
                                     rx: showAudioWebm,
-                                    builder: (showAudioWebm) => getPopupItem(
+                                    builder: (context, showAudioWebm) => getPopupItem(
                                       items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm).toList(),
                                       itemBuilder: (element) {
                                         return Obx(
-                                          () {
+                                          (context) {
                                             final cacheFile = element.getCachedFile(videoId);
                                             return getQualityButton(
                                               selected: selectedAudioOnlyStream.valueR == element,
@@ -504,7 +504,7 @@ Future<void> showDownloadVideoBottomSheet({
                             getDivider(),
                             ObxO(
                               rx: selectedVideoOnlyStream,
-                              builder: (vostream) {
+                              builder: (context, vostream) {
                                 final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
                                 return getTextWidget(
                                   hasWebm: hasVideoWebm,
@@ -538,11 +538,11 @@ Future<void> showDownloadVideoBottomSheet({
                                   )
                                 : ObxO(
                                     rx: showVideoWebm,
-                                    builder: (showVideoWebm) => getPopupItem(
+                                    builder: (context, showVideoWebm) => getPopupItem(
                                       items: showVideoWebm ? streamResult!.videoStreams : streamResult!.videoStreams.where((element) => !element.isWebm).toList(),
                                       itemBuilder: (element) {
                                         return Obx(
-                                          () {
+                                          (context) {
                                             final cacheFile = element.getCachedFile(videoId);
 
                                             var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
@@ -569,7 +569,7 @@ Future<void> showDownloadVideoBottomSheet({
                     ),
                   ),
                   const SizedBox(height: 12.0),
-                  Obx(() {
+                  Obx((context) {
                     final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.VIDEO_ONLY : null;
                     final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.AUDIO_ONLY : null;
                     final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
@@ -627,7 +627,7 @@ Future<void> showDownloadVideoBottomSheet({
                       Expanded(
                         flex: 2,
                         child: Obx(
-                          () {
+                          (context) {
                             final sizeSum = (selectedVideoOnlyStream.valueR?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.valueR?.sizeInBytes ?? 0);
                             final enabled = sizeSum > 0;
                             final sizeText = enabled ? "(${sizeSum.fileSizeFormatted})" : '';

@@ -48,7 +48,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
                 final details = sortToTextAndIcon(e);
                 return ObxO(
                   rx: sorting,
-                  builder: (s) {
+                  builder: (context, s) {
                     final enabled = s == e;
                     final itemsColor = enabled ? Colors.white.withOpacity(0.8) : null;
                     return NamidaInkWell(
@@ -63,7 +63,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
                           enabled
                               ? ObxO(
                                   rx: sortingByTop,
-                                  builder: (sortingByTop) => StackedIcon(
+                                  builder: (context, sortingByTop) => StackedIcon(
                                     baseIcon: details.$2,
                                     secondaryIcon: sortingByTop ? Broken.arrow_down_2 : Broken.arrow_up_3,
                                     iconSize: 20.0,

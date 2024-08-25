@@ -203,7 +203,7 @@ class StorageCacheManager {
 
           /// Clear after choosing
           Obx(
-            () => NamidaButton(
+            (context) => NamidaButton(
               enabled: itemsToDeleteSize.valueR > 0 || itemsToDelete.valueR.isNotEmpty,
               text: "${lang.DELETE.toUpperCase()} (${itemsToDeleteSize.valueR.fileSizeFormatted})",
               onPressed: () async {
@@ -246,7 +246,7 @@ class StorageCacheManager {
                 scrollDirection: Axis.horizontal,
                 child: ObxO(
                   rx: currentSort,
-                  builder: (currentSort) => Row(
+                  builder: (context, currentSort) => Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       const SizedBox(width: 24.0),
@@ -279,7 +279,7 @@ class StorageCacheManager {
               Expanded(
                 child: NamidaScrollbarWithController(
                   child: (sc) => Obx(
-                    () => ListView.builder(
+                    (context) => ListView.builder(
                       controller: sc,
                       padding: EdgeInsets.zero,
                       itemCount: allFiles.valueR.length,
@@ -347,7 +347,7 @@ class StorageCacheManager {
                                   width: 16.0,
                                   child: ObxO(
                                     rx: itemsToDelete,
-                                    builder: (toDelete) => CheckMark(
+                                    builder: (context, toDelete) => CheckMark(
                                       strokeWidth: 2,
                                       activeColor: context.theme.listTileTheme.iconColor!,
                                       inactiveColor: context.theme.listTileTheme.iconColor!,
@@ -367,12 +367,12 @@ class StorageCacheManager {
               ),
               ObxO(
                 rx: tempFilesSizeFinal,
-                builder: (tempfs) => tempfs > 0
+                builder: (context, tempfs) => tempfs > 0
                     ? Padding(
                         padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
                         child: ObxO(
                           rx: deleteTempFiles,
-                          builder: (deleteTempf) => AnimatedOpacity(
+                          builder: (context, deleteTempf) => AnimatedOpacity(
                             duration: const Duration(milliseconds: 200),
                             opacity: deleteTempFiles.value ? 1.0 : 0.6,
                             child: NamidaInkWell(
@@ -397,7 +397,7 @@ class StorageCacheManager {
                                   const SizedBox(width: 8.0),
                                   ObxO(
                                     rx: tempFilesSizeFinal,
-                                    builder: (tempf) => Text(
+                                    builder: (context, tempf) => Text(
                                       '${lang.DELETE_TEMP_FILES} (${tempf.fileSizeFormatted})',
                                       style: namida.textTheme.displaySmall,
                                     ),

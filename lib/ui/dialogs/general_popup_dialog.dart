@@ -131,7 +131,7 @@ Future<void> showGeneralPopupDialog(
               iconWidget ??
                   ObxO(
                     rx: iconColor,
-                    builder: (color) => Icon(
+                    builder: (context, color) => Icon(
                       icon,
                       color: color,
                     ),
@@ -254,7 +254,7 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           ObxO(
             rx: isEditing,
-            builder: (editing) => AnimatedEnabled(
+            builder: (context, editing) => AnimatedEnabled(
               enabled: !editing,
               child: NamidaButton(
                 text: lang.SAVE,
@@ -503,7 +503,7 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           ObxO(
             rx: isUpdating,
-            builder: (updating) => AnimatedEnabled(
+            builder: (context, updating) => AnimatedEnabled(
               enabled: !updating,
               child: NamidaButton(
                 text: lang.CONFIRM,
@@ -608,7 +608,7 @@ Future<void> showGeneralPopupDialog(
                   ),
                   ObxO(
                     rx: shouldCleanUp,
-                    builder: (cleanup) => NamidaIconButton(
+                    builder: (context, cleanup) => NamidaIconButton(
                       tooltip: () => shouldCleanUp.value ? lang.DISABLE_SEARCH_CLEANUP : lang.ENABLE_SEARCH_CLEANUP,
                       icon: cleanup ? Broken.shield_cross : Broken.shield_search,
                       onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
@@ -620,7 +620,7 @@ Future<void> showGeneralPopupDialog(
               Expanded(
                 child: ObxO(
                   rx: filteredPaths,
-                  builder: (filtered) => NamidaListView(
+                  builder: (context, filtered) => NamidaListView(
                     header: highMatchesFiles.isNotEmpty ? highMatchesWidget(highMatchesFiles) : null,
                     itemBuilder: (context, i) {
                       final p = filtered[i];
@@ -655,7 +655,7 @@ Future<void> showGeneralPopupDialog(
 
   final advancedStuffListTile = ObxO(
     rx: colorDelightened,
-    builder: (colorDelightened) => SmallListTile(
+    builder: (context, colorDelightened) => SmallListTile(
       color: colorDelightened,
       compact: false,
       title: lang.ADVANCED,
@@ -675,7 +675,7 @@ Future<void> showGeneralPopupDialog(
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? ObxO(
           rx: colorDelightened,
-          builder: (colorDelightened) => SmallListTile(
+          builder: (context, colorDelightened) => SmallListTile(
             color: colorDelightened,
             compact: true,
             title: lang.REMOVE_FROM_PLAYLIST,
@@ -725,7 +725,7 @@ Future<void> showGeneralPopupDialog(
   final Widget? removeQueueTile = queue != null
       ? ObxO(
           rx: colorDelightened,
-          builder: (colorDelightened) => SmallListTile(
+          builder: (context, colorDelightened) => SmallListTile(
             color: colorDelightened,
             compact: false,
             title: lang.REMOVE_QUEUE,
@@ -757,7 +757,7 @@ Future<void> showGeneralPopupDialog(
     onDismissing: cancelSkipTimer,
     dialog: ObxO(
       rx: colorDelightened,
-      builder: (colorDelightened) {
+      builder: (context, colorDelightened) {
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
         return AnimatedTheme(
@@ -936,7 +936,7 @@ Future<void> showGeneralPopupDialog(
                               if (errorPlayingTrack != null)
                                 ObxO(
                                   rx: Player.inst.playErrorRemainingSecondsToSkip,
-                                  builder: (remainingSecondsToSkip) => SmallListTile(
+                                  builder: (context, remainingSecondsToSkip) => SmallListTile(
                                     title: lang.SKIP,
                                     subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
                                     color: colorDelightened,
@@ -1119,7 +1119,7 @@ Future<void> showGeneralPopupDialog(
                                   padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                   child: ObxO(
                                     rx: isLoadingFilesToShare,
-                                    builder: (loading) => loading ? const LoadingIndicator() : const SizedBox(),
+                                    builder: (context, loading) => loading ? const LoadingIndicator() : const SizedBox(),
                                   ),
                                 ),
                                 onTap: () async {
@@ -1242,7 +1242,7 @@ Future<void> showGeneralPopupDialog(
                             if (isSingle && tracks.first == Player.inst.currentTrack?.track)
                               ObxO(
                                 rx: numberOfRepeats,
-                                builder: (repeats) => SmallListTile(
+                                builder: (context, repeats) => SmallListTile(
                                   color: colorDelightened,
                                   compact: true,
                                   title: lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', repeats.toString()),
@@ -1294,7 +1294,7 @@ Future<void> showGeneralPopupDialog(
                                           ),
                                           ObxO(
                                             rx: isLoadingFilesToShare,
-                                            builder: (loading) => Padding(
+                                            builder: (context, loading) => Padding(
                                               padding: const EdgeInsets.only(top: 2.0),
                                               child: const LoadingIndicator().animateEntrance(
                                                 showWhen: loading,
@@ -1353,7 +1353,7 @@ Future<void> showGeneralPopupDialog(
                                           )
                                         : ObxO(
                                             rx: statsWrapper,
-                                            builder: (stats) => bigIcon(
+                                            builder: (context, stats) => bigIcon(
                                               Broken.grammerly,
                                               () => lang.SET_RATING,
                                               setTrackStatsDialog,

@@ -286,7 +286,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                           const SizedBox(height: 8.0),
                           ObxO(
                             rx: _currentLikeStatus,
-                            builder: (currentLikeStatus) {
+                            builder: (context, currentLikeStatus) {
                               int? likeCount = comment?.likesCount;
                               if (likeCount != null && currentLikeStatus == LikeStatus.liked) likeCount++;
                               return Row(

@@ -68,7 +68,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
         child: Column(
           children: [
             Obx(
-              () => ExpandableBox(
+              (context) => ExpandableBox(
                 enableHero: false,
                 isBarVisible: LibraryTab.tracks.isBarVisible.valueR,
                 showSearchBox: LibraryTab.tracks.isSearchBoxVisible.valueR,
@@ -118,7 +118,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   ),
                   builder: (properties) => ObxO(
                     rx: SearchSortController.inst.trackSearchList,
-                    builder: (trackSearchList) => NamidaListViewRaw(
+                    builder: (context, trackSearchList) => NamidaListViewRaw(
                       itemExtent: Dimensions.inst.trackTileItemExtent,
                       itemCount: trackSearchList.length,
                       scrollController: LibraryTab.tracks.scrollController,

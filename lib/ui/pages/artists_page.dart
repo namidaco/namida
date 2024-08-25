@@ -93,8 +93,8 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
         child: AnimationLimiter(
           child: ObxO(
             rx: artists ?? SearchSortController.inst.artistSearchList,
-            builder: (finalArtists) => Obx(
-              () {
+            builder: (context, finalArtists) => Obx(
+              (context) {
                 final artistTypeSettings = settings.activeArtistType.valueR;
                 final artistType = customType ?? artistTypeSettings;
                 final artistTypeText = artistType.toText();

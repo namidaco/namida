@@ -67,7 +67,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
 
   Widget get iconWidget => ObxO(
         rx: foldersController.isHome,
-        builder: (isHome) => SizedBox(
+        builder: (context, isHome) => SizedBox(
           height: double.infinity,
           child: Icon(
             isHome ? Broken.home_2 : Broken.folder_2,
@@ -85,7 +85,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     return BackgroundWrapper(
       child: ObxO(
         rx: foldersController.indexToScrollTo,
-        builder: (indexToScrollTo) => TrackTilePropertiesProvider(
+        builder: (context, indexToScrollTo) => TrackTilePropertiesProvider(
           configs: TrackTilePropertiesConfigs(
             queueSource: _queueSource,
           ),
@@ -93,16 +93,16 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
             children: [
               ObxO(
                 rx: config.enableFoldersHierarchy,
-                builder: (enableFoldersHierarchy) => enableFoldersHierarchy
+                builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
                     ? Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                             child: ObxO(
                               rx: foldersController.isHome,
-                              builder: (isHome) => ObxO(
+                              builder: (context, isHome) => ObxO(
                                 rx: foldersController.currentFolder,
-                                builder: (currentFolder) {
+                                builder: (context, currentFolder) {
                                   final pathOfDefault = isHome ? '' : currentFolder?.path;
                                   return CustomListTile(
                                     borderR: 16.0,
@@ -115,7 +115,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                       children: [
                                         ObxO(
                                           rx: config.defaultFolderStartupLocation,
-                                          builder: (defaultFolderStartupLocation) => NamidaIconButton(
+                                          builder: (context, defaultFolderStartupLocation) => NamidaIconButton(
                                             horizontalPadding: 8.0,
                                             tooltip: () => lang.SET_AS_DEFAULT,
                                             icon: defaultFolderStartupLocation == pathOfDefault ? Broken.archive_tick : Broken.save_2,
@@ -143,9 +143,9 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               controller: scrollController,
                               child: ObxO(
                                 rx: foldersController.isHome,
-                                builder: (isHome) => ObxO(
+                                builder: (context, isHome) => ObxO(
                                   rx: foldersController.currentFolder,
-                                  builder: (currentFolder) {
+                                  builder: (context, currentFolder) {
                                     final folderTracks = currentFolder?.tracks() ?? [];
                                     return CustomScrollView(
                                       controller: scrollController,
@@ -165,7 +165,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                         else ...[
                                           ObxO(
                                             rx: foldersController.currentFolderslist,
-                                            builder: (currentFolderslist) => SliverList.builder(
+                                            builder: (context, currentFolderslist) => SliverList.builder(
                                               itemCount: currentFolderslist.length,
                                               itemBuilder: (context, i) {
                                                 return FolderTile(
@@ -206,7 +206,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                             leading: iconWidget,
                             title: ObxO(
                               rx: foldersController.currentFolder,
-                              builder: (currentFolder) => Text(
+                              builder: (context, currentFolder) => Text(
                                 currentFolder?.path.formatPath() ?? lang.HOME,
                                 style: context.textTheme.displaySmall,
                                 maxLines: 2,
@@ -220,9 +220,9 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               controller: scrollController,
                               child: ObxO(
                                 rx: foldersController.isInside,
-                                builder: (isInside) => ObxO(
+                                builder: (context, isInside) => ObxO(
                                   rx: foldersController.currentFolder,
-                                  builder: (currentFolder) {
+                                  builder: (context, currentFolder) {
                                     final folderTracks = currentFolder?.tracks() ?? [];
                                     return CustomScrollView(
                                       controller: scrollController,
@@ -230,7 +230,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                         if (!isInside)
                                           ObxO(
                                             rx: _foldersMap,
-                                            builder: (mainMapFolders) {
+                                            builder: (context, mainMapFolders) {
                                               final mainMapFoldersKeys = _foldersMap.keys.toList();
                                               return SliverList.builder(
                                                 itemCount: mainMapFoldersKeys.length,
@@ -272,7 +272,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
               ),
               indexToScrollTo != null
                   ? Obx(
-                      () => Positioned(
+                      (context) => Positioned(
                         bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 8.0,
                         right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABHeight) + 12.0 + 8.0,
                         child: DecoratedBox(

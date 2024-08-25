@@ -89,7 +89,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                     ...PerformanceMode.values.map(
                       (e) => ObxO(
                         rx: settings.performanceMode,
-                        builder: (performanceMode) => NamidaInkWell(
+                        builder: (context, performanceMode) => NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                           borderRadius: 6.0,
@@ -118,7 +118,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   ],
                   child: ObxO(
                     rx: settings.performanceMode,
-                    builder: (performanceMode) => Text(
+                    builder: (context, performanceMode) => Text(
                       performanceMode.toText(),
                       style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
                       textAlign: TextAlign.end,
@@ -131,7 +131,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               const SizedBox(height: 6.0),
               ObxO(
                 rx: settings.enableBlurEffect,
-                builder: (enableBlurEffect) => CustomSwitchListTile(
+                builder: (context, enableBlurEffect) => CustomSwitchListTile(
                   icon: Broken.drop,
                   title: lang.ENABLE_BLUR_EFFECT,
                   subtitle: lang.PERFORMANCE_NOTE,
@@ -146,7 +146,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               ),
               ObxO(
                 rx: settings.enableGlowEffect,
-                builder: (enableGlowEffect) => CustomSwitchListTile(
+                builder: (context, enableGlowEffect) => CustomSwitchListTile(
                   icon: Broken.sun_1,
                   title: lang.ENABLE_GLOW_EFFECT,
                   subtitle: lang.PERFORMANCE_NOTE,
@@ -161,7 +161,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               ),
               ObxO(
                 rx: settings.enableMiniplayerParallaxEffect,
-                builder: (enableMiniplayerParallaxEffect) => CustomSwitchListTile(
+                builder: (context, enableMiniplayerParallaxEffect) => CustomSwitchListTile(
                   icon: Broken.maximize,
                   title: lang.ENABLE_PARALLAX_EFFECT,
                   subtitle: lang.PERFORMANCE_NOTE,
@@ -178,7 +178,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 subtitle: lang.PERFORMANCE_NOTE,
                 trailing: ObxO(
                   rx: settings.artworkCacheHeightMultiplier,
-                  builder: (artworkCacheHeightMultiplier) => NamidaWheelSlider(
+                  builder: (context, artworkCacheHeightMultiplier) => NamidaWheelSlider(
                     key: ValueKey(changedArtworkCacheM),
                     text: '${artworkCacheHeightMultiplier}x',
                     totalCount: 1 * artworkPartsMultiplier, // from 0.5 to 1.5 * 100 part
@@ -208,7 +208,7 @@ class AdvancedSettings extends SettingSubpageProvider {
         title: lang.PERFORMANCE_MODE,
         trailing: ObxO(
           rx: settings.performanceMode,
-          builder: (performanceMode) => Text(
+          builder: (context, performanceMode) => Text(
             performanceMode.toText(),
             style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
             textAlign: TextAlign.end,
@@ -238,7 +238,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 secondaryIcon: Broken.refresh,
               ),
               trailingRaw: Obx(
-                () {
+                (context) {
                   final current = VideoController.inst.localVideoExtractCurrent.valueR;
                   final total = VideoController.inst.localVideoExtractTotal.valueR;
                   final isCounterVisible = total != 0;
@@ -343,7 +343,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                       )
                     ],
                     child: Obx(
-                      () => Column(
+                      (context) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 12.0),
@@ -352,7 +352,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                               const SizedBox(width: 8.0),
                               const Icon(Broken.danger),
                               const SizedBox(width: 8.0),
-                              Obx(() => Text(
+                              Obx((context) => Text(
                                     '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
                                     style: context.textTheme.displayMedium,
                                   )),
@@ -366,7 +366,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                               return Padding(
                                 padding: const EdgeInsets.only(top: 10.0),
                                 child: Obx(
-                                  () => ListTileWithCheckMark(
+                                  (context) => ListTileWithCheckMark(
                                     active: isActive(source),
                                     title: '${source.name} (${count.formatDecimal()})',
                                     onTap: () {
@@ -386,7 +386,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                           const SizedBox(height: 12.0),
                           ObxO(
                             rx: totalTracksBetweenDates,
-                            builder: (total) => BetweenDatesTextButton(
+                            builder: (context, total) => BetweenDatesTextButton(
                               useHistoryDates: true,
                               onConfirm: (dates) {
                                 oldestDate = dates.firstOrNull;
@@ -439,7 +439,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_IMAGE_CACHE_SIZE,
                 trailing: Obx(
-                  () {
+                  (context) {
                     final maxInSettings = settings.imagesMaxCacheInMB.valueR;
                     return NamidaWheelSlider(
                       totalCount: getValue(4 * 1024), // 4 GB
@@ -470,7 +470,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_AUDIO_CACHE_SIZE,
                 trailing: Obx(
-                  () {
+                  (context) {
                     final maxInSettings = settings.audiosMaxCacheInMB.valueR;
                     return NamidaWheelSlider(
                       totalCount: getValue(12 * 1024), // 12 GB
@@ -500,7 +500,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 ),
                 title: lang.MAX_VIDEO_CACHE_SIZE,
                 trailing: Obx(
-                  () {
+                  (context) {
                     final maxInSettings = settings.videosMaxCacheInMB.valueR;
                     return NamidaWheelSlider(
                       totalCount: getValue(32 * 1024), // 32 GB
@@ -532,7 +532,7 @@ class AdvancedSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _AdvancedSettingKeys.clearVideoCache,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
                 leading: const StackedIcon(
                   baseIcon: Broken.video,
@@ -630,7 +630,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => CustomListTile(
+      (context) => CustomListTile(
         bgColor: widget.bgColor,
         leading: const StackedIcon(
           baseIcon: Broken.image,
@@ -646,7 +646,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
               actions: [
                 const CancelButton(),
                 Obx(
-                  () {
+                  (context) {
                     final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
                     return NamidaButton(
                       text: "${lang.CLEAR.toUpperCase()} (${total.fileSizeFormatted})",
@@ -678,7 +678,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                       return Padding(
                         padding: const EdgeInsets.all(6.0),
                         child: Obx(
-                          () => ListTileWithCheckMark(
+                          (context) => ListTileWithCheckMark(
                             active: dirsChoosen.contains(e),
                             dense: true,
                             icon: Broken.cpu_setting,
@@ -862,7 +862,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                 const CancelButton(),
                 ObxO(
                   rx: isUpdating,
-                  builder: (updating) => AnimatedEnabled(
+                  builder: (context, updating) => AnimatedEnabled(
                     enabled: !updating,
                     child: NamidaButton(
                       text: lang.UPDATE,
@@ -956,7 +956,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 12.0),
                   Obx(
-                    () => CustomSwitchListTile(
+                    (context) => CustomSwitchListTile(
                       passedColor: colorScheme,
                       title: lang.UPDATE_MISSING_TRACKS_ONLY,
                       value: updateMissingOnly.valueR,
@@ -989,7 +989,7 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () {
+      (context) {
         final p = NamidaFFMPEG.inst.currentOperations[OperationType.ytdlpThumbnailFix]?.valueR;
         final currentAudioPath = p?.currentFilePath;
         final currentProgress = p?.progress ?? 0;
@@ -1046,13 +1046,13 @@ class _CompressImagesListTile extends StatelessWidget {
         child: Column(
           children: [
             Obx(
-              () => ListView(
+              (context) => ListView(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 children: [
                   ...initialDirectories.valueR.map(
                     (e) => Obx(
-                      () {
+                      (context) {
                         final dirPath = e.split(Platform.pathSeparator)..removeWhere((element) => element == '');
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -1074,7 +1074,7 @@ class _CompressImagesListTile extends StatelessWidget {
             CustomListTile(
               title: lang.COMPRESSION_PERCENTAGE,
               trailing: Obx(
-                () => NamidaWheelSlider(
+                (context) => NamidaWheelSlider(
                   totalCount: 100,
                   initValue: 50,
                   text: "${compPerc.valueR}%",
@@ -1095,7 +1095,7 @@ class _CompressImagesListTile extends StatelessWidget {
               },
             ),
             Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 icon: Broken.document_code_2,
                 title: lang.KEEP_FILE_DATES,
                 value: keepOriginalFileDates.valueR,
@@ -1119,7 +1119,7 @@ class _CompressImagesListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () {
+      (context) {
         final p = NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.valueR;
         final currentImagePath = p?.currentFilePath;
         final currentProgress = p?.progress ?? 0;

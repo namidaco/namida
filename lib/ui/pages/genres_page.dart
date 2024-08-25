@@ -46,7 +46,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
         controller: scrollController,
         child: AnimationLimiter(
           child: Obx(
-            () => Column(
+            (context) => Column(
               children: [
                 ExpandableBox(
                   enableHero: enableHero,

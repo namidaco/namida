@@ -148,7 +148,7 @@ class YtUtilsPlaylist {
             scrollDirection: Axis.horizontal,
             child: ObxO(
               rx: privacyRx,
-              builder: (privacy) => Row(
+              builder: (context, privacy) => Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: PlaylistPrivacy.values.map(
                   (e) {
@@ -307,7 +307,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Obx(
-                            () {
+                            (context) {
                               final totalC = totalCount.valueR;
                               return AnimatedSwitcher(
                                 key: const Key('circle_switch'),
@@ -333,7 +333,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                           ),
                           const SizedBox(height: 8.0),
                           Obx(
-                            () {
+                            (context) {
                               final totalC = totalCount.valueR;
                               return Text(
                                 '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',

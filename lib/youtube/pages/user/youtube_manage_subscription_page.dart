@@ -112,7 +112,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: ObxO(
             rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-            builder: (membershipType) => ListView(
+            builder: (context, membershipType) => ListView(
                   children: [
                     const SizedBox(height: 64.0),
                     Container(
@@ -127,57 +127,54 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                           const SizedBox(height: 12.0),
                           const MembershipCard(displayName: true),
                           const SizedBox(height: 12.0),
-                          ObxO(
-                            rx: YoutubeAccountController.membership.userPatreonTier,
-                            builder: (userPatreonTier) => NamidaExpansionTile(
-                              initiallyExpanded: true,
-                              icon: Broken.wallet_2,
-                              titleText: 'Patreon',
-                              trailing: ObxO(
-                                rx: YoutubeAccountController.membership.userPatreonTier,
-                                builder: (userPatreonTier) {
-                                  final imageUrl = userPatreonTier?.imageUrl;
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(width: 8.0),
-                                      SizedBox(
+                          NamidaExpansionTile(
+                            initiallyExpanded: true,
+                            icon: Broken.wallet_2,
+                            titleText: 'Patreon',
+                            trailing: ObxO(
+                              rx: YoutubeAccountController.membership.userPatreonTier,
+                              builder: (context, userPatreonTier) {
+                                final imageUrl = userPatreonTier?.imageUrl;
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(width: 8.0),
+                                    SizedBox(
+                                      width: 24.0,
+                                      height: 24.0,
+                                      child: YoutubeThumbnail(
+                                        key: ValueKey(imageUrl),
                                         width: 24.0,
-                                        height: 24.0,
-                                        child: YoutubeThumbnail(
-                                          key: ValueKey(imageUrl),
-                                          width: 24.0,
-                                          customUrl: imageUrl,
-                                          isImportantInCache: false,
-                                          type: ThumbnailType.channel,
-                                        ),
+                                        customUrl: imageUrl,
+                                        isImportantInCache: false,
+                                        type: ThumbnailType.channel,
                                       ),
-                                      IconButton(
-                                        onPressed: () {},
-                                        icon: const Icon(
-                                          Broken.arrow_down_2,
-                                          size: 20.0,
-                                        ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(
+                                        Broken.arrow_down_2,
+                                        size: 20.0,
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              subtitle: ObxO(
-                                rx: YoutubeAccountController.membership.userMembershipTypePatreon,
-                                builder: (userMembershipTypePatreon) => Text(
-                                  userMembershipTypePatreon?.name ?? '?',
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ),
-                              children: [
-                                CustomListTile(
-                                  icon: Broken.login_1,
-                                  title: lang.SIGN_IN,
-                                  onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
-                                ),
-                              ],
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
+                            subtitle: ObxO(
+                              rx: YoutubeAccountController.membership.userMembershipTypePatreon,
+                              builder: (context, userMembershipTypePatreon) => Text(
+                                userMembershipTypePatreon?.name ?? '?',
+                                style: context.textTheme.displaySmall,
+                              ),
+                            ),
+                            children: [
+                              CustomListTile(
+                                icon: Broken.login_1,
+                                title: lang.SIGN_IN,
+                                onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12.0),
                           Form(
@@ -188,9 +185,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                               titleText: lang.MEMBERSHIP_FREE_COUPON,
                               trailing: ObxO(
                                 rx: _isChecking,
-                                builder: (isChecking) => ObxO(
+                                builder: (context, isChecking) => ObxO(
                                   rx: _isClaiming,
-                                  builder: (isClaiming) => Row(
+                                  builder: (context, isClaiming) => Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       isChecking || isClaiming ? const LoadingIndicator() : const SizedBox(),
@@ -210,14 +207,14 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 children: [
                                   ObxO(
                                     rx: YoutubeAccountController.membership.userMembershipTypeSupabase,
-                                    builder: (userMembershipTypeSupabase) => Text(
+                                    builder: (context, userMembershipTypeSupabase) => Text(
                                       userMembershipTypeSupabase?.name ?? '?',
                                       style: context.textTheme.displaySmall,
                                     ),
                                   ),
                                   ObxO(
                                     rx: YoutubeAccountController.membership.userSupabaseSub,
-                                    builder: (userSupabaseSub) {
+                                    builder: (context, userSupabaseSub) {
                                       if (userSupabaseSub == null) return const SizedBox();
                                       final availableTill = userSupabaseSub.availableTill;
                                       String endTimeLeftText;
@@ -260,9 +257,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 const SizedBox(height: 12.0),
                                 ObxO(
                                   rx: _isChecking,
-                                  builder: (isChecking) => ObxO(
+                                  builder: (context, isChecking) => ObxO(
                                     rx: _isClaiming,
-                                    builder: (isClaiming) => AnimatedEnabled(
+                                    builder: (context, isClaiming) => AnimatedEnabled(
                                       enabled: !isChecking && !isClaiming,
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.end,

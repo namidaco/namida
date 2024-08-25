@@ -44,7 +44,7 @@ class SortByMenuTracks extends StatelessWidget {
         ].map(
           (e) => ObxO(
             rx: settings.tracksSort,
-            builder: (tracksSort) => SmallListTile(
+            builder: (context, tracksSort) => SmallListTile(
               title: e.toText(),
               active: tracksSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e),
@@ -65,7 +65,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
       height: context.height * 0.5,
       child: SingleChildScrollView(
         child: Obx(
-          () {
+          (context) {
             final tracksSortSearch = settings.tracksSortSearch.valueR;
             final reversed = settings.tracksSortSearchReversed.valueR;
             final isAuto = settings.tracksSortSearchIsAuto.valueR;
@@ -174,7 +174,7 @@ class SortByMenuAlbums extends StatelessWidget {
         ].map(
           (e) => ObxO(
             rx: settings.albumSort,
-            builder: (albumsort) => SmallListTile(
+            builder: (context, albumsort) => SmallListTile(
               title: e.toText(),
               active: albumsort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
@@ -215,7 +215,7 @@ class SortByMenuArtists extends StatelessWidget {
         ].map(
           (e) => ObxO(
             rx: settings.artistSort,
-            builder: (artistSort) => SmallListTile(
+            builder: (context, artistSort) => SmallListTile(
               title: e.toText(),
               active: artistSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSortBy: e),
@@ -252,7 +252,7 @@ class SortByMenuGenres extends StatelessWidget {
         ].map(
           (e) => ObxO(
             rx: settings.genreSort,
-            builder: (genreSort) => SmallListTile(
+            builder: (context, genreSort) => SmallListTile(
               title: e.toText(),
               active: genreSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
@@ -285,7 +285,7 @@ class SortByMenuPlaylist extends StatelessWidget {
         ].map(
           (e) => ObxO(
             rx: settings.playlistSort,
-            builder: (playlistSort) => SmallListTile(
+            builder: (context, playlistSort) => SmallListTile(
               title: e.toText(),
               active: playlistSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),

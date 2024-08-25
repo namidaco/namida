@@ -131,7 +131,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     return getItemWrapper(
       key: _BackupAndRestoreKeys.defaultLocation,
       child: Obx(
-        () => CustomListTile(
+        (context) => CustomListTile(
           bgColor: getBgColor(_BackupAndRestoreKeys.defaultLocation),
           title: lang.DEFAULT_BACKUP_LOCATION,
           icon: Broken.direct_inbox,
@@ -258,7 +258,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   required List<String> youtubeItems,
                 }) {
                   return Obx(
-                    () {
+                    (context) {
                       final localRes = getItemsSize(items, sizesMap.valueR);
                       final ytRes = getItemsSize(youtubeItems, sizesMap.valueR);
                       final localSize = localRes.$1;
@@ -266,7 +266,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       final localUnknown = localRes.$2;
                       final ytUnknown = ytRes.$2;
                       return Obx(
-                        () {
+                        (context) {
                           final isLocalIconChecked = isActive(items);
                           final isYoutubeIconChecked = youtubeForceFollowItems
                               ? isActive(items)
@@ -532,7 +532,7 @@ class BackupAndRestore extends SettingSubpageProvider {
               title: lang.AUTO_BACKUP_INTERVAL,
               icon: Broken.timer,
               trailing: Obx(
-                () {
+                (context) {
                   final days = settings.autoBackupIntervalDays.valueR;
                   return NamidaWheelSlider(
                     totalCount: 14,
@@ -612,9 +612,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 title: lang.CONFIGURE,
                                 actions: [
                                   Obx(
-                                    () => NamidaButton(
+                                    (context) => NamidaButton(
                                       enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
-                                      textWidget: Obx(() => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                                      textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                       onPressed: () async {
                                         NamidaNavigator.inst.closeDialog();
                                         await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -662,7 +662,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                     ),
                                     getDivider(),
                                     Obx(
-                                      () => matchAllTracksListTile(
+                                      (context) => matchAllTracksListTile(
                                         active: matchAll.valueR,
                                         onTap: matchAll.toggle,
                                         displayPerfWarning: isMatchingTypeTitleAndArtist.valueR, // link matching wont result in perf issue
@@ -750,7 +750,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 actions: [
                                   const CancelButton(),
                                   NamidaButton(
-                                    textWidget: Obx(() => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                                    textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                     onPressed: () async {
                                       NamidaNavigator.inst.closeDialog();
                                       await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
@@ -767,7 +767,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Obx(
-                                      () => matchAllTracksListTile(
+                                      (context) => matchAllTracksListTile(
                                         active: matchAll.valueR,
                                         onTap: matchAll.toggle,
                                         displayPerfWarning: true,

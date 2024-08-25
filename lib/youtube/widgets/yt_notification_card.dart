@@ -218,9 +218,9 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
         childrenDefault: getMenuItems,
         child: ObxO(
           rx: _isNowRead,
-          builder: (isNowRead) => ObxO(
+          builder: (context, isNowRead) => ObxO(
             rx: _borderColor,
-            builder: (borderColor) => NamidaInkWell(
+            builder: (context, borderColor) => NamidaInkWell(
               animationDurationMS: 100,
               decoration: BoxDecoration(
                 border: isNowRead == false

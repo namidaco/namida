@@ -234,7 +234,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                         style: namida.textTheme.displayMedium,
                       ),
                       Obx(
-                        () {
+                        (context) {
                           final ms = newOffset.valueR.remainder(1000).abs().toString();
                           final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
                           final off = newOffset.valueR;
@@ -251,7 +251,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   getButton(Broken.minus_cirlce, false),
                   const SizedBox(width: 8.0),
                   Obx(
-                    () => Text(
+                    (context) => Text(
                       "${newOffset.valueR}ms",
                       style: namida.textTheme.displayMedium,
                     ),
@@ -315,7 +315,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         const CancelButton(),
         const SizedBox(width: 6.0),
         Obx(
-          () {
+          (context) {
             final selected = selectedLyrics.valueR;
             return NamidaButton(
               enabled: selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */,
@@ -363,7 +363,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             const SizedBox(height: 6.0),
             Expanded(
               child: Obx(
-                () {
+                (context) {
                   if (fetchingFromInternet.valueR == true) {
                     return ThreeArchedCircle(
                       color: namida.theme.cardColor,
@@ -389,7 +389,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                               ? lang.CACHE
                               : lang.LOCAL;
                       return Obx(
-                        () => NamidaInkWell(
+                        (context) => NamidaInkWell(
                           borderRadius: 12.0,
                           animationDurationMS: 200,
                           onTap: () => selectedLyrics.value = l,
@@ -521,7 +521,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             ),
             const SizedBox(height: 8.0),
             Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 visualDensity: VisualDensity.compact,
                 icon: Broken.add_circle,
                 title: lang.ADD_LRC_FILE,

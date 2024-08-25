@@ -27,11 +27,11 @@ class YoutubeHomeFeedPage extends StatelessWidget {
 
     return ObxO(
       rx: settings.youtube.ytVisibleShorts,
-      builder: (visibleShorts) {
+      builder: (context, visibleShorts) {
         final isShortsVisible = visibleShorts[YTVisibleShortPlaces.homeFeed] ?? true;
         return ObxO(
           rx: settings.youtube.ytVisibleMixes,
-          builder: (visibleMixes) {
+          builder: (context, visibleMixes) {
             final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.homeFeed] ?? true;
             return YoutubeMainPageFetcherAccBase<YoutiPieFeedResult, YoutubeFeed>(
               showRefreshInsteadOfRefreshing: true,

@@ -150,7 +150,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         ],
         child: ObxO(
             rx: st,
-            builder: (_) {
+            builder: (context, _) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -199,7 +199,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     },
                   ),
                   Obx(
-                    () {
+                    (context) {
                       final downloadAO = downloadAudioOnly.valueR;
                       return CustomSwitchListTile(
                         visualDensity: visualDensity,
@@ -248,7 +248,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           ),
                         )
                       ],
-                      child: Obx(() => Text(downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+                      child: Obx((context) => Text(downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
                     ),
                   ),
                 ],
@@ -274,7 +274,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             children: [
               const SizedBox(height: 12.0),
               Obx(
-                () => CustomListTile(
+                (context) => CustomListTile(
                   icon: Broken.music_playlist,
                   title: widget.playlistName,
                   subtitle: "${_selectedList.length.formatDecimal()}/${widget.ids.length.formatDecimal()}",
@@ -292,7 +292,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         },
                       ),
                       Obx(
-                        () => Checkbox.adaptive(
+                        (context) => Checkbox.adaptive(
                           splashRadius: 28.0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4.0.multipliedRadius),
@@ -317,7 +317,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 ),
               ),
               Obx(
-                () => YTDownloadOptionFolderListTile(
+                (context) => YTDownloadOptionFolderListTile(
                   key: _folderController,
                   visualDensity: VisualDensity.compact,
                   trailingPadding: 12.0,
@@ -344,7 +344,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           final duration = info?.durSeconds?.secondsLabel;
 
                           return Obx(
-                            () {
+                            (context) {
                               final isSelected = _selectedList.contains(id);
                               final filename = _configMap[id]?.filenameR;
                               final fileExists = filename == null ? false : File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.valueR}/${filename.filename}").existsSync();
@@ -467,7 +467,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           );
                         },
                       ),
-                      Obx(() => SliverPadding(padding: EdgeInsets.only(bottom: _bottomPaddingEffective + 56.0 + 4.0))),
+                      Obx((context) => SliverPadding(padding: EdgeInsets.only(bottom: _bottomPaddingEffective + 56.0 + 4.0))),
                     ],
                   ),
                 ),
@@ -475,7 +475,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ],
           ),
           Obx(
-            () => AnimatedPositioned(
+            (context) => AnimatedPositioned(
               curve: Curves.fastEaseInToSlowEaseOut,
               duration: const Duration(milliseconds: 400),
               bottom: _bottomPaddingEffective,
@@ -492,7 +492,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                   const SizedBox(width: 8.0),
                   Obx(
-                    () => FloatingActionButton.extended(
+                    (context) => FloatingActionButton.extended(
                       heroTag: 'download_fab',
                       backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
                       isExtended: true,

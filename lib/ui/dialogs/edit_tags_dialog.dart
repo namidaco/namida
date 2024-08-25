@@ -138,7 +138,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
         actions: [
           const CancelButton(),
           Obx(
-            () => NamidaButton(
+            (context) => NamidaButton(
               enabled: canEditComment.valueR && _editingInProgress[singleTrack.path] != true,
               textWidget: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -195,7 +195,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
 
 Widget get _getKeepDatesWidget => ObxO(
       rx: settings.editTagsKeepFileDates,
-      builder: (editTagsKeepFileDates) => NamidaIconButton(
+      builder: (context, editTagsKeepFileDates) => NamidaIconButton(
         tooltip: () => lang.KEEP_FILE_DATES,
         icon: editTagsKeepFileDates ? Broken.document_code_2 : Broken.calendar_edit,
         onPressed: () {
@@ -301,7 +301,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
     },
     scale: 0.94,
     lighterDialogColor: false,
-    dialog: ObxOContext(
+    dialog: ObxO(
         rx: color,
         builder: (context, color) {
           final theme = AppThemes.inst.getAppTheme(color, null, false);
@@ -341,7 +341,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                 const SizedBox(height: 6.0),
                                 Expanded(
                                   child: Obx(
-                                    () {
+                                    (context) {
                                       final tagFields = settings.tagFieldsToEdit;
                                       return NamidaListView(
                                         itemExtent: null,
@@ -384,7 +384,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                 const SizedBox(height: 6.0),
                                 Expanded(
                                   child: Obx(
-                                    () => ListView.builder(
+                                    (context) => ListView.builder(
                                       padding: const EdgeInsets.only(bottom: 24.0),
                                       itemBuilder: (context, i) {
                                         final tf = subList[i];
@@ -422,7 +422,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Obx(
-                        () => SizedBox(
+                        (context) => SizedBox(
                           height: 18,
                           width: 18,
                           child: CheckMark(
@@ -446,7 +446,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                 ),
                 actions: [
                   Obx(
-                    () => NamidaButton(
+                    (context) => NamidaButton(
                       enabled: canEditTags.valueR && _editingInProgress[track.path] != true,
                       icon: Broken.pen_add,
                       textWidget: Row(
@@ -486,7 +486,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                   )
                 ],
                 child: Obx(
-                  () {
+                  (context) {
                     settings.tagFieldsToEdit;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,7 +504,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                     alignment: Alignment.bottomRight,
                                     children: [
                                       Obx(
-                                        () => ArtworkWidget(
+                                        (context) => ArtworkWidget(
                                           key: Key(currentImagePath.valueR),
                                           icon: track is Video ? Broken.video : Broken.musicnote,
                                           thumbnailSize: namida.width / 3,
@@ -652,7 +652,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
               final tr = tracks.value[index];
               return ObxO(
                 rx: tracks,
-                builder: (tracksRaw) => TrackTile(
+                builder: (context, tracksRaw) => TrackTile(
                   properties: properties,
                   index: index,
                   trackOrTwd: tr,
@@ -750,7 +750,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
         ],
         actions: [
           Obx(
-            () {
+            (context) {
               final isEditing = tracks.valueR.any((track) => _editingInProgress[track.path] == true);
               return NamidaButton(
                 enabled: canEditTags.valueR && !isEditing,
@@ -840,7 +840,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               },
                               tapToDismiss: () => false,
                               dialog: Obx(
-                                () => CustomBlurryDialog(
+                                (context) => CustomBlurryDialog(
                                   title: lang.PROGRESS,
                                   normalTitleStyle: true,
                                   trailingWidgets: [
@@ -852,7 +852,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                   actions: [
                                     ObxO(
                                       rx: finishedEditing,
-                                      builder: (finished) => DoneButton(
+                                      builder: (context, finished) => DoneButton(
                                         enabled: finished,
                                       ),
                                     ),
@@ -865,7 +865,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                         getText('${lang.SUCCEEDED}: ${successfullEdits.valueR}'),
                                         const SizedBox(height: 8.0),
                                         Obx(
-                                          () => Row(
+                                          (context) => Row(
                                             children: [
                                               getText('${lang.FAILED}: ${failedEditsTracks.length}'),
                                               const SizedBox(width: 4.0),
@@ -942,7 +942,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(
-                () => SizedBox(
+                (context) => SizedBox(
                   height: 18,
                   width: 18,
                   child: CheckMark(
@@ -965,7 +965,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
           ),
         ),
         child: Obx(
-          () => tracks.isEmpty
+          (context) => tracks.isEmpty
               ? SizedBox(
                   width: namida.width * 0.6,
                   child: NamidaButton(
@@ -980,7 +980,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       );
                     },
                     textWidget: Obx(
-                      () => Text(tracks.valueR.displayTrackKeyword),
+                      (context) => Text(tracks.valueR.displayTrackKeyword),
                     ),
                   ),
                 )
@@ -1000,7 +1000,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                 alignment: Alignment.bottomRight,
                                 children: [
                                   Obx(
-                                    () => currentImagePath.valueR != ''
+                                    (context) => currentImagePath.valueR != ''
                                         ? ArtworkWidget(
                                             key: Key(currentImagePath.valueR),
                                             thumbnailSize: namida.width / 3,
@@ -1062,7 +1062,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                           );
                                         },
                                         textWidget: Obx(
-                                          () => Text(tracks.valueR.displayTrackKeyword),
+                                          (context) => Text(tracks.valueR.displayTrackKeyword),
                                         ),
                                       ),
                                     ),
@@ -1110,7 +1110,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       height: 12.0,
                     ),
                     Obx(
-                      () {
+                      (context) {
                         final trs = tracks.valueR;
                         return Text(
                           [
@@ -1126,7 +1126,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       height: 8.0,
                     ),
                     Obx(
-                      () => hasEmptyDumbValues.valueR
+                      (context) => hasEmptyDumbValues.valueR
                           ? Text.rich(
                               TextSpan(
                                 children: [

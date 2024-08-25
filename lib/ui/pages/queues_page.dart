@@ -27,7 +27,7 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               Obx(
-                () {
+                (context) {
                   final queuesKeys = QueueController.inst.queuesMap.valueR.keys.toList();
                   final queuesLength = queuesKeys.length;
                   return SliverFixedExtentList.builder(

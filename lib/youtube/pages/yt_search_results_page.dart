@@ -200,7 +200,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               ],
                               ObxO(
                                 rx: YTLocalSearchController.inst.didLoadLookupLists,
-                                builder: (didLoadLookupLists) => didLoadLookupLists == false ? const LoadingIndicator() : const SizedBox(),
+                                builder: (context, didLoadLookupLists) => didLoadLookupLists == false ? const LoadingIndicator() : const SizedBox(),
                               ),
                               const SizedBox(width: 6.0),
                               const Icon(Broken.arrow_right_3),
@@ -297,11 +297,11 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                 ? const SliverToBoxAdapter()
                                 : ObxO(
                                     rx: settings.youtube.ytVisibleShorts,
-                                    builder: (visibleShorts) {
+                                    builder: (context, visibleShorts) {
                                       final isShortsVisible = visibleShorts[YTVisibleShortPlaces.search] ?? true;
                                       return ObxO(
                                         rx: settings.youtube.ytVisibleMixes,
-                                        builder: (visibleMixes) {
+                                        builder: (context, visibleMixes) {
                                           final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
                                           return SliverList.builder(
                                             itemCount: searchResult.length,
@@ -396,7 +396,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                   ),
                     SliverToBoxAdapter(
                       child: Obx(
-                        () => _isFetchingMoreResults.valueR
+                        (context) => _isFetchingMoreResults.valueR
                             ? const Padding(
                                 padding: EdgeInsets.all(8.0),
                                 child: Stack(

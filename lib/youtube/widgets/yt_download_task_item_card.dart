@@ -516,7 +516,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             ),
             const SizedBox(width: 8.0),
             Expanded(
-              child: Obx(() {
+              child: Obx((context) {
                 final filename = item.filenameR;
                 final isDownloading = YoutubeController.inst.isDownloading[videoIdWrapper]?[filename] ?? false;
                 final isFetchingData = YoutubeController.inst.isFetchingData[videoIdWrapper]?[filename] ?? false;
@@ -619,7 +619,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Obx(
-                                  () {
+                                  (context) {
                                     final isDownloading = YoutubeController.inst.isDownloading[videoId]?[item.filename] ?? false;
                                     final isFetching = YoutubeController.inst.isFetchingData[videoId]?[item.filename] ?? false;
                                     final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;

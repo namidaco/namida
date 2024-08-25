@@ -119,7 +119,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             key: _CustomizationSettingsKeys.enableBlur,
             child: ObxO(
               rx: settings.enableBlurEffect,
-              builder: (enableBlurEffect) => CustomSwitchListTile(
+              builder: (context, enableBlurEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableBlur),
                 icon: Broken.drop,
                 title: lang.ENABLE_BLUR_EFFECT,
@@ -138,7 +138,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             key: _CustomizationSettingsKeys.enableGlow,
             child: ObxO(
               rx: settings.enableGlowEffect,
-              builder: (enableGlowEffect) => CustomSwitchListTile(
+              builder: (context, enableGlowEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableGlow),
                 icon: Broken.sun_1,
                 title: lang.ENABLE_GLOW_EFFECT,
@@ -157,7 +157,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             key: _CustomizationSettingsKeys.enableParallax,
             child: ObxO(
               rx: settings.enableMiniplayerParallaxEffect,
-              builder: (enableMiniplayerParallaxEffect) => CustomSwitchListTile(
+              builder: (context, enableMiniplayerParallaxEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableParallax),
                 icon: Broken.maximize,
                 title: lang.ENABLE_PARALLAX_EFFECT,
@@ -173,7 +173,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.brMultiplier,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.brMultiplier),
                 icon: Broken.rotate_left_1,
                 title: lang.BORDER_RADIUS_MULTIPLIER,
@@ -191,7 +191,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.fontScale,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.fontScale),
                 icon: Broken.text,
                 title: lang.FONT_SCALE,
@@ -209,7 +209,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.hourFormat12,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.hourFormat12),
                 icon: Broken.clock,
                 title: lang.HOUR_FORMAT_12,
@@ -223,7 +223,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.dateTimeFormat,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.dateTimeFormat),
                 icon: Broken.calendar_edit,
                 title: lang.DATE_TIME_FORMAT,
@@ -290,7 +290,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayRemainingDur,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayRemainingDur),
                 icon: Broken.timer,
                 title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
@@ -323,7 +323,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.trackNumberInAlbumPage,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.trackNumberInAlbumPage),
                 icon: Broken.card_remove,
                 title: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE,
@@ -338,7 +338,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.albumCardTopRightDate,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.albumCardTopRightDate),
                 icon: Broken.notification_status,
                 title: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE,
@@ -353,7 +353,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.forceSquaredAlbumThumb,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredAlbumThumb),
                 icon: Broken.crop,
                 title: lang.FORCE_SQUARED_ALBUM_THUMBNAIL,
@@ -388,7 +388,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.staggeredAlbumGridview,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.staggeredAlbumGridview),
                 icon: Broken.element_4,
                 title: lang.STAGGERED_ALBUM_GRID_VIEW,
@@ -402,7 +402,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.sizeOfAlbumThumb,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfAlbumThumb),
                 icon: Broken.maximize_3,
                 title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
@@ -422,7 +422,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.heightOfAlbumTile,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfAlbumTile),
                 icon: Broken.pharagraphspacing,
                 title: lang.HEIGHT_OF_ALBUM_TILE,
@@ -491,7 +491,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.forceSquaredTrackThumb,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredTrackThumb),
                 icon: Broken.crop,
                 title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
@@ -526,7 +526,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.sizeOfTrackThumb,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfTrackThumb),
                 icon: Broken.maximize_3,
                 title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
@@ -544,7 +544,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.heightOfTrackTile,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfTrackTile),
                 icon: Broken.pharagraphspacing,
                 title: lang.HEIGHT_OF_TRACK_TILE,
@@ -562,7 +562,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayThirdRow,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayThirdRow),
                 icon: Broken.chart_1,
                 rotateIcon: 1,
@@ -578,7 +578,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayThirdItemInRow,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayThirdItemInRow),
                 icon: Broken.coin,
                 rotateIcon: 3,
@@ -594,7 +594,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayFavButtonInTrackTile,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayFavButtonInTrackTile),
                 icon: Broken.heart,
                 title: lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
@@ -609,7 +609,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.itemsSeparator,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.itemsSeparator),
                 icon: Broken.minus_square,
                 title: lang.TRACK_TILE_ITEMS_SEPARATOR,
@@ -623,7 +623,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             ),
           ),
           Obx(
-            () => Container(
+            (context) => Container(
               color: context.theme.cardTheme.color,
               width: context.width,
               height: settings.trackListTileHeight.valueR * 1.5,
@@ -778,7 +778,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.partyMode,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.partyMode),
                 icon: Broken.slider_horizontal_1,
                 title: lang.ENABLE_PARTY_MODE,
@@ -794,7 +794,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.edgeColorsSwitching,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.edgeColorsSwitching),
                 enabled: settings.enablePartyModeInMiniplayer.valueR,
                 icon: Broken.colors_square,
@@ -809,7 +809,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.movingParticles,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.movingParticles),
                 icon: Broken.buy_crypto,
                 title: lang.ENABLE_MINIPLAYER_PARTICLES,
@@ -821,7 +821,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.thumbAnimationIntensity,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensity),
                 icon: Broken.flash,
                 title: lang.ANIMATING_THUMBNAIL_INTENSITY,
@@ -839,7 +839,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.thumbInverseAnimation,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.thumbInverseAnimation),
                 icon: Broken.arrange_circle_2,
                 title: lang.ANIMATING_THUMBNAIL_INVERSED,
@@ -881,7 +881,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               ),
               children: [
                 Obx(
-                  () => CustomSwitchListTile(
+                  (context) => CustomSwitchListTile(
                     visualDensity: VisualDensity.compact,
                     icon: Broken.maximize,
                     title: lang.SCALE_MULTIPLIER,
@@ -893,7 +893,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   ),
                 ),
                 Obx(
-                  () => CustomSwitchListTile(
+                  (context) => CustomSwitchListTile(
                     visualDensity: VisualDensity.compact,
                     leading: const StackedIcon(
                       baseIcon: Broken.document,
@@ -915,7 +915,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.waveformBarsCount,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.waveformBarsCount),
                 icon: Broken.sound,
                 title: lang.WAVEFORM_BARS_COUNT,
@@ -942,7 +942,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayAudioInfo,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayAudioInfo),
                 icon: Broken.text_block,
                 title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
@@ -954,7 +954,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _CustomizationSettingsKeys.displayArtistBeforeTitle,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayArtistBeforeTitle),
                 icon: Broken.align_left,
                 title: lang.DISPLAY_ARTIST_BEFORE_TITLE,

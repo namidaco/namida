@@ -44,7 +44,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
     final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumInsideArtistGridCount);
     return BackgroundWrapper(
       child: Obx(
-        () {
+        (context) {
           // to update after sorting
           type == MediaType.artist
               ? Indexer.inst.mainMapArtists.valueR

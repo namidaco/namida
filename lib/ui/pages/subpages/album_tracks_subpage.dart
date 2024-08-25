@@ -35,7 +35,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
     return BackgroundWrapper(
       child: Obx(
-        () {
+        (context) {
           Indexer.inst.mainMapAlbums.valueR; // to update after sorting
           return NamidaTracksList(
             queueSource: QueueSource.album,

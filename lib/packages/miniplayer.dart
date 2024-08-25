@@ -67,7 +67,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   Widget build(BuildContext context) {
     MiniPlayerController.inst.updateScreenValues(context); // useful for updating after split screen & if landscape ever got supported.
     return Obx(
-      () => Theme(
+      (context) => Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
         child: Stack(
           children: [
@@ -92,10 +92,10 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
             // -- MiniPlayers
             ObxO(
               rx: Player.inst.currentItem,
-              builder: (currentItem) => currentItem is YoutubeID
+              builder: (context, currentItem) => currentItem is YoutubeID
                   ? ObxO(
                       rx: settings.youtube.youtubeStyleMiniplayer,
-                      builder: (youtubeStyleMiniplayer) => AnimatedSwitcher(
+                      builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: youtubeStyleMiniplayer
                             ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
@@ -199,7 +199,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         },
         onPressed: (currentItem) => VideoController.inst.toggleVideoPlayback(),
         videoIconBuilder: (currentItem, size, color) => Obx(
-          () => Icon(
+          (context) => Icon(
             settings.enableVideoPlayback.valueR ? Broken.video : Broken.headphone,
             size: size,
             color: color,
@@ -207,7 +207,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         ),
         builder: (currentItem) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-          return Obx(() {
+          return Obx((context) {
             final currentVideo = VideoController.inst.currentVideo.valueR;
             final downloadedBytes = VideoController.inst.currentDownloadedBytes.valueR;
             final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
@@ -439,7 +439,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         onOpen: (currentItem) => true,
         onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
         videoIconBuilder: (currentItem, size, color) => Obx(
-          () => Icon(
+          (context) => Icon(
             !settings.youtube.isAudioOnlyMode.valueR ? Broken.video : Broken.headphone,
             size: size,
             color: color,
@@ -447,7 +447,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         ),
         builder: (currentItem) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-          return Obx(() {
+          return Obx((context) {
             if (settings.youtube.isAudioOnlyMode.valueR) {
               List<TextSpan>? textChildren;
               if (settings.displayAudioInfoMiniplayer.valueR) {
@@ -607,7 +607,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lyricsWidget = Obx(
-      () => AnimatedSwitcher(
+      (context) => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
             ? LyricsLRCParsedView(
@@ -624,11 +624,11 @@ class _AnimatingThumnailWidget extends StatelessWidget {
     );
     return ObxO(
       rx: settings.animatingThumbnailInversed,
-      builder: (isInversed) => ObxO(
+      builder: (context, isInversed) => ObxO(
         rx: settings.animatingThumbnailScaleMultiplier,
-        builder: (userScaleMultiplier) => ObxO(
+        builder: (context, userScaleMultiplier) => ObxO(
           rx: Player.inst.videoPlayerInfo,
-          builder: (videoInfo) {
+          builder: (context, videoInfo) {
             final videoOrImage = videoInfo != null && videoInfo.isInitialized
                 ? BorderRadiusClip(
                     borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
@@ -650,15 +650,15 @@ class _AnimatingThumnailWidget extends StatelessWidget {
             );
             return ObxO(
               rx: VideoController.inst.videoZoomAdditionalScale,
-              builder: (videoZoomAdditionalScale) {
+              builder: (context, videoZoomAdditionalScale) {
                 final additionalScaleVideo = 0.02 * videoZoomAdditionalScale;
                 return ObxO(
                   rx: _lrcAdditionalScale,
-                  builder: (lrcAdditionalScale) {
+                  builder: (context, lrcAdditionalScale) {
                     final additionalScaleLRC = 0.02 * lrcAdditionalScale;
                     return ObxO(
                       rx: Player.inst.nowPlayingPosition,
-                      builder: (nowPlayingPosition) {
+                      builder: (context, nowPlayingPosition) {
                         final finalScale = additionalScaleLRC + additionalScaleVideo + WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
                         return AnimatedScale(
                           duration: const Duration(milliseconds: 100),
@@ -804,12 +804,12 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
           if (settings.enableMiniplayerParticles.value)
             ObxO(
               rx: Player.inst.isPlaying,
-              builder: (playing) => AnimatedOpacity(
+              builder: (context, playing) => AnimatedOpacity(
                 duration: const Duration(seconds: 1),
                 opacity: playing ? 1 : 0,
                 child: ObxO(
                   rx: Player.inst.nowPlayingPosition,
-                  builder: (nowPlayingPosition) {
+                  builder: (context, nowPlayingPosition) {
                     final scale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
                     final bpm = (2000 * scale).withMinimum(0);
                     return AnimatedScale(

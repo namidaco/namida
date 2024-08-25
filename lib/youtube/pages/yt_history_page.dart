@@ -53,9 +53,9 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
         slivers: [
           ObxO(
             rx: YoutubeHistoryController.inst.historyMap,
-            builder: (history) => ObxO(
+            builder: (context, history) => ObxO(
               rx: YoutubeHistoryController.inst.highlightedItem,
-              builder: (highlightedItem) => SliverVariedExtentList.builder(
+              builder: (context, highlightedItem) => SliverVariedExtentList.builder(
                 key: ValueKey(daysLength), // rebuild after adding/removing day
                 itemExtentBuilder: (index, dimensions) {
                   final day = historyDays[index];

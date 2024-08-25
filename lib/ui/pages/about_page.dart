@@ -263,7 +263,7 @@ class _AboutPageState extends State<AboutPage> {
                 ),
                 ObxO(
                   rx: _loadingChangelog,
-                  builder: (isLoading) => NamidaAboutListTile(
+                  builder: (context, isLoading) => NamidaAboutListTile(
                     icon: Broken.activity,
                     title: lang.CHANGELOG,
                     subtitle: 'See what\'s newly added/fixed inside Namida',

@@ -228,7 +228,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
             // -- current seek
             Obx(
-              () {
+              (context) {
                 final currentPositionMS = Player.inst.nowPlayingPositionR;
                 final seekTo = _seekPercentage.valueR * _currentDurationR.inMilliseconds;
                 final seekToDiff = seekTo - currentPositionMS;
@@ -272,7 +272,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
               bottom: barHeight / 2 - (progressBarHeight / 2),
               child: AnimatedBuilder(
                 animation: _animation,
-                child: Obx(() {
+                child: Obx((context) {
                   final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
                   final currentPositionMS = Player.inst.nowPlayingPositionR;
                   final buffered = Player.inst.buffered.valueR;
@@ -352,7 +352,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
               AnimatedBuilder(
                 animation: _animation,
                 child: Obx(
-                  () {
+                  (context) {
                     final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
                     final currentPositionMS = Player.inst.nowPlayingPositionR;
                     final pos = durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS));
@@ -387,7 +387,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
             // -- circle
             Obx(
-              () {
+              (context) {
                 final clampedEdge = clampCircleEdges ? circleWidth / 2 : 0;
                 final seekP = _seekPercentage.valueR;
                 return Transform.translate(

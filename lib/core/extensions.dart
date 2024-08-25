@@ -240,7 +240,7 @@ extension BorderRadiusSetting on double {
 }
 
 extension TrackItemSubstring on TrackTileItem {
-  String get label => convertToString;
+  String get label => name;
 }
 
 extension Channels on String {

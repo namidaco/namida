@@ -32,7 +32,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
           queueSource: QueueSource.selectedTracks,
         ),
         builder: (properties) => Obx(
-          () {
+          (context) {
             final SelectedTracksController stc = SelectedTracksController.inst;
             final selectedTracks = stc.selectedTracks.valueR;
             return AnimatedSwitcher(
@@ -174,7 +174,7 @@ class SelectedTracksRow extends StatelessWidget {
         SizedBox(
           width: 140,
           child: Obx(
-            () {
+            (context) {
               final selectedTracks = SelectedTracksController.inst.selectedTracks.valueR.tracks.toList();
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class SelectedTracksRow extends StatelessWidget {
         ),
         ObxO(
           rx: SelectedTracksController.inst.didInsertTracks,
-          builder: (didInsertTracks) => AnimatedOpacity(
+          builder: (context, didInsertTracks) => AnimatedOpacity(
             duration: const Duration(milliseconds: 400),
             opacity: didInsertTracks ? 0.5 : 1.0,
             child: IgnorePointer(

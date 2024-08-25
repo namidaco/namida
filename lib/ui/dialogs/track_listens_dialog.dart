@@ -74,7 +74,7 @@ void showListensDialog({
     lighterDialogColor: false,
     dialog: ObxO(
         rx: color,
-        builder: (dialogColor) {
+        builder: (context, dialogColor) {
           final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
           return AnimatedTheme(
             data: theme,
@@ -90,7 +90,7 @@ void showListensDialog({
                 const SizedBox(width: 8.0),
                 ObxO(
                   rx: settings.heatmapListensView,
-                  builder: (heatmapListensView) => NamidaIconButton(
+                  builder: (context, heatmapListensView) => NamidaIconButton(
                     icon: heatmapListensView ? Broken.row_vertical : Broken.calendar_1,
                     iconSize: heatmapListensView ? 18.0 : 20.0,
                     onPressed: () => settings.save(heatmapListensView: !settings.heatmapListensView.value),
@@ -102,7 +102,7 @@ void showListensDialog({
                 width: namida.width,
                 child: ObxO(
                   rx: settings.heatmapListensView,
-                  builder: (heatmapListensView) => heatmapListensView
+                  builder: (context, heatmapListensView) => heatmapListensView
                       ? Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: PagedVerticalCalendar(

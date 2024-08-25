@@ -123,7 +123,7 @@ class NamidaDrawer extends StatelessWidget {
                 ...LibraryTab.values.map(
                   (e) => ObxO(
                     rx: settings.extra.selectedLibraryTab,
-                    builder: (selectedLibraryTab) => NamidaDrawerListTile(
+                    builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
                       enabled: selectedLibraryTab == e,
                       title: e.toText(),
                       icon: e.toIcon(),
@@ -183,7 +183,7 @@ class NamidaDrawer extends StatelessWidget {
                     const CancelButton(),
                     ObxO(
                       rx: Player.inst.sleepTimerConfig,
-                      builder: (currentConfig) {
+                      builder: (context, currentConfig) {
                         return currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems
                             ? NamidaButton(
                                 icon: Broken.timer_pause,
@@ -221,7 +221,7 @@ class NamidaDrawer extends StatelessWidget {
                         children: [
                           // minutes
                           Obx(
-                            () => NamidaWheelSlider(
+                            (context) => NamidaWheelSlider(
                               totalCount: 180,
                               initValue: minutes.valueR,
                               onValueChanged: (val) => minutes.value = val,
@@ -237,7 +237,7 @@ class NamidaDrawer extends StatelessWidget {
                           // tracks
                           ObxO(
                             rx: tracks,
-                            builder: (trs) => NamidaWheelSlider(
+                            builder: (context, trs) => NamidaWheelSlider(
                               totalCount: kMaximumSleepTimerTracks,
                               initValue: trs,
                               onValueChanged: (val) => tracks.value = val,

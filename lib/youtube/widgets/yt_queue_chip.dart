@@ -152,7 +152,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
       children: [
         ObxO(
           rx: Player.inst.currentQueue,
-          builder: (queue) {
+          builder: (context, queue) {
             final isSingle = queue.length == 1;
             return Positioned(
               bottom: 0,
@@ -204,7 +204,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 const SizedBox(width: 6.0),
                                 Expanded(
                                   child: Obx(
-                                    () {
+                                    (context) {
                                       final currentIndex = Player.inst.currentIndex.valueR;
                                       final nextItem =
                                           Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
@@ -309,7 +309,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   style: context.textTheme.displayMedium,
                                 ),
                                 Obx(
-                                  () => Text(
+                                  (context) => Text(
                                     "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
                                     style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
                                   ),
@@ -352,7 +352,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                     ),
                     Expanded(
                       child: Obx(
-                        () {
+                        (context) {
                           final queue = Player.inst.currentQueue.valueR;
                           final canScroll = _canScrollQueue.valueR;
                           return IgnorePointer(
@@ -413,7 +413,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
                               scrollQueueWidget: ObxO(
                                 rx: _arrowIcon,
-                                builder: (arrowIcon) => NamidaButton(
+                                builder: (context, arrowIcon) => NamidaButton(
                                   onPressed: _animateQueueToCurrentTrack,
                                   icon: arrowIcon,
                                 ),

@@ -180,13 +180,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       child: IgnorePointer(
         child: ObxO(
           rx: _canDimMiniplayer,
-          builder: (canDimMiniplayer) => AnimatedSwitcher(
+          builder: (context, canDimMiniplayer) => AnimatedSwitcher(
             duration: const Duration(milliseconds: 600),
             reverseDuration: const Duration(milliseconds: 200),
             child: canDimMiniplayer
                 ? ObxO(
                     rx: settings.youtube.ytMiniplayerDimOpacity,
-                    builder: (dimOpacity) => Container(
+                    builder: (context, dimOpacity) => Container(
                       color: Colors.black.withOpacity(dimOpacity),
                     ),
                   )
@@ -241,9 +241,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       style: mainTextTheme.displayMedium!,
       child: ObxO(
         rx: settings.youtube.topComments,
-        builder: (ytTopComments) => ObxO(
+        builder: (context, ytTopComments) => ObxO(
           rx: Player.inst.currentItem,
-          builder: (currentItem) {
+          builder: (context, currentItem) {
             if (currentItem is! YoutubeID) return const SizedBox();
 
             final currentId = currentItem.id;
@@ -251,11 +251,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
             return ObxO(
               rx: YoutubeInfoController.current.currentYTStreams,
-              builder: (streams) => ObxO(
+              builder: (context, streams) => ObxO(
                 rx: YoutubeInfoController.current.isLoadingVideoPage,
-                builder: (isLoadingVideoPage) => ObxO(
+                builder: (context, isLoadingVideoPage) => ObxO(
                   rx: YoutubeInfoController.current.currentVideoPage,
-                  builder: (page) {
+                  builder: (context, page) {
                     final shimmerEnabledDummyContainer = page == null;
                     final shimmerEnabled = isLoadingVideoPage && page == null;
                     final videoInfo = page?.videoInfo;
@@ -374,7 +374,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       Obx(
-                                                        () {
+                                                        (context) {
                                                           final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
                                                           if (videoListens.isEmpty) return const SizedBox();
                                                           return NamidaInkWell(
@@ -414,7 +414,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               icon: Broken.cd,
                                                               title: '',
                                                               titleBuilder: (style) => Obx(
-                                                                () => Text(
+                                                                (context) => Text(
                                                                   lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', _numberOfRepeats.valueR.toString()),
                                                                   style: style,
                                                                 ),
@@ -469,7 +469,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   ),
                                                   title: ObxO(
                                                     rx: _isTitleExpanded,
-                                                    builder: (isTitleExpanded) {
+                                                    builder: (context, isTitleExpanded) {
                                                       String? dateToShow;
                                                       if (isTitleExpanded) {
                                                         dateToShow = uploadDate ?? uploadDateAgo;
@@ -533,12 +533,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       const SizedBox(width: 4.0),
                                                       ObxO(
                                                         rx: _videoLikeManager.currentVideoLikeStatus,
-                                                        builder: (currentLikeStatus) {
+                                                        builder: (context, currentLikeStatus) {
                                                           final isUserLiked = currentLikeStatus == LikeStatus.liked;
                                                           final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
                                                           return ObxO(
                                                             rx: _isTitleExpanded,
-                                                            builder: (isTitleExpanded) => SmallYTActionButton(
+                                                            builder: (context, isTitleExpanded) => SmallYTActionButton(
                                                               title: shimmerEnabled
                                                                   ? null
                                                                   : videoLikeCount < 1
@@ -575,12 +575,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       const SizedBox(width: 4.0),
                                                       ObxO(
                                                         rx: _videoLikeManager.currentVideoLikeStatus,
-                                                        builder: (currentLikeStatus) {
+                                                        builder: (context, currentLikeStatus) {
                                                           final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
                                                           const int? videoDislikeCount = null; // should have a value if ReturnYoutubeDislikes implemented.
                                                           return ObxO(
                                                             rx: _isTitleExpanded,
-                                                            builder: (isTitleExpanded) => SmallYTActionButton(
+                                                            builder: (context, isTitleExpanded) => SmallYTActionButton(
                                                               title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
                                                               icon: Broken.dislike,
                                                               smallIconWidget: FittedBox(
@@ -632,7 +632,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       ),
                                                       const SizedBox(width: 4.0),
                                                       Obx(
-                                                        () {
+                                                        (context) {
                                                           final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentIdTask]?.values.firstOrNull;
                                                           final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
                                                           final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentIdTask]?.values.firstOrNull;
@@ -771,7 +771,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   shimmerEnabled: channelSubs == null,
                                                                   child: ObxO(
                                                                     rx: _isTitleExpanded,
-                                                                    builder: (isTitleExpanded) => Text(
+                                                                    builder: (context, isTitleExpanded) => Text(
                                                                       channelSubs == null ? '? ${lang.SUBSCRIBERS}' : channelSubs.displaySubscribersKeywordShort,
                                                                       style: mainTextTheme.displaySmall?.copyWith(
                                                                         fontSize: 12.0,
@@ -809,7 +809,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   padding: const EdgeInsets.only(top: 8.0),
                                                   child: ObxO(
                                                     rx: YoutubeInfoController.current.currentComments,
-                                                    builder: (comments) => ShimmerWrapper(
+                                                    builder: (context, comments) => ShimmerWrapper(
                                                       shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
                                                       child: NamidaInkWell(
                                                         key: Key("${currentId}_top_comments_highlight"),
@@ -846,7 +846,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 ),
                                                                 ObxO(
                                                                   rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
-                                                                  builder: (commFromCache) {
+                                                                  builder: (context, commFromCache) {
                                                                     commFromCache ??= false;
                                                                     return NamidaIconButton(
                                                                       horizontalPadding: 0.0,
@@ -880,7 +880,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
                                                             ObxO(
                                                               rx: YoutubeInfoController.current.isLoadingInitialComments,
-                                                              builder: (loading) => ShimmerWrapper(
+                                                              builder: (context, loading) => ShimmerWrapper(
                                                                 shimmerEnabled: loading,
                                                                 child: YTCommentCardCompact(comment: loading ? null : comments?.items.firstOrNull),
                                                               ),
@@ -913,11 +913,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   )
                                                 : ObxO(
                                                     rx: settings.youtube.ytVisibleShorts,
-                                                    builder: (visibleShorts) {
+                                                    builder: (context, visibleShorts) {
                                                       final isShortsVisible = visibleShorts[YTVisibleShortPlaces.relatedVideos] ?? true;
                                                       return ObxO(
                                                         rx: settings.youtube.ytVisibleMixes,
-                                                        builder: (visibleMixes) {
+                                                        builder: (context, visibleMixes) {
                                                           final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.relatedVideos] ?? true;
                                                           return SliverVariedExtentList.builder(
                                                             key: Key("${currentId}_feedlist"),
@@ -1018,7 +1018,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                             if (!ytTopComments)
                                               ObxO(
                                                 rx: YoutubeInfoController.current.isLoadingInitialComments,
-                                                builder: (loadingInitial) => loadingInitial
+                                                builder: (context, loadingInitial) => loadingInitial
                                                     ? SliverToBoxAdapter(
                                                         key: Key("${currentId}_comments_shimmer"),
                                                         child: ShimmerWrapper(
@@ -1043,7 +1043,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       )
                                                     : ObxO(
                                                         rx: YoutubeInfoController.current.currentComments,
-                                                        builder: (comments) => comments == null
+                                                        builder: (context, comments) => comments == null
                                                             ? const SliverToBoxAdapter()
                                                             : SliverList.builder(
                                                                 key: Key("${currentId}_comments"),
@@ -1064,7 +1064,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                             if (!ytTopComments)
                                               ObxO(
                                                 rx: YoutubeInfoController.current.isLoadingMoreComments,
-                                                builder: (loadingMoreComments) => loadingMoreComments
+                                                builder: (context, loadingMoreComments) => loadingMoreComments
                                                     ? const SliverToBoxAdapter(
                                                         child: Padding(
                                                           padding: EdgeInsets.all(12.0),
@@ -1081,7 +1081,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                         ),
                                         ObxO(
                                           rx: _shouldShowGlowUnderVideo,
-                                          builder: (shouldShowGlowUnderVideo) {
+                                          builder: (context, shouldShowGlowUnderVideo) {
                                             const containerHeight = 12.0;
                                             return AnimatedSwitcher(
                                               duration: const Duration(milliseconds: 300),
@@ -1168,7 +1168,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     );
 
                     final playPauseButtonChild = Obx(
-                      () {
+                      (context) {
                         final isLoading = Player.inst.shouldShowLoadingIndicatorR;
                         return Stack(
                           alignment: Alignment.center,
@@ -1222,9 +1222,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
                     return ObxO(
                       rx: settings.enableBottomNavBar,
-                      builder: (enableBottomNavBar) => ObxO(
+                      builder: (context, enableBottomNavBar) => ObxO(
                         rx: settings.dismissibleMiniplayer,
-                        builder: (dismissibleMiniplayer) => NamidaYTMiniplayer(
+                        builder: (context, dismissibleMiniplayer) => NamidaYTMiniplayer(
                           key: MiniPlayerController.inst.ytMiniplayerKey,
                           duration: const Duration(milliseconds: 1000),
                           curve: Curves.easeOutExpo,

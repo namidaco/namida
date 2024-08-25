@@ -113,7 +113,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
             const SizedBox(width: 4.0),
             ObxO(
               rx: isLoadingMoreUploads,
-              builder: (isLoadingMoreUploads) => NamidaInkWellButton(
+              builder: (context, isLoadingMoreUploads) => NamidaInkWellButton(
                 animationDurationMS: 100,
                 sizeMultiplier: 0.95,
                 borderRadius: 8.0,
@@ -248,7 +248,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                   SliverToBoxAdapter(
                     child: ObxO(
                       rx: isLoadingMoreUploads,
-                      builder: (loading) => loading
+                      builder: (context, loading) => loading
                           ? const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Stack(

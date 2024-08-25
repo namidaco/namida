@@ -44,7 +44,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
 
     return ObxO(
       rx: settings.youtube.ytVisibleShorts,
-      builder: (visibleShorts) {
+      builder: (context, visibleShorts) {
         final isShortsVisible = visibleShorts[YTVisibleShortPlaces.history] ?? true;
         return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
           onListUpdated: onListUpdated,

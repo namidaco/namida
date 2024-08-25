@@ -374,7 +374,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                   SliverToBoxAdapter(
                     child: ObxO(
                       rx: _isLoadingMoreItems,
-                      builder: (loading) => loading
+                      builder: (context, loading) => loading
                           ? const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Stack(

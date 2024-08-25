@@ -243,7 +243,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(
-                () {
+                (context) {
                   final seek = MiniPlayerController.inst.seekValue.valueR;
                   final diffInMs = seek - Player.inst.nowPlayingPositionR;
                   final plusOrMinus = diffInMs < 0 ? '' : '+';
@@ -261,7 +261,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
               NamidaHero(
                 tag: 'MINIPLAYER_POSITION',
                 child: Obx(
-                  () => Text(
+                  (context) => Text(
                     Player.inst.nowPlayingPositionR.milliSecondsLabel,
                     style: context.textTheme.displaySmall,
                   ),
@@ -291,7 +291,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
               Lyrics.inst.updateLyrics(_getcurrentItem as Playable);
             },
             icon: Obx(
-              () => settings.enableLyrics.valueR
+              (context) => settings.enableLyrics.valueR
                   ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
                       ? StackedIcon(
                           baseIcon: Broken.document,
@@ -383,7 +383,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                     onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
                     scrollQueueWidget: ObxO(
                       rx: MiniPlayerController.inst.arrowIcon,
-                      builder: (arrow) => NamidaButton(
+                      builder: (context, arrow) => NamidaButton(
                         onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
                         icon: arrow,
                       ),
@@ -397,7 +397,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
       ),
     );
     return Obx(
-      () {
+      (context) {
         final currentIndex = Player.inst.currentIndex.valueR;
         final queue = Player.inst.currentQueue.valueR;
         final indminus = refine(currentIndex - 1);
@@ -467,7 +467,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                 child: NamidaHero(
                   tag: 'MINIPLAYER_DURATION',
                   child: Obx(
-                    () {
+                    (context) {
                       int toSubtract = 0;
                       String prefix = '';
                       if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
@@ -510,7 +510,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 ),
                 menuWidget: Obx(
-                  () {
+                  (context) {
                     final availableVideos = widget.focusedMenuOptions.localVideos.valueR;
                     final ytVideos = widget.focusedMenuOptions.streams.valueR?.videoStreams.withoutWebm();
                     return ListView(
@@ -532,7 +532,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                           (element) {
                             final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
                             return Obx(
-                              () {
+                              (context) {
                                 final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
                                 return _MPQualityButton(
                                   onTap: () => widget.focusedMenuOptions.onLocalVideoTap(currentItem, element),
@@ -578,7 +578,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                   alignment: Alignment.centerLeft,
                   children: [
                     Obx(
-                      () {
+                      (context) {
                         return AnimatedDecoration(
                           duration: animationDuration,
                           decoration: isMenuOpened.valueR
@@ -771,7 +771,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                   /// Smol progress bar
                                   ObxO(
                                     rx: Player.inst.nowPlayingPosition,
-                                    builder: (nowPlayingPosition) {
+                                    builder: (context, nowPlayingPosition) {
                                       final w = currentDurationInMS == 0 ? 0 : nowPlayingPosition / currentDurationInMS;
                                       return Container(
                                         height: 2 * (1 - cp),
@@ -877,7 +877,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                     width: iconBoxSize,
                                     child: Center(
                                       child: Obx(
-                                        () {
+                                        (context) {
                                           final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
                                           return TapDetector(
                                             onTap: null,
@@ -926,7 +926,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                                         padding: EdgeInsets.all(6.0 * cp * rcp),
                                                         child: ObxO(
                                                           rx: Player.inst.isPlaying,
-                                                          builder: (isPlaying) => AnimatedSwitcher(
+                                                          builder: (context, isPlaying) => AnimatedSwitcher(
                                                             duration: const Duration(milliseconds: 200),
                                                             child: isPlaying
                                                                 ? Icon(
@@ -948,7 +948,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                                     if (widget.canShowBuffering)
                                                       IgnorePointer(
                                                         child: Obx(
-                                                          () => Player.inst.shouldShowLoadingIndicatorR
+                                                          (context) => Player.inst.shouldShowLoadingIndicatorR
                                                               ? ThreeArchedCircle(
                                                                   color: Colors.white.withAlpha(120),
                                                                   size: iconSize * 1.4,
@@ -1125,11 +1125,11 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                     onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
                                     child: ObxO(
                                       rx: settings.artworkGestureDoubleTapLRC,
-                                      builder: (artworkGestureDoubleTapLRC) {
+                                      builder: (context, artworkGestureDoubleTapLRC) {
                                         if (artworkGestureDoubleTapLRC) {
                                           return ObxO(
                                             rx: Lyrics.inst.currentLyricsLRC,
-                                            builder: (currentLyricsLRC) {
+                                            builder: (context, currentLyricsLRC) {
                                               // -- only when lrc view is not visible, to prevent other gestures delaying.
                                               return DoubleTapDetector(
                                                 onDoubleTap: currentLyricsLRC == null
@@ -1353,7 +1353,7 @@ class _TrackInfo<T extends Playable, E> extends StatelessWidget {
                               child: ytLikeManager != null
                                   ? ObxO(
                                       rx: ytLikeManager.currentVideoLikeStatus,
-                                      builder: (currentLikeStatus) {
+                                      builder: (context, currentLikeStatus) {
                                         final isUserLiked = currentLikeStatus == LikeStatus.liked;
                                         return NamidaLoadingSwitcher(
                                           size: 32.0,
@@ -1379,7 +1379,7 @@ class _TrackInfo<T extends Playable, E> extends StatelessWidget {
                                     )
                                   : ObxOClass(
                                       rx: textData.favouritePlaylist,
-                                      builder: (favouritePlaylist) => NamidaRawLikeButton(
+                                      builder: (context, favouritePlaylist) => NamidaRawLikeButton(
                                         size: 32.0,
                                         likedIcon: textData.likedIcon,
                                         normalIcon: textData.normalIcon,
@@ -1532,7 +1532,7 @@ class _QueueListChildWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () {
+      (context) {
         final queue = Player.inst.currentQueue.valueR;
         final queueLength = queue.length;
         if (queueLength == 0) return const SizedBox();

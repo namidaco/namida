@@ -39,7 +39,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
       children: [
         verticalPadding,
         Obx(
-          () => _SliderTextWidget(
+          (context) => _SliderTextWidget(
             icon: Broken.airpods,
             title: lang.PITCH,
             value: settings.player.pitch.valueR,
@@ -61,7 +61,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         ),
         verticalPadding,
         Obx(
-          () => _SliderTextWidget(
+          (context) => _SliderTextWidget(
             icon: Broken.forward,
             title: lang.SPEED,
             value: settings.player.speed.valueR,
@@ -84,7 +84,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         ),
         verticalPadding,
         Obx(
-          () => _SliderTextWidget(
+          (context) => _SliderTextWidget(
             icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
             title: lang.VOLUME,
             value: settings.player.volume.valueR,
@@ -208,7 +208,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                           onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
                           child: ObxO(
                             rx: settings.equalizer.uiTapToUpdate,
-                            builder: (val) => StackedIcon(
+                            builder: (context, val) => StackedIcon(
                               baseIcon: Broken.mouse_1,
                               secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
                               secondaryIconSize: 12.0,
@@ -272,7 +272,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                           children: [
                             const SizedBox(width: 8.0),
                             Obx(
-                              () => NamidaInkWell(
+                              (context) => NamidaInkWell(
                                 animationDurationMS: 200,
                                 borderRadius: 5.0,
                                 margin: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -293,7 +293,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                             ),
                             ..._equalizerPresets.asMap().entries.map(
                                   (e) => Obx(
-                                    () => NamidaInkWell(
+                                    (context) => NamidaInkWell(
                                       animationDurationMS: 200,
                                       borderRadius: 5.0,
                                       margin: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -361,7 +361,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 ),
                                 ObxO(
                                   rx: settings.equalizer.uiTapToUpdate,
-                                  builder: (uiTapToUpdate) => _CuteSlider(
+                                  builder: (context, uiTapToUpdate) => _CuteSlider(
                                     key: _loudnessKey,
                                     initialValue: targetGain,
                                     min: -1,
@@ -381,7 +381,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                     ),
                     ObxO(
                       rx: settings.equalizer.uiTapToUpdate,
-                      builder: (uiTapToUpdate) => EqualizerMainSlidersColumn(
+                      builder: (context, uiTapToUpdate) => EqualizerMainSlidersColumn(
                         verticalInBetweenPadding: verticalInBetweenPaddingH,
                         tapToUpdate: uiTapToUpdate,
                       ),
@@ -773,7 +773,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                 duration: const Duration(milliseconds: 50),
                 bottom: height - circleHeight / 2,
                 child: Obx(
-                  () => AnimatedScale(
+                  (context) => AnimatedScale(
                     duration: const Duration(milliseconds: 200),
                     scale: _isPointerDown.valueR ? 1.2 : 1.0,
                     child: Container(

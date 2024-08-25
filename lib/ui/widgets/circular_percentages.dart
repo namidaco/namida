@@ -14,7 +14,7 @@ class IndexingPercentage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => Indexer.inst.isIndexing.valueR
+      (context) => Indexer.inst.isIndexing.valueR
           ? NamidaCircularPercentage(
               heroTag: 'indexingper',
               percentage: Indexer.inst.tracksInfoList.valueR.length / Indexer.inst.allAudioFiles.valueR.length,
@@ -34,7 +34,7 @@ class ParsingJsonPercentage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => JsonToHistoryParser.inst.isParsing.valueR && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.valueR)
+      (context) => JsonToHistoryParser.inst.isParsing.valueR && (forceDisplay ? true : source == JsonToHistoryParser.inst.currentParsingSource.valueR)
           ? TapDetector(
               onTap: () => JsonToHistoryParser.inst.showParsingProgressDialog(),
               child: NamidaCircularPercentage(

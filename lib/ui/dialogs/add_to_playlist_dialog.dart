@@ -37,7 +37,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
         ),
       ),
       leftAction: Obx(
-        () => Text(
+        (context) => Text(
           "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${lang.PLAYLISTS}",
           style: namida.theme.textTheme.displayMedium,
           maxLines: 1,

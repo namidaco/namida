@@ -14,7 +14,7 @@ class SettingsSearchPage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Obx(
-          () {
+          (context) {
             final keys = SettingsSearchController.inst.searchResults.keys.toList();
             return CustomScrollView(
               slivers: [

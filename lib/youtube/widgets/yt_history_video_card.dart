@@ -220,7 +220,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
         videoYTID: itemToYTIDPlay(item),
       ),
       child: Obx(
-        () {
+        (context) {
           final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
           final displayDateText = dateText != null && dateText.isNotEmpty;
 

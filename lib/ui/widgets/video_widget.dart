@@ -584,13 +584,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final finalVideoWidget = ObxO(
         key: _videoConstraintsKey,
         rx: Player.inst.videoPlayerInfo,
-        builder: (info) {
+        builder: (context, info) {
           if (info != null && info.isInitialized) {
             return NamidaAspectRatio(
               aspectRatio: info.aspectRatio,
               child: ObxO(
                 rx: VideoController.inst.videoZoomAdditionalScale,
-                builder: (pinchInZoom) => AnimatedScale(
+                builder: (context, pinchInZoom) => AnimatedScale(
                   duration: const Duration(milliseconds: 200),
                   scale: 1.0 + pinchInZoom * 0.02,
                   child: Texture(textureId: info.textureId),
@@ -607,7 +607,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           // -- fallback images
           return ObxO(
               rx: Player.inst.currentItem,
-              builder: (item) {
+              builder: (context, item) {
                 if (item is YoutubeID) {
                   final vidId = item.id;
                   return YoutubeThumbnail(
@@ -752,7 +752,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             Positioned.fill(
               child: ObxO(
                 rx: _currentBrigthnessDim,
-                builder: (brightness) => Container(
+                builder: (context, brightness) => Container(
                   color: Colors.black.withOpacity(1 - brightness),
                 ),
               ),
@@ -761,7 +761,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             if (showEndcards)
               ObxO(
                 rx: isEndCardsVisible,
-                builder: (endcardsvisible) => AnimatedSwitcher(
+                builder: (context, endcardsvisible) => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: endcardsvisible
                       ? _YTVideoEndcards(
@@ -806,7 +806,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: widget.isFullScreen
                                 ? Material(
                                     type: MaterialType.transparency,
-                                    child: Obx(() {
+                                    child: Obx((context) {
                                       String? videoName;
                                       String? channelName;
 
@@ -853,7 +853,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           // ==== Reset Brightness ====
                           ObxO(
                             rx: _currentBrigthnessDim,
-                            builder: (brigthnessDim) => AnimatedSwitcher(
+                            builder: (context, brigthnessDim) => AnimatedSwitcher(
                               duration: const Duration(milliseconds: 200),
                               child: brigthnessDim < 1.0
                                   ? NamidaIconButton(
@@ -882,7 +882,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               ...settings.player.speeds.map((speed) {
                                 return ObxO(
                                   rx: Player.inst.currentSpeed,
-                                  builder: (selectedSpeed) {
+                                  builder: (context, selectedSpeed) {
                                     final isSelected = selectedSpeed == speed;
                                     return NamidaInkWell(
                                       onTap: () {
@@ -948,7 +948,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     child: Obx(
-                                      () {
+                                      (context) {
                                         final speed = Player.inst.currentSpeed.valueR;
                                         return Row(
                                           children: [
@@ -976,7 +976,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           ),
                           ObxO(
                               rx: YoutubeInfoController.current.currentYTStreams,
-                              builder: (streams) {
+                              builder: (context, streams) {
                                 final currentYTAudioStreams = streams?.audioStreams;
                                 if (currentYTAudioStreams == null || currentYTAudioStreams.isEmpty) return const SizedBox();
                                 final audioStreamsAll = List<AudioStream>.from(currentYTAudioStreams); // check below
@@ -1000,7 +1000,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   children: () => [
                                     ...streamsMap.values.map(
                                       (element) => Obx(
-                                        () {
+                                        (context) {
                                           bool isSelected = false;
                                           final audioTrack = element.audioTrack;
                                           final langCode = audioTrack?.langCode;
@@ -1046,7 +1046,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                           ),
                                           child: Obx(
-                                            () {
+                                            (context) {
                                               final displayName =
                                                   Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
                                               return displayName == null || displayName == ''
@@ -1101,7 +1101,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               }
                               return [
                                 Obx(
-                                  () => _getQualityChip(
+                                  (context) => _getQualityChip(
                                     title: lang.AUDIO_ONLY,
                                     onPlay: (isSelected) {
                                       Player.inst.setAudioOnlyPlayback(true);
@@ -1115,7 +1115,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ),
                                 ...cachedQualities.map(
                                   (element) => Obx(
-                                    () => _getQualityChip(
+                                    (context) => _getQualityChip(
                                       title: '${element.resolution}p${element.framerateText()}',
                                       subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                       onPlay: (isSelected) {
@@ -1146,7 +1146,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ),
                                 ...?ytQualities?.map((element) {
                                   return Obx(
-                                    () {
+                                    (context) {
                                       if (widget.isLocal) {
                                         final id = Player.inst.currentVideoR?.id;
                                         final isSelected = element.height == VideoController.inst.currentVideo.valueR?.height;
@@ -1226,7 +1226,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     child: Obx(
-                                      () {
+                                      (context) {
                                         final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR;
 
                                         String? qt;
@@ -1331,7 +1331,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Obx(
-                                              () => Text(
+                                              (context) => Text(
                                                 "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
                                                 style: context.textTheme.displayMedium?.copyWith(
                                                   fontSize: 13.5,
@@ -1340,7 +1340,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               ),
                                             ),
                                             Obx(
-                                              () {
+                                              (context) {
                                                 int totalDurMs = Player.inst.getCurrentVideoDurationR.inMilliseconds;
                                                 String prefix = '';
                                                 if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
@@ -1367,7 +1367,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 if (widget.isFullScreen) ...[
                                   // -- queue order
                                   Obx(
-                                    () {
+                                    (context) {
                                       final queueL = Player.inst.currentQueue.valueR.length;
                                       if (queueL <= 1) return const SizedBox();
                                       return BorderRadiusClip(
@@ -1381,7 +1381,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               borderRadius: borr8,
                                             ),
                                             child: Obx(
-                                              () => Text(
+                                              (context) => Text(
                                                 "${Player.inst.currentIndex.valueR + 1}/$queueL",
                                                 style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
                                               ),
@@ -1492,7 +1492,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     const SizedBox(),
                     ObxO(
                       rx: Player.inst.currentIndex,
-                      builder: (currentIndex) {
+                      builder: (context, currentIndex) {
                         final shouldShowPrev = currentIndex != 0;
                         return IgnorePointer(
                           ignoring: !shouldShowPrev,
@@ -1532,7 +1532,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         child: ColoredBox(
                           color: Colors.black.withOpacity(0.3),
                           child: Obx(
-                            () {
+                            (context) {
                               final currentPosition = Player.inst.nowPlayingPositionR;
                               final currentTotalDur = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
                               final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 100; // 100ms allowance
@@ -1569,7 +1569,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         padding: const EdgeInsets.all(14.0),
                                         child: ObxO(
                                           rx: Player.inst.isPlaying,
-                                          builder: (isPlaying) => AnimatedSwitcher(
+                                          builder: (context, isPlaying) => AnimatedSwitcher(
                                             duration: const Duration(milliseconds: 200),
                                             child: isPlaying
                                                 ? Icon(
@@ -1595,10 +1595,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     ),
                     ObxO(
                       rx: Player.inst.currentIndex,
-                      builder: (currentIndex) {
+                      builder: (context, currentIndex) {
                         return ObxO(
                           rx: Player.inst.currentQueue,
-                          builder: (ytqueue) {
+                          builder: (context, ytqueue) {
                             final shouldShowNext = currentIndex != ytqueue.length - 1;
                             return IgnorePointer(
                               ignoring: !shouldShowNext,
@@ -1639,7 +1639,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
               ),
               Obx(
-                () => Player.inst.shouldShowLoadingIndicatorR
+                (context) => Player.inst.shouldShowLoadingIndicatorR
                     ? ThreeArchedCircle(
                         color: itemsColor,
                         size: 52.0,
@@ -1689,7 +1689,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 Positioned(
                   left: context.width * 0.15,
                   child: Obx(
-                    () {
+                    (context) {
                       final bri = _canShowBrightnessSlider.valueR ? _currentBrigthnessDim.valueR : null;
                       return _getVerticalSliderWidget(
                         'brightness',
@@ -1705,7 +1705,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   right: context.width * 0.15,
                   child: ObxO(
                     rx: _currentDeviceVolume,
-                    builder: (vol) => _getVerticalSliderWidget(
+                    builder: (context, vol) => _getVerticalSliderWidget(
                       'volume',
                       vol,
                       Broken.volume_high,
@@ -2092,7 +2092,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
               top: topPadding,
               child: ObxO(
                 rx: Player.inst.nowPlayingPosition,
-                builder: (playerPosition) {
+                builder: (context, playerPosition) {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: playerPosition < e.startMs || playerPosition > e.endMs

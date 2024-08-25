@@ -88,7 +88,7 @@ Future<void> showVideoDownloadOptionsSheet({
                   children: [
                     if (showSpecificFileOptions) ...[
                       Obx(
-                        () => CustomSwitchListTile(
+                        (context) => CustomSwitchListTile(
                           icon: Broken.document_code,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                           title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
@@ -97,7 +97,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         ),
                       ),
                       Obx(
-                        () => CustomSwitchListTile(
+                        (context) => CustomSwitchListTile(
                           icon: Broken.tick_circle,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                           title: lang.KEEP_CACHED_VERSIONS,
@@ -375,7 +375,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
           ),
         ],
         child: Obx(
-          () {
+          (context) {
             final groupName = this.groupName.valueR;
             final title = groupName == '' ? lang.DEFAULT : groupName;
             final count = availableDirectoriesNames[groupName];

@@ -77,7 +77,7 @@ void showTrackAdvancedDialog({
           const CancelButton(),
           ObxO(
             rx: isDeleting,
-            builder: (deleting) => AnimatedEnabled(
+            builder: (context, deleting) => AnimatedEnabled(
               enabled: !deleting,
               child: NamidaButton(
                 text: lang.DELETE.toUpperCase(),
@@ -187,7 +187,7 @@ void showTrackAdvancedDialog({
                     child: Column(
                       children: SetMusicAsAction.values
                           .map((e) => Obx(
-                                () => Padding(
+                                (context) => Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                                   child: ListTileWithCheckMark(
                                     active: selected.contains(e),
@@ -203,7 +203,7 @@ void showTrackAdvancedDialog({
               },
             ),
           Obx(
-            () {
+            (context) {
               final shouldShow = shouldShowReIndexProgress.valueR;
               final errors = reIndexedTracksFailed.valueR;
               final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
@@ -217,7 +217,7 @@ void showTrackAdvancedDialog({
                   padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                   bgColor: theme.cardColor,
                   onTap: () => willUpdateArtwork.toggle(),
-                  child: Obx(() => Text('${lang.ARTWORK}  ${willUpdateArtwork.valueR ? '✓' : 'x'}')),
+                  child: Obx((context) => Text('${lang.ARTWORK}  ${willUpdateArtwork.valueR ? '✓' : 'x'}')),
                 ),
                 onTap: () async {
                   await Indexer.inst.reindexTracks(
@@ -457,7 +457,7 @@ void _showTrackColorPaletteDialog({
 
             // --- Removed Colors
             Obx(
-              () => removedColors.isNotEmpty
+              (context) => removedColors.isNotEmpty
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -483,7 +483,7 @@ void _showTrackColorPaletteDialog({
             getText(lang.PALETTE),
             const SizedBox(height: 8.0),
             Obx(
-              () => getPalettesWidget(
+              (context) => getPalettesWidget(
                 palette: allPaletteColor.valueR,
                 onColorTap: (color) => selectedColors.addOrRemove(color),
                 onColorLongPress: (color) {
@@ -512,7 +512,7 @@ void _showTrackColorPaletteDialog({
             ),
             const SizedBox(height: 12.0),
             Obx(
-              () => Wrap(
+              (context) => Wrap(
                 spacing: 12.0,
                 runSpacing: 6.0,
                 children: [
@@ -544,7 +544,7 @@ void _showTrackColorPaletteDialog({
                 Expanded(
                   child: ObxO(
                     rx: finalColorToBeUsed,
-                    builder: (finalColorToBeUsed) => AnimatedSizedBox(
+                    builder: (context, finalColorToBeUsed) => AnimatedSizedBox(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
                         color: finalColorToBeUsed,
@@ -612,7 +612,7 @@ void showLibraryTracksChooseDialog({
         const CancelButton(),
         ObxO(
           rx: selectedTrack,
-          builder: (selectedTr) => NamidaButton(
+          builder: (context, selectedTr) => NamidaButton(
             enabled: selectedTr != null,
             text: lang.CONFIRM,
             onPressed: () => onChoose(selectedTrack.value!),
@@ -658,7 +658,7 @@ void showLibraryTracksChooseDialog({
                       ),
                       ObxO(
                         rx: isSearching,
-                        builder: (isSearching) => isSearching
+                        builder: (context, isSearching) => isSearching
                             ? const CircularProgressIndicator.adaptive(
                                 strokeWidth: 2.0,
                                 strokeCap: StrokeCap.round,
@@ -688,7 +688,7 @@ void showLibraryTracksChooseDialog({
                     queueSource: QueueSource.others,
                   ),
                   builder: (properties) => Obx(
-                    () => ListView.builder(
+                    (context) => ListView.builder(
                       controller: scrollController,
                       padding: EdgeInsets.zero,
                       itemCount: allTracksList.length,
@@ -703,7 +703,7 @@ void showLibraryTracksChooseDialog({
                           onRightAreaTap: () => onTrackTap(tr),
                           trailingWidget: ObxO(
                             rx: selectedTrack,
-                            builder: (selectedTrack) => NamidaCheckMark(
+                            builder: (context, selectedTrack) => NamidaCheckMark(
                               size: 22.0,
                               active: selectedTrack == tr,
                             ),

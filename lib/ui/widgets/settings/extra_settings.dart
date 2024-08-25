@@ -81,7 +81,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.bottomNavBar,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.bottomNavBar),
                 icon: Broken.direct,
                 title: lang.ENABLE_BOTTOM_NAV_BAR,
@@ -97,7 +97,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.pip,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.pip),
                 icon: Broken.screenmirroring,
                 title: lang.ENABLE_PICTURE_IN_PICTURE,
@@ -112,7 +112,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.foldersHierarchy,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.foldersHierarchy),
                 icon: Broken.folder_open,
                 title: lang.ENABLE_FOLDERS_HIERARCHY,
@@ -126,7 +126,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           ),
           // TODO: Allow later
           // Obx(
-          //   () => CustomSwitchListTile(
+          //   (context) => CustomSwitchListTile(
           //     icon: Broken.folder_open,
           //     title: lang.ENABLE_FOLDERS_HIERARCHY,
           //     subtitle: lang.VIDEOS,
@@ -140,7 +140,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.fabType,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.fabType),
                 icon: Broken.safe_home,
                 title: lang.FLOATING_ACTION_BUTTON,
@@ -159,7 +159,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                               .map(
                                 (e) => ObxO(
                                   rx: settings.floatingActionButton,
-                                  builder: (floatingActionButton) => Container(
+                                  builder: (context, floatingActionButton) => Container(
                                     margin: const EdgeInsets.all(4.0),
                                     child: ListTileWithCheckMark(
                                       title: e.toText(),
@@ -182,7 +182,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.defaultLibraryTab,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
                 icon: Broken.receipt_1,
                 title: lang.DEFAULT_LIBRARY_TAB,
@@ -200,7 +200,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           Container(
                             margin: const EdgeInsets.all(4.0),
                             child: Obx(
-                              () => ListTileWithCheckMark(
+                              (context) => ListTileWithCheckMark(
                                 title: lang.AUTO,
                                 icon: Broken.recovery_convert,
                                 onTap: () => settings.extra.save(autoLibraryTab: true),
@@ -211,7 +211,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           const SizedBox(height: 12.0),
                           ...settings.libraryTabs.value.asMap().entries.map(
                                 (e) => Obx(
-                                  () => Container(
+                                  (context) => Container(
                                     margin: const EdgeInsets.all(4.0),
                                     child: ListTileWithCheckMark(
                                       title: "${e.key + 1}. ${e.value.toText()}",
@@ -240,7 +240,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.filterTracksBy,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.filterTracksBy),
                 icon: Broken.filter_search,
                 title: lang.FILTER_TRACKS_BY,
@@ -273,7 +273,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             (e) => Padding(
                               padding: const EdgeInsets.all(4.0),
                               child: Obx(
-                                () => ListTileWithCheckMark(
+                                (context) => ListTileWithCheckMark(
                                   title: e.toText(),
                                   onTap: () => _trackFilterOnTap(e),
                                   active: settings.trackSearchFilter.contains(e),
@@ -292,7 +292,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.searchCleanup,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.searchCleanup),
                 icon: Broken.document_filter,
                 title: lang.ENABLE_SEARCH_CLEANUP,
@@ -305,7 +305,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
                 icon: Broken.mobile_programming,
                 title: lang.PRIORITIZE_EMBEDDED_LYRICS,
@@ -317,7 +317,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.lyricsSource,
             child: Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
                 enabled: settings.enableLyrics.valueR,
                 title: lang.LYRICS_SOURCE,
@@ -340,7 +340,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ],
                       child: ObxO(
                         rx: settings.lyricsSource,
-                        builder: (lyricsSource) => ListView(
+                        builder: (context, lyricsSource) => ListView(
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           children: [
@@ -366,7 +366,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.immersiveMode,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
                 icon: Broken.external_drive,
                 title: lang.IMMERSIVE_MODE,
@@ -379,7 +379,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.swipeToOpenDrawer,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.swipeToOpenDrawer),
                 icon: Broken.sidebar_right,
                 title: lang.SWIPE_TO_OPEN_DRAWER,
@@ -394,7 +394,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.alwaysExpandedSearchbar,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.alwaysExpandedSearchbar),
                 // icon: Broken.scroll,
                 leading: const StackedIcon(
@@ -414,7 +414,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _ExtraSettingsKeys.enableClipboardMonitoring,
             child: Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.enableClipboardMonitoring),
                 icon: Broken.clipboard_export,
                 title: lang.ENABLE_CLIPBOARD_MONITORING,
@@ -433,7 +433,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               icon: Broken.colorfilter,
               title: lang.EXTRACT_ALL_COLOR_PALETTES,
               trailing: Obx(
-                () => Column(
+                (context) => Column(
                   children: [
                     Text("${Indexer.inst.colorPalettesInStorage.valueR}/${Indexer.inst.artworksInStorage.valueR}"),
                     if (CurrentColor.inst.isGeneratingAllColorPalettes.valueR) const LoadingIndicator(),
@@ -489,7 +489,7 @@ class ExtrasSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _ExtraSettingsKeys.libraryTabs,
       child: Obx(
-        () => CustomListTile(
+        (context) => CustomListTile(
           bgColor: getBgColor(_ExtraSettingsKeys.libraryTabs),
           icon: Broken.color_swatch,
           title: lang.LIBRARY_TABS,
@@ -517,7 +517,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   width: namida.width,
                   height: namida.height * 0.5,
                   child: Obx(
-                    () => Column(
+                    (context) => Column(
                       children: [
                         Text(
                           lang.LIBRARY_TABS_REORDER,

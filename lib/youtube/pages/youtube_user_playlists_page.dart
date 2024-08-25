@@ -108,7 +108,7 @@ class _AccountHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: YoutubeAccountController.current.activeAccountChannel,
-      builder: (acc) => acc == null
+      builder: (context, acc) => acc == null
           ? const SizedBox()
           : Padding(
               padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),

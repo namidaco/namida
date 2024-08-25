@@ -501,7 +501,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                 String? subtitle = isPlayAfter ? playAfterVid.name : null;
                 if (subtitle == '') subtitle = null;
                 return Obx(
-                  () => CustomListTile(
+                  (context) => CustomListTile(
                     enabled: isItemEnabled[e] ?? true,
                     icon: e.toIcon(),
                     title: e.toText() + extraTitle,
@@ -729,7 +729,7 @@ extension RouteUtils on NamidaRoute {
       case RouteType.PAGE_queue:
         finalWidget = ObxO(
           rx: QueueController.inst.queuesMap,
-          builder: (qmap) => getTextWidget("${lang.QUEUES} • ${qmap.length}"),
+          builder: (context, qmap) => getTextWidget("${lang.QUEUES} • ${qmap.length}"),
         );
         break;
       default:
@@ -889,7 +889,7 @@ extension RouteUtils on NamidaRoute {
         child: ObxO(
           key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
           rx: PlaylistController.inst.canReorderTracks,
-          builder: (reorderable) => NamidaAppBarIcon(
+          builder: (context, reorderable) => NamidaAppBarIcon(
             tooltip: () => PlaylistController.inst.canReorderTracks.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
             icon: reorderable ? Broken.forward_item : Broken.lock_1,
             onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
@@ -908,7 +908,7 @@ extension RouteUtils on NamidaRoute {
       getAnimatedCrossFade(
         child: ObxO(
           rx: ytplc.YoutubePlaylistController.inst.canReorderVideos,
-          builder: (reorderable) => NamidaAppBarIcon(
+          builder: (context, reorderable) => NamidaAppBarIcon(
             tooltip: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
             icon: reorderable ? Broken.forward_item : Broken.lock_1,
             onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,

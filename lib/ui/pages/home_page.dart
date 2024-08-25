@@ -261,7 +261,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
           width: namida.width,
           height: namida.height * 0.5,
           child: Obx(
-            () => Column(
+            (context) => Column(
               children: [
                 Expanded(
                   flex: 6,
@@ -370,7 +370,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                 child: AnimationLimiter(
                   child: ObxO(
                     rx: settings.homePageItems,
-                    builder: (homePageItems) => CustomScrollView(
+                    builder: (context, homePageItems) => CustomScrollView(
                       controller: _scrollController,
                       slivers: [
                         const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),

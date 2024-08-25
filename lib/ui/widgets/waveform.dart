@@ -90,7 +90,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
     );
     return ObxO(
         rx: WaveformController.inst.isWaveformUIEnabled,
-        builder: (enabled) {
+        builder: (context, enabled) {
           _updateAnimation(enabled);
           final downscaled = WaveformController.inst.currentWaveformUI;
           final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
@@ -115,7 +115,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                       barMaxHeight: widget.barsMaxHeight,
                     ),
                     Obx(
-                      () {
+                      (context) {
                         final seekValue = MiniPlayerController.inst.seekValue.valueR;
                         final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
                         final durInMs = _currentDurationInMSR;

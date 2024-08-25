@@ -177,7 +177,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                               ],
                             ),
                             Obx(
-                              () => SizedBox(
+                              (context) => SizedBox(
                                 height: 12.0,
                                 width: context.width,
                                 child: AnimatedDecoration(

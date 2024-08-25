@@ -72,7 +72,7 @@ class JsonToHistoryParser {
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
         titleWidgetInPadding: Obx(
-          () {
+          (context) {
             final title = '${isParsing.valueR ? lang.EXTRACTING_INFO : lang.DONE} ($_parsedProgressPercentageR)';
             return Text(
               "$title ${isParsing.valueR ? '' : ' ✓'}",
@@ -94,18 +94,18 @@ class JsonToHistoryParser {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx(() => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.valueR ? '' : lang.DONE}')),
+              Obx((context) => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.valueR ? '' : lang.DONE}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
+              Obx((context) => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
               const SizedBox(height: 10.0),
-              Obx(() => getTextWidget('$_addedHistoryJsonR ${lang.ADDED}')),
+              Obx((context) => getTextWidget('$_addedHistoryJsonR ${lang.ADDED}')),
               const SizedBox(height: 4.0),
               if (dateText != '') ...[
                 getTextWidget(dateText, style: namida.textTheme.displaySmall),
                 const SizedBox(height: 4.0),
               ],
               const SizedBox(height: 4.0),
-              Obx(() {
+              Obx((context) {
                 final shouldShow = currentParsingSource.valueR == TrackSource.youtube || currentParsingSource.valueR == TrackSource.youtubeMusic;
                 return shouldShow
                     ? getTextWidget('${lang.STATS}: ${_updatingYoutubeStatsDirectoryProgress.valueR}/${_updatingYoutubeStatsDirectoryTotal.valueR}')
@@ -198,7 +198,7 @@ class JsonToHistoryParser {
         trailingWidgets: [
           const SizedBox(width: 8.0),
           Obx(
-            () => NamidaIconButton(
+            (context) => NamidaIconButton(
               horizontalPadding: 0.0,
               icon: Broken.command_square,
               iconSize: 24.0,
@@ -251,7 +251,7 @@ class JsonToHistoryParser {
               ),
               Expanded(
                 child: Obx(
-                  () {
+                  (context) {
                     final missing = _latestMissingMap.valueR.entries.toList()..sortByReverse((e) => e.value.length);
                     return NamidaScrollbarWithController(
                       child: (sc) => ListView.separated(
@@ -261,7 +261,7 @@ class JsonToHistoryParser {
                         itemBuilder: (context, index) {
                           final entry = missing[index];
                           return Obx(
-                            () {
+                            (context) {
                               final replacedWithTrack = _latestMissingMapAddedStatus[entry.key];
                               return IgnorePointer(
                                 ignoring: replacedWithTrack != null,
@@ -322,7 +322,7 @@ class JsonToHistoryParser {
                                         ),
                                         const SizedBox(width: 4.0),
                                         Obx(
-                                          () => NamidaIconButton(
+                                          (context) => NamidaIconButton(
                                             horizontalPadding: 0.0,
                                             icon: Broken.command,
                                             iconSize: 20.0,

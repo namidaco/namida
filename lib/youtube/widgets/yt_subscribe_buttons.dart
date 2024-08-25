@@ -130,9 +130,9 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           const CancelButton(),
           ObxO(
             rx: tileActiveNoti,
-            builder: (activeNoti) => ObxO(
+            builder: (context, activeNoti) => ObxO(
               rx: isSaving,
-              builder: (saving) => NamidaButton(
+              builder: (context, saving) => NamidaButton(
                 enabled: activeNoti != null && !saving,
                 text: lang.SAVE.toUpperCase(),
                 textWidget: Row(
@@ -169,7 +169,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           padding: const EdgeInsets.all(8.0),
           child: ObxO(
             rx: tileActiveNoti,
-            builder: (activeNoti) => Column(
+            builder: (context, activeNoti) => Column(
               children: [
                 ...ChannelNotifications.values.map(
                   (e) {
@@ -325,7 +325,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                 const SizedBox(height: 32.0),
                 ObxO(
                   rx: YoutubeSubscriptionsController.inst.availableChannels,
-                  builder: (availableChannels) {
+                  builder: (context, availableChannels) {
                     final favouriteChannel = availableChannels[channelId]?.subscribed;
                     return TextButton(
                       onPressed: () {
@@ -388,7 +388,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                     // scrollDirection: Axis.horizontal,
                     child: ObxO(
                       rx: currentGroups,
-                      builder: (activeG) => Wrap(
+                      builder: (context, activeG) => Wrap(
                           crossAxisAlignment: WrapCrossAlignment.start,
                           // direction: Axis.vertical,
                           children: allChannelGroups
@@ -438,7 +438,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(context, widget.channelID!),
       child: ObxO(
         rx: _YTSubscribeButtonManager._activeModifications,
-        builder: (activeModifications) => AnimatedEnabled(
+        builder: (context, activeModifications) => AnimatedEnabled(
           enabled: activeModifications[widget.channelID] != true && _currentSubscribed != null,
           durationMS: 300,
           child: Row(

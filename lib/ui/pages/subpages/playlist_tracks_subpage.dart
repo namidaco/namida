@@ -74,7 +74,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
           slivers: [
             ObxO(
               rx: HistoryController.inst.totalHistoryItemsCount,
-              builder: (totalHistoryItemsCount) {
+              builder: (context, totalHistoryItemsCount) {
                 final lengthDummy = totalHistoryItemsCount == -1;
                 return SliverToBoxAdapter(
                   child: SubpagesTopContainer(
@@ -85,7 +85,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                     tracksFn: () => HistoryController.inst.historyTracks,
                     imageWidget: ObxO(
                       rx: HistoryController.inst.historyMap,
-                      builder: (historyMap) => MultiArtworkContainer(
+                      builder: (context, historyMap) => MultiArtworkContainer(
                         heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
                         size: context.width * 0.35,
                         tracks: getHistoryTracks(historyMap).toImageTracks(),
@@ -98,11 +98,11 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
             ),
             ObxO(
               rx: HistoryController.inst.historyMap,
-              builder: (history) {
+              builder: (context, history) {
                 // -- refresh sublist when history change
                 return ObxO(
                   rx: HistoryController.inst.highlightedItem,
-                  builder: (highlightedItem) => SliverVariedExtentList.builder(
+                  builder: (context, highlightedItem) => SliverVariedExtentList.builder(
                     key: ValueKey(daysLength), // rebuild after adding/removing day
                     itemExtentBuilder: (index, dimensions) {
                       final day = historyDays[index];
@@ -191,7 +191,7 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
           draggableThumbnail: false,
         ),
         builder: (properties) => Obx(
-          () {
+          (context) {
             final tracks = QueueSource.mostPlayed.toTracks();
             return MostPlayedItemsPage(
               itemExtent: Dimensions.inst.trackTileItemExtent,
@@ -337,7 +337,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                           onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
                           onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
                           trailingWidget: Obx(
-                            () => NamidaCheckMark(
+                            (context) => NamidaCheckMark(
                               size: 22.0,
                               active: tracksToAddMap[tr] == true,
                             ),
@@ -357,7 +357,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
               child: SizedBox(
                 height: 42.0,
                 child: Obx(
-                  () {
+                  (context) {
                     final trl = tracksToAddMap.entries.where((element) => element.value).length;
                     return NamidaButton(
                       enabled: trl > 0,
@@ -406,14 +406,14 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
   Widget build(BuildContext context) {
     final threeC = ObxO(
       rx: PlaylistController.inst.canReorderTracks,
-      builder: (reorderable) => ThreeLineSmallContainers(enabled: reorderable),
+      builder: (context, reorderable) => ThreeLineSmallContainers(enabled: reorderable),
     );
 
     final child = ObxO(
       rx: PlaylistController.inst.favouritesPlaylist,
-      builder: (_) => ObxO(
+      builder: (context, _) => ObxO(
         rx: PlaylistController.inst.playlistsMap,
-        builder: (_) {
+        builder: (context, _) {
           final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);
           if (playlist == null) return const SizedBox();
           _playlistM3uPath = playlist.m3uPath;
@@ -425,7 +425,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
 
           return ObxO(
             rx: PlaylistController.inst.canReorderTracks,
-            builder: (reorderable) => TrackTilePropertiesProvider(
+            builder: (context, reorderable) => TrackTilePropertiesProvider(
               configs: TrackTilePropertiesConfigs(
                 queueSource: playlist.toQueueSource(),
                 playlistName: playlist.name,

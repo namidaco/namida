@@ -82,7 +82,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.enableVideoPlayback,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.enableVideoPlayback),
             title: lang.ENABLE_VIDEO_PLAYBACK,
             icon: Broken.video,
@@ -94,7 +94,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.videoSource,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.videoSource),
             enabled: settings.enableVideoPlayback.valueR,
             title: lang.VIDEO_PLAYBACK_SOURCE,
@@ -114,7 +114,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   ],
                   child: ObxO(
                     rx: settings.videoPlaybackSource,
-                    builder: (videoPlaybackSource) => ListView(
+                    builder: (context, videoPlaybackSource) => ListView(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       children: [
@@ -141,7 +141,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.videoQuality,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.videoQuality),
             enabled: settings.enableVideoPlayback.valueR,
             title: lang.VIDEO_QUALITY,
@@ -189,7 +189,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           height: namida.height * 0.4,
                           child: ObxO(
                             rx: settings.youtubeVideoQualities,
-                            builder: (youtubeVideoQualities) => ListView(
+                            builder: (context, youtubeVideoQualities) => ListView(
                               padding: EdgeInsets.zero,
                               children: [
                                 ...kStockVideoQualities.asMap().entries.map(
@@ -219,7 +219,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.localVideoMatching,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.localVideoMatching),
             enabled: settings.enableVideoPlayback.valueR,
             icon: Broken.video_tick,
@@ -235,7 +235,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   child: Column(
                     children: [
                       Obx(
-                        () => CustomListTile(
+                        (context) => CustomListTile(
                           icon: Broken.video_tick,
                           title: lang.MATCHING_TYPE,
                           trailingText: settings.localVideoMatchingType.valueR.toText(),
@@ -246,7 +246,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                         ),
                       ),
                       Obx(
-                        () => CustomSwitchListTile(
+                        (context) => CustomSwitchListTile(
                           icon: Broken.folder,
                           title: lang.SAME_DIRECTORY_ONLY,
                           value: settings.localVideoMatchingCheckSameDir.valueR,
@@ -264,7 +264,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.keepScreenAwake,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.keepScreenAwake),
             title: '${lang.KEEP_SCREEN_AWAKE_WHEN}:',
             subtitle: settings.wakelockMode.valueR.toText(),
@@ -279,7 +279,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.displayFavButtonInNotif,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
             title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
             icon: Broken.heart_tick,
@@ -298,7 +298,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         getItemWrapper(
           key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
           child: Obx(
-            () => CustomSwitchListTile(
+            (context) => CustomSwitchListTile(
               bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
               title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
               leading: const StackedIcon(
@@ -316,7 +316,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.killPlayerAfterDismissing,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.killPlayerAfterDismissing),
             title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
             icon: Broken.forbidden_2,
@@ -331,7 +331,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.onNotificationTap,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
             title: lang.ON_NOTIFICATION_TAP,
             trailingText: settings.onNotificationTapAction.valueR.toText(),
@@ -346,7 +346,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.dismissibleMiniplayer,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.dismissibleMiniplayer),
             icon: Broken.sidebar_bottom,
             title: lang.DISMISSIBLE_MINIPLAYER,
@@ -358,7 +358,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.skipSilence,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.skipSilence),
             icon: Broken.forward,
             title: lang.SKIP_SILENCE,
@@ -389,10 +389,10 @@ class PlaybackSettings extends SettingSubpageProvider {
             if (!wasCollapsed) return settings.player.save(enableCrossFade: false);
             SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
           },
-          trailing: Obx(() => CustomSwitch(active: settings.player.enableCrossFade.valueR)),
+          trailing: Obx((context) => CustomSwitch(active: settings.player.enableCrossFade.valueR)),
           children: [
             Obx(
-              () {
+              (context) {
                 const stepper = 100;
                 const minVal = 100;
                 final enableCrossFade = settings.player.enableCrossFade.valueR;
@@ -414,7 +414,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               },
             ),
             Obx(
-              () {
+              (context) {
                 final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
                 return CustomListTile(
                   enabled: settings.player.enableCrossFade.valueR,
@@ -454,10 +454,10 @@ class PlaybackSettings extends SettingSubpageProvider {
             settings.player.save(enableVolumeFadeOnPlayPause: value);
             Player.inst.setVolume(settings.player.volume.value);
           },
-          trailing: Obx(() => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
+          trailing: Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
           children: [
             Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
                 icon: Broken.play,
                 title: lang.PLAY_FADE_DURATION,
@@ -473,7 +473,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               ),
             ),
             Obx(
-              () => CustomListTile(
+              (context) => CustomListTile(
                 enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
                 icon: Broken.pause,
                 title: lang.PAUSE_FADE_DURATION,
@@ -494,7 +494,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.autoPlayOnNextPrev,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.autoPlayOnNextPrev),
             leading: const StackedIcon(
               baseIcon: Broken.play,
@@ -509,7 +509,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.infinityQueue,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.infinityQueue),
             icon: Broken.repeat,
             title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
@@ -529,7 +529,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           titleText: lang.ON_VOLUME_ZERO,
           children: [
             Obx(
-              () => CustomSwitchListTile(
+              (context) => CustomSwitchListTile(
                 icon: Broken.pause_circle,
                 title: lang.PAUSE_PLAYBACK,
                 onChanged: (value) => settings.player.save(pauseOnVolume0: !value),
@@ -537,7 +537,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               ),
             ),
             Obx(
-              () {
+              (context) {
                 final valInSet = settings.player.volume0ResumeThresholdMin.valueR;
                 final disabled = !settings.player.resumeAfterOnVolume0Pause.valueR;
                 const max = 61;
@@ -586,7 +586,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   title: type.toText(),
                   subtitle: type.toSubtitle(),
                   trailing: PopupMenuButton<InterruptionAction>(
-                    child: Obx(() {
+                    child: Obx((context) {
                       final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
                       return Text(actionInSetting.toText());
                     }),
@@ -602,7 +602,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                               Text(action.toText()),
                               const Spacer(),
                               Obx(
-                                () {
+                                (context) {
                                   final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
                                   return NamidaCheckMark(
                                     size: 16.0,
@@ -624,7 +624,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
             const SizedBox(height: 6.0),
             Obx(
-              () {
+              (context) {
                 final valInSet = settings.player.interruptionResumeThresholdMin.valueR;
                 final disabled = !settings.player.resumeAfterWasInterrupted.valueR;
                 const max = 61;
@@ -661,7 +661,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
             icon: Broken.rotate_left,
             title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
@@ -673,7 +673,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.previousButtonReplays,
         child: Obx(
-          () => CustomSwitchListTile(
+          (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.previousButtonReplays),
             leading: const StackedIcon(
               baseIcon: Broken.previous,
@@ -690,7 +690,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.seekDuration,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.seekDuration),
             icon: Broken.forward_5_seconds,
             title: "${lang.SEEK_DURATION} (${settings.player.isSeekDurationPercentage.valueR ? lang.PERCENTAGE : lang.SECONDS})",
@@ -719,7 +719,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition,
         child: Obx(
-          () {
+          (context) {
             final valInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.valueR;
             const max = 121;
             return CustomListTile(
@@ -745,7 +745,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       getItemWrapper(
         key: _PlaybackSettingsKeys.countListenAfter,
         child: Obx(
-          () => CustomListTile(
+          (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.countListenAfter),
             icon: Broken.timer,
             title: lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
@@ -762,7 +762,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       height: 32.0,
                     ),
                     Obx(
-                      () => Row(
+                      (context) => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           NamidaWheelSlider(

@@ -247,7 +247,7 @@ class NamidaOnTaps {
           child: Column(
             children: [
               Obx(
-                () {
+                (context) {
                   final currentlyReverse = settings.mediaItemsTrackSortingReverse.valueR[media] ?? false;
                   return ListTileWithCheckMark(
                     title: lang.REVERSE_ORDER,
@@ -261,7 +261,7 @@ class NamidaOnTaps {
               const SizedBox(height: 12.0),
               Expanded(
                 child: Obx(
-                  () => NamidaListView(
+                  (context) => NamidaListView(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     itemCount: allSorts.length,
                     itemExtent: null,
@@ -280,7 +280,7 @@ class NamidaOnTaps {
                         key: ValueKey(i),
                         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
                         child: Obx(
-                          () {
+                          (context) {
                             final isActive = sorters.contains(sorting);
                             return ListTileWithCheckMark(
                               title: "${i + 1}. ${sorting.toText()}",
@@ -405,7 +405,7 @@ class NamidaOnTaps {
           const CancelButton(),
           const SizedBox(width: 8.0),
           Obx(
-            () => NamidaButton(
+            (context) => NamidaButton(
               enabled: !isRemoving.valueR && totalToRemove.valueR > 0,
               textWidget: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -457,7 +457,7 @@ class NamidaOnTaps {
           height: namida.height * 0.6,
           width: namida.width,
           child: Obx(
-            () {
+            (context) {
               final sizesLookup = sizesLookupMap.valueR;
               return ListView(
                 padding: EdgeInsets.zero,
@@ -544,7 +544,7 @@ class NamidaOnTaps {
           ),
           ObxO(
             rx: actionRx,
-            builder: (action) => NamidaButton(
+            builder: (context, action) => NamidaButton(
               enabled: action != null,
               text: lang.CONFIRM,
               onPressed: () {
@@ -572,7 +572,7 @@ class NamidaOnTaps {
                         padding: const EdgeInsets.all(3.0),
                         child: ObxO(
                           rx: actionRx,
-                          builder: (act) => ListTileWithCheckMark(
+                          builder: (context, act) => ListTileWithCheckMark(
                             active: act == e,
                             title: e.toText(),
                             onTap: () => actionRx.value = e,
@@ -640,7 +640,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
     scale: 0.90,
     dialog: CustomBlurryDialog(
       titleWidgetInPadding: Obx(
-        () => Text(
+        (context) => Text(
           '$title ${daysNumber.valueR == 0 ? '' : "(${daysNumber.valueR.displayDayKeyword})"}',
           style: namida.textTheme.displayLarge,
         ),
@@ -650,7 +650,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
       actions: [
         const CancelButton(),
         Obx(
-          () => NamidaButton(
+          (context) => NamidaButton(
             enabled: canGenerate.valueR,
             onPressed: () => onGenerate(dates),
             text: buttonText,
@@ -813,7 +813,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
       return isInitiallyLoading != null
           ? ObxO(
               rx: isInitiallyLoading,
-              builder: (initiallyLoading) {
+              builder: (context, initiallyLoading) {
                 return Stack(
                   children: [
                     AnimatedEnabled(
@@ -1078,7 +1078,7 @@ class TracksAddOnTap {
                                   ),
                                   const SizedBox(width: 8.0),
                                   Obx(
-                                    () => NamidaCheckMark(
+                                    (context) => NamidaCheckMark(
                                       size: 12.0,
                                       active: selectedList.valueR.contains(m),
                                     ),
@@ -1203,7 +1203,7 @@ class TracksAddOnTap {
                               ),
                               const SizedBox(height: 2.0),
                               Obx(
-                                () => Text(
+                                (context) => Text(
                                   '${minRating.valueR}%',
                                   style: context.textTheme.displaySmall,
                                 ),
@@ -1223,7 +1223,7 @@ class TracksAddOnTap {
                               ),
                               const SizedBox(height: 2.0),
                               Obx(
-                                () => Text(
+                                (context) => Text(
                                   '${maxRating.valueR}%',
                                   style: context.textTheme.displaySmall,
                                 ),
@@ -1311,7 +1311,7 @@ class TracksAddOnTap {
       tiles: (getAddTracksTile) {
         return [
           Obx(
-            () {
+            (context) {
               final isLoading = NamidaYTGenerator.inst.didPrepareResources.valueR == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
@@ -1363,7 +1363,7 @@ class TracksAddOnTap {
           ),
           ObxO(
             rx: isLoadingMixPlaylist,
-            builder: (isLoading) => AnimatedEnabled(
+            builder: (context, isLoading) => AnimatedEnabled(
               enabled: !isLoading,
               child: getAddTracksTile(
                 title: lang.MIX,
@@ -1402,7 +1402,7 @@ class TracksAddOnTap {
           ),
           const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 4.0)),
           Obx(
-            () {
+            (context) {
               final isLoading = isLoadingVideoDate.valueR || NamidaYTGenerator.inst.didPrepareResources.valueR == false;
               return AnimatedEnabled(
                 enabled: !isLoading,
@@ -1528,7 +1528,7 @@ class TracksAddOnTap {
                 title: lang.NUMBER_OF_TRACKS,
                 subtitle: "${lang.UNLIMITED}-$maxCount",
                 trailing: Obx(
-                  () => NamidaWheelSlider(
+                  (context) => NamidaWheelSlider(
                     totalCount: maxCount,
                     initValue: tracksNo.valueR,
                     onValueChanged: (val) => tracksNo.value = val,
@@ -1537,7 +1537,7 @@ class TracksAddOnTap {
                 ),
               ),
               Obx(
-                () => CustomSwitchListTile(
+                (context) => CustomSwitchListTile(
                   icon: Broken.next,
                   title: lang.PLAY_NEXT,
                   value: insertN.valueR,
@@ -1552,7 +1552,7 @@ class TracksAddOnTap {
                   child: FittedBox(
                     child: PopupMenuButton<InsertionSortingType>(
                       child: Obx(
-                        () => Row(
+                        (context) => Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(sortBy.valueR.toIcon(), size: 18.0),
@@ -1609,7 +1609,7 @@ class TracksAddOnTap {
         onTap: () => onTap(insertionType),
         trailingRaw: trailingRaw ??
             Obx(
-              () => NamidaIconButton(
+              (context) => NamidaIconButton(
                 icon: Broken.setting_4,
                 onPressed: () => openQueueInsertionConfigure(insertionType, title),
               ).animateEntrance(

@@ -89,10 +89,10 @@ class MainPage extends StatelessWidget {
         },
         child: ObxO(
           rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
-          builder: (isGlobalSearchMenuShown) => isGlobalSearchMenuShown
+          builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
               ? ObxO(
                   rx: SearchSortController.inst.runningSearches,
-                  builder: (runningSearches) => Stack(
+                  builder: (context, runningSearches) => Stack(
                     alignment: Alignment.center,
                     children: [
                       const Icon(
@@ -105,7 +105,7 @@ class MainPage extends StatelessWidget {
                 )
               : ObxO(
                   rx: settings.floatingActionButton,
-                  builder: (fabButton) => Icon(
+                  builder: (context, fabButton) => Icon(
                     fabButton.toIcon(),
                     color: const Color.fromRGBO(255, 255, 255, 0.8),
                   ),
@@ -145,7 +145,7 @@ class MainPage extends StatelessWidget {
             /// Search Box
             Positioned.fill(
               child: Obx(
-                () => AnimatedSwitcher(
+                (context) => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
                   child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
                 ),
@@ -156,7 +156,7 @@ class MainPage extends StatelessWidget {
             Positioned.fill(
               child: ObxO(
                 rx: SettingsSearchController.inst.canShowSearch,
-                builder: (canShowSearch) => AnimatedSwitcher(
+                builder: (context, canShowSearch) => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
                   child: canShowSearch ? const SettingsSearchPage() : null,
                 ),
@@ -167,7 +167,7 @@ class MainPage extends StatelessWidget {
               builder: (context) {
                 final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
                 return Obx(
-                  () {
+                  (context) {
                     final shouldHide = Dimensions.inst.shouldHideFABR;
                     return AnimatedPositioned(
                       key: const Key('fab_active'),
@@ -187,7 +187,7 @@ class MainPage extends StatelessWidget {
 
             /// Bottom Glow/Shadow
             Obx(
-              () {
+              (context) {
                 final currentItem = Player.inst.currentItem.valueR;
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 600),
@@ -301,7 +301,7 @@ class NamidaSearchBar extends StatelessWidget {
       ),
       buttonWidgetSmallPadding: 24.0 + 8.0,
       buttonWidgetSmall: Obx(
-        () {
+        (context) {
           final clipboard = ClipboardController.inst.clipboardText.valueR;
           final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed.valueR;
           final empty = ClipboardController.inst.textInControllerEmpty.valueR;
@@ -422,7 +422,7 @@ class _CustomAppBar extends StatelessWidget {
     final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
     final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
     final appbar = Obx(
-      () {
+      (context) {
         final title =
             ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRouteR?.toTitle(context);
         final actions = NamidaNavigator.inst.currentRouteR?.toActions();
@@ -461,7 +461,7 @@ class _CustomAppBar extends StatelessWidget {
         child: SafeArea(
           bottom: false,
           child: Obx(
-            () {
+            (context) {
               return !settings.enableMiniplayerParallaxEffect.valueR
                   ? SizedBox(
                       height: kToolbarHeight,
@@ -503,7 +503,7 @@ class _CustomNavBar extends StatelessWidget {
         ),
       ),
       child: Obx(
-        () => NavigationBar(
+        (context) => NavigationBar(
           animationDuration: const Duration(seconds: 1),
           elevation: 22,
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
@@ -526,7 +526,7 @@ class _CustomNavBar extends StatelessWidget {
     );
 
     return Obx(
-      () => !settings.enableBottomNavBar.valueR
+      (context) => !settings.enableBottomNavBar.valueR
           ? const SizedBox()
           : AnimatedBuilder(
               animation: animation,

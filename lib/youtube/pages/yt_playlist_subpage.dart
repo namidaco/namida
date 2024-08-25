@@ -95,7 +95,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () {
+      (context) {
         final videos = YoutubeHistoryController.inst.currentMostPlayedTracks.toList();
         return getMainWidget(videos);
       },
@@ -159,7 +159,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
     Color? threeCColor;
     late final threeC = ObxO(
       rx: YoutubePlaylistController.inst.canReorderVideos,
-      builder: (canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
+      builder: (context, canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
     );
     return AnimatedTheme(
       duration: const Duration(milliseconds: 300),
@@ -167,7 +167,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
       child: BackgroundWrapper(
         child: NamidaScrollbarWithController(
           child: (sc) => Obx(
-            () {
+            (context) {
               YoutubePlaylistController.inst.playlistsMap.valueR;
               final playlist = YoutubePlaylistController.inst.getPlaylist(playlistCurrentName);
               if (playlist == null) return const SizedBox();
@@ -317,7 +317,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                   const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
                   ObxO(
                     rx: YoutubePlaylistController.inst.canReorderVideos,
-                    builder: (canReorderVideos) => NamidaSliverReorderableList(
+                    builder: (context, canReorderVideos) => NamidaSliverReorderableList(
                       onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
@@ -341,7 +341,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                           draggingThumbnailBuilder: (draggingTrigger) {
                             return ObxO(
                               rx: YoutubePlaylistController.inst.canReorderVideos,
-                              builder: (canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
+                              builder: (context, canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
                             );
                           },
                           canHaveDuplicates: true,
@@ -711,7 +711,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             ),
                             ObxO(
                               rx: _isLoadingMoreItems,
-                              builder: (isLoadingMoreItems) => NamidaInkWellButton(
+                              builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
                                 animationDurationMS: 100,
                                 sizeMultiplier: 0.95,
                                 borderRadius: 8.0,
@@ -760,7 +760,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                   SliverToBoxAdapter(
                     child: ObxO(
                       rx: _isLoadingMoreItems,
-                      builder: (isLoadingMoreItems) => isLoadingMoreItems
+                      builder: (context, isLoadingMoreItems) => isLoadingMoreItems
                           ? const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Stack(
