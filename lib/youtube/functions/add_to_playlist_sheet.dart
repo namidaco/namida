@@ -231,8 +231,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
           NamidaButton(
             text: lang.REMOVE.toUpperCase(),
             onPressed: () async {
-              NamidaNavigator.inst.closeDialog();
               confirmed = true;
+              NamidaNavigator.inst.closeDialog();
             },
           ),
         ],

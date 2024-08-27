@@ -19,6 +19,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTMiniplayerCommentsSubpage extends StatefulWidget {
   const YTMiniplayerCommentsSubpage({super.key});
@@ -255,6 +256,21 @@ class YoutubeCommentsHeader extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+            const SizedBox(width: 4.0),
+            NamidaInkWellButton(
+              icon: Broken.add_square,
+              text: '',
+              onTap: () {
+                final videoId = Player.inst.currentVideo?.id;
+                if (videoId == null) return;
+                YTUtils.comments.createComment(
+                  context: context,
+                  videoId: videoId,
+                  mainList: YoutubeInfoController.current.currentComments,
+                  videoPage: YoutubeInfoController.current.currentVideoPage.value,
+                );
+              },
             ),
             const SizedBox(width: 8.0),
           ],

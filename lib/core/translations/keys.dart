@@ -543,6 +543,7 @@ abstract class LanguageKeys {
   String get REPEAT_MODE_NONE => _getKey('REPEAT_MODE_NONE');
   String get REPEAT_MODE_ONE => _getKey('REPEAT_MODE_ONE');
   String get REPLIES => _getKey('REPLIES');
+  String get REPLY => _getKey('REPLY');
   String get REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING => _getKey('REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING');
   String get RESCAN_VIDEOS => _getKey('RESCAN_VIDEOS');
   String get RESET_BRIGHTNESS => _getKey('RESET_BRIGHTNESS');

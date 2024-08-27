@@ -8,6 +8,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -47,6 +48,7 @@ import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class NamidaOnTaps {
   static NamidaOnTaps get inst => _instance;
@@ -712,6 +714,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
   bool useRootNavigator = true,
   bool showDragHandle = true,
   required String title,
+  String? subtitle,
   required BottomSheetTextFieldConfig textfieldConfig,
   List<BottomSheetTextFieldConfigWC>? extraTextfieldsConfig,
   required String buttonText,
@@ -720,6 +723,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
   required FutureOr<bool> Function(String text) onButtonTap,
   Widget Function(FormState formState)? extraItemsBuilder,
   Rx<bool>? isInitiallyLoading,
+  bool displayAccountThumbnail = false,
 }) async {
   final localController = textfieldConfig is BottomSheetTextFieldConfigWC ? textfieldConfig.controller : TextEditingController(text: textfieldConfig.initalControllerText);
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -743,69 +747,99 @@ Future<String?> showNamidaBottomSheetWithTextField({
         child: Form(
           key: formKey,
           child: NamidaLoadingSwitcher(
-            builder: (loadingController) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: context.textTheme.displayLarge,
-                ),
-                const SizedBox(height: 18.0),
-                CustomTagTextField(
-                  focusNode: focusNode,
-                  controller: localController,
-                  hintText: textfieldConfig.hintText,
-                  labelText: textfieldConfig.labelText,
-                  validator: textfieldConfig.validator,
-                  maxLength: textfieldConfig.maxLength,
-                ),
-                ...?extraTextfieldsConfig?.map(
-                  (e) {
-                    return CustomTagTextField(
-                      controller: e.controller,
-                      hintText: e.hintText,
-                      labelText: e.labelText,
-                      validator: e.validator,
-                      maxLength: e.maxLength,
-                    );
-                  },
-                ),
-                if (extraItemsBuilder != null) extraItemsBuilder(formKey.currentState!),
-                const SizedBox(height: 18.0),
-                Row(
-                  children: [
-                    SizedBox(width: context.width * 0.1),
-                    CancelButton(onPressed: context.safePop),
-                    SizedBox(width: context.width * 0.1),
-                    Expanded(
-                      child: NamidaInkWell(
-                        borderRadius: 12.0,
-                        padding: const EdgeInsets.all(12.0),
-                        height: 48.0,
-                        bgColor: buttonColor ?? CurrentColor.inst.color,
-                        decoration: const BoxDecoration(),
-                        child: Center(
-                          child: Text(
-                            buttonText,
-                            style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
-                          ),
-                        ),
-                        onTap: () async {
-                          if (formKey.currentState!.validate()) {
-                            loadingController.startLoading();
-                            final didAgree = await onButtonTap(localController.text);
-                            loadingController.stopLoading();
-                            if (didAgree) {
-                              finalText = localController.text;
-                              if (context.mounted) context.safePop();
-                            }
-                          }
-                        },
-                      ),
+            builder: (loadingController) => SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: context.textTheme.displayLarge,
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: context.textTheme.displaySmall,
                     ),
-                  ],
-                ),
-              ],
+                  if (subtitle != null) const SizedBox(height: 6.0),
+                  const SizedBox(height: 18.0),
+                  Row(
+                    children: [
+                      if (displayAccountThumbnail)
+                        ObxO(
+                          rx: YoutubeAccountController.current.activeAccountChannel,
+                          builder: (context, acc) => acc == null
+                              ? const SizedBox()
+                              : YoutubeThumbnail(
+                                  type: ThumbnailType.channel,
+                                  key: Key(acc.id),
+                                  width: 32.0,
+                                  forceSquared: false,
+                                  isImportantInCache: true,
+                                  customUrl: acc.thumbnails.pick()?.url,
+                                  isCircle: true,
+                                ),
+                        ),
+                      if (displayAccountThumbnail) const SizedBox(width: 12.0),
+                      Expanded(
+                        child: CustomTagTextField(
+                          focusNode: focusNode,
+                          controller: localController,
+                          hintText: textfieldConfig.hintText,
+                          labelText: textfieldConfig.labelText,
+                          validator: textfieldConfig.validator,
+                          maxLength: textfieldConfig.maxLength,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ...?extraTextfieldsConfig?.map(
+                    (e) {
+                      return CustomTagTextField(
+                        controller: e.controller,
+                        hintText: e.hintText,
+                        labelText: e.labelText,
+                        validator: e.validator,
+                        maxLength: e.maxLength,
+                      );
+                    },
+                  ),
+                  if (extraItemsBuilder != null) extraItemsBuilder(formKey.currentState!),
+                  const SizedBox(height: 18.0),
+                  Row(
+                    children: [
+                      SizedBox(width: context.width * 0.1),
+                      CancelButton(onPressed: context.safePop),
+                      SizedBox(width: context.width * 0.1),
+                      Expanded(
+                        child: NamidaInkWell(
+                          borderRadius: 12.0,
+                          padding: const EdgeInsets.all(12.0),
+                          height: 48.0,
+                          bgColor: buttonColor ?? CurrentColor.inst.color,
+                          decoration: const BoxDecoration(),
+                          child: Center(
+                            child: Text(
+                              buttonText,
+                              style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+                            ),
+                          ),
+                          onTap: () async {
+                            if (formKey.currentState!.validate()) {
+                              loadingController.startLoading();
+                              final didAgree = await onButtonTap(localController.text);
+                              loadingController.stopLoading();
+                              if (didAgree) {
+                                finalText = localController.text;
+                                if (context.mounted) context.safePop();
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -5,10 +5,17 @@ import 'package:flutter/services.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/comments/comment_info_item.dart';
+import 'package:youtipie/class/comments/comment_info_item_base.dart';
+import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
+import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/url_utils.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
@@ -24,11 +31,14 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -36,11 +46,18 @@ import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
+import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+part 'yt_utils.comments.dart';
+
 class YTUtils {
+  const YTUtils();
+
+  static const comments = _YTUtilsCommentActions();
+
   static void expandMiniplayer() {
     final st = MiniPlayerController.inst.ytMiniplayerKey.currentState;
     if (st != null) st.animateToState(true);
@@ -211,7 +228,7 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.copy,
           title: lang.COPY,
-          onTap: () => YTUtils().copyCurrentVideoUrl(videoId, withTimestamp: false),
+          onTap: () => const YTUtils().copyCurrentVideoUrl(videoId, withTimestamp: false),
         ),
       if (channelID != null && channelID.isNotEmpty)
         NamidaPopupItem(

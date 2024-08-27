@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:jiffy/jiffy.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
+import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/core/enum.dart';
@@ -15,6 +17,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/namida_read_more.dart';
@@ -22,6 +25,7 @@ import 'package:namida/youtube/widgets/yt_description_widget.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_minplayer_comment_replies_subpage.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
@@ -31,6 +35,11 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
   final CommentInfoItemBase? comment;
   final W Function()? mainList;
 
+  final CommentInfoItem Function()? mainCommentForReplies;
+  final RxBaseCore<YoutiPieCommentReplyResult?>? mainRepliesList;
+  final void Function(CommentInfoItem editedComment) Function()? onCommentEdited;
+  final void Function() Function()? onCommentDeleted;
+
   const YTCommentCard({
     super.key,
     required this.margin,
@@ -39,6 +48,10 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
     required this.videoId,
     required this.comment,
     required this.mainList,
+    this.mainCommentForReplies,
+    this.mainRepliesList,
+    this.onCommentEdited,
+    this.onCommentDeleted,
   });
 
   @override
@@ -81,7 +94,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
     NamidaNavigator.inst.isInYTCommentRepliesSubpage = true;
     NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
       YTMiniplayerCommentRepliesSubpage(
-        comment: comment,
+        initialComment: comment,
         mainList: mainList,
         repliesCount: repliesCount,
         videoId: widget.videoId,
@@ -90,13 +103,129 @@ class _YTCommentCardState extends State<YTCommentCard> {
     );
   }
 
+  List<NamidaPopupItem> _getCommentPopupItems() {
+    final comment = widget.comment;
+    final activeChannel = YoutubeAccountController.current.activeAccountChannel.value;
+    final isUserOwnedComment = activeChannel != null && (activeChannel.id == comment?.author?.channelId);
+
+    NamidaPopupItem? editCommentOrReply;
+    NamidaPopupItem? deleteCommentOrReply;
+    if (isUserOwnedComment) {
+      if (comment is CommentInfoItem) {
+        // -- is comment
+        editCommentOrReply = NamidaPopupItem(
+          icon: Broken.sms_edit,
+          title: lang.EDIT,
+          subtitle: lang.COMMENT,
+          onTap: () {
+            YTUtils.comments.editComment(
+              context: context,
+              videoId: widget.videoId ?? '',
+              comment: comment,
+              mainList: YoutubeInfoController.current.currentComments,
+              mainRepliesList: widget.mainRepliesList,
+              onEdited: widget.onCommentEdited?.call(),
+            );
+          },
+        );
+        deleteCommentOrReply = NamidaPopupItem(
+          icon: Broken.pen_remove,
+          title: lang.DELETE,
+          subtitle: lang.COMMENT,
+          onTap: () {
+            YTUtils.comments.deleteComment(
+              videoId: widget.videoId ?? '',
+              comment: comment,
+              mainList: YoutubeInfoController.current.currentComments,
+              mainRepliesList: widget.mainRepliesList,
+              onDeleted: widget.onCommentDeleted?.call(),
+            );
+          },
+        );
+      } else if (comment is CommentInfoItemBase) {
+        // -- is reply
+        editCommentOrReply = NamidaPopupItem(
+          icon: Broken.message_edit,
+          title: lang.EDIT,
+          subtitle: lang.REPLY,
+          onTap: () {
+            if (widget.mainCommentForReplies != null) {
+              YTUtils.comments.editReply(
+                context: context,
+                videoId: widget.videoId ?? '',
+                mainComment: widget.mainCommentForReplies!(),
+                reply: comment,
+                mainList: widget.mainRepliesList,
+              );
+            }
+          },
+        );
+        deleteCommentOrReply = NamidaPopupItem(
+          icon: Broken.message_minus,
+          title: lang.DELETE,
+          subtitle: lang.REPLY,
+          onTap: () {
+            YTUtils.comments.deleteReply(
+              videoId: widget.videoId ?? '',
+              mainComment: widget.mainCommentForReplies!(),
+              reply: comment,
+              mainList: widget.mainRepliesList,
+            );
+          },
+        );
+      }
+    }
+    return [
+      NamidaPopupItem(
+        icon: Broken.copy,
+        title: lang.COPY,
+        onTap: () {
+          final rawText = comment?.content.rawText;
+          if (rawText != null) {
+            Clipboard.setData(ClipboardData(text: rawText));
+          }
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.user,
+        title: lang.GO_TO_CHANNEL,
+        onTap: () {
+          final channelId = comment?.author?.channelId;
+          if (channelId != null) {
+            YTChannelSubpage(channelID: channelId).navigate();
+          }
+        },
+      ),
+      if (editCommentOrReply != null) editCommentOrReply,
+      if (deleteCommentOrReply != null) deleteCommentOrReply,
+      NamidaPopupItem(
+        icon: Broken.message_add_1,
+        title: lang.REPLY,
+        onTap: () {
+          if (comment == null) return;
+          YTUtils.comments.createReply(
+            context: context,
+            videoId: widget.videoId ?? '',
+            mainComment: comment,
+            replyingTo: comment,
+            mainList: widget.mainRepliesList,
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final comment = this.widget.comment;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
     final isArtist = comment?.author?.isArtist ?? false;
-    final uploadedFrom = comment?.publishedTimeText;
+
+    final uploadedFromDate = comment?.publishedAt.date;
+    String? uploadedFromText = uploadedFromDate == null ? null : Jiffy.parseFromDateTime(uploadedFromDate).fromNow();
+    uploadedFromText ??= comment?.publishedTimeText;
+
     final commentContent = comment?.content;
     final isHearted = comment?.isHearted ?? false;
 
@@ -188,16 +317,24 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             style: authorTextStyle,
                                           ),
                                         ),
-                                      if (uploadedFrom != null)
+                                      if (uploadedFromText != null)
                                         Text(
-                                          " • $uploadedFrom",
+                                          " • $uploadedFromText",
                                           style: authorTextStyle,
                                         ),
+                                      if (comment?.isEdited == true) ...[
+                                        const SizedBox(width: 4.0),
+                                        Icon(
+                                          Broken.edit_2,
+                                          size: 12.0,
+                                          color: authorTextColor,
+                                        ),
+                                      ],
                                       if (isArtist) ...[
                                         const SizedBox(width: 4.0),
                                         Icon(
                                           Broken.musicnote,
-                                          size: 10.0,
+                                          size: 12.0,
                                           color: authorTextColor,
                                         ),
                                       ],
@@ -372,28 +509,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
           top: 0,
           right: 0,
           child: NamidaPopupWrapper(
-            childrenDefault: () => [
-              NamidaPopupItem(
-                icon: Broken.copy,
-                title: lang.COPY,
-                onTap: () {
-                  final rawText = comment?.content.rawText;
-                  if (rawText != null) {
-                    Clipboard.setData(ClipboardData(text: rawText));
-                  }
-                },
-              ),
-              NamidaPopupItem(
-                icon: Broken.user,
-                title: lang.GO_TO_CHANNEL,
-                onTap: () {
-                  final channelId = comment?.author?.channelId;
-                  if (channelId != null) {
-                    YTChannelSubpage(channelID: channelId).navigate();
-                  }
-                },
-              ),
-            ],
+            childrenDefault: _getCommentPopupItems,
             child: const Padding(
               padding: EdgeInsets.all(12.0 + 4.0),
               child: MoreIcon(),
@@ -413,12 +529,24 @@ class YTCommentCardCompact extends StatelessWidget {
   Widget build(BuildContext context) {
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
-    final uploadedFrom = comment?.publishedTimeText;
+
+    final uploadedFromDate = comment?.publishedAt.date;
+    String? uploadedFromText = uploadedFromDate == null ? null : Jiffy.parseFromDateTime(uploadedFromDate).fromNow();
+    uploadedFromText ??= comment?.publishedTimeText;
+
     final commentTextParsed = comment?.content.rawText;
     final likeCount = comment?.likesCount;
     final repliesCount = comment?.repliesCount;
     final isHearted = comment?.isHearted ?? false;
     final isPinned = comment?.isPinned ?? false;
+    final isArtist = comment?.author?.isArtist ?? false;
+
+    final authorTextColor = context.theme.colorScheme.onSurface.withAlpha(180);
+    final authorTextStyle = context.textTheme.displaySmall?.copyWith(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w400,
+      color: authorTextColor,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,24 +578,32 @@ class YTCommentCardCompact extends StatelessWidget {
                 shimmerEnabled: author == null,
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        [
+                    if (author != null)
+                      Flexible(
+                        child: Text(
                           author,
-                          if (uploadedFrom != null) uploadedFrom,
-                        ].join(' • '),
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w400,
-                          color: context.theme.colorScheme.onSurface.withAlpha(180),
+                          style: authorTextStyle,
                         ),
                       ),
-                    ),
-                    if (isPinned) ...[
+                    if (uploadedFromText != null)
+                      Text(
+                        " • $uploadedFromText",
+                        style: authorTextStyle,
+                      ),
+                    if (comment?.isEdited == true) ...[
                       const SizedBox(width: 4.0),
-                      const Icon(
-                        Broken.path,
-                        size: 14.0,
+                      Icon(
+                        Broken.edit_2,
+                        size: 12.0,
+                        color: authorTextColor,
+                      ),
+                    ],
+                    if (isArtist) ...[
+                      const SizedBox(width: 4.0),
+                      Icon(
+                        Broken.musicnote,
+                        size: 12.0,
+                        color: authorTextColor,
                       ),
                     ],
                     if (isHearted) ...[
@@ -475,7 +611,14 @@ class YTCommentCardCompact extends StatelessWidget {
                       const Icon(
                         Broken.heart_tick,
                         size: 14.0,
-                        color: Color.fromARGB(200, 250, 90, 80),
+                        color: Color.fromARGB(210, 233, 80, 112),
+                      ),
+                    ],
+                    if (isPinned) ...[
+                      const SizedBox(width: 4.0),
+                      const Icon(
+                        Broken.path,
+                        size: 14.0,
                       ),
                     ],
                   ],

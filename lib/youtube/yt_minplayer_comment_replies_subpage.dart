@@ -21,17 +21,18 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTMiniplayerCommentRepliesSubpage extends StatefulWidget {
   final String? videoId;
-  final CommentInfoItem comment;
+  final CommentInfoItem initialComment;
   final YoutiPieCommentResult Function() mainList;
   final int? repliesCount;
 
   const YTMiniplayerCommentRepliesSubpage({
     super.key,
     this.videoId,
-    required this.comment,
+    required this.initialComment,
     required this.mainList,
     required this.repliesCount,
   });
@@ -46,12 +47,13 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   late final _isLoadingCurrentReplies = Rxn<bool>();
   late final _isLoadingMoreReplies = Rxn<bool>();
   late final _currentReplies = Rxn<YoutiPieCommentReplyResult>();
+  late final _currentMainComment = Rx<CommentInfoItem>(widget.initialComment);
 
   @override
   void initState() {
     super.initState();
     sc = ScrollController();
-    final cachedReplies = YoutiPie.cacheBuilder.forCommentReplies(commentId: widget.comment.commentId).read();
+    final cachedReplies = YoutiPie.cacheBuilder.forCommentReplies(commentId: _currentMainComment.value.commentId).read();
     if (cachedReplies != null) {
       _currentReplies.value = cachedReplies;
       _lastFetchWasCached.value = true;
@@ -86,7 +88,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     _lastFetchWasCached.value = false;
     _isLoadingCurrentReplies.value = true;
     final val = await YoutubeInfoController.comment.fetchCommentReplies(
-      mainComment: widget.comment,
+      mainComment: _currentMainComment.value,
       details: ExecuteDetails.forceRequest(),
     );
     _isLoadingCurrentReplies.value = false;
@@ -170,6 +172,19 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                             textAlign: TextAlign.start,
                           ),
                         ),
+                        NamidaInkWellButton(
+                          icon: Broken.message_add_1,
+                          text: '',
+                          onTap: () {
+                            YTUtils.comments.createReply(
+                              context: context,
+                              videoId: currentId,
+                              mainList: _currentReplies,
+                              mainComment: _currentMainComment.value,
+                              replyingTo: _currentMainComment.value,
+                            );
+                          },
+                        ),
                         const SizedBox(width: 8.0),
                       ],
                     ),
@@ -198,14 +213,21 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         controller: controller,
                         slivers: [
                           SliverToBoxAdapter(
-                            child: YTCommentCard(
-                              key: Key(widget.comment.commentId),
-                              bgAlpha: 200,
-                              showRepliesBox: false,
-                              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                              comment: widget.comment,
-                              mainList: widget.mainList,
-                              videoId: currentId,
+                            child: ObxO(
+                              rx: _currentMainComment,
+                              builder: (context, mainComment) => YTCommentCard(
+                                key: Key(mainComment.commentId),
+                                bgAlpha: 200,
+                                showRepliesBox: false,
+                                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                comment: mainComment,
+                                mainList: widget.mainList,
+                                videoId: currentId,
+                                mainCommentForReplies: () => mainComment,
+                                mainRepliesList: _currentReplies,
+                                onCommentEdited: () => (c) => _currentMainComment.value = c,
+                                onCommentDeleted: () => NamidaNavigator.inst.popPage,
+                              ),
                             ),
                           ),
                           const SliverToBoxAdapter(
@@ -252,6 +274,8 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                         comment: reply,
                                         mainList: () => replies,
                                         videoId: currentId,
+                                        mainCommentForReplies: () => _currentMainComment.value,
+                                        mainRepliesList: _currentReplies,
                                       );
                                     },
                                   );

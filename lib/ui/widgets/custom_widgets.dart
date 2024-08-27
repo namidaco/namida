@@ -2917,9 +2917,9 @@ class NamidaInkWellButton extends StatelessWidget {
                   size: 18.0 * sizeMultiplier,
                   color: itemsColor,
                 ),
-                SizedBox(width: 6.0 * sizeMultiplier),
               ],
-              if (textGood)
+              if (textGood) ...[
+                SizedBox(width: 6.0 * sizeMultiplier),
                 Flexible(
                   child: Text(
                     text,
@@ -2929,7 +2929,8 @@ class NamidaInkWellButton extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (textGood) const SizedBox(width: 4.0),
+                if (textGood) const SizedBox(width: 4.0),
+              ],
               if (trailing != null) trailing!,
             ],
           ),

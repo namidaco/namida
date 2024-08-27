@@ -219,8 +219,8 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           NamidaButton(
             text: lang.REMOVE.toUpperCase(),
             onPressed: () async {
-              NamidaNavigator.inst.closeDialog();
               confirmed = true;
+              NamidaNavigator.inst.closeDialog();
             },
           ),
         ],
