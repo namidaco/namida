@@ -187,12 +187,6 @@ extension NamidaVideoUtils on NamidaVideo {
     }
     return getPath('EXT_');
   }
-
-  String get pathToLocalImage {
-    final name = path.getFilenameWOExt;
-    const prefix = 'EXT_';
-    return "${AppDirs.THUMBNAILS}$prefix$name.png";
-  }
 }
 
 class Video extends Track {

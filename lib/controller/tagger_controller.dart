@@ -13,6 +13,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -200,7 +201,7 @@ class FAudioTaggerController {
     bool overrideArtwork = false,
     required bool isVideo,
   }) async {
-    final artworkDirectory = saveArtworkToCache ? cacheDirectoryPath ?? AppDirs.ARTWORKS : null;
+    final artworkDirectory = saveArtworkToCache ? cacheDirectoryPath ?? (isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS) : null;
 
     FAudioModel? trackInfo;
 
@@ -231,37 +232,24 @@ class FAudioTaggerController {
           if (artworkFile == null || !await artworkFile.exists()) {
             final identifiersMap = identifiers ?? _getIdentifiersMap();
             final filename = _defaultGroupArtworksByAlbum ? getArtworkIdentifierFromInfo(trackInfo, identifiersMap) : trackPath.getFilename;
-            final thumbnailSavePath = "$artworkDirectory/$filename.png";
-            final File? res = isVideo
-                ? await NamidaFFMPEG.inst
-                    .extractVideoThumbnail(
-                      videoPath: trackPath,
-                      thumbnailSavePath: "$artworkDirectory/$filename.png",
-                    )
-                    .then((value) => value ? File(thumbnailSavePath) : null)
-                : await NamidaFFMPEG.inst.extractAudioThumbnail(
-                    audioPath: trackPath,
-                    thumbnailSavePath: thumbnailSavePath,
-                  );
-
-            trackInfo.tags.artwork.file = res;
+            final File? thumbFile = await _extractThumbnailCustom(
+              trackPath: trackPath,
+              filename: filename,
+              artworkDirectory: artworkDirectory,
+              isVideo: isVideo,
+            );
+            trackInfo.tags.artwork.file = thumbFile;
           }
         } else {
           // -- otherwise the artwork should be within info as bytes.
           Uint8List? artworkBytes = trackInfo.tags.artwork.bytes;
           if (artworkBytes == null || artworkBytes.isEmpty) {
-            final tempThumbnailSavePath = "${AppDirs.APP_CACHE}/${trackPath.hashCode}.png";
-            final tempFile = isVideo
-                ? await NamidaFFMPEG.inst
-                    .extractVideoThumbnail(
-                      videoPath: trackPath,
-                      thumbnailSavePath: tempThumbnailSavePath,
-                    )
-                    .then((value) => value ? File(tempThumbnailSavePath) : null)
-                : await NamidaFFMPEG.inst.extractAudioThumbnail(
-                    audioPath: trackPath,
-                    thumbnailSavePath: tempThumbnailSavePath,
-                  );
+            final File? tempFile = await _extractThumbnailCustom(
+              trackPath: trackPath,
+              filename: null,
+              artworkDirectory: null,
+              isVideo: isVideo,
+            );
             trackInfo.tags.artwork.bytes = await tempFile?.readAsBytes();
             tempFile?.tryDeleting();
           }
@@ -270,6 +258,43 @@ class FAudioTaggerController {
     }
 
     return trackInfo ?? FAudioModel.dummy(trackPath);
+  }
+
+  Future<File?> _extractThumbnailCustom({
+    required String trackPath,
+    required String? filename,
+    required String? artworkDirectory,
+    required bool isVideo,
+  }) async {
+    final File? res;
+    if (artworkDirectory == null || filename == null) {
+      final tempThumbnailSavePath = "${AppDirs.APP_CACHE}/${trackPath.hashCode}.png";
+      res = isVideo
+          ? await NamidaFFMPEG.inst
+              .extractVideoThumbnail(
+                videoPath: trackPath,
+                thumbnailSavePath: tempThumbnailSavePath,
+              )
+              .then((value) => value ? File(tempThumbnailSavePath) : null)
+          : await NamidaFFMPEG.inst.extractAudioThumbnail(
+              audioPath: trackPath,
+              thumbnailSavePath: tempThumbnailSavePath,
+            );
+    } else {
+      res = isVideo
+          ? await ThumbnailManager.inst.extractVideoThumbnailAndSave(
+              videoPath: trackPath,
+              isLocal: true,
+              isExtracted: true,
+              idOrFileNameWithExt: filename,
+              cacheDirPath: artworkDirectory,
+            )
+          : await NamidaFFMPEG.inst.extractAudioThumbnail(
+              audioPath: trackPath,
+              thumbnailSavePath: "$artworkDirectory/$filename.png",
+            );
+    }
+    return res;
   }
 
   Future<File?> copyArtworkToCache({

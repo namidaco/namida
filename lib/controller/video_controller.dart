@@ -573,7 +573,7 @@ class VideoController {
             ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: l,
               isLocal: true,
-              idOrFileNameWOExt: l.getFilenameWOExt,
+              idOrFileNameWithExt: l.getFilename,
               isExtracted: true,
             );
             final newVidInfo = addLocalVideoFileInfoToCacheMap(l, v, File(l).statSync());
@@ -828,7 +828,7 @@ class VideoController {
             ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: path,
               isLocal: true,
-              idOrFileNameWOExt: path.getFilenameWOExt,
+              idOrFileNameWithExt: path.getFilename,
               isExtracted: true,
             );
             final stats = await File(path).stat();
@@ -861,7 +861,7 @@ class VideoController {
     ThumbnailManager.inst.extractVideoThumbnailAndSave(
       videoPath: path,
       isLocal: id == null,
-      idOrFileNameWOExt: id ?? path.getFilenameWOExt,
+      idOrFileNameWithExt: id ?? path.getFilename,
       isExtracted: true,
     );
     final info = await NamidaFFMPEG.inst.extractMetadata(path);
@@ -887,7 +887,7 @@ class VideoController {
     return NamidaVideo(
       path: path,
       ytID: ytID,
-      nameInCache: ytID != null ? path.getFilenameWOExt : null,
+      nameInCache: ytID != null ? path.getFilename : null,
       height: videoStream?.height ?? 0,
       width: videoStream?.width ?? 0,
       sizeInBytes: stats.size,

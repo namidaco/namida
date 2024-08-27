@@ -392,7 +392,7 @@ extension TrackExtUtils on TrackExtended {
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
-    return "${AppDirs.ARTWORKS}$identifier.png";
+    return "${isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
   String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers.value);
@@ -600,7 +600,7 @@ extension TrackUtils on Track {
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
-    return "${AppDirs.ARTWORKS}$identifier.png";
+    return "${this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
   String get youtubeLink => toTrackExt().youtubeLink;

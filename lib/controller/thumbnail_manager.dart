@@ -99,14 +99,15 @@ class ThumbnailManager {
   Future<File?> extractVideoThumbnailAndSave({
     required String? videoPath,
     required bool isLocal,
-    required String idOrFileNameWOExt,
+    required String idOrFileNameWithExt,
     required bool isExtracted, // set to false if its a youtube thumbnail.
+    String? cacheDirPath,
   }) async {
     if (videoPath == null) return null;
 
     final prefix = !isLocal && isExtracted ? 'EXT_' : '';
-    final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
-    final file = File("$dir$prefix$idOrFileNameWOExt.png");
+    final dir = cacheDirPath ?? (isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS);
+    final file = File("$dir$prefix$idOrFileNameWithExt.png");
     await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
     final fileExists = await file.exists();
     return fileExists ? file : null;
