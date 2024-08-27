@@ -116,10 +116,21 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     if (llength != '') {
       final parts = llength.split(RegExp(r'[:.]'));
       try {
+        String? hundreds;
+        if (parts.length >= 3) {
+          // -- converting whatever here to 6-digit microseconds
+          hundreds = parts[2];
+          var zerosToAdd = 6 - hundreds.length;
+          while (zerosToAdd > 0) {
+            hundreds = '${hundreds!}0';
+            zerosToAdd--;
+          }
+        }
+
         final lyricsDuration = Duration(
           minutes: int.parse(parts[0]),
           seconds: int.parse(parts[1]),
-          milliseconds: int.parse("${parts[2]}0"), // aditional 0 to convert to millis
+          microseconds: hundreds == null ? 0 : int.tryParse(hundreds) ?? 0,
         );
         final totalDurMS = _itemDurationUpdater();
         final totalDurMicro = totalDurMS * 1000;

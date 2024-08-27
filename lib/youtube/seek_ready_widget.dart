@@ -43,10 +43,16 @@ class SeekReadyWidget extends StatefulWidget {
 class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
   final _seekPercentage = 0.0.obs;
 
-  late final _animation = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 200),
-  );
+  late AnimationController _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
 
   @override
   void dispose() {

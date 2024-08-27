@@ -244,17 +244,12 @@ extension TrackItemSubstring on TrackTileItem {
 }
 
 extension Channels on String {
-  String? get channelToLabel {
+  String get channelToLabel {
     final ch = int.tryParse(this);
-    if (ch == 0) {
-      return '';
-    }
-    if (ch == 1) {
-      return 'mono';
-    }
-    if (ch == 2) {
-      return 'stereo';
-    }
+    if (ch == null) return '';
+    if (ch == 0) return '';
+    if (ch == 1) return 'mono';
+    if (ch == 2) return 'stereo';
     return this;
   }
 }

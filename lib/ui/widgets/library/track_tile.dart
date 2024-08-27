@@ -654,7 +654,7 @@ class TrackTileManager {
     TrackTileItem.fileName: (track) => track.filename.overflow,
     TrackTileItem.folder: (track) => track.folderName.overflow,
     TrackTileItem.path: (track) => track.path.formatPath(),
-    TrackTileItem.channels: (track) => track.channels.channelToLabel ?? '',
+    TrackTileItem.channels: (track) => track.channels.channelToLabel,
     TrackTileItem.comment: (track) => track.comment.overflow,
     TrackTileItem.composer: (track) => track.composer.overflow,
     TrackTileItem.dateAdded: (track) => track.dateAdded.dateFormatted,

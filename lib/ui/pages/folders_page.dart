@@ -29,6 +29,8 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   final QueueSource _queueSource;
   final RxMap<F, List<T>> _foldersMap;
 
+  final String Function(int count) itemsToCountText;
+
   const FoldersPage._(
     this._type,
     this._queueSource,
@@ -39,6 +41,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     required this.tab,
     required this.mediaType,
     required this.config,
+    required this.itemsToCountText,
   });
 
   factory FoldersPage.tracks({Key? key}) => FoldersPage._(
@@ -51,6 +54,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
         tab: LibraryTab.folders,
         mediaType: () => MediaType.folder,
         config: FoldersPageConfig.tracks(),
+        itemsToCountText: (count) => count.displayTrackKeyword,
       );
 
   factory FoldersPage.videos({Key? key}) => FoldersPage._(
@@ -63,6 +67,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
         tab: LibraryTab.foldersVideos,
         mediaType: () => MediaType.folderVideo,
         config: FoldersPageConfig.videos(),
+        itemsToCountText: (count) => count.displayVideoKeyword,
       );
 
   Widget get iconWidget => ObxO(
@@ -159,6 +164,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                               return FolderTile(
                                                 folder: f,
                                                 dummyTracks: f.tracksRecusive().toList(),
+                                                itemsToCountText: itemsToCountText,
                                               );
                                             },
                                           )
@@ -170,6 +176,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                               itemBuilder: (context, i) {
                                                 return FolderTile(
                                                   folder: currentFolderslist[i],
+                                                  itemsToCountText: itemsToCountText,
                                                 );
                                               },
                                             ),
@@ -240,6 +247,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                                   return FolderTile(
                                                     folder: folder,
                                                     subtitle: folder.hasSimilarFolderNames ? folder.parent.path.formatPath() : null,
+                                                    itemsToCountText: itemsToCountText,
                                                   );
                                                 },
                                               );

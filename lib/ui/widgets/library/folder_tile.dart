@@ -15,12 +15,14 @@ class FolderTile extends StatelessWidget {
   final Folder folder;
   final List<Track>? dummyTracks;
   final String? subtitle;
+  final String Function(int count) itemsToCountText;
 
   const FolderTile({
     super.key,
     required this.folder,
     this.dummyTracks,
     this.subtitle,
+    required this.itemsToCountText,
   });
 
   @override
@@ -96,7 +98,7 @@ class FolderTile extends StatelessWidget {
                       ),
                     Text(
                       [
-                        tracks.displayTrackKeyword,
+                        itemsToCountText(tracks.length),
                         if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
                       ].join(' - '),
                       overflow: TextOverflow.ellipsis,
