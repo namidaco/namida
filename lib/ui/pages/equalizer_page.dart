@@ -12,6 +12,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -48,6 +49,9 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
               settings.player.save(pitch: 1.0);
               pitchKey.currentState?._updateVal(1.0);
             },
+            onManualChange: (value) {
+              pitchKey.currentState?._updateValNoRound(value);
+            },
           ),
         ),
         _CuteSlider(
@@ -65,6 +69,9 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             icon: Broken.forward,
             title: lang.SPEED,
             value: settings.player.speed.valueR,
+            onManualChange: (value) {
+              speedKey.currentState?._updateValNoRound(value);
+            },
             restoreDefault: () {
               Player.inst.setPlayerSpeed(1.0);
               settings.player.save(speed: 1.0);
@@ -88,6 +95,10 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
             title: lang.VOLUME,
             value: settings.player.volume.valueR,
+            max: 1.0,
+            onManualChange: (value) {
+              volumeKey.currentState?._updateValNoRound(value);
+            },
             restoreDefault: () {
               Player.inst.setPlayerVolume(1.0);
               settings.player.save(volume: 1.0);
@@ -347,6 +358,11 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
                                       title: lang.LOUDNESS_ENHANCER,
                                       value: targetGain,
+                                      min: -1,
+                                      max: 1,
+                                      onManualChange: (newVal) {
+                                        _loudnessKey.currentState?._updateValNoRound(newVal);
+                                      },
                                       restoreDefault: () {
                                         settings.equalizer.save(loudnessEnhancer: 0.0);
                                         _loudnessEnhancer.setTargetGain(0.0);
@@ -402,44 +418,95 @@ class _SliderTextWidget extends StatelessWidget {
   final IconData icon;
   final String title;
   final double value;
+  final double min;
+  final double max;
   final VoidCallback? restoreDefault;
   final Widget? trailing;
   final bool displayValue;
   final String Function(double val) valToText;
+  final void Function(double value)? onManualChange;
 
   const _SliderTextWidget({
     required this.icon,
     required this.title,
     required this.value,
+    this.min = 0.0,
+    this.max = 2.0,
     this.restoreDefault,
     this.trailing,
     this.displayValue = true,
     this.valToText = toPercentage,
+    this.onManualChange,
   });
 
-  static String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
-  static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
+  static String toPercentage(double val) => "${(val * 100) /* .roundDecimals(6) */}%";
+  static String toXMultiplier(double val) => "${val /* .toStringAsFixed(2) */}x";
+
+  void _showPreciseValueConfig({required BuildContext context, required double initial, required void Function(double val) onChanged}) {
+    showNamidaBottomSheetWithTextField(
+      context: context,
+      title: title,
+      textfieldConfig: BottomSheetTextFieldConfig(
+        hintText: initial.toString(),
+        labelText: title,
+        initalControllerText: initial.toString(),
+        validator: (text) {
+          if (text == null || text.isEmpty) {
+            return lang.EMPTY_VALUE;
+          }
+          final doubleval = double.tryParse(text);
+          if (doubleval == null) return lang.NAME_CONTAINS_BAD_CHARACTER;
+          if (doubleval < min || doubleval > max) return '$min | +$max';
+          return null;
+        },
+      ),
+      buttonText: lang.SAVE,
+      onButtonTap: (text) {
+        final doubleval = double.tryParse(text);
+        if (doubleval == null) return false;
+        onChanged(doubleval);
+        return true;
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
         children: [
-          Icon(icon, color: context.defaultIconColor()),
-          const SizedBox(width: 12.0),
-          Text(
-            title,
-            style: context.textTheme.displayLarge,
+          NamidaIconButton(
+            horizontalPadding: 6.0,
+            icon: icon,
+            onPressed: onManualChange == null
+                ? null
+                : () => _showPreciseValueConfig(
+                      context: context,
+                      initial: value,
+                      onChanged: onManualChange!,
+                    ),
+          ),
+          const SizedBox(width: 6.0),
+          Flexible(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    style: context.textTheme.displayLarge,
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                if (displayValue)
+                  Text(
+                    valToText(value),
+                    style: context.textTheme.displayMedium,
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 8.0),
-          if (displayValue)
-            Text(
-              valToText(value),
-              style: context.textTheme.displayMedium,
-            ),
-          const SizedBox(width: 8.0),
-          const Spacer(),
           if (restoreDefault != null)
             NamidaIconButton(
               horizontalPadding: 8.0,
@@ -450,6 +517,7 @@ class _SliderTextWidget extends StatelessWidget {
             ),
           if (trailing != null) trailing!,
           const SizedBox(width: 8.0),
+          const SizedBox(width: 6.0),
         ],
       ),
     );
@@ -485,6 +553,15 @@ class _CuteSliderState extends State<_CuteSlider> {
       setState(() {
         _currentVal = finalVal;
         widget.onChanged(finalVal);
+      });
+    }
+  }
+
+  void _updateValNoRound(double newVal) {
+    if (newVal != _currentVal) {
+      setState(() {
+        _currentVal = newVal;
+        widget.onChanged(newVal);
       });
     }
   }
