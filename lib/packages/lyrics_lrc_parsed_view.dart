@@ -95,7 +95,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final _currentItemDurationMS = RxnO<int>();
 
   void clearLists() {
-    timestampsMap.clear();
+    highlightTimestampsMap.clear();
     lyrics.clear();
   }
 
@@ -103,7 +103,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     currentLRC = lrc;
 
     if (lrc == null) {
-      timestampsMap.clear();
+      highlightTimestampsMap.clear();
       lyrics.clear();
       if (_isCurrentLineEmpty && !_checkIfTextEmpty(Lyrics.inst.currentLyricsText.value)) {
         refreshState(() => _isCurrentLineEmpty = false);
@@ -138,25 +138,24 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       } catch (_) {}
     }
 
-    timestampsMap.assignAllEntries(
-      lrc.lyrics.asMap().entries.map(
-        (e) {
-          final lineTimeStamp = e.value.timestamp + Duration(milliseconds: lrc.offset ?? 0);
-          final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
-          final newLrcLine = LrcLine(
-            timestamp: calculatedForSpedUpVersions,
-            lyrics: e.value.lyrics,
-            type: e.value.type,
-            args: e.value.args,
-          );
-          return MapEntry(
-            calculatedForSpedUpVersions,
-            (e.key, newLrcLine),
-          );
-        },
-      ),
+    highlightTimestampsMap.clear();
+    lyrics.clear();
+
+    lrc.lyrics.loopAdv(
+      (item, index) {
+        final lineTimeStamp = item.timestamp + Duration(milliseconds: lrc.offset ?? 0);
+        final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
+        final newLrcLine = LrcLine(
+          timestamp: calculatedForSpedUpVersions,
+          lyrics: item.lyrics,
+          type: item.type,
+          args: item.args,
+        );
+        highlightTimestampsMap[calculatedForSpedUpVersions] ??= index;
+        lyrics.add(newLrcLine);
+      },
     );
-    lyrics = timestampsMap.values.map((e) => e.$2).toList();
+
     _updateHighlightedLine(Player.inst.nowPlayingPosition.value, jump: true);
   }
 
@@ -170,7 +169,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _latestUpdatedLine.value = lrcDur?.timestamp;
 
-      int newIndex = timestampsMap[_latestUpdatedLine.value]?.$1 ?? -1;
+      int newIndex = highlightTimestampsMap[_latestUpdatedLine.value] ?? -1;
       _latestUpdatedLineIndex.value = newIndex;
       if (newIndex + 1 == lyrics.length) {
         final alreadyHighlightingLastLine = _currentIndex == newIndex;
@@ -232,7 +231,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final _latestUpdatedLine = Rxn<Duration>();
 
   var lyrics = <LrcLine>[];
-  final timestampsMap = <Duration, (int, LrcLine)>{};
+  final highlightTimestampsMap = <Duration, int>{}; // timestamp: index
 
   late double _previousFontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
   late double _fontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
@@ -438,68 +437,70 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         }
 
                                         final color = CurrentColor.inst.miniplayerColor;
-                                        final highlighted = timestampsMap[_latestUpdatedLine.valueR]?.$2;
-                                        return PageStorage(
-                                          bucket: PageStorageBucket(),
-                                          child: ScrollablePositionedList.builder(
-                                            padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                                            itemScrollController: controller,
-                                            itemCount: lyrics.length,
-                                            itemBuilder: (context, index) {
-                                              final lrc = lyrics[index];
-                                              final text = lrc.lyrics;
-                                              final selected = highlighted?.timestamp == lrc.timestamp;
-                                              final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                                              final bgColor = selected
-                                                  ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
-                                                  : null;
-                                              final padding = selected ? 2.0 : 0.0;
+                                        return ObxO(
+                                          rx: _latestUpdatedLine,
+                                          builder: (context, highlightedTimeStamp) => PageStorage(
+                                            bucket: PageStorageBucket(),
+                                            child: ScrollablePositionedList.builder(
+                                              padding: EdgeInsets.symmetric(vertical: _paddingVertical),
+                                              itemScrollController: controller,
+                                              itemCount: lyrics.length,
+                                              itemBuilder: (context, index) {
+                                                final lrc = lyrics[index];
+                                                final text = lrc.lyrics;
+                                                final selected = highlightedTimeStamp == lrc.timestamp;
+                                                final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                                                final bgColor = selected
+                                                    ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
+                                                    : null;
+                                                final padding = selected ? 2.0 : 0.0;
 
-                                              return Stack(
-                                                alignment: Alignment.center,
-                                                children: [
-                                                  Positioned.fill(
-                                                    child: Material(
-                                                      type: MaterialType.transparency,
-                                                      child: InkWell(
-                                                        splashFactory: InkSparkle.splashFactory,
-                                                        onTap: () {
-                                                          Player.inst.seek(lrc.timestamp);
-                                                          _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
-                                                        },
+                                                return Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    Positioned.fill(
+                                                      child: Material(
+                                                        type: MaterialType.transparency,
+                                                        child: InkWell(
+                                                          splashFactory: InkSparkle.splashFactory,
+                                                          onTap: () {
+                                                            Player.inst.seek(lrc.timestamp);
+                                                            _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
+                                                          },
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  IgnorePointer(
-                                                    child: NamidaHero(
-                                                      tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                                      enabled: false,
-                                                      child: AnimatedScale(
-                                                        duration: const Duration(milliseconds: 400),
-                                                        curve: Curves.easeInOutCubicEmphasized,
-                                                        scale: selected ? 1.0 : 0.95,
-                                                        child: NamidaInkWell(
-                                                          bgColor: bgColor,
-                                                          borderRadius: selectedAndEmpty ? 5.0 : 8.0,
-                                                          animationDurationMS: 300,
-                                                          margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
-                                                          padding: selectedAndEmpty
-                                                              ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
-                                                              : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                                                          child: Text(
-                                                            text,
-                                                            style: normalTextStyle.copyWith(
-                                                              color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
+                                                    IgnorePointer(
+                                                      child: NamidaHero(
+                                                        tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                                        enabled: false,
+                                                        child: AnimatedScale(
+                                                          duration: const Duration(milliseconds: 400),
+                                                          curve: Curves.easeInOutCubicEmphasized,
+                                                          scale: selected ? 1.0 : 0.95,
+                                                          child: NamidaInkWell(
+                                                            bgColor: bgColor,
+                                                            borderRadius: selectedAndEmpty ? 5.0 : 8.0,
+                                                            animationDurationMS: 300,
+                                                            margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
+                                                            padding: selectedAndEmpty
+                                                                ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
+                                                                : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                                                            child: Text(
+                                                              text,
+                                                              style: normalTextStyle.copyWith(
+                                                                color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
+                                                              ),
+                                                              textAlign: TextAlign.center,
                                                             ),
-                                                            textAlign: TextAlign.center,
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
+                                                  ],
+                                                );
+                                              },
+                                            ),
                                           ),
                                         );
                                       },
