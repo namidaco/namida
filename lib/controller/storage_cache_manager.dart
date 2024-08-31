@@ -21,7 +21,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-enum _CacheSorting { size, listenCount, accessTime }
+enum _CacheSorting { recommended, size, listenCount, accessTime }
 
 class StorageCacheManager {
   const StorageCacheManager();
@@ -109,43 +109,60 @@ class StorageCacheManager {
     final tempFilesSizeFinal = 0.obs;
     tempFilesSize().then((value) => tempFilesSizeFinal.value = value);
 
-    final currentSort = _CacheSorting.size.obs;
+    final currentSort = _CacheSorting.recommended.obs;
 
     final localIdTrackMap = <String, Track>{};
     if (includeLocalTracksListens) {
       allTracksInLibrary.loop((tr) => localIdTrackMap[tr.youtubeID] = tr);
     }
 
-    final sizesMap = <String, int>{};
-    final accessTimeMap = <String, (int, String)>{};
-
-    allFiles.loop((e) {
-      final path = itemToPath(e);
-      final stats = File(path).statSync();
-      final accessed = stats.accessed.millisecondsSinceEpoch;
-      final modified = stats.modified.millisecondsSinceEpoch;
-      final finalMS = modified > accessed ? modified : accessed;
-      sizesMap[path] = stats.size;
-      accessTimeMap[path] = (finalMS, Jiffy.parseFromMillisecondsSinceEpoch(finalMS).fromNow());
-    });
-
-    int getTotalListensForIDLength(String? id) {
-      if (id == null) return 0;
+    int getTotalListensForIDLength(String id) {
       final correspondingTrack = localIdTrackMap[id];
       final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens[correspondingTrack] ?? [];
       final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
       return local.length + yt.length;
     }
 
+    final listensMap = <String?, int>{};
+    final sizesMap = <String, int>{};
+    final accessTimeMap = <String, int>{};
+    int maxListenCount = 0;
+
+    allFiles.value.loop((e) {
+      final path = itemToPath(e);
+      final stats = File(path).statSync();
+      final accessed = stats.accessed.millisecondsSinceEpoch;
+      final modified = stats.modified.millisecondsSinceEpoch;
+      final finalMS = modified > accessed ? modified : accessed;
+      sizesMap[path] = stats.size;
+      accessTimeMap[path] = finalMS;
+
+      final videoId = itemToYtId(e);
+      if (videoId != null) {
+        final listensCount = getTotalListensForIDLength(videoId);
+        listensMap[videoId] = listensCount;
+        if (maxListenCount < listensCount) maxListenCount = listensCount;
+      }
+    });
+
     void sortBy(_CacheSorting type) {
       currentSort.value = type;
       switch (type) {
+        case _CacheSorting.recommended:
+          final maxLastAccess = DateTime.now().millisecondsSinceEpoch;
+          allFiles.sortBy((e) {
+            final accessTime = accessTimeMap[itemToPath(e)] ?? 0;
+            final listenCount = listensMap[itemToYtId(e)] ?? 0;
+            final normalizedAccessTime = (accessTime / maxLastAccess);
+            final normalizedListenCount = (listenCount / maxListenCount);
+            return normalizedAccessTime * 0.3 + normalizedListenCount * 0.7;
+          });
         case _CacheSorting.size:
           allFiles.sortByReverse((e) => sizesMap[itemToPath(e)] ?? 0);
         case _CacheSorting.accessTime:
-          allFiles.sortBy((e) => accessTimeMap[itemToPath(e)]?.$1 ?? 0);
+          allFiles.sortBy((e) => accessTimeMap[itemToPath(e)] ?? 0);
         case _CacheSorting.listenCount:
-          allFiles.sortBy((e) => getTotalListensForIDLength(itemToYtId(e)));
+          allFiles.sortBy((e) => listensMap[itemToYtId(e)] ?? 0);
         default:
           null;
       }
@@ -251,6 +268,13 @@ class StorageCacheManager {
                     children: [
                       const SizedBox(width: 24.0),
                       getChipButton(
+                        sort: _CacheSorting.recommended,
+                        title: lang.AUTO,
+                        icon: Broken.magic_star,
+                        enabled: (sort) => sort == currentSort,
+                      ),
+                      const SizedBox(width: 12.0),
+                      getChipButton(
                         sort: _CacheSorting.size,
                         title: lang.SIZE,
                         icon: Broken.size,
@@ -287,8 +311,13 @@ class StorageCacheManager {
                         final item = allFiles.value[index];
                         final id = itemToYtId(item);
                         final title = id == null ? null : YoutubeInfoController.utils.getVideoName(id);
-                        final listens = getTotalListensForIDLength(id);
+                        final listens = id == null ? null : listensMap[id];
                         final itemSize = sizesMap[itemToPath(item)] ?? 0;
+                        String? lastPlayedTimeText;
+                        if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
+                          final accessTime = accessTimeMap[itemToPath(item)];
+                          if (accessTime != null) lastPlayedTimeText = Jiffy.parseFromMillisecondsSinceEpoch(accessTime).fromNow();
+                        }
                         return NamidaInkWell(
                           margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -325,16 +354,16 @@ class StorageCacheManager {
                                       itemToSubtitle(item, itemSize),
                                       style: context.textTheme.displaySmall,
                                     ),
-                                    if (currentSort.value == _CacheSorting.accessTime)
+                                    if (lastPlayedTimeText != null)
                                       Text(
-                                        accessTimeMap[itemToPath(item)]?.$2 ?? '',
+                                        lastPlayedTimeText,
                                         style: context.textTheme.displaySmall,
                                       ),
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 8.0),
-                              if (listens > 0) ...[
+                              if (listens != null && listens > 0) ...[
                                 Text(
                                   listens.toString(),
                                   style: context.textTheme.displaySmall,

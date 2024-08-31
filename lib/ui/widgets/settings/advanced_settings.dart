@@ -552,7 +552,12 @@ class AdvancedSettings extends SettingSubpageProvider {
                       cacheManager.showChooseToDeleteDialog(
                         allItems: allvideos,
                         itemToPath: (item) => item.path,
-                        itemToYtId: (item) => item.ytID,
+                        itemToYtId: (item) {
+                          if (item.ytID != null) return item.ytID;
+                          var filename = item.path.getFilename;
+                          if (filename.length >= 11) return filename.substring(0, 11);
+                          return null;
+                        },
                         itemToSubtitle: (item, itemSize) => "${item.resolution}p • ${item.framerate}fps - ${itemSize.fileSizeFormatted}",
                         confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
                         onConfirm: (itemsToDelete) async {
@@ -783,7 +788,12 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
             cacheManager.showChooseToDeleteDialog(
               allItems: allaudios,
               itemToPath: (item) => item.file.path,
-              itemToYtId: (item) => item.youtubeId,
+              itemToYtId: (item) {
+                if (item.youtubeId.isNotEmpty) return item.youtubeId;
+                var filename = item.file.path.getFilename;
+                if (filename.length >= 11) return filename.substring(0, 11);
+                return null;
+              },
               itemToSubtitle: (item, size) => "${(item.bitrate ?? 0) ~/ 1000}kb/s - ${size.fileSizeFormatted}",
               confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
               onConfirm: (itemsToDelete) async {
