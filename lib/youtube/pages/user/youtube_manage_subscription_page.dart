@@ -105,6 +105,33 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     );
   }
 
+  Future<void> _refreshPatreon() async {
+    return _onPossibleMemebershipChange(
+      () => YoutubeAccountController.membership.checkPatreon(
+        showError: true,
+      ),
+    );
+  }
+
+  Future<void> _refreshSupabase() async {
+    final info = NamicoSubscriptionManager.supabase.getUserSubInCache();
+    if (info != null) {
+      final uuid = info.uuid;
+      final email = info.email;
+      if (uuid != null && email != null) {
+        return _onPossibleMemebershipChange(
+          () => YoutubeAccountController.membership.checkSupabase(uuid, email),
+        );
+      }
+    }
+  }
+
+  Future<void> _onPatreonSignOut() async {
+    _onPossibleMemebershipChange(
+      () => Future.sync(YoutubeAccountController.membership.signOutPatreon),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
@@ -134,29 +161,31 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                             trailing: ObxO(
                               rx: YoutubeAccountController.membership.userPatreonTier,
                               builder: (context, userPatreonTier) {
-                                final imageUrl = userPatreonTier?.imageUrl;
                                 return Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const SizedBox(width: 8.0),
-                                    SizedBox(
-                                      width: 24.0,
-                                      height: 24.0,
-                                      child: YoutubeThumbnail(
-                                        key: ValueKey(imageUrl),
-                                        width: 24.0,
-                                        customUrl: imageUrl,
-                                        isImportantInCache: false,
-                                        type: ThumbnailType.channel,
-                                      ),
+                                    NamidaIconButton(
+                                      verticalPadding: 8.0,
+                                      horizontalPadding: 8.0,
+                                      onPressed: () => NamidaLinkUtils.openLink(AppSocial.DONATE_PATREON),
+                                      icon: Broken.export_1,
+                                      iconSize: 20.0,
                                     ),
-                                    IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(
-                                        Broken.arrow_down_2,
-                                        size: 20.0,
-                                      ),
+                                    const SizedBox(width: 4.0),
+                                    NamidaIconButton(
+                                      verticalPadding: 8.0,
+                                      horizontalPadding: 8.0,
+                                      onPressed: _refreshPatreon,
+                                      icon: Broken.refresh,
+                                      iconSize: 20.0,
                                     ),
+                                    const SizedBox(width: 4.0),
+                                    const Icon(
+                                      Broken.arrow_down_2,
+                                      size: 20.0,
+                                    ),
+                                    const SizedBox(width: 8.0),
                                   ],
                                 );
                               },
@@ -169,10 +198,50 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                               ),
                             ),
                             children: [
-                              CustomListTile(
-                                icon: Broken.login_1,
-                                title: lang.SIGN_IN,
-                                onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
+                              ObxO(
+                                rx: YoutubeAccountController.membership.userPatreonTier,
+                                builder: (context, userPatreonTier) {
+                                  if (userPatreonTier == null) {
+                                    return CustomListTile(
+                                      icon: Broken.login_1,
+                                      title: lang.SIGN_IN,
+                                      trailing: IconButton(
+                                        tooltip: lang.CLEAR,
+                                        onPressed: _onPatreonSignOut,
+                                        icon: const Icon(
+                                          Broken.broom,
+                                          size: 20.0,
+                                        ),
+                                      ),
+                                      onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
+                                    );
+                                  }
+                                  final username = userPatreonTier.userName;
+                                  final imageUrl = userPatreonTier.imageUrl;
+                                  return CustomListTile(
+                                    leading: SizedBox(
+                                      width: 24.0,
+                                      height: 24.0,
+                                      child: YoutubeThumbnail(
+                                        key: ValueKey(imageUrl),
+                                        width: 24.0,
+                                        customUrl: imageUrl,
+                                        isImportantInCache: false,
+                                        type: ThumbnailType.channel,
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      tooltip: lang.SIGN_OUT,
+                                      onPressed: _onPatreonSignOut,
+                                      icon: const Icon(
+                                        Broken.logout,
+                                        size: 20.0,
+                                      ),
+                                    ),
+                                    title: username ?? '?',
+                                    onTap: () {},
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -191,13 +260,19 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       isChecking || isClaiming ? const LoadingIndicator() : const SizedBox(),
-                                      IconButton(
-                                        onPressed: () {},
-                                        icon: const Icon(
-                                          Broken.arrow_down_2,
-                                          size: 20.0,
-                                        ),
+                                      NamidaIconButton(
+                                        verticalPadding: 8.0,
+                                        horizontalPadding: 8.0,
+                                        onPressed: _refreshSupabase,
+                                        icon: Broken.refresh,
+                                        iconSize: 20.0,
                                       ),
+                                      const SizedBox(width: 4.0),
+                                      const Icon(
+                                        Broken.arrow_down_2,
+                                        size: 20.0,
+                                      ),
+                                      const SizedBox(width: 8.0),
                                     ],
                                   ),
                                 ),

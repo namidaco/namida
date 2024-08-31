@@ -159,11 +159,6 @@ Future<void> showVideoDownloadOptionsSheet({
                           FFMPEGTagField.language,
                           FFMPEGTagField.recordLabel,
                           FFMPEGTagField.country,
-
-                          // -- NOT TESTED
-                          FFMPEGTagField.rating,
-                          FFMPEGTagField.mood,
-                          FFMPEGTagField.tags,
                         ].map((e) => getTextChip(e)),
                       ]
                           .addSeparators(

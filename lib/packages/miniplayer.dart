@@ -342,7 +342,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           icon: Broken.trash,
           title: lang.CLEAR,
           onTap: () {
-            YTUtils().showVideoClearDialog(context, video.id, CurrentColor.inst.miniplayerColor);
+            const YTUtils().showVideoClearDialog(context, video.id, CurrentColor.inst.miniplayerColor);
           },
         );
         final isFavourite = video.isFavourite;

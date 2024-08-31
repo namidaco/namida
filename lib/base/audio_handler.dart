@@ -298,6 +298,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _isCurrentAudioFromCache = false;
     isFetchingInfo.value = false;
     _nextSeekSetAudioCache = null;
+    _nextSeekSetVideoCache = null;
     await super.clearQueue();
   }
 
@@ -948,6 +949,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _isCurrentAudioFromCache = false;
     isFetchingInfo.value = false;
     _nextSeekSetAudioCache = null;
+    _nextSeekSetVideoCache = null;
     YoutubeInfoController.current.onVideoPageReset?.call();
 
     if (item.id == '' || item.id == 'null') {
@@ -1344,6 +1346,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
+  void recheckCachedVideos(String videoId) {
+    final current = currentItem.value;
+    if (current is! YoutubeID || current.id != videoId) return;
+
+    final allCachedVideos = VideoController.inst.getNVFromIDSorted(videoId);
+    YoutubeInfoController.current.currentCachedQualities.value = allCachedVideos;
+
+    final currCachedV = currentCachedVideo.value;
+    if (currCachedV != null && videoId == currCachedV.ytID) {
+      if (!allCachedVideos.contains(currCachedV)) {
+        currentCachedVideo.value = null;
+      }
+    }
+  }
+
   /// Returns Audio File and Video File.
   Future<({AudioCacheDetails? audio, NamidaVideo? video, Duration? duration})> _trySetYTVideoWithoutConnection({
     required YoutubeID item,
@@ -1359,16 +1376,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required List<Track> possibleLocalFiles,
   }) async {
     // ------ Getting Video ------
-    final allCachedVideos = VideoController.inst.getNVFromID(item.id);
-    allCachedVideos.sortByReverseAlt(
-      (e) {
-        if (e.resolution != 0) return e.resolution;
-        if (e.height != 0) return e.height;
-        return 0;
-      },
-      (e) => e.frameratePrecise,
-    );
-
+    final allCachedVideos = VideoController.inst.getNVFromIDSorted(item.id);
     YoutubeInfoController.current.currentCachedQualities.value = allCachedVideos;
 
     final cachedVideo = allCachedVideos.firstWhereEff((e) => File(e.path).existsSync());

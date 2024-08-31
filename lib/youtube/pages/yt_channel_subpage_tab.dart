@@ -313,6 +313,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                                       liveThumbs: item.liveThumbs,
                                                       isUploaderVerified: null,
                                                       badges: null,
+                                                      isActuallyShortContent: true,
                                                     );
                                                   }
                                                   return null;
@@ -344,7 +345,6 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                       thumbnailWidth: itemThumbnailWidth,
                                       short: item as StreamInfoItemShort,
                                       playlistID: null,
-                                      dateInsteadOfChannel: true,
                                     ),
                                   const (PlaylistInfoItem) => YoutubePlaylistCard(
                                       key: Key((item as PlaylistInfoItem).id),

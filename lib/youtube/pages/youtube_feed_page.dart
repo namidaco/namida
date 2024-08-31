@@ -50,7 +50,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                   itemExtentBuilder: (index, dimensions) {
                     if (isShortsVisible && feed.shortsSection.relatedItemsShortsData[index] != null) return 64.0 * 3 + 24.0 * 2;
                     final item = feed.items[index];
-                    if (item is StreamInfoItemShort) return 0;
+                    if (!isShortsVisible && item is StreamInfoItemShort) return 0;
                     if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
                     return thumbnailItemExtent;
                   },

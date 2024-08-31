@@ -531,15 +531,16 @@ class AdvancedSettings extends SettingSubpageProvider {
 
           getItemWrapper(
             key: _AdvancedSettingKeys.clearVideoCache,
-            child: Obx(
-              (context) => CustomListTile(
+            child: ObxO(
+              rx: Indexer.inst.videosSizeInStorage,
+              builder: (context, videosSizeInStorage) => CustomListTile(
                 bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
                 leading: const StackedIcon(
                   baseIcon: Broken.video,
                   secondaryIcon: Broken.close_circle,
                 ),
                 title: lang.CLEAR_VIDEO_CACHE,
-                trailingText: Indexer.inst.videosSizeInStorage.valueR.fileSizeFormatted,
+                trailingText: videosSizeInStorage.fileSizeFormatted,
                 onTap: () {
                   final allvideos = VideoController.inst.getCurrentVideosInCache();
                   const cacheManager = StorageCacheManager();

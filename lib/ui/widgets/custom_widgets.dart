@@ -1597,6 +1597,7 @@ class NamidaAppBarIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaIconButton(
+      verticalPadding: 8.0,
       horizontalPadding: 6.0,
       icon: icon,
       onPressed: onPressed,

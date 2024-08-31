@@ -418,7 +418,6 @@ class FFMPEGTagField {
   static const String synopsis = 'synopsis';
   static const String description = 'description';
   static const String genre = 'genre';
-  static const String mood = 'mood';
   static const String year = 'date';
   static const String trackNumber = 'track';
   static const String discNumber = 'disc';
@@ -432,7 +431,8 @@ class FFMPEGTagField {
   static const String recordLabel = 'LABEL';
   static const String country = 'Country';
 
-  // -- NOT TESTED
+  // -- NOT WORKING
+  static const String mood = 'mood';
   static const String rating = 'rating';
   static const String tags = 'tags';
 

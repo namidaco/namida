@@ -343,6 +343,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                       itemCount: items.length,
                                                       itemBuilder: (context, index) {
                                                         final item = items[index];
+                                                        if (!isShortsVisible && item is StreamInfoItemShort) return const SizedBox();
+                                                        if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return const SizedBox();
                                                         return switch (item.runtimeType) {
                                                           const (StreamInfoItem) => YoutubeVideoCard(
                                                               thumbnailHeight: thumbnailHeight,

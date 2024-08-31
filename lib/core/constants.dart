@@ -329,6 +329,7 @@ class AppDirs {
 class AppSocial {
   static const DONATE_KOFI = 'https://ko-fi.com/namidaco';
   static const DONATE_BUY_ME_A_COFFEE = 'https://www.buymeacoffee.com/namidaco';
+  static const DONATE_PATREON = 'https://www.patreon.com/namidaco';
   static const GITHUB = 'https://github.com/namidaco/namida';
   static const GITHUB_SNAPSHOTS = 'https://github.com/namidaco/namida-snapshots';
   static const GITHUB_ISSUES = '$GITHUB/issues';

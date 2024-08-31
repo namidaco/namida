@@ -444,7 +444,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             icon: Broken.trash,
                                                             title: lang.CLEAR,
                                                             onTap: () {
-                                                              YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
+                                                              const YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
                                                             },
                                                           );
                                                           final isFavourite = currentItem.isFavourite;
@@ -926,7 +926,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 return 64.0 * 3 + 24.0 * 2;
                                                               }
                                                               final item = page.relatedVideosResult.items[index];
-                                                              if (item is StreamInfoItemShort) return 0;
+                                                              if (!isShortsVisible && item is StreamInfoItemShort) return 0;
                                                               if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
                                                               return relatedThumbnailItemExtent;
                                                             },

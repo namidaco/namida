@@ -69,6 +69,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     _isLoadingCurrentReplies.close();
     _isLoadingMoreReplies.close();
     _currentReplies.close();
+    _currentMainComment.close();
     super.dispose();
   }
 

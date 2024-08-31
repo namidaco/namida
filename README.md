@@ -242,3 +242,11 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 - You may read/compile/modify the code for your personal usage, or for the purpose of contribution for the software.
 - Redistributing the program as a whole under different name or license without permission is not allowed.
 ```
+
+<a href="https://star-history.com/#namidaco/namida&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=namidaco/namida&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=namidaco/namida&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=namidaco/namida&type=Date" />
+ </picture>
+</a>

@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 4.0.55-beta+240828225
+version: 4.0.7-beta+240831181
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -124,7 +124,9 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/flutter_scrollbar_modified
   sticky_headers: ^0.3.0+2
-  flutter_sticky_header: ^0.6.5
+  flutter_sticky_header:
+    git:
+      url: https://github.com/giangphan11/flutter_sticky_header
   focused_menu: ^1.0.5
   paged_vertical_calendar: ^1.1.6
 

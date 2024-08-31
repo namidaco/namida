@@ -371,6 +371,7 @@ extension _VideoInfoUtils on VideoStreamInfo {
       liveThumbs: vid.thumbnails,
       isUploaderVerified: null,
       badges: null,
+      isActuallyShortContent: null,
     );
   }
 }
@@ -400,6 +401,7 @@ extension _YTVHToVideoInfo on YoutubeVideoHistory {
       liveThumbs: [],
       isUploaderVerified: null,
       badges: [],
+      isActuallyShortContent: null,
     );
   }
 }

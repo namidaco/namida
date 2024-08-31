@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:namico_login_manager/namico_login_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
+import 'package:namico_subscription_manager/namico_subscription_manager.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -122,6 +124,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                           return CustomListTile(
                             borderR: 12.0,
                             onTap: const YoutubeManageSubscriptionPage().navigate,
+                            verticalPadding: 4.0,
                             title: hasMembership ? lang.MEMBERSHIP_MANAGE : "${lang.SIGNING_IN_ALLOWS_BASIC_USAGE}.\n${lang.SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE}",
                             icon: Broken.money_3,
                             bgColor: Color.alphaBlend(

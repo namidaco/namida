@@ -501,6 +501,10 @@ class Player {
     );
   }
 
+  void recheckCachedVideos(String videoId) {
+    _audioHandler.recheckCachedVideos(videoId);
+  }
+
   Future<void> play() async {
     await _audioHandler.play();
   }

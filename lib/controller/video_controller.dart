@@ -222,9 +222,27 @@ class VideoController {
     return _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
   }
 
-  List<NamidaVideo> getNVFromID(String youtubeId, {bool checkForFileIRT = true}) {
+  bool hasNVCachedFromID(String youtubeId) {
+    return _videoCacheIDMap[youtubeId]?.isNotEmpty ?? false;
+  }
+
+  List<NamidaVideo> getNVFromID(String youtubeId) {
     if (youtubeId.isEmpty) return [];
     return _videoCacheIDMap[youtubeId]?.where((element) => File(element.path).existsSync()).toList() ?? [];
+  }
+
+  List<NamidaVideo> getNVFromIDSorted(String youtubeId) {
+    if (youtubeId.isEmpty) return [];
+    final videos = _videoCacheIDMap[youtubeId]?.where((element) => File(element.path).existsSync()).toList() ?? [];
+    videos.sortByReverseAlt(
+      (e) {
+        if (e.resolution != 0) return e.resolution;
+        if (e.height != 0) return e.height;
+        return 0;
+      },
+      (e) => e.frameratePrecise,
+    );
+    return videos;
   }
 
   List<NamidaVideo> getCurrentVideosInCache() {
@@ -349,7 +367,8 @@ class VideoController {
 
   /// loop only if video duration is less than [p] of audio.
   bool canLoopVideo(NamidaVideo video, int trackDurationMS, {double p = 0.6}) {
-    return video.durationMS > 0 && trackDurationMS > 0 && video.durationMS < trackDurationMS * p;
+    if (video.durationMS <= 0 || trackDurationMS <= 0) return false;
+    return video.durationMS < trackDurationMS * p;
   }
 
   Future<void> toggleVideoPlayback() async {
@@ -557,11 +576,7 @@ class VideoController {
     final link = track.youtubeLink;
     final id = link.getYoutubeID;
 
-    final possibleCached = getNVFromID(id);
-    possibleCached.sortByReverseAlt(
-      (e) => e.resolution,
-      (e) => e.frameratePrecise,
-    );
+    final possibleCached = getNVFromIDSorted(id);
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
     for (final l in local) {

@@ -7,10 +7,11 @@ import 'package:namico_subscription_manager/class/supabase_sub.dart';
 import 'package:namico_subscription_manager/class/support_tier.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/managers/acount_manager.dart';
-import 'package:youtipie/youtipie.dart';
+import 'package:youtipie/youtipie.dart' hide logger;
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -47,7 +48,7 @@ class YoutubeAccountController {
     NamicoSubscriptionManager.initialize(dataDirectory: AppDirs.YOUTIPIE_DATA);
 
     NamicoSubscriptionManager.onError = (message, e, st) {
-      _showError(message, exception: e);
+      _showError(message, exception: e, manageSubscriptionButton: true, messageAsTitle: true);
       logger.error(message, e: e, st: st);
     };
 
@@ -191,9 +192,15 @@ class YoutubeAccountController {
     }
   }
 
-  static void _showError(String msg, {Object? exception, bool manageSubscriptionButton = false, bool manageAccountButton = false}) {
+  static void _showError(String msg, {Object? exception, bool manageSubscriptionButton = false, bool manageAccountButton = false, bool messageAsTitle = false}) {
     String title = lang.ERROR;
     if (exception != null) title += ': $exception';
+
+    if (messageAsTitle) {
+      final tempTitle = title;
+      title = msg;
+      msg = tempTitle;
+    }
 
     snackyy(
       message: msg,
@@ -305,6 +312,14 @@ class _CurrentMembership {
     }
     userPatreonTier.value = tier;
     final ms = tier.toMembershipType();
+    userMembershipTypePatreon.value = ms;
+    _updateGlobal(ms);
+  }
+
+  void signOutPatreon() {
+    NamicoSubscriptionManager.cacheManager.deletePatreonCache();
+    const ms = MembershipType.unknown;
+    userPatreonTier.value = null;
     userMembershipTypePatreon.value = ms;
     _updateGlobal(ms);
   }

@@ -1094,7 +1094,7 @@ Future<void> showGeneralPopupDialog(
                                 compact: true,
                                 title: lang.GO_TO_FOLDER,
                                 subtitle: availableFolders.first.folderName,
-                                icon: Broken.folder,
+                                icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();
                                   NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);

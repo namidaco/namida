@@ -245,6 +245,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
                       liveThumbs: item.liveThumbs,
                       isUploaderVerified: null,
                       badges: null,
+                      isActuallyShortContent: true,
                     );
                   }
                   return null;

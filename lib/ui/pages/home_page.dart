@@ -1083,6 +1083,8 @@ class _MixesCardState extends State<_MixesCard> {
                   child: Padding(
                     padding: const EdgeInsets.all(2.0),
                     child: NamidaIconButton(
+                      verticalPadding: 4.0,
+                      horizontalPadding: 12.0,
                       icon: Broken.arrow_left_2,
                       iconColor: context.theme.colorScheme.onSurface.withAlpha(160),
                       onPressed: NamidaNavigator.inst.closeDialog,

@@ -106,7 +106,7 @@ class YTUtils {
             Broken.video,
             size: 15.0,
             color: iconsColor?.withOpacity(
-              VideoController.inst.getNVFromID(videoId).isNotEmpty ? 0.6 : 0.1,
+              VideoController.inst.hasNVCachedFromID(videoId) ? 0.6 : 0.1,
             ),
           ),
         ),
@@ -636,6 +636,7 @@ class YTUtils {
                   if (deleteTempAudio.value) deleteItems(tempFilesSizeAudio.keys.map((e) => e.path)),
                   if (deleteTempVideo.value) deleteItems(tempFilesSizeVideo.keys.map((e) => e.path)),
                 ]);
+                Player.inst.recheckCachedVideos(videoId);
                 NamidaNavigator.inst.closeDialog();
               },
             ),

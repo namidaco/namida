@@ -649,12 +649,13 @@ class Indexer<T extends Track> {
       (trS) {
         final tr = trS.track;
         recentlyDeltedFileWrite.writeln(tr.path);
+        _removeThisTrackFromAlbumGenreArtistEtc(tr);
         allTracksMappedByYTID.remove(tr.youtubeID);
         _currentFileNamesMap.remove(tr.path.getFilename);
         tracksInfoList.value.remove(tr);
         SearchSortController.inst.trackSearchList.value.remove(tr);
         SearchSortController.inst.trackSearchTemp.value.remove(tr);
-        _removeThisTrackFromAlbumGenreArtistEtc(tr);
+        allTracksMappedByPath.remove(tr.path);
       },
     );
     SearchSortController.inst.trackSearchList.refresh();
