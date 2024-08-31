@@ -111,7 +111,7 @@ class YoutubeDescriptionWidgetManager {
       onTap = () {
         if (sw.videoId == videoId && sw.videoStartSeconds != null) {
           Player.inst.seek(Duration(seconds: sw.videoStartSeconds!));
-          Vibration.vibrate(duration: 10, amplitude: 10);
+          Vibration.vibrate(duration: 10, amplitude: 20);
         } else {
           Player.inst.playOrPause(0, [YoutubeID(id: sw.videoId!, playlistID: null)], QueueSource.others);
           // TODO: seek after playing?

@@ -198,6 +198,8 @@ class _SettingsController with SettingsFileWriter {
   final ytMostPlayedCustomisStartOfDay = true.obs;
 
   /// Track Items
+  final onTrackSwipeLeft = OnTrackTileSwapActions.none.obs;
+  final onTrackSwipeRight = OnTrackTileSwapActions.none.obs;
   final displayThirdRow = true.obs;
   final displayThirdItemInEachRow = false.obs;
   final trackTileSeparator = '•'.obs;
@@ -439,6 +441,8 @@ class _SettingsController with SettingsFileWriter {
       ytMostPlayedCustomisStartOfDay.value = json['ytMostPlayedCustomisStartOfDay'] ?? ytMostPlayedCustomisStartOfDay.value;
 
       /// Track Items
+      onTrackSwipeLeft.value = OnTrackTileSwapActions.values.getEnum(json['onTrackSwipeLeft']) ?? onTrackSwipeLeft.value;
+      onTrackSwipeRight.value = OnTrackTileSwapActions.values.getEnum(json['onTrackSwipeRight']) ?? onTrackSwipeRight.value;
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
@@ -610,6 +614,8 @@ class _SettingsController with SettingsFileWriter {
         'ytMostPlayedCustomisStartOfDay': ytMostPlayedCustomisStartOfDay.value,
 
         /// Track Items
+        'onTrackSwipeLeft': onTrackSwipeLeft.value.name,
+        'onTrackSwipeRight': onTrackSwipeRight.value.name,
         'displayThirdRow': displayThirdRow.value,
         'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
         'trackTileSeparator': trackTileSeparator.value,
@@ -689,6 +695,8 @@ class _SettingsController with SettingsFileWriter {
     bool? playlistSortReversed,
     GroupSortType? ytPlaylistSort,
     bool? ytPlaylistSortReversed,
+    OnTrackTileSwapActions? onTrackSwipeLeft,
+    OnTrackTileSwapActions? onTrackSwipeRight,
     bool? displayThirdRow,
     bool? displayThirdItemInEachRow,
     String? trackTileSeparator,
@@ -859,6 +867,8 @@ class _SettingsController with SettingsFileWriter {
     if (playlistSortReversed != null) this.playlistSortReversed.value = playlistSortReversed;
     if (ytPlaylistSort != null) this.ytPlaylistSort.value = ytPlaylistSort;
     if (ytPlaylistSortReversed != null) this.ytPlaylistSortReversed.value = ytPlaylistSortReversed;
+    if (onTrackSwipeLeft != null) this.onTrackSwipeLeft.value = onTrackSwipeLeft;
+    if (onTrackSwipeRight != null) this.onTrackSwipeRight.value = onTrackSwipeRight;
     if (displayThirdRow != null) this.displayThirdRow.value = displayThirdRow;
     if (displayThirdItemInEachRow != null) this.displayThirdItemInEachRow.value = displayThirdItemInEachRow;
     if (trackTileSeparator != null) this.trackTileSeparator.value = trackTileSeparator;

@@ -2150,7 +2150,7 @@ class NamidaContainerDivider extends StatelessWidget {
 
 class FadeDismissible extends StatefulWidget {
   final Widget child;
-  final void Function(DismissDirection onDismissed) onDismissed;
+  final void Function(DismissDirection direction) onDismissed;
   final void Function(DragStartDetails details)? onDismissStart;
   final void Function(DragEndDetails details)? onDismissEnd;
   final void Function(DragEndDetails details)? onDismissCancel;
@@ -2165,6 +2165,7 @@ class FadeDismissible extends StatefulWidget {
   final bool Function()? draggable;
   final RxBase<bool>? draggableRx;
   final Widget? onTopWidget;
+  final bool removeOnDismiss;
 
   const FadeDismissible({
     required Key key,
@@ -2184,6 +2185,7 @@ class FadeDismissible extends StatefulWidget {
     this.draggable,
     this.draggableRx,
     this.onTopWidget,
+    this.removeOnDismiss = true,
   }) : super(key: key);
 
   @override
@@ -2210,6 +2212,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
 
   bool _draggable = true;
   bool _inDismissRange = true;
+  bool? _canSwipeInternal; // calculate for direction once to allow swiping back.
 
   void calculateInDismissRange(double positionDx, double maxWidth) {
     final percentage = positionDx / maxWidth;
@@ -2221,17 +2224,27 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 
   Future<void> _dismissToRight(DragEndDetails d, {bool faster = false}) async {
-    await _animateDismiss(1, faster: faster);
-    widget.onDismissed(DismissDirection.horizontal);
-    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
-    _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+    if (widget.removeOnDismiss) {
+      await _animateDismiss(1, faster: faster);
+      widget.onDismissed(DismissDirection.startToEnd);
+      if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
+      _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+    } else {
+      widget.onDismissed(DismissDirection.startToEnd);
+      await _resetToMiddle(d);
+    }
   }
 
   Future<void> _dismissToLeft(DragEndDetails d, {bool faster = false}) async {
-    await _animateDismiss(-1, faster: faster);
-    widget.onDismissed(DismissDirection.horizontal);
-    if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
-    _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+    if (widget.removeOnDismiss) {
+      await _animateDismiss(-1, faster: faster);
+      widget.onDismissed(DismissDirection.endToStart);
+      if (widget.onDismissEnd != null) widget.onDismissEnd!(d);
+      _animation.animateTo(0, duration: Duration.zero); // fixes rendering issue
+    } else {
+      widget.onDismissed(DismissDirection.endToStart);
+      await _resetToMiddle(d);
+    }
   }
 
   Future<void> _resetToMiddle(DragEndDetails d) async {
@@ -2253,12 +2266,25 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
           : (d) {
               if (!_draggable) return;
               if (!_inDismissRange) return;
+              if (_canSwipeInternal == null) {
+                bool canSwipe = true;
+                if (d.delta.dx.isNegative) {
+                  if (widget.direction == DismissDirection.startToEnd) canSwipe = false;
+                } else {
+                  if (widget.direction == DismissDirection.endToStart) canSwipe = false;
+                }
+                if (canSwipe != _canSwipeInternal) _canSwipeInternal = canSwipe;
+              }
+              if (_canSwipeInternal == false) return;
+
               _dragged += d.delta.dx;
               _animation.animateTo(_dragged / maxWidth, duration: Duration.zero);
             },
       onEnd: !draggable
           ? null
           : (d) {
+              _canSwipeInternal = null;
+
               final velocity = d.velocity.pixelsPerSecond.dx;
               if (velocity > 800) {
                 _dismissToRight(d, faster: true);

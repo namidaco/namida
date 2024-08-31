@@ -444,6 +444,7 @@ abstract class LanguageKeys {
   String get ON_INTERRUPTION => _getKey('ON_INTERRUPTION');
   String get ON_NOTIFICATION_TAP => _getKey('ON_NOTIFICATION_TAP');
   String get ON_OPENING_YOUTUBE_LINK => _getKey('ON_OPENING_YOUTUBE_LINK');
+  String get ON_SWIPING => _getKey('ON_SWIPING');
   String get ON_VOLUME_ZERO => _getKey('ON_VOLUME_ZERO');
   String get OPEN => _getKey('OPEN');
   String get OPEN_APP => _getKey('OPEN_APP');

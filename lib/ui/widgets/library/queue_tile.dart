@@ -45,7 +45,7 @@ class QueueTile extends StatelessWidget {
           FadeDismissible(
             direction: DismissDirection.endToStart,
             key: Key("${queue.date}"),
-            onDismissed: (onDismissed) {
+            onDismissed: (direction) {
               final oldQueue = queue;
               QueueController.inst.removeQueue(oldQueue);
               snackyy(

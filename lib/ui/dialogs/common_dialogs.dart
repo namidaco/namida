@@ -198,7 +198,7 @@ class NamidaDialogs {
     required Folder folder,
     required bool recursiveTracks,
   }) async {
-    if (recursiveTracks) Vibration.vibrate(duration: 20, amplitude: 50);
+    if (recursiveTracks) Vibration.vibrate(duration: 20, amplitude: 40);
     final tracks = recursiveTracks ? folder.tracksRecusive().toList() : folder.tracks();
     await showGeneralPopupDialog(
       tracks,

@@ -374,6 +374,10 @@ extension LocalVideoMatchingTypeText on LocalVideoMatchingType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension TRACKPLAYMODE on TrackPlayMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -1176,6 +1180,13 @@ class _NamidaConverters {
         TrackPlayMode.trackAlbum: lang.TRACK_PLAY_MODE_TRACK_ALBUM,
         TrackPlayMode.trackArtist: lang.TRACK_PLAY_MODE_TRACK_ARTIST,
         TrackPlayMode.trackGenre: lang.TRACK_PLAY_MODE_TRACK_GENRE,
+      },
+      OnTrackTileSwapActions: {
+        OnTrackTileSwapActions.none: lang.NONE,
+        OnTrackTileSwapActions.playnext: lang.PLAY_NEXT,
+        OnTrackTileSwapActions.playlast: lang.PLAY_LAST,
+        OnTrackTileSwapActions.playafter: lang.PLAY_AFTER,
+        OnTrackTileSwapActions.addtoplaylist: lang.ADD_TO_PLAYLIST,
       },
       InsertionSortingType: {
         InsertionSortingType.listenCount: lang.TOTAL_LISTENS,

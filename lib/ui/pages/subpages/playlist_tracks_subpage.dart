@@ -430,6 +430,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                 queueSource: playlist.toQueueSource(),
                 playlistName: playlist.name,
                 draggableThumbnail: reorderable,
+                horizontalGestures: !reorderable,
                 selectable: () => !PlaylistController.inst.canReorderTracks.value,
               ),
               builder: (properties) => NamidaListViewRaw(

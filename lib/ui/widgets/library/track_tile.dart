@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
+import 'package:vibration/vibration.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -16,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -55,45 +57,53 @@ class TrackTilePropertiesProvider extends StatelessWidget {
           builder: (context, displayFavouriteIconInListTile) => ObxO(
             rx: settings.trackThumbnailSizeinList,
             builder: (context, thumbnailSize) => ObxO(
-              rx: settings.trackListTileHeight,
-              builder: (context, trackTileHeight) => ObxO(
-                rx: SelectedTracksController.inst.existingTracksMap,
-                builder: (context, selectedTracksMap) => _ObxPrefer(
-                  rx: HistoryController.inst.topTracksMapListens,
-                  enabled: listenToTopHistoryItems,
-                  builder: (context, _) => ObxO(
-                    rx: CurrentColor.inst.currentPlayingTrack,
-                    builder: (context, currentPlayingTrack) => ObxO(
-                      rx: CurrentColor.inst.currentPlayingIndex,
-                      builder: (context, currentPlayingIndex) => Obx(
-                        (context) {
-                          int? sleepingIndex;
-                          if (queueSource == QueueSource.playerQueue) {
-                            final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                            if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
-                          }
+              rx: settings.onTrackSwipeLeft,
+              builder: (context, onTrackSwipeLeft) => ObxO(
+                rx: settings.onTrackSwipeRight,
+                builder: (context, onTrackSwipeRight) => ObxO(
+                  rx: settings.trackListTileHeight,
+                  builder: (context, trackTileHeight) => ObxO(
+                    rx: SelectedTracksController.inst.existingTracksMap,
+                    builder: (context, selectedTracksMap) => _ObxPrefer(
+                      rx: HistoryController.inst.topTracksMapListens,
+                      enabled: listenToTopHistoryItems,
+                      builder: (context, _) => ObxO(
+                        rx: CurrentColor.inst.currentPlayingTrack,
+                        builder: (context, currentPlayingTrack) => ObxO(
+                          rx: CurrentColor.inst.currentPlayingIndex,
+                          builder: (context, currentPlayingIndex) => Obx(
+                            (context) {
+                              int? sleepingIndex;
+                              if (comingFromQueue) {
+                                final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                                if (sleepconfig.enableSleepAfterItems) sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                              }
 
-                          final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
+                              final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
 
-                          final properties = TrackTileProperties(
-                            backgroundColorPlaying: backgroundColorPlaying,
-                            backgroundColorNotPlaying: backgroundColorNotPlaying,
-                            selectionColorLayer: selectionColorLayer,
-                            thumbnailSize: thumbnailSize,
-                            trackTileHeight: trackTileHeight,
-                            forceSquaredThumbnails: forceSquaredThumbnails,
-                            sleepingIndex: sleepingIndex,
-                            displayThirdRow: displayThirdRow,
-                            displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                            comingFromQueue: comingFromQueue,
-                            configs: configs,
-                            canHaveDuplicates: canHaveDuplicates,
-                            currentPlayingTrack: currentPlayingTrack,
-                            currentPlayingIndex: currentPlayingIndex,
-                            isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                          );
-                          return builder(properties);
-                        },
+                              final properties = TrackTileProperties(
+                                backgroundColorPlaying: backgroundColorPlaying,
+                                backgroundColorNotPlaying: backgroundColorNotPlaying,
+                                selectionColorLayer: selectionColorLayer,
+                                thumbnailSize: thumbnailSize,
+                                trackTileHeight: trackTileHeight,
+                                forceSquaredThumbnails: forceSquaredThumbnails,
+                                sleepingIndex: sleepingIndex,
+                                displayThirdRow: displayThirdRow,
+                                displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                                comingFromQueue: comingFromQueue,
+                                configs: configs,
+                                canHaveDuplicates: canHaveDuplicates,
+                                currentPlayingTrack: currentPlayingTrack,
+                                currentPlayingIndex: currentPlayingIndex,
+                                isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != OnTrackTileSwapActions.none,
+                                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != OnTrackTileSwapActions.none,
+                              );
+                              return builder(properties);
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -127,6 +137,7 @@ class TrackTilePropertiesConfigs {
   final bool draggableThumbnail;
   final bool displayRightDragHandler;
   final bool displayTrackNumber;
+  final bool horizontalGestures;
   final String? playlistName;
 
   const TrackTilePropertiesConfigs({
@@ -135,6 +146,7 @@ class TrackTilePropertiesConfigs {
     this.draggableThumbnail = true,
     this.displayRightDragHandler = false,
     this.displayTrackNumber = false,
+    this.horizontalGestures = true,
     this.playlistName,
   });
 }
@@ -157,6 +169,9 @@ class TrackTileProperties {
   final int? currentPlayingIndex;
   final Function(Selectable trOrTwd) isTrackSelected;
 
+  final bool allowSwipeLeft;
+  final bool allowSwipeRight;
+
   const TrackTileProperties({
     required this.configs,
     required this.backgroundColorPlaying,
@@ -173,6 +188,8 @@ class TrackTileProperties {
     required this.currentPlayingTrack,
     required this.currentPlayingIndex,
     required this.isTrackSelected,
+    required this.allowSwipeLeft,
+    required this.allowSwipeRight,
   });
 }
 
@@ -323,7 +340,9 @@ class TrackTile extends StatelessWidget {
     final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
     final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
-    return Stack(
+    final heroTag = '${properties.comingFromQueue}${index}_sussydialogs_${track.path}$additionalHero';
+
+    Widget finalChild = Stack(
       alignment: Alignment.centerRight,
       children: [
         Padding(
@@ -386,7 +405,7 @@ class TrackTile extends StatelessWidget {
                                 width: properties.thumbnailSize,
                                 height: properties.thumbnailSize,
                                 child: NamidaHero(
-                                  tag: '${properties.comingFromQueue}${index}_sussydialogs_${track.path}$additionalHero',
+                                  tag: heroTag,
                                   child: ArtworkWidget(
                                     key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
                                     track: track,
@@ -539,6 +558,41 @@ class TrackTile extends StatelessWidget {
           ),
       ],
     );
+
+    if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+      finalChild = FadeDismissible(
+        key: ValueKey(heroTag),
+        direction: properties.allowSwipeLeft && properties.allowSwipeRight
+            ? DismissDirection.horizontal
+            : properties.allowSwipeLeft
+                ? DismissDirection.endToStart
+                : properties.allowSwipeRight
+                    ? DismissDirection.startToEnd
+                    : DismissDirection.none,
+        removeOnDismiss: false,
+        dismissThreshold: 0.1,
+        onDismissed: (direction) {
+          final swipedLeft = direction == DismissDirection.endToStart;
+          final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;
+          if (action == OnTrackTileSwapActions.none) return;
+
+          switch (action) {
+            case OnTrackTileSwapActions.playnext:
+              Player.inst.addToQueue([trackOrTwd], insertNext: true);
+            case OnTrackTileSwapActions.playlast:
+              Player.inst.addToQueue([trackOrTwd], insertNext: false);
+            case OnTrackTileSwapActions.playafter:
+              Player.inst.addToQueue([trackOrTwd], insertAfterLatest: true);
+            case OnTrackTileSwapActions.addtoplaylist:
+              showAddToPlaylistDialog([trackOrTwd.track]);
+            case OnTrackTileSwapActions.none:
+          }
+          Vibration.vibrate(duration: 10, amplitude: 10);
+        },
+        child: finalChild,
+      );
+    }
+    return finalChild;
   }
 }
 

@@ -410,3 +410,11 @@ enum YTVisibleMixesPlaces {
   search,
   relatedVideos,
 }
+
+enum OnTrackTileSwapActions {
+  none,
+  playnext,
+  playlast,
+  playafter,
+  addtoplaylist,
+}

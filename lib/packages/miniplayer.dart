@@ -158,6 +158,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       trackTileConfigs: const TrackTilePropertiesConfigs(
         displayRightDragHandler: true,
         draggableThumbnail: true,
+        horizontalGestures: false,
         queueSource: QueueSource.playerQueue,
       ),
       itemBuilder: (context, i, currentIndex, queue, properties) {

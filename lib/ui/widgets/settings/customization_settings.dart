@@ -44,6 +44,7 @@ enum _CustomizationSettingsKeys {
   forceSquaredTrackThumb,
   sizeOfTrackThumb,
   heightOfTrackTile,
+  onSwiping,
   displayThirdRow,
   displayThirdItemInRow,
   displayFavButtonInTrackTile,
@@ -90,6 +91,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.FORCE_SQUARED_TRACK_THUMBNAIL],
         _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.TRACK_THUMBNAIL_SIZE_IN_LIST],
         _CustomizationSettingsKeys.heightOfTrackTile: [lang.HEIGHT_OF_TRACK_TILE],
+        _CustomizationSettingsKeys.onSwiping: [lang.ON_SWIPING],
         _CustomizationSettingsKeys.displayThirdRow: [lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE],
         _CustomizationSettingsKeys.displayThirdItemInRow: [lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE],
         _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE],
@@ -303,6 +305,46 @@ class CustomizationSettings extends SettingSubpageProvider {
           _getTrackTileCustomizationsTile(context),
           _getMiniplayerCustomizationsTile(context),
         ],
+      ),
+    );
+  }
+
+  void _onSwipingTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.ON_SWIPING,
+        actions: [
+          NamidaButton(
+            onPressed: NamidaNavigator.inst.closeDialog,
+            text: lang.DONE,
+          ),
+        ],
+        child: Column(
+          children: [
+            ObxO(
+              rx: settings.onTrackSwipeLeft,
+              builder: (context, onTrackSwipeLeft) => CustomListTile(
+                icon: Broken.arrow_left_1,
+                title: onTrackSwipeLeft.toText(),
+                onTap: () {
+                  final next = settings.onTrackSwipeLeft.value.nextElement(OnTrackTileSwapActions.values);
+                  settings.save(onTrackSwipeLeft: next);
+                },
+              ),
+            ),
+            ObxO(
+              rx: settings.onTrackSwipeRight,
+              builder: (context, onTrackSwipeRight) => CustomListTile(
+                icon: Broken.arrow_right,
+                title: onTrackSwipeRight.toText(),
+                onTap: () {
+                  final next = settings.onTrackSwipeRight.value.nextElement(OnTrackTileSwapActions.values);
+                  settings.save(onTrackSwipeRight: next);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -557,6 +599,15 @@ class CustomizationSettings extends SettingSubpageProvider {
                   );
                 },
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.onSwiping,
+            child: CustomListTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.onSwiping),
+              icon: Broken.arrow_swap_horizontal,
+              title: lang.ON_SWIPING,
+              onTap: _onSwipingTap,
             ),
           ),
           getItemWrapper(
