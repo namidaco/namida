@@ -254,10 +254,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     refreshNotification();
 
-    await itemDragged._execute(
-      selectable: (finalItem) {
-        CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true);
-      },
+    itemDragged._execute(
+      selectable: (finalItem) => CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true),
       youtubeID: (finalItem) {},
     );
 
@@ -358,7 +356,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<int> itemToDurationInSeconds(Q item) async {
-    return (await item._execute(
+    return (await item._execute<Future<int?>>(
           selectable: (finalItem) async {
             final dur = finalItem.track.durationMS;
             if (dur > 0) {
@@ -1947,10 +1945,10 @@ extension YoutubeIDToMediaItem on YoutubeID {
 }
 
 extension _PlayableExecuter on Playable {
-  FutureOr<T?> _execute<T>({
-    required FutureOr<T> Function(Selectable finalItem) selectable,
-    required FutureOr<T> Function(YoutubeID finalItem) youtubeID,
-  }) async {
+  T? _execute<T>({
+    required T Function(Selectable finalItem) selectable,
+    required T Function(YoutubeID finalItem) youtubeID,
+  }) {
     final item = this;
     if (item is Selectable) {
       return selectable(item);

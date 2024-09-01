@@ -59,7 +59,7 @@ class Player {
     return item is YoutubeID ? item : null;
   }
 
-  RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue;
+  RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue.queueRx;
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
@@ -308,7 +308,7 @@ class Player {
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
     if (allTracks) {
-      currentItem.value?._executeAsync(
+      currentItem.value?._execute(
         selectable: (_) {
           return _audioHandler.shuffleAllItems((element) => (element as Selectable).track);
         },
@@ -324,7 +324,7 @@ class Player {
   }
 
   int removeDuplicatesFromQueue() {
-    return currentItem.value?._execute(
+    return currentItem.value?._execute<int>(
           selectable: (_) {
             return _audioHandler.removeDuplicatesFromQueue((element) => (element as Selectable).track);
           },
@@ -348,7 +348,7 @@ class Player {
     final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
     final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
     final newItem = tracks.firstOrNull;
-    return await newItem?._executeAsync(
+    return await newItem?._execute(
           selectable: (_) async {
             final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
             insertionType?.shuffleOrSort(finalTracks);
@@ -637,19 +637,6 @@ extension _PlayableExecuter on Playable {
     required T Function(Selectable finalItem) selectable,
     required T Function(YoutubeID finalItem) youtubeID,
   }) {
-    final item = this;
-    if (item is Selectable) {
-      return selectable(item);
-    } else if (item is YoutubeID) {
-      return youtubeID(item);
-    }
-    return null;
-  }
-
-  FutureOr<T?> _executeAsync<T>({
-    required FutureOr<T> Function(Selectable finalItem) selectable,
-    required FutureOr<T> Function(YoutubeID finalItem) youtubeID,
-  }) async {
     final item = this;
     if (item is Selectable) {
       return selectable(item);
