@@ -63,11 +63,11 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                 ),
                 child: const Column(
                   children: [
-                    SizedBox(height: 12.0),
+                    SizedBox(height: 8.0),
                     YoutubeCommentsHeader(
                       displayBackButton: true,
                     ),
-                    SizedBox(height: 12.0),
+                    SizedBox(height: 8.0),
                   ],
                 ),
               ),
@@ -180,14 +180,15 @@ class YoutubeCommentsHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        if (displayBackButton) const SizedBox(width: 12.0),
         if (displayBackButton)
           NamidaIconButton(
-            horizontalPadding: 0,
+            verticalPadding: 8.0,
+            horizontalPadding: 12.0,
             icon: Broken.arrow_left_2,
             onPressed: NamidaNavigator.inst.popPage,
-          ),
-        const SizedBox(width: 12.0),
+          )
+        else
+          const SizedBox(width: 12.0),
         ObxO(
           rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
           builder: (context, isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)

@@ -1187,7 +1187,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 ),
                               ),
                             NamidaIconButton(
-                              horizontalPadding: 0.0,
+                                  verticalPadding: 4.0,
+                                  horizontalPadding: 4.0,
                               onPressed: () {
                                 Player.inst.togglePlayPause();
                               },
@@ -1212,7 +1213,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                       },
                     );
                     final nextButton = NamidaIconButton(
-                      horizontalPadding: 0.0,
+                          verticalPadding: 4.0,
+                          horizontalPadding: 4.0,
                       icon: Broken.next,
                       iconColor: defaultIconColor,
                       onPressed: () {

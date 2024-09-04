@@ -128,9 +128,10 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                             onPressed: () => config.onDefaultStartupFolderChanged(),
                                           ),
                                         ),
-                                        const SizedBox(width: 8.0),
+                                        const SizedBox(width: 6.0),
                                         NamidaIconButton(
-                                          horizontalPadding: 0.0,
+                                          verticalPadding: 8.0,
+                                          horizontalPadding: 2.0,
                                           icon: Broken.sort,
                                           onPressed: () {
                                             NamidaOnTaps.inst.onSubPageTracksSortIconTap(mediaType());
@@ -360,8 +361,6 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
     return NamidaIconButton(
       padding: const EdgeInsets.all(7.0),
       iconSize: widget.iconSize,
-      horizontalPadding: 0.0,
-      verticalPadding: 0.0,
       onPressed: () {
         try {
           widget.controller.animateToEff(

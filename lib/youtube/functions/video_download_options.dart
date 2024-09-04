@@ -334,7 +334,6 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
-      icon: Broken.add_circle,
       leading: NamidaIconButton(
         icon: Broken.add_circle,
         iconColor: context.defaultIconColor(),

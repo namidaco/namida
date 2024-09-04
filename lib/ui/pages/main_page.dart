@@ -310,7 +310,7 @@ class NamidaSearchBar extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             child: clipboard != '' && (empty || !alreadyPasted)
                 ? NamidaIconButton(
-                    horizontalPadding: 0,
+                    horizontalPadding: 2.0,
                     icon: Broken.clipboard_tick,
                     iconSize: 20.0,
                     onPressed: () {

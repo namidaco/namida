@@ -108,12 +108,14 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   if (widget.gridWidget != null) widget.gridWidget!,
                   const SizedBox(width: 4.0),
                   widget.sortByMenuWidget,
-                  const SizedBox(width: 12.0),
-                  SmallIconButton(
+                  const SizedBox(width: 6.0),
+                  NamidaIconButton(
+                    horizontalPadding: 6.0,
                     icon: Broken.filter_search,
-                    onTap: widget.onFilterIconTap,
+                    onPressed: widget.onFilterIconTap,
+                    iconSize: 20.0,
                   ),
-                  const SizedBox(width: 12.0),
+                  const SizedBox(width: 6.0),
                 ],
               ),
             ),
@@ -217,9 +219,11 @@ class SortByMenu extends StatelessWidget {
             ],
           ),
         ),
-        SmallIconButton(
-          onTap: onReverseIconTap,
+        NamidaIconButton(
+          horizontalPadding: 0.0,
           icon: isCurrentlyReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
+          iconSize: 20.0,
+          onPressed: onReverseIconTap,
         )
       ],
     );

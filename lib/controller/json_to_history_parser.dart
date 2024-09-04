@@ -196,10 +196,10 @@ class JsonToHistoryParser {
         normalTitleStyle: true,
         title: lang.MISSING_ENTRIES,
         trailingWidgets: [
-          const SizedBox(width: 8.0),
+          const SizedBox(width: 4.0),
           Obx(
             (context) => NamidaIconButton(
-              horizontalPadding: 0.0,
+              horizontalPadding: 4.0,
               icon: Broken.command_square,
               iconSize: 24.0,
               onPressed: () async {
@@ -226,15 +226,14 @@ class JsonToHistoryParser {
               },
             ).animateEntrance(showWhen: showAddAsDummyIcon.valueR),
           ),
-          const SizedBox(width: 8.0),
           NamidaIconButton(
-            horizontalPadding: 0.0,
+            horizontalPadding: 4.0,
             icon: Broken.eye,
             onPressed: () {
               showAddAsDummyIcon.toggle();
             },
           ),
-          const SizedBox(width: 8.0),
+          const SizedBox(width: 4.0),
         ],
         child: SizedBox(
           width: namida.width,
@@ -313,17 +312,16 @@ class JsonToHistoryParser {
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 8.0),
+                                        const SizedBox(width: 4.0),
                                         NamidaIconButton(
-                                          horizontalPadding: 0.0,
+                                          horizontalPadding: 4.0,
                                           icon: Broken.repeat_circle,
                                           iconSize: 24.0,
                                           onPressed: () => pickTrack(entry),
                                         ),
-                                        const SizedBox(width: 4.0),
                                         Obx(
                                           (context) => NamidaIconButton(
-                                            horizontalPadding: 0.0,
+                                            horizontalPadding: 2.0,
                                             icon: Broken.command,
                                             iconSize: 20.0,
                                             onPressed: () => confirmAddAsDummy(
@@ -332,7 +330,7 @@ class JsonToHistoryParser {
                                             ),
                                           ).animateEntrance(showWhen: showAddAsDummyIcon.valueR),
                                         ),
-                                        const SizedBox(width: 4.0),
+                                        const SizedBox(width: 2.0),
                                       ],
                                     ),
                                   ),

@@ -285,7 +285,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
           child: IconButton(
             visualDensity: VisualDensity.compact,
             style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            padding: const EdgeInsets.all(2.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
             onPressed: () {
               settings.save(enableLyrics: !settings.enableLyrics.value);
               Lyrics.inst.updateLyrics(_getcurrentItem as Playable);
@@ -318,7 +318,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
           tooltip: lang.QUEUE,
           visualDensity: VisualDensity.compact,
           style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-          padding: const EdgeInsets.all(2.0),
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
           onPressed: MiniPlayerController.inst.snapToQueue,
           icon: Icon(
             Broken.row_vertical,
@@ -599,78 +599,75 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                     color: context.theme.colorScheme.secondaryContainer,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Padding(
+                                  child: NamidaIconButton(
                                     padding: const EdgeInsets.all(6.0),
-                                    child: NamidaIconButton(
-                                      horizontalPadding: 0.0,
-                                      icon: null,
-                                      child: videoIconBuilder,
-                                      onPressed: () {
-                                        String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+                                    icon: null,
+                                    child: videoIconBuilder,
+                                    onPressed: () {
+                                      String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
 
-                                        Widget getTextWidget(IconData icon, String title, double value) {
-                                          return Row(
-                                            children: [
-                                              Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
-                                              const SizedBox(width: 12.0),
-                                              NamidaButtonText(
-                                                title,
-                                                style: context.textTheme.displayLarge,
-                                              ),
-                                              const SizedBox(width: 8.0),
-                                              NamidaButtonText(
-                                                toPercentage(value),
-                                                style: context.textTheme.displayMedium,
-                                              )
-                                            ],
-                                          );
-                                        }
-
-                                        Widget getSlider({
-                                          double min = 0.0,
-                                          double max = 2.0,
-                                          required double value,
-                                          required void Function(double newValue)? onChanged,
-                                        }) {
-                                          return Slider.adaptive(
-                                            min: min,
-                                            max: max,
-                                            value: value.clamp(min, max),
-                                            onChanged: onChanged,
-                                            divisions: (max * 100).round(),
-                                            label: "${(value * 100).toStringAsFixed(0)}%",
-                                          );
-                                        }
-
-                                        NamidaNavigator.inst.navigateDialog(
-                                          dialog: CustomBlurryDialog(
-                                            title: lang.CONFIGURE,
-                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-                                            actions: [
-                                              NamidaIconButton(
-                                                icon: Broken.refresh,
-                                                onPressed: () {
-                                                  const val = 1.0;
-                                                  Player.inst.setPlayerPitch(val);
-                                                  Player.inst.setPlayerSpeed(val);
-                                                  Player.inst.setPlayerVolume(val);
-                                                  settings.player.save(
-                                                    pitch: val,
-                                                    speed: val,
-                                                    volume: val,
-                                                  );
-                                                },
-                                              ),
-                                              const DoneButton(),
-                                            ],
-                                            child: const EqualizerMainSlidersColumn(
-                                              verticalInBetweenPadding: 18.0,
-                                              tapToUpdate: false,
+                                      Widget getTextWidget(IconData icon, String title, double value) {
+                                        return Row(
+                                          children: [
+                                            Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
+                                            const SizedBox(width: 12.0),
+                                            NamidaButtonText(
+                                              title,
+                                              style: context.textTheme.displayLarge,
                                             ),
-                                          ),
+                                            const SizedBox(width: 8.0),
+                                            NamidaButtonText(
+                                              toPercentage(value),
+                                              style: context.textTheme.displayMedium,
+                                            )
+                                          ],
                                         );
-                                      },
-                                    ),
+                                      }
+
+                                      Widget getSlider({
+                                        double min = 0.0,
+                                        double max = 2.0,
+                                        required double value,
+                                        required void Function(double newValue)? onChanged,
+                                      }) {
+                                        return Slider.adaptive(
+                                          min: min,
+                                          max: max,
+                                          value: value.clamp(min, max),
+                                          onChanged: onChanged,
+                                          divisions: (max * 100).round(),
+                                          label: "${(value * 100).toStringAsFixed(0)}%",
+                                        );
+                                      }
+
+                                      NamidaNavigator.inst.navigateDialog(
+                                        dialog: CustomBlurryDialog(
+                                          title: lang.CONFIGURE,
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                                          actions: [
+                                            NamidaIconButton(
+                                              icon: Broken.refresh,
+                                              onPressed: () {
+                                                const val = 1.0;
+                                                Player.inst.setPlayerPitch(val);
+                                                Player.inst.setPlayerSpeed(val);
+                                                Player.inst.setPlayerVolume(val);
+                                                settings.player.save(
+                                                  pitch: val,
+                                                  speed: val,
+                                                  volume: val,
+                                                );
+                                              },
+                                            ),
+                                            const DoneButton(),
+                                          ],
+                                          child: const EqualizerMainSlidersColumn(
+                                            verticalInBetweenPadding: 18.0,
+                                            tapToUpdate: false,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 8.0),

@@ -418,7 +418,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     ),
                                   ),
                                   NamidaIconButton(
-                                    horizontalPadding: 0.0,
+                                    verticalPadding: 3.0,
+                                    horizontalPadding: 3.0,
                                     tooltip: () => lang.COPY,
                                     icon: Broken.copy,
                                     iconSize: 20.0,
@@ -436,27 +437,27 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                       );
                                     },
                                   ),
-                                  const SizedBox(width: 6.0),
                                   if (l.file != null) ...[
                                     if (l.synced && !l.fromInternet)
                                       NamidaIconButton(
-                                        horizontalPadding: 0.0,
+                                        verticalPadding: 3.0,
+                                        horizontalPadding: 3.0,
                                         icon: Broken.timer_1,
                                         iconSize: 20.0,
                                         onPressed: () {
                                           showEditCachedSyncedTimeOffsetDialog(l);
                                         },
                                       ),
-                                    const SizedBox(width: 6.0),
                                     NamidaIconButton(
-                                      horizontalPadding: 0.0,
+                                      verticalPadding: 3.0,
+                                      horizontalPadding: 3.0,
                                       icon: Broken.trash,
                                       iconSize: 20.0,
                                       onPressed: () {
                                         showDeleteLyricsDialog(l);
                                       },
                                     ),
-                                    const SizedBox(width: 4.0),
+                                    const SizedBox(width: 2.0),
                                   ],
                                 ],
                               ),
@@ -484,7 +485,6 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     right: 4.0,
                                     child: Container(
                                       clipBehavior: Clip.antiAlias,
-                                      padding: const EdgeInsets.all(4.0),
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         boxShadow: [
@@ -495,9 +495,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                         ],
                                       ),
                                       child: NamidaIconButton(
-                                        horizontalPadding: 0.0,
+                                        padding: const EdgeInsets.all(4.0),
                                         icon: Broken.maximize_circle,
-                                        iconSize: 14.0,
+                                        iconSize: 16.0,
                                         onPressed: () {
                                           if (expandedLyrics.value == l) {
                                             expandedLyrics.value = null;

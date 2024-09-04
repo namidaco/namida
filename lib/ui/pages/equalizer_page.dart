@@ -212,7 +212,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                           ),
                         ),
                         NamidaIconButton(
-                          horizontalPadding: 0.0,
+                          horizontalPadding: 8.0,
                           tooltip: () => lang.TAP_TO_SEEK,
                           icon: null,
                           iconSize: 24.0,
@@ -249,16 +249,15 @@ class EqualizerPageState extends State<EqualizerPage> {
                             displayValue: false,
                             trailing: Row(
                               children: [
-                                const SizedBox(width: 4.0),
                                 NamidaIconButton(
-                                  horizontalPadding: 0.0,
+                                  horizontalPadding: 4.0,
                                   tooltip: () => lang.OPEN_APP,
                                   icon: Broken.export_2,
                                   iconColor: context.defaultIconColor(),
                                   iconSize: 20.0,
                                   onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
                                 ),
-                                const SizedBox(width: 16.0),
+                                const SizedBox(width: 12.0),
                                 CustomSwitch(
                                   active: enabled,
                                   passedColor: null,
@@ -439,8 +438,8 @@ class _SliderTextWidget extends StatelessWidget {
     this.onManualChange,
   });
 
-  static String toPercentage(double val) => "${(val * 100) /* .roundDecimals(6) */}%";
-  static String toXMultiplier(double val) => "${val /* .toStringAsFixed(2) */}x";
+  static String toPercentage(double val) => "${(val * 100).roundDecimals(4)}%";
+  static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
 
   void _showPreciseValueConfig({required BuildContext context, required double initial, required void Function(double val) onChanged}) {
     showNamidaBottomSheetWithTextField(
@@ -572,7 +571,7 @@ class _CuteSliderState extends State<_CuteSlider> {
     final interaction = widget.tapToUpdate ? SliderInteraction.tapAndSlide : SliderInteraction.slideOnly;
     return Row(
       children: [
-        const SizedBox(width: 16.0),
+        const SizedBox(width: 12.0),
         _getArrowIcon(
           icon: Broken.arrow_left_2,
           callback: () {
@@ -598,7 +597,7 @@ class _CuteSliderState extends State<_CuteSlider> {
             _updateVal(newVal);
           },
         ),
-        const SizedBox(width: 16.0),
+        const SizedBox(width: 12.0),
       ],
     );
   }
@@ -608,7 +607,8 @@ Timer? _longPressTimer;
 
 Widget _getArrowIcon({required IconData icon, required VoidCallback callback}) {
   return NamidaIconButton(
-    horizontalPadding: 0.0,
+    verticalPadding: 4.0,
+    horizontalPadding: 4.0,
     icon: icon,
     iconSize: 20.0,
     onPressed: () {
@@ -685,7 +685,7 @@ class EqualizerControls extends StatelessWidget {
                                       icon: Broken.arrow_up_3,
                                       callback: () => _onGainSet(band, parameters, band.gain + incremental),
                                     ),
-                                    const SizedBox(height: 8.0),
+                                    const SizedBox(height: 4.0),
                                     Expanded(
                                       child: VerticalSlider(
                                         min: parameters.minDecibels,
@@ -696,12 +696,12 @@ class EqualizerControls extends StatelessWidget {
                                         tapToUpdate: tapToUpdate,
                                       ),
                                     ),
-                                    const SizedBox(height: 8.0),
+                                    const SizedBox(height: 4.0),
                                     _getArrowIcon(
                                       icon: Broken.arrow_down_2,
                                       callback: () => _onGainSet(band, parameters, band.gain - incremental),
                                     ),
-                                    const SizedBox(height: 12.0),
+                                    const SizedBox(height: 8.0),
                                     FittedBox(
                                       child: Text(
                                         "${band.gain > 0 ? '+' : ''}${(band.gain * 20).toStringAsFixed(2)}",

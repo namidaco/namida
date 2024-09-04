@@ -3991,7 +3991,8 @@ class RepeatModeIconButton extends StatelessWidget {
             ? NamidaIconButton(
                 tooltip: _buildTooltip,
                 icon: null,
-                horizontalPadding: 0.0,
+                verticalPadding: 2.0,
+                horizontalPadding: 4.0,
                 padding: EdgeInsets.zero,
                 iconSize: 20.0,
                 onPressed: () {
@@ -4005,7 +4006,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                  padding: const EdgeInsets.all(2.0),
+                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
                   onPressed: () {
                     onPressed?.call();
                     _switchMode();
@@ -4069,7 +4070,8 @@ class EqualizerIconButton extends StatelessWidget {
         ? NamidaIconButton(
             tooltip: () => tooltip,
             icon: null,
-            horizontalPadding: 0.0,
+            verticalPadding: 2.0,
+            horizontalPadding: 4.0,
             padding: EdgeInsets.zero,
             iconSize: 20.0,
             onPressed: () {
@@ -4081,7 +4083,7 @@ class EqualizerIconButton extends StatelessWidget {
         : IconButton(
             visualDensity: VisualDensity.compact,
             style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            padding: const EdgeInsets.all(2.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
             tooltip: tooltip,
             onPressed: () {
               onPressed?.call();

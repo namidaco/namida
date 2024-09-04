@@ -272,14 +272,15 @@ Future<void> showDownloadVideoBottomSheet({
           if (hasWebm)
             NamidaIconButton(
               tooltip: () => lang.SHOW_WEBM,
-              horizontalPadding: 0.0,
+              verticalPadding: 6.0,
+              horizontalPadding: 6.0,
               iconSize: 20.0,
               icon: Broken.video_octagon,
               onPressed: onSussyIconTap,
             ),
-          if (hasWebm) const SizedBox(width: 12.0),
           NamidaIconButton(
-            horizontalPadding: 0.0,
+            verticalPadding: 6.0,
+            horizontalPadding: 6.0,
             iconSize: 20.0,
             icon: Broken.close_circle,
             onPressed: () {
@@ -388,7 +389,8 @@ Future<void> showDownloadVideoBottomSheet({
                                 alignment: Alignment.bottomRight,
                                 children: [
                                   NamidaIconButton(
-                                    horizontalPadding: 0.0,
+                                    verticalPadding: 4.0,
+                                    horizontalPadding: 8.0,
                                     icon: Broken.edit,
                                     onPressed: () {
                                       if (videoInfo == null && tagsMap.isEmpty) return;

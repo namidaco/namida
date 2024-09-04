@@ -432,21 +432,22 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 4.0),
                                         NamidaIconButton(
-                                          horizontalPadding: 0.0,
+                                          verticalPadding: 4.0,
+                                          horizontalPadding: 4.0,
                                           icon: Broken.edit_2,
                                           iconSize: 20.0,
-                                          onPressed: () => _onEditIconTap(id: id),
+                                          onPressed: () => _onEditIconTap(id: id, index: index),
                                         ),
                                         Checkbox.adaptive(
+                                          visualDensity: VisualDensity.compact,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(4.0.multipliedRadius),
                                           ),
                                           value: isSelected,
                                           onChanged: (value) => _onItemTap(id),
                                         ),
-                                        const SizedBox(width: 4.0),
+                                        const SizedBox(width: 8.0),
                                       ],
                                     ),
                                     Positioned(

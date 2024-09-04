@@ -849,7 +849,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   )
                                 : const SizedBox(),
                           ),
-                          const SizedBox(width: 8.0),
+                          const SizedBox(width: 4.0),
                           // ==== Reset Brightness ====
                           ObxO(
                             rx: _currentBrigthnessDim,
@@ -861,7 +861,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       tooltip: () => lang.RESET_BRIGHTNESS,
                                       icon: Broken.sun_1,
                                       iconColor: itemsColor.withOpacity(0.8),
-                                      horizontalPadding: 0.0,
+                                      verticalPadding: 4.0,
+                                      horizontalPadding: 8.0,
                                       iconSize: 18.0,
                                       onPressed: () => _currentBrigthnessDim.value = 1.0,
                                     )
@@ -870,7 +871,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ),
                             ),
                           ),
-                          const SizedBox(width: 8.0),
+                          const SizedBox(width: 4.0),
                           // ===== Speed Chip =====
                           NamidaPopupWrapper(
                             onPop: _startTimer,
@@ -1411,7 +1412,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           if (widget.isFullScreen)
                                             // -- rotate screen button
                                             NamidaIconButton(
-                                              horizontalPadding: 0.0,
+                                              verticalPadding: 2.0,
+                                              horizontalPadding: 4.0,
                                               padding: EdgeInsets.zero,
                                               iconSize: 20.0,
                                               icon: Broken.rotate_left_1,
@@ -1421,7 +1423,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
                                               },
                                             ),
-                                          if (widget.isFullScreen) SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),
+                                          if (widget.isFullScreen) const SizedBox(width: 10.0),
                                           RepeatModeIconButton(
                                             compact: true,
                                             color: itemsColor,
@@ -1429,7 +1431,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               _startTimer();
                                             },
                                           ),
-                                          SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),
+                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                           EqualizerIconButton(
                                             compact: true,
                                             color: itemsColor,
@@ -1437,9 +1439,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               _startTimer();
                                             },
                                           ),
-                                          SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),
+                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                           NamidaIconButton(
-                                            horizontalPadding: 0.0,
+                                            verticalPadding: 2.0,
+                                            horizontalPadding: 4.0,
                                             padding: EdgeInsets.zero,
                                             iconSize: 20.0,
                                             icon: Broken.copy,
@@ -1455,9 +1458,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               if (id != null) const YTUtils().copyCurrentVideoUrl(id, withTimestamp: true);
                                             },
                                           ),
-                                          SizedBox(width: widget.isFullScreen ? 12.0 : 10.0),
+                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                           NamidaIconButton(
-                                            horizontalPadding: 0.0,
+                                            verticalPadding: 2.0,
+                                            horizontalPadding: 4.0,
                                             padding: EdgeInsets.zero,
                                             iconSize: 20.0,
                                             icon: Broken.maximize_2,
@@ -1504,21 +1508,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: ColoredBox(
                                   color: Colors.black.withOpacity(0.2),
                                   child: NamidaIconButton(
-                                      icon: null,
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
-                                      onPressed: () {
-                                        Player.inst.previous();
-                                        _startTimer();
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: Icon(
-                                          Broken.previous,
-                                          size: 30.0,
-                                          color: itemsColor,
-                                        ),
-                                      )),
+                                    icon: null,
+                                    padding: const EdgeInsets.all(10.0),
+                                    onPressed: () {
+                                      Player.inst.previous();
+                                      _startTimer();
+                                    },
+                                    child: Icon(
+                                      Broken.previous,
+                                      size: 30.0,
+                                      color: itemsColor,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1540,51 +1541,43 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               return reachedLastPosition
                                   ? NamidaIconButton(
                                       icon: null,
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
+                                      padding: const EdgeInsets.all(14.0),
                                       onPressed: () async {
                                         await Player.inst.seek(Duration.zero);
                                         await Player.inst.play();
                                         _startTimer();
                                       },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(14.0),
-                                        child: Icon(
-                                          Broken.refresh,
-                                          size: 40.0,
-                                          color: itemsColor,
-                                          key: const Key('replay'),
-                                        ),
+                                      child: Icon(
+                                        Broken.refresh,
+                                        size: 40.0,
+                                        color: itemsColor,
+                                        key: const Key('replay'),
                                       ),
                                     )
                                   : NamidaIconButton(
                                       icon: null,
-                                      horizontalPadding: 0.0,
-                                      padding: EdgeInsets.zero,
+                                      padding: const EdgeInsets.all(14.0),
                                       onPressed: () {
                                         Player.inst.togglePlayPause();
                                         _startTimer();
                                       },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(14.0),
-                                        child: ObxO(
-                                          rx: Player.inst.isPlaying,
-                                          builder: (context, isPlaying) => AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 200),
-                                            child: isPlaying
-                                                ? Icon(
-                                                    Broken.pause,
-                                                    size: 40.0,
-                                                    color: itemsColor,
-                                                    key: const Key('paused'),
-                                                  )
-                                                : Icon(
-                                                    Broken.play,
-                                                    size: 40.0,
-                                                    color: itemsColor,
-                                                    key: const Key('playing'),
-                                                  ),
-                                          ),
+                                      child: ObxO(
+                                        rx: Player.inst.isPlaying,
+                                        builder: (context, isPlaying) => AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 200),
+                                          child: isPlaying
+                                              ? Icon(
+                                                  Broken.pause,
+                                                  size: 40.0,
+                                                  color: itemsColor,
+                                                  key: const Key('paused'),
+                                                )
+                                              : Icon(
+                                                  Broken.play,
+                                                  size: 40.0,
+                                                  color: itemsColor,
+                                                  key: const Key('playing'),
+                                                ),
                                         ),
                                       ),
                                     );
@@ -1610,21 +1603,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     child: ColoredBox(
                                       color: Colors.black.withOpacity(0.2),
                                       child: NamidaIconButton(
-                                          icon: null,
-                                          horizontalPadding: 0.0,
-                                          padding: EdgeInsets.zero,
-                                          onPressed: () {
-                                            Player.inst.next();
-                                            _startTimer();
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(10.0),
-                                            child: Icon(
-                                              Broken.next,
-                                              size: 30.0,
-                                              color: itemsColor,
-                                            ),
-                                          )),
+                                        icon: null,
+                                        padding: const EdgeInsets.all(10.0),
+                                        onPressed: () {
+                                          Player.inst.next();
+                                          _startTimer();
+                                        },
+                                        child: Icon(
+                                          Broken.next,
+                                          size: 30.0,
+                                          color: itemsColor,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

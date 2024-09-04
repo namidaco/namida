@@ -135,17 +135,16 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(height: 12.0),
+                    const SizedBox(height: 6.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        const SizedBox(width: 12.0),
                         NamidaIconButton(
-                          horizontalPadding: 0,
+                          verticalPadding: 6.0,
+                          horizontalPadding: 12.0,
                           icon: Broken.arrow_left_2,
                           onPressed: NamidaNavigator.inst.popPage,
                         ),
-                        const SizedBox(width: 12.0),
                         ObxO(
                           rx: _lastFetchWasCached,
                           builder: (context, isRepliesFromCache) => (isRepliesFromCache ?? false)
@@ -189,7 +188,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         const SizedBox(width: 8.0),
                       ],
                     ),
-                    const SizedBox(height: 12.0),
+                    const SizedBox(height: 6.0),
                   ],
                 ),
               ),
