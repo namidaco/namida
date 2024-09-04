@@ -75,6 +75,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: hPadding),
                               child: YoutubeShortVideoTallCard(
+                                index: index,
                                 short: short,
                                 thumbnailWidth: width,
                                 thumbnailHeight: height,

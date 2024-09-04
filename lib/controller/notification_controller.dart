@@ -85,7 +85,7 @@ class NotificationService {
   }
 
   static void downloadYoutubeNotification({
-    required DownloadTaskFilename notificationID,
+    required DownloadTaskFilename filenameWrapper,
     required String title,
     required String Function(String progressText) subtitle,
     String? imagePath,
@@ -105,24 +105,25 @@ class NotificationService {
       payload: _youtubeDownloadPayload,
       imagePath: imagePath,
       isInBytes: true,
-      tag: notificationID.filename,
+      tag: filenameWrapper.key,
       displayTime: displayTime,
       ongoing: isRunning,
     );
   }
 
-  static Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename notificationID}) async {
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID.filename);
+  static Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename filenameWrapper}) async {
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: filenameWrapper.key);
   }
 
   static void doneDownloadingYoutubeNotification({
-    required DownloadTaskFilename notificationID,
+    required DownloadTaskFilename filenameWrapper,
     required String videoTitle,
     required String subtitle,
     required bool failed,
     String? imagePath,
   }) async {
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: notificationID.filename);
+    final key = filenameWrapper.key;
+    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: key);
     _createNotification(
       id: _youtubeDownloadID,
       title: videoTitle,
@@ -133,7 +134,7 @@ class NotificationService {
       payload: _youtubeDownloadPayload,
       imagePath: imagePath,
       isInBytes: true,
-      tag: notificationID.filename,
+      tag: key,
       displayTime: DateTime.now(),
     );
   }

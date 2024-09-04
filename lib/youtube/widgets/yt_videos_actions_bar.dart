@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -41,6 +42,7 @@ class YTVideosActionBar extends StatelessWidget {
   final String Function()? urlBuilder;
   final List<YoutubeID>? Function() videosCallback;
   final Map<String, StreamInfoItem>? Function()? infoLookupCallback;
+  final PlaylistBasicInfo? Function()? playlistBasicInfo;
   final YTVideosActionBarOptions barOptions;
   final YTVideosActionBarOptions menuOptions;
 
@@ -50,6 +52,7 @@ class YTVideosActionBar extends StatelessWidget {
     required this.urlBuilder,
     required this.videosCallback,
     this.infoLookupCallback,
+    this.playlistBasicInfo,
     this.barOptions = const YTVideosActionBarOptions(),
     this.menuOptions = const YTVideosActionBarOptions(
       shuffle: false,
@@ -69,6 +72,7 @@ class YTVideosActionBar extends StatelessWidget {
       ids: videos,
       playlistName: title,
       infoLookup: infoLookupCallback?.call() ?? {},
+      playlistInfo: playlistBasicInfo?.call(),
     ).navigate();
   }
 

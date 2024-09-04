@@ -184,6 +184,13 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                 streamsList.loop((e) => m[e.id] = e);
                 return m;
               },
+              playlistBasicInfo: () => PlaylistBasicInfo(
+                id: channelInfo?.id ?? '',
+                title: channelInfo?.title ?? '',
+                videosCountText: channelInfo?.videosCountText,
+                videosCount: channelInfo?.videosCount,
+                thumbnails: [],
+              ),
             ),
             const SizedBox(width: 8.0),
           ],

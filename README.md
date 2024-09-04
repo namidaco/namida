@@ -30,7 +30,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Features](#-features)
   - [Library \& Indexing](#library--indexing)
   - [Look \& Feel](#look--feel)
-  - [Streaming](#streaming)
+  - [Streaming & Youtube](#streaming--youtube)
   - [Others](#others)
   - [Some additional cool features](#some-additional-cool-features)
 - [Video Integration](#video-integration)
@@ -65,15 +65,41 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Waveform Seekbar.
 - Lots of customizations (check out [customization section](#customization-settings)).
 
-## Streaming
+## Streaming & Youtube
 
 - Best Video & Audio Quality
 - Audio Only Mode
-- Support Caching & Offline Playback
-- Support Downloads
+- Support Downloads, Caching & Offline Playback
 - Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, etc)
 - Edit tags for downloads
 - Optional Auto title/artist/album extraction for downloads and scrobbling
+- Downloads output filename builder (similar to yt-dlp)
+
+  - `video_id`, `id`: video identifier
+  - `title`: video title
+  - `ext`: format container extension (mp4, m4a, webm). this is not necessary as it would be added automatically
+  - `channel`, `uploader`: channel name of the video
+  - `channel_id`, `uploader_id`: channel id of the video
+  - `channel_url`, `uploader_url`: channel url of the video
+  - `timestamp`: UNIX timestamp of the video (milliseconds since epoch)
+  - `upload_date`: upload date of the video (yyyyMMdd)
+  - `view_count`: view count of the video
+  - `like_count`: like count of the video
+  - `playlist_title`: title of the playlist containing the video
+  - `playlist_id`: id of the playlist containing the video
+  - `playlist`: `playlist_title` if available or else `playlist_id`
+  - `playlist_count`: total videos count in the playlist
+  - `playlist_index`: index of the video in the playlists (starts at 0)
+  - `playlist_autonumber`: position of the video in the playlists (starts at 1)
+  - example: 
+```bash
+# [04] music title [(channel name)]
+[%(playlist_autonumber)s] %(title)s [(%(channel)s)]
+
+# saving to separate folders
+# music playlist/02. music title.m4a
+%(playlist)s/%(playlist_autonumber)s. %(title)s.%(ext)s
+```
 
 ## Others:
 
@@ -146,6 +172,8 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 </summary>
  • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
 </details>
+
+- Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
 
 # Screenshots
 

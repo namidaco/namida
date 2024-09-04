@@ -407,6 +407,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       ids: videoIDs.toList(),
       playlistName: playlist.title,
       infoLookup: infoLookup,
+      playlistInfo: this,
     ).navigate();
   }
 

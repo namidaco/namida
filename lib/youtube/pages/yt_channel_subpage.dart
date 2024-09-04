@@ -22,6 +22,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/thumbnail.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/extensions.dart';
 import 'package:youtipie/youtipie.dart';
@@ -520,14 +521,5 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         ),
       ),
     );
-  }
-}
-
-extension _ListMapper<E> on List<E> {
-  Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
-    final length = this.length;
-    for (int i = 0; i < length; i++) {
-      yield toElement(this[i], i);
-    }
   }
 }

@@ -391,6 +391,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
   void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
     await showDownloadVideoBottomSheet(
+      index: index,
+      streamInfoItem: config.streamInfoItem,
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: config.id.videoId,
       initialItemConfig: config,
@@ -438,7 +440,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         await YoutubeController.inst.renameConfigFilename(
           config: config,
           videoID: config.id,
-          newFilename: DownloadTaskFilename(initialFilename: text),
+          newFilename: text,
           groupName: groupName,
           renameCacheFiles: true,
         );
@@ -468,16 +470,18 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         : item.audioStream != null
             ? Broken.musicnote
             : null;
-
+    final infoFinal = videos[index].streamInfoItem ?? info;
     return NamidaPopupWrapper(
       openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
+        index: index,
+        streamInfoItem: infoFinal,
         videoId: videoId,
-        url: info?.buildUrl(),
-        channelID: info?.channelId ?? info?.channel.id,
+        url: infoFinal?.buildUrl(),
+        channelID: infoFinal?.channelId ?? infoFinal?.channel.id,
         playlistID: null,
-        idsNamesLookup: {videoId: info?.title},
+        idsNamesLookup: {videoId: infoFinal?.title},
         playlistName: '',
         videoYTID: null,
       )..insert(
@@ -511,7 +515,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
               width: thumbWidth,
               height: thumbHeight,
               videoId: videoId,
-              customUrl: info?.liveThumbs.pick()?.url,
+              customUrl: infoFinal?.liveThumbs.pick()?.url,
               smallBoxText: duration,
             ),
             const SizedBox(width: 8.0),
@@ -712,7 +716,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   context: context,
                                   title: lang.INFO,
                                   icon: Broken.info_circle,
-                                  onTap: () => _showInfoDialog(context, item, info, groupName),
+                                  onTap: () => _showInfoDialog(context, item, infoFinal, groupName),
                                 ),
                               ],
                             ),

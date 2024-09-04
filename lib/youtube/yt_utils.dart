@@ -12,6 +12,7 @@ import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/url_utils.dart';
@@ -185,6 +186,8 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideoCardMenuItems({
+    required int? index,
+    required StreamInfoItem? streamInfoItem,
     required String videoId,
     required String? url,
     required String? channelID,
@@ -215,6 +218,8 @@ class YTUtils {
         onTap: () {
           showDownloadVideoBottomSheet(
             videoId: videoId,
+            index: index,
+            streamInfoItem: streamInfoItem,
           );
         },
       ),
@@ -334,6 +339,7 @@ class YTUtils {
       FFMPEGTagField.comment: YTUrlUtils.buildVideoUrl(id),
       FFMPEGTagField.year: date == null ? null : DateFormat('yyyyMMdd').format(date),
       FFMPEGTagField.synopsis: description,
+      FFMPEGTagField.description: description,
     };
   }
 

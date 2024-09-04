@@ -52,6 +52,8 @@ class YoutubeVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = video.id;
     return YTUtils.getVideoCardMenuItems(
+      index: index,
+      streamInfoItem: video,
       videoId: videoId,
       url: video.buildUrl(),
       channelID: video.channel.id,
@@ -159,6 +161,8 @@ class YoutubeShortVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
+      index: index,
+      streamInfoItem: null,
       videoId: videoId,
       url: short.buildUrl(),
       channelID: null,
@@ -209,12 +213,14 @@ class YoutubeShortVideoCard extends StatelessWidget {
 }
 
 class YoutubeShortVideoTallCard extends StatelessWidget {
+  final int index;
   final StreamInfoItemShort short;
   final double thumbnailWidth;
   final double? thumbnailHeight;
 
   const YoutubeShortVideoTallCard({
     super.key,
+    required this.index,
     required this.short,
     required this.thumbnailWidth,
     required this.thumbnailHeight,
@@ -223,6 +229,8 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
+      index: index,
+      streamInfoItem: null,
       videoId: videoId,
       url: short.buildUrl(),
       channelID: null,

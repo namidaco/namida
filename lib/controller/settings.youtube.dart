@@ -21,6 +21,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final dragToSeek = YTSeekActionMode.all.obs;
+  final downloadFilenameBuilder = ''.obs;
 
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
@@ -43,6 +44,7 @@ class _YoutubeSettings with SettingsFileWriter {
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     YTSeekActionMode? tapToSeek,
     YTSeekActionMode? dragToSeek,
+    String? downloadFilenameBuilder,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
@@ -68,6 +70,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
     if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
+    if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
 
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
@@ -113,6 +116,8 @@ class _YoutubeSettings with SettingsFileWriter {
 
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
+      downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
+
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
@@ -141,6 +146,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'dragToSeek': dragToSeek.value.name,
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
+        'downloadFilenameBuilder': downloadFilenameBuilder.value,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.name,
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,

@@ -6,6 +6,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart';
 
@@ -423,12 +424,20 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
         if (ids.length == 1) {
-          showDownloadVideoBottomSheet(videoId: ids.first);
+          showDownloadVideoBottomSheet(videoId: ids.first, index: 0, streamInfoItem: null);
         } else {
+          final ptitle = 'External - ${DateTime.now().millisecondsSinceEpoch.dateAndClockFormattedOriginal}';
           YTPlaylistDownloadPage(
             ids: ids.map((e) => YoutubeID(id: e, playlistID: null)).toList(),
-            playlistName: 'External - ${DateTime.now().millisecondsSinceEpoch.dateAndClockFormattedOriginal}',
+            playlistName: ptitle,
             infoLookup: const {},
+            playlistInfo: PlaylistBasicInfo(
+              id: '',
+              title: ptitle,
+              videosCountText: ids.length.toString(),
+              videosCount: ids.length,
+              thumbnails: [],
+            ),
           ).navigate();
         }
         return true;

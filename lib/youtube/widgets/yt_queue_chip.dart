@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -337,6 +339,13 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
                                 playlistName: lang.QUEUE,
                                 infoLookup: const {},
+                                playlistInfo: PlaylistBasicInfo(
+                                  id: '',
+                                  title: lang.QUEUE,
+                                  videosCountText: Player.inst.currentQueue.value.length.toString(),
+                                  videosCount: Player.inst.currentQueue.value.length,
+                                  thumbnails: [],
+                                ),
                               ).navigate();
                             },
                           ),

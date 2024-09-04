@@ -92,6 +92,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     if (videoId.isEmpty) return [];
     if (widget.notification.isComment) return [];
     return YTUtils.getVideoCardMenuItems(
+      index: widget.index, // original index
+      streamInfoItem: null,
       videoId: videoId,
       url: widget.notification.buildUrl(),
       channelID: null,

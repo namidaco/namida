@@ -1978,6 +1978,8 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         final videoId = item.videoId;
         if (videoId == null) return [];
         return YTUtils.getVideoCardMenuItems(
+          index: null,
+          streamInfoItem: null,
           videoId: videoId,
           url: YTUrlUtils.buildVideoUrl(videoId),
           channelID: null,

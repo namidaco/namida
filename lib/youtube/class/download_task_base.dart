@@ -8,18 +8,11 @@ abstract class DownloadTask<T> {
 class DownloadTaskFilename extends DownloadTask {
   String filename;
 
-  DownloadTaskFilename({
+  String get key => hashCode.toString();
+
+  DownloadTaskFilename.create({
     required String initialFilename,
   }) : filename = initialFilename;
-
-  @override
-  bool operator ==(Object other) {
-    if (other is DownloadTaskFilename) return filename == other.filename;
-    return false;
-  }
-
-  @override
-  int get hashCode => filename.hashCode;
 
   @override
   String toString() => filename;

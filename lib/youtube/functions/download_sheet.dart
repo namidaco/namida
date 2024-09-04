@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
@@ -26,6 +27,7 @@ import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
+import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -39,6 +41,9 @@ Future<void> showDownloadVideoBottomSheet({
   bool Function(String groupName, YoutubeItemDownloadConfig config)? onConfirmButtonTap,
   bool showSpecificFileOptionsInEditTagDialog = true,
   YoutubeItemDownloadConfig? initialItemConfig,
+  required int? index,
+  required StreamInfoItem? streamInfoItem,
+  bool preferAudioOnly = false,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
@@ -122,15 +127,17 @@ Future<void> showDownloadVideoBottomSheet({
         showAudioWebm.value = true;
       }
     }
-    selectedVideoOnlyStream.value = streams?.videoStreams.firstWhereEff(
-          (e) {
-            final cached = e.getCachedFile(videoId);
-            if (cached != null) return true;
-            final strQualityLabel = e.qualityLabel.videoLabelToSettingLabel();
-            return !e.isWebm && settings.youtubeVideoQualities.contains(strQualityLabel);
-          },
-        ) ??
-        streams?.videoStreams.firstWhereEff((e) => !e.isWebm);
+    if (!preferAudioOnly) {
+      selectedVideoOnlyStream.value = streams?.videoStreams.firstWhereEff(
+            (e) {
+              final cached = e.getCachedFile(videoId);
+              if (cached != null) return true;
+              final strQualityLabel = e.qualityLabel.videoLabelToSettingLabel();
+              return !e.isWebm && settings.youtubeVideoQualities.contains(strQualityLabel);
+            },
+          ) ??
+          streams?.videoStreams.firstWhereEff((e) => !e.isWebm);
+    }
 
     onAudioSelectionChanged();
     onVideoSelectionChanged();
@@ -363,7 +370,8 @@ Future<void> showDownloadVideoBottomSheet({
                                   height: 12.0,
                                   shimmerEnabled: videoInfo == null,
                                   child: () {
-                                    final dateFormatted = videoInfo?.publishedAt.date?.millisecondsSinceEpoch.dateFormattedOriginal;
+                                    final date = streamResult.value?.info?.uploadDate.date ?? streamResult.value?.info?.publishDate.date ?? videoInfo?.publishedAt.date;
+                                    final dateFormatted = date?.millisecondsSinceEpoch.dateFormattedOriginal;
                                     return Text(
                                       [
                                         videoInfo?.durSeconds?.secondsLabel ?? "00:00",
@@ -599,7 +607,7 @@ Future<void> showDownloadVideoBottomSheet({
                       validatorMode: AutovalidateMode.always,
                       validator: (value) {
                         if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                        final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName$value");
+                        final file = File("${AppDirs.YOUTUBE_DOWNLOADS}$groupName/$value");
                         void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                               filenameExists.value = exist;
                             });
@@ -614,6 +622,8 @@ Future<void> showDownloadVideoBottomSheet({
                       },
                     ),
                   ),
+                  const SizedBox(height: 6.0),
+                  YTDownloadFilenameBuilderRow(controller: videoOutputFilenameController),
                   const SizedBox(height: 12.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -653,13 +663,15 @@ Future<void> showDownloadVideoBottomSheet({
                                       : const BoxDecoration(),
                                   onTap: () async {
                                     final itemConfig = YoutubeItemDownloadConfig(
+                                      index: index,
                                       id: DownloadTaskVideoId(videoId: videoId),
                                       groupName: DownloadTaskGroupName(groupName: groupName),
-                                      filename: DownloadTaskFilename(initialFilename: videoOutputFilenameController.text),
+                                      filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
                                       ffmpegTags: tagsMap,
                                       fileDate: videoDateTime,
                                       videoStream: selectedVideoOnlyStream.value,
                                       audioStream: selectedAudioOnlyStream.value,
+                                      streamInfoItem: streamInfoItem,
                                       prefferedVideoQualityID: selectedVideoOnlyStream.value?.itag.toString(),
                                       prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
                                       fetchMissingAudio: selectedAudioOnlyStream.value != null,

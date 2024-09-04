@@ -267,6 +267,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         ids: playlist.tracks,
                                         playlistName: playlistCurrentName,
                                         infoLookup: const {},
+                                        playlistInfo: PlaylistBasicInfo(
+                                          id: playlist.playlistID.id,
+                                          title: playlist.name,
+                                          videosCountText: playlist.tracks.length.toString(),
+                                          videosCount: playlist.tracks.length,
+                                          thumbnails: [],
+                                        ),
                                       ).navigate();
                                     },
                                   ),
@@ -664,11 +671,15 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.import,
                                     onPressed: () async {
+                                      final infoLookup = <String, StreamInfoItem>{};
+                                      playlist.items.loop((e) => infoLookup[e.id] = e);
+
                                       final videos = await _getAllPlaylistVideos();
                                       YTPlaylistDownloadPage(
                                         ids: videos,
                                         playlistName: playlist.basicInfo.title,
-                                        infoLookup: const {},
+                                        infoLookup: infoLookup,
+                                        playlistInfo: playlist.basicInfo,
                                       ).navigate();
                                     },
                                   ),
@@ -699,8 +710,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                     ),
                   ),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
-                  SliverStickyHeader.builder(
-                    builder: (context, state) => ColoredBox(
+                  SliverStickyHeader(
+                    header: ColoredBox(
                       color: context.theme.scaffoldBackgroundColor,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

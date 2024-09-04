@@ -330,6 +330,8 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     final popUpItems = NamidaPopupWrapper(
       childrenDefault: () {
         final defaultItems = YTUtils.getVideoCardMenuItems(
+          index: Player.inst.currentIndex.value,
+          streamInfoItem: null,
           videoId: video.id,
           url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),
           channelID: vidpage?.channelInfo?.id,

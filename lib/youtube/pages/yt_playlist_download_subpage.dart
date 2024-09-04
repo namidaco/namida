@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -14,6 +15,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -37,12 +39,14 @@ class YTPlaylistDownloadPage extends StatefulWidget with NamidaRouteWidget {
   final List<YoutubeID> ids;
   final String playlistName;
   final Map<String, StreamInfoItem> infoLookup;
+  final PlaylistBasicInfo? playlistInfo;
 
   const YTPlaylistDownloadPage({
     super.key,
     required this.ids,
     required this.playlistName,
     required this.infoLookup,
+    required this.playlistInfo,
   });
 
   @override
@@ -84,17 +88,23 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     super.dispose();
   }
 
-  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id) {
-    final videoTitle = widget.infoLookup[id]?.title ?? YoutubeInfoController.utils.getVideoName(id);
-    final filename = videoTitle ?? id;
+  void onRenameAllTasks(String? defaultFilename) {
+    widget.ids.mapIndexed((ytid, index) => _configMap[ytid.id] = _getDummyDownloadConfig(ytid.id, index, defaultFilename: defaultFilename)).toList();
+  }
+
+  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int index, {String? defaultFilename}) {
+    final streamInfoItem = widget.infoLookup[id];
+    final filename = defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id;
     return YoutubeItemDownloadConfig(
+      index: index,
       id: DownloadTaskVideoId(videoId: id),
       groupName: DownloadTaskGroupName(groupName: _groupName.value),
-      filename: DownloadTaskFilename(initialFilename: filename),
+      filename: DownloadTaskFilename.create(initialFilename: filename),
       ffmpegTags: {},
       fileDate: null,
       videoStream: null,
       audioStream: null,
+      streamInfoItem: streamInfoItem,
       prefferedVideoQualityID: null,
       prefferedAudioQualityID: null,
       fetchMissingAudio: true,
@@ -108,10 +118,15 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   Future<void> _onEditIconTap({
     required String id,
+    required int index,
   }) async {
     await showDownloadVideoBottomSheet(
+      index: index,
+      streamInfoItem: widget.infoLookup[id],
       showSpecificFileOptionsInEditTagDialog: false,
+      preferAudioOnly: downloadAudioOnly.value,
       videoId: id,
+      initialItemConfig: _configMap[id],
       confirmButtonText: lang.CONFIRM,
       onConfirmButtonTap: (groupName, config) {
         _configMap[id] = config;
@@ -272,7 +287,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         children: [
           Column(
             children: [
-              const SizedBox(height: 12.0),
               Obx(
                 (context) => CustomListTile(
                   icon: Broken.music_playlist,
@@ -282,6 +296,48 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   trailingRaw: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      NamidaIconButton(
+                        tooltip: () => lang.OUTPUT,
+                        icon: Broken.edit_2,
+                        onPressed: () async {
+                          final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
+                          await showNamidaBottomSheetWithTextField(
+                            context: context,
+                            title: lang.OUTPUT,
+                            textfieldConfig: BottomSheetTextFieldConfigWC(
+                              controller: controller,
+                              hintText: '',
+                              labelText: lang.FILE_NAME,
+                              validator: (value) {
+                                if (value == null) return lang.PLEASE_ENTER_A_NAME;
+                                final file = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.value}/$value");
+                                if (file.existsSync()) {
+                                  return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
+                                }
+                                if (!YoutubeController.filenameBuilder.isBuildingDefaultFilenameSafe(value)) {
+                                  return YoutubeController.filenameBuilder.encodedParamsThatShouldExistInFilename.join(' - ');
+                                }
+                                return null;
+                              },
+                            ),
+                            buttonText: lang.SAVE,
+                            onButtonTap: (text) {
+                              onRenameAllTasks(text);
+                              settings.youtube.save(downloadFilenameBuilder: text);
+                              return true;
+                            },
+                            extraItemsBuilder: (formState) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                child: YTDownloadFilenameBuilderRow(
+                                  controller: controller,
+                                ),
+                              );
+                            },
+                          );
+                          controller.disposeAfterAnimation();
+                        },
+                      ),
                       NamidaIconButton(
                         tooltip: () => lang.INVERT_SELECTION,
                         icon: Broken.recovery_convert,
@@ -328,6 +384,33 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     _groupName.value = newGroupName;
                   },
                 ),
+              ),
+              ObxO(
+                rx: settings.youtube.downloadFilenameBuilder,
+                builder: (context, value) {
+                  return value.isEmpty
+                      ? const SizedBox()
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: 6.0),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 18.0),
+                              const Icon(
+                                Broken.document_code,
+                                size: 20.0,
+                              ),
+                              const SizedBox(width: 12.0),
+                              Expanded(
+                                child: Text(
+                                  value,
+                                  style: context.textTheme.displaySmall,
+                                ),
+                              ),
+                              const SizedBox(width: 18.0),
+                            ],
+                          ),
+                        );
+                },
               ),
               Expanded(
                 child: NamidaScrollbarWithController(
@@ -514,7 +597,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
                           groupName: DownloadTaskGroupName(groupName: widget.playlistName),
-                          itemsConfig: _selectedList.value.map((id) => _configMap[id] ?? _getDummyDownloadConfig(id)).toList(),
+                          itemsConfig: _selectedList.value.mapIndexed((id, index) => _configMap[id] ?? _getDummyDownloadConfig(id, index)).toList(),
                           useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
                           autoExtractTitleAndArtist: autoExtractTitleAndArtist,
                           keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
@@ -530,6 +613,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             }
                             return list;
                           }(),
+                          playlistInfo: widget.playlistInfo,
                         );
                       },
                     ),
@@ -545,6 +629,42 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class YTDownloadFilenameBuilderRow extends StatelessWidget {
+  final TextEditingController controller;
+  const YTDownloadFilenameBuilderRow({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: YoutubeController.filenameBuilder.availableEncodedParams
+            .map(
+              (e) => NamidaInkWell(
+                borderRadius: 4.0,
+                bgColor: context.theme.cardColor,
+                margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                onTap: () {
+                  var cursorPos = controller.selection.base.offset;
+                  String textAfterCursor = controller.text.substring(cursorPos);
+                  String textBeforeCursor = controller.text.substring(0, cursorPos);
+                  final toAdd = YoutubeController.filenameBuilder.buildParamForFilename(e);
+                  controller.text = "$textBeforeCursor$toAdd$textAfterCursor";
+                  controller.selection = TextSelection.collapsed(offset: textBeforeCursor.length + toAdd.length);
+                },
+                child: Text(
+                  e,
+                  style: context.textTheme.displaySmall,
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }

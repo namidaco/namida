@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 
@@ -18,10 +19,12 @@ class YoutubeItemDownloadConfig {
   DateTime? fileDate;
   VideoStream? videoStream;
   AudioStream? audioStream;
+  final StreamInfoItem? streamInfoItem;
   final String? prefferedVideoQualityID;
   final String? prefferedAudioQualityID;
   final bool? fetchMissingAudio;
   final bool? fetchMissingVideo;
+  final int? index;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -31,39 +34,48 @@ class YoutubeItemDownloadConfig {
     required this.fileDate,
     required this.videoStream,
     required this.audioStream,
+    required this.streamInfoItem,
     required this.prefferedVideoQualityID,
     required this.prefferedAudioQualityID,
     required this.fetchMissingAudio,
     required this.fetchMissingVideo,
+    required this.index,
   }) : _filename = filename.obs;
 
   /// Using this method is restricted only for the function that will rename all the other instances in other parts.
   @protected
-  void rename(DownloadTaskFilename newName) {
-    _filename.value = newName;
+  void rename(String newName) {
+    _filename.value.filename = newName;
+    _filename.refresh();
   }
 
   factory YoutubeItemDownloadConfig.fromJson(Map<String, dynamic> map) {
     VideoStream? vids;
     AudioStream? auds;
+    StreamInfoItem? streamInfoItem;
     try {
       vids = VideoStream.fromMap(map['videoStream']);
     } catch (_) {}
     try {
       auds = AudioStream.fromMap(map['audioStream']);
     } catch (_) {}
+    try {
+      streamInfoItem = StreamInfoItem.fromMap(map['streamInfoItem']);
+    } catch (_) {}
     return YoutubeItemDownloadConfig(
       id: DownloadTaskVideoId(videoId: map['id'] ?? 'UNKNOWN_ID'),
-      filename: DownloadTaskFilename(initialFilename: map['filename'] ?? 'UNKNOWN_FILENAME'),
+      filename: DownloadTaskFilename.create(initialFilename: map['filename'] ?? 'UNKNOWN_FILENAME'),
       groupName: DownloadTaskGroupName(groupName: map['groupName'] ?? ''),
       fileDate: DateTime.fromMillisecondsSinceEpoch(map['fileDate'] ?? 0),
       ffmpegTags: (map['ffmpegTags'] as Map<String, dynamic>?)?.cast() ?? {},
       videoStream: vids,
       audioStream: auds,
+      streamInfoItem: streamInfoItem,
       prefferedVideoQualityID: map['prefferedVideoQualityID'],
       prefferedAudioQualityID: map['prefferedAudioQualityID'],
       fetchMissingAudio: map['fetchMissingAudio'],
       fetchMissingVideo: map['fetchMissingVideo'],
+      index: map['index'],
     );
   }
 
@@ -76,10 +88,12 @@ class YoutubeItemDownloadConfig {
       'fileDate': fileDate?.millisecondsSinceEpoch,
       'videoStream': videoStream?.toMap(),
       'audioStream': audioStream?.toMap(),
+      'streamInfoItem': streamInfoItem?.toMap(),
       'prefferedVideoQualityID': prefferedVideoQualityID,
       'prefferedAudioQualityID': prefferedAudioQualityID,
       'fetchMissingAudio': fetchMissingAudio,
       'fetchMissingVideo': fetchMissingVideo,
+      'index': index,
     };
   }
 
