@@ -2058,9 +2058,13 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
       double maxHeightFinal = maxHeight;
       final keyContext = widget.videoConstraintsKey.currentContext;
       if (keyContext != null) {
-        final box = keyContext.findRenderObject() as RenderBox;
-        if (box.size.width < maxWidthFinal) maxWidthFinal = box.size.width;
-        if (box.size.height < maxHeightFinal) maxHeightFinal = box.size.height;
+        try {
+          final box = keyContext.findRenderObject() as RenderBox;
+          if (box.size.width < maxWidthFinal) maxWidthFinal = box.size.width;
+          if (box.size.height < maxHeightFinal) maxHeightFinal = box.size.height;
+        } catch (_) {
+          // layout error (not laid out yet)
+        }
       }
       return Stack(
         alignment: Alignment.center,

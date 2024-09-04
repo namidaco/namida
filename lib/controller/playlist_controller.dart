@@ -257,6 +257,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     if (forPaths.isEmpty && addAsM3U && !settings.enableM3USyncStartup.value) {
       if (_addedM3UPlaylists) PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
       _addedM3UPlaylists = false;
+    if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
       return null;
     }
 

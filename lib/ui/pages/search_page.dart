@@ -214,6 +214,7 @@ class SearchPage extends StatelessWidget {
                                   (context) {
                                     final activeList = settings.activeSearchMediaTypes.valueR;
 
+                                    final tracksSearchTemp = SearchSortController.inst.trackSearchTemp.valueR;
                                     final albumSearchTemp = SearchSortController.inst.albumSearchTemp.valueR;
                                     final artistSearchTemp = SearchSortController.inst.artistSearchTemp.valueR;
                                     final albumArtistSearchTemp = SearchSortController.inst.albumArtistSearchTemp.valueR;
@@ -404,12 +405,12 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Tracks ==
-                                        if (activeList.contains(MediaType.track) && SearchSortController.inst.trackSearchTemp.isNotEmpty) ...[
+                                        if (activeList.contains(MediaType.track) && tracksSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: Tooltip(
                                               message: lang.TRACK_PLAY_MODE,
                                               child: SearchPageTitleRow(
-                                                title: '${lang.TRACKS} • ${SearchSortController.inst.trackSearchTemp.length}',
+                                                title: '${lang.TRACKS} • ${tracksSearchTemp.length}',
                                                 icon: Broken.music_circle,
                                                 subtitleWidget: Row(
                                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -463,10 +464,10 @@ class SearchPage extends StatelessWidget {
                                           ),
                                           const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
                                           SliverFixedExtentList.builder(
-                                            itemCount: SearchSortController.inst.trackSearchTemp.length,
+                                            itemCount: tracksSearchTemp.length,
                                             itemExtent: Dimensions.inst.trackTileItemExtent,
                                             itemBuilder: (context, i) {
-                                              final track = SearchSortController.inst.trackSearchTemp[i];
+                                              final track = tracksSearchTemp[i];
                                               return AnimatingTile(
                                                 position: i,
                                                 child: TrackTile(

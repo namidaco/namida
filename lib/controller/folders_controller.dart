@@ -63,6 +63,8 @@ class Folders<T extends Folder> {
 
     if (trackToScrollTo != null) {
       indexToScrollTo.value = folder.tracks().indexOf(trackToScrollTo);
+    } else {
+      indexToScrollTo.value = null;
     }
     _scrollJump(jumpTo);
   }

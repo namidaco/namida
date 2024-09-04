@@ -872,7 +872,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
     },
   );
   Future.delayed(const Duration(milliseconds: 2000), () {
-    if (localController is! BottomSheetTextFieldConfigWC) localController.dispose();
+    if (localController.runtimeType == BottomSheetTextFieldConfig) localController.dispose();
     focusNode.dispose();
   });
   return finalText;
