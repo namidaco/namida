@@ -928,27 +928,39 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
   final allPaths = <String>{};
   final excludedByNoMedia = <String>{};
   final folderCovers = <String, String>{};
-  final folderCoversValidity = <String, bool>{};
 
-  final fillFolderCovers = imageExtensions.isNotEmpty;
-
-  // "thumb", "album", "albumart", etc.. are covered by the check `element.contains(filename)`.
-  final coversNames = ["folder", "front", "cover", "thumbnail", "albumartsmall"];
+  final coversNames = imageExtensions.isNotEmpty
+      ? {
+          "folder": true,
+          "front": true,
+          "cover": true,
+          "thumbnail": true,
+          "thumb": true,
+          "album": true,
+          "albumart": true,
+          "albumartsmall": true,
+        }
+      : null;
+  final fillFolderCovers = coversNames != null;
 
   allAvailableDirectories.keys.toList().loop((d) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
     try {
-      for (final systemEntity in d.listSyncSafe()) {
+      final allFiles = d.listSyncSafe();
+      final allFilesLength = allFiles.length;
+      for (int i = 0; i < allFilesLength; i++) {
+        var systemEntity = allFiles[i];
         if (systemEntity is File) {
           final path = systemEntity.path;
 
           if (fillFolderCovers) {
-            final dirPath = path.getDirectoryPath;
-            if (folderCoversValidity[dirPath] == null || folderCoversValidity[dirPath] == false) {
+            final dirPath = d.path;
+            if (folderCovers[dirPath] == null) {
               if (imageExtensions.any((ext) => path.endsWith(ext))) {
-                folderCovers[dirPath] = path;
-                final filename = path.getFilenameWOExt.toLowerCase();
-                folderCoversValidity[dirPath] = coversNames.any((element) => element.contains(filename));
+                final filenameCleaned = path.getFilenameWOExt.toLowerCase();
+                final isValidCover = coversNames[filenameCleaned] == true;
+                if (isValidCover) folderCovers[dirPath] = path;
+
                 continue;
               }
             }

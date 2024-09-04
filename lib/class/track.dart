@@ -388,7 +388,7 @@ extension TrackExtUtils on TrackExtended {
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => path.getDirectoryName;
+  String get folderPath => path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
@@ -596,7 +596,7 @@ extension TrackUtils on Track {
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => path.getDirectoryName;
+  String get folderPath => path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
