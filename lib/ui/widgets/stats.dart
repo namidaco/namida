@@ -59,7 +59,7 @@ class StatsSection extends StatelessWidget {
                     return StatsContainer(
                       icon: Broken.timer_1,
                       title: '${lang.TOTAL_LISTEN_TIME} :',
-                      value: trSec.formattedTime,
+                      value: trSec.secondsFormatted,
                     );
                   },
                 ),
@@ -75,7 +75,7 @@ class StatsSection extends StatelessWidget {
                       ),
                       icon: Broken.timer_1,
                       title: '${lang.TOTAL_LISTEN_TIME} (${lang.YOUTUBE}) :',
-                      value: sec.formattedTime,
+                      value: sec.secondsFormatted,
                     );
                   },
                 ),

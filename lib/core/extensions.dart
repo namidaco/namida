@@ -54,7 +54,7 @@ extension TracksSelectableUtils on Iterable<Selectable> {
 extension TracksWithDatesUtils on List<TrackWithDate> {
   int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.track.durationMS);
   String get totalDurationFormatted {
-    return (totalDurationInMS ~/ 1000).formattedTime;
+    return (totalDurationInMS ~/ 1000).secondsFormatted;
   }
 }
 
@@ -75,7 +75,7 @@ extension TracksUtils on List<Track> {
   int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.durationMS);
 
   String get totalDurationFormatted {
-    return (totalDurationInMS ~/ 1000).formattedTime;
+    return (totalDurationInMS ~/ 1000).secondsFormatted;
   }
 
   int get year {
@@ -201,7 +201,7 @@ extension DisplayKeywords on int {
 }
 
 extension YearDateFormatted on int {
-  String get formattedTime => getTimeFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
+  String get secondsFormatted => getSecondsFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
 
   String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value); // non reactive
 

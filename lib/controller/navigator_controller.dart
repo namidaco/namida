@@ -540,7 +540,7 @@ SnackbarController? snackyy({
   final EdgeInsets paddingInsets;
   if (button != null) {
     if (title.isNotEmpty && message.isNotEmpty) {
-      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
+      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0);
     } else {
       paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0);
     }
