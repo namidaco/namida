@@ -214,7 +214,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   Future<void> _onSubscriptionFileImportTap() async {
     final file = await NamidaFileBrowser.pickFile(
       note: 'Choose a "subscriptions.csv" file from a google takeout',
-      allowedExtensions: ['csv', 'CSV'],
+      allowedExtensions: const NamidaFileBrowserAllowedExtensions.csv(),
     );
     final fp = file?.path;
     if (fp != null) {

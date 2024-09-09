@@ -590,7 +590,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 child: Text("- $text", style: namida.textTheme.displayLarge),
                               );
 
-                          final jsonfile = await NamidaFileBrowser.pickFile(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: ['json', 'JSON']);
+                          final jsonfile = await NamidaFileBrowser.pickFile(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: const NamidaFileBrowserAllowedExtensions.json());
                           if (jsonfile != null) {
                             final isMatchingTypeLink = true.obs;
                             final isMatchingTypeTitleAndArtist = false.obs;
@@ -733,7 +733,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
 
-                          final csvFiles = await NamidaFileBrowser.pickFile(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: ['csv']);
+                          final csvFiles = await NamidaFileBrowser.pickFile(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: const NamidaFileBrowserAllowedExtensions.csv());
                           final csvFilePath = csvFiles?.path;
                           if (csvFiles != null && csvFilePath != null) {
                             final oldestDate = Rxn<DateTime>();

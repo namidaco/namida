@@ -226,7 +226,7 @@ class BackupController {
       final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
       backupzip = sortedFiles.firstOrNull;
     } else {
-      final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: ['zip']);
+      final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: const NamidaFileBrowserAllowedExtensions.zip());
       final path = filePicked?.path;
       if (path != null) {
         backupzip = File(path);

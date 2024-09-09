@@ -38,7 +38,7 @@ class NamidaStorage {
   Future<List<String>> pickFiles({
     String? note,
     bool multiple = false,
-    List<String> allowedExtensions = const [],
+    List<String>? allowedExtensions,
     String? memetype = NamidaStorageFileMemeType.any,
   }) async {
     try {
@@ -51,10 +51,12 @@ class NamidaStorage {
 
       final files = res?.cast<String>() ?? <String>[];
 
-      for (final f in files) {
-        if (!allowedExtensions.any((ext) => f.endsWith(".$ext"))) {
-          snackyy(title: lang.ERROR, message: "${lang.EXTENSION}: $allowedExtensions", isError: true);
-          return [];
+      if (allowedExtensions != null && allowedExtensions.isNotEmpty) {
+        for (final f in files) {
+          if (!allowedExtensions.any((ext) => f.endsWith(ext))) {
+            snackyy(title: lang.ERROR, message: "${lang.EXTENSION}: $allowedExtensions", isError: true);
+            return [];
+          }
         }
       }
 

@@ -66,7 +66,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
   Future<void> _importPlaylists({required bool keepSynced, required bool pickFolder}) async {
     Set<String> playlistsFilesPath;
-    final m3uExtensions = kM3UPlaylistsExtensions.toList();
+    final m3uExtensionsWrapper = NamidaFileBrowserAllowedExtensions.m3u();
+    final m3uExtensions = m3uExtensionsWrapper.extensions ?? [];
     if (pickFolder) {
       final dirs = await NamidaFileBrowser.pickDirectories(note: "${lang.IMPORT} (${lang.FOLDERS})");
       playlistsFilesPath = {};
@@ -84,7 +85,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         );
       }
     } else {
-      final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT, allowedExtensions: m3uExtensions);
+      final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT, allowedExtensions: m3uExtensionsWrapper);
       playlistsFilesPath = playlistsFiles.map((f) => f.path).toSet();
     }
     if (playlistsFilesPath.isNotEmpty) {

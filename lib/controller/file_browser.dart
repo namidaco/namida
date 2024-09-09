@@ -30,12 +30,24 @@ enum _SortType {
 
 const _defaultMemeType = NamidaStorageFileMemeType.any;
 
+class NamidaFileBrowserAllowedExtensions {
+  final List<String>? extensions;
+
+  /// initialize with custom extensions. all should start with a dot.
+  const NamidaFileBrowserAllowedExtensions._(this.extensions);
+  const NamidaFileBrowserAllowedExtensions.csv() : extensions = const ['.csv', '.CSV'];
+  const NamidaFileBrowserAllowedExtensions.json() : extensions = const ['.json', '.JSON'];
+  const NamidaFileBrowserAllowedExtensions.zip() : extensions = const ['.zip', '.ZIP', '.rar', '.RAR'];
+  const NamidaFileBrowserAllowedExtensions.lrcOrTxt() : extensions = const ['.lrc', '.LRC', '.txt', '.TXT'];
+  factory NamidaFileBrowserAllowedExtensions.m3u() => NamidaFileBrowserAllowedExtensions._(kM3UPlaylistsExtensions.toList());
+}
+
 class NamidaFileBrowser {
   static Future<File?> pickFile({
     String note = '',
     String memeType = _defaultMemeType,
     String? initialDirectory,
-    List<String> allowedExtensions = const [],
+    NamidaFileBrowserAllowedExtensions? allowedExtensions,
   }) async {
     return _NamidaFileBrowserBase.pickFile(
       note: note,
@@ -51,7 +63,7 @@ class NamidaFileBrowser {
     String note = '',
     String memeType = _defaultMemeType,
     String? initialDirectory,
-    List<String> allowedExtensions = const [],
+    NamidaFileBrowserAllowedExtensions? allowedExtensions,
   }) async {
     return _NamidaFileBrowserBase.pickFiles(
       note: note,
@@ -114,7 +126,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   final String note;
   final String? initialDirectory;
   final Completer<List<T>> onSelect;
-  final List<String> allowedExtensions;
+  final NamidaFileBrowserAllowedExtensions? allowedExtensions;
   final String memeType;
   final bool allowMultiple;
   final _NamidaFileBrowserPopCallback onPop;
@@ -124,7 +136,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
     required this.note,
     this.initialDirectory,
     required this.onSelect,
-    this.allowedExtensions = const [],
+    this.allowedExtensions,
     this.memeType = _defaultMemeType,
     required this.allowMultiple,
     required this.onPop,
@@ -132,7 +144,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
 
   static Future<File?> pickFile({
     String note = '',
-    List<String> allowedExtensions = const [],
+    NamidaFileBrowserAllowedExtensions? allowedExtensions,
     String memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
@@ -156,7 +168,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
 
   static Future<List<File>> pickFiles({
     String note = '',
-    List<String> allowedExtensions = const [],
+    NamidaFileBrowserAllowedExtensions? allowedExtensions,
     String memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
@@ -664,7 +676,8 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       _fetchFiles(Directory(widget.initialDirectory ?? paths.first));
       _fetchInfo(_mainStoragePaths);
     });
-    _effectiveAllowedExtensions.addAll(widget.allowedExtensions);
+    final allowedExtensions = widget.allowedExtensions?.extensions;
+    if (allowedExtensions != null) _effectiveAllowedExtensions.addAll(allowedExtensions);
     if (widget.memeType != NamidaStorageFileMemeType.any) {
       switch (widget.memeType) {
         case NamidaStorageFileMemeType.audio:
@@ -862,7 +875,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   final _iconsLookupPre = <String, int>{};
   final _iconsLookup = <int, IconData>{};
 
-  Future<void> _onBackupPickerLaunch([List<String> allowedExtensions = const []]) async {
+  Future<void> _onBackupPickerLaunch([List<String>? allowedExtensions]) async {
     final note = widget.note != '' ? widget.note : null;
     if (T == File) {
       final res = await NamidaStorage.inst.pickFiles(

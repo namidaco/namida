@@ -529,7 +529,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 onTap: () async {
                   final picked = await NamidaFileBrowser.pickFile(
                     note: lang.ADD_LRC_FILE,
-                    allowedExtensions: ['lrc', 'LRC', 'txt', 'TXT'],
+                    allowedExtensions: const NamidaFileBrowserAllowedExtensions.lrcOrTxt(),
                     initialDirectory: lrcUtils.pickFileInitialDirectory,
                   );
                   final path = picked?.path;
