@@ -319,7 +319,7 @@ class _SmolIconFolderScroll extends StatefulWidget {
 }
 
 class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
-  double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + widget.foldersController.currentFolderslist.length - 2);
+  double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + widget.foldersController.currentFolderslist.value.length - 2);
 
   IconData _arrowIcon = Broken.cd;
   void _updateIcon(IconData icon) {

@@ -17,9 +17,11 @@ import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -186,6 +188,87 @@ class YTUtils {
         ),
       ...moreItems,
     ];
+  }
+
+  static List<NamidaPopupItem> getVideoCardMenuItemsForCurrentlyPlaying({
+    required BuildContext context,
+    required Rx<int> numberOfRepeats,
+    required String videoId,
+    required String? videoTitle,
+    required String? channelID,
+    required bool displayGoToChannel,
+    required bool displayCopyUrl,
+  }) {
+    final currentItem = Player.inst.currentItem.value;
+    NamidaPopupItem? repeatForWidget;
+    final defaultItems = YTUtils.getVideoCardMenuItems(
+      downloadIndex: null,
+      totalLength: null,
+      streamInfoItem: null,
+      videoId: videoId,
+      url: YTUrlUtils.buildVideoUrl(videoId),
+      channelID: channelID,
+      displayGoToChannel: displayGoToChannel,
+      playlistID: null,
+      idsNamesLookup: {videoId: videoTitle},
+      copyUrl: displayCopyUrl,
+    );
+    if (currentItem is YoutubeID && videoId == currentItem.id) {
+      repeatForWidget = NamidaPopupItem(
+        icon: Broken.cd,
+        title: '',
+        titleBuilder: (style) => Obx(
+          (context) => Text(
+            lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', numberOfRepeats.valueR.toString()),
+            style: style,
+          ),
+        ),
+        onTap: () {
+          settings.player.save(repeatMode: RepeatMode.forNtimes);
+          Player.inst.updateNumberOfRepeats(numberOfRepeats.value);
+        },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NamidaIconButton(
+              icon: Broken.minus_cirlce,
+              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clamp(1, 20),
+              iconSize: 20.0,
+            ),
+            NamidaIconButton(
+              icon: Broken.add_circle,
+              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clamp(1, 20),
+              iconSize: 20.0,
+            ),
+          ],
+        ),
+      );
+    }
+    final clearItem = NamidaPopupItem(
+      icon: Broken.trash,
+      title: lang.CLEAR,
+      onTap: () {
+        const YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
+      },
+    );
+    final isFavourite = currentItem is YoutubeID
+        ? currentItem.isFavourite
+        : currentItem is Track
+            ? currentItem.isFavourite
+            : null;
+    final favouriteItem = isFavourite == null
+        ? null
+        : NamidaPopupItem(
+            icon: isFavourite ? Broken.heart_tick : Broken.heart,
+            title: lang.FAVOURITES,
+            onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
+          );
+    final items = <NamidaPopupItem>[];
+    if (favouriteItem != null) items.add(favouriteItem);
+    items.addAll(defaultItems);
+    if (repeatForWidget != null) items.add(repeatForWidget);
+    items.add(clearItem);
+    return items;
   }
 
   static List<NamidaPopupItem> getVideoCardMenuItems({

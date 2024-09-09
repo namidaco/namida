@@ -68,7 +68,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   AudioLoadConfiguration? get defaultAndroidLoadConfig {
     return AudioLoadConfiguration(
       androidLoadControl: AndroidLoadControl(
-        minBufferDuration: const Duration(seconds: 50),
+        minBufferDuration: const Duration(seconds: 5),
         maxBufferDuration: const Duration(minutes: 3),
       ),
     );

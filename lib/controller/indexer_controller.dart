@@ -317,10 +317,12 @@ class Indexer<T extends Track> {
         case MediaType.folder:
           sortPls(mainMapFolders.values, MediaType.folder);
           mainMapFolders.refresh();
+          Folders.tracks.refreshLists();
           break;
         case MediaType.folderVideo:
           sortPls(mainMapFoldersVideos.values, MediaType.folderVideo);
           mainMapFoldersVideos.refresh();
+          Folders.videos.refreshLists();
           break;
         default:
           null;
@@ -374,7 +376,7 @@ class Indexer<T extends Track> {
     final List<String> addedComposers = [];
     final List<String> addedGenres = [];
     final List<Folder> addedFolders = [];
-    final List<Folder> addedFoldersVideos = [];
+    final List<VideoFolder> addedFoldersVideos = [];
 
     tracks.loop((tr) {
       final trExt = tr.toTrackExt();
@@ -412,10 +414,9 @@ class Indexer<T extends Track> {
     final folderSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder);
     final folderVideosSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folderVideo);
 
-    void cleanyLoopy<T, E>(MediaType type, List<E> added, Map<E, List<T>> map, List<Comparable<dynamic> Function(T tr)> sorters) {
+    void cleanyLoopy<A, E>(MediaType type, List<E> added, Map<E, List<A>> map, List<Comparable<dynamic> Function(A tr)> sorters) {
       if (added.isEmpty) return;
       added.removeDuplicates();
-      if (added.isEmpty) return;
 
       final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
       if (reverse) {

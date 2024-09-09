@@ -33,6 +33,11 @@ class Folders<T extends Folder> {
 
   final _latestScrollOffset = <T?, double>{};
 
+  void refreshLists() {
+    currentFolderslist.refresh(); // refreshes folders
+    currentFolder.refresh(); // refreshes tracks
+  }
+
   /// Indicates wether the navigator can go back at this point.
   /// Returns true only if at home, otherwise will call [stepOut] and return false.
   bool onBackButton() {
@@ -161,6 +166,7 @@ class Folders<T extends Folder> {
       );
 
     map.assignAllEntries(sorted); // we clear after building new sorted one
+    refreshLists();
   }
 
   Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {

@@ -311,6 +311,7 @@ class NamidaMiniPlayerYoutubeID extends StatefulWidget {
 
 class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   final _videoLikeManager = YtVideoLikeManager();
+  final _numberOfRepeats = 1.obs;
 
   @override
   void initState() {
@@ -321,46 +322,25 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   @override
   void dispose() {
     _videoLikeManager.dispose();
+    _numberOfRepeats.close();
     super.dispose();
   }
 
   void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) {
     final vidpage = YoutubeInfoController.video.fetchVideoPageSync(video.id);
     final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id, infoOnly: true);
+    final videoTitle = vidpage?.videoInfo?.title ?? vidstreams?.info?.title;
+    final videoChannelId = vidpage?.channelInfo?.id ?? vidstreams?.info?.channelId;
     final popUpItems = NamidaPopupWrapper(
-      childrenDefault: () {
-        final defaultItems = YTUtils.getVideoCardMenuItems(
-          downloadIndex: null,
-          totalLength: null,
-          streamInfoItem: null,
-          videoId: video.id,
-          url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),
-          channelID: vidpage?.channelInfo?.id,
-          playlistID: null,
-          idsNamesLookup: {video.id: vidpage?.videoInfo?.title ?? vidstreams?.info?.title},
-          playlistName: '',
-          videoYTID: video,
-          copyUrl: true,
-        );
-        final clearItem = NamidaPopupItem(
-          icon: Broken.trash,
-          title: lang.CLEAR,
-          onTap: () {
-            const YTUtils().showVideoClearDialog(context, video.id, CurrentColor.inst.miniplayerColor);
-          },
-        );
-        final isFavourite = video.isFavourite;
-        final favouriteItem = NamidaPopupItem(
-          icon: isFavourite ? Broken.heart_tick : Broken.heart,
-          title: lang.FAVOURITES,
-          onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
-        );
-        final items = <NamidaPopupItem>[];
-        items.add(favouriteItem);
-        items.addAll(defaultItems);
-        items.add(clearItem);
-        return items;
-      },
+      childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
+        context: context,
+        numberOfRepeats: _numberOfRepeats,
+        videoId: video.id,
+        videoTitle: videoTitle,
+        channelID: videoChannelId,
+        displayGoToChannel: true,
+        displayCopyUrl: true,
+      ),
     ).convertItems(context);
     NamidaNavigator.inst.showMenu(
       context: context,

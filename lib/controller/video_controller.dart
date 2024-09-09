@@ -269,9 +269,10 @@ class VideoController {
   }
 
   Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, bool handleVideoPlayback = true}) async {
+    currentVideo.value = null;
+    currentPossibleLocalVideos.value.clear();
     isNoVideosAvailable.value = false;
     currentDownloadedBytes.value = null;
-    currentVideo.value = null;
     currentYTStreams.value = null;
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
@@ -288,6 +289,7 @@ class VideoController {
               durationMS: 0,
               bitrate: 0);
       currentVideo.value = nv;
+      currentPossibleLocalVideos.value = [nv];
       if (handleVideoPlayback) await Player.inst.setAudioOnlyPlayback(false);
       return nv;
     }

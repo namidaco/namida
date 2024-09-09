@@ -36,7 +36,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
@@ -401,71 +400,15 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             onPop: () {
                                                               _numberOfRepeats.value = 1;
                                                             },
-                                                            childrenDefault: () {
-                                                              final videoId = currentId;
-                                                              NamidaPopupItem? repeatForWidget;
-                                                              final defaultItems = YTUtils.getVideoCardMenuItems(
-                                                                downloadIndex: null,
-                                                                totalLength: null,
-                                                                streamInfoItem: null,
-                                                                videoId: videoId,
-                                                                url: videoInfo?.buildUrl(),
-                                                                channelID: null,
-                                                                displayGoToChannel: false,
-                                                                playlistID: null,
-                                                                idsNamesLookup: {videoId: videoTitle},
-                                                              );
-                                                              if (Player.inst.currentVideo != null && videoId == Player.inst.currentVideo?.id) {
-                                                                repeatForWidget = NamidaPopupItem(
-                                                                  icon: Broken.cd,
-                                                                  title: '',
-                                                                  titleBuilder: (style) => Obx(
-                                                                    (context) => Text(
-                                                                      lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', _numberOfRepeats.valueR.toString()),
-                                                                      style: style,
-                                                                    ),
-                                                                  ),
-                                                                  onTap: () {
-                                                                    settings.player.save(repeatMode: RepeatMode.forNtimes);
-                                                                    Player.inst.updateNumberOfRepeats(_numberOfRepeats.value);
-                                                                  },
-                                                                  trailing: Row(
-                                                                    mainAxisSize: MainAxisSize.min,
-                                                                    children: [
-                                                                      NamidaIconButton(
-                                                                        icon: Broken.minus_cirlce,
-                                                                        onPressed: () => _numberOfRepeats.value = (_numberOfRepeats.value - 1).clamp(1, 20),
-                                                                        iconSize: 20.0,
-                                                                      ),
-                                                                      NamidaIconButton(
-                                                                        icon: Broken.add_circle,
-                                                                        onPressed: () => _numberOfRepeats.value = (_numberOfRepeats.value + 1).clamp(1, 20),
-                                                                        iconSize: 20.0,
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                );
-                                                              }
-                                                              final clearItem = NamidaPopupItem(
-                                                                icon: Broken.trash,
-                                                                title: lang.CLEAR,
-                                                                onTap: () {
-                                                                  const YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
-                                                                },
-                                                              );
-                                                              final isFavourite = currentItem.isFavourite;
-                                                              final favouriteItem = NamidaPopupItem(
-                                                                icon: isFavourite ? Broken.heart_tick : Broken.heart,
-                                                                title: lang.FAVOURITES,
-                                                                onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(currentId),
-                                                              );
-                                                              final items = <NamidaPopupItem>[];
-                                                              items.add(favouriteItem);
-                                                              items.addAll(defaultItems);
-                                                              if (repeatForWidget != null) items.add(repeatForWidget);
-                                                              items.add(clearItem);
-                                                              return items;
-                                                            },
+                                                            childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
+                                                              context: context,
+                                                              numberOfRepeats: _numberOfRepeats,
+                                                              videoId: currentId,
+                                                              videoTitle: videoTitle,
+                                                              channelID: null,
+                                                              displayGoToChannel: false,
+                                                              displayCopyUrl: false,
+                                                            ),
                                                             child: const Icon(
                                                               Broken.arrow_down_2,
                                                               size: 20.0,
