@@ -19,11 +19,14 @@ Future<void> showVideoDownloadOptionsSheet({
   required String? videoTitle,
   required String? videoUploader,
   required Map<String, String?> tagMaps,
+  Map<String, String?>? tagMapsForFillingInfoOnly,
   required bool supportTagging,
   required void Function(String newGroupName) onDownloadGroupNameChanged,
   required bool showSpecificFileOptions,
+  Widget Function(TextEditingController? Function() currentControllerFn, Function(String text) onChanged)? preWidget,
 }) async {
-  final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t])};
+  final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t] ?? tagMapsForFillingInfoOnly?[t])};
+  String? currentActiveField;
 
   Widget getTextChip(String field) {
     return AnimatedOpacity(
@@ -36,7 +39,11 @@ Future<void> showVideoDownloadOptionsSheet({
           hintText: tagMaps[field] ?? '',
           labelText: field.ffmpegTagToText(),
           icon: field.ffmpegTagToIcon(),
-          onChanged: (value) => tagMaps[field] = value,
+          onTap: () => currentActiveField = field,
+          onChanged: (value) {
+            currentActiveField = field;
+            tagMaps[field] = value;
+          },
         ),
       ),
     );
@@ -56,6 +63,7 @@ Future<void> showVideoDownloadOptionsSheet({
 
   await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
   await showModalBottomSheet(
+    useRootNavigator: true,
     isScrollControlled: true,
     // ignore: use_build_context_synchronously
     context: context,
@@ -83,6 +91,13 @@ Future<void> showVideoDownloadOptionsSheet({
                 ],
               ),
               const SizedBox(height: 12.0),
+              if (preWidget != null)
+                preWidget(
+                  () => controllersMap[currentActiveField],
+                  (text) {
+                    if (currentActiveField != null) tagMaps[currentActiveField!] = text;
+                  },
+                ),
               Expanded(
                 child: ListView(
                   children: [
@@ -176,30 +191,31 @@ Future<void> showVideoDownloadOptionsSheet({
               const SizedBox(height: 8.0),
               Row(
                 children: [
-                  Expanded(
-                    flex: 4,
-                    child: InkWell(
-                      onTap: () {
-                        (String?, String?) artistAndTitle = (null, null);
-                        if (tagMaps.isNotEmpty) {
-                          artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
-                        }
-                        if (videoTitle != null && artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
-                          artistAndTitle = videoTitle.splitArtistAndTitle();
-                        }
-                        if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
-                        if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
-                        controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
-                      },
-                      child: Text(
-                        lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
-                        style: namida.textTheme.displaySmall?.copyWith(
-                          decoration: TextDecoration.underline,
-                          decorationStyle: TextDecorationStyle.dashed,
+                  if (videoTitle != null)
+                    Expanded(
+                      flex: 4,
+                      child: InkWell(
+                        onTap: () {
+                          (String?, String?) artistAndTitle = (null, null);
+                          if (tagMaps.isNotEmpty) {
+                            artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
+                          }
+                          if (artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
+                            artistAndTitle = videoTitle.splitArtistAndTitle();
+                          }
+                          if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
+                          if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
+                          controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
+                        },
+                        child: Text(
+                          lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
+                          style: namida.textTheme.displaySmall?.copyWith(
+                            decoration: TextDecoration.underline,
+                            decorationStyle: TextDecorationStyle.dashed,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   Expanded(
                     flex: 5,
                     child: NamidaButton(

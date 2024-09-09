@@ -864,7 +864,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final prevAudioBitrate = prevAudioStream?.bitrate ?? currentCachedAudio.value?.bitrate;
     final prevAudioLangCode = prevAudioStream?.audioTrack?.langCode ?? currentCachedAudio.value?.langaugeCode;
     final prevAudioLangName = prevAudioStream?.audioTrack?.displayName ?? currentCachedAudio.value?.langaugeName;
-    final prevVideoInfo = YoutubeInfoController.current.currentYTStreams.value?.info;
+    final prevVideoInfo = YoutubeInfoController.current.currentYTStreams.value;
 
     // -- Adding recently cached audio to cache map, for being displayed on cards.
     audioCacheMap.addNoDuplicatesForce(
@@ -878,7 +878,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         ));
 
     // -- Writing metadata too
-    final meta = YTUtils.getMetadataInitialMap(videoId, prevVideoInfo);
+    final meta = await YTUtils.getMetadataInitialMap(videoId, null, null, prevAudioStream, prevVideoInfo, null, null, null, null);
     await YTUtils.writeAudioMetadata(
       videoId: videoId,
       audioFile: audioCacheFile,

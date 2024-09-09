@@ -722,6 +722,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
   Color? buttonColor,
   required FutureOr<bool> Function(String text) onButtonTap,
   Widget Function(FormState formState)? extraItemsBuilder,
+  Widget Function(FormState formState)? extraPreItemsBuilder,
   Rx<bool>? isInitiallyLoading,
   bool displayAccountThumbnail = false,
 }) async {
@@ -762,6 +763,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
                     ),
                   if (subtitle != null) const SizedBox(height: 6.0),
                   const SizedBox(height: 18.0),
+                  if (extraPreItemsBuilder != null) extraPreItemsBuilder(formKey.currentState!),
                   Row(
                     children: [
                       if (displayAccountThumbnail)

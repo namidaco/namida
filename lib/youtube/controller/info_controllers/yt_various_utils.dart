@@ -40,7 +40,7 @@ class _YoutubeInfoUtils {
   }
 
   VideoStreamsResult? _getVideoStreamResultSync(String videoId) {
-    return YoutubeInfoController.video.fetchVideoStreamsSync(videoId, bypassJSCheck: true);
+    return YoutubeInfoController.video.fetchVideoStreamsSync(videoId, infoOnly: true);
   }
 
   YoutiPieVideoPageResult? _getVideoPageResultSync(String videoId) {

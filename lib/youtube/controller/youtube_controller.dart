@@ -8,6 +8,7 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/videos/video_result.dart';
+import 'package:youtipie/class/youtipie_description/youtipie_description.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
@@ -17,12 +18,14 @@ import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_progress.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -611,14 +614,27 @@ class YoutubeController {
         }
 
         // -- meta info
-        if (config.ffmpegTags.isEmpty) {
+        if (config.ffmpegTags.isEmpty || config.ffmpegTags.values.any((element) => element != null && filenameBuilder.paramRegex.hasMatch(element))) {
           final info = streams.info;
-          final meta = YTUtils.getMetadataInitialMap(videoID.videoId, info, autoExtract: autoExtractTitleAndArtist);
-
+          final meta = await YTUtils.getMetadataInitialMap(
+            videoID.videoId,
+            config.streamInfoItem,
+            config.videoStream,
+            config.audioStream,
+            streams,
+            playlistInfo,
+            playlistInfo?.id ?? config.playlistId,
+            config.index,
+            config.totalLength,
+            autoExtract: autoExtractTitleAndArtist,
+            initialBuilding: config.ffmpegTags,
+          );
           config.ffmpegTags.addAll(meta);
           config.fileDate = info?.publishDate.date ?? info?.uploadDate.date;
         }
       } catch (e) {
+        printy(e, isError: true);
+        snackyy(title: lang.ERROR, message: e.toString(), isError: true);
         // -- force break
         isFetchingData.value[videoID]?[config.filename] = false;
         return;
@@ -634,11 +650,10 @@ class YoutubeController {
         config: config,
         useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
         saveDirectory: saveDirectory,
-        fileExtension: config.videoStream?.codecInfo.container ?? config.audioStream?.codecInfo.container ?? '',
+        fileExtension: config.videoStream?.codecInfo.container ?? config.audioStream?.codecInfo.container ?? 'm4a',
         streams: streams,
         pageResult: pageResult,
         playlistInfo: playlistInfo,
-        totalLength: itemsConfig.length,
         videoStream: config.videoStream,
         audioStream: config.audioStream,
         merge: true,
@@ -686,9 +701,11 @@ class YoutubeController {
         }
       }
 
-      downloadedFilesMap[groupName]?[config.filename] = downloadedFile;
+      final dfmg = downloadedFilesMap.value[groupName] ??= {};
+      dfmg[config.filename] = downloadedFile;
       downloadedFilesMap.refresh();
-      youtubeDownloadTasksInQueueMap[groupName]?[config.filename] = null;
+      final dtqmg = youtubeDownloadTasksInQueueMap.value[groupName] ??= {};
+      dtqmg[config.filename] = null;
       downloadedFilesMap.refresh();
       YTOnGoingFinishedDownloads.inst.refreshList();
       await onFileDownloaded?.call(downloadedFile);
@@ -769,7 +786,6 @@ class YoutubeController {
     required VideoStreamsResult? streams,
     required YoutiPieVideoPageResult? pageResult,
     required PlaylistBasicInfo? playlistInfo,
-    required int? totalLength,
     required VideoStream? videoStream,
     required AudioStream? audioStream,
     required Map<String, String?> ffmpegTags,
@@ -788,8 +804,8 @@ class YoutubeController {
     String finalFilenameTemp = finalFilenameWrapper.filename;
     bool requiresRenaming = false;
 
-    final finalFilenameTempRebuilt = filenameBuilder._rebuildFilenameWithDecodedParams(
-        finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.index, totalLength);
+    final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
+        finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.index, config.totalLength);
     if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
       finalFilenameTemp = finalFilenameTempRebuilt;
       requiresRenaming = true;

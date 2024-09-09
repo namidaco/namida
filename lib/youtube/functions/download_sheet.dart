@@ -8,6 +8,7 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/extensions.dart' hide ListUtils;
 
 import 'package:namida/controller/current_color.dart';
@@ -41,7 +42,10 @@ Future<void> showDownloadVideoBottomSheet({
   bool Function(String groupName, YoutubeItemDownloadConfig config)? onConfirmButtonTap,
   bool showSpecificFileOptionsInEditTagDialog = true,
   YoutubeItemDownloadConfig? initialItemConfig,
+  PlaylistBasicInfo? playlistInfo,
+  required String? playlistId,
   required int? index,
+  required int? totalLength,
   required StreamInfoItem? streamInfoItem,
   bool preferAudioOnly = false,
 }) async {
@@ -69,6 +73,10 @@ Future<void> showDownloadVideoBottomSheet({
       tagsMap[e.key] = e.value;
     }
   }
+
+  final defaultInitialTags = YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value);
+  updateTagsMap(defaultInitialTags);
+  updateTagsMap(settings.youtube.initialDefaultMetadataTags);
 
   void updatefilenameOutput({String customName = ''}) {
     if (customName != '') {
@@ -142,9 +150,25 @@ Future<void> showDownloadVideoBottomSheet({
     onAudioSelectionChanged();
     onVideoSelectionChanged();
     updatefilenameOutput();
-    videoDateTime = videoInfo.value?.publishedAt.date;
-    final meta = YTUtils.getMetadataInitialMap(videoId, videoInfo.value, autoExtract: settings.youtube.autoExtractVideoTagsFromInfo.value);
-    if (initialItemConfig == null) updateTagsMap(meta);
+    videoDateTime = videoInfo.value?.publishDate.date ?? videoInfo.value?.uploadDate.date ?? streamInfoItem?.publishedAt.accurateDate;
+
+    if (initialItemConfig == null ||
+        initialItemConfig.ffmpegTags.isEmpty ||
+        initialItemConfig.ffmpegTags.values.any((element) => element != null && YoutubeController.filenameBuilder.paramRegex.hasMatch(element))) {
+      YTUtils.getMetadataInitialMap(
+        videoId,
+        streamInfoItem,
+        null,
+        null,
+        streamResult.value,
+        playlistInfo,
+        playlistId,
+        index,
+        totalLength,
+        autoExtract: settings.youtube.autoExtractVideoTagsFromInfo.value,
+        initialBuilding: initialItemConfig?.ffmpegTags,
+      ).then(updateTagsMap);
+    }
   }
 
   final streamsInCache = YoutubeInfoController.video.fetchVideoStreamsSync(videoId);
@@ -391,7 +415,8 @@ Future<void> showDownloadVideoBottomSheet({
                           builder: (context, selectedVideo) => ObxO(
                             rx: selectedAudioOnlyStream,
                             builder: (context, selectedAudio) {
-                              if (selectedAudio == null && selectedVideo == null) return const SizedBox();
+                              // -- we allow cuz now we using parameter builders
+                              // if (selectedAudio == null && selectedVideo == null) return const SizedBox();
                               final isWEBM = (selectedAudio?.isWebm == true || selectedVideo?.isWebm == true);
                               return Stack(
                                 alignment: Alignment.bottomRight,
@@ -623,7 +648,9 @@ Future<void> showDownloadVideoBottomSheet({
                     ),
                   ),
                   const SizedBox(height: 6.0),
-                  YTDownloadFilenameBuilderRow(controller: videoOutputFilenameController),
+                  YTDownloadFilenameBuilderRow(
+                    controller: videoOutputFilenameController,
+                  ),
                   const SizedBox(height: 12.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -664,6 +691,8 @@ Future<void> showDownloadVideoBottomSheet({
                                   onTap: () async {
                                     final itemConfig = YoutubeItemDownloadConfig(
                                       index: index,
+                                      totalLength: totalLength,
+                                      playlistId: playlistId,
                                       id: DownloadTaskVideoId(videoId: videoId),
                                       groupName: DownloadTaskGroupName(groupName: groupName),
                                       filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),

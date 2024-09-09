@@ -25,6 +25,8 @@ class YoutubeItemDownloadConfig {
   final bool? fetchMissingAudio;
   final bool? fetchMissingVideo;
   final int? index;
+  final int? totalLength;
+  final String? playlistId;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -40,6 +42,8 @@ class YoutubeItemDownloadConfig {
     required this.fetchMissingAudio,
     required this.fetchMissingVideo,
     required this.index,
+    required this.totalLength,
+    required this.playlistId,
   }) : _filename = filename.obs;
 
   /// Using this method is restricted only for the function that will rename all the other instances in other parts.
@@ -76,6 +80,8 @@ class YoutubeItemDownloadConfig {
       fetchMissingAudio: map['fetchMissingAudio'],
       fetchMissingVideo: map['fetchMissingVideo'],
       index: map['index'],
+      totalLength: map['totalLength'],
+      playlistId: map['playlistId'],
     );
   }
 
@@ -94,6 +100,8 @@ class YoutubeItemDownloadConfig {
       'fetchMissingAudio': fetchMissingAudio,
       'fetchMissingVideo': fetchMissingVideo,
       'index': index,
+      'totalLength': totalLength,
+      'playlistId': playlistId,
     };
   }
 
@@ -108,5 +116,5 @@ class YoutubeItemDownloadConfig {
   /// only [id], [groupName] && [filename] are matched, since map lookup will
   /// recognize this and update accordingly
   @override
-  int get hashCode => "$id$groupName$filename".hashCode;
+  int get hashCode => id.videoId.hashCode ^ groupName.hashCode ^ filename.hashCode;
 }

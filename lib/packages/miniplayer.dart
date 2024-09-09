@@ -326,11 +326,12 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
 
   void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) {
     final vidpage = YoutubeInfoController.video.fetchVideoPageSync(video.id);
-    final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id);
+    final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id, infoOnly: true);
     final popUpItems = NamidaPopupWrapper(
       childrenDefault: () {
         final defaultItems = YTUtils.getVideoCardMenuItems(
-          index: Player.inst.currentIndex.value,
+          downloadIndex: null,
+          totalLength: null,
           streamInfoItem: null,
           videoId: video.id,
           url: vidpage?.videoInfo?.buildUrl() ?? vidstreams?.info?.buildUrl(),

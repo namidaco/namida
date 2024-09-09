@@ -287,7 +287,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         (timeStamp) async {
           final rootContext = nampack.rootNavigatorKey.currentContext;
           if (rootContext != null) {
-            popSheet = Navigator.of(rootContext, rootNavigator: true).pop;
+            popSheet = Navigator.of(rootContext, rootNavigator: true).maybePop;
             await Future.delayed(Duration.zero);
             showModalBottomSheet(
               // ignore: use_build_context_synchronously

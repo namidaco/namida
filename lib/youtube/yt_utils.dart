@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:intl/intl.dart';
 import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
@@ -13,9 +12,11 @@ import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/videos/video_result.dart';
-import 'package:youtipie/core/url_utils.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -26,6 +27,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -40,6 +42,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -186,8 +189,10 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideoCardMenuItems({
-    required int? index,
+    required int? downloadIndex,
+    required int? totalLength,
     required StreamInfoItem? streamInfoItem,
+    String? playlistId,
     required String videoId,
     required String? url,
     required String? channelID,
@@ -218,7 +223,9 @@ class YTUtils {
         onTap: () {
           showDownloadVideoBottomSheet(
             videoId: videoId,
-            index: index,
+            index: downloadIndex,
+            playlistId: playlistId,
+            totalLength: totalLength,
             streamInfoItem: streamInfoItem,
           );
         },
@@ -308,39 +315,78 @@ class YTUtils {
     return null;
   }
 
-  static Map<String, String?> getMetadataInitialMap(String id, VideoStreamInfo? info, {bool autoExtract = true}) {
-    String removeTopic(String text) {
-      const topic = '- Topic';
-      final startIndex = (text.length - topic.length).withMinimum(0);
-      return text.replaceFirst(topic, '', startIndex).trimAll();
-    }
-
-    final date = info?.publishedAt.date?.toLocal();
-    final description = info?.availableDescription;
-    String? title = info?.title;
-    String? artist = info?.channelName;
-    String? album;
-    if (autoExtract) {
-      final splitted = info?.title.splitArtistAndTitle();
-      if (splitted != null && splitted.$1 != null && splitted.$2 != null) {
-        title = splitted.$2;
-        artist = splitted.$1;
-      }
-      final uploaderName = info?.channelName;
-      if (uploaderName != null) album = removeTopic(uploaderName);
-    }
-
-    if (artist != null) artist = removeTopic(artist);
-
+  static Map<String, String> getDefaultTagsFieldsBuilders(bool autoExtract) {
     return {
-      FFMPEGTagField.title: title,
-      FFMPEGTagField.artist: artist,
-      FFMPEGTagField.album: album,
-      FFMPEGTagField.comment: YTUrlUtils.buildVideoUrl(id),
-      FFMPEGTagField.year: date == null ? null : DateFormat('yyyyMMdd').format(date),
-      FFMPEGTagField.synopsis: description,
-      FFMPEGTagField.description: description,
+      if (autoExtract)
+        FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('title')
+      else
+        FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('fulltitle'),
+      if (autoExtract)
+        FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('artist')
+      else
+        FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
+      if (autoExtract) FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
+      FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('title'),
+      FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('artist'),
+      FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
+      FFMPEGTagField.comment: YoutubeController.filenameBuilder.buildParamForFilename('video_url'),
+      FFMPEGTagField.year: YoutubeController.filenameBuilder.buildParamForFilename('upload_date'),
+      FFMPEGTagField.trackNumber: YoutubeController.filenameBuilder.buildParamForFilename('playlist_autonumber'),
+      FFMPEGTagField.trackTotal: YoutubeController.filenameBuilder.buildParamForFilename('playlist_count'),
+      // FFMPEGTagField.synopsis: YoutubeController.filenameBuilder.buildParamForFilename('description'),
+      FFMPEGTagField.description: YoutubeController.filenameBuilder.buildParamForFilename('description'),
     };
+  }
+
+  static Future<Map<String, String?>> getMetadataInitialMap(
+    String id,
+    StreamInfoItem? streamInfoItem,
+    VideoStream? videoStream,
+    AudioStream? audioStream,
+    VideoStreamsResult? streams,
+    PlaylistBasicInfo? playlistInfo,
+    String? playlistId,
+    int? index,
+    int? totalLength, {
+    bool autoExtract = true,
+    Map<String, String?>? initialBuilding,
+  }) async {
+    if (playlistInfo == null && playlistId != null) {
+      final plInfo = await YoutubeInfoController.playlist.fetchPlaylist(playlistId: playlistId).catchError((_) => null);
+      playlistInfo = plInfo?.info;
+    }
+    final videoPage = await YoutubeInfoController.video.fetchVideoPage(id).catchError((_) => null);
+
+    final infoMap = <String, String?>{};
+
+    if (initialBuilding != null) {
+      for (final ib in initialBuilding.entries) {
+        final userText = ib.value;
+        if (userText != null) {
+          infoMap[ib.key] = YoutubeController.filenameBuilder
+                  .rebuildFilenameWithDecodedParams(userText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+              userText;
+        }
+      }
+    }
+
+    final defaultInfoSett = settings.youtube.initialDefaultMetadataTags;
+    for (final di in defaultInfoSett.entries) {
+      final defaultText = di.value;
+      infoMap[di.key] ??= YoutubeController.filenameBuilder
+              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+          defaultText;
+    }
+
+    final defaultInfo = getDefaultTagsFieldsBuilders(autoExtract);
+    for (final di in defaultInfo.entries) {
+      final defaultText = di.value;
+      infoMap[di.key] ??= YoutubeController.filenameBuilder
+              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+          '';
+    }
+
+    return infoMap;
   }
 
   static Future<bool> writeAudioMetadata({

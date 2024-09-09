@@ -27,7 +27,7 @@ class YoutubeVideoCard extends StatelessWidget {
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final YoutiPiePlaylistResultBase? playlist;
-  final int? index;
+  final ({int index, int totalLength, String playlistId})? playlistIndexAndCount;
   final double fontMultiplier;
   final double thumbnailWidthPercentage;
   final bool dateInsteadOfChannel;
@@ -42,7 +42,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.playlist,
-    this.index,
+    this.playlistIndexAndCount,
     this.fontMultiplier = 1.0,
     this.thumbnailWidthPercentage = 1.0,
     this.dateInsteadOfChannel = false,
@@ -52,7 +52,9 @@ class YoutubeVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = video.id;
     return YTUtils.getVideoCardMenuItems(
-      index: index,
+      downloadIndex: playlistIndexAndCount?.index,
+      totalLength: playlistIndexAndCount?.totalLength,
+      playlistId: playlistIndexAndCount?.playlistId,
       streamInfoItem: video,
       videoId: videoId,
       url: video.buildUrl(),
@@ -103,7 +105,7 @@ class YoutubeVideoCard extends StatelessWidget {
             () async {
               _VideoCardUtils.onVideoTap(
                 videoId: videoId,
-                index: index,
+                index: playlistIndexAndCount?.index,
                 playlist: playlist,
                 playlistID: playlistID,
               );
@@ -161,7 +163,8 @@ class YoutubeShortVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
-      index: index,
+      downloadIndex: null,
+      totalLength: null,
       streamInfoItem: null,
       videoId: videoId,
       url: short.buildUrl(),
@@ -229,7 +232,8 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
-      index: index,
+      downloadIndex: null,
+      totalLength: null,
       streamInfoItem: null,
       videoId: videoId,
       url: short.buildUrl(),

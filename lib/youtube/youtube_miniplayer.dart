@@ -269,7 +269,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                         String? uploadDate;
                         String? uploadDateAgo;
 
-                        DateTime? parsedDate = videoInfoStream?.publishedAt.date ?? videoInfoStream?.publishDate.date; // videoInfo?.publishedAt.date aint no way near accurate
+                        DateTime? parsedDate = videoInfoStream?.publishedAt.date ??
+                            videoInfoStream?.publishDate.date ??
+                            videoInfo?.publishedAt.accurateDate; // videoInfo?.publishedAt.date aint no way near accurate
                         bool accurateDate = true;
                         if (parsedDate == null) {
                           parsedDate = videoInfo?.publishedAt.date;
@@ -403,7 +405,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               final videoId = currentId;
                                                               NamidaPopupItem? repeatForWidget;
                                                               final defaultItems = YTUtils.getVideoCardMenuItems(
-                                                                index: null,
+                                                                downloadIndex: null,
+                                                                totalLength: null,
                                                                 streamInfoItem: null,
                                                                 videoId: videoId,
                                                                 url: videoInfo?.buildUrl(),
@@ -656,7 +659,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 titleWidget: videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
                                                                 title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
                                                                 icon: icon,
-                                                                onLongPress: () async => await showDownloadVideoBottomSheet(videoId: currentId, index: null, streamInfoItem: null),
+                                                                onLongPress: () async => await showDownloadVideoBottomSheet(
+                                                                    videoId: currentId, index: null, totalLength: null, playlistId: null, streamInfoItem: null),
                                                                 onPressed: () async {
                                                                   if (isDownloading) {
                                                                     YoutubeController.inst.pauseDownloadTask(
@@ -670,7 +674,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                       groupName: const DownloadTaskGroupName.defaulty(),
                                                                     );
                                                                   } else {
-                                                                    await showDownloadVideoBottomSheet(videoId: currentId, index: null, streamInfoItem: null);
+                                                                    await showDownloadVideoBottomSheet(
+                                                                        videoId: currentId, index: null, totalLength: null, playlistId: null, streamInfoItem: null);
                                                                   }
                                                                 },
                                                               );

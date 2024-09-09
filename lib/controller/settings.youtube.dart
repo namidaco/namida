@@ -22,6 +22,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final dragToSeek = YTSeekActionMode.all.obs;
   final downloadFilenameBuilder = ''.obs;
+  final initialDefaultMetadataTags = <String, String>{};
 
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
@@ -118,6 +119,13 @@ class _YoutubeSettings with SettingsFileWriter {
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
 
+      final initialDefaultMetadataTagsInStorage = (json['initialDefaultMetadataTags'] as Map?);
+      if (initialDefaultMetadataTagsInStorage != null) {
+        for (final e in initialDefaultMetadataTagsInStorage.entries) {
+          initialDefaultMetadataTags[e.key] = e.value;
+        }
+      }
+
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
@@ -147,6 +155,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
         'downloadFilenameBuilder': downloadFilenameBuilder.value,
+        'initialDefaultMetadataTags': initialDefaultMetadataTags,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.name,
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,

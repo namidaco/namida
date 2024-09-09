@@ -391,8 +391,10 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
   void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
     await showDownloadVideoBottomSheet(
-      index: index,
+      index: config.index,
+      totalLength: config.totalLength,
       streamInfoItem: config.streamInfoItem,
+      playlistId: config.playlistId,
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: config.id.videoId,
       initialItemConfig: config,
@@ -475,7 +477,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        index: index,
+        downloadIndex: item.index,
+        totalLength: item.totalLength,
+        playlistId: item.playlistId,
         streamInfoItem: infoFinal,
         videoId: videoId,
         url: infoFinal?.buildUrl(),

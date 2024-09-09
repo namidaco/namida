@@ -1157,6 +1157,7 @@ class CustomTagTextField extends StatefulWidget {
   final int? maxLength;
   final String? Function(String? value)? validator;
   final String labelText;
+  final void Function()? onTap;
   final void Function(String value)? onChanged;
   final bool isNumeric;
   final TextInputType? keyboardType;
@@ -1174,6 +1175,7 @@ class CustomTagTextField extends StatefulWidget {
     this.maxLines,
     this.maxLength,
     this.validator,
+    this.onTap,
     this.onChanged,
     required this.labelText,
     this.isNumeric = false,
@@ -1203,6 +1205,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final borderR = widget.borderRadius.multipliedRadius;
     final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
     return TextFormField(
+      onTap: widget.onTap,
       focusNode: widget.focusNode,
       validator: widget.validator,
       maxLength: widget.maxLength,

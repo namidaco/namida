@@ -29,6 +29,7 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTPlaylistDownloadPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -97,6 +98,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     final filename = defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id;
     return YoutubeItemDownloadConfig(
       index: index,
+      totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
+      playlistId: widget.playlistInfo?.id,
       id: DownloadTaskVideoId(videoId: id),
       groupName: DownloadTaskGroupName(groupName: _groupName.value),
       filename: DownloadTaskFilename.create(initialFilename: filename),
@@ -121,8 +124,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     required int index,
   }) async {
     await showDownloadVideoBottomSheet(
-      index: index,
+      index: _configMap[id]?.index,
+      totalLength: _configMap[id]?.totalLength,
       streamInfoItem: widget.infoLookup[id],
+      playlistInfo: widget.playlistInfo,
+      playlistId: widget.playlistInfo?.id,
       showSpecificFileOptionsInEditTagDialog: false,
       preferAudioOnly: downloadAudioOnly.value,
       videoId: id,
@@ -326,9 +332,39 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                               settings.youtube.save(downloadFilenameBuilder: text);
                               return true;
                             },
+                            extraPreItemsBuilder: (formState) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: CustomListTile(
+                                  icon: Broken.edit,
+                                  title: lang.EDIT_TAGS,
+                                  onTap: () async {
+                                    await showVideoDownloadOptionsSheet(
+                                      context: context,
+                                      videoTitle: null,
+                                      videoUploader: null,
+                                      tagMaps: settings.youtube.initialDefaultMetadataTags,
+                                      tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
+                                      supportTagging: true,
+                                      showSpecificFileOptions: false,
+                                      onDownloadGroupNameChanged: (newGroupName) {}, // not visible
+                                      preWidget: (controllerFn, onChangedFn) => Padding(
+                                        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+                                        child: YTDownloadFilenameBuilderRow(
+                                          controller: null,
+                                          controllerCallback: controllerFn,
+                                          onChanged: onChangedFn,
+                                        ),
+                                      ),
+                                    );
+                                    settings.youtube.save();
+                                  },
+                                ),
+                              );
+                            },
                             extraItemsBuilder: (formState) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
                                 child: YTDownloadFilenameBuilderRow(
                                   controller: controller,
                                 ),
@@ -635,8 +671,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 }
 
 class YTDownloadFilenameBuilderRow extends StatelessWidget {
-  final TextEditingController controller;
-  const YTDownloadFilenameBuilderRow({super.key, required this.controller});
+  final TextEditingController? controller;
+  final TextEditingController? Function()? controllerCallback;
+  final Function(String text)? onChanged;
+  const YTDownloadFilenameBuilderRow({super.key, required this.controller, this.controllerCallback, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -651,12 +689,15 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 2.0),
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                 onTap: () {
+                  final controller = this.controller ?? controllerCallback?.call();
+                  if (controller == null) return;
                   var cursorPos = controller.selection.base.offset;
                   String textAfterCursor = controller.text.substring(cursorPos);
                   String textBeforeCursor = controller.text.substring(0, cursorPos);
                   final toAdd = YoutubeController.filenameBuilder.buildParamForFilename(e);
                   controller.text = "$textBeforeCursor$toAdd$textAfterCursor";
                   controller.selection = TextSelection.collapsed(offset: textBeforeCursor.length + toAdd.length);
+                  onChanged?.call(controller.text);
                 },
                 child: Text(
                   e,

@@ -75,23 +75,37 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Optional Auto title/artist/album extraction for downloads and scrobbling
 - Downloads output filename builder (similar to yt-dlp)
 
+<details>
+
+<summary>Available formats & example</summary>
+
+- Formats:
   - `video_id`, `id`: video identifier
-  - `title`: video title
+  - `video_url`, `url`: video full url (https://www.youtube.com/watch?v=`id`)
+  - `video_title`, `fulltitle`: video full title
+  - `title`: extracted music title from video title (*Navjaxx - **<ins>Fading Light</ins>** (Slowed)*)
+  - `artist`: extracted music artist from video title (***<ins>Navjaxx</ins>** - Fading Light (Slowed)*) or else `channel`
   - `ext`: format container extension (mp4, m4a, webm). this is not necessary as it would be added automatically
-  - `channel`, `uploader`: channel name of the video
-  - `channel_id`, `uploader_id`: channel id of the video
-  - `channel_url`, `uploader_url`: channel url of the video
+  - `channel_fulltitle`: channel full name
+  - `channel`, `uploader`: channel name (excluding ` - Topic`)
+  - `channel_id`, `uploader_id`: channel id
+  - `channel_url`, `uploader_url`: channel url
   - `timestamp`: UNIX timestamp of the video (milliseconds since epoch)
-  - `upload_date`: upload date of the video (yyyyMMdd)
+  - `upload_date`: upload date of the video, converted to local time (yyyyMMdd)
   - `view_count`: view count of the video
   - `like_count`: like count of the video
+  - `description`: video description. links are wrapped in a markdown style
+  - `duration`: video duration in seconds (204)
+  - `duration_string`: video duration formatted (3:24)
   - `playlist_title`: title of the playlist containing the video
   - `playlist_id`: id of the playlist containing the video
   - `playlist`: `playlist_title` if available or else `playlist_id`
   - `playlist_count`: total videos count in the playlist
   - `playlist_index`: index of the video in the playlists (starts at 0)
   - `playlist_autonumber`: position of the video in the playlists (starts at 1)
-  - example: 
+  - `none`: empty field. useful for tags to override any other settings
+
+- Example: 
 ```bash
 # [04] music title [(channel name)]
 [%(playlist_autonumber)s] %(title)s [(%(channel)s)]
@@ -100,6 +114,8 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 # music playlist/02. music title.m4a
 %(playlist)s/%(playlist_autonumber)s. %(title)s.%(ext)s
 ```
+
+</details>
 
 ## Others:
 

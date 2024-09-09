@@ -56,9 +56,10 @@ class _VideoInfoController {
   /// Returns cached streams result if exist. you need to ensure that urls didn't expire ![VideoStreamsResult.hasExpired] before consuming them.
   ///
   /// Enable [bypassJSCheck] if you gurantee using [VideoStreamsResult.info] only.
-  VideoStreamsResult? fetchVideoStreamsSync(String videoId, {bool bypassJSCheck = false}) {
+  VideoStreamsResult? fetchVideoStreamsSync(String videoId, {bool bypassJSCheck = false, bool infoOnly = false}) {
     final res = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
     final cached = res.read();
+    if (infoOnly) return cached;
     if (cached == null || cached.client != _usedClient) return null;
     if (_requiresJSPlayer && bypassJSCheck == false) {
       if (!YoutiPie.cipher.isPrepared) {

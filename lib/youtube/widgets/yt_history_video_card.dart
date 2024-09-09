@@ -211,7 +211,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       openOnTap: false,
       openOnLongPress: openMenuOnLongPress,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        index: index,
+        downloadIndex: null,
+        totalLength: null,
         streamInfoItem: info,
         videoId: videoId,
         url: info?.buildUrl(),
@@ -374,7 +375,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     right: 0.0,
                     child: NamidaPopupWrapper(
                       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-                        index: index,
+                        downloadIndex: null,
+                        totalLength: null,
                         streamInfoItem: info,
                         videoId: videoId,
                         url: info?.buildUrl(),
