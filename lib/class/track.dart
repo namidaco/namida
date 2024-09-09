@@ -412,8 +412,8 @@ extension TrackExtUtils on TrackExtended {
     }
     var filename = this.filename;
     if (filename.isNotEmpty) {
-      var link = NamidaLinkUtils.extractYoutubeLink(filename);
-      if (link != null) return link;
+      var id = RegExp('[v|id]=(.{11})').firstMatch(filename)?.group(1);
+      if (id != null) return 'youtu.be/$id';
     }
     return '';
   }

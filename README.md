@@ -186,7 +186,11 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ###### How youtube?
 
 </summary>
- • looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+
+  - looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+    - for comment tag, any url format should get matched normally.
+    - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
+  
 </details>
 
 - Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
