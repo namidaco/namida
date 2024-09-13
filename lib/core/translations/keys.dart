@@ -417,6 +417,8 @@ abstract class LanguageKeys {
   String get NEW_TRACKS_UNKNOWN_YEAR => _getKey('NEW_TRACKS_UNKNOWN_YEAR');
   String get NEXT => _getKey('NEXT');
   String get NON_FAVOURITES => _getKey('NON_FAVOURITES');
+  String get NORMALIZE_AUDIO => _getKey('NORMALIZE_AUDIO');
+  String get NORMALIZE_AUDIO_SUBTITLE => _getKey('NORMALIZE_AUDIO_SUBTITLE');
   String get NOTIFICATION => _getKey('NOTIFICATION');
   String get NO_CHANGES_FOUND => _getKey('NO_CHANGES_FOUND');
   String get NO_ENOUGH_TRACKS => _getKey('NO_ENOUGH_TRACKS');

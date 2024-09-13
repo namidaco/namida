@@ -1,3 +1,5 @@
+import 'package:namida/class/replay_gain_data.dart';
+
 class MediaInfo {
   final String path;
   final List<MIStream>? streams;
@@ -106,6 +108,7 @@ class MIFormatTags {
   final String? lyricist;
   final String? compatibleBrands;
   final String? mood;
+  final ReplayGainData? gainData;
 
   const MIFormatTags({
     this.date,
@@ -133,6 +136,7 @@ class MIFormatTags {
     this.lyricist,
     this.compatibleBrands,
     this.mood,
+    this.gainData,
   });
 
   factory MIFormatTags.fromMap(Map<dynamic, dynamic> map) => MIFormatTags(
@@ -161,6 +165,7 @@ class MIFormatTags {
         lyricist: map.getOrLowerCase("LYRICIST"),
         compatibleBrands: map.getOrUpperCase("compatible_brands"),
         mood: map.getOrUpperCase("mood"),
+        gainData: ReplayGainData.fromAndroidMap(map),
       );
 
   Map<dynamic, dynamic> toMap() => {
@@ -189,6 +194,7 @@ class MIFormatTags {
         "LYRICIST": lyricist,
         "compatible_brands": compatibleBrands,
         "mood": mood,
+        "gainData": gainData?.toMap(),
       };
 }
 

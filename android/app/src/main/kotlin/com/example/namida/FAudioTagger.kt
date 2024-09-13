@@ -298,6 +298,13 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                 } catch (_: Exception) {}
               }
             }
+
+            // -- for extra goofy fields
+            tag.getFields().forEach {
+              if (metadata[it.id] == null) {
+                metadata[it.id] =  it.toString()
+              }
+            }
           } catch (_: Exception) {}
 
           if (extractArtwork) {

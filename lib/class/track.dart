@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -230,6 +231,7 @@ class TrackExtended {
   final double rating;
   final String? originalTags;
   final List<String> tagsList;
+  final ReplayGainData? gainData;
 
   final bool isVideo;
 
@@ -263,6 +265,7 @@ class TrackExtended {
     required this.rating,
     required this.originalTags,
     required this.tagsList,
+    required this.gainData,
     required this.isVideo,
   });
 
@@ -328,6 +331,7 @@ class TrackExtended {
         json['originalTags'],
         config: genresSplitConfig,
       ),
+      gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       isVideo: json['v'] ?? false,
     );
   }
@@ -359,6 +363,7 @@ class TrackExtended {
       if (label.isNotEmpty) 'label': label,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
+      if (gainData != null) 'gainData': gainData?.toMap(),
       'v': isVideo,
     };
   }
@@ -431,6 +436,40 @@ extension TrackExtUtils on TrackExtended {
     return tostr;
   }
 
+  String get audioInfoFormatted {
+    final trExt = this;
+    final initial = [
+      trExt.durationMS.milliSecondsLabel,
+      trExt.size.fileSizeFormatted,
+      "${trExt.bitrate} kps",
+      "${trExt.sampleRate} hz",
+    ].join(' • ');
+    final gainFormatted = trExt.gainDataFormatted;
+    if (gainFormatted == null) return initial;
+    return '$initial\n$gainFormatted';
+  }
+
+  String? get gainDataFormatted {
+    final gain = gainData;
+    if (gain == null) return null;
+    return [
+      '${gain.trackGain ?? '?'} dB gain',
+      if (gain.trackPeak != null) '${gain.trackPeak} peak',
+      if (gain.albumGain != null) '${gain.albumGain} dB gain (album)',
+      if (gain.albumPeak != null) '${gain.albumPeak} peak (album)',
+    ].join(' • ');
+  }
+
+  String get audioInfoFormattedCompact {
+    final trExt = this;
+    return [
+      trExt.format,
+      "${trExt.channels} ch",
+      "${trExt.bitrate} kps",
+      "${trExt.sampleRate / 1000} khz",
+    ].joinText(separator: ' • ');
+  }
+
   TrackExtended copyWithTag({
     required FTags tag,
     int? dateModified,
@@ -459,6 +498,7 @@ extension TrackExtUtils on TrackExtended {
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
       tagsList: tag.tags != null ? [tag.tags!] : tagsList,
+      gainData: tag.gainData ?? gainData,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -504,6 +544,7 @@ extension TrackExtUtils on TrackExtended {
     double? rating,
     String? originalTags,
     List<String>? tagsList,
+    ReplayGainData? gainData,
     bool? isVideo,
   }) {
     return TrackExtended(
@@ -536,6 +577,7 @@ extension TrackExtUtils on TrackExtended {
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
+      gainData: gainData ?? this.gainData,
       isVideo: isVideo ?? this.isVideo,
     );
   }
@@ -606,26 +648,12 @@ extension TrackUtils on Track {
   String get youtubeLink => toTrackExt().youtubeLink;
   String get youtubeID => youtubeLink.getYoutubeID;
 
-  String get audioInfoFormatted {
-    final trExt = toTrackExt();
-    return [
-      trExt.durationMS.milliSecondsLabel,
-      trExt.size.fileSizeFormatted,
-      "${trExt.bitrate} kps",
-      "${trExt.sampleRate} hz",
-    ].join(' • ');
-  }
-
-  String get audioInfoFormattedCompact {
-    final trExt = toTrackExt();
-    return [
-      trExt.format,
-      "${trExt.channels} ch",
-      "${trExt.bitrate} kps",
-      "${trExt.sampleRate / 1000} khz",
-    ].join(' • ');
-  }
+  String get audioInfoFormatted => toTrackExt().audioInfoFormatted;
+  String? get gainDataFormatted => toTrackExt().gainDataFormatted;
+  String get audioInfoFormattedCompact => toTrackExt().audioInfoFormattedCompact;
 
   String get albumIdentifier => toTrackExt().albumIdentifier;
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
+
+  ReplayGainData? get gainData => toTrackExt().gainData;
 }

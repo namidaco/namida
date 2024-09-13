@@ -447,6 +447,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
+    if (settings.player.replayGain.value) {
+      final gain = item.track.toTrackExt().gainData?.calculateGainAsVolume();
+      _userPlayerVolume = gain ?? 0.75; // save in memory only
+    }
     final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
@@ -1620,6 +1624,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       );
 
   double get _userPlayerVolume => settings.player.volume.value;
+  set _userPlayerVolume(double val) => settings.player.volume.value = val;
 
   @override
   bool get enableCrossFade => settings.player.enableCrossFade.value && currentItem.value is! YoutubeID;

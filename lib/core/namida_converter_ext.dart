@@ -268,6 +268,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
         mood: info.mood,
         country: info.country,
         recordLabel: info.label,
+        gainData: info.gainData,
       ),
       durationMS: infoFull.format?.duration?.inMilliseconds,
       bitRate: bitrateThousands?.round(),

@@ -495,6 +495,7 @@ class Indexer<T extends Track> {
         rating: 0.0,
         originalTags: null,
         tagsList: [],
+        gainData: null,
         isVideo: trackPath.isVideo(),
       );
       if (!trackInfo.hasError) {
@@ -562,6 +563,7 @@ class Indexer<T extends Track> {
           rating: tags.ratingPercentage,
           originalTags: tags.tags,
           tagsList: tagsEmbedded,
+          gainData: tags.gainData,
         );
 
         // ----- if the title || artist weren't found in the tag fields
@@ -1319,6 +1321,7 @@ class Indexer<T extends Track> {
         rating: 0.0,
         originalTags: tag,
         tagsList: tags,
+        gainData: null,
         isVideo: e.data.isVideo(),
       );
       tracks.add((trext, e.id));

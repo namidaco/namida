@@ -34,6 +34,7 @@ class _PlayerSettings with SettingsFileWriter {
   final displayRemainingDurInsteadOfTotal = false.obs;
   final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
   final lockscreenArtwork = true.obs;
+  final replayGain = false.obs;
 
   final onInterrupted = <InterruptionType, InterruptionAction>{
     InterruptionType.shouldPause: InterruptionAction.pause,
@@ -70,6 +71,7 @@ class _PlayerSettings with SettingsFileWriter {
     RepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
+    bool? replayGain,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
     if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
@@ -99,6 +101,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
+    if (replayGain != null) this.replayGain.value = replayGain;
     _writeToStorage();
   }
 
@@ -140,6 +143,7 @@ class _PlayerSettings with SettingsFileWriter {
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       killAfterDismissingApp.value = KillAppMode.values.getEnum(json['killAfterDismissingApp']) ?? killAfterDismissingApp.value;
       lockscreenArtwork.value = json['lockscreenArtwork'] ?? lockscreenArtwork.value;
+      replayGain.value = json['replayGain'] ?? replayGain.value;
       onInterrupted.value = getEnumMap_(
             json['onInterrupted'],
             InterruptionType.values,
@@ -181,6 +185,7 @@ class _PlayerSettings with SettingsFileWriter {
         'repeatMode': repeatMode.value.name,
         'killAfterDismissingApp': killAfterDismissingApp.value.name,
         'lockscreenArtwork': lockscreenArtwork.value,
+        'replayGain': replayGain.value,
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),

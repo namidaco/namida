@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/core/extensions.dart';
 
 class FArtwork {
@@ -70,6 +71,7 @@ class FTags {
   final String? recordLabel;
 
   final double? ratingPercentage;
+  final ReplayGainData? gainData;
 
   const FTags({
     required this.path,
@@ -99,6 +101,7 @@ class FTags {
     this.country,
     this.recordLabel,
     this.ratingPercentage,
+    this.gainData,
   });
 
   static String? _listToString(List? list) {
@@ -159,6 +162,7 @@ class FTags {
       country: _listToString(map["country"]) ?? map["COUNTRY"],
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
       ratingPercentage: ratingUnsignedIntToPercentage(ratingString),
+      gainData: ReplayGainData.fromAndroidMap(map),
     );
   }
 
@@ -190,6 +194,7 @@ class FTags {
       "country": country,
       "recordLabel": recordLabel,
       "language": language,
+      "gainData": gainData?.toMap(),
     };
   }
 }

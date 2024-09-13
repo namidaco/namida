@@ -90,31 +90,59 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
           tapToUpdate: tapToUpdate,
         ),
         verticalPadding,
-        Obx(
-          (context) => _SliderTextWidget(
-            icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
-            title: lang.VOLUME,
-            value: settings.player.volume.valueR,
-            max: 1.0,
-            onManualChange: (value) {
-              volumeKey.currentState?._updateValNoRound(value);
-            },
-            restoreDefault: () {
-              Player.inst.setPlayerVolume(1.0);
-              settings.player.save(volume: 1.0);
-              volumeKey.currentState?._updateVal(1.0);
-            },
-          ),
-        ),
-        _CuteSlider(
-          key: volumeKey,
-          max: 1.0,
-          initialValue: settings.player.volume.value,
-          onChanged: (value) {
-            Player.inst.setPlayerVolume(value);
-            settings.player.save(volume: value);
+        ObxO(
+          rx: settings.player.replayGain,
+          builder: (context, replayGainEnabled) {
+            final child = Obx(
+              (context) => _SliderTextWidget(
+                icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
+                title: lang.VOLUME,
+                value: settings.player.volume.valueR,
+                max: 1.0,
+                onManualChange: (value) {
+                  volumeKey.currentState?._updateValNoRound(value);
+                },
+                restoreDefault: () {
+                  Player.inst.setPlayerVolume(1.0);
+                  settings.player.save(volume: 1.0);
+                  volumeKey.currentState?._updateVal(1.0);
+                },
+              ),
+            );
+            return replayGainEnabled
+                ? NamidaTooltip(
+                    message: () => lang.NORMALIZE_AUDIO,
+                    child: AnimatedEnabled(
+                      enabled: !replayGainEnabled,
+                      child: child,
+                    ),
+                  )
+                : child;
           },
-          tapToUpdate: tapToUpdate,
+        ),
+        ObxO(
+          rx: settings.player.replayGain,
+          builder: (context, replayGainEnabled) {
+            final child = _CuteSlider(
+              key: volumeKey,
+              max: 1.0,
+              initialValue: settings.player.volume.value,
+              onChanged: (value) {
+                Player.inst.setPlayerVolume(value);
+                settings.player.save(volume: value);
+              },
+              tapToUpdate: tapToUpdate,
+            );
+            return replayGainEnabled
+                ? NamidaTooltip(
+                    message: () => lang.NORMALIZE_AUDIO,
+                    child: AnimatedEnabled(
+                      enabled: !replayGainEnabled,
+                      child: child,
+                    ),
+                  )
+                : child;
+          },
         ),
       ],
     );

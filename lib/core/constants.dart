@@ -539,6 +539,7 @@ const kDummyExtendedTrack = TrackExtended(
   rating: 0.0,
   originalTags: null,
   tagsList: [],
+  gainData: null,
   isVideo: false,
 );
 

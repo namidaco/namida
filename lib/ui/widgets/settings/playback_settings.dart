@@ -29,6 +29,7 @@ enum _PlaybackSettingsKeys {
   killPlayerAfterDismissing,
   onNotificationTap,
   dismissibleMiniplayer,
+  replayGain,
   skipSilence,
   crossfade,
   fadeEffectOnPlayPause,
@@ -62,6 +63,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
         _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
         _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
+        _PlaybackSettingsKeys.replayGain: [lang.NORMALIZE_AUDIO, lang.NORMALIZE_AUDIO_SUBTITLE],
         _PlaybackSettingsKeys.skipSilence: [lang.SKIP_SILENCE],
         _PlaybackSettingsKeys.crossfade: [lang.ENABLE_CROSSFADE_EFFECT, lang.CROSSFADE_DURATION, lang.CROSSFADE_TRIGGER_SECONDS],
         _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE, lang.PLAY_FADE_DURATION, lang.PAUSE_FADE_DURATION],
@@ -352,6 +354,31 @@ class PlaybackSettings extends SettingSubpageProvider {
             title: lang.DISMISSIBLE_MINIPLAYER,
             onChanged: (value) => settings.save(dismissibleMiniplayer: !value),
             value: settings.dismissibleMiniplayer.valueR,
+          ),
+        ),
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.replayGain,
+        child: ObxO(
+          rx: settings.player.replayGain,
+          builder: (context, replayGain) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.replayGain),
+            leading: const StackedIcon(
+              baseIcon: Broken.airpods,
+              secondaryIcon: Broken.voice_cricle,
+            ),
+            title: lang.NORMALIZE_AUDIO,
+            subtitle: lang.NORMALIZE_AUDIO_SUBTITLE,
+            onChanged: (value) async {
+              final willBeTrue = !value;
+              settings.player.save(replayGain: !value);
+              if (willBeTrue) {
+                final gain = Player.inst.currentTrack?.track.toTrackExt().gainData?.calculateGainAsVolume() ?? 0.75;
+                settings.player.volume.value = gain;
+                await Player.inst.setVolume(gain);
+              }
+            },
+            value: replayGain,
           ),
         ),
       ),
