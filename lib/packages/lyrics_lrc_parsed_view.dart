@@ -374,174 +374,176 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: _lrcOpacityDurationMS),
             opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
-            child: BorderRadiusClip(
-              borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),
-              child: NamidaBgBlur(
-                blur: fullscreen ? 0.0 : 12.0,
-                enabled: !fullscreen,
-                child: Container(
-                  color: context.theme.scaffoldBackgroundColor.withOpacity(fullscreen ? 0.8 : 0.6),
-                  alignment: Alignment.center,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Listener(
-                              onPointerDown: (event) {
-                                _scrollTimer?.cancel();
-                                _scrollTimer = null;
-                                _canAnimateScroll = false;
-                                if (_isCurrentLineEmpty) {
-                                  refreshState(() => _isCurrentLineEmpty = false);
-                                }
-                              },
-                              onPointerUp: (event) {
-                                _scrollTimer = Timer(const Duration(seconds: 3), () {
-                                  _canAnimateScroll = true;
-                                  if (Player.inst.isPlaying.value) {
-                                    _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true);
+            child: RepaintBoundary(
+              child: BorderRadiusClip(
+                borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),
+                child: NamidaBgBlur(
+                  blur: fullscreen ? 0.0 : 12.0,
+                  enabled: !fullscreen,
+                  child: Container(
+                    color: context.theme.scaffoldBackgroundColor.withOpacity(fullscreen ? 0.8 : 0.6),
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Listener(
+                                onPointerDown: (event) {
+                                  _scrollTimer?.cancel();
+                                  _scrollTimer = null;
+                                  _canAnimateScroll = false;
+                                  if (_isCurrentLineEmpty) {
+                                    refreshState(() => _isCurrentLineEmpty = false);
                                   }
-                                  if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
-                                    refreshState(() => _isCurrentLineEmpty = true);
-                                  }
-                                });
-                              },
-                              child: ShaderFadingWidget(
-                                biggerValues: fullscreen,
-                                child: Builder(
-                                  builder: (context) {
-                                    return Obx(
-                                      (context) {
-                                        final lrc = Lyrics.inst.currentLyricsLRC.valueR;
-                                        if (lrc == null) {
-                                          final text = Lyrics.inst.currentLyricsText.valueR;
-                                          if (!_checkIfTextEmpty(text)) {
-                                            return SingleChildScrollView(
-                                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                              controller: Lyrics.inst.textScrollController,
-                                              child: Column(
-                                                children: [
-                                                  SizedBox(height: _paddingVertical),
-                                                  Text(
-                                                    text,
-                                                    style: normalTextStyle,
-                                                  ),
-                                                  SizedBox(height: _paddingVertical),
-                                                ],
-                                              ),
-                                            );
-                                          }
-                                          return const SizedBox();
-                                        }
-
-                                        final color = CurrentColor.inst.miniplayerColor;
-                                        return ObxO(
-                                          rx: _latestUpdatedLine,
-                                          builder: (context, highlightedTimeStamp) => PageStorage(
-                                            bucket: PageStorageBucket(),
-                                            child: ScrollablePositionedList.builder(
-                                              padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                                              itemScrollController: controller,
-                                              itemCount: lyrics.length,
-                                              itemBuilder: (context, index) {
-                                                final lrc = lyrics[index];
-                                                final text = lrc.lyrics;
-                                                final selected = highlightedTimeStamp == lrc.timestamp;
-                                                final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                                                final bgColor = selected
-                                                    ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
-                                                    : null;
-                                                final padding = selected ? 2.0 : 0.0;
-
-                                                return Stack(
-                                                  alignment: Alignment.center,
+                                },
+                                onPointerUp: (event) {
+                                  _scrollTimer = Timer(const Duration(seconds: 3), () {
+                                    _canAnimateScroll = true;
+                                    if (Player.inst.isPlaying.value) {
+                                      _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true);
+                                    }
+                                    if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
+                                      refreshState(() => _isCurrentLineEmpty = true);
+                                    }
+                                  });
+                                },
+                                child: ShaderFadingWidget(
+                                  biggerValues: fullscreen,
+                                  child: Builder(
+                                    builder: (context) {
+                                      return Obx(
+                                        (context) {
+                                          final lrc = Lyrics.inst.currentLyricsLRC.valueR;
+                                          if (lrc == null) {
+                                            final text = Lyrics.inst.currentLyricsText.valueR;
+                                            if (!_checkIfTextEmpty(text)) {
+                                              return SingleChildScrollView(
+                                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                                controller: Lyrics.inst.textScrollController,
+                                                child: Column(
                                                   children: [
-                                                    Positioned.fill(
-                                                      child: Material(
-                                                        type: MaterialType.transparency,
-                                                        child: InkWell(
-                                                          splashFactory: InkSparkle.splashFactory,
-                                                          onTap: () {
-                                                            Player.inst.seek(lrc.timestamp);
-                                                            _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
-                                                          },
+                                                    SizedBox(height: _paddingVertical),
+                                                    Text(
+                                                      text,
+                                                      style: normalTextStyle,
+                                                    ),
+                                                    SizedBox(height: _paddingVertical),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                            return const SizedBox();
+                                          }
+
+                                          final color = CurrentColor.inst.miniplayerColor;
+                                          return ObxO(
+                                            rx: _latestUpdatedLine,
+                                            builder: (context, highlightedTimeStamp) => PageStorage(
+                                              bucket: PageStorageBucket(),
+                                              child: ScrollablePositionedList.builder(
+                                                padding: EdgeInsets.symmetric(vertical: _paddingVertical),
+                                                itemScrollController: controller,
+                                                itemCount: lyrics.length,
+                                                itemBuilder: (context, index) {
+                                                  final lrc = lyrics[index];
+                                                  final text = lrc.lyrics;
+                                                  final selected = highlightedTimeStamp == lrc.timestamp;
+                                                  final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                                                  final bgColor = selected
+                                                      ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
+                                                      : null;
+                                                  final padding = selected ? 2.0 : 0.0;
+
+                                                  return Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Positioned.fill(
+                                                        child: Material(
+                                                          type: MaterialType.transparency,
+                                                          child: InkWell(
+                                                            splashFactory: InkSparkle.splashFactory,
+                                                            onTap: () {
+                                                              Player.inst.seek(lrc.timestamp);
+                                                              _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
+                                                            },
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    IgnorePointer(
-                                                      child: NamidaHero(
-                                                        tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                                        enabled: false,
-                                                        child: AnimatedScale(
-                                                          duration: const Duration(milliseconds: 400),
-                                                          curve: Curves.easeInOutCubicEmphasized,
-                                                          scale: selected ? 1.0 : 0.95,
-                                                          child: NamidaInkWell(
-                                                            bgColor: bgColor,
-                                                            borderRadius: selectedAndEmpty ? 5.0 : 8.0,
-                                                            animationDurationMS: 300,
-                                                            margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
-                                                            padding: selectedAndEmpty
-                                                                ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
-                                                                : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                                                            child: Text(
-                                                              text,
-                                                              style: normalTextStyle.copyWith(
-                                                                color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
+                                                      IgnorePointer(
+                                                        child: NamidaHero(
+                                                          tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                                          enabled: false,
+                                                          child: AnimatedScale(
+                                                            duration: const Duration(milliseconds: 400),
+                                                            curve: Curves.easeInOutCubicEmphasized,
+                                                            scale: selected ? 1.0 : 0.95,
+                                                            child: NamidaInkWell(
+                                                              bgColor: bgColor,
+                                                              borderRadius: selectedAndEmpty ? 5.0 : 8.0,
+                                                              animationDurationMS: 300,
+                                                              margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
+                                                              padding: selectedAndEmpty
+                                                                  ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
+                                                                  : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                                                              child: Text(
+                                                                text,
+                                                                style: normalTextStyle.copyWith(
+                                                                  color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
+                                                                ),
+                                                                textAlign: TextAlign.center,
                                                               ),
-                                                              textAlign: TextAlign.center,
                                                             ),
                                                           ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                );
-                                              },
+                                                    ],
+                                                  );
+                                                },
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              bottom: 8.0,
-                              right: 0.0,
-                              child: Container(
-                                clipBehavior: Clip.antiAlias,
-                                padding: const EdgeInsets.all(4.0),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 8.0,
-                                      color: context.theme.scaffoldBackgroundColor.withOpacity(0.7),
-                                    ),
-                                  ],
-                                ),
-                                child: NamidaIconButton(
-                                  icon: Broken.maximize_3,
-                                  iconSize: 20.0,
-                                  onPressed: () {
-                                    if (fullscreen) {
-                                      Navigator.of(context).pop();
-                                    } else {
-                                      enterFullScreen();
-                                    }
-                                  },
+                              Positioned(
+                                bottom: 8.0,
+                                right: 0.0,
+                                child: Container(
+                                  clipBehavior: Clip.antiAlias,
+                                  padding: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        blurRadius: 8.0,
+                                        color: context.theme.scaffoldBackgroundColor.withOpacity(0.7),
+                                      ),
+                                    ],
+                                  ),
+                                  child: NamidaIconButton(
+                                    icon: Broken.maximize_3,
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      if (fullscreen) {
+                                        Navigator.of(context).pop();
+                                      } else {
+                                        enterFullScreen();
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      ...bottomControlsChildren,
-                    ],
+                        ...bottomControlsChildren,
+                      ],
+                    ),
                   ),
                 ),
               ),

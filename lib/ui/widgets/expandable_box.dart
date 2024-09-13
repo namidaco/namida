@@ -82,60 +82,64 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
               duration: const Duration(milliseconds: 400),
               height: widget.isBarVisible ? kExpandableBoxHeight : 0.0,
               animateWidth: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 18.0),
-                  Expanded(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.leftWidgets != null) ...widget.leftWidgets!,
-                        Expanded(
-                          child: Text(
-                            widget.leftText,
-                            style: context.textTheme.displayMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              child: RepaintBoundary(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 18.0),
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (widget.leftWidgets != null) ...widget.leftWidgets!,
+                          Expanded(
+                            child: Text(
+                              widget.leftText,
+                              style: context.textTheme.displayMedium,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        if (widget.displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
-                      ],
+                          if (widget.displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
+                        ],
+                      ),
                     ),
-                  ),
-                  if (widget.gridWidget != null) widget.gridWidget!,
-                  const SizedBox(width: 4.0),
-                  widget.sortByMenuWidget,
-                  const SizedBox(width: 6.0),
-                  NamidaIconButton(
-                    horizontalPadding: 6.0,
-                    icon: Broken.filter_search,
-                    onPressed: widget.onFilterIconTap,
-                    iconSize: 20.0,
-                  ),
-                  const SizedBox(width: 6.0),
-                ],
+                    if (widget.gridWidget != null) widget.gridWidget!,
+                    const SizedBox(width: 4.0),
+                    widget.sortByMenuWidget,
+                    const SizedBox(width: 6.0),
+                    NamidaIconButton(
+                      horizontalPadding: 6.0,
+                      icon: Broken.filter_search,
+                      onPressed: widget.onFilterIconTap,
+                      iconSize: 20.0,
+                    ),
+                    const SizedBox(width: 6.0),
+                  ],
+                ),
               ),
             ),
           ),
           AnimatedBuilder(
             animation: _controller,
-            child: Row(
-              children: [
-                const SizedBox(width: 12.0),
-                Expanded(child: textfieldWidget),
-                const SizedBox(width: 12.0),
-                NamidaIconButton(
-                  onPressed: () {
-                    widget.onCloseButtonPressed();
-                    ScrollSearchController.inst.unfocusKeyboard();
-                  },
-                  icon: Broken.close_circle,
-                ),
-                const SizedBox(width: 8.0),
-              ],
+            child: RepaintBoundary(
+              child: Row(
+                children: [
+                  const SizedBox(width: 12.0),
+                  Expanded(child: textfieldWidget),
+                  const SizedBox(width: 12.0),
+                  NamidaIconButton(
+                    onPressed: () {
+                      widget.onCloseButtonPressed();
+                      ScrollSearchController.inst.unfocusKeyboard();
+                    },
+                    icon: Broken.close_circle,
+                  ),
+                  const SizedBox(width: 8.0),
+                ],
+              ),
             ),
             builder: (context, child) {
               return Opacity(

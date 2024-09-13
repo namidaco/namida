@@ -81,8 +81,8 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
-    final drawerChild = widget.drawerChild;
-    final scaffoldBody = widget.child;
+    final drawerChild = RepaintBoundary(child: widget.drawerChild);
+    final scaffoldBody = RepaintBoundary(child: widget.child);
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {

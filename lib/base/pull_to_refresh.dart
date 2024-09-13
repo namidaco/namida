@@ -155,17 +155,19 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   }
 
   Widget get pullToRefreshWidget {
+    final circleAvatar = RepaintBoundary(
+      child: CircleAvatar(
+        radius: 24.0,
+        backgroundColor: context.theme.colorScheme.secondaryContainer,
+        child: const Icon(Broken.refresh_2),
+      ),
+    );
     return Positioned(
       left: 0,
       right: 0,
       child: AnimatedBuilder(
         animation: animation,
-        child: CircleAvatar(
-          radius: 24.0,
-          backgroundColor: context.theme.colorScheme.secondaryContainer,
-          child: const Icon(Broken.refresh_2),
-        ),
-        builder: (context, circleAvatar) {
+        builder: (context, _) {
           final p = animation.value;
           if (!_animation2.isAnimating && p == 0) return const SizedBox();
           const multiplier = 4.5;
@@ -176,8 +178,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
               angle: (p * multiplier) - minus,
               child: AnimatedBuilder(
                 animation: _animation2,
-                child: circleAvatar,
-                builder: (context, circleAvatar) {
+                builder: (context, _) {
                   return Opacity(
                     opacity: _animation2.status == AnimationStatus.forward ? 1.0 : p,
                     child: RotationTransition(

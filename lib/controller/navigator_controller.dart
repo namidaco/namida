@@ -321,13 +321,15 @@ class NamidaNavigator {
           child: NamidaBgBlur(
             blur: 5.0,
             enabled: _currentDialogNumber == 1,
-            child: Container(
-              color: Colors.black.withOpacity(blackBg ? 1.0 : 0.45),
-              child: Transform.scale(
-                scale: scale,
-                child: Theme(
-                  data: theme,
-                  child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
+            child: material.RepaintBoundary(
+              child: Container(
+                color: Colors.black.withOpacity(blackBg ? 1.0 : 0.45),
+                child: Transform.scale(
+                  scale: scale,
+                  child: Theme(
+                    data: theme,
+                    child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
+                  ),
                 ),
               ),
             ),

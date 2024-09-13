@@ -267,12 +267,14 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 child: AnimatedOpacity(
                   opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
                   duration: const Duration(milliseconds: _SBDimensions.t700),
-                  child: Container(
-                    padding: const EdgeInsets.all(_SBDimensions.d8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(_SBDimensions.d30),
+                  child: RepaintBoundary(
+                    child: Container(
+                      padding: const EdgeInsets.all(_SBDimensions.d8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(_SBDimensions.d30),
+                      ),
+                      child: widget.trailingWidget,
                     ),
-                    child: widget.trailingWidget,
                   ),
                 ),
               ),
@@ -288,11 +290,13 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 child: AnimatedOpacity(
                   opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
                   duration: const Duration(milliseconds: _SBDimensions.t200),
-                  child: Container(
-                    padding: const EdgeInsets.only(left: _SBDimensions.d10),
-                    alignment: Alignment.topCenter,
-                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width) / _SBDimensions.d1_7,
-                    child: _textFormField(context, smallButtonTotalPaddingPart),
+                  child: RepaintBoundary(
+                    child: Container(
+                      padding: const EdgeInsets.only(left: _SBDimensions.d10),
+                      alignment: Alignment.topCenter,
+                      width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width) / _SBDimensions.d1_7,
+                      child: _textFormField(context, smallButtonTotalPaddingPart),
+                    ),
                   ),
                 ),
               ),
@@ -307,7 +311,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                     child: AnimatedOpacity(
                       opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
                       duration: const Duration(milliseconds: _SBDimensions.t200),
-                      child: widget.buttonWidgetSmall != null ? widget.buttonWidgetSmall! : const SizedBox(),
+                      child: RepaintBoundary(child: widget.buttonWidgetSmall != null ? widget.buttonWidgetSmall! : const SizedBox()),
                     ),
                   ),
                 ),

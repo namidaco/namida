@@ -73,38 +73,42 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
           children: [
             // -- MiniPlayer Wallpaper
             Positioned.fill(
-              child: AnimatedBuilder(
-                animation: widget.animation,
-                child: const Wallpaper(gradient: false, particleOpacity: .3),
-                builder: (context, child) {
-                  if (widget.animation.value > 0.01) {
-                    return Opacity(
-                      opacity: widget.animation.value.clamp(0.0, 1.0),
-                      child: child!,
-                    );
-                  } else {
-                    return const SizedBox();
-                  }
-                },
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: widget.animation,
+                  child: const Wallpaper(gradient: false, particleOpacity: .3),
+                  builder: (context, child) {
+                    if (widget.animation.value > 0.01) {
+                      return Opacity(
+                        opacity: widget.animation.value.clamp(0.0, 1.0),
+                        child: child!,
+                      );
+                    } else {
+                      return const SizedBox();
+                    }
+                  },
+                ),
               ),
             ),
 
             // -- MiniPlayers
-            ObxO(
-              rx: Player.inst.currentItem,
-              builder: (context, currentItem) => currentItem is YoutubeID
-                  ? ObxO(
-                      rx: settings.youtube.youtubeStyleMiniplayer,
-                      builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: youtubeStyleMiniplayer
-                            ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
-                            : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
-                      ),
-                    )
-                  : currentItem is Selectable
-                      ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
-                      : const SizedBox(key: Key('empty_miniplayer')),
+            RepaintBoundary(
+              child: ObxO(
+                rx: Player.inst.currentItem,
+                builder: (context, currentItem) => currentItem is YoutubeID
+                    ? ObxO(
+                        rx: settings.youtube.youtubeStyleMiniplayer,
+                        builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: youtubeStyleMiniplayer
+                              ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
+                              : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
+                        ),
+                      )
+                    : currentItem is Selectable
+                        ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
+                        : const SizedBox(key: Key('empty_miniplayer')),
+              ),
             ),
           ],
         ),
@@ -647,7 +651,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                         return AnimatedScale(
                           duration: const Duration(milliseconds: 100),
                           scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
-                          child: animatedScaleChild,
+                          child: RepaintBoundary(child: animatedScaleChild),
                         );
                       },
                     );
@@ -773,15 +777,17 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
       body: Stack(
         children: [
           if (widget.gradient)
-            Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0.95, -0.95),
-                  radius: 1.0,
-                  colors: [
-                    context.theme.colorScheme.onSecondary.withOpacity(.3),
-                    context.theme.colorScheme.onSecondary.withOpacity(.2),
-                  ],
+            RepaintBoundary(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.95, -0.95),
+                    radius: 1.0,
+                    colors: [
+                      context.theme.colorScheme.onSecondary.withOpacity(.3),
+                      context.theme.colorScheme.onSecondary.withOpacity(.2),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -799,21 +805,23 @@ class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
                     return AnimatedScale(
                       duration: const Duration(milliseconds: 300),
                       scale: 1.0 + scale * 1.5,
-                      child: AnimatedBackground(
-                        vsync: this,
-                        behaviour: RandomParticleBehaviour(
-                          options: ParticleOptions(
-                            baseColor: context.theme.colorScheme.tertiary,
-                            spawnMaxRadius: 4,
-                            spawnMinRadius: 2,
-                            spawnMaxSpeed: 60 + bpm * 2,
-                            spawnMinSpeed: bpm,
-                            maxOpacity: widget.particleOpacity,
-                            minOpacity: 0,
-                            particleCount: 50,
+                      child: RepaintBoundary(
+                        child: AnimatedBackground(
+                          vsync: this,
+                          behaviour: RandomParticleBehaviour(
+                            options: ParticleOptions(
+                              baseColor: context.theme.colorScheme.tertiary,
+                              spawnMaxRadius: 4,
+                              spawnMinRadius: 2,
+                              spawnMaxSpeed: 60 + bpm * 2,
+                              spawnMinSpeed: bpm,
+                              maxOpacity: widget.particleOpacity,
+                              minOpacity: 0,
+                              particleCount: 50,
+                            ),
                           ),
+                          child: const SizedBox(),
                         ),
-                        child: const SizedBox(),
                       ),
                     );
                   },

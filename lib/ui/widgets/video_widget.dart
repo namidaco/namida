@@ -379,22 +379,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             final ss = _seekSeconds;
             return NamidaOpacity(
               opacity: controller.value,
-              child: Column(
-                children: [
-                  Icon(
-                    isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
-                    color: color,
-                    shadows: outlineShadow,
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    '$ss ${lang.SECONDS}',
-                    style: context.textTheme.displayMedium?.copyWith(
+              child: RepaintBoundary(
+                child: Column(
+                  children: [
+                    Icon(
+                      isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
                       color: color,
                       shadows: outlineShadow,
                     ),
-                  )
-                ],
+                    const SizedBox(height: 8.0),
+                    Text(
+                      '$ss ${lang.SECONDS}',
+                      style: context.textTheme.displayMedium?.copyWith(
+                        color: color,
+                        shadows: outlineShadow,
+                      ),
+                    )
+                  ],
+                ),
               ),
             );
           },

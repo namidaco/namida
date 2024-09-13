@@ -162,83 +162,85 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
               right: 0,
               child: AnimatedBuilder(
                 animation: _smallBoxAnimation,
-                child: GestureDetector(
-                  onVerticalDragUpdate: (event) {
-                    _smallBoxDrag = (_smallBoxDrag + event.delta.dy * 0.002).clamp(0, 1);
-                    if (_smallBoxDrag > 0.0 && _smallBoxDrag < 1.0) {
-                      _jump(1 - _smallBoxDrag, _smallBoxDrag);
-                    }
-                  },
-                  onVerticalDragEnd: (d) {
-                    if (1 - _smallBoxDrag > 0.4 || d.velocity.pixelsPerSecond.dy < -250) {
-                      _animateSmallToBig();
-                    } else {
-                      _animateBigToSmall();
-                    }
-                    _smallBoxDrag = 1.0;
-                  },
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: isSingle
-                        ? Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: FloatingActionButton(
-                              heroTag: 'yt_queue_fab_hero',
-                              backgroundColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.9),
-                              onPressed: () => _animateSmallToBig(),
-                              child: const Icon(Broken.driver),
-                            ),
-                          )
-                        : NamidaInkWell(
-                            onTap: () => _animateSmallToBig(),
-                            margin: EdgeInsets.symmetric(horizontal: context.width * 0.04, vertical: 6.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-                            height: minHeight,
-                            bgColor: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor).withOpacity(0.95),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Broken.airdrop,
-                                  size: 24.0,
-                                  color: context.theme.iconTheme.color?.withOpacity(0.65),
-                                ),
-                                const SizedBox(width: 6.0),
-                                Expanded(
-                                  child: Obx(
-                                    (context) {
-                                      final currentIndex = Player.inst.currentIndex.valueR;
-                                      final nextItem =
-                                          Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
-                                      final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoName(nextItem.id);
-                                      final queueLength = Player.inst.currentQueue.valueR.length;
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "${currentIndex + 1}/$queueLength",
-                                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                                          ),
-                                          // const SizedBox(height: 2.0),
-                                          if (nextItemName != null && nextItemName != '')
-                                            Text(
-                                              "${lang.NEXT}: $nextItemName",
-                                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                        ],
-                                      );
-                                    },
+                child: RepaintBoundary(
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (event) {
+                      _smallBoxDrag = (_smallBoxDrag + event.delta.dy * 0.002).clamp(0, 1);
+                      if (_smallBoxDrag > 0.0 && _smallBoxDrag < 1.0) {
+                        _jump(1 - _smallBoxDrag, _smallBoxDrag);
+                      }
+                    },
+                    onVerticalDragEnd: (d) {
+                      if (1 - _smallBoxDrag > 0.4 || d.velocity.pixelsPerSecond.dy < -250) {
+                        _animateSmallToBig();
+                      } else {
+                        _animateBigToSmall();
+                      }
+                      _smallBoxDrag = 1.0;
+                    },
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: isSingle
+                          ? Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: FloatingActionButton(
+                                heroTag: 'yt_queue_fab_hero',
+                                backgroundColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.9),
+                                onPressed: () => _animateSmallToBig(),
+                                child: const Icon(Broken.driver),
+                              ),
+                            )
+                          : NamidaInkWell(
+                              onTap: () => _animateSmallToBig(),
+                              margin: EdgeInsets.symmetric(horizontal: context.width * 0.04, vertical: 6.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                              height: minHeight,
+                              bgColor: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor).withOpacity(0.95),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Broken.airdrop,
+                                    size: 24.0,
+                                    color: context.theme.iconTheme.color?.withOpacity(0.65),
                                   ),
-                                ),
-                                const SizedBox(width: 6.0),
-                                const Icon(Broken.arrow_up_3, size: 22.0)
-                              ],
+                                  const SizedBox(width: 6.0),
+                                  Expanded(
+                                    child: Obx(
+                                      (context) {
+                                        final currentIndex = Player.inst.currentIndex.valueR;
+                                        final nextItem =
+                                            Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
+                                        final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoName(nextItem.id);
+                                        final queueLength = Player.inst.currentQueue.valueR.length;
+                                        return Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "${currentIndex + 1}/$queueLength",
+                                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                            ),
+                                            // const SizedBox(height: 2.0),
+                                            if (nextItemName != null && nextItemName != '')
+                                              Text(
+                                                "${lang.NEXT}: $nextItemName",
+                                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6.0),
+                                  const Icon(Broken.arrow_up_3, size: 22.0)
+                                ],
+                              ),
                             ),
-                          ),
+                    ),
                   ),
                 ),
                 builder: (context, child) {
@@ -253,186 +255,188 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
         ),
         AnimatedBuilder(
           animation: _bigBoxAnimation,
-          child: ColoredBox(
-            color: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor),
-            child: Listener(
-              onPointerMove: (event) {
-                if (Player.inst.isModifyingQueue) return;
-                if (event.delta.dy > 0) {
-                  if (_queueScrollController.hasClients) {
-                    if (_queueScrollController.position.pixels <= 0) {
-                      _updateCanScrollQueue(false);
-                    }
-                  }
-                } else {
-                  _updateCanScrollQueue(true);
-                }
-              },
-              onPointerDown: (_) {
-                _updateCanScrollQueue(true);
-                YoutubeMiniplayerUiController.inst.cancelDimTimer();
-              },
-              onPointerUp: (_) {
-                _updateCanScrollQueue(true);
-                YoutubeMiniplayerUiController.inst.startDimTimer();
-              },
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onVerticalDragUpdate: (event) {
+          child: RepaintBoundary(
+            child: ColoredBox(
+              color: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor),
+              child: Listener(
+                onPointerMove: (event) {
                   if (Player.inst.isModifyingQueue) return;
-                  _updateCanScrollQueue(false);
-                  _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clamp(0, 1);
-                  if (_bigBoxDrag > 0.0 && _bigBoxDrag < 1.0) {
-                    _jump(1 - _bigBoxDrag, _bigBoxDrag);
-                  }
-                },
-                onVerticalDragEnd: (d) {
-                  _updateCanScrollQueue(true);
-                  if (_bigBoxDrag > 0.2 || d.velocity.pixelsPerSecond.dy > 250) {
-                    _animateBigToSmall();
+                  if (event.delta.dy > 0) {
+                    if (_queueScrollController.hasClients) {
+                      if (_queueScrollController.position.pixels <= 0) {
+                        _updateCanScrollQueue(false);
+                      }
+                    }
                   } else {
-                    _animateSmallToBig();
+                    _updateCanScrollQueue(true);
                   }
-                  _bigBoxDrag = 0.0;
                 },
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12.0),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  lang.QUEUE,
-                                  style: context.textTheme.displayMedium,
-                                ),
-                                Obx(
-                                  (context) => Text(
-                                    "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
-                                    style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                onPointerDown: (_) {
+                  _updateCanScrollQueue(true);
+                  YoutubeMiniplayerUiController.inst.cancelDimTimer();
+                },
+                onPointerUp: (_) {
+                  _updateCanScrollQueue(true);
+                  YoutubeMiniplayerUiController.inst.startDimTimer();
+                },
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragUpdate: (event) {
+                    if (Player.inst.isModifyingQueue) return;
+                    _updateCanScrollQueue(false);
+                    _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clamp(0, 1);
+                    if (_bigBoxDrag > 0.0 && _bigBoxDrag < 1.0) {
+                      _jump(1 - _bigBoxDrag, _bigBoxDrag);
+                    }
+                  },
+                  onVerticalDragEnd: (d) {
+                    _updateCanScrollQueue(true);
+                    if (_bigBoxDrag > 0.2 || d.velocity.pixelsPerSecond.dy > 250) {
+                      _animateBigToSmall();
+                    } else {
+                      _animateSmallToBig();
+                    }
+                    _bigBoxDrag = 0.0;
+                  },
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    lang.QUEUE,
+                                    style: context.textTheme.displayMedium,
                                   ),
-                                ),
-                              ],
+                                  Obx(
+                                    (context) => Text(
+                                      "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
+                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          _ActionItem(
-                            icon: Broken.music_playlist,
-                            tooltip: lang.ADD_TO_PLAYLIST,
-                            onTap: () {
-                              showAddToPlaylistSheet(
-                                ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().map((e) => e.id),
-                                idsNamesLookup: const {},
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 6.0),
-                          _ActionItem(
-                            icon: Broken.import,
-                            tooltip: lang.DOWNLOAD,
-                            onTap: () {
-                              YTPlaylistDownloadPage(
-                                ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
-                                playlistName: lang.QUEUE,
-                                infoLookup: const {},
-                                playlistInfo: PlaylistBasicInfo(
-                                  id: '',
-                                  title: lang.QUEUE,
-                                  videosCountText: Player.inst.currentQueue.value.length.toString(),
-                                  videosCount: Player.inst.currentQueue.value.length,
-                                  thumbnails: [],
-                                ),
-                              ).navigate();
-                            },
-                          ),
-                          const SizedBox(width: 4.0),
-                          NamidaIconButton(
-                            iconColor: context.defaultIconColor().withOpacity(0.95),
-                            icon: Broken.arrow_down_2,
-                            onPressed: () => _animateBigToSmall(),
-                          ),
-                          const SizedBox(width: 12.0),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Obx(
-                        (context) {
-                          final queue = Player.inst.currentQueue.valueR;
-                          final canScroll = _canScrollQueue.valueR;
-                          return IgnorePointer(
-                            ignoring: !canScroll,
-                            child: NamidaListView(
-                              padding: EdgeInsets.zero,
-                              scrollController: _queueScrollController,
-                              itemCount: queue.length,
-                              itemExtent: Dimensions.youtubeCardItemExtent,
-                              onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                              onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                              onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                              onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                              physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
-                              itemBuilder: (context, i) {
-                                final video = queue[i] as YoutubeID;
-                                return FadeDismissible(
-                                  key: Key("Diss_${video.id}_$i"),
-                                  onDismissed: (direction) async {
-                                    await Player.inst.removeFromQueueWithUndo(i);
-                                    Player.inst.invokeQueueModifyLockRelease();
-                                  },
-                                  onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
-                                  onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
-                                  child: YTHistoryVideoCard(
-                                    key: Key("${i}_${video.id}"),
-                                    videos: queue,
-                                    index: i,
-                                    day: null,
-                                    playlistID: null,
-                                    playlistName: '',
-                                    openMenuOnLongPress: false,
-                                    displayTimeAgo: false,
-                                    thumbnailHeight: Dimensions.youtubeThumbnailHeight,
-                                    fromPlayerQueue: true,
-                                    draggingEnabled: true,
-                                    draggableThumbnail: true,
-                                    showMoreIcon: true,
-                                    canHaveDuplicates: true,
-                                  ),
+                            const SizedBox(width: 6.0),
+                            _ActionItem(
+                              icon: Broken.music_playlist,
+                              tooltip: lang.ADD_TO_PLAYLIST,
+                              onTap: () {
+                                showAddToPlaylistSheet(
+                                  ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().map((e) => e.id),
+                                  idsNamesLookup: const {},
                                 );
                               },
                             ),
-                          );
-                        },
+                            const SizedBox(width: 6.0),
+                            _ActionItem(
+                              icon: Broken.import,
+                              tooltip: lang.DOWNLOAD,
+                              onTap: () {
+                                YTPlaylistDownloadPage(
+                                  ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
+                                  playlistName: lang.QUEUE,
+                                  infoLookup: const {},
+                                  playlistInfo: PlaylistBasicInfo(
+                                    id: '',
+                                    title: lang.QUEUE,
+                                    videosCountText: Player.inst.currentQueue.value.length.toString(),
+                                    videosCount: Player.inst.currentQueue.value.length,
+                                    thumbnails: [],
+                                  ),
+                                ).navigate();
+                              },
+                            ),
+                            const SizedBox(width: 4.0),
+                            NamidaIconButton(
+                              iconColor: context.defaultIconColor().withOpacity(0.95),
+                              icon: Broken.arrow_down_2,
+                              onPressed: () => _animateBigToSmall(),
+                            ),
+                            const SizedBox(width: 12.0),
+                          ],
+                        ),
                       ),
-                    ),
-                    ColoredBox(
-                      color: context.theme.scaffoldBackgroundColor,
-                      child: SizedBox(
-                        width: context.width,
-                        height: kQueueBottomRowHeight,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: FittedBox(
-                            child: QueueUtilsRow(
-                              itemsKeyword: (number) => number.displayVideoKeyword,
-                              onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
-                              scrollQueueWidget: ObxO(
-                                rx: _arrowIcon,
-                                builder: (context, arrowIcon) => NamidaButton(
-                                  onPressed: _animateQueueToCurrentTrack,
-                                  icon: arrowIcon,
+                      Expanded(
+                        child: Obx(
+                          (context) {
+                            final queue = Player.inst.currentQueue.valueR;
+                            final canScroll = _canScrollQueue.valueR;
+                            return IgnorePointer(
+                              ignoring: !canScroll,
+                              child: NamidaListView(
+                                padding: EdgeInsets.zero,
+                                scrollController: _queueScrollController,
+                                itemCount: queue.length,
+                                itemExtent: Dimensions.youtubeCardItemExtent,
+                                onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                                onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                                onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, i) {
+                                  final video = queue[i] as YoutubeID;
+                                  return FadeDismissible(
+                                    key: Key("Diss_${video.id}_$i"),
+                                    onDismissed: (direction) async {
+                                      await Player.inst.removeFromQueueWithUndo(i);
+                                      Player.inst.invokeQueueModifyLockRelease();
+                                    },
+                                    onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+                                    onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                    child: YTHistoryVideoCard(
+                                      key: Key("${i}_${video.id}"),
+                                      videos: queue,
+                                      index: i,
+                                      day: null,
+                                      playlistID: null,
+                                      playlistName: '',
+                                      openMenuOnLongPress: false,
+                                      displayTimeAgo: false,
+                                      thumbnailHeight: Dimensions.youtubeThumbnailHeight,
+                                      fromPlayerQueue: true,
+                                      draggingEnabled: true,
+                                      draggableThumbnail: true,
+                                      showMoreIcon: true,
+                                      canHaveDuplicates: true,
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      ColoredBox(
+                        color: context.theme.scaffoldBackgroundColor,
+                        child: SizedBox(
+                          width: context.width,
+                          height: kQueueBottomRowHeight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: FittedBox(
+                              child: QueueUtilsRow(
+                                itemsKeyword: (number) => number.displayVideoKeyword,
+                                onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
+                                scrollQueueWidget: ObxO(
+                                  rx: _arrowIcon,
+                                  builder: (context, arrowIcon) => NamidaButton(
+                                    onPressed: _animateQueueToCurrentTrack,
+                                    icon: arrowIcon,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

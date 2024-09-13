@@ -535,7 +535,7 @@ class NamidaButton extends StatelessWidget {
             child: AnimatedOpacity(
               opacity: enabled! ? 1.0 : 0.6,
               duration: const Duration(milliseconds: 250),
-              child: child,
+              child: RepaintBoundary(child: child),
             ),
           );
   }
@@ -2321,14 +2321,16 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final maxWidth = context.width;
-    final child = widget.onTopWidget != null
-        ? Stack(
-            children: [
-              widget.child,
-              widget.onTopWidget!,
-            ],
-          )
-        : widget.child;
+    final child = RepaintBoundary(
+      child: widget.onTopWidget != null
+          ? Stack(
+              children: [
+                widget.child,
+                widget.onTopWidget!,
+              ],
+            )
+          : widget.child,
+    );
     return widget.draggableRx != null
         ? ObxO(
             rx: widget.draggableRx!,

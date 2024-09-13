@@ -177,7 +177,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
   @override
   Widget build(BuildContext context) {
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-    const waveformChild = WaveformMiniplayer();
+    const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
 
     final topRightButton = IconButton(
       onPressed: () {},
@@ -207,31 +207,33 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
       iconSize: 22.0,
     );
 
-    const partyContainersChild = Stack(
-      children: [
-        NamidaPartyContainer(
-          height: 2,
-          spreadRadiusMultiplier: 0.8,
-        ),
-        NamidaPartyContainer(
-          width: 2,
-          spreadRadiusMultiplier: 0.25,
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: NamidaPartyContainer(
+    const partyContainersChild = RepaintBoundary(
+      child: Stack(
+        children: [
+          NamidaPartyContainer(
             height: 2,
             spreadRadiusMultiplier: 0.8,
           ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: NamidaPartyContainer(
+          NamidaPartyContainer(
             width: 2,
             spreadRadiusMultiplier: 0.25,
           ),
-        ),
-      ],
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: NamidaPartyContainer(
+              height: 2,
+              spreadRadiusMultiplier: 0.8,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: NamidaPartyContainer(
+              width: 2,
+              spreadRadiusMultiplier: 0.25,
+            ),
+          ),
+        ],
+      ),
     );
     final positionTextChild = TapDetector(
       onTap: () => Player.inst.seekSecondsBackward(),
@@ -347,874 +349,893 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
         itemBuilder: _queueItemBuilder,
       );
     }
-    final queueChild = SafeArea(
-      bottom: false,
-      child: SizedBox(
-        height: context.height,
-        width: context.width,
-        child: Stack(
-          fit: StackFit.loose,
-          alignment: Alignment.bottomCenter,
-          children: [
-            SizedBox(
-              height: maxQueueHeight,
-              child: BorderRadiusClip(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32.0.multipliedRadius),
-                  topRight: Radius.circular(32.0.multipliedRadius),
-                ),
-                child: queueListChild,
-              ),
-            ),
-            Container(
-              width: context.width,
-              height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
-              decoration: BoxDecoration(
-                color: context.theme.scaffoldBackgroundColor,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(12.0.multipliedRadius),
+    final queueChild = RepaintBoundary(
+      child: SafeArea(
+        bottom: false,
+        child: SizedBox(
+          height: context.height,
+          width: context.width,
+          child: Stack(
+            fit: StackFit.loose,
+            alignment: Alignment.bottomCenter,
+            children: [
+              SizedBox(
+                height: maxQueueHeight,
+                child: BorderRadiusClip(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.0.multipliedRadius),
+                    topRight: Radius.circular(32.0.multipliedRadius),
+                  ),
+                  child: queueListChild,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
-                child: FittedBox(
-                  child: QueueUtilsRow(
-                    itemsKeyword: widget.itemsKeyword,
-                    onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
-                    scrollQueueWidget: ObxO(
-                      rx: MiniPlayerController.inst.arrowIcon,
-                      builder: (context, arrow) => NamidaButton(
-                        onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
-                        icon: arrow,
+              Container(
+                width: context.width,
+                height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
+                decoration: BoxDecoration(
+                  color: context.theme.scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(12.0.multipliedRadius),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0).add(EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom)),
+                  child: FittedBox(
+                    child: QueueUtilsRow(
+                      itemsKeyword: widget.itemsKeyword,
+                      onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
+                      scrollQueueWidget: ObxO(
+                        rx: MiniPlayerController.inst.arrowIcon,
+                        builder: (context, arrow) => NamidaButton(
+                          onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
+                          icon: arrow,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
-    return Obx(
-      (context) {
-        final currentIndex = Player.inst.currentIndex.valueR;
-        final queue = Player.inst.currentQueue.valueR;
-        final indminus = refine(currentIndex - 1);
-        final indplus = refine(currentIndex + 1);
-        final prevItem = queue.isEmpty ? null : queue[indminus] as E;
-        final currentItem = queue[currentIndex] as E;
-        final nextItem = queue.isEmpty ? null : queue[indplus] as E;
-        final currentDurationInMS = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? widget.getDurationMS?.call(currentItem) ?? 0;
+    return ObxO(
+      rx: Player.inst.currentQueue,
+      builder: (context, queue) {
+        return ObxO(
+            rx: Player.inst.currentIndex,
+            builder: (context, currentIndex) {
+              final indminus = refine(currentIndex - 1);
+              final indplus = refine(currentIndex + 1);
+              final prevItem = queue.isEmpty ? null : queue[indminus] as E;
+              final currentItem = queue[currentIndex] as E;
+              final nextItem = queue.isEmpty ? null : queue[indplus] as E;
+              final currentDurationInMS = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? widget.getDurationMS?.call(currentItem) ?? 0;
 
-        final prevText = prevItem == null ? null : widget.textBuilder(prevItem);
-        final currentText = widget.textBuilder(currentItem);
-        final nextText = nextItem == null ? null : widget.textBuilder(nextItem);
+              final prevText = prevItem == null ? null : widget.textBuilder(prevItem);
+              final currentText = widget.textBuilder(currentItem);
+              final nextText = nextItem == null ? null : widget.textBuilder(nextItem);
 
-        final topText = widget.topText(currentItem);
-        final videoIconBuilder = widget.focusedMenuOptions.videoIconBuilder(currentItem, 18.0, onSecondary);
-        final focusedMenuBuilder = widget.focusedMenuOptions.builder(currentItem);
+              final topText = widget.topText(currentItem);
+              final videoIconBuilder = widget.focusedMenuOptions.videoIconBuilder(currentItem, 18.0, onSecondary);
+              final focusedMenuBuilder = widget.focusedMenuOptions.builder(currentItem);
 
-        final topRowChild = SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                topLeftButton,
-                Expanded(
-                  child: NamidaInkWell(
-                    borderRadius: 14.0,
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    onTap: () => widget.onTopTextTap(_getcurrentItem),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+              final topRowChild = RepaintBoundary(
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "${currentIndex + 1}/${queue.length}",
-                          style: TextStyle(
-                            color: onSecondary.withOpacity(.8),
-                            fontSize: 12.0,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          topText,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0, color: onSecondary.withOpacity(.9)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                topRightButton,
-              ],
-            ),
-          ),
-        );
-
-        final positionDurationRowChild = Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            positionTextChild,
-            TapDetector(
-              onTap: () => Player.inst.seekSecondsForward(),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: NamidaHero(
-                  tag: 'MINIPLAYER_DURATION',
-                  child: Obx(
-                    (context) {
-                      int toSubtract = 0;
-                      String prefix = '';
-                      if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
-                        toSubtract = Player.inst.nowPlayingPositionR;
-                        prefix = '-';
-                      }
-                      final msToDisplay = currentDurationInMS - toSubtract;
-                      return Text(
-                        "$prefix ${msToDisplay.milliSecondsLabel}",
-                        style: context.textTheme.displaySmall,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-
-        final bottomLeftButton = Expanded(
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              FocusedMenuHolder(
-                menuOpenAlignment: Alignment.bottomLeft,
-                bottomOffsetHeight: 12.0,
-                leftOffsetHeight: 4.0,
-                onMenuOpen: () {
-                  final canOpen = widget.focusedMenuOptions.onOpen(_getcurrentItem);
-                  isMenuOpened.value = canOpen;
-                  return canOpen;
-                },
-                onMenuClose: () => isMenuOpened.value = false,
-                blurSize: 2.0,
-                duration: animationDuration,
-                animateMenuItems: false,
-                menuWidth: context.width * 0.5,
-                menuBoxDecoration: BoxDecoration(
-                  color: context.theme.scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                ),
-                menuWidget: Obx(
-                  (context) {
-                    final availableVideos = widget.focusedMenuOptions.localVideos.valueR;
-                    final ytVideos = widget.focusedMenuOptions.streams.valueR?.videoStreams.withoutWebm();
-                    return ListView(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      children: [
-                        if (widget.focusedMenuOptions.loadQualities != null)
-                          _MPQualityButton(
-                            title: lang.CHECK_FOR_MORE,
-                            icon: Broken.chart,
-                            bgColor: null,
-                            trailing: isLoadingMore.valueR ? const LoadingIndicator() : null,
-                            onTap: () async {
-                              isLoadingMore.value = true;
-                              await widget.focusedMenuOptions.loadQualities!(currentItem);
-                              isLoadingMore.value = false;
-                            },
-                          ),
-                        ...availableVideos.map(
-                          (element) {
-                            final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
-                            return Obx(
-                              (context) {
-                                final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
-                                return _MPQualityButton(
-                                  onTap: () => widget.focusedMenuOptions.onLocalVideoTap(currentItem, element),
-                                  bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
-                                  icon: Broken.video,
-                                  title: [
-                                    "${element.resolution}p${element.framerateText()}",
-                                    localOrCache,
-                                  ].join(' • '),
-                                  subtitle: [
-                                    element.sizeInBytes.fileSizeFormatted,
-                                    "${element.bitrate ~/ 1000} kb/s",
-                                  ].join(' • '),
-                                  trailing: NamidaCheckMark(
-                                    active: isCurrent,
-                                    size: 12.0,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 6.0)),
-                        ...?ytVideos?.map(
-                          (element) {
-                            final currentId = widget.focusedMenuOptions.currentId(currentItem);
-                            final cacheFile = currentId == null ? null : element.getCachedFile(currentId);
-                            final cacheExists = cacheFile != null;
-                            return _MPQualityButton(
-                              onTap: () => widget.focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, widget.focusedMenuOptions.streams.value),
-                              bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
-                              icon: cacheExists ? Broken.tick_circle : Broken.import,
-                              title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
-                              subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    Obx(
-                      (context) {
-                        return AnimatedDecoration(
-                          duration: animationDuration,
-                          decoration: isMenuOpened.valueR
-                              ? BoxDecoration(
-                                  color: context.theme.scaffoldBackgroundColor,
-                                  borderRadius: BorderRadius.circular(24.0.multipliedRadius),
-                                )
-                              : BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                                ),
-                          child: TextButton(
-                            onPressed: () => widget.focusedMenuOptions.onPressed(_getcurrentItem),
-                            child: Row(
+                        topLeftButton,
+                        Expanded(
+                          child: NamidaInkWell(
+                            borderRadius: 14.0,
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            onTap: () => widget.onTopTextTap(_getcurrentItem),
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: context.theme.colorScheme.secondaryContainer,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: NamidaIconButton(
-                                    padding: const EdgeInsets.all(6.0),
-                                    icon: null,
-                                    child: videoIconBuilder,
-                                    onPressed: () {
-                                      String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
-
-                                      Widget getTextWidget(IconData icon, String title, double value) {
-                                        return Row(
-                                          children: [
-                                            Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
-                                            const SizedBox(width: 12.0),
-                                            NamidaButtonText(
-                                              title,
-                                              style: context.textTheme.displayLarge,
-                                            ),
-                                            const SizedBox(width: 8.0),
-                                            NamidaButtonText(
-                                              toPercentage(value),
-                                              style: context.textTheme.displayMedium,
-                                            )
-                                          ],
-                                        );
-                                      }
-
-                                      Widget getSlider({
-                                        double min = 0.0,
-                                        double max = 2.0,
-                                        required double value,
-                                        required void Function(double newValue)? onChanged,
-                                      }) {
-                                        return Slider.adaptive(
-                                          min: min,
-                                          max: max,
-                                          value: value.clamp(min, max),
-                                          onChanged: onChanged,
-                                          divisions: (max * 100).round(),
-                                          label: "${(value * 100).toStringAsFixed(0)}%",
-                                        );
-                                      }
-
-                                      NamidaNavigator.inst.navigateDialog(
-                                        dialog: CustomBlurryDialog(
-                                          title: lang.CONFIGURE,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-                                          actions: [
-                                            NamidaIconButton(
-                                              icon: Broken.refresh,
-                                              onPressed: () {
-                                                const val = 1.0;
-                                                Player.inst.setPlayerPitch(val);
-                                                Player.inst.setPlayerSpeed(val);
-                                                Player.inst.setPlayerVolume(val);
-                                                settings.player.save(
-                                                  pitch: val,
-                                                  speed: val,
-                                                  volume: val,
-                                                );
-                                              },
-                                            ),
-                                            const DoneButton(),
-                                          ],
-                                          child: const EqualizerMainSlidersColumn(
-                                            verticalInBetweenPadding: 18.0,
-                                            tapToUpdate: false,
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                Text(
+                                  "${currentIndex + 1}/${queue.length}",
+                                  style: TextStyle(
+                                    color: onSecondary.withOpacity(.8),
+                                    fontSize: 12.0,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 8.0),
-                                Flexible(
-                                  child: focusedMenuBuilder,
+                                Text(
+                                  topText,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0, color: onSecondary.withOpacity(.9)),
                                 ),
                               ],
                             ),
                           ),
-                        );
-                      },
+                        ),
+                        topRightButton,
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
+              );
 
-        final bottomRowChild = Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
-          child: Row(
-            children: [
-              bottomLeftButton,
-              buttonsRowChild,
-            ],
-          ),
-        );
+              final positionDurationRowChild = Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  positionTextChild,
+                  TapDetector(
+                    onTap: () => Player.inst.seekSecondsForward(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: NamidaHero(
+                        tag: 'MINIPLAYER_DURATION',
+                        child: Obx(
+                          (context) {
+                            int toSubtract = 0;
+                            String prefix = '';
+                            if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
+                              toSubtract = Player.inst.nowPlayingPositionR;
+                              prefix = '-';
+                            }
+                            final msToDisplay = currentDurationInMS - toSubtract;
+                            return Text(
+                              "$prefix ${msToDisplay.milliSecondsLabel}",
+                              style: context.textTheme.displaySmall,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
 
-        return MiniplayerRaw(
-          builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
-              borderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight) {
-            final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0));
-            final panelExtra = panelH / 2.25 - navBarHeight - (100.0 + topInset + 4.0);
-            final panelFinal = panelH - (panelExtra * (1 - qcp));
-
-            final currentImage = widget.currentImageBuilder(currentItem, bcp);
-            final iconBoxSize = (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp;
-            final iconSize = (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp;
-
-            final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
-            final nextPrevIconSize = 21.0 + 11.0 * nextprevmultiplier;
-            final nextPrevIconPadding = 8.0 + 4.0 * nextprevmultiplier;
-            final nextPrevOpacity = (nextprevmultiplier + 1).clamp(0.0, 1.0);
-
-            return Stack(
-              children: [
-                /// MiniPlayer Body
-                Container(
-                  color: p > 0 ? Colors.transparent : null, // hit test only when expanded
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Transform.translate(
-                      offset: Offset(0, bottomOffset),
-                      child: ColoredBox(
-                        color: Colors.transparent, // prevents scrolling gap
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6 * (1 - cp * 10 + 9).clamp(0, 1), vertical: 12 * icp),
-                          child: SizedBox(
-                            height: velpy(a: 82.0, b: panelFinal, c: cp),
-                            width: double.infinity,
-                            child: AnimatedDecoration(
-                              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                              decoration: BoxDecoration(
-                                color: context.theme.scaffoldBackgroundColor,
-                                borderRadius: borderRadius,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
-                                    blurRadius: 20.0,
-                                  )
-                                ],
-                              ),
-                              child: Stack(
-                                alignment: Alignment.bottomLeft,
-                                children: [
-                                  Positioned.fill(
-                                    child: AnimatedDecoration(
-                                      duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                      // clipBehavior: Clip.antiAlias,
-                                      decoration: BoxDecoration(
-                                        color: CurrentColor.inst.miniplayerColor,
-                                        borderRadius: borderRadius,
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
-                                                .withOpacity(velpy(a: .38, b: .28, c: icp)),
-                                            Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                                .withOpacity(velpy(a: .1, b: .22, c: icp)),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  /// Smol progress bar
-                                  ObxO(
-                                    rx: Player.inst.nowPlayingPosition,
-                                    builder: (context, nowPlayingPosition) {
-                                      final w = currentDurationInMS == 0 ? 0 : nowPlayingPosition / currentDurationInMS;
-                                      return Container(
-                                        height: 2 * (1 - cp),
-                                        width: w > 0 ? ((context.width * w) * 0.9) : 0,
-                                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                                        child: AnimatedDecoration(
-                                          duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                          decoration: BoxDecoration(
-                                            color: CurrentColor.inst.miniplayerColor,
-                                            borderRadius: BorderRadius.circular(50),
-                                            //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                            //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
-                                          ),
+              final bottomLeftButton = Expanded(
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    FocusedMenuHolder(
+                      menuOpenAlignment: Alignment.bottomLeft,
+                      bottomOffsetHeight: 12.0,
+                      leftOffsetHeight: 4.0,
+                      onMenuOpen: () {
+                        final canOpen = widget.focusedMenuOptions.onOpen(_getcurrentItem);
+                        isMenuOpened.value = canOpen;
+                        return canOpen;
+                      },
+                      onMenuClose: () => isMenuOpened.value = false,
+                      blurSize: 2.0,
+                      duration: animationDuration,
+                      animateMenuItems: false,
+                      menuWidth: context.width * 0.5,
+                      menuBoxDecoration: BoxDecoration(
+                        color: context.theme.scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                      ),
+                      menuWidget: Obx(
+                        (context) {
+                          final availableVideos = widget.focusedMenuOptions.localVideos.valueR;
+                          final ytVideos = widget.focusedMenuOptions.streams.valueR?.videoStreams.withoutWebm();
+                          return ListView(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            children: [
+                              if (widget.focusedMenuOptions.loadQualities != null)
+                                _MPQualityButton(
+                                  title: lang.CHECK_FOR_MORE,
+                                  icon: Broken.chart,
+                                  bgColor: null,
+                                  trailing: isLoadingMore.valueR ? const LoadingIndicator() : null,
+                                  onTap: () async {
+                                    isLoadingMore.value = true;
+                                    await widget.focusedMenuOptions.loadQualities!(currentItem);
+                                    isLoadingMore.value = false;
+                                  },
+                                ),
+                              ...availableVideos.map(
+                                (element) {
+                                  final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
+                                  return Obx(
+                                    (context) {
+                                      final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
+                                      return _MPQualityButton(
+                                        onTap: () => widget.focusedMenuOptions.onLocalVideoTap(currentItem, element),
+                                        bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
+                                        icon: Broken.video,
+                                        title: [
+                                          "${element.resolution}p${element.framerateText()}",
+                                          localOrCache,
+                                        ].join(' • '),
+                                        subtitle: [
+                                          element.sizeInBytes.fileSizeFormatted,
+                                          "${element.bitrate ~/ 1000} kb/s",
+                                        ].join(' • '),
+                                        trailing: NamidaCheckMark(
+                                          active: isCurrent,
+                                          size: 12.0,
                                         ),
                                       );
                                     },
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (settings.enablePartyModeInMiniplayer.value)
-                  NamidaOpacity(
-                    opacity: cp,
-                    child: partyContainersChild,
-                  ),
-
-                /// Top Row
-                if (rcp > 0.0)
-                  Material(
-                    type: MaterialType.transparency,
-                    child: NamidaOpacity(
-                      opacity: rcp,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - bp) * -100),
-                        child: topRowChild,
-                      ),
-                    ),
-                  ),
-
-                /// Controls
-                Material(
-                  type: MaterialType.transparency,
-                  child: Transform.translate(
-                    offset: Offset(
-                        0,
-                        (bottomOffset +
-                                (-maxOffset / 8.8 * bp) +
-                                ((-maxOffset + topInset + 80.0) *
-                                    (!bounceUp
-                                        ? !bounceDown
-                                            ? qp
-                                            : (1 - bp)
-                                        : 0.0))) -
-                            (navBarHeight * cp)),
-                    child: Padding(
-                      padding: EdgeInsets.all(12.0 * icp),
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Stack(
-                          alignment: Alignment.centerRight,
-                          children: [
-                            if (fastOpacity > 0.0)
-                              NamidaOpacity(
-                                opacity: fastOpacity,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 24.0 * (16 * (!bounceDown ? icp : 0.0) + 1)),
-                                  child: positionDurationRowChild,
-                                ),
+                              const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 6.0)),
+                              ...?ytVideos?.map(
+                                (element) {
+                                  final currentId = widget.focusedMenuOptions.currentId(currentItem);
+                                  final cacheFile = currentId == null ? null : element.getCachedFile(currentId);
+                                  final cacheExists = cacheFile != null;
+                                  return _MPQualityButton(
+                                    onTap: () => widget.focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, widget.focusedMenuOptions.streams.value),
+                                    bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
+                                    icon: cacheExists ? Broken.tick_circle : Broken.import,
+                                    title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
+                                    subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                  );
+                                },
                               ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
-                                  right: !bounceDown
-                                      ? !bounceUp
-                                          ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 1.82 + (qp * 2.0)
-                                          : screenSize.width * cp / 2 - (80 + 32.0 * 3) * cp / 1.82
-                                      : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 1.82 + (qp * 2.0))),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Opacity(
-                                    opacity: nextPrevOpacity,
-                                    child: IgnorePointer(
-                                      ignoring: nextPrevOpacity == 0.0,
-                                      child: NamidaIconButton(
-                                        icon: Broken.previous,
-                                        iconSize: nextPrevIconSize,
-                                        horizontalPadding: nextPrevIconPadding,
-                                        verticalPadding: nextPrevIconPadding,
-                                        onPressed: MiniPlayerController.inst.snapToPrev,
+                            ],
+                          );
+                        },
+                      ),
+                      child: Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          Obx(
+                            (context) {
+                              return AnimatedDecoration(
+                                duration: animationDuration,
+                                decoration: isMenuOpened.valueR
+                                    ? BoxDecoration(
+                                        color: context.theme.scaffoldBackgroundColor,
+                                        borderRadius: BorderRadius.circular(24.0.multipliedRadius),
+                                      )
+                                    : BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                       ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    key: const Key("playpause"),
-                                    height: iconBoxSize,
-                                    width: iconBoxSize,
-                                    child: Center(
-                                      child: Obx(
-                                        (context) {
-                                          final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
-                                          return TapDetector(
-                                            onTap: null,
-                                            initializer: (instance) {
-                                              instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
-                                              instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
-                                              instance.onTapCancel = () =>
-                                                  MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
-                                              instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-                                            },
-                                            child: AnimatedScale(
-                                              duration: const Duration(milliseconds: 400),
-                                              scale: isButtonHighlighed ? 0.97 : 1.0,
-                                              child: AnimatedDecoration(
-                                                duration: const Duration(milliseconds: 400),
-                                                decoration: BoxDecoration(
-                                                  color: isButtonHighlighed
-                                                      ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
-                                                      : CurrentColor.inst.miniplayerColor,
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      CurrentColor.inst.miniplayerColor,
-                                                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
-                                                    ],
-                                                    stops: const [0, 0.7],
+                                child: TextButton(
+                                  onPressed: () => widget.focusedMenuOptions.onPressed(_getcurrentItem),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: context.theme.colorScheme.secondaryContainer,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: NamidaIconButton(
+                                          padding: const EdgeInsets.all(6.0),
+                                          icon: null,
+                                          child: videoIconBuilder,
+                                          onPressed: () {
+                                            String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+
+                                            Widget getTextWidget(IconData icon, String title, double value) {
+                                              return Row(
+                                                children: [
+                                                  Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
+                                                  const SizedBox(width: 12.0),
+                                                  NamidaButtonText(
+                                                    title,
+                                                    style: context.textTheme.displayLarge,
                                                   ),
-                                                  shape: BoxShape.circle,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: CurrentColor.inst.miniplayerColor.withAlpha(160),
-                                                      blurRadius: 8.0,
-                                                      spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
-                                                      offset: const Offset(0.0, 2.0),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Stack(
-                                                  alignment: Alignment.center,
-                                                  children: [
-                                                    IconButton(
-                                                      highlightColor: Colors.transparent,
-                                                      onPressed: Player.inst.togglePlayPause,
-                                                      icon: Padding(
-                                                        padding: EdgeInsets.all(6.0 * cp * rcp),
-                                                        child: ObxO(
-                                                          rx: Player.inst.isPlaying,
-                                                          builder: (context, isPlaying) => AnimatedSwitcher(
-                                                            duration: const Duration(milliseconds: 200),
-                                                            child: isPlaying
-                                                                ? Icon(
-                                                                    Broken.pause,
-                                                                    size: iconSize,
-                                                                    key: const Key("pauseicon"),
-                                                                    color: Colors.white.withAlpha(180),
-                                                                  )
-                                                                : Icon(
-                                                                    Broken.play,
-                                                                    size: iconSize,
-                                                                    key: const Key("playicon"),
-                                                                    color: Colors.white.withAlpha(180),
-                                                                  ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    if (widget.canShowBuffering)
-                                                      IgnorePointer(
-                                                        child: Obx(
-                                                          (context) => Player.inst.shouldShowLoadingIndicatorR
-                                                              ? ThreeArchedCircle(
-                                                                  color: Colors.white.withAlpha(120),
-                                                                  size: iconSize * 1.4,
-                                                                )
-                                                              : const SizedBox(),
-                                                        ),
-                                                      ),
-                                                  ],
+                                                  const SizedBox(width: 8.0),
+                                                  NamidaButtonText(
+                                                    toPercentage(value),
+                                                    style: context.textTheme.displayMedium,
+                                                  )
+                                                ],
+                                              );
+                                            }
+
+                                            Widget getSlider({
+                                              double min = 0.0,
+                                              double max = 2.0,
+                                              required double value,
+                                              required void Function(double newValue)? onChanged,
+                                            }) {
+                                              return Slider.adaptive(
+                                                min: min,
+                                                max: max,
+                                                value: value.clamp(min, max),
+                                                onChanged: onChanged,
+                                                divisions: (max * 100).round(),
+                                                label: "${(value * 100).toStringAsFixed(0)}%",
+                                              );
+                                            }
+
+                                            NamidaNavigator.inst.navigateDialog(
+                                              dialog: CustomBlurryDialog(
+                                                title: lang.CONFIGURE,
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                                                actions: [
+                                                  NamidaIconButton(
+                                                    icon: Broken.refresh,
+                                                    onPressed: () {
+                                                      const val = 1.0;
+                                                      Player.inst.setPlayerPitch(val);
+                                                      Player.inst.setPlayerSpeed(val);
+                                                      Player.inst.setPlayerVolume(val);
+                                                      settings.player.save(
+                                                        pitch: val,
+                                                        speed: val,
+                                                        volume: val,
+                                                      );
+                                                    },
+                                                  ),
+                                                  const DoneButton(),
+                                                ],
+                                                child: const EqualizerMainSlidersColumn(
+                                                  verticalInBetweenPadding: 18.0,
+                                                  tapToUpdate: false,
                                                 ),
                                               ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      Flexible(
+                                        child: focusedMenuBuilder,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              final bottomRowChild = Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    bottomLeftButton,
+                    buttonsRowChild,
+                  ],
+                ),
+              );
+
+              return MiniplayerRaw(
+                builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
+                    borderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight) {
+                  final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0));
+                  final panelExtra = panelH / 2.25 - navBarHeight - (100.0 + topInset + 4.0);
+                  final panelFinal = panelH - (panelExtra * (1 - qcp));
+
+                  final currentImage = widget.currentImageBuilder(currentItem, bcp);
+                  final iconBoxSize = (velpy(a: 60.0, b: 80.0, c: rcp) - 8) + 8 * rcp - 8 * icp;
+                  final iconSize = (velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp;
+
+                  final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
+                  final nextPrevIconSize = 21.0 + 11.0 * nextprevmultiplier;
+                  final nextPrevIconPadding = 8.0 + 4.0 * nextprevmultiplier;
+                  final nextPrevOpacity = (nextprevmultiplier + 1).clamp(0.0, 1.0);
+
+                  return Stack(
+                    children: [
+                      /// MiniPlayer Body
+                      Container(
+                        color: p > 0 ? Colors.transparent : null, // hit test only when expanded
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Transform.translate(
+                            offset: Offset(0, bottomOffset),
+                            child: ColoredBox(
+                              color: Colors.transparent, // prevents scrolling gap
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 6 * (1 - cp * 10 + 9).clamp(0, 1), vertical: 12 * icp),
+                                child: SizedBox(
+                                  height: velpy(a: 82.0, b: panelFinal, c: cp),
+                                  width: double.infinity,
+                                  child: AnimatedDecoration(
+                                    duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                    decoration: BoxDecoration(
+                                      color: context.theme.scaffoldBackgroundColor,
+                                      borderRadius: borderRadius,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
+                                          blurRadius: 20.0,
+                                        )
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      alignment: Alignment.bottomLeft,
+                                      children: [
+                                        Positioned.fill(
+                                          child: AnimatedDecoration(
+                                            duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                            // clipBehavior: Clip.antiAlias,
+                                            decoration: BoxDecoration(
+                                              color: CurrentColor.inst.miniplayerColor,
+                                              borderRadius: borderRadius,
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
+                                                      .withOpacity(velpy(a: .38, b: .28, c: icp)),
+                                                  Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                                      .withOpacity(velpy(a: .1, b: .22, c: icp)),
+                                                ],
+                                              ),
                                             ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  Opacity(
-                                    opacity: nextPrevOpacity,
-                                    child: IgnorePointer(
-                                      ignoring: nextPrevOpacity == 0.0,
-                                      child: NamidaIconButton(
-                                        icon: Broken.next,
-                                        iconSize: nextPrevIconSize,
-                                        horizontalPadding: nextPrevIconPadding,
-                                        verticalPadding: nextPrevIconPadding,
-                                        onPressed: MiniPlayerController.inst.snapToNext,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                                          ),
+                                        ),
 
-                /// Destination selector
-                Visibility(
-                  maintainState: true,
-                  visible: opacity > 0.0,
-                  child: NamidaOpacity(
-                    opacity: opacity,
-                    child: Transform.translate(
-                      offset: Offset(0, -100 * ip),
-                      child: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: SafeArea(
-                          child: bottomRowChild,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                /// Track Info
-                Material(
-                  type: MaterialType.transparency,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                    child: AnimatedBuilder(
-                      animation: sAnim,
-                      builder: (context, child) {
-                        final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
-                        final rightOpacity = sAnim.value.clamp(0.0, 1.0);
-                        return Stack(
-                          children: [
-                            if (prevText != null && leftOpacity > 0)
-                              NamidaOpacity(
-                                opacity: leftOpacity,
-                                child: Transform.translate(
-                                  offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
-                                  child: _TrackInfo(
-                                    textData: prevText,
-                                    p: bp,
-                                    qp: qp,
-                                    cp: bcp,
-                                    bottomOffset: bottomOffset,
-                                    maxOffset: maxOffset,
-                                    screenSize: screenSize,
-                                  ),
-                                ),
-                              ),
-                            Opacity(
-                              opacity: 1 - sAnim.value.abs(),
-                              child: Transform.translate(
-                                offset: Offset(
-                                    -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
-                                    (-maxOffset + topInset + 102.0) *
-                                        (!bounceUp
-                                            ? !bounceDown
-                                                ? qp
-                                                : (1 - bp)
-                                            : 0.0)),
-                                child: _TrackInfo(
-                                  textData: currentText,
-                                  p: bp,
-                                  qp: qp,
-                                  cp: bcp,
-                                  bottomOffset: bottomOffset,
-                                  maxOffset: maxOffset,
-                                  screenSize: screenSize,
-                                ),
-                              ),
-                            ),
-                            if (nextText != null && rightOpacity > 0)
-                              NamidaOpacity(
-                                opacity: rightOpacity,
-                                child: Transform.translate(
-                                  offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                                  child: _TrackInfo(
-                                    textData: nextText,
-                                    p: bp,
-                                    qp: qp,
-                                    cp: bcp,
-                                    bottomOffset: bottomOffset,
-                                    maxOffset: maxOffset,
-                                    screenSize: screenSize,
-                                  ),
-                                ),
-                              )
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                /// Track Image
-                Padding(
-                  padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                  child: AnimatedBuilder(
-                    animation: sAnim,
-                    builder: (context, child) {
-                      final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
-                      final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
-                      final width = velpy(a: 82.0, b: 92.0, c: qp);
-                      final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
-                      final rightOpacity = sAnim.value.clamp(0.0, 1.0);
-                      return Stack(
-                        children: [
-                          if (prevItem != null && leftOpacity > 0)
-                            NamidaOpacity(
-                              opacity: leftOpacity,
-                              child: Transform.translate(
-                                offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
-                                child: _RawImageContainer(
-                                  cp: bcp,
-                                  p: bp,
-                                  width: width,
-                                  screenSize: screenSize,
-                                  bottomOffset: bottomOffset,
-                                  maxOffset: maxOffset,
-                                  child: widget.imageBuilder(prevItem, cp),
-                                ),
-                              ),
-                            ),
-                          Opacity(
-                            opacity: 1 - sAnim.value.abs(),
-                            child: Transform.translate(
-                              offset: Offset(horizontalOffset, verticalOffset),
-                              child: _RawImageContainer(
-                                cp: bcp,
-                                p: bp,
-                                width: width,
-                                screenSize: screenSize,
-                                bottomOffset: bottomOffset,
-                                maxOffset: maxOffset,
-                                child: Padding(
-                                  padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                  child: LongPressDetector(
-                                    onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
-                                    child: ObxO(
-                                      rx: settings.artworkGestureDoubleTapLRC,
-                                      builder: (context, artworkGestureDoubleTapLRC) {
-                                        if (artworkGestureDoubleTapLRC) {
-                                          return ObxO(
-                                            rx: Lyrics.inst.currentLyricsLRC,
-                                            builder: (context, currentLyricsLRC) {
-                                              // -- only when lrc view is not visible, to prevent other gestures delaying.
-                                              return DoubleTapDetector(
-                                                onDoubleTap: currentLyricsLRC == null
-                                                    ? () {
-                                                        settings.save(enableLyrics: !settings.enableLyrics.value);
-                                                        Lyrics.inst.updateLyrics(currentItem);
-                                                      }
-                                                    : null,
-                                                child: currentImage,
-                                              );
-                                            },
-                                          );
-                                        }
-                                        return currentImage;
-                                      },
+                                        /// Smol progress bar
+                                        ObxO(
+                                          rx: Player.inst.nowPlayingPosition,
+                                          builder: (context, nowPlayingPosition) {
+                                            final w = currentDurationInMS == 0 ? 0 : nowPlayingPosition / currentDurationInMS;
+                                            return Container(
+                                              height: 2 * (1 - cp),
+                                              width: w > 0 ? ((context.width * w) * 0.9) : 0,
+                                              margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                                              child: AnimatedDecoration(
+                                                duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                                decoration: BoxDecoration(
+                                                  color: CurrentColor.inst.miniplayerColor,
+                                                  borderRadius: BorderRadius.circular(50),
+                                                  //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                                  //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                          if (nextItem != null && rightOpacity > 0)
-                            NamidaOpacity(
-                              opacity: rightOpacity,
-                              child: Transform.translate(
-                                offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                                child: _RawImageContainer(
-                                  cp: bcp,
-                                  p: bp,
-                                  width: width,
-                                  screenSize: screenSize,
-                                  bottomOffset: bottomOffset,
-                                  maxOffset: maxOffset,
-                                  child: widget.imageBuilder(nextItem, cp),
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-
-                /// Slider
-                Visibility(
-                  maintainState: false,
-                  visible: slowOpacity > 0.0,
-                  child: Opacity(
-                    opacity: slowOpacity,
-                    child: Transform.translate(
-                      offset: Offset(
-                          0,
-                          (bottomOffset +
-                                  (-maxOffset / 4.4 * p) +
-                                  ((-maxOffset + topInset) *
-                                      ((!bounceUp
-                                          ? !bounceDown
-                                              ? qp
-                                              : (1 - bp)
-                                          : 0.0)) *
-                                      0.4)) -
-                              (navBarHeight * cp)),
-                      child: const Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: waveformChild,
                         ),
                       ),
-                    ),
-                  ),
-                ),
+                      if (settings.enablePartyModeInMiniplayer.value)
+                        NamidaOpacity(
+                          opacity: cp,
+                          child: partyContainersChild,
+                        ),
 
-                Visibility(
-                  maintainState: true, // cuz rebuilding from scratch almost kills raster
-                  visible: qp > 0 && !bounceUp,
-                  child: Opacity(
-                    opacity: qp.clamp(0.0, 1.0),
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - qp) * maxQueueHeight),
-                      child: queueChild,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
+                      /// Top Row
+                      if (rcp > 0.0)
+                        Material(
+                          type: MaterialType.transparency,
+                          child: NamidaOpacity(
+                            opacity: rcp,
+                            child: Transform.translate(
+                              offset: Offset(0, (1 - bp) * -100),
+                              child: topRowChild,
+                            ),
+                          ),
+                        ),
+
+                      /// Controls
+                      Material(
+                        type: MaterialType.transparency,
+                        child: Transform.translate(
+                          offset: Offset(
+                              0,
+                              (bottomOffset +
+                                      (-maxOffset / 8.8 * bp) +
+                                      ((-maxOffset + topInset + 80.0) *
+                                          (!bounceUp
+                                              ? !bounceDown
+                                                  ? qp
+                                                  : (1 - bp)
+                                              : 0.0))) -
+                                  (navBarHeight * cp)),
+                          child: Padding(
+                            padding: EdgeInsets.all(12.0 * icp),
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: Stack(
+                                alignment: Alignment.centerRight,
+                                children: [
+                                  if (fastOpacity > 0.0)
+                                    NamidaOpacity(
+                                      opacity: fastOpacity,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 24.0 * (16 * (!bounceDown ? icp : 0.0) + 1)),
+                                        child: positionDurationRowChild,
+                                      ),
+                                    ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 20.0 * icp, horizontal: 2.0 * (1 - cp)).add(EdgeInsets.only(
+                                        right: !bounceDown
+                                            ? !bounceUp
+                                                ? screenSize.width * rcp / 2 - (80 + 32.0 * 3) * rcp / 1.82 + (qp * 2.0)
+                                                : screenSize.width * cp / 2 - (80 + 32.0 * 3) * cp / 1.82
+                                            : screenSize.width * bcp / 2 - (80 + 32.0 * 3) * bcp / 1.82 + (qp * 2.0))),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Opacity(
+                                          opacity: nextPrevOpacity,
+                                          child: IgnorePointer(
+                                            ignoring: nextPrevOpacity == 0.0,
+                                            child: NamidaIconButton(
+                                              icon: Broken.previous,
+                                              iconSize: nextPrevIconSize,
+                                              horizontalPadding: nextPrevIconPadding,
+                                              verticalPadding: nextPrevIconPadding,
+                                              onPressed: MiniPlayerController.inst.snapToPrev,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          key: const Key("playpause"),
+                                          height: iconBoxSize,
+                                          width: iconBoxSize,
+                                          child: Center(
+                                            child: Obx(
+                                              (context) {
+                                                final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
+                                                return TapDetector(
+                                                  onTap: null,
+                                                  initializer: (instance) {
+                                                    instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
+                                                    instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
+                                                    instance.onTapCancel = () => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value =
+                                                        !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+                                                    instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+                                                  },
+                                                  child: AnimatedScale(
+                                                    duration: const Duration(milliseconds: 400),
+                                                    scale: isButtonHighlighed ? 0.97 : 1.0,
+                                                    child: AnimatedDecoration(
+                                                      duration: const Duration(milliseconds: 400),
+                                                      decoration: BoxDecoration(
+                                                        color: isButtonHighlighed
+                                                            ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
+                                                            : CurrentColor.inst.miniplayerColor,
+                                                        gradient: LinearGradient(
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                          colors: [
+                                                            CurrentColor.inst.miniplayerColor,
+                                                            Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
+                                                          ],
+                                                          stops: const [0, 0.7],
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: CurrentColor.inst.miniplayerColor.withAlpha(160),
+                                                            blurRadius: 8.0,
+                                                            spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
+                                                            offset: const Offset(0.0, 2.0),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Stack(
+                                                        alignment: Alignment.center,
+                                                        children: [
+                                                          IconButton(
+                                                            highlightColor: Colors.transparent,
+                                                            onPressed: Player.inst.togglePlayPause,
+                                                            icon: Padding(
+                                                              padding: EdgeInsets.all(6.0 * cp * rcp),
+                                                              child: ObxO(
+                                                                rx: Player.inst.isPlaying,
+                                                                builder: (context, isPlaying) => AnimatedSwitcher(
+                                                                  duration: const Duration(milliseconds: 200),
+                                                                  child: isPlaying
+                                                                      ? Icon(
+                                                                          Broken.pause,
+                                                                          size: iconSize,
+                                                                          key: const Key("pauseicon"),
+                                                                          color: Colors.white.withAlpha(180),
+                                                                        )
+                                                                      : Icon(
+                                                                          Broken.play,
+                                                                          size: iconSize,
+                                                                          key: const Key("playicon"),
+                                                                          color: Colors.white.withAlpha(180),
+                                                                        ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          if (widget.canShowBuffering)
+                                                            IgnorePointer(
+                                                              child: Obx(
+                                                                (context) => Player.inst.shouldShowLoadingIndicatorR
+                                                                    ? ThreeArchedCircle(
+                                                                        color: Colors.white.withAlpha(120),
+                                                                        size: iconSize * 1.4,
+                                                                      )
+                                                                    : const SizedBox(),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        Opacity(
+                                          opacity: nextPrevOpacity,
+                                          child: IgnorePointer(
+                                            ignoring: nextPrevOpacity == 0.0,
+                                            child: NamidaIconButton(
+                                              icon: Broken.next,
+                                              iconSize: nextPrevIconSize,
+                                              horizontalPadding: nextPrevIconPadding,
+                                              verticalPadding: nextPrevIconPadding,
+                                              onPressed: MiniPlayerController.inst.snapToNext,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Destination selector
+                      Visibility(
+                        maintainState: true,
+                        visible: opacity > 0.0,
+                        child: NamidaOpacity(
+                          opacity: opacity,
+                          child: Transform.translate(
+                            offset: Offset(0, -100 * ip),
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: SafeArea(
+                                child: bottomRowChild,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Track Info
+                      Material(
+                        type: MaterialType.transparency,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                          child: AnimatedBuilder(
+                            animation: sAnim,
+                            builder: (context, child) {
+                              final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                              final rightOpacity = sAnim.value.clamp(0.0, 1.0);
+                              return Stack(
+                                children: [
+                                  if (prevText != null && leftOpacity > 0)
+                                    NamidaOpacity(
+                                      opacity: leftOpacity,
+                                      child: Transform.translate(
+                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                        child: RepaintBoundary(
+                                          child: _TrackInfo(
+                                            textData: prevText,
+                                            p: bp,
+                                            qp: qp,
+                                            cp: bcp,
+                                            bottomOffset: bottomOffset,
+                                            maxOffset: maxOffset,
+                                            screenSize: screenSize,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  Opacity(
+                                    opacity: 1 - sAnim.value.abs(),
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                          -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
+                                          (-maxOffset + topInset + 102.0) *
+                                              (!bounceUp
+                                                  ? !bounceDown
+                                                      ? qp
+                                                      : (1 - bp)
+                                                  : 0.0)),
+                                      child: RepaintBoundary(
+                                        child: _TrackInfo(
+                                          textData: currentText,
+                                          p: bp,
+                                          qp: qp,
+                                          cp: bcp,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          screenSize: screenSize,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (nextText != null && rightOpacity > 0)
+                                    NamidaOpacity(
+                                      opacity: rightOpacity,
+                                      child: Transform.translate(
+                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                                        child: RepaintBoundary(
+                                          child: _TrackInfo(
+                                            textData: nextText,
+                                            p: bp,
+                                            qp: qp,
+                                            cp: bcp,
+                                            bottomOffset: bottomOffset,
+                                            maxOffset: maxOffset,
+                                            screenSize: screenSize,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      /// Track Image
+                      Padding(
+                        padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                        child: AnimatedBuilder(
+                          animation: sAnim,
+                          builder: (context, child) {
+                            final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
+                            final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
+                            final width = velpy(a: 82.0, b: 92.0, c: qp);
+                            final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                            final rightOpacity = sAnim.value.clamp(0.0, 1.0);
+                            return Stack(
+                              children: [
+                                if (prevItem != null && leftOpacity > 0)
+                                  NamidaOpacity(
+                                    opacity: leftOpacity,
+                                    child: Transform.translate(
+                                      offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                      child: RepaintBoundary(
+                                        child: _RawImageContainer(
+                                          cp: bcp,
+                                          p: bp,
+                                          width: width,
+                                          screenSize: screenSize,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          child: widget.imageBuilder(prevItem, cp),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                Opacity(
+                                  opacity: 1 - sAnim.value.abs(),
+                                  child: Transform.translate(
+                                    offset: Offset(horizontalOffset, verticalOffset),
+                                    child: RepaintBoundary(
+                                      child: _RawImageContainer(
+                                        cp: bcp,
+                                        p: bp,
+                                        width: width,
+                                        screenSize: screenSize,
+                                        bottomOffset: bottomOffset,
+                                        maxOffset: maxOffset,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                          child: LongPressDetector(
+                                            onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
+                                            child: ObxO(
+                                              rx: settings.artworkGestureDoubleTapLRC,
+                                              builder: (context, artworkGestureDoubleTapLRC) {
+                                                if (artworkGestureDoubleTapLRC) {
+                                                  return ObxO(
+                                                    rx: Lyrics.inst.currentLyricsLRC,
+                                                    builder: (context, currentLyricsLRC) {
+                                                      // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                                      return DoubleTapDetector(
+                                                        onDoubleTap: currentLyricsLRC == null
+                                                            ? () {
+                                                                settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                                Lyrics.inst.updateLyrics(currentItem);
+                                                              }
+                                                            : null,
+                                                        child: currentImage,
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                                return currentImage;
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (nextItem != null && rightOpacity > 0)
+                                  NamidaOpacity(
+                                    opacity: rightOpacity,
+                                    child: Transform.translate(
+                                      offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                                      child: RepaintBoundary(
+                                        child: _RawImageContainer(
+                                          cp: bcp,
+                                          p: bp,
+                                          width: width,
+                                          screenSize: screenSize,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          child: widget.imageBuilder(nextItem, cp),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      /// Slider
+                      Visibility(
+                        maintainState: false,
+                        visible: slowOpacity > 0.0,
+                        child: Opacity(
+                          opacity: slowOpacity,
+                          child: Transform.translate(
+                            offset: Offset(
+                                0,
+                                (bottomOffset +
+                                        (-maxOffset / 4.4 * p) +
+                                        ((-maxOffset + topInset) *
+                                            ((!bounceUp
+                                                ? !bounceDown
+                                                    ? qp
+                                                    : (1 - bp)
+                                                : 0.0)) *
+                                            0.4)) -
+                                    (navBarHeight * cp)),
+                            child: const Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                child: waveformChild,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Visibility(
+                        maintainState: true, // cuz rebuilding from scratch almost kills raster
+                        visible: qp > 0 && !bounceUp,
+                        child: Opacity(
+                          opacity: qp.clamp(0.0, 1.0),
+                          child: Transform.translate(
+                            offset: Offset(0, (1 - qp) * maxQueueHeight),
+                            child: queueChild,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            });
       },
     );
   }
@@ -1345,45 +1366,47 @@ class _TrackInfo<T extends Playable, E> extends StatelessWidget {
                           opacity: opacity,
                           child: Transform.translate(
                             offset: Offset(-100 * (1.0 - cp), 0.0),
-                            child: LongPressDetector(
-                              onLongPress: textData.onShowAddToPlaylistDialog,
-                              child: ytLikeManager != null
-                                  ? ObxO(
-                                      rx: ytLikeManager.currentVideoLikeStatus,
-                                      builder: (context, currentLikeStatus) {
-                                        final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                                        return NamidaLoadingSwitcher(
-                                          size: 32.0,
-                                          builder: (loadingController) => NamidaRawLikeButton(
-                                            isLiked: isUserLiked,
-                                            likedIcon: textData.likedIcon,
-                                            normalIcon: textData.normalIcon,
+                            child: RepaintBoundary(
+                              child: LongPressDetector(
+                                onLongPress: textData.onShowAddToPlaylistDialog,
+                                child: ytLikeManager != null
+                                    ? ObxO(
+                                        rx: ytLikeManager.currentVideoLikeStatus,
+                                        builder: (context, currentLikeStatus) {
+                                          final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                                          return NamidaLoadingSwitcher(
                                             size: 32.0,
-                                            onTap: (isLiked) async {
-                                              return ytLikeManager.onLikeClicked(
-                                                YTVideoLikeParamters(
-                                                  page: YoutubeInfoController.current.currentVideoPage.value,
-                                                  isActive: isLiked,
-                                                  action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                  onStart: loadingController.startLoading,
-                                                  onEnd: loadingController.stopLoading,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : ObxOClass(
-                                      rx: textData.favouritePlaylist,
-                                      builder: (context, favouritePlaylist) => NamidaRawLikeButton(
-                                        size: 32.0,
-                                        likedIcon: textData.likedIcon,
-                                        normalIcon: textData.normalIcon,
-                                        isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
-                                        onTap: textData.onLikeTap,
+                                            builder: (loadingController) => NamidaRawLikeButton(
+                                              isLiked: isUserLiked,
+                                              likedIcon: textData.likedIcon,
+                                              normalIcon: textData.normalIcon,
+                                              size: 32.0,
+                                              onTap: (isLiked) async {
+                                                return ytLikeManager.onLikeClicked(
+                                                  YTVideoLikeParamters(
+                                                    page: YoutubeInfoController.current.currentVideoPage.value,
+                                                    isActive: isLiked,
+                                                    action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                                    onStart: loadingController.startLoading,
+                                                    onEnd: loadingController.stopLoading,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : ObxOClass(
+                                        rx: textData.favouritePlaylist,
+                                        builder: (context, favouritePlaylist) => NamidaRawLikeButton(
+                                          size: 32.0,
+                                          likedIcon: textData.likedIcon,
+                                          normalIcon: textData.normalIcon,
+                                          isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+                                          onTap: textData.onLikeTap,
+                                        ),
                                       ),
-                                    ),
+                              ),
                             ),
                           ),
                         ),

@@ -209,47 +209,51 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
         builder: (context, _) {
           final percentage = this.percentage;
           final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin);
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              if (widget.displayBottomBGLayer)
-                SizedBox(
-                  height: totalBottomPadding,
-                  width: maxWidth,
-                  child: ColoredBox(color: widget.bgColor),
-                ),
-              Padding(
-                padding: EdgeInsets.only(
-                  top: _padding.top,
-                  bottom: totalBottomPadding,
-                ),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: GestureDetector(
-                    onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
-                    onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
-                    onVerticalDragEnd: (details) {
-                      if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
-                    },
-                    child: Material(
-                      clipBehavior: Clip.hardEdge,
-                      type: MaterialType.transparency,
-                      child: NamidaOpacity(
-                        enabled: controllerHeight < widget.minHeight,
-                        opacity: dismissPercentage,
-                        child: SizedBox(
-                          height: controllerHeight,
-                          child: ColoredBox(
-                            color: widget.bgColor,
-                            child: widget.builder(controllerHeight, percentage),
+          return RepaintBoundary(
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                if (widget.displayBottomBGLayer)
+                  SizedBox(
+                    height: totalBottomPadding,
+                    width: maxWidth,
+                    child: ColoredBox(color: widget.bgColor),
+                  ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: _padding.top,
+                    bottom: totalBottomPadding,
+                  ),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: GestureDetector(
+                      onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
+                      onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
+                      onVerticalDragEnd: (details) {
+                        if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
+                      },
+                      child: Material(
+                        clipBehavior: Clip.hardEdge,
+                        type: MaterialType.transparency,
+                        child: NamidaOpacity(
+                          enabled: controllerHeight < widget.minHeight,
+                          opacity: dismissPercentage,
+                          child: RepaintBoundary(
+                            child: SizedBox(
+                              height: controllerHeight,
+                              child: ColoredBox(
+                                color: widget.bgColor,
+                                child: widget.builder(controllerHeight, percentage),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         });
   }

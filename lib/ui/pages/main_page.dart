@@ -224,11 +224,13 @@ class MainPage extends StatelessWidget {
 
     final theme = context.theme;
 
-    final animatedThemeWidget = _AnimatedTheme(
-      key: _animatedThemeGlobalKey,
-      duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-      data: theme,
-      child: mainChild,
+    final animatedThemeWidget = RepaintBoundary(
+      child: _AnimatedTheme(
+        key: _animatedThemeGlobalKey,
+        duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+        data: theme,
+        child: mainChild,
+      ),
     );
     final animatedThemeState = _animatedThemeGlobalKey.currentState;
     animatedThemeState?.setAnimated(animation.value < 1);
