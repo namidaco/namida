@@ -207,6 +207,7 @@ class _SettingsController with SettingsFileWriter {
   final editTagsKeepFileDates = true.obs;
   final downloadFilesWriteUploadDate = true.obs;
   final downloadFilesKeepCachedVersions = true.obs;
+  final downloadAddAudioToLocalLibrary = true.obs;
   final enablePip = true.obs;
   final pickColorsFromDeviceWallpaper = false.obs;
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
@@ -450,6 +451,7 @@ class _SettingsController with SettingsFileWriter {
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
+      downloadAddAudioToLocalLibrary.value = json['downloadAddAudioToLocalLibrary'] ?? downloadAddAudioToLocalLibrary.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
       pickColorsFromDeviceWallpaper.value = json['pickColorsFromDeviceWallpaper'] ?? pickColorsFromDeviceWallpaper.value;
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
@@ -623,6 +625,7 @@ class _SettingsController with SettingsFileWriter {
         'editTagsKeepFileDates': editTagsKeepFileDates.value,
         'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
         'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
+        'downloadAddAudioToLocalLibrary': downloadAddAudioToLocalLibrary.value,
         'enablePip': enablePip.value,
         'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
         'trackItem': trackItem.value.map((key, value) => MapEntry(key.name, value.name)),
@@ -736,6 +739,7 @@ class _SettingsController with SettingsFileWriter {
     bool? editTagsKeepFileDates,
     bool? downloadFilesWriteUploadDate,
     bool? downloadFilesKeepCachedVersions,
+    bool? downloadAddAudioToLocalLibrary,
     bool? enablePip,
     bool? pickColorsFromDeviceWallpaper,
     int? waveformTotalBars,
@@ -944,6 +948,7 @@ class _SettingsController with SettingsFileWriter {
     if (editTagsKeepFileDates != null) this.editTagsKeepFileDates.value = editTagsKeepFileDates;
     if (downloadFilesWriteUploadDate != null) this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
     if (downloadFilesKeepCachedVersions != null) this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
+    if (downloadAddAudioToLocalLibrary != null) this.downloadAddAudioToLocalLibrary.value = downloadAddAudioToLocalLibrary;
     if (enablePip != null) this.enablePip.value = enablePip;
     if (pickColorsFromDeviceWallpaper != null) this.pickColorsFromDeviceWallpaper.value = pickColorsFromDeviceWallpaper;
     if (waveformTotalBars != null) this.waveformTotalBars.value = waveformTotalBars;

@@ -403,6 +403,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
     return ObxO(
       rx: Player.inst.currentQueue,
       builder: (context, queue) {
+        if (queue.isEmpty) return const SizedBox();
         return ObxO(
             rx: Player.inst.currentIndex,
             builder: (context, currentIndex) {

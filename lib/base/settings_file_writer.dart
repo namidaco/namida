@@ -49,7 +49,7 @@ mixin SettingsFileWriter {
   bool _canWriteSettings = true;
 
   @protected
-  Map<K, V>? getEnumMap_<K, V>(dynamic jsonMap, List<K> enumKeys, K defaultKey, List<V> enumValues, V defaultValue) {
+  Map<K, V>? getEnumMap_<K extends Enum, V extends Enum>(dynamic jsonMap, List<K> enumKeys, K defaultKey, List<V> enumValues, V defaultValue) {
     return ((jsonMap as Map?)?.map(
       (key, value) => MapEntry(enumKeys.getEnum(key) ?? defaultKey, enumValues.getEnum(value) ?? defaultValue),
     ));

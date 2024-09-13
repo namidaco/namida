@@ -560,6 +560,7 @@ class Indexer<T extends Track> {
           lyrics: tags.lyrics,
           label: tags.recordLabel,
           rating: tags.ratingPercentage,
+          originalTags: tags.tags,
           tagsList: tagsEmbedded,
         );
 
@@ -887,7 +888,7 @@ class Indexer<T extends Track> {
       if (prevDuplicated) {
         /// skip duplicated tracks according to filename
         for (final trackPath in audioFiles) {
-          if (_currentFileNamesMap.keyExists(trackPath.getFilename)) {
+          if (_currentFileNamesMap.containsKey(trackPath.getFilename)) {
             duplicatedTracksLength.value++;
           } else {
             audioFilesWithoutDuplicates.add(trackPath);

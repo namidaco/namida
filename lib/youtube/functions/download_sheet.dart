@@ -718,6 +718,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
                                         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                        addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
                                         groupName: DownloadTaskGroupName(groupName: groupName),
                                         itemsConfig: [itemConfig],
                                       );

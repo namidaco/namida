@@ -104,6 +104,15 @@ Future<void> showVideoDownloadOptionsSheet({
                     if (showSpecificFileOptions) ...[
                       Obx(
                         (context) => CustomSwitchListTile(
+                          icon: Broken.tick_circle,
+                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                          title: lang.KEEP_CACHED_VERSIONS,
+                          value: settings.downloadFilesKeepCachedVersions.valueR,
+                          onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                        ),
+                      ),
+                      Obx(
+                        (context) => CustomSwitchListTile(
                           icon: Broken.document_code,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                           title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
@@ -113,11 +122,11 @@ Future<void> showVideoDownloadOptionsSheet({
                       ),
                       Obx(
                         (context) => CustomSwitchListTile(
-                          icon: Broken.tick_circle,
+                          icon: Broken.music_library_2,
                           visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                          title: lang.KEEP_CACHED_VERSIONS,
-                          value: settings.downloadFilesKeepCachedVersions.valueR,
-                          onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                          title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                          value: settings.downloadAddAudioToLocalLibrary.valueR,
+                          onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
                         ),
                       ),
                       YTDownloadOptionFolderListTile(

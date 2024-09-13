@@ -121,7 +121,9 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   void onVerticalDragFinish() {
     _distanceDragged = 0;
     _isDraggingVertically = null;
-    animation.animateTo(0, duration: const Duration(milliseconds: 100));
+    try {
+      animation.animateTo(0, duration: const Duration(milliseconds: 100));
+    } catch (_) {}
   }
 
   bool _isRefreshing = false;

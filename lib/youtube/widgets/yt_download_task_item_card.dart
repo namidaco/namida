@@ -98,6 +98,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   void _onResumeDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
     YoutubeController.inst.downloadYoutubeVideos(
       useCachedVersionsIfAvailable: true,
+      addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
       autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
       keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
       downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,

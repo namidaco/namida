@@ -1303,35 +1303,37 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         // -----------------------
       } catch (e) {
         if (checkInterrupted()) return;
-        void showSnackError(String nextAction) {
-          if (item == currentItem.value) {
-            snackyy(title: lang.ERROR, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
-          }
-        }
-
-        showSnackError('trying again');
-
-        printy(e, isError: true);
-        playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
-          item: item,
-          mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
-          checkInterrupted: checkInterrupted,
-          index: index,
-          canPlayAudioOnly: canPlayAudioOnlyFromCache,
-          disableVideo: _isAudioOnlyPlayback,
-          whatToAwait: playerStoppingSeikoo?.future,
-          startPlaying: startPlaying,
-          positionToRestore: positionToRestore,
-          possibleAudioFiles: audioCacheMap[item.id] ?? [],
-          possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
-        );
-        _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;
-        duration ??= playedFromCacheDetails.duration;
-        if (checkInterrupted()) return; // this also refreshes currentDuration
-        generateWaveform();
         if (!okaySetFromCache()) {
-          showSnackError('skipping');
-          skipItem();
+          void showSnackError(String nextAction) {
+            if (item == currentItem.value) {
+              snackyy(title: lang.ERROR, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
+            }
+          }
+
+          showSnackError('trying again');
+
+          printy(e, isError: true);
+          playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
+            item: item,
+            mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+            checkInterrupted: checkInterrupted,
+            index: index,
+            canPlayAudioOnly: canPlayAudioOnlyFromCache,
+            disableVideo: _isAudioOnlyPlayback,
+            whatToAwait: playerStoppingSeikoo?.future,
+            startPlaying: startPlaying,
+            positionToRestore: positionToRestore,
+            possibleAudioFiles: audioCacheMap[item.id] ?? [],
+            possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
+          );
+          _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;
+          duration ??= playedFromCacheDetails.duration;
+          if (checkInterrupted()) return; // this also refreshes currentDuration
+          generateWaveform();
+          if (!okaySetFromCache()) {
+            showSnackError('skipping');
+            skipItem();
+          }
         }
       }
     }
@@ -1916,7 +1918,7 @@ extension YoutubeIDToMediaItem on YoutubeID {
   MediaItem toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) {
     final id = videoInfo?.id ?? videoId;
     final videoTitle = videoInfo?.title ?? YoutubeInfoController.utils.getVideoName(videoId);
-    final artistAndTitle = videoInfo?.title.splitArtistAndTitle();
+    final artistAndTitle = videoTitle?.splitArtistAndTitle();
     final videoChannelTitle = videoInfo?.channelName ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
     final videoDuration = duration ?? videoInfo?.durSeconds?.seconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId)?.seconds;
 

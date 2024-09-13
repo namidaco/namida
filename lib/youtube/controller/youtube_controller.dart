@@ -487,7 +487,7 @@ class YoutubeController {
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
-    youtubeDownloadTasksMap[groupName] ??= {};
+    youtubeDownloadTasksMap.value[groupName] ??= {};
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
     if (remove) {
       final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");

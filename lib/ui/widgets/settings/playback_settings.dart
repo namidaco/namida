@@ -357,8 +357,9 @@ class PlaybackSettings extends SettingSubpageProvider {
       ),
       getItemWrapper(
         key: _PlaybackSettingsKeys.skipSilence,
-        child: Obx(
-          (context) => CustomSwitchListTile(
+        child: ObxO(
+          rx: settings.player.skipSilenceEnabled,
+          builder: (context, skipSilenceEnabled) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.skipSilence),
             icon: Broken.forward,
             title: lang.SKIP_SILENCE,
@@ -367,7 +368,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               settings.player.save(skipSilenceEnabled: willBeTrue);
               await Player.inst.setSkipSilenceEnabled(willBeTrue);
             },
-            value: settings.player.skipSilenceEnabled.valueR,
+            value: skipSilenceEnabled,
           ),
         ),
       ),

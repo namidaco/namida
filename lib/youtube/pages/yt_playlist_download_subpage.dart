@@ -63,9 +63,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   bool useCachedVersionsIfAvailable = true;
   bool autoExtractTitleAndArtist = settings.youtube.autoExtractVideoTagsFromInfo.value;
-  bool keepCachedVersionsIfDownloaded = false;
+  bool keepCachedVersionsIfDownloaded = settings.downloadFilesKeepCachedVersions.value;
   bool downloadFilesWriteUploadDate = settings.downloadFilesWriteUploadDate.value;
-  bool addAudioToLocalLibrary = true;
+  bool addAudioToLocalLibrary = settings.downloadAddAudioToLocalLibrary.value;
   bool overrideOldFiles = false;
   final preferredQuality = (settings.youtubeVideoQualities.value.firstOrNull ?? kStockVideoQualities.first).obs;
   final downloadAudioOnly = false.obs;
@@ -219,20 +219,15 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       rebuildy();
                     },
                   ),
-                  Obx(
-                    (context) {
-                      final downloadAO = downloadAudioOnly.valueR;
-                      return CustomSwitchListTile(
-                        visualDensity: visualDensity,
-                        enabled: downloadAO,
-                        icon: Broken.music_library_2,
-                        title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
-                        value: downloadAO && addAudioToLocalLibrary,
-                        onChanged: (isTrue) {
-                          addAudioToLocalLibrary = !addAudioToLocalLibrary;
-                          rebuildy();
-                        },
-                      );
+                  CustomSwitchListTile(
+                    visualDensity: visualDensity,
+                    enabled: true,
+                    icon: Broken.music_library_2,
+                    title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                    value: addAudioToLocalLibrary,
+                    onChanged: (isTrue) {
+                      addAudioToLocalLibrary = !addAudioToLocalLibrary;
+                      rebuildy();
                     },
                   ),
                   CustomSwitchListTile(
