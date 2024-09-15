@@ -1,13 +1,28 @@
 import 'package:history_manager/history_manager.dart';
 
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
-  HistoryManager<T, E> get historyController;
+  final HistoryManager<T, E> historyController;
+  const NamidaGeneratorBase(this.historyController);
 
   /// Generated items listened to in a time range.
-  List<T> generateItemsFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, {bool removeDuplicates = true}) {
-    return historyController.generateTracksFromHistoryDates(oldestDate, newestDate, removeDuplicates: removeDuplicates);
+  List<T> generateItemsFromHistoryDates(DateTime? oldestDate, DateTime? newestDate) {
+    final items = historyController.generateTracksFromHistoryDates(oldestDate, newestDate, removeDuplicates: false);
+
+    final shouldDefaultSort = QueueInsertionType.listenTimeRange.toQueueInsertion().sortBy == InsertionSortingType.none;
+    if (shouldDefaultSort) {
+      final listensCountInThisRange = <E, int>{};
+      items.loop((item) => listensCountInThisRange.update(historyController.mainItemToSubItem(item), (value) => value + 1, ifAbsent: () => 1));
+      items.removeDuplicates(historyController.mainItemToSubItem);
+      items.sortByReverse((item) => listensCountInThisRange[historyController.mainItemToSubItem(item)] ?? 0);
+      return items;
+    } else {
+      items.removeDuplicates(historyController.mainItemToSubItem);
+    }
+    return items;
   }
 
   static Iterable<R> getRandomItems<R>(List<R> list, {R? exclude, int? min, int? max}) {

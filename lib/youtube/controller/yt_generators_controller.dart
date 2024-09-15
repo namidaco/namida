@@ -3,7 +3,6 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 
-import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/core/enum.dart';
@@ -23,14 +22,11 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider<Map> {
   static final NamidaYTGenerator inst = NamidaYTGenerator._internal();
-  NamidaYTGenerator._internal();
+  NamidaYTGenerator._internal() : super(YoutubeHistoryController.inst);
 
   late final didPrepareResources = false.obs;
 
   late final _operationsCompleter = <_GenerateOperation, Completer<Iterable<String>>>{};
-
-  @override
-  HistoryManager<YoutubeID, String> get historyController => YoutubeHistoryController.inst;
 
   Iterable<YoutubeID> generateRecommendedVideos(YoutubeID video) {
     final strings = super.generateRecommendedItemsFor(video.id, (current) => current.id);

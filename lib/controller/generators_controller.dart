@@ -1,5 +1,3 @@
-import 'package:history_manager/history_manager.dart';
-
 import 'package:namida/base/generator_base.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -9,10 +7,7 @@ import 'package:namida/core/extensions.dart';
 
 class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
   static final NamidaGenerator inst = NamidaGenerator._internal();
-  NamidaGenerator._internal();
-
-  @override
-  HistoryManager<TrackWithDate, Track> get historyController => HistoryController.inst;
+  NamidaGenerator._internal() : super(HistoryController.inst);
 
   static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filename) {
     return files.where(

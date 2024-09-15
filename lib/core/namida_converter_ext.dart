@@ -583,7 +583,7 @@ extension ThemeUtils on ThemeMode {
 }
 
 extension QueueInsertionTypeToQI on QueueInsertionType {
-  QueueInsertion toQueueInsertion() => settings.queueInsertion[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none);
+  QueueInsertion toQueueInsertion() => settings.queueInsertion.value[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none);
 
   /// NOTE: Modifies the original list.
   List<Selectable> shuffleOrSort(List<Selectable> tracks) {

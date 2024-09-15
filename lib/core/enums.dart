@@ -280,9 +280,16 @@ enum QueueInsertionType {
 }
 
 enum InsertionSortingType {
+  /// random sort
   random,
+
+  /// total listen count
   listenCount,
+
+  /// sort by user rating
   rating,
+
+  /// default implementation. can be slected listens count or no sorting.
   none,
 }
 
