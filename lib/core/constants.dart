@@ -381,125 +381,39 @@ const kDefaultDateTimeStrings = {
   '[dd.MM.yyyy]': '[13.04.2022]',
 };
 
-/// Extensions used to filter audio files
-const Set<String> kAudioFileExtensions = {
-  '.m4a',
-  '.mp3',
-  '.weba',
-  '.ogg',
-  '.wav',
-  '.flac',
-  '.aac',
-  '.3gp',
-  '.ac3',
-  '.opus',
-  '.m4b',
-  '.pk',
-  '.8svx',
-  '.aa',
-  '.aax',
-  '.act',
-  '.aiff',
-  '.alac',
-  '.amr',
-  '.ape',
-  '.au',
-  '.awb',
-  '.cda',
-  '.dss',
-  '.dts',
-  '.dvf',
-  '.gsm',
-  '.iklax',
-  '.ivs',
-  '.m4p',
-  '.mmf',
-  '.movpkg',
-  '.mid',
-  '.mpc',
-  '.msv',
-  '.nmf',
-  '.oga',
-  '.mogg',
-  '.ra',
-  '.rm',
-  '.raw',
-  '.rf64',
-  '.sln',
-  '.tak',
-  '.tta',
-  '.voc',
-  '.vox',
-  '.wma',
-  '.wv',
-  '.aif',
-  '.aifc',
-  '.amz',
-  '.awc',
-  '.bwf',
-  '.caf',
-  '.dct',
-  '.dff',
-  '.dsf',
-  '.fap',
-  '.flp',
-  '.its',
-  '.kar',
-  '.kfn',
-  '.m4r',
-  '.mac',
-  '.mka',
-  '.mlp',
-  '.mp2',
-  '.mpp',
-  '.oma',
-  '.qcp',
-  '.rmi',
-  '.snd',
-  '.spx',
-  '.ts',
-  '.uax',
-  '.xmz',
-};
+class NamidaFileExtensionsWrapper {
+  final Set<String> extensions;
+  const NamidaFileExtensionsWrapper._(this.extensions);
 
-/// Extensions used to filter video files
-const Set<String> kVideoFilesExtensions = {
-  '.mp4',
-  '.mkv',
-  '.avi',
-  '.wmv',
-  '.flv',
-  '.mov',
-  '.3gp',
-  '.ogv',
-  '.webm',
-  '.mpg',
-  '.mpeg',
-  '.m4v',
-  '.ts',
-  '.vob',
-  '.asf',
-  '.rm',
-  '.swf',
-  '.f4v',
-  '.divx',
-  '.m2ts',
-  '.mts',
-  '.mpv',
-  '.mp2',
-  '.mpe',
-  '.mpa',
-  '.mxf',
-  '.m2v',
-  '.mpeg1',
-  '.mpeg2',
-  '.mpeg4'
-};
+  bool isPathValid(String path) {
+    return extensions.contains(path.splitLast('.'));
+  }
 
-/// Extensions used to filter m3u files
-const Set<String> kM3UPlaylistsExtensions = {'.m3u', '.m3u8', '.M3U', '.M3U8'};
+  static const _audioExtensions = {
+    'm4a', 'mp3', 'weba', 'ogg', 'wav', 'flac', 'aac', 'ac3', 'opus', 'm4b', 'pk', '8svx', 'aa', 'aax', 'act', 'aiff', 'alac', 'amr', //
+    'ape', 'au', 'awb', 'cda', 'dss', 'dts', 'dvf', 'gsm', 'iklax', 'ivs', 'm4p', 'mmf', 'movpkg', 'mid', 'mpc', 'msv', 'nmf', 'oga', //
+    'mogg', 'ra', 'raw', 'rf64', 'sln', 'tak', 'tta', 'voc', 'vox', 'wma', 'wv', 'aif', 'aifc', 'amz', 'awc', 'bwf', 'caf', 'dct', 'dff', //
+    'dsf', 'fap', 'flp', 'its', 'kar', 'kfn', 'm4r', 'mac', 'mka', 'mlp', 'mp2', 'mpp', 'oma', 'qcp', 'rmi', 'snd', 'spx', 'uax', 'xmz',
+  };
 
-const Set<String> kImageFilesExtensions = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'};
+  static const _videoExtensions = {
+    'mp4', 'mkv', 'avi', 'wmv', 'flv', 'mov', '3gp', 'ogv', 'webm', 'mpg', 'mpeg', 'm4v', 'ts', 'vob', 'asf', //
+    'rm', 'swf', 'f4v', 'divx', 'm2ts', 'mts', 'mpv', 'mpe', 'mpa', 'mxf', 'm2v', 'mpeg1', 'mpeg2', 'mpeg4'
+  };
+
+  static const audio = NamidaFileExtensionsWrapper._(_audioExtensions);
+  static const video = NamidaFileExtensionsWrapper._(_videoExtensions);
+  static const audioAndVideo = NamidaFileExtensionsWrapper._({..._audioExtensions, ..._videoExtensions});
+
+  static const image = NamidaFileExtensionsWrapper._({'png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp'});
+
+  static const m3u = NamidaFileExtensionsWrapper._({'m3u', 'm3u8', 'M3U', 'M3U8'});
+  static const csv = NamidaFileExtensionsWrapper._({'csv', 'CSV'});
+  static const json = NamidaFileExtensionsWrapper._({'json', 'JSON'});
+  static const zip = NamidaFileExtensionsWrapper._({'zip', 'ZIP', 'rar', 'RAR'});
+  static const compressed = NamidaFileExtensionsWrapper._({'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
+  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'LRC', 'txt', 'TXT'});
+}
 
 const kDefaultOrientations = <DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
 const kDefaultLang = NamidaLanguage(
@@ -562,45 +476,5 @@ const kMaximumSleepTimerTracks = 40;
 const kMaximumSleepTimerMins = 180;
 
 extension PathTypeUtils on String {
-  bool isVideo() {
-    bool isVideo;
-    var ext = splitLast('.');
-    switch (ext) {
-      case 'mp4':
-      case 'mkv':
-      case 'avi':
-      case 'wmv':
-      case 'flv':
-      case 'mov':
-      case '3gp':
-      case 'ogv':
-      case 'webm':
-      case 'mpg':
-      case 'mpeg':
-      case 'm4v':
-      case 'ts':
-      case 'vob':
-      case 'asf':
-      case 'rm':
-      case 'swf':
-      case 'f4v':
-      case 'divx':
-      case 'm2ts':
-      case 'mts':
-      case 'mpv':
-      case 'mp2':
-      case 'mpe':
-      case 'mpa':
-      case 'mxf':
-      case 'm2v':
-      case 'mpeg1':
-      case 'mpeg2':
-      case 'mpeg4':
-        isVideo = true;
-
-      default:
-        isVideo = false;
-    }
-    return isVideo;
-  }
+  bool isVideo() => NamidaFileExtensionsWrapper.video.isPathValid(this);
 }

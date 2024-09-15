@@ -897,10 +897,6 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
   }
 }
 
-bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
-  return checkIfListsSimilar(queue, allTracksInLibrary) == 1.0;
-}
-
 /// **takes:**
 /// ```
 /// {
@@ -923,15 +919,15 @@ bool checkIfQueueSameAsAllTracks(List<Selectable> queue) {
 Map<String, Object> getFilesTypeIsolate(Map parameters) {
   final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
   final directoriesToExclude = parameters['directoriesToExclude'] as List<String>? ?? [];
-  final extensions = parameters['extensions'] as Set<String>;
-  final imageExtensions = parameters['imageExtensions'] as Set<String>? ?? {};
+  final extensions = parameters['extensions'] as NamidaFileExtensionsWrapper;
+  final imageExtensions = parameters['imageExtensions'] as NamidaFileExtensionsWrapper?;
   final respectNoMedia = parameters['respectNoMedia'] as bool? ?? true;
 
   final allPaths = <String>{};
   final excludedByNoMedia = <String>{};
   final folderCovers = <String, String>{};
 
-  final coversNames = imageExtensions.isNotEmpty
+  final coversNames = imageExtensions != null && imageExtensions.extensions.isNotEmpty
       ? {
           "folder": true,
           "front": true,
@@ -943,7 +939,7 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
           "albumartsmall": true,
         }
       : null;
-  final fillFolderCovers = coversNames != null;
+  final fillFolderCovers = imageExtensions != null && coversNames != null;
 
   allAvailableDirectories.keys.toList().loop((d) {
     final hasNoMedia = allAvailableDirectories[d] ?? false;
@@ -958,7 +954,7 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
           if (fillFolderCovers) {
             final dirPath = d.path;
             if (folderCovers[dirPath] == null) {
-              if (imageExtensions.any((ext) => path.endsWith(ext))) {
+              if (imageExtensions.isPathValid(path)) {
                 final filenameCleaned = path.getFilenameWOExt.toLowerCase();
                 final isValidCover = coversNames[filenameCleaned] == true;
                 if (isValidCover) folderCovers[dirPath] = path;
@@ -968,8 +964,13 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
             }
           }
 
+          // -- skips if the file is included in one of the excluded folders.
+          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
+            continue;
+          }
+
           // -- skip if not in extensions
-          if (!extensions.any((ext) => path.endsWith(ext))) {
+          if (!extensions.isPathValid(path)) {
             continue;
           }
 
@@ -982,10 +983,6 @@ Map<String, Object> getFilesTypeIsolate(Map parameters) {
             continue;
           }
 
-          // -- skips if the file is included in one of the excluded folders.
-          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
-            continue;
-          }
           allPaths.add(path);
         }
       }

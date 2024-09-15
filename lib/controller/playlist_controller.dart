@@ -272,7 +272,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
         final parameters = {
           'allAvailableDirectories': allAvailableDirectories,
           'directoriesToExclude': <String>[],
-          'extensions': kM3UPlaylistsExtensions,
+          'extensions': NamidaFileExtensionsWrapper.m3u,
           'respectNoMedia': false,
         };
         final mapResult = await getFilesTypeIsolate.thready(parameters);

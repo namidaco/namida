@@ -97,7 +97,7 @@ class ThemeSetting extends SettingSubpageProvider {
                 actions: [
                   NamidaButton(
                     onPressed: () async {
-                      final files = await NamidaFileBrowser.pickFile(note: lang.ADD_LANGUAGE, allowedExtensions: const NamidaFileBrowserAllowedExtensions.json());
+                      final files = await NamidaFileBrowser.pickFile(note: lang.ADD_LANGUAGE, allowedExtensions: NamidaFileExtensionsWrapper.json);
                       final path = files?.path;
                       if (path != null) {
                         try {

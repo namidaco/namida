@@ -30,24 +30,12 @@ enum _SortType {
 
 const _defaultMemeType = NamidaStorageFileMemeType.any;
 
-class NamidaFileBrowserAllowedExtensions {
-  final List<String>? extensions;
-
-  /// initialize with custom extensions. all should start with a dot.
-  const NamidaFileBrowserAllowedExtensions._(this.extensions);
-  const NamidaFileBrowserAllowedExtensions.csv() : extensions = const ['.csv', '.CSV'];
-  const NamidaFileBrowserAllowedExtensions.json() : extensions = const ['.json', '.JSON'];
-  const NamidaFileBrowserAllowedExtensions.zip() : extensions = const ['.zip', '.ZIP', '.rar', '.RAR'];
-  const NamidaFileBrowserAllowedExtensions.lrcOrTxt() : extensions = const ['.lrc', '.LRC', '.txt', '.TXT'];
-  factory NamidaFileBrowserAllowedExtensions.m3u() => NamidaFileBrowserAllowedExtensions._(kM3UPlaylistsExtensions.toList());
-}
-
 class NamidaFileBrowser {
   static Future<File?> pickFile({
     String note = '',
     String memeType = _defaultMemeType,
     String? initialDirectory,
-    NamidaFileBrowserAllowedExtensions? allowedExtensions,
+    NamidaFileExtensionsWrapper? allowedExtensions,
   }) async {
     return _NamidaFileBrowserBase.pickFile(
       note: note,
@@ -63,7 +51,7 @@ class NamidaFileBrowser {
     String note = '',
     String memeType = _defaultMemeType,
     String? initialDirectory,
-    NamidaFileBrowserAllowedExtensions? allowedExtensions,
+    NamidaFileExtensionsWrapper? allowedExtensions,
   }) async {
     return _NamidaFileBrowserBase.pickFiles(
       note: note,
@@ -126,7 +114,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   final String note;
   final String? initialDirectory;
   final Completer<List<T>> onSelect;
-  final NamidaFileBrowserAllowedExtensions? allowedExtensions;
+  final NamidaFileExtensionsWrapper? allowedExtensions;
   final String memeType;
   final bool allowMultiple;
   final _NamidaFileBrowserPopCallback onPop;
@@ -144,7 +132,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
 
   static Future<File?> pickFile({
     String note = '',
-    NamidaFileBrowserAllowedExtensions? allowedExtensions,
+    NamidaFileExtensionsWrapper? allowedExtensions,
     String memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
@@ -168,7 +156,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
 
   static Future<List<File>> pickFiles({
     String note = '',
-    NamidaFileBrowserAllowedExtensions? allowedExtensions,
+    NamidaFileExtensionsWrapper? allowedExtensions,
     String memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
@@ -343,7 +331,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     try {
       _stopMainIsolates();
       _resultPort = ReceivePort();
-      final params = (dir: dirPath, showHiddenFiles: _showHiddenFiles.value, allowedExtensions: _effectiveAllowedExtensions, resultPort: _resultPort!.sendPort);
+      final params = (dir: dirPath, showHiddenFiles: _showHiddenFiles.value, allowedExtensionsWrappers: _effectiveAllowedExtensions, resultPort: _resultPort!.sendPort);
       _isolate = await Isolate.spawn(_fetchFilesIsolate, params);
       isolateRes = await _resultPort!.first as (List<File>, List<Directory>, Object?);
       // _fetchInfo(dirPath, isolateRes.$1, isolateRes.$2);
@@ -612,7 +600,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   //   });
   // }
 
-  static void _fetchFilesIsolate(({String dir, List<String> allowedExtensions, bool showHiddenFiles, SendPort resultPort}) params) {
+  static void _fetchFilesIsolate(({String dir, List<NamidaFileExtensionsWrapper> allowedExtensionsWrappers, bool showHiddenFiles, SendPort resultPort}) params) {
     List<FileSystemEntity> items;
     try {
       items = Directory(params.dir).listSync();
@@ -632,15 +620,15 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     }
 
     final excludeHidden = params.showHiddenFiles == false;
-    final extensions = params.allowedExtensions;
+    final extensionsWrappers = params.allowedExtensionsWrappers;
 
-    if (excludeHidden && extensions.isNotEmpty) {
+    if (excludeHidden && extensionsWrappers.isNotEmpty) {
       items.loop((e) {
         final filename = e.path.splitLast(_pathSeparator);
         if (e is Directory) {
           if (!filename.startsWith('.')) onAdd(e);
         } else {
-          if (!filename.startsWith('.') && extensions.any((ext) => filename.endsWith(ext))) onAdd(e);
+          if (!filename.startsWith('.') && extensionsWrappers.any((wrapper) => wrapper.isPathValid(filename))) onAdd(e);
         }
       });
     } else if (excludeHidden) {
@@ -648,11 +636,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         final fileorDirName = e.path.splitLast(_pathSeparator);
         if (!fileorDirName.startsWith('.')) onAdd(e);
       });
-    } else if (extensions.isNotEmpty) {
+    } else if (extensionsWrappers.isNotEmpty) {
       items.loop((e) {
         if (e is File) {
           final filename = e.path.splitLast(_pathSeparator);
-          if (extensions.any((ext) => filename.endsWith(ext))) onAdd(e);
+          if (extensionsWrappers.any((wrapper) => wrapper.isPathValid(filename))) onAdd(e);
         } else {
           onAdd(e);
         }
@@ -666,7 +654,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     params.resultPort.send((files, dirs, null));
   }
 
-  final _effectiveAllowedExtensions = <String>[];
+  final _effectiveAllowedExtensions = <NamidaFileExtensionsWrapper>[];
 
   @override
   void initState() {
@@ -676,20 +664,20 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       _fetchFiles(Directory(widget.initialDirectory ?? paths.first));
       _fetchInfo(_mainStoragePaths);
     });
-    final allowedExtensions = widget.allowedExtensions?.extensions;
-    if (allowedExtensions != null) _effectiveAllowedExtensions.addAll(allowedExtensions);
+    final allowedExtensions = widget.allowedExtensions;
+    if (allowedExtensions != null) _effectiveAllowedExtensions.add(allowedExtensions);
     if (widget.memeType != NamidaStorageFileMemeType.any) {
       switch (widget.memeType) {
         case NamidaStorageFileMemeType.audio:
-          _effectiveAllowedExtensions.addAll(kAudioFileExtensions);
+          _effectiveAllowedExtensions.add(NamidaFileExtensionsWrapper.audio);
         case NamidaStorageFileMemeType.video:
-          _effectiveAllowedExtensions.addAll(kVideoFilesExtensions);
+          _effectiveAllowedExtensions.add(NamidaFileExtensionsWrapper.video);
         case NamidaStorageFileMemeType.image:
-          _effectiveAllowedExtensions.addAll(kImageFilesExtensions);
+          _effectiveAllowedExtensions.add(NamidaFileExtensionsWrapper.image);
         case NamidaStorageFileMemeType.media:
           _effectiveAllowedExtensions
-            ..addAll(kAudioFileExtensions)
-            ..addAll(kVideoFilesExtensions);
+            ..add(NamidaFileExtensionsWrapper.audio)
+            ..add(NamidaFileExtensionsWrapper.video);
       }
     }
     _initIconsLookup();
@@ -820,7 +808,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   }
 
   IconData _fileToIcon(File file) {
-    final extension = '.${_pathToExtension(file.path)}';
+    final extension = _pathToExtension(file.path);
     final iconIndex = _iconsLookupPre[extension];
     if (iconIndex != null) {
       final icon = _iconsLookup[iconIndex];
@@ -830,7 +818,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   }
 
   ArtworkWidget? _getFileImage(File file) {
-    final extension = '.${_pathToExtension(file.path)}';
+    final extension = _pathToExtension(file.path);
     final iconIndex = _iconsLookupPre[extension];
     if (iconIndex != 2) return null;
     return ArtworkWidget(
@@ -845,22 +833,22 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   }
 
   void _initIconsLookup() {
-    for (final e in kAudioFileExtensions) {
+    for (final e in NamidaFileExtensionsWrapper.audio.extensions) {
       _iconsLookupPre[e] = 0;
     }
-    for (final e in kVideoFilesExtensions) {
+    for (final e in NamidaFileExtensionsWrapper.video.extensions) {
       _iconsLookupPre[e] = 1;
     }
-    for (final e in kImageFilesExtensions) {
+    for (final e in NamidaFileExtensionsWrapper.image.extensions) {
       _iconsLookupPre[e] = 2;
     }
-    for (final e in ['.json', '.csv']) {
+    for (final e in [...NamidaFileExtensionsWrapper.json.extensions, ...NamidaFileExtensionsWrapper.csv.extensions]) {
       _iconsLookupPre[e] = 3;
     }
-    for (final e in kM3UPlaylistsExtensions) {
+    for (final e in NamidaFileExtensionsWrapper.m3u.extensions) {
       _iconsLookupPre[e] = 4;
     }
-    for (final e in [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".cab", ".iso", ".jar"]) {
+    for (final e in NamidaFileExtensionsWrapper.compressed.extensions) {
       _iconsLookupPre[e] = 5;
     }
 
@@ -875,7 +863,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   final _iconsLookupPre = <String, int>{};
   final _iconsLookup = <int, IconData>{};
 
-  Future<void> _onBackupPickerLaunch([List<String>? allowedExtensions]) async {
+  Future<void> _onBackupPickerLaunch([List<NamidaFileExtensionsWrapper>? allowedExtensions]) async {
     final note = widget.note != '' ? widget.note : null;
     if (T == File) {
       final res = await NamidaStorage.inst.pickFiles(

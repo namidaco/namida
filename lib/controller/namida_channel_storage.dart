@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 
@@ -38,29 +39,35 @@ class NamidaStorage {
   Future<List<String>> pickFiles({
     String? note,
     bool multiple = false,
-    List<String>? allowedExtensions,
+    List<NamidaFileExtensionsWrapper>? allowedExtensions,
     String? memetype = NamidaStorageFileMemeType.any,
   }) async {
     try {
+      List<String>? extensionsList;
+      if (allowedExtensions != null) {
+        extensionsList = <String>[];
+        allowedExtensions.loop((item) => extensionsList!.addAll(item.extensions.toList()));
+      }
+
       final res = await _channel.invokeListMethod<String?>('pickFile', {
         'note': note,
         'type': memetype,
         'multiple': multiple,
-        'allowedExtensions': allowedExtensions,
+        'allowedExtensions': extensionsList,
       });
 
-      final files = res?.cast<String>() ?? <String>[];
+      final filesPaths = res?.cast<String>() ?? <String>[];
 
       if (allowedExtensions != null && allowedExtensions.isNotEmpty) {
-        for (final f in files) {
-          if (!allowedExtensions.any((ext) => f.endsWith(ext))) {
+        for (final fp in filesPaths) {
+          if (!allowedExtensions.any((wrapper) => wrapper.isPathValid(fp))) {
             snackyy(title: lang.ERROR, message: "${lang.EXTENSION}: $allowedExtensions", isError: true);
             return [];
           }
         }
       }
 
-      return files;
+      return filesPaths;
     } catch (e) {
       snackyy(title: lang.ERROR, message: e.toString(), isError: true);
       return [];

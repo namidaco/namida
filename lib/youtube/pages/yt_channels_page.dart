@@ -12,6 +12,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -214,7 +215,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   Future<void> _onSubscriptionFileImportTap() async {
     final file = await NamidaFileBrowser.pickFile(
       note: 'Choose a "subscriptions.csv" file from a google takeout',
-      allowedExtensions: const NamidaFileBrowserAllowedExtensions.csv(),
+      allowedExtensions: NamidaFileExtensionsWrapper.csv,
     );
     final fp = file?.path;
     if (fp != null) {

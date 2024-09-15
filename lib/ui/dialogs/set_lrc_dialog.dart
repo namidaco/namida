@@ -14,6 +14,7 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -529,7 +530,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 onTap: () async {
                   final picked = await NamidaFileBrowser.pickFile(
                     note: lang.ADD_LRC_FILE,
-                    allowedExtensions: const NamidaFileBrowserAllowedExtensions.lrcOrTxt(),
+                    allowedExtensions: NamidaFileExtensionsWrapper.lrcOrTxt,
                     initialDirectory: lrcUtils.pickFileInitialDirectory,
                   );
                   final path = picked?.path;

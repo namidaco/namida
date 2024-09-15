@@ -1164,12 +1164,12 @@ class Indexer<T extends Track> {
     tracksExcludedByNoMedia.value = 0;
     final allAvailableDirectories = await getAvailableDirectories(forceReCheck: true, strictNoMedia: strictNoMedia);
 
-    final extensions = _includeVideosAsTracks ? {...kAudioFileExtensions, ...kVideoFilesExtensions} : kAudioFileExtensions;
+    final extensions = _includeVideosAsTracks ? NamidaFileExtensionsWrapper.audioAndVideo : NamidaFileExtensionsWrapper.audio;
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': settings.directoriesToExclude.value,
       'extensions': extensions,
-      'imageExtensions': kImageFilesExtensions,
+      'imageExtensions': NamidaFileExtensionsWrapper.image,
     };
 
     final mapResult = await getFilesTypeIsolate.thready(parameters);

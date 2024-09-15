@@ -306,7 +306,7 @@ void _initializeIntenties() {
           final realPath = f.realPath;
           if (realPath != null) {
             final path = realPath.replaceAll(r'\', '');
-            if (kM3UPlaylistsExtensions.any((ext) => path.endsWith(ext))) {
+            if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
               m3uPaths.add(path);
             } else {
               paths.add(path);

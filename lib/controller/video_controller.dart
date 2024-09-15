@@ -921,7 +921,7 @@ class VideoController {
     final parameters = {
       'allAvailableDirectories': allAvailableDirectories,
       'directoriesToExclude': settings.directoriesToExclude.value,
-      'extensions': kVideoFilesExtensions,
+      'extensions': NamidaFileExtensionsWrapper.video,
     };
 
     final mapResult = await getFilesTypeIsolate.thready(parameters);
