@@ -24,7 +24,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -38,18 +37,9 @@ Future<void> showTrackInfoDialog(
   required QueueSource queueSource,
   String? additionalHero,
 }) async {
-  // [showTrackDialog] calls [showGeneralPopupDialog] which has a built-check for tracks that are not available.
   final trackExt = track.toTrackExtOrNull();
-  if (trackExt == null) {
-    NamidaDialogs.inst.showTrackDialog(
-      track,
-      source: queueSource,
-      additionalHero: additionalHero,
-    );
-    return;
-  }
 
-  final totalListens = HistoryController.inst.topTracksMapListens[track] ?? [];
+  final totalListens = HistoryController.inst.topTracksMapListens.value[track] ?? [];
   totalListens.sortByReverse((e) => e);
   final firstListenTrack = totalListens.lastOrNull;
 
@@ -137,11 +127,11 @@ Future<void> showTrackInfoDialog(
   }
 
   final artwork = NamidaHero(
-    tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}$additionalHero',
+    tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero',
     child: ArtworkWidget(
-      key: Key(trackExt.pathToImage),
-      track: trackExt.asTrack(),
-      path: trackExt.pathToImage,
+      key: Key(track.pathToImage),
+      track: track,
+      path: track.pathToImage,
       thumbnailSize: 120,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
       useTrackTileCacheHeight: true,
@@ -150,12 +140,32 @@ Future<void> showTrackInfoDialog(
   );
 
   String releasedFromNow = '';
-  final parsed = DateTime.tryParse(trackExt.year.toString());
+  final parsed = trackExt == null ? null : DateTime.tryParse(trackExt.year.toString());
   if (parsed != null) {
     final fromNow = Jiffy.parseFromDateTime(parsed);
     releasedFromNow = fromNow.fromNow();
   }
 
+  final trackPathDetailTilesSection = <TrackInfoListTile>[
+    if (shouldShowTheField(track.filenameWOExt == ''))
+      TrackInfoListTile(
+        title: lang.FILE_NAME,
+        value: track.filenameWOExt,
+        icon: Broken.quote_up_circle,
+      ),
+    if (shouldShowTheField(track.folderName == ''))
+      TrackInfoListTile(
+        title: lang.FOLDER,
+        value: track.folderName,
+        icon: Broken.folder,
+      ),
+    if (shouldShowTheField(track.path == ''))
+      TrackInfoListTile(
+        title: lang.PATH,
+        value: track.path,
+        icon: Broken.location,
+      ),
+  ];
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       color.close();
@@ -238,14 +248,14 @@ Future<void> showTrackInfoDialog(
                                         );
                                       },
                                       child: PhotoView(
-                                        heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${trackExt.path}$additionalHero'),
+                                        heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero'),
                                         gaplessPlayback: true,
                                         tightMode: true,
                                         minScale: PhotoViewComputedScale.contained,
                                         loadingBuilder: (context, event) => artwork,
                                         backgroundDecoration: const BoxDecoration(color: Colors.transparent),
                                         filterQuality: FilterQuality.high,
-                                        imageProvider: FileImage(File(trackExt.pathToImage)),
+                                        imageProvider: FileImage(File(track.pathToImage)),
                                       ),
                                     ),
                                   ),
@@ -302,145 +312,129 @@ Future<void> showTrackInfoDialog(
                             ),
                           ),
                           const SizedBox(height: 12.0),
-                          if (shouldShowTheField(trackExt.hasUnknownTitle))
+                          if (trackExt == null)
+                            ...trackPathDetailTilesSection
+                          else ...<Widget>[
+                            if (shouldShowTheField(trackExt.hasUnknownTitle))
+                              TrackInfoListTile(
+                                title: lang.TITLE,
+                                value: trackExt.title,
+                                icon: Broken.text,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownArtist))
+                              TrackInfoListTile(
+                                title: Indexer.splitArtist(
+                                          title: trackExt.title,
+                                          originalArtist: trackExt.originalArtist,
+                                          config: ArtistsSplitConfig.settings(addFeatArtist: false),
+                                        ).length ==
+                                        1
+                                    ? lang.ARTIST
+                                    : lang.ARTISTS,
+                                value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
+                                icon: Broken.microphone,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownAlbum))
+                              TrackInfoListTile(
+                                title: lang.ALBUM,
+                                value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
+                                icon: Broken.music_dashboard,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
+                              TrackInfoListTile(
+                                title: lang.ALBUM_ARTIST,
+                                value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
+                                icon: Broken.user,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownGenre))
+                              TrackInfoListTile(
+                                title: trackExt.genresList.length == 1 ? lang.GENRE : lang.GENRES,
+                                value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
+                                icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownMood))
+                              TrackInfoListTile(
+                                title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
+                                value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
+                                icon: Broken.happyemoji,
+                              ),
+
+                            if (shouldShowTheField(trackExt.hasUnknownComposer))
+                              TrackInfoListTile(
+                                title: lang.COMPOSER,
+                                value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
+                                icon: Broken.profile_2user,
+                              ),
+
+                            if (shouldShowTheField(trackExt.durationMS == 0))
+                              TrackInfoListTile(
+                                title: lang.DURATION,
+                                value: trackExt.durationMS.milliSecondsLabel,
+                                icon: Broken.clock,
+                              ),
+
+                            if (shouldShowTheField(trackExt.year == 0))
+                              TrackInfoListTile(
+                                title: lang.YEAR,
+                                value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
+                                icon: Broken.calendar,
+                              ),
+
+                            if (shouldShowTheField(trackExt.dateModified == 0))
+                              TrackInfoListTile(
+                                title: lang.DATE_MODIFIED,
+                                value: trackExt.dateModified.dateAndClockFormattedOriginal,
+                                icon: Broken.calendar_1,
+                              ),
+
+                            ///
+                            if (shouldShowTheField(trackExt.discNo == 0))
+                              TrackInfoListTile(
+                                title: lang.DISC_NUMBER,
+                                value: trackExt.discNo.toString(),
+                                icon: Broken.hashtag,
+                              ),
+
+                            if (shouldShowTheField(trackExt.trackNo == 0))
+                              TrackInfoListTile(
+                                title: lang.TRACK_NUMBER,
+                                value: trackExt.trackNo.toString(),
+                                icon: Broken.hashtag,
+                              ),
+
+                            ...trackPathDetailTilesSection,
+
                             TrackInfoListTile(
-                              title: lang.TITLE,
-                              value: trackExt.title,
-                              icon: Broken.text,
+                              title: lang.FORMAT,
+                              value: [
+                                track.audioInfoFormattedCompact,
+                                track.gainDataFormatted,
+                                '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
+                              ].joinText(separator: '\n'),
+                              icon: Broken.voice_cricle,
                             ),
 
-                          if (shouldShowTheField(trackExt.hasUnknownArtist))
-                            TrackInfoListTile(
-                              title: Indexer.splitArtist(
-                                        title: trackExt.title,
-                                        originalArtist: trackExt.originalArtist,
-                                        config: ArtistsSplitConfig.settings(addFeatArtist: false),
-                                      ).length ==
-                                      1
-                                  ? lang.ARTIST
-                                  : lang.ARTISTS,
-                              value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
-                              icon: Broken.microphone,
-                            ),
+                            if (shouldShowTheField(trackExt.lyrics == ''))
+                              TrackInfoListTile(
+                                title: lang.LYRICS,
+                                value: trackExt.lyrics,
+                                icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
+                              ),
 
-                          if (shouldShowTheField(trackExt.hasUnknownAlbum))
-                            TrackInfoListTile(
-                              title: lang.ALBUM,
-                              value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
-                              icon: Broken.music_dashboard,
-                            ),
-
-                          if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
-                            TrackInfoListTile(
-                              title: lang.ALBUM_ARTIST,
-                              value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
-                              icon: Broken.user,
-                            ),
-
-                          if (shouldShowTheField(trackExt.hasUnknownGenre))
-                            TrackInfoListTile(
-                              title: trackExt.genresList.length == 1 ? lang.GENRE : lang.GENRES,
-                              value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
-                              icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
-                            ),
-
-                          if (shouldShowTheField(trackExt.hasUnknownMood))
-                            TrackInfoListTile(
-                              title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
-                              value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
-                              icon: Broken.happyemoji,
-                            ),
-
-                          if (shouldShowTheField(trackExt.hasUnknownComposer))
-                            TrackInfoListTile(
-                              title: lang.COMPOSER,
-                              value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
-                              icon: Broken.profile_2user,
-                            ),
-
-                          if (shouldShowTheField(trackExt.durationMS == 0))
-                            TrackInfoListTile(
-                              title: lang.DURATION,
-                              value: trackExt.durationMS.milliSecondsLabel,
-                              icon: Broken.clock,
-                            ),
-
-                          if (shouldShowTheField(trackExt.year == 0))
-                            TrackInfoListTile(
-                              title: lang.YEAR,
-                              value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
-                              icon: Broken.calendar,
-                            ),
-
-                          if (shouldShowTheField(trackExt.dateModified == 0))
-                            TrackInfoListTile(
-                              title: lang.DATE_MODIFIED,
-                              value: trackExt.dateModified.dateAndClockFormattedOriginal,
-                              icon: Broken.calendar_1,
-                            ),
-
-                          ///
-                          if (shouldShowTheField(trackExt.discNo == 0))
-                            TrackInfoListTile(
-                              title: lang.DISC_NUMBER,
-                              value: trackExt.discNo.toString(),
-                              icon: Broken.hashtag,
-                            ),
-
-                          if (shouldShowTheField(trackExt.trackNo == 0))
-                            TrackInfoListTile(
-                              title: lang.TRACK_NUMBER,
-                              value: trackExt.trackNo.toString(),
-                              icon: Broken.hashtag,
-                            ),
-
-                          /// bruh moment
-                          if (shouldShowTheField(trackExt.filenameWOExt == ''))
-                            TrackInfoListTile(
-                              title: lang.FILE_NAME,
-                              value: trackExt.filenameWOExt,
-                              icon: Broken.quote_up_circle,
-                            ),
-
-                          if (shouldShowTheField(trackExt.folderName == ''))
-                            TrackInfoListTile(
-                              title: lang.FOLDER,
-                              value: trackExt.folderName,
-                              icon: Broken.folder,
-                            ),
-
-                          if (shouldShowTheField(trackExt.path == ''))
-                            TrackInfoListTile(
-                              title: lang.PATH,
-                              value: trackExt.path,
-                              icon: Broken.location,
-                            ),
-
-                          TrackInfoListTile(
-                            title: lang.FORMAT,
-                            value: [
-                              track.audioInfoFormattedCompact,
-                              track.gainDataFormatted,
-                              '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
-                            ].joinText(separator: '\n'),
-                            icon: Broken.voice_cricle,
-                          ),
-
-                          if (shouldShowTheField(trackExt.lyrics == ''))
-                            TrackInfoListTile(
-                              title: lang.LYRICS,
-                              value: trackExt.lyrics,
-                              icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
-                            ),
-
-                          if (shouldShowTheField(trackExt.comment == ''))
-                            TrackInfoListTile(
-                              title: lang.COMMENT,
-                              value: trackExt.comment,
-                              icon: Broken.message_text_1,
-                              isComment: true,
-                            ),
-                          const SizedBox(height: 12.0),
+                            if (shouldShowTheField(trackExt.comment == ''))
+                              TrackInfoListTile(
+                                title: lang.COMMENT,
+                                value: trackExt.comment,
+                                icon: Broken.message_text_1,
+                                isComment: true,
+                              ),
+                            const SizedBox(height: 12.0),
+                          ],
                         ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toList(),
                       ),
                     ),
