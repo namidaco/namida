@@ -148,8 +148,8 @@ class SearchSortController {
     SortType.sampleRate: (e) => e.sampleRate,
     SortType.size: (e) => e.size,
     SortType.rating: (e) => e.effectiveRating,
-    SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0,
-    SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0,
+    SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
+    SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
   };
 
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
@@ -737,10 +737,10 @@ class SearchSortController {
         list.shuffle();
         break;
       case SortType.mostPlayed:
-        sortThis((e) => HistoryController.inst.topTracksMapListens[e]?.length ?? 0);
+        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0);
         break;
       case SortType.latestPlayed:
-        sortThis((e) => HistoryController.inst.topTracksMapListens[e]?.lastOrNull ?? 0);
+        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0);
         break;
 
       case null:

@@ -229,6 +229,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     // -- this can produce in an outdated playlist version in cache
     // -- which will be seen if the m3u file got deleted/renamed
     await prepareM3UPlaylists();
+    if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
@@ -257,7 +258,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     if (forPaths.isEmpty && addAsM3U && !settings.enableM3USyncStartup.value) {
       if (_addedM3UPlaylists) PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
       _addedM3UPlaylists = false;
-      if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
       return null;
     }
 
@@ -310,7 +310,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
 
       return paths.length;
     } catch (_) {}
-    if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
     return null;
   }
 
@@ -329,12 +328,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     for (final path in paths) {
       final file = File(path);
       final filename = file.path.getFilenameWOExt;
-      final fullPaths = <String>[];
+      final fullTracks = <Track>[];
       String? latestInfo;
       for (String line in file.readAsLinesSync()) {
         if (line.startsWith("#")) {
           latestInfo = line;
-        } else {
+        } else if (line.isNotEmpty) {
           if (line.startsWith('primary/')) {
             line = line.replaceFirst('primary/', '');
           }
@@ -357,16 +356,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
             }
           }
 
-          fullPaths.add(fullPath);
+          fullTracks.add(Track.orVideo(fullPath));
           infoMap[fullPath] = latestInfo;
         }
       }
-      final tracks = fullPaths.map((e) => Track.orVideo(e)).toList();
       if (all[filename] == null) {
-        all[filename] = (path, tracks);
+        all[filename] = (path, fullTracks);
       } else {
         // -- filename already exists
-        all[file.path.formatPath()] = (path, tracks);
+        all[file.path.formatPath()] = (path, fullTracks);
       }
 
       latestInfo = null; // resetting info between each file looping

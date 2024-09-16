@@ -21,7 +21,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) async {
   showListensDialog(
-    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens[track] ?? [],
+    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () async => await CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true),
     onListenTap: (listen) {

@@ -338,7 +338,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                               child: Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
                                                 child: Text(
-                                                  '${(HistoryController.inst.topTracksMapListens[Track.explicit(path)] ?? HistoryController.inst.topTracksMapListens[Video.explicit(path)])?.length ?? 0}',
+                                                  '${(HistoryController.inst.topTracksMapListens.value[Track.explicit(path)] ?? HistoryController.inst.topTracksMapListens.value[Video.explicit(path)])?.length ?? 0}',
                                                   style: textTheme.displaySmall,
                                                 ),
                                               ),

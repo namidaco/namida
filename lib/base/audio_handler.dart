@@ -569,7 +569,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false, handleVideoPlayback: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
-    if (startPlaying()) onPlayRaw();
+    if (startPlaying()) onPlayRaw(attemptFixVolume: false);
 
     startSleepAfterMinCount();
     startCounterToAListen(pi);
@@ -1013,7 +1013,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     bool heyIhandledPlaying = false;
     Future<void> plsplsplsPlay({required bool wasPlayingFromCache}) async {
-      startPlaying() ? onPlayRaw() : onPauseRaw();
+      startPlaying() ? onPlayRaw(attemptFixVolume: false) : onPauseRaw();
       heyIhandledPlaying = true;
 
       if (!wasPlayingFromCache) {

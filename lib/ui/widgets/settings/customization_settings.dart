@@ -217,6 +217,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.HOUR_FORMAT_12,
                 onChanged: (p0) {
                   settings.save(hourFormat12: !p0);
+                  TrackTileManager.onTrackItemPropChange();
                 },
                 value: settings.hourFormat12.valueR,
               ),
@@ -254,6 +255,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                       active: settings.dateTimeFormat.value == e.key,
                                       onTap: () {
                                         settings.save(dateTimeFormat: e.key);
+                                        TrackTileManager.onTrackItemPropChange();
                                         NamidaNavigator.inst.closeDialog();
                                       },
                                     ),

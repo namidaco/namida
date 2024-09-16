@@ -660,11 +660,11 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                                       const val = 1.0;
                                                       Player.inst.setPlayerPitch(val);
                                                       Player.inst.setPlayerSpeed(val);
-                                                      Player.inst.setPlayerVolume(val);
+                                                      if (!settings.player.replayGain.value) Player.inst.setPlayerVolume(val);
                                                       settings.player.save(
                                                         pitch: val,
                                                         speed: val,
-                                                        volume: val,
+                                                        volume: settings.player.replayGain.value ? null : val,
                                                       );
                                                     },
                                                   ),

@@ -520,26 +520,6 @@ int _getDirSizeIsolate(Map params) {
 }
 
 extension FileUtils on File {
-  Future<int?> fileSize() async {
-    try {
-      return await length();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  int? fileSizeSync() {
-    try {
-      return lengthSync();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  String? fileSizeFormatted() {
-    return fileSizeSync()?.fileSizeFormatted;
-  }
-
   Future<void> setLastAccessedTry(DateTime time) async {
     try {
       await setLastAccessed(time);

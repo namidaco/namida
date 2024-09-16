@@ -303,11 +303,11 @@ class YTLocalSearchController with PortsProvider<Map> {
   //   final finalListens = <int>[];
   //   final correspondingTrack = _localIdTrackMap![id];
   //   if (correspondingTrack != null) {
-  //     final l = HistoryController.inst.topTracksMapListens[correspondingTrack];
+  //     final l = HistoryController.inst.topTracksMapListens.value[correspondingTrack];
   //     if (l != null) finalListens.addAll(l);
   //   }
 
-  //   final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
+  //   final yt = YoutubeHistoryController.inst.topTracksMapListens.value[id] ?? [];
 
   //   finalListens.addAll(yt);
   //   finalListens.sortByReverse((e) => e);

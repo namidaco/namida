@@ -1938,8 +1938,8 @@ class NamidaDrawerListTile extends StatelessWidget {
     required this.title,
     required this.icon,
     this.width = double.infinity,
-    this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 5.0),
-    this.padding = const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+    this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.5),
+    this.padding = const EdgeInsets.symmetric(vertical: 11.0, horizontal: 10.0),
     this.isCentered = false,
     this.iconSize = 20.0,
   });

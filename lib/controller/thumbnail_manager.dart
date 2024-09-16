@@ -251,7 +251,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   }) async {
     if (_notFoundThumbnails[id] == true) return null;
 
-    _requestsCountForId.update(id, (value) => value++, ifAbsent: () => 1);
+    _requestsCountForId.update(id, (value) => value + 1, ifAbsent: () => 1);
 
     if (forceRequest == false && _downloadCompleters[id] != null) {
       final res = await _downloadCompleters[id]!.future;

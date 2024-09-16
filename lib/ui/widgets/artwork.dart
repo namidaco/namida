@@ -147,7 +147,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             cover = Indexer.inst.allFolderCovers[folderPath];
           } catch (_) {}
         }
-        if (cover != null) setState(() => _imagePath = cover);
+        if (cover != null && mounted) setState(() => _imagePath = cover);
       }
     }
   }

@@ -16,7 +16,7 @@ class FArtwork {
 
   bool get hasArtwork => file != null || bytes != null;
 
-  int? get sizeActual => bytes?.length ?? file?.sizeInBytesSync();
+  int? get sizeActual => bytes?.length ?? file?.fileSizeSync();
 
   FArtwork({
     this.file,

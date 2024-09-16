@@ -76,10 +76,18 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   Future<void> _onTapInternal() async {
     if (widget.notification.isComment) return;
 
+    final itemsToPlay = <YoutubeID>[];
     final mainList = widget.mainList();
+    mainList.items.reverseLoop(
+      (item) {
+        if (item.isComment == false) {
+          itemsToPlay.add(YoutubeID(id: item.id, playlistID: null));
+        }
+      },
+    );
     Player.inst.playOrPause(
-      mainList.items.length - widget.index - 1,
-      mainList.items.reversed.where((element) => !element.isComment).map((e) => YoutubeID(id: e.id, playlistID: null)),
+      itemsToPlay.length - widget.index - 1,
+      itemsToPlay,
       QueueSource.others,
     );
     YTUtils.expandMiniplayer();

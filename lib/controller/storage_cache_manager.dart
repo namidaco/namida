@@ -118,7 +118,7 @@ class StorageCacheManager {
 
     int getTotalListensForIDLength(String id) {
       final correspondingTrack = localIdTrackMap[id];
-      final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens[correspondingTrack] ?? [];
+      final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens.value[correspondingTrack] ?? [];
       final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
       return local.length + yt.length;
     }

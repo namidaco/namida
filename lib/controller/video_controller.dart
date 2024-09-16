@@ -283,7 +283,7 @@ class VideoController {
               path: track.path,
               height: 0,
               width: 0,
-              sizeInBytes: File(track.path).sizeInBytesSync(),
+              sizeInBytes: File(track.path).fileSizeSync() ?? 0,
               frameratePrecise: 0,
               creationTimeMS: File(track.path).statSync().creationDate.millisecondsSinceEpoch,
               durationMS: 0,

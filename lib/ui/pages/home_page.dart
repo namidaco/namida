@@ -186,7 +186,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- supermacy
     final ct = Player.inst.currentTrack?.track;
-    final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks ?? 25;
+    final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
     MapEntry<String, List<Track>>? supremacyEntry;
     if (ct != null) {
       final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);

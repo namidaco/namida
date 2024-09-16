@@ -164,6 +164,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                 }
               } catch (_: Exception) {
                 val map = HashMap<String, Any>()
+                map["path"] = p
                 map["ERROR_FAULTY"] = true
                 withContext(Dispatchers.Main) { eventChannel.success(map) }
               }

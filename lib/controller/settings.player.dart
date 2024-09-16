@@ -34,7 +34,7 @@ class _PlayerSettings with SettingsFileWriter {
   final displayRemainingDurInsteadOfTotal = false.obs;
   final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
   final lockscreenArtwork = true.obs;
-  final replayGain = false.obs;
+  final replayGain = true.obs;
 
   final onInterrupted = <InterruptionType, InterruptionAction>{
     InterruptionType.shouldPause: InterruptionAction.pause,

@@ -247,7 +247,7 @@ void showTrackAdvancedDialog({
               icon: Broken.convert_card,
               onTap: () async {
                 void showWarningAboutTrackListens(Track trackWillBeReplaced, Track newTrack) {
-                  final listens = HistoryController.inst.topTracksMapListens[trackWillBeReplaced] ?? [];
+                  final listens = HistoryController.inst.topTracksMapListens.value[trackWillBeReplaced] ?? [];
                   NamidaNavigator.inst.navigateDialog(
                     colorScheme: colorScheme,
                     dialogBuilder: (theme) => CustomBlurryDialog(

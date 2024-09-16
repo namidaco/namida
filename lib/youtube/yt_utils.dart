@@ -561,7 +561,7 @@ class YTUtils {
     int audiosSize = 0;
 
     audiosCached.loop((e) {
-      final s = e.file.sizeInBytesSync();
+      final s = e.file.fileSizeSync() ?? 0;
       audiosSize += s;
       fileSizeLookup[e.file.path] = s;
       fileTypeLookup[e.file.path] = 0;
@@ -800,7 +800,7 @@ class YTUtils {
               subtitle: audiosSize.fileSizeFormatted,
               icon: Broken.musicnote,
               items: audiosCached,
-              itemSize: (item) => fileSizeLookup[item.file.path] ?? item.file.sizeInBytesSync(),
+              itemSize: (item) => fileSizeLookup[item.file.path] ?? item.file.fileSizeSync() ?? 0,
               tempFilesDelete: deleteTempAudio,
               tempFilesSize: tempFilesSizeAudio,
               itemBuilder: (a) {
