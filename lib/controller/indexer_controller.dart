@@ -47,10 +47,8 @@ class Indexer<T extends Track> {
 
   final artworksInStorage = 0.obs;
   final colorPalettesInStorage = 0.obs;
-  final videosInStorage = 0.obs;
 
   final artworksSizeInStorage = 0.obs;
-  final videosSizeInStorage = 0.obs;
 
   final mainMapAlbums = LibraryItemMap();
   final mainMapArtists = LibraryItemMap();
@@ -1371,10 +1369,6 @@ class Indexer<T extends Track> {
     await _updateDirectoryStats(AppDirs.PALETTES, colorPalettesInStorage, null);
   }
 
-  Future<void> updateVideosSizeInStorage() async {
-    await _updateDirectoryStats(AppDirs.VIDEOS_CACHE, videosInStorage, videosSizeInStorage);
-  }
-
   Future<void> _updateDirectoryStats(String dirPath, Rx<int>? filesCountVariable, Rx<int>? filesSizeVariable) async {
     // resets values
     filesCountVariable?.value = 0;
@@ -1396,24 +1390,6 @@ class Indexer<T extends Track> {
     await Directory(AppDirs.ARTWORKS).create();
     await _createDefaultNamidaArtwork();
     calculateAllImageSizesInStorage();
-  }
-
-  /// Deletes specific videos or the whole cache.
-  Future<void> clearVideoCache([List<NamidaVideo>? videosToDelete]) async {
-    if (videosToDelete != null) {
-      for (final v in videosToDelete) {
-        final deleted = await File(v.path).tryDeleting();
-        if (deleted) {
-          videosInStorage.value--;
-          videosSizeInStorage.value -= v.sizeInBytes;
-        }
-      }
-    } else {
-      await Directory(AppDirs.VIDEOS_CACHE).delete(recursive: true);
-      await Directory(AppDirs.VIDEOS_CACHE).create();
-      videosInStorage.value = 0;
-      videosSizeInStorage.value = 0;
-    }
   }
 
   Future<void> _createDefaultNamidaArtwork() async {

@@ -528,54 +528,103 @@ class AdvancedSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
             ),
           ),
-
           getItemWrapper(
             key: _AdvancedSettingKeys.clearVideoCache,
-            child: ObxO(
-              rx: Indexer.inst.videosSizeInStorage,
-              builder: (context, videosSizeInStorage) => CustomListTile(
-                bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
-                leading: const StackedIcon(
-                  baseIcon: Broken.video,
-                  secondaryIcon: Broken.close_circle,
-                ),
-                title: lang.CLEAR_VIDEO_CACHE,
-                trailingText: videosSizeInStorage.fileSizeFormatted,
-                onTap: () {
-                  final allvideos = VideoController.inst.getCurrentVideosInCache();
-                  const cacheManager = StorageCacheManager();
-                  cacheManager.promptCacheDeleteDialog(
-                    allItems: allvideos,
-                    deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, Indexer.inst.videosSizeInStorage.value),
-                    chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
-                    onChoosePrompt: () {
-                      cacheManager.showChooseToDeleteDialog(
-                        allItems: allvideos,
-                        itemToPath: (item) => item.path,
-                        itemToYtId: (item) {
-                          if (item.ytID != null) return item.ytID;
-                          var filename = item.path.getFilename;
-                          if (filename.length >= 11) return filename.substring(0, 11);
-                          return null;
-                        },
-                        itemToSubtitle: (item, itemSize) => "${item.resolution}p • ${item.framerate}fps - ${itemSize.fileSizeFormatted}",
-                        confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
-                        onConfirm: (itemsToDelete) async {
-                          await Indexer.inst.clearVideoCache(itemsToDelete);
-                        },
-                        includeLocalTracksListens: true,
-                        tempFilesSize: () async => await cacheManager.getTempVideosSize(),
-                        onDeleteTempFiles: () async => await cacheManager.deleteTempVideos(),
-                      );
-                    },
-                    onDeleteAll: () async => await Indexer.inst.clearVideoCache(),
-                  );
-                },
-              ),
+            child: _ClearVideoCacheListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ClearVideoCacheListTile extends StatefulWidget {
+  final Color? bgColor;
+  const _ClearVideoCacheListTile({this.bgColor});
+
+  @override
+  State<_ClearVideoCacheListTile> createState() => __ClearVideoCacheListTileState();
+}
+
+class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
+  int totalSize = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _fillSizes();
+  }
+
+  void _fillSizes() async {
+    final res = await _getSizeIsolate.thready([AppDirs.VIDEOS_CACHE, AppDirs.VIDEOS_CACHE_TEMP]);
+    if (mounted) setState(() => totalSize = res);
+  }
+
+  static int _getSizeIsolate(List<String> dirsPath) {
+    int size = 0;
+    dirsPath.loop(
+      (dirPath) {
+        Directory(dirPath).listSyncSafe().loop((e) {
+          if (e is File) {
+            size += e.fileSizeSync() ?? 0;
+          }
+        });
+      },
+    );
+    return size;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: widget.bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.video,
+        secondaryIcon: Broken.close_circle,
+      ),
+      title: lang.CLEAR_VIDEO_CACHE,
+      trailingText: totalSize.fileSizeFormatted,
+      onTap: () {
+        final allvideos = VideoController.inst.getCurrentVideosInCache();
+        const cacheManager = StorageCacheManager();
+        cacheManager.promptCacheDeleteDialog(
+          allItems: allvideos,
+          deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, totalSize),
+          chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
+          onChoosePrompt: () {
+            cacheManager.showChooseToDeleteDialog(
+              allItems: allvideos,
+              itemToPath: (item) => item.path,
+              itemToYtId: (item) {
+                if (item.ytID != null) return item.ytID;
+                var filename = item.path.getFilename;
+                if (filename.length >= 11) return filename.substring(0, 11);
+                return null;
+              },
+              itemToSubtitle: (item, itemSize) => "${item.resolution}p • ${item.framerate}fps - ${itemSize.fileSizeFormatted}",
+              confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
+              onDeleteFiles: (itemsToDelete) async {
+                setState(() => totalSize = -1);
+                for (final video in itemsToDelete) {
+                  await File(video.path).tryDeleting();
+                  if (video.ytID != null) VideoController.inst.removeNVFromCacheMap(video.ytID!, video.path);
+                }
+                _fillSizes();
+              },
+              includeLocalTracksListens: true,
+              tempFilesSize: cacheManager.getTempVideosSize,
+              onDeleteTempFiles: () => cacheManager.deleteTempVideos().then((_) => _fillSizes()),
+            );
+          },
+          onDeleteEVERYTHING: () async {
+            await cacheManager.deleteAllVideos();
+            VideoController.inst.clearCachedVideosMap();
+            if (mounted) setState(() => totalSize = 0);
+          },
+        );
+      },
     );
   }
 }
@@ -628,7 +677,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   static Map<String, int> _fillSizesIsolate(Set<String> dirs) {
     final map = <String, int>{};
     for (final d in dirs) {
-      map[d] = Directory(d).listSyncSafe().fold(0, (previousValue, element) => previousValue + element.statSync().size);
+      map[d] = Directory(d).listSyncSafe().fold(0, (previousValue, element) => previousValue + (element is File ? element.fileSizeSync() ?? 0 : 0));
     }
     return map;
   }
@@ -738,29 +787,9 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
   static int _fillSizeIsolate(String dirPath) {
     int size = 0;
     Directory(dirPath).listSyncSafe().loop((e) {
-      size += e.statSync().size;
+      if (e is File) size += e.fileSizeSync() ?? 0;
     });
     return size;
-  }
-
-  static int _tempFilesSizeIsolate(String dirPath) {
-    int size = 0;
-    Directory(dirPath).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.part')) size += e.statSync().size;
-    });
-    return size;
-  }
-
-  static void _tempFilesDeleteIsolate(String dirPath) {
-    Directory(dirPath).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.part')) {
-        if (e is File) {
-          try {
-            e.deleteSync();
-          } catch (_) {}
-        }
-      }
-    });
   }
 
   @override
@@ -796,24 +825,22 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
               },
               itemToSubtitle: (item, size) => "${(item.bitrate ?? 0) ~/ 1000}kb/s - ${size.fileSizeFormatted}",
               confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
-              onConfirm: (itemsToDelete) async {
+              onDeleteFiles: (itemsToDelete) async {
                 setState(() => totalSize = -1);
-
                 for (final audio in itemsToDelete) {
                   await audio.file.tryDeleting();
+                  Player.inst.audioCacheMap[audio.youtubeId]?.removeWhere((element) => element.file.path == audio.file.path);
                 }
-
                 _fillSizes();
               },
               includeLocalTracksListens: true,
-              tempFilesSize: () async => await _tempFilesSizeIsolate.thready(AppDirs.AUDIOS_CACHE),
-              onDeleteTempFiles: () async => await _tempFilesDeleteIsolate.thready(AppDirs.AUDIOS_CACHE),
+              tempFilesSize: cacheManager.getTempAudiosSize,
+              onDeleteTempFiles: () => cacheManager.deleteTempAudios().then((_) => _fillSizes()),
             );
           },
-          onDeleteAll: () async {
-            final dir = Directory(AppDirs.AUDIOS_CACHE);
-            await dir.delete(recursive: true);
-            await dir.create();
+          onDeleteEVERYTHING: () async {
+            await cacheManager.deleteAllAudios();
+            Player.inst.audioCacheMap.clear();
             if (mounted) setState(() => totalSize = 0);
           },
         );

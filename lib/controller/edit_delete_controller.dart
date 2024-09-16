@@ -29,11 +29,19 @@ class EditDeleteController {
   }
 
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {
-    final videosToDelete = <NamidaVideo>[];
     tracks.loop((e) {
-      videosToDelete.addAll(VideoController.inst.getNVFromID(e.track.youtubeID));
+      var ytid = e.track.youtubeID;
+      VideoController.inst.deleteAllVideosForVideoId(ytid);
     });
-    await Indexer.inst.clearVideoCache(videosToDelete);
+  }
+
+  Future<void> deleteCachedAudios(List<Selectable> tracks) async {
+    tracks.loop((e) {
+      var ytid = e.track.youtubeID;
+      final audios = Player.inst.audioCacheMap[ytid];
+      audios?.loop((item) => item.file.deleteSync());
+      Player.inst.audioCacheMap.remove(ytid);
+    });
   }
 
   Future<void> deleteTXTLyrics(List<Selectable> tracks) async {
@@ -218,6 +226,18 @@ extension HasCachedFiles on List<Selectable> {
       final tr = this[i];
       if (VideoController.inst.doesVideoExistsInCache(tr.track.youtubeID)) {
         return true;
+      }
+    }
+    return false;
+  }
+
+  bool get hasAudioCached {
+    for (int i = 0; i < length; i++) {
+      final tr = this[i];
+      var vidId = tr.track.youtubeID;
+      if (vidId.isNotEmpty) {
+        final cachedAudios = Player.inst.audioCacheMap[vidId];
+        if (cachedAudios != null) return true;
       }
     }
     return false;

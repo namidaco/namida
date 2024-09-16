@@ -36,11 +36,32 @@ class StorageCacheManager {
   }
 
   Future<int> getTempVideosSize() async {
-    return _VideoTrimmer._getFilesSizeIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
   }
 
   Future<void> deleteTempVideos() async {
-    return _VideoTrimmer._deleteTempFilesIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+  }
+
+  Future<void> deleteAllVideos() async {
+    await Directory(AppDirs.VIDEOS_CACHE).delete(recursive: true).catchError((_) => Directory(''));
+    await Directory(AppDirs.VIDEOS_CACHE_TEMP).delete(recursive: true).catchError((_) => Directory(''));
+
+    await Directory(AppDirs.VIDEOS_CACHE).create(recursive: true);
+    await Directory(AppDirs.VIDEOS_CACHE_TEMP).create(recursive: true);
+  }
+
+  Future<int> getTempAudiosSize() async {
+    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready({'normal': AppDirs.AUDIOS_CACHE});
+  }
+
+  Future<void> deleteTempAudios() async {
+    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready({'normal': AppDirs.AUDIOS_CACHE});
+  }
+
+  Future<void> deleteAllAudios() async {
+    await Directory(AppDirs.AUDIOS_CACHE).delete(recursive: true).catchError((_) => Directory(''));
+    await Directory(AppDirs.AUDIOS_CACHE).create(recursive: true);
   }
 
   Future<Map<File, int>> getTempVideosForID(String videoId) async {
@@ -60,7 +81,7 @@ class StorageCacheManager {
     required String Function(List<T> items) deleteStatsNote,
     required String chooseNote,
     required void Function() onChoosePrompt,
-    required Future<void> Function() onDeleteAll,
+    required Future<void> Function() onDeleteEVERYTHING,
   }) {
     /// First Dialog
     NamidaNavigator.inst.navigateDialog(
@@ -82,7 +103,7 @@ class StorageCacheManager {
             text: lang.DELETE.toUpperCase(),
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
-              await onDeleteAll();
+              await onDeleteEVERYTHING();
             },
           ),
         ],
@@ -96,7 +117,7 @@ class StorageCacheManager {
     required String? Function(T item) itemToYtId,
     required String Function(T item, int itemSize) itemToSubtitle,
     required String Function(int length, int totalSize) confirmDialogText,
-    required Future<void> Function(List<T> itemsToDelete) onConfirm,
+    required Future<void> Function(List<T> itemsToDelete) onDeleteFiles,
     required Future<int> Function() tempFilesSize,
     required Future<void> Function() onDeleteTempFiles,
     bool includeLocalTracksListens = true,
@@ -240,8 +261,8 @@ class StorageCacheManager {
                         text: lang.DELETE.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog(2);
-                          onConfirm(itemsToDelete.value);
-                          onDeleteTempFiles();
+                          onDeleteFiles(itemsToDelete.value);
+                          if (hasTemp) onDeleteTempFiles();
                         },
                       ),
                     ],
@@ -490,7 +511,7 @@ class _VideoTrimmer {
       if (e is File) {
         final filename = e.path.splitLast(sep);
         if (filename.startsWith(id)) {
-          filesMap[e] = e.statSync().size;
+          filesMap[e] = e.fileSizeSync() ?? 0;
         }
       }
     }
@@ -502,42 +523,6 @@ class _VideoTrimmer {
       }
     });
     return filesMap;
-  }
-
-  static int _getFilesSizeIsolate(Map dirsPath) {
-    int size = 0;
-    final tempDir = dirsPath['temp'] as String;
-    final normalDir = dirsPath['normal'] as String;
-    Directory(tempDir).listSyncSafe().loop((e) {
-      size += e.statSync().size;
-    });
-    Directory(normalDir).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.part')) {
-        size += e.statSync().size;
-      }
-    });
-    return size;
-  }
-
-  static void _deleteTempFilesIsolate(Map dirsPath) {
-    final tempDir = dirsPath['temp'] as String;
-    final normalDir = dirsPath['normal'] as String;
-    Directory(tempDir).listSyncSafe().loop((e) {
-      if (e is File) {
-        try {
-          e.deleteSync();
-        } catch (_) {}
-      }
-    });
-    Directory(normalDir).listSyncSafe().loop((e) {
-      if (e.path.endsWith('.part')) {
-        if (e is File) {
-          try {
-            e.deleteSync();
-          } catch (_) {}
-        }
-      }
-    });
   }
 }
 
@@ -582,7 +567,7 @@ class _AudioTrimmer {
         if (e is File) {
           final filename = e.path.splitLast(sep);
           if (filename.startsWith(id)) {
-            filesMap[e] = e.statSync().size;
+            filesMap[e] = e.fileSizeSync() ?? 0;
           }
         }
       }
@@ -683,20 +668,69 @@ class _Trimmer {
     int totalBytes = 0;
     final sizesMap = <String, int>{};
     files.loop((f) {
-      final size = f.statSync().size;
-      sizesMap[f.path] = size;
-      totalBytes += size;
+      if (f is File) {
+        final size = f.fileSizeSync() ?? 0;
+        sizesMap[f.path] = size;
+        totalBytes += size;
+      }
     });
-    for (final file in files) {
+    for (int i = 0; i < files.length; i++) {
+      var file = files[i];
       if (totalBytes <= maxBytes) break; // better than checking with each loop
-      final deletedSize = sizesMap[file.path] ?? file.statSync().size;
-      try {
-        file.deleteSync();
-        totalBytes -= deletedSize;
-        totalDeletedBytes += deletedSize;
-      } catch (_) {}
+      if (file is File) {
+        final deletedSize = sizesMap[file.path] ?? file.fileSizeSync() ?? 0;
+        try {
+          file.deleteSync();
+          totalBytes -= deletedSize;
+          totalDeletedBytes += deletedSize;
+        } catch (_) {}
+      }
     }
 
     return totalDeletedBytes;
+  }
+}
+
+class _AudioVideoTrimmer {
+  static int _getTempFilesSizeIsolate(Map dirsPath) {
+    int size = 0;
+    final tempDir = dirsPath['temp'] as String?;
+    final normalDir = dirsPath['normal'] as String;
+    if (tempDir != null) {
+      Directory(tempDir).listSyncSafe().loop((e) {
+        if (e is File) {
+          size += e.fileSizeSync() ?? 0;
+        }
+      });
+    }
+    Directory(normalDir).listSyncSafe().loop((e) {
+      if (e is File && e.path.endsWith('.part')) {
+        size += e.fileSizeSync() ?? 0;
+      }
+    });
+    return size;
+  }
+
+  static void _deleteTempFilesIsolate(Map dirsPath) {
+    final tempDir = dirsPath['temp'] as String?;
+    final normalDir = dirsPath['normal'] as String;
+    if (tempDir != null) {
+      Directory(tempDir).listSyncSafe().loop((e) {
+        if (e is File) {
+          try {
+            e.deleteSync();
+          } catch (_) {}
+        }
+      });
+    }
+    Directory(normalDir).listSyncSafe().loop((e) {
+      if (e.path.endsWith('.part')) {
+        if (e is File) {
+          try {
+            e.deleteSync();
+          } catch (_) {}
+        }
+      }
+    });
   }
 }

@@ -199,7 +199,8 @@ class VideoController {
     }
   }
 
-  Future<void> addYTVideoToCacheMap(String id, NamidaVideo nv) async {
+  void addYTVideoToCacheMap(String id, NamidaVideo nv) {
+    if (id.isEmpty) return;
     _videoCacheIDMap.addNoDuplicatesForce(id, nv);
     // well, no matter what happens, sometimes the info coming has extra info
     _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.resolution}_${element.path}");
@@ -258,14 +259,17 @@ class VideoController {
   }
 
   void removeNVFromCacheMap(String youtubeId, String path) {
-    _videoCacheIDMap[youtubeId]?.removeWhere((element) {
-      if (element.path == path) {
-        Indexer.inst.videosInStorage.value--;
-        Indexer.inst.videosSizeInStorage.value -= element.sizeInBytes;
-        return true;
-      }
-      return false;
-    });
+    _videoCacheIDMap[youtubeId]?.removeWhere((element) => element.path == path);
+  }
+
+  void deleteAllVideosForVideoId(String youtubeId) {
+    final videos = _videoCacheIDMap[youtubeId];
+    videos?.loop((item) => File(item.path).deleteSync());
+    _videoCacheIDMap.remove(youtubeId);
+  }
+
+  void clearCachedVideosMap() {
+    _videoCacheIDMap.clear();
   }
 
   Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, bool handleVideoPlayback = true}) async {

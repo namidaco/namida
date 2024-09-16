@@ -274,7 +274,6 @@ class BackupController {
 
     Indexer.inst.calculateAllImageSizesInStorage();
     Indexer.inst.updateColorPalettesSizeInStorage();
-    Indexer.inst.updateVideosSizeInStorage();
     await _readNewFiles();
     snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
     isRestoringBackup.value = false;
