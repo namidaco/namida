@@ -26,6 +26,7 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 enum _AdvancedSettingKeys {
@@ -129,6 +130,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               const SizedBox(height: 6.0),
               const NamidaContainerDivider(),
               const SizedBox(height: 6.0),
+              const ThemeSetting().getAutoColoringTile(),
               ObxO(
                 rx: settings.enableBlurEffect,
                 builder: (context, enableBlurEffect) => CustomSwitchListTile(

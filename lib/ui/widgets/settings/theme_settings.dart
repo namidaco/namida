@@ -75,6 +75,33 @@ class ThemeSetting extends SettingSubpageProvider {
     );
   }
 
+  Widget getAutoColoringTile() {
+    return getItemWrapper(
+      key: _ThemeSettingsKeys.autoColoring,
+      child: ObxO(
+        rx: settings.autoColor,
+        builder: (context, autoColor) => CustomSwitchListTile(
+          bgColor: getBgColor(_ThemeSettingsKeys.autoColoring),
+          icon: Broken.colorfilter,
+          title: lang.AUTO_COLORING,
+          subtitle: "${lang.AUTO_COLORING_SUBTITLE}. ${lang.PERFORMANCE_NOTE}",
+          value: autoColor,
+          onChanged: (isTrue) {
+            settings.save(
+              autoColor: !isTrue,
+              performanceMode: PerformanceMode.custom,
+            );
+            if (isTrue) {
+              CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
+            } else {
+              _refreshColorCurrentPlayingItem();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   Widget getLanguageTile(BuildContext context) {
     return getItemWrapper(
       key: _ThemeSettingsKeys.language,
@@ -198,26 +225,8 @@ class ThemeSetting extends SettingSubpageProvider {
         child: Column(
           children: [
             getThemeTile(),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.autoColoring,
-              child: Obx(
-                (context) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.autoColoring),
-                  icon: Broken.colorfilter,
-                  title: lang.AUTO_COLORING,
-                  subtitle: lang.AUTO_COLORING_SUBTITLE,
-                  value: settings.autoColor.valueR,
-                  onChanged: (isTrue) {
-                    settings.save(autoColor: !isTrue);
-                    if (isTrue) {
-                      CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
-                    } else {
-                      _refreshColorCurrentPlayingItem();
-                    }
-                  },
-                ),
-              ),
-            ),
+            getAutoColoringTile(),
+
             // Android S/12+
             if (NamidaDeviceInfo.sdkVersion >= 31)
               getItemWrapper(
