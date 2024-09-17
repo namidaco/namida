@@ -121,6 +121,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 - Sleep Timer (Tracks or Minutes)
 - Crossfade, Play/Pause Fade Effect, along with Skip Silence.
+- Replay Gain (Normalize Audio)
 - Control pausing scenarios (calls, notifications, volume 0, etc..)
 - Define parameters to use for filtering tracks in search lists.
 - Global Tracks Selection

@@ -267,11 +267,20 @@ void _initLifeCycle() {
 void _initializeIntenties() {
   Future<void> clearIntentCachedFiles() async {
     final cacheDir = await pp.getTemporaryDirectory();
-    await for (final cf in cacheDir.list()) {
-      if (cf is File) {
-        cf.tryDeleting();
-      }
-    }
+    return Isolate.run(
+      () {
+        final items = cacheDir.listSyncSafe();
+        items.loop(
+          (item) {
+            if (item is File) {
+              try {
+                item.deleteSync();
+              } catch (_) {}
+            }
+          },
+        );
+      },
+    );
   }
 
   /// Clearing files cached by intents

@@ -1385,8 +1385,8 @@ class Indexer<T extends Track> {
     await for (final f in dir.list()) {
       if (f is File) {
         filesCountVariable?.value++;
-        final st = await f.stat();
-        filesSizeVariable?.value += st.size;
+        final fs = await f.fileSize();
+        filesSizeVariable?.value += fs ?? 0;
       }
     }
   }

@@ -1307,9 +1307,9 @@ class _YTDownloadManager with PortsProvider<SendPort> {
             bool movedSuccessfully = false;
             if (moveTo != null && moveToRequiredBytes != null) {
               try {
-                final fileStats = file.statSync();
+                final fileSize = file.fileSizeSync() ?? 0;
                 const allowance = 1024; // 1KB allowance
-                if (fileStats.size >= moveToRequiredBytes - allowance) {
+                if (fileSize >= moveToRequiredBytes - allowance) {
                   final movedFile = file.moveSync(
                     moveTo,
                     goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,

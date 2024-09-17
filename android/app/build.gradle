@@ -108,6 +108,11 @@ android {
             signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
         } 
+
+        profile {
+            signingConfig signingConfigs.debug
+            applicationIdSuffix ".profile"
+        } 
         
         release {
             signingConfig signingConfigs.release

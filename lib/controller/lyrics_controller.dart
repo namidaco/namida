@@ -371,7 +371,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
                 isEmbedded: false,
               ));
             }
-          }
+          });
           fetched.removeDuplicates();
           return fetched;
         } catch (_) {}

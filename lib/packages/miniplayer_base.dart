@@ -3,6 +3,7 @@
 // Credits goes for the original author @55nknown
 
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -180,7 +181,16 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
     const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
 
     final topRightButton = IconButton(
-      onPressed: () {},
+      onPressed: () {
+        widget.onMenuOpen(
+          _getcurrentItem,
+          TapUpDetails(
+            kind: PointerDeviceKind.unknown,
+            globalPosition: const Offset(1, 0),
+            localPosition: const Offset(1, 0),
+          ),
+        );
+      },
       icon: TapDetector(
         onTap: null,
         initializer: (instance) {

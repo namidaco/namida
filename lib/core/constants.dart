@@ -90,9 +90,8 @@ final Set<String> kStoragePaths = {};
 final Set<String> kInitialDirectoriesToScan = {};
 
 /// Main Color
-const Color kMainColor = Color.fromARGB(160, 117, 128, 224);
-const Color kMainColorLight = Color.fromARGB(255, 116, 126, 219);
-const Color kMainColorDark = Color.fromARGB(255, 139, 149, 241);
+const Color kMainColorLight = Color(0xFF9c99c1);
+const Color kMainColorDark = Color(0xFF4e4c72);
 
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
@@ -442,6 +441,8 @@ const kDummyExtendedTrack = TrackExtended(
   dateModified: 0,
   path: "",
   comment: "",
+  description: "",
+  synopsis: "",
   bitrate: 0,
   sampleRate: 0,
   format: "",

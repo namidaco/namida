@@ -18,8 +18,8 @@ class VideoFolder extends Folder {
 
 class Folder {
   final String path;
-  late final String folderName;
-  late final String _key;
+  final String folderName;
+  final String _key;
 
   Folder.explicit(this.path)
       : folderName = path.pathReverseSplitter(_pathSeparator),
@@ -59,6 +59,8 @@ class Folder {
 
   List<String> splitParts() => _key.split(_pathSeparator);
 
+  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? path.formatPath() : folderName;
+
   @override
   bool operator ==(other) {
     if (other is Folder) {
@@ -97,8 +99,9 @@ extension FolderUtils<T extends Folder, E extends Track> on Folder {
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
     int count = 0;
+    var thisfolderLower = folderName.toLowerCase();
     for (final k in _mainFoldersMap.keys) {
-      if (k.folderName == folderName) {
+      if (k.folderName.toLowerCase() == thisfolderLower) {
         count++;
         if (count > 1) return true;
       }

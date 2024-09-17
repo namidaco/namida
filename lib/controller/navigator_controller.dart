@@ -57,24 +57,8 @@ class NamidaNavigator {
 
   bool _isInLanscape = false;
   bool get isInLanscape => _isInLanscape;
-  set isInLanscape(bool val) {
-    _isInLanscape = val;
-    for (final fn in _onLandscapeEvents.values) {
-      fn();
-    }
-  }
 
   static const _defaultRouteAnimationDurMS = 500;
-
-  final _onLandscapeEvents = <String, FutureOr<void> Function()>{};
-
-  void addOnLandScapeEvent(String key, FutureOr<void> Function() fn) {
-    _onLandscapeEvents[key] = fn;
-  }
-
-  void removeOnLandScapeEvent(String key) {
-    _onLandscapeEvents.remove(key);
-  }
 
   Future<T?> showMenu<T>({
     required BuildContext context,
@@ -195,7 +179,7 @@ class NamidaNavigator {
   }
 
   Future<void> setDeviceOrientations(bool lanscape) async {
-    isInLanscape = lanscape;
+    _isInLanscape = lanscape;
     final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;
     await SystemChrome.setPreferredOrientations(orientations);
   }

@@ -155,7 +155,10 @@ class FAudioTaggerController {
       streamController.add(info);
       toExtract--;
       incrementCurrentExtracting();
-      if (toExtract <= 0) usingStream.completeIfWasnt();
+      if (toExtract <= 0) {
+        usingStream.completeIfWasnt();
+        closeStreams();
+      }
     }
 
     currentPathsBeingExtracted[streamKey] = paths[0];

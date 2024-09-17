@@ -151,10 +151,6 @@ class Player {
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: false,
       ),
-      cacheKeyResolver: (mediaItem) {
-        final imagePath = mediaItem.artUri?.path;
-        return imagePath != null ? File(imagePath).statSync().toString() : '';
-      },
     );
 
     void videoInfoListener() {

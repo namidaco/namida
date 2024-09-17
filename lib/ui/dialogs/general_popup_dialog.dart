@@ -534,7 +534,7 @@ Future<void> showGeneralPopupDialog(
           (e) => SmallListTile(
             borderRadius: 12.0,
             title: showFullPath ? e : e.getFilename,
-            subtitle: File(e).statSync().size.fileSizeFormatted,
+            subtitle: File(e).fileSizeFormatted(),
             onTap: () => updatePathDialog(e),
             color: colorDelightened.value, // not worth refreshing
             icon: Broken.medal_star,
@@ -628,7 +628,7 @@ Future<void> showGeneralPopupDialog(
                         key: ValueKey(i),
                         borderRadius: 12.0,
                         title: p.getFilename,
-                        subtitle: File(p).statSync().size.fileSizeFormatted,
+                        subtitle: File(p).fileSizeFormatted(),
                         onTap: () => updatePathDialog(p),
                       );
                     },
@@ -1093,7 +1093,7 @@ Future<void> showGeneralPopupDialog(
                                 color: colorDelightened,
                                 compact: true,
                                 title: lang.GO_TO_FOLDER,
-                                subtitle: availableFolders.first.folderName,
+                                subtitle: availableFolders.first.folderNameAvoidingConflicts(),
                                 icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();

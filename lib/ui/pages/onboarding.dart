@@ -36,19 +36,21 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
 
   final _shouldShowGlow = false.obs;
 
+  void _scrollListener() {
+    if (c.hasClients) {
+      if (c.position.extentAfter > 0) {
+        _shouldShowGlow.value = true;
+      } else {
+        _shouldShowGlow.value = false;
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    c = ScrollController()
-      ..addListener(() {
-        if (c.hasClients) {
-          if (c.position.extentAfter > 0) {
-            _shouldShowGlow.value = true;
-          } else {
-            _shouldShowGlow.value = false;
-          }
-        }
-      });
+    c = ScrollController()..addListener(_scrollListener);
+    Future.delayed(Duration.zero, _scrollListener);
 
     _requestPermission(request: false); // just to set it to true only if granted.
   }
@@ -185,7 +187,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   decoration: BoxDecoration(
                                     boxShadow: [
                                       BoxShadow(
-                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color : Colors.transparent,
+                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withOpacity(0.5) : Colors.transparent,
                                         blurRadius: 12.0,
                                         spreadRadius: 2.0,
                                       )

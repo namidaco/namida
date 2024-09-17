@@ -22,7 +22,7 @@ class NamidaFFMPEG {
   static final NamidaFFMPEG _instance = NamidaFFMPEG._internal();
   NamidaFFMPEG._internal() {
     FFmpegKitConfig.disableLogs();
-    FFmpegKitConfig.setSessionHistorySize(999);
+    FFmpegKitConfig.setSessionHistorySize(99);
   }
   final currentOperations = <OperationType, Rx<OperationProgress>>{
     OperationType.imageCompress: OperationProgress().obs,

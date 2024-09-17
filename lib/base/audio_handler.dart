@@ -70,6 +70,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       androidLoadControl: AndroidLoadControl(
         minBufferDuration: const Duration(seconds: 5),
         maxBufferDuration: const Duration(minutes: 3),
+        bufferForPlaybackAfterRebufferDuration: const Duration(seconds: 5),
+        prioritizeTimeOverSizeThresholds: true,
       ),
     );
   }
@@ -1267,6 +1269,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 }
               }
             }
+
+            if (finalAudioSource == null && finalVideoSource == null) {
+              if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio/video source', top: false, isError: true);
+              return;
+            }
+
             if (finalAudioSource != null || finalVideoSource != null) {
               heyIhandledPlaying = false;
 
