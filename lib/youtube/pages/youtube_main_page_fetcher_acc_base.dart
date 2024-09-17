@@ -138,7 +138,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       }
     }
 
-    final cachedFeed = widget.cacheReader.read();
+    final cachedFeed = await widget.cacheReader.readAsync();
     if (cachedFeed != null) {
       _currentFeed.value = cachedFeed;
       _lastFetchWasCached.value = true;
