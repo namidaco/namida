@@ -153,7 +153,7 @@ class FTags {
       discTotal: map["discTotal"] ?? map["DISCTOTAL"],
       lyrics: lyricsList?.firstWhereEff((e) => e is String ? e.isValidLRC() : false) ?? lyricsList?.firstOrNull,
       comment: _listToString(map["comment"]) ?? map["COMMENT"],
-      description: _listToString(map["description"]) ?? map["description"] ?? map["DESCRIPTION"],
+      description: map["description"] ?? map["desc"] ?? map["DESCRIPTION"] ?? map["DESC"],
       synopsis: _listToString(map["synopsis"]) ?? map["synopsis"] ?? map["SYNOPSIS"],
       year: _listToString(map["year"]) ?? map["YEAR"],
       language: _listToString(map["language"]) ?? map["LANGUAGE"],
