@@ -35,81 +35,86 @@ class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.animation});
 
   @override
-  Widget build(BuildContext context) {
-    final main = WillPopScope(
-      onWillPop: () async {
-        await NamidaNavigator.inst.popPage();
-        return false;
-      },
-      child: Navigator(
-        key: NamidaNavigator.inst.navKey,
-        restorationScopeId: 'namida',
-        requestFocus: false,
-        observers: [NamidaNavigator.inst.heroController],
-        onGenerateRoute: (settings) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            NamidaNavigator.inst.onFirstLoad();
-          });
-          return MaterialPageRoute(
-            builder: (_) => const SizedBox(),
-          );
+  Widget build(BuildContext _) {
+    final main = RepaintBoundary(
+      child: WillPopScope(
+        onWillPop: () async {
+          await NamidaNavigator.inst.popPage();
+          return false;
         },
+        child: Navigator(
+          key: NamidaNavigator.inst.navKey,
+          restorationScopeId: 'namida',
+          requestFocus: false,
+          observers: [NamidaNavigator.inst.heroController],
+          onGenerateRoute: (settings) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              NamidaNavigator.inst.onFirstLoad();
+            });
+            return MaterialPageRoute(
+              builder: (_) => const SizedBox(),
+            );
+          },
+        ),
       ),
     );
 
-    final searchProgressColor = context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4);
-    final searchProgressWidget = CircularProgressIndicator(
-      strokeWidth: 2.0,
-      strokeCap: StrokeCap.round,
-      color: searchProgressColor,
-    );
+    final searchProgressWidget = Builder(builder: (context) {
+      return CircularProgressIndicator(
+        strokeWidth: 2.0,
+        strokeCap: StrokeCap.round,
+        color: context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4),
+      );
+    });
 
-    final fabChild = NamidaTooltip(
-      message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
-      child: FloatingActionButton(
-        heroTag: 'main_page_fab_hero',
-        backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
-        onPressed: () {
-          final fab = settings.floatingActionButton.value;
-          final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-          if (fab == FABType.search || isMenuOpened) {
-            final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
-            if (isOpen && !isMenuOpened) {
-              SearchSortController.inst.prepareResources();
-              ScrollSearchController.inst.showSearchMenu();
-              ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
-            } else {
-              isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
-              ScrollSearchController.inst.toggleSearchMenu();
-              ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+    final fabChild = Builder(
+      builder: (context) => NamidaTooltip(
+        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
+        child: FloatingActionButton(
+          heroTag: 'main_page_fab_hero',
+          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
+          onPressed: () {
+            final fab = settings.floatingActionButton.value;
+            final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+            if (fab == FABType.search || isMenuOpened) {
+              final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
+              if (isOpen && !isMenuOpened) {
+                SearchSortController.inst.prepareResources();
+                ScrollSearchController.inst.showSearchMenu();
+                ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
+              } else {
+                isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
+                ScrollSearchController.inst.toggleSearchMenu();
+                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+              }
+            } else if (fab == FABType.shuffle || fab == FABType.play) {
+              Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
             }
-          } else if (fab == FABType.shuffle || fab == FABType.play) {
-            Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
-          }
-        },
-        child: ObxO(
-          rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
-          builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
-              ? ObxO(
-                  rx: SearchSortController.inst.runningSearches,
-                  builder: (context, runningSearches) => Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Icon(
-                        Broken.search_status_1,
-                        color: Color.fromRGBO(255, 255, 255, 0.8),
-                      ),
-                      if (runningSearches.values.any((running) => running)) searchProgressWidget,
-                    ],
+          },
+          child: ObxO(
+            rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
+            builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
+                ? ObxO(
+                    rx: SearchSortController.inst.runningSearches,
+                    builder: (context, runningSearches) => Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Broken.search_status_1,
+                          color: Color.fromRGBO(255, 255, 255, 0.8),
+                        ),
+                        if (runningSearches.values.any((running) => running)) searchProgressWidget,
+                      ],
+                    ),
+                  )
+                : ObxO(
+                    rx: settings.floatingActionButton,
+                    builder: (context, fabButton) => Icon(
+                      fabButton.toIcon(),
+                      color: const Color.fromRGBO(255, 255, 255, 0.8),
+                    ),
                   ),
-                )
-              : ObxO(
-                  rx: settings.floatingActionButton,
-                  builder: (context, fabButton) => Icon(
-                    fabButton.toIcon(),
-                    color: const Color.fromRGBO(255, 255, 255, 0.8),
-                  ),
-                ),
+          ),
         ),
       ),
     );
@@ -222,28 +227,42 @@ class MainPage extends StatelessWidget {
       bottomNavigationBar: _CustomNavBar(animation: animation),
     );
 
-    final theme = context.theme;
+    return ObxO(
+      rx: settings.animatedTheme,
+      builder: (context, animatedTheme) {
+        if (!animatedTheme) {
+          return Builder(
+            builder: (context) => Theme(
+              data: context.theme,
+              child: mainChild,
+            ),
+          );
+        }
 
-    final animatedThemeWidget = RepaintBoundary(
-      child: _AnimatedTheme(
-        key: _animatedThemeGlobalKey,
-        duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-        data: theme,
-        child: mainChild,
-      ),
-    );
-    final animatedThemeState = _animatedThemeGlobalKey.currentState;
-    animatedThemeState?.setAnimated(animation.value < 1);
+        final animatedThemeWidget = Builder(
+          builder: (context) => RepaintBoundary(
+            child: _AnimatedTheme(
+              key: _animatedThemeGlobalKey,
+              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+              data: context.theme,
+              child: mainChild,
+            ),
+          ),
+        );
+        final animatedThemeState = _animatedThemeGlobalKey.currentState;
+        animatedThemeState?.setAnimated(animation.value < 1);
 
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, _) {
-        final mainPlayerVisible = animation.value < 1;
-        animatedThemeState?.setAnimated(mainPlayerVisible);
-        return Visibility(
-          maintainState: true,
-          visible: mainPlayerVisible,
-          child: animatedThemeWidget,
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, _) {
+            final mainPlayerVisible = animation.value < 1;
+            animatedThemeState?.setAnimated(mainPlayerVisible);
+            return Visibility(
+              maintainState: true,
+              visible: mainPlayerVisible,
+              child: animatedThemeWidget,
+            );
+          },
         );
       },
     );

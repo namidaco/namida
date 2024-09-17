@@ -77,7 +77,7 @@ void showListensDialog({
         rx: color,
         builder: (context, dialogColor) {
           final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
-          return AnimatedTheme(
+          return AnimatedThemeOrTheme(
             data: theme,
             child: CustomBlurryDialog(
               theme: theme,

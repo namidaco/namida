@@ -4514,3 +4514,31 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
     );
   }
 }
+
+/// Returns [AnimatedTheme] or [Theme] based on [settings.animatedTheme].
+class AnimatedThemeOrTheme extends StatelessWidget {
+  final ThemeData data;
+  final Widget child;
+  final Duration duration;
+
+  const AnimatedThemeOrTheme({
+    super.key,
+    required this.data,
+    required this.child,
+    this.duration = kThemeAnimationDuration,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return settings.animatedTheme.value
+        ? AnimatedTheme(
+            data: data,
+            duration: duration,
+            child: child,
+          )
+        : Theme(
+            data: data,
+            child: child,
+          );
+  }
+}

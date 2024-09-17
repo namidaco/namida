@@ -161,7 +161,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
       rx: YoutubePlaylistController.inst.canReorderVideos,
       builder: (context, canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
     );
-    return AnimatedTheme(
+    return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(
@@ -550,7 +550,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final plIdWrapper = PlaylistID(id: plId);
     final firstID = playlist.items.firstOrNull?.id;
     final hasMoreStreamsLeft = playlist.canFetchNext;
-    return AnimatedTheme(
+    return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: 300),
       data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
       child: BackgroundWrapper(

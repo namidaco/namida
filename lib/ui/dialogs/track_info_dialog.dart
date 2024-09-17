@@ -76,7 +76,7 @@ Future<void> showTrackInfoDialog(
         rx: color,
         builder: (context, dialogColor) {
           final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
-          return AnimatedTheme(
+          return AnimatedThemeOrTheme(
             data: theme,
             child: CustomBlurryDialog(
               theme: theme,
@@ -175,7 +175,7 @@ Future<void> showTrackInfoDialog(
       rx: color,
       builder: (context, dialogColor) {
         final theme = AppThemes.inst.getAppTheme(dialogColor, null, true);
-        return AnimatedTheme(
+        return AnimatedThemeOrTheme(
           data: theme,
           child: CustomBlurryDialog(
             theme: theme,

@@ -38,6 +38,7 @@ class _SettingsController with SettingsFileWriter {
   final themeMode = ThemeMode.system.obs;
   final pitchBlack = false.obs;
   final autoColor = true.obs;
+  final animatedTheme = true.obs;
   final staticColor = kMainColorLight.value.obs;
   final staticColorDark = kMainColorDark.value.obs;
   final RxList<LibraryTab> libraryTabs = [
@@ -296,6 +297,7 @@ class _SettingsController with SettingsFileWriter {
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       pitchBlack.value = json['pitchBlack'] ?? pitchBlack.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
+      animatedTheme.value = json['animatedTheme'] ?? animatedTheme.value;
       staticColor.value = json['staticColor'] ?? staticColor.value;
       staticColorDark.value = json['staticColorDark'] ?? staticColorDark.value;
       final libraryListFromStorage = json['libraryTabs'];
@@ -496,6 +498,7 @@ class _SettingsController with SettingsFileWriter {
         'themeMode': themeMode.value.name,
         'pitchBlack': pitchBlack.value,
         'autoColor': autoColor.value,
+        'animatedTheme': animatedTheme.value,
         'staticColor': staticColor.value,
         'staticColorDark': staticColorDark.value,
         'libraryTabs': libraryTabs.mapped((element) => element.name),
@@ -650,6 +653,7 @@ class _SettingsController with SettingsFileWriter {
     ThemeMode? themeMode,
     bool? pitchBlack,
     bool? autoColor,
+    bool? animatedTheme,
     int? staticColor,
     int? staticColorDark,
     int? searchResultsPlayMode,
@@ -789,6 +793,7 @@ class _SettingsController with SettingsFileWriter {
     if (themeMode != null) this.themeMode.value = themeMode;
     if (pitchBlack != null) this.pitchBlack.value = pitchBlack;
     if (autoColor != null) this.autoColor.value = autoColor;
+    if (animatedTheme != null) this.animatedTheme.value = animatedTheme;
     if (staticColor != null) this.staticColor.value = staticColor;
     if (staticColorDark != null) this.staticColorDark.value = staticColorDark;
     if (libraryTabs != null) {

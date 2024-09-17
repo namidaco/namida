@@ -307,7 +307,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
         rx: color,
         builder: (context, color) {
           final theme = AppThemes.inst.getAppTheme(color, null, false);
-          return AnimatedTheme(
+          return AnimatedThemeOrTheme(
             data: theme,
             child: Form(
               key: formKey,

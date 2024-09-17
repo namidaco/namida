@@ -760,7 +760,7 @@ Future<void> showGeneralPopupDialog(
       builder: (context, colorDelightened) {
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
-        return AnimatedTheme(
+        return AnimatedThemeOrTheme(
           data: theme,
           child: Dialog(
             backgroundColor: theme.dialogBackgroundColor,

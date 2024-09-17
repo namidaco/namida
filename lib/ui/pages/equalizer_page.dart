@@ -210,7 +210,7 @@ class EqualizerPageState extends State<EqualizerPage> {
   Widget build(BuildContext context) {
     const verticalInBetweenPaddingH = 18.0;
     const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
-    return AnimatedTheme(
+    return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
       data: context.theme,
       child: BackgroundWrapper(

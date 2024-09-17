@@ -554,6 +554,7 @@ extension PerformanceModeUtils on PerformanceMode {
           enableMiniplayerParallaxEffect: false,
           artworkCacheHeightMultiplier: 0.8,
           autoColor: false,
+          animatedTheme: false,
         );
       case PerformanceMode.balanced:
         settings.save(
@@ -563,6 +564,7 @@ extension PerformanceModeUtils on PerformanceMode {
           enableMiniplayerParallaxEffect: true,
           artworkCacheHeightMultiplier: 0.9,
           autoColor: true,
+          animatedTheme: false,
         );
       case PerformanceMode.goodLooking:
         settings.save(
@@ -572,6 +574,7 @@ extension PerformanceModeUtils on PerformanceMode {
           enableMiniplayerParallaxEffect: true,
           artworkCacheHeightMultiplier: 1.0,
           autoColor: true,
+          animatedTheme: true,
         );
       case PerformanceMode.custom:
         settings.save(
