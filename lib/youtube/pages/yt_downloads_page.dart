@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
 import 'package:flutter/material.dart';
 
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -18,8 +19,21 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/widgets/yt_download_task_item_card.dart';
 
-class YTDownloadsPage extends StatelessWidget {
+class YTDownloadsPage extends StatefulWidget {
   const YTDownloadsPage({super.key});
+
+  @override
+  State<YTDownloadsPage> createState() => _YTDownloadsPageState();
+}
+
+class _YTDownloadsPageState extends State<YTDownloadsPage> {
+  final _hiddenGroupsMap = <DownloadTaskGroupName, bool>{}.obs;
+
+  @override
+  void dispose() {
+    _hiddenGroupsMap.close();
+    super.dispose();
+  }
 
   Widget _getFilterChip({
     required BuildContext context,
@@ -157,13 +171,10 @@ class YTDownloadsPage extends StatelessWidget {
   bool? get _isOnGoingSelectedR => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
   set _isOnGoingSelected(bool? val) => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value = val;
   void _updateTempList(bool? forIsGoing) => YTOnGoingFinishedDownloads.inst.updateTempList(forIsGoing);
-  void _refreshTempList() => YTOnGoingFinishedDownloads.inst.refreshList();
   RxList<(DownloadTaskGroupName, YoutubeItemDownloadConfig)> get _downloadTasksTempList => YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList;
 
   @override
   Widget build(BuildContext context) {
-    _refreshTempList(); // refresh for when coming back to page.
-
     return BackgroundWrapper(
       child: Column(
         children: [
@@ -291,92 +302,127 @@ class YTDownloadsPage extends StatelessWidget {
                   keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                   return CustomScrollView(
                     controller: sc,
-                    slivers: [
-                      _isOnGoingSelectedR == null
-                          ? SliverList.builder(
-                              itemCount: keys.length,
-                              itemBuilder: (context, index) {
-                                final groupName = keys[index];
-                                final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
-                                final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
-                                final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
+                    slivers: _isOnGoingSelectedR == null
+                        ? keys.mapIndexed(
+                            (e, index) {
+                              final groupName = keys[index];
+                              final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+                              final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
+                              final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
-                                  child: NamidaExpansionTile(
-                                    initiallyExpanded: true,
-                                    titleText: groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
-                                    subtitleText: lastEditedAgo,
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton.filledTonal(
-                                          padding: EdgeInsets.zero,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () {
-                                            YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
-                                          },
-                                          icon: const Icon(Broken.play, size: 18.0),
+                              return SliverStickyHeader(
+                                header: NamidaInkWell(
+                                  borderRadius: 0.0,
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  bgColor: context.theme.scaffoldBackgroundColor,
+                                  onTap: () {
+                                    _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
+                                    _hiddenGroupsMap.refresh();
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(width: 12.0),
+                                      NamidaInkWell(
+                                        borderRadius: 8.0,
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                        bgColor: context.theme.cardColor,
+                                        child: Text(
+                                          "${list.length}",
+                                          style: context.textTheme.displayLarge,
                                         ),
-                                        IconButton.filledTonal(
-                                          padding: EdgeInsets.zero,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () {
-                                            YoutubeController.inst.pauseDownloadTask(
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
+                                              style: context.textTheme.displayMedium,
+                                            ),
+                                            if (lastEditedAgo != null)
+                                              Text(
+                                                lastEditedAgo,
+                                                style: context.textTheme.displaySmall,
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
+                                        },
+                                        icon: const Icon(Broken.play, size: 18.0),
+                                      ),
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          YoutubeController.inst.pauseDownloadTask(
+                                            itemsConfig: [],
+                                            groupName: groupName,
+                                            allInGroupName: true,
+                                          );
+                                        },
+                                        icon: const Icon(Broken.pause, size: 18.0),
+                                      ),
+                                      IconButton.filledTonal(
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () async {
+                                          final confirmed = await _confirmCancelDialog(
+                                            context: context,
+                                            operationTitle: lang.CANCEL,
+                                            confirmMessage: lang.REMOVE,
+                                            groupTitle: groupName.groupName,
+                                            itemsLength: list.length,
+                                          );
+                                          if (confirmed) {
+                                            YoutubeController.inst.cancelDownloadTask(
                                               itemsConfig: [],
                                               groupName: groupName,
                                               allInGroupName: true,
                                             );
-                                          },
-                                          icon: const Icon(Broken.pause, size: 18.0),
-                                        ),
-                                        IconButton.filledTonal(
-                                          padding: EdgeInsets.zero,
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () async {
-                                            final confirmed = await _confirmCancelDialog(
-                                              context: context,
-                                              operationTitle: lang.CANCEL,
-                                              confirmMessage: lang.REMOVE,
-                                              groupTitle: groupName.groupName,
-                                              itemsLength: list.length,
-                                            );
-                                            if (confirmed) {
-                                              YoutubeController.inst.cancelDownloadTask(
-                                                itemsConfig: [],
-                                                groupName: groupName,
-                                                allInGroupName: true,
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Broken.close_circle, size: 18.0),
-                                        ),
-                                        const SizedBox(width: 4.0),
-                                        const Icon(
-                                          Broken.arrow_down_2,
-                                          size: 20.0,
-                                        ),
-                                        const SizedBox(width: 4.0),
-                                      ],
-                                    ),
-                                    leading: NamidaInkWell(
-                                      borderRadius: 8.0,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                      bgColor: context.theme.cardColor,
-                                      child: Text(
-                                        "${list.length}",
-                                        style: context.textTheme.displayLarge,
+                                          }
+                                        },
+                                        icon: const Icon(Broken.close_circle, size: 18.0),
                                       ),
-                                    ),
-                                    children: List<YTDownloadTaskItemCard>.generate(
-                                      list.length,
-                                      (index) => YTDownloadTaskItemCard(videos: list, index: index, groupName: groupName),
-                                    ),
+                                      const SizedBox(width: 4.0),
+                                      const Icon(
+                                        Broken.arrow_down_2,
+                                        size: 20.0,
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                    ],
                                   ),
-                                );
-                              },
-                            )
-                          : ObxO(
+                                ),
+                                sliver: ObxO(
+                                  rx: _hiddenGroupsMap,
+                                  builder: (context, hiddenGroups) => hiddenGroups[groupName] == true
+                                      ? const SliverToBoxAdapter()
+                                      : SliverPadding(
+                                          padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
+                                          sliver: SliverList.builder(
+                                            itemCount: list.length,
+                                            itemBuilder: (context, index) {
+                                              return YTDownloadTaskItemCard(
+                                                videos: list,
+                                                index: index,
+                                                groupName: groupName,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                ),
+                              );
+                            },
+                          ).toList()
+                        : [
+                            ObxO(
                               rx: _downloadTasksTempList,
                               builder: (context, downloadTasksTempList) {
                                 final videos = downloadTasksTempList.map((e) => e.$2).toList();
@@ -393,8 +439,8 @@ class YTDownloadsPage extends StatelessWidget {
                                 );
                               },
                             ),
-                      kBottomPaddingWidgetSliver,
-                    ],
+                            kBottomPaddingWidgetSliver,
+                          ],
                   );
                 },
               ),
