@@ -37,18 +37,20 @@ class CurrentColor {
   bool get _shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
 
   Color get miniplayerColor => settings.forceMiniplayerTrackColor.valueR ? _namidaColorMiniplayer.valueR ?? color : color;
-  Color get color => _namidaColor.valueR.color;
-  List<Color> get palette => _namidaColor.valueR.palette;
+  Color get color => _namidaColor.valueR?.color ?? _defaultNamidaColor.color;
+  List<Color> get palette => _namidaColor.valueR?.palette ?? _defaultNamidaColor.palette;
   Color get currentColorScheme => _colorSchemeOfSubPages.valueR ?? color;
   int get colorAlpha => namida.isDarkMode ? 200 : 120;
 
   final _namidaColorMiniplayer = Rxn<Color>();
 
-  late final Rx<NamidaColor> _namidaColor = NamidaColor(
-    used: playerStaticColor,
-    mix: playerStaticColor,
-    palette: [playerStaticColor],
-  ).obs;
+  final _namidaColor = Rxn<NamidaColor>();
+
+  NamidaColor get _defaultNamidaColor => NamidaColor(
+        used: playerStaticColor,
+        mix: playerStaticColor,
+        palette: [playerStaticColor],
+      );
 
   final _colorSchemeOfSubPages = Rxn<Color>();
 
@@ -102,7 +104,7 @@ class CurrentColor {
 
   void updateColorAfterThemeModeChange() {
     if (settings.autoColor.value) {
-      final nc = _namidaColor.value;
+      final nc = _namidaColor.value ?? _defaultNamidaColor;
       _namidaColor.value = NamidaColor(
         used: nc.color.withAlpha(colorAlpha),
         mix: nc.mix,
