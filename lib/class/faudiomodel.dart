@@ -57,6 +57,8 @@ class FTags {
   final String? discTotal;
   final String? lyrics;
   final String? comment;
+  final String? description;
+  final String? synopsis;
   final String? year;
   final String? language;
   final String? lyricist;
@@ -88,6 +90,8 @@ class FTags {
     this.discTotal,
     this.lyrics,
     this.comment,
+    this.description,
+    this.synopsis,
     this.year,
     this.language,
     this.lyricist,
@@ -104,8 +108,8 @@ class FTags {
     this.gainData,
   });
 
-  static String? _listToString(List? list) {
-    if (list == null || list.isEmpty) return null;
+  static String? _listToString(dynamic list) {
+    if (list is! List || list.isEmpty) return null;
     if (list.length == 1) return list[0];
     return list.join('; ');
   }
@@ -149,6 +153,8 @@ class FTags {
       discTotal: map["discTotal"] ?? map["DISCTOTAL"],
       lyrics: lyricsList?.firstWhereEff((e) => e is String ? e.isValidLRC() : false) ?? lyricsList?.firstOrNull,
       comment: _listToString(map["comment"]) ?? map["COMMENT"],
+      description: _listToString(map["description"]) ?? map["description"] ?? map["DESCRIPTION"],
+      synopsis: _listToString(map["synopsis"]) ?? map["synopsis"] ?? map["SYNOPSIS"],
       year: _listToString(map["year"]) ?? map["YEAR"],
       language: _listToString(map["language"]) ?? map["LANGUAGE"],
       lyricist: _listToString(map["lyricist"]) ?? map["LYRICIST"],
@@ -177,6 +183,8 @@ class FTags {
       "composer": composer,
       "genre": genre,
       "comment": comment,
+      "description": description,
+      "synopsis": synopsis,
       "year": year,
       "trackNumber": trackNumber,
       "trackTotal": trackTotal,

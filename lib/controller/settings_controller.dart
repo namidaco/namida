@@ -179,6 +179,7 @@ class _SettingsController with SettingsFileWriter {
     TagField.albumArtist,
     TagField.composer,
     TagField.comment,
+    TagField.description,
     TagField.lyrics,
   ].obs;
 

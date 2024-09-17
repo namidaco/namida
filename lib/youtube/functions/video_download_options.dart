@@ -168,8 +168,8 @@ Future<void> showVideoDownloadOptionsSheet({
                       FFMPEGTagField.discNumber,
                     ]),
                     getTextChip(FFMPEGTagField.comment),
-                    getTextChip(FFMPEGTagField.synopsis),
                     getTextChip(FFMPEGTagField.description),
+                    getTextChip(FFMPEGTagField.synopsis),
                     getTextChip(FFMPEGTagField.lyrics),
                     NamidaExpansionTile(
                       icon: Broken.more_square,

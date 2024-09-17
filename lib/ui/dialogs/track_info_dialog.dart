@@ -433,6 +433,20 @@ Future<void> showTrackInfoDialog(
                                 icon: Broken.message_text_1,
                                 isComment: true,
                               ),
+                            if (shouldShowTheField(trackExt.description == ''))
+                              TrackInfoListTile(
+                                title: lang.DESCRIPTION,
+                                value: trackExt.description,
+                                icon: Broken.note_text,
+                                isComment: true,
+                              ),
+                            if (shouldShowTheField(trackExt.synopsis == ''))
+                              TrackInfoListTile(
+                                title: lang.SYNOPSIS,
+                                value: trackExt.synopsis,
+                                icon: Broken.text,
+                                isComment: true,
+                              ),
                             const SizedBox(height: 12.0),
                           ],
                         ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toList(),

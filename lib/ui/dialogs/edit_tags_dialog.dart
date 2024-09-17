@@ -252,6 +252,8 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
     TagField.genre: TextEditingController(text: tags.genre ?? ''),
     TagField.composer: TextEditingController(text: tags.composer ?? ''),
     TagField.comment: TextEditingController(text: tags.comment ?? ''),
+    TagField.description: TextEditingController(text: tags.description ?? ''),
+    TagField.synopsis: TextEditingController(text: tags.synopsis ?? ''),
     TagField.lyrics: TextEditingController(text: tags.lyrics ?? ''),
     TagField.trackNumber: TextEditingController(text: tags.trackNumber.toIf('', '0')),
     TagField.discNumber: TextEditingController(text: tags.discNumber.toIf('', '0')),
@@ -282,7 +284,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
       },
       validator: tag == TagField.rating ? _ratingsValidator : null,
       isNumeric: tag.isNumeric,
-      maxLines: tag == TagField.comment ? 4 : null,
+      maxLines: tag == TagField.comment || tag == TagField.description || tag == TagField.synopsis ? 4 : null,
     );
   }
 
@@ -689,6 +691,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
     TagField.mood,
     TagField.year,
     TagField.comment,
+    TagField.description,
+    TagField.synopsis,
     TagField.albumArtist,
     TagField.composer,
     TagField.trackTotal,
@@ -719,7 +723,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
       },
       validator: tag == TagField.rating ? _ratingsValidator : null,
       isNumeric: tag.isNumeric,
-      maxLines: tag == TagField.comment ? 4 : null,
+      maxLines: tag == TagField.comment || tag == TagField.description || tag == TagField.synopsis ? 4 : null,
     );
   }
 

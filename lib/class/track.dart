@@ -220,6 +220,8 @@ class TrackExtended {
   final int dateModified;
   final String path;
   final String comment;
+  final String description;
+  final String synopsis;
   final int bitrate;
   final int sampleRate;
   final String format;
@@ -254,6 +256,8 @@ class TrackExtended {
     required this.dateModified,
     required this.path,
     required this.comment,
+    required this.description,
+    required this.synopsis,
     required this.bitrate,
     required this.sampleRate,
     required this.format,
@@ -317,6 +321,8 @@ class TrackExtended {
       dateModified: json['dateModified'] ?? 0,
       path: json['path'] ?? '',
       comment: json['comment'] ?? '',
+      description: json['description'] ?? '',
+      synopsis: json['synopsis'] ?? '',
       bitrate: json['bitrate'] ?? 0,
       sampleRate: json['sampleRate'] ?? 0,
       format: json['format'] ?? '',
@@ -353,6 +359,8 @@ class TrackExtended {
       if (dateModified > 0) 'dateModified': dateModified,
       if (path.isNotEmpty) 'path': path,
       if (comment.isNotEmpty) 'comment': comment,
+      if (description.isNotEmpty) 'description': description,
+      if (synopsis.isNotEmpty) 'synopsis': synopsis,
       if (bitrate > 0) 'bitrate': bitrate,
       if (sampleRate > 0) 'sampleRate': sampleRate,
       if (format.isNotEmpty) 'format': format,
@@ -491,6 +499,8 @@ extension TrackExtUtils on TrackExtended {
       dateModified: dateModified ?? this.dateModified,
       path: path ?? this.path,
       comment: tag.comment ?? comment,
+      description: tag.description ?? description,
+      synopsis: tag.synopsis ?? synopsis,
       discNo: tag.discNumber.getIntValue() ?? discNo,
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
@@ -533,6 +543,8 @@ extension TrackExtUtils on TrackExtended {
     int? dateModified,
     String? path,
     String? comment,
+    String? description,
+    String? synopsis,
     int? bitrate,
     int? sampleRate,
     String? format,
@@ -566,6 +578,8 @@ extension TrackExtUtils on TrackExtended {
       dateModified: dateModified ?? this.dateModified,
       path: path ?? this.path,
       comment: comment ?? this.comment,
+      description: description ?? this.description,
+      synopsis: synopsis ?? this.synopsis,
       bitrate: bitrate ?? this.bitrate,
       sampleRate: sampleRate ?? this.sampleRate,
       format: format ?? this.format,
@@ -603,6 +617,8 @@ extension TrackUtils on Track {
   int get dateAdded => toTrackExt().dateAdded;
   int get dateModified => toTrackExt().dateModified;
   String get comment => toTrackExt().comment;
+  String get description => toTrackExt().description;
+  String get synopsis => toTrackExt().synopsis;
   int get bitrate => toTrackExt().bitrate;
   int get sampleRate => toTrackExt().sampleRate;
   String get format => toTrackExt().format;

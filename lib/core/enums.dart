@@ -166,6 +166,8 @@ enum TagField {
   trackNumber,
   discNumber,
   comment,
+  description,
+  synopsis,
   lyrics,
   remixer,
   trackTotal,
