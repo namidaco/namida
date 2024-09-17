@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:intl/intl.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -104,6 +105,7 @@ class YoutubeController {
   final downloadedFilesMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File?>>{}.obs;
 
   late final _notificationData = _YTNotificationDataHolder();
+  late final _downloadTasksMainDBManager = DBWrapperMain.init(AppDirs.YT_DOWNLOAD_TASKS);
 
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
@@ -117,6 +119,10 @@ class YoutubeController {
 
     // ignore: invalid_use_of_protected_member
     config.rename(newFilename);
+    final downloadTasksGroupDB = _downloadTasksMainDBManager.open(groupName.groupName);
+    downloadTasksGroupDB.put(newFilename, config.toJson());
+    downloadTasksGroupDB.delete(oldFilename);
+    downloadTasksGroupDB.claimFreeSpace();
 
     final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
     final existingFile = File("${directory.path}/$oldFilename");
@@ -140,8 +146,6 @@ class YoutubeController {
     }
 
     YTOnGoingFinishedDownloads.inst.refreshList();
-
-    await _writeTaskGroupToStorage(groupName: groupName);
   }
 
   AudioStream? getPreferredAudioStream(List<AudioStream> audiostreams) {
@@ -310,25 +314,69 @@ class YoutubeController {
 
   // -- things here are not refreshed. should be called in startup only.
   void loadDownloadTasksInfoFileSync() {
-    for (final f in Directory(AppDirs.YT_DOWNLOAD_TASKS).listSync()) {
-      if (f is File) {
-        final groupName = DownloadTaskGroupName(groupName: f.path.getFilename.splitFirst('.'));
-        final res = f.readAsJsonSync() as Map<String, dynamic>?;
-        if (res != null) {
-          final fileModified = f.statSync().modified;
-          youtubeDownloadTasksMap.value[groupName] ??= {};
-          downloadedFilesMap.value[groupName] ??= {};
-          if (fileModified != DateTime(1970)) {
-            latestEditedGroupDownloadTask[groupName] ??= fileModified.millisecondsSinceEpoch;
+    final allFiles = Directory(AppDirs.YT_DOWNLOAD_TASKS).listSyncSafe();
+    final oldJsonFiles = <File>[];
+    final newDBFiles = <File>[];
+    allFiles.loop((item) {
+      if (item is File) item.path.endsWith('.json') ? oldJsonFiles.add(item) : newDBFiles.add(item);
+    });
+
+    DownloadTaskGroupName fileToGroupName(File file) {
+      final filenameWOExt = file.path.getFilenameWOExt;
+      return DownloadTaskGroupName(groupName: filenameWOExt.startsWith('.') ? '' : filenameWOExt);
+    }
+
+    // -- migrating old .json files to .db
+    oldJsonFiles.loop(
+      (file) {
+        final group = fileToGroupName(file);
+
+        try {
+          final res = file.readAsJsonSync() as Map<String, dynamic>?;
+          if (res != null) {
+            final downloadTasksGroupDB = _downloadTasksMainDBManager.open(group.groupName, createIfNotExist: true);
+            for (final r in res.entries) {
+              downloadTasksGroupDB.put(r.key, r.value);
+            }
+            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDB.file.path) == null;
+            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDB.file);
+            try {
+              final originalFileDates = file.statSync();
+              downloadTasksGroupDB.file.setLastModifiedSync(originalFileDates.modified);
+              downloadTasksGroupDB.file.setLastAccessedSync(originalFileDates.accessed);
+            } catch (_) {}
           }
-          for (final v in res.entries) {
-            final ytitem = YoutubeItemDownloadConfig.fromJson(v.value as Map<String, dynamic>);
-            final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}";
+        } catch (_) {}
+
+        try {
+          file.deleteSync();
+        } catch (_) {}
+      },
+    );
+
+    newDBFiles.loop(
+      (file) {
+        final group = fileToGroupName(file);
+
+        if (youtubeDownloadTasksMap.value[group] == null) {
+          final fileModified = file.statSync().modified;
+          youtubeDownloadTasksMap.value[group] = {};
+          downloadedFilesMap.value[group] = {};
+          if (fileModified != DateTime(1970)) {
+            latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
+          }
+        }
+
+        try {
+          final downloadTasksGroupDB = _downloadTasksMainDBManager.open(group.groupName);
+          downloadTasksGroupDB.loadEverything((itemMap) {
+            final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
+            final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}${group.groupName}";
             final file = File("$saveDirPath/${ytitem.filename.filename}");
             final fileExists = file.existsSync();
             final itemFileName = ytitem.filename;
-            youtubeDownloadTasksMap.value[groupName]![itemFileName] = ytitem;
-            downloadedFilesMap.value[groupName]![itemFileName] = fileExists ? file : null;
+            youtubeDownloadTasksMap.value[group]![itemFileName] = ytitem;
+            downloadedFilesMap.value[group]![itemFileName] = fileExists ? file : null;
             if (!fileExists) {
               final aFile = File("$saveDirPath/.tempa_${ytitem.filename.filename}");
               final vFile = File("$saveDirPath/.tempv_${ytitem.filename.filename}");
@@ -347,10 +395,10 @@ class YoutubeController {
                 );
               }
             }
-          }
-        }
-      }
-    }
+          });
+        } catch (_) {}
+      },
+    );
   }
 
   File? doesIDHasFileDownloaded(String id) {
@@ -487,6 +535,8 @@ class YoutubeController {
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
+    final downloadTasksGroupDB = _downloadTasksMainDBManager.open(groupName.groupName, createIfNotExist: true);
+
     youtubeDownloadTasksMap.value[groupName] ??= {};
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
     if (remove) {
@@ -498,6 +548,7 @@ class YoutubeController {
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
         NotificationService.removeDownloadingYoutubeNotification(filenameWrapper: c.filename);
+        downloadTasksGroupDB.delete(c.filename.filename);
         if (!keepInListIfRemoved) {
           youtubeDownloadTasksMap.value[groupName]?.remove(c.filename);
           youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);
@@ -507,16 +558,21 @@ class YoutubeController {
           await File("$directory/${c.filename.filename}").delete();
         } catch (_) {}
         downloadedFilesMap[groupName]?[c.filename] = null;
+        downloadTasksGroupDB.claimFreeSpace();
       }
 
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
         youtubeDownloadTasksMap.value.remove(groupName);
+        try {
+          downloadTasksGroupDB.file.deleteSync();
+        } catch (_) {}
       }
     } else {
       itemsConfig.loop((c) {
         youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
         youtubeDownloadTasksInQueueMap[groupName]![c.filename] = true;
+        downloadTasksGroupDB.put(c.filename.filename, c.toJson());
       });
     }
 
@@ -524,23 +580,6 @@ class YoutubeController {
     downloadedFilesMap.refresh();
 
     latestEditedGroupDownloadTask[groupName] = DateTime.now().millisecondsSinceEpoch;
-
-    await _writeTaskGroupToStorage(groupName: groupName);
-  }
-
-  Future<void> _writeTaskGroupToStorage({required DownloadTaskGroupName groupName}) async {
-    final mapToWrite = youtubeDownloadTasksMap.value[groupName];
-    final file = File("${AppDirs.YT_DOWNLOAD_TASKS}${groupName.groupName}.json");
-    if (mapToWrite != null && mapToWrite.isNotEmpty) {
-      final jsonMap = <String, Map<String, dynamic>>{};
-      for (final k in mapToWrite.keys) {
-        final val = mapToWrite[k];
-        if (val != null) jsonMap[k.filename] = val.toJson();
-      }
-      file.writeAsJsonSync(jsonMap); // sync cuz
-    } else {
-      await file.tryDeleting();
-    }
   }
 
   final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult>>{};
