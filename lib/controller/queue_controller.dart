@@ -202,16 +202,17 @@ class QueueController {
   static (SplayTreeMap<int, Queue>, int) _readQueueFilesCompute(String path) {
     int newestQueueDate = 0;
     final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
-    for (final f in Directory(path).listSyncSafe()) {
+    final files = Directory(path).listSyncSafe();
+    final filesL = files.length;
+    for (int i = 0; i < filesL; i++) {
+      var f = files[i];
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
           final q = Queue.fromJson(response);
           map[q.date] = q;
           if (q.date > newestQueueDate) newestQueueDate = q.date;
-        } catch (e) {
-          continue;
-        }
+        } catch (_) {}
       }
     }
     return (map, newestQueueDate);

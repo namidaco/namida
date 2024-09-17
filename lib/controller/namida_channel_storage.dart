@@ -59,7 +59,8 @@ class NamidaStorage {
       final filesPaths = res?.cast<String>() ?? <String>[];
 
       if (allowedExtensions != null && allowedExtensions.isNotEmpty) {
-        for (final fp in filesPaths) {
+        for (int i = 0; i < filesPaths.length; i++) {
+          var fp = filesPaths[i];
           if (!allowedExtensions.any((wrapper) => wrapper.isPathValid(fp))) {
             snackyy(title: lang.ERROR, message: "${lang.EXTENSION}: $allowedExtensions", isError: true);
             return [];

@@ -72,7 +72,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  for (final localLRC in localLRCFiles) {
+  localLRCFiles.loop((localLRC) {
     if (localLRC.existsSync()) {
       availableLyrics.add(
         LyricsModel(
@@ -85,7 +85,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         ),
       );
     }
-  }
+  });
 
   void updateForCurrentTrack() {
     if (item == Player.inst.currentItem.value) {

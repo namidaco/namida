@@ -1212,18 +1212,18 @@ class Indexer<T extends Track> {
 
     final allAvailableDirectories = <Directory, bool>{};
 
-    for (final dirPath in directoriesToScan) {
+    directoriesToScan.loop((dirPath) {
       final directory = Directory(dirPath);
 
       if (directory.existsSync()) {
         allAvailableDirectories[directory] = false;
-        for (final file in directory.listSyncSafe(recursive: true, followLinks: true)) {
+        directory.listSyncSafe(recursive: true, followLinks: true).loop((file) {
           if (file is Directory) {
             allAvailableDirectories[file] = false;
           }
-        }
+        });
       }
-    }
+    });
 
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (respectNoMedia) {
@@ -1351,12 +1351,12 @@ class Indexer<T extends Track> {
     int totalSize = 0;
     final dir = Directory(dirPath);
 
-    for (final f in dir.listSyncSafe()) {
+    dir.listSyncSafe().loop((f) {
       try {
         totalSize += (f as File).lengthSync();
         totalCount++;
       } catch (_) {}
-    }
+    });
 
     return (totalCount, totalSize);
   }

@@ -371,7 +371,8 @@ class SearchSortController {
       String year,
       bool isVideo,
     })>[];
-    for (final trMap in tracks) {
+    for (int i = 0; i < tracks.length; i++) {
+      var trMap = tracks[i];
       final path = trMap['path'] as String;
       tracksExtended.add(
         (
@@ -528,7 +529,8 @@ class SearchSortController {
       String dateCreatedFormatted,
       String dateModifiedFormatted,
     })>[];
-    for (final plMap in playlistsMap) {
+    for (int i = 0; i < playlistsMap.length; i++) {
+      var plMap = playlistsMap[i];
       final pl = GeneralPlaylist<TrackWithDate>.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson));
       final trName = translatePlName(pl.name);
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));

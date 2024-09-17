@@ -393,7 +393,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     file.createSync(recursive: true);
     final sink = file.openWrite(mode: FileMode.append);
     sink.write('#EXTM3U\n');
-    for (final trwd in tracks) {
+    for (int i = 0; i < tracks.length; i++) {
+      var trwd = tracks[i];
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
       final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
@@ -550,15 +551,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
 
   static Future<Map<String, LocalPlaylist>> _readPlaylistFilesCompute(String path) async {
     final map = <String, LocalPlaylist>{};
-    for (final f in Directory(path).listSyncSafe()) {
+    final files = Directory(path).listSyncSafe();
+    final filesL = files.length;
+    for (int i = 0; i < filesL; i++) {
+      var f = files[i];
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
           final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson);
           map[pl.name] = pl;
-        } catch (e) {
-          continue;
-        }
+        } catch (_) {}
       }
     }
     return map;

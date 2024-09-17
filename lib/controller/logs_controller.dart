@@ -63,8 +63,9 @@ class _FileOutput extends LogOutput {
   void _writeMainFile(OutputEvent event) async {
     // -- chronological logs
     try {
-      for (final line in event.lines) {
-        _sink.write("\n$line");
+      final length = event.lines.length;
+      for (int i = 0; i < length; i++) {
+        _sink.write("\n${event.lines[i]}");
       }
       _sink.write("\n-------------------------------");
       await _sink.flush();

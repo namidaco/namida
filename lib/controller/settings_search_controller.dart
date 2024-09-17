@@ -146,7 +146,8 @@ class SettingsSearchController {
         (backupAndRestore, backupAndRestore.lookupMap),
         (advanced, advanced.lookupMap),
       ];
-      for (final p in _allWidgets) {
+      for (int i = 0; i < _allWidgets.length; i++) {
+        var p = _allWidgets[i];
         subpagesDetails[p.$1.settingPage] = p.$1.settingPage.toSettingSubPageDetails();
       }
       _canShowSearch.value = true;

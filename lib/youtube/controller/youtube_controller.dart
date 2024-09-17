@@ -492,7 +492,8 @@ class YoutubeController {
     if (remove) {
       final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
       final itemsToCancel = allInGroupName ? youtubeDownloadTasksMap.value[groupName]!.values.toList() : itemsConfig;
-      for (final c in itemsToCancel) {
+      for (int i = 0; i < itemsToCancel.length; i++) {
+        var c = itemsToCancel[i];
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
@@ -1273,8 +1274,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
         if (stop == true) {
           final files = p['files'] as List<File>?;
           if (files != null) {
-            for (final file in files) {
-              final path = file.path;
+            for (int i = 0; i < files.length; i++) {
+              var path = files[i].path;
               requesters[path]?.close();
               requesters[path] = null;
             }

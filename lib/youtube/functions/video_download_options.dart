@@ -282,13 +282,13 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     availableDirectoriesNames[widget.initialFolder] = 0;
     availableDirectoriesNames[''] = 0;
     int rootFiles = 0;
-    for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).listSyncSafe()) {
+    Directory(AppDirs.YOUTUBE_DOWNLOADS).listSyncSafe().loop((d) {
       if (d is Directory) {
         availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = Directory(d.path).listSyncSafe().length;
       } else {
         rootFiles++;
       }
-    }
+    });
     availableDirectoriesNames[''] = rootFiles;
     groupName.value = widget.initialFolder;
     super.initState();

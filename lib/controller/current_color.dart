@@ -323,16 +323,17 @@ class CurrentColor {
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
 
-  Color mixIntColors(Iterable<Color> colors) {
+  Color mixIntColors(List<Color> colors) {
     if (colors.isEmpty) return Colors.transparent;
     int red = 0;
     int green = 0;
     int blue = 0;
 
-    for (final color in colors) {
-      red += (color.value >> 16) & 0xFF;
-      green += (color.value >> 8) & 0xFF;
-      blue += color.value & 0xFF;
+    for (int i = 0; i < colors.length; i++) {
+      var colorvalue = colors[i].value;
+      red += (colorvalue >> 16) & 0xFF;
+      green += (colorvalue >> 8) & 0xFF;
+      blue += colorvalue & 0xFF;
     }
 
     red ~/= colors.length;

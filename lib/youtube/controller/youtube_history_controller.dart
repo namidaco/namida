@@ -53,21 +53,24 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
     final map = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <String, List<int>>{};
     int totalCount = 0;
-    for (final f in Directory(path).listSyncSafe()) {
+    final files = Directory(path).listSyncSafe();
+    final filesL = files.length;
+    for (int i = 0; i < filesL; i++) {
+      var f = files[i];
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
           final dayOfVideo = int.parse(f.path.getFilenameWOExt);
-          final listVideos = (response as List?)?.mapped((e) => YoutubeID.fromJson(e)) ?? <YoutubeID>[];
+
+          final listVideos = <YoutubeID>[];
+          (response as List?)?.loop((e) {
+            var vid = YoutubeID.fromJson(e);
+            listVideos.add(vid);
+            tempMapTopItems.addForce(vid.id, vid.dateTimeAdded.millisecondsSinceEpoch);
+          });
           map[dayOfVideo] = listVideos;
           totalCount += listVideos.length;
-
-          listVideos.loop((e) {
-            tempMapTopItems.addForce(e.id, e.dateTimeAdded.millisecondsSinceEpoch);
-          });
-        } catch (e) {
-          continue;
-        }
+        } catch (_) {}
       }
     }
 

@@ -208,12 +208,12 @@ class JsonToHistoryParser {
                   onConfirm: () async {
                     final historyDays = <int>[];
                     final missing = _latestMissingMap.value.entries.toList()..sortByReverse((e) => e.value.length);
-                    for (final e in missing) {
+                    missing.loop((e) {
                       final replacedWithTrack = _latestMissingMapAddedStatus[e.key];
                       if (replacedWithTrack == null) {
                         historyDays.addAll(addTrackToHistoryOnly(e, getDummyTrack(e.key)));
                       }
-                    }
+                    });
 
                     HistoryController.inst.removeDuplicatedItems(historyDays);
                     HistoryController.inst.sortHistoryTracks(historyDays);
@@ -936,7 +936,10 @@ class JsonToHistoryParser {
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
-    for (final line in lines) {
+    final linesLength = lines.length;
+    for (int i = 0; i < linesLength; i++) {
+      final line = lines[i];
+
       totalParsed++;
 
       /// artist, album, title, (dd MMM yyyy HH:mm);

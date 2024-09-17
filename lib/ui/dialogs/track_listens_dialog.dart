@@ -56,7 +56,8 @@ void showListensDialog({
 
   final datesMapByDay = <DateTime, List<DateTime>>{};
   final datesMapByMonth = <DateTime, List<DateTime>>{};
-  for (final d in datesOfListen) {
+  for (int i = 0; i < datesOfListen.length; i++) {
+    var d = datesOfListen[i];
     final date = DateTime.fromMillisecondsSinceEpoch(d);
     final dayDate = DateTime(date.year, date.month, date.day);
     final monthDate = DateTime(date.year, date.month);

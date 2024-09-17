@@ -1071,12 +1071,11 @@ class TracksAddOnTap {
               }
 
               // -- moods from track embedded tag
-              final library = allTracksInLibrary;
-              for (final tr in library) {
+              allTracksInLibrary.loop((tr) {
                 tr.moodList.loop((mood) {
                   allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr);
                 });
-              }
+              });
 
               if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
                 snackyy(title: lang.ERROR, message: lang.NO_MOODS_AVAILABLE);

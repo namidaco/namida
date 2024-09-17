@@ -17,21 +17,21 @@ class _YoutubeInfoUtils {
 
   static Map<String, YoutubeVideoHistory> _fillBackupInfoMapIsolate(String dirPath) {
     final map = <String, YoutubeVideoHistory>{};
-    for (final f in Directory(dirPath).listSyncSafe()) {
+    Directory(dirPath).listSyncSafe().loop((f) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
-          if (response != null) {
-            for (final r in response as List) {
-              final yvh = YoutubeVideoHistory.fromJson(r);
-              map[yvh.id] = yvh;
-            }
+          if (response is List) {
+            response.loop(
+              (r) {
+                final yvh = YoutubeVideoHistory.fromJson(r);
+                map[yvh.id] = yvh;
+              },
+            );
           }
-        } catch (e) {
-          continue;
-        }
+        } catch (_) {}
       }
-    }
+    });
     return map;
   }
 

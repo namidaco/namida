@@ -380,7 +380,8 @@ class FAudioTaggerController {
           );
 
     final tracksMap = <Track, TrackExtended>{};
-    for (final track in tracks) {
+    for (int i = 0; i < tracks.length; i++) {
+      var track = tracks[i];
       final file = File(track.path);
       bool fileExists = false;
       String? error;

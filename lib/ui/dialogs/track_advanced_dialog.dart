@@ -318,7 +318,7 @@ void showTrackAdvancedDialog({
   );
 }
 
-Color _mixColor(Iterable<Color> colors) => CurrentColor.inst.mixIntColors(colors);
+Color _mixColor(List<Color> colors) => CurrentColor.inst.mixIntColors(colors);
 
 void _showTrackColorPaletteDialog({
   required Color colorScheme,

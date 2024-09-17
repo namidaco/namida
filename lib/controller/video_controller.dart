@@ -585,7 +585,8 @@ class VideoController {
     final possibleCached = getNVFromIDSorted(id);
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
-    for (final l in local) {
+    for (int i = 0; i < local.length; i++) {
+      var l = local[i];
       NamidaVideo? nv = _videoPathsMap[l];
       if (nv == null) {
         try {
@@ -798,7 +799,9 @@ class VideoController {
     final dir = Directory(dirPath);
     final newIdsMap = <String, List<(FileStat, String)>>{};
 
-    for (final df in dir.listSyncSafe()) {
+    final dirFiles = dir.listSyncSafe();
+    for (int i = 0; i < dirFiles.length; i++) {
+      var df = dirFiles[i];
       if (df is File) {
         final filename = df.path.getFilename;
         if (filename.endsWith('.part')) continue; // first thing first

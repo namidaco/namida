@@ -130,21 +130,23 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <Track, List<int>>{};
     int totalCount = 0;
-    for (final f in Directory(path).listSyncSafe()) {
+    final files = Directory(path).listSyncSafe();
+    final filesL = files.length;
+    for (int i = 0; i < filesL; i++) {
+      var f = files[i];
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
-          final listTracks = (response as List?)?.mapped((e) => TrackWithDate.fromJson(e)) ?? <TrackWithDate>[];
+          final listTracks = <TrackWithDate>[];
+          (response as List?)?.loop((e) {
+            var twd = TrackWithDate.fromJson(e);
+            listTracks.add(twd);
+            tempMapTopItems.addForce(twd.track, twd.dateTimeAdded.millisecondsSinceEpoch);
+          });
           map[dayOfTrack] = listTracks;
           totalCount += listTracks.length;
-
-          listTracks.loop((e) {
-            tempMapTopItems.addForce(e.track, e.dateTimeAdded.millisecondsSinceEpoch);
-          });
-        } catch (e) {
-          continue;
-        }
+        } catch (_) {}
       }
     }
 
