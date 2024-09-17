@@ -333,25 +333,25 @@ class _LRCSearchManager with PortsProvider<SendPort> {
           final responseBody = await utf8.decodeStream(response.asBroadcastStream());
           final fetched = <LyricsModel>[];
           final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
-          for (final jsonRes in jsonLists) {
+          jsonLists.loop((jsonRes) {
             final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
             final plain = jsonRes?["plainLyrics"] as String? ?? '';
             if (syncedLyrics != '') {
               // lrc
-              final lines = <String>[];
+              final lrcBuffer = StringBuffer();
               final artist = jsonRes['artistName'] ?? details?.artist ?? '';
               final album = jsonRes['albumName'] ?? details?.album ?? '';
               final title = jsonRes['trackName'] ?? details?.title ?? '';
               final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : details?.durationMS ?? 0;
 
-              if (artist != '') lines.add('[ar:$artist]');
-              if (album != '') lines.add('[al:$album]');
-              if (title != '') lines.add('[ti:$title]');
-              if (durMS > 0) lines.add('[length:${formatTime(durMS)}]');
-              for (final l in syncedLyrics.split('\n')) {
-                lines.add(l);
-              }
-              final resultedLRC = lines.join('\n');
+              if (artist != '') lrcBuffer.writeln('[ar:$artist]');
+              if (album != '') lrcBuffer.writeln('[al:$album]');
+              if (title != '') lrcBuffer.writeln('[ti:$title]');
+              if (durMS > 0) lrcBuffer.writeln('[length:${formatTime(durMS)}]');
+              lrcBuffer.write(syncedLyrics);
+
+              final resultedLRC = lrcBuffer.toString();
+
               fetched.add(LyricsModel(
                 lyrics: resultedLRC,
                 isInCache: false,
