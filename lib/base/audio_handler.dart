@@ -464,7 +464,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return current is Selectable && path == current.track.path;
       },
     );
+
+    Duration? duration;
+    bool checkInterrupted() {
+      if (item.track != currentItem.value) {
+        return true;
+      } else {
+        if (duration != null) _currentItemDuration.value = duration;
+        return false;
+      }
+    }
+
     final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true, handleVideoPlayback: false);
+
+    if (checkInterrupted()) return;
 
     // -- generating artwork in case it wasnt, to be displayed in notification
     File(tr.pathToImage).exists().then((exists) {
@@ -480,8 +493,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // if (trackYoutubeId.isNotEmpty) {
     //   YoutubeInfoController.history.markVideoWatched(videoId: trackYoutubeId, streamResult: null, errorOnMissingParam: false);
     // }
-
-    Duration? duration;
 
     Future<Duration?> setPls() async {
       if (!File(tr.path).existsSync()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
@@ -512,15 +523,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return dur;
     }
 
-    bool checkInterrupted() {
-      if (item.track != currentItem.value) {
-        return true;
-      } else {
-        if (duration != null) _currentItemDuration.value = duration;
-        return false;
-      }
-    }
-
     if (tr.path.startsWith('/namida_dummy/')) return;
 
     try {
@@ -533,6 +535,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         // -- playing music from root folders still require `all_file_access`
         // -- this is a fix for not playing some external files reported by some users.
         final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+        if (checkInterrupted()) return;
         if (hadPermissionBefore) {
           pause();
           cancelPlayErrorSkipTimer();
@@ -559,6 +562,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         } else {
           final hasPermission = await requestManageStoragePermission();
           if (!hasPermission) return;
+          if (checkInterrupted()) return;
           try {
             duration = await setPls();
           } catch (_) {}
