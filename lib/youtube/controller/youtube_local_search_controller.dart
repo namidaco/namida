@@ -65,7 +65,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     for (final l in _onSearchStartListeners.entries) {
       l.value();
     }
-    final possibleID = text.getYoutubeID;
+    final possibleID = text.length == 11 ? text : null;
     final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
     await sendPort(p);
   }
@@ -158,11 +158,11 @@ class YTLocalSearchController with PortsProvider<Map> {
       p as Map;
       final textPre = p['text'] as String;
       final maxResults = p['maxResults'] as int?;
-      final possibleID = p['possibleID'] as String;
+      final possibleID = p['possibleID'] as String?;
 
       final searchResults = <StreamInfoItem>[];
 
-      if (possibleID != '') {
+      if (possibleID != null && possibleID != '') {
         try {
           final res = lookupItemAvailable[possibleID];
           if (res != null) {
