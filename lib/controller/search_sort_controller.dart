@@ -758,7 +758,18 @@ class SearchSortController {
 
     final finalMap = Indexer.inst.mainMapAlbums;
     final albumsList = finalMap.value.entries.toList();
-    void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? albumsList.sortByReverse(comparable) : albumsList.sortBy(comparable);
+
+    sortAlbumsListRaw(albumsList, sortBy, reverse);
+
+    finalMap.value.assignAllEntries(albumsList);
+
+    settings.save(albumSort: sortBy, albumSortReversed: reverse);
+
+    _searchMediaType(type: MediaType.album, text: LibraryTab.albums.textSearchController?.text ?? '');
+  }
+
+  void sortAlbumsListRaw(List<MapEntry<String, List<Track>>> albumsList, GroupSortType sortBy, bool reverse) {
+    void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse ? albumsList.sortByReverse(comparable) : albumsList.sortBy(comparable);
 
     switch (sortBy) {
       case GroupSortType.album:
@@ -795,12 +806,6 @@ class SearchSortController {
       default:
         null;
     }
-
-    finalMap.value.assignAllEntries(albumsList);
-
-    settings.save(albumSort: sortBy, albumSortReversed: reverse);
-
-    _searchMediaType(type: MediaType.album, text: LibraryTab.albums.textSearchController?.text ?? '');
   }
 
   /// Sorts Artists and Saves automatically to settings

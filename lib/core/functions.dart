@@ -26,6 +26,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -58,7 +59,14 @@ class NamidaOnTaps {
   Future<void> onArtistTap(String name, MediaType type, [List<Track>? tracksPre]) async {
     final tracks = tracksPre ?? name.getArtistTracksFor(type);
 
-    final albumIds = tracks.toUniqueAlbums();
+    final albumIdsMap = <String, List<Track>>{};
+    for (final tr in tracks) {
+      final album = tr.albumIdentifier;
+      albumIdsMap[album] ??= album.getAlbumTracks();
+    }
+    final albumIdsFinalList = albumIdsMap.entries.toList();
+    SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSort.value, settings.albumSortReversed.value);
+    final albumIds = albumIdsFinalList.map((e) => e.key).toList();
 
     ArtistTracksPage(
       name: name,

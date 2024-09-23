@@ -28,7 +28,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
   final String name;
 
   final List<Track> tracks;
-  final Set<String> albumIdentifiers;
+  final List<String> albumIdentifiers;
   final MediaType type;
 
   const ArtistTracksPage({
@@ -78,7 +78,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
                           track: tracks.trackOfImage,
-                          thumbnailSize: namida.width * 0.35,
+                          thumbnailSize: context.width * 0.35,
                           path: tracks.pathToImage,
                           forceSquared: true,
                           blur: 0,
@@ -102,7 +102,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                         itemExtent: 100.0,
                         itemCount: albumIdentifiers.length,
                         itemBuilder: (context, i) {
-                          final albumId = albumIdentifiers.elementAt(i);
+                          final albumId = albumIdentifiers[i];
                           return Container(
                             width: 100.0,
                             margin: const EdgeInsets.only(left: 2.0),
