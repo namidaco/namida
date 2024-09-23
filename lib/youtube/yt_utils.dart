@@ -206,13 +206,13 @@ class YTUtils {
       totalLength: null,
       streamInfoItem: null,
       videoId: videoId,
-      url: YTUrlUtils.buildVideoUrl(videoId),
       channelID: channelID,
       displayGoToChannel: displayGoToChannel,
       playlistID: null,
       idsNamesLookup: {videoId: videoTitle},
       copyUrl: displayCopyUrl,
       clearTile: false,
+      displayShareUrl: false,
     );
     if (currentItem is YoutubeID && videoId == currentItem.id) {
       repeatForWidget = NamidaPopupItem(
@@ -278,7 +278,6 @@ class YTUtils {
     required StreamInfoItem? streamInfoItem,
     String? playlistId,
     required String videoId,
-    required String? url,
     required String? channelID,
     bool displayGoToChannel = true,
     required PlaylistID? playlistID,
@@ -289,6 +288,7 @@ class YTUtils {
     List<NamidaPopupItem>? moreMenuChildren,
     bool isInFullScreen = false,
     bool clearTile = true,
+    bool displayShareUrl = true,
   }) {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
@@ -315,11 +315,11 @@ class YTUtils {
           );
         },
       ),
-      if (url != null && url.isNotEmpty)
+      if (displayShareUrl)
         NamidaPopupItem(
           icon: Broken.share,
           title: lang.SHARE,
-          onTap: () => Share.share(url),
+          onTap: () => Share.share(YTUrlUtils.buildVideoUrl(videoId)),
         ),
       if (copyUrl)
         NamidaPopupItem(

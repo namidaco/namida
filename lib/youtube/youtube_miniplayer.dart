@@ -9,6 +9,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/yt_video_like_manager.dart';
@@ -566,8 +567,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             title: lang.SHARE,
                                                             icon: Broken.share,
                                                             onPressed: () {
-                                                              final url = videoInfo?.buildUrl();
-                                                              if (url != null) Share.share(url);
+                                                              final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
+                                                              Share.share(url);
                                                             },
                                                           ),
                                                           const SizedBox(width: 4.0),

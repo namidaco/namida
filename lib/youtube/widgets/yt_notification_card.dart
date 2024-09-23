@@ -104,7 +104,6 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       totalLength: null,
       streamInfoItem: null,
       videoId: videoId,
-      url: widget.notification.buildUrl(),
       channelID: null,
       playlistID: widget.playlistID,
       moreMenuChildren: _isNowRead.value == true
