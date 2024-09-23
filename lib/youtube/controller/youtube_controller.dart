@@ -105,7 +105,7 @@ class YoutubeController {
   final downloadedFilesMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File?>>{}.obs;
 
   late final _notificationData = _YTNotificationDataHolder();
-  late final _downloadTasksMainDBManager = DBWrapperMain.init(AppDirs.YT_DOWNLOAD_TASKS);
+  late final _downloadTasksMainDBManager = DBWrapperMain(AppDirs.YT_DOWNLOAD_TASKS);
 
   /// [renameCacheFiles] requires you to stop the download first, otherwise it might result in corrupted files.
   Future<void> renameConfigFilename({
@@ -119,7 +119,7 @@ class YoutubeController {
 
     // ignore: invalid_use_of_protected_member
     config.rename(newFilename);
-    final downloadTasksGroupDB = _downloadTasksMainDBManager.open(groupName.groupName);
+    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName);
     downloadTasksGroupDB.put(newFilename, config.toJson());
     downloadTasksGroupDB.delete(oldFilename);
     downloadTasksGroupDB.claimFreeSpace();
@@ -334,16 +334,17 @@ class YoutubeController {
         try {
           final res = file.readAsJsonSync() as Map<String, dynamic>?;
           if (res != null) {
-            final downloadTasksGroupDB = _downloadTasksMainDBManager.open(group.groupName, createIfNotExist: true);
+            final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true);
             for (final r in res.entries) {
               downloadTasksGroupDB.put(r.key, r.value);
             }
-            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDB.file.path) == null;
-            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDB.file);
+            final downloadTasksGroupDBFile = downloadTasksGroupDB.fileInfo.file;
+            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDBFile.path) == null;
+            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDBFile);
             try {
               final originalFileDates = file.statSync();
-              downloadTasksGroupDB.file.setLastModifiedSync(originalFileDates.modified);
-              downloadTasksGroupDB.file.setLastAccessedSync(originalFileDates.accessed);
+              downloadTasksGroupDBFile.setLastModifiedSync(originalFileDates.modified);
+              downloadTasksGroupDBFile.setLastAccessedSync(originalFileDates.accessed);
             } catch (_) {}
           }
         } catch (_) {}
@@ -368,7 +369,7 @@ class YoutubeController {
         }
 
         try {
-          final downloadTasksGroupDB = _downloadTasksMainDBManager.open(group.groupName);
+          final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(group.groupName);
           downloadTasksGroupDB.loadEverything((itemMap) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
             final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}${group.groupName}";
@@ -535,7 +536,7 @@ class YoutubeController {
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
-    final downloadTasksGroupDB = _downloadTasksMainDBManager.open(groupName.groupName, createIfNotExist: true);
+    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName, createIfNotExist: true);
 
     youtubeDownloadTasksMap.value[groupName] ??= {};
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
@@ -565,7 +566,7 @@ class YoutubeController {
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
         youtubeDownloadTasksMap.value.remove(groupName);
         try {
-          downloadTasksGroupDB.file.deleteSync();
+          downloadTasksGroupDB.fileInfo.file.deleteSync();
         } catch (_) {}
       }
     } else {

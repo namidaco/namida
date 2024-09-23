@@ -16,6 +16,7 @@ import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:jiffy/jiffy.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -87,6 +88,8 @@ void mainInitialization() async {
   if (!await requestStoragePermission(request: false)) {
     shouldShowOnBoarding = true;
   }
+
+  NamicoDBWrapper.initialize();
 
   late final List<String> paths;
   Future<void> fetchAppData() async {
