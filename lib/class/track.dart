@@ -97,12 +97,29 @@ class TrackStats {
     required this.lastPositionInMs,
   });
 
+  static List<String>? _parseList(dynamic listJson) {
+    if (listJson is List && listJson.isNotEmpty) {
+      return listJson.cast<String>();
+    }
+    return null;
+  }
+
+  static List<String>? _cleanList(List<String> current) {
+    if (current.isEmpty || (current.length == 1 && current[0].isEmpty)) return null;
+    return current;
+  }
+
   factory TrackStats.fromJson(Map<String, dynamic> json) {
+    final track = Track.fromJson(json['track'] ?? '', isVideo: json['v'] == true);
+    return TrackStats.fromJsonWithoutTrack(track, json);
+  }
+
+  factory TrackStats.fromJsonWithoutTrack(Track track, Map<String, dynamic> json) {
     return TrackStats(
-      track: Track.fromJson(json['track'] ?? '', isVideo: json['v'] == true),
+      track: track,
       rating: json['rating'] ?? 0,
-      tags: (json['tags'] as List?)?.cast<String>() ?? [],
-      moods: (json['moods'] as List?)?.cast<String>() ?? [],
+      tags: _parseList(json['tags']) ?? [],
+      moods: _parseList(json['moods']) ?? [],
       lastPositionInMs: json['lastPositionInMs'] ?? 0,
     );
   }
@@ -110,16 +127,28 @@ class TrackStats {
   Map<String, dynamic> toJson() {
     return {
       'track': track.path,
-      'rating': rating,
-      'tags': tags,
-      'moods': moods,
-      'lastPositionInMs': lastPositionInMs,
-      if (track is Video) 'v': true,
+      ...?toJsonWithoutTrack(),
     };
   }
 
+  Map<String, dynamic>? toJsonWithoutTrack() {
+    final tagsFinal = _cleanList(tags);
+    final moodsFinal = _cleanList(moods);
+    final map = {
+      if (rating > 0) 'rating': rating,
+      if (tagsFinal != null) 'tags': tagsFinal,
+      if (moodsFinal != null) 'moods': moodsFinal,
+      if (lastPositionInMs > 0) 'lastPositionInMs': lastPositionInMs,
+      if (track is Video) 'v': true,
+    };
+    if (map.isEmpty) return null;
+    return map;
+  }
+
   @override
-  String toString() => '${track.toString()}, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs';
+  String toString() {
+    return 'TrackStats(track: $track, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs)';
+  }
 }
 
 abstract class Playable<T extends Object> {
@@ -291,6 +320,7 @@ class TrackExtended {
     Map<String, dynamic> json, {
     required ArtistsSplitConfig artistsSplitConfig,
     required GenresSplitConfig genresSplitConfig,
+    required GeneralSplitConfig generalSplitConfig,
   }) {
     return TrackExtended(
       title: json['title'] ?? '',
@@ -310,7 +340,7 @@ class TrackExtended {
       originalMood: json['originalMood'] ?? '',
       moodList: Indexer.splitGeneral(
         json['originalMood'],
-        config: genresSplitConfig,
+        config: generalSplitConfig,
       ),
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
@@ -335,7 +365,7 @@ class TrackExtended {
       originalTags: json['originalTags'],
       tagsList: Indexer.splitGeneral(
         json['originalTags'],
-        config: genresSplitConfig,
+        config: generalSplitConfig,
       ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       isVideo: json['v'] ?? false,

@@ -402,7 +402,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 subtitle: "${lang.EXTRACT_FEAT_ARTIST_SUBTITLE} ${lang.INSTANTLY_APPLIES}.",
                 onChanged: (isTrue) async {
                   settings.save(extractFeatArtistFromTitle: !isTrue);
-                  Indexer.inst.prepareTracksFile();
+                  Indexer.inst.rebuildTracksAfterSplitConfigChanges();
                 },
                 value: settings.extractFeatArtistFromTitle.valueR,
               ),
@@ -438,9 +438,6 @@ class IndexerSettings extends SettingSubpageProvider {
                                 NamidaNavigator.inst.closeDialog();
                                 settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
                                 settings.save(albumIdentifiers: tempList.value);
-
-                                Indexer.inst.prepareTracksFile();
-
                                 _showReindexingPrompt(title: lang.ALBUM_IDENTIFIERS, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
                               },
                             );
@@ -694,7 +691,7 @@ class IndexerSettings extends SettingSubpageProvider {
           ? null
           : () async {
               updatingLibrary.value = true;
-              Indexer.inst.prepareTracksFile();
+              Indexer.inst.rebuildTracksAfterSplitConfigChanges();
             },
       durationInMs: 200,
       dialog: CustomBlurryDialog(

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_udid/flutter_udid.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -218,7 +219,8 @@ class AppPaths {
   static final SETTINGS_YOUTUBE = '$_USER_DATA/namida_settings_youtube.json';
   static final SETTINGS_EXTRA = '$_USER_DATA/namida_settings_extra.json';
   static final TRACKS = '$_USER_DATA/tracks.json';
-  static final TRACKS_STATS = '$_USER_DATA/tracks_stats.json';
+  static final TRACKS_STATS_OLD = '$_USER_DATA/tracks_stats.json';
+  static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
   static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
   static final VIDEOS_CACHE = '$_USER_DATA/cache_videos.json';
   static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';

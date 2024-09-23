@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:intl/intl.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -37,6 +38,8 @@ class Indexer<T extends Track> {
 
   bool get _defaultUseMediaStore => settings.useMediaStore.value;
   bool get _includeVideosAsTracks => true; // TODO: settings.includeVideosAsTracks.value
+
+  late final _trackStatsDBManager = DBWrapper.openFromInfo(fileInfo: AppPaths.TRACKS_STATS_DB_INFO, createIfNotExist: true);
 
   final isIndexing = false.obs;
 
@@ -167,7 +170,7 @@ class Indexer<T extends Track> {
 
     /// Only awaits if the track file exists, otherwise it will get into normally and start indexing.
     if (File(AppPaths.TRACKS).existsAndValidSync()) {
-      readTrackData();
+      _readTrackData();
       _afterIndexing();
     }
 
@@ -176,6 +179,36 @@ class Indexer<T extends Track> {
       File(AppPaths.TRACKS).createSync();
       refreshLibraryAndCheckForDiff(forceReIndex: true, useMediaStore: _defaultUseMediaStore);
     }
+  }
+
+  void rebuildTracksAfterSplitConfigChanges() {
+    final splitConfig = _createSplitConfig();
+    final keysList = allTracksMappedByPath.keys.toList();
+    for (int i = 0; i < keysList.length; i++) {
+      var trPath = keysList[i];
+      final oldtr = allTracksMappedByPath[trPath]!;
+      allTracksMappedByPath[trPath] = oldtr.copyWith(
+        artistsList: Indexer.splitArtist(
+          title: oldtr.title,
+          originalArtist: oldtr.originalArtist,
+          config: splitConfig.artistsConfig,
+        ),
+        genresList: Indexer.splitGenre(
+          oldtr.originalGenre,
+          config: splitConfig.genresConfig,
+        ),
+        moodList: Indexer.splitGeneral(
+          oldtr.originalMood,
+          config: splitConfig.generalConfig,
+        ),
+        tagsList: Indexer.splitGeneral(
+          oldtr.originalTags,
+          config: splitConfig.generalConfig,
+        ),
+      );
+    }
+
+    tracksInfoList.refresh();
   }
 
   Future<void> refreshLibraryAndCheckForDiff({
@@ -1022,19 +1055,43 @@ class Indexer<T extends Track> {
       lastPositionInMs: lastPositionInMs,
     );
     trackStatsMap[track] = newStats;
-
-    await _saveTrackStatsFileToStorage();
+    _trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack());
     return newStats;
   }
 
-  Future<void> _saveTrackStatsFileToStorage() async {
-    await File(AppPaths.TRACKS_STATS).writeAsJson(trackStatsMap.values.map((e) => e.toJson()).toList());
-  }
-
-  void readTrackData() {
+  void _readTrackData() {
     // reading stats file containing track rating etc.
-    final statsResult = _readTracksStatsCompute(AppPaths.TRACKS_STATS);
-    trackStatsMap.value = statsResult;
+    try {
+      _trackStatsDBManager.loadEverythingKeyed(
+        (key, value) {
+          final track = Track.fromJson(key, isVideo: value['v'] == true);
+          final stats = TrackStats.fromJsonWithoutTrack(track, value);
+          trackStatsMap.value[stats.track] = stats;
+        },
+      );
+
+      // -- migrating json to db
+      final statsJsonFile = File(AppPaths.TRACKS_STATS_OLD);
+      if (statsJsonFile.existsSync()) {
+        final list = statsJsonFile.readAsJsonSync() as List?;
+        if (list != null) {
+          for (int i = 0; i < list.length; i++) {
+            try {
+              final item = list[i];
+              final trst = TrackStats.fromJson(item);
+              if (trackStatsMap.value[trst.track] == null) {
+                final jsonDetails = trst.toJsonWithoutTrack();
+                if (jsonDetails != null) {
+                  trackStatsMap.value[trst.track] = trst;
+                  _trackStatsDBManager.put(trst.track.path, trst.toJsonWithoutTrack());
+                }
+              }
+            } catch (_) {}
+          }
+        }
+        statsJsonFile.deleteSync();
+      }
+    } catch (_) {}
 
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
@@ -1047,23 +1104,6 @@ class Indexer<T extends Track> {
     tracksInfoList.value = tracksResult.$3 as List<T>;
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
-  }
-
-  static Map<Track, TrackStats> _readTracksStatsCompute(String path) {
-    final map = <Track, TrackStats>{};
-    final list = File(path).readAsJsonSync() as List?;
-    if (list != null) {
-      for (int i = 0; i < list.length; i++) {
-        try {
-          final item = list[i];
-          final trst = TrackStats.fromJson(item);
-          map[trst.track] = trst;
-        } catch (e) {
-          continue;
-        }
-      }
-    }
-    return map;
   }
 
   static (Map<String, TrackExtended>, Map<String, List<Track>>, List<Track>) _readTracksFileCompute(SplitArtistGenreConfigsWrapper config) {
@@ -1079,6 +1119,7 @@ class Indexer<T extends Track> {
             item,
             artistsSplitConfig: config.artistsConfig,
             genresSplitConfig: config.genresConfig,
+            generalSplitConfig: config.generalConfig,
           );
           final track = trExt.asTrack();
           map[track.path] = trExt;
@@ -1092,8 +1133,6 @@ class Indexer<T extends Track> {
     return (map, idsMap, allTracks);
   }
 
-  /// [addArtistsFromTitle] extracts feat artists.
-  /// Defaults to [settings.extractFeatArtistFromTitle]
   static List<String> splitArtist({
     required String? title,
     required String? originalArtist,
