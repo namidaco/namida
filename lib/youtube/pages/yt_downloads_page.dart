@@ -302,145 +302,146 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                   keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                   return CustomScrollView(
                     controller: sc,
-                    slivers: _isOnGoingSelectedR == null
-                        ? keys.mapIndexed(
-                            (e, index) {
-                              final groupName = keys[index];
-                              final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
-                              final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
-                              final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
+                    slivers: [
+                      if (_isOnGoingSelectedR == null)
+                        ...keys.mapIndexed(
+                          (e, index) {
+                            final groupName = keys[index];
+                            final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+                            final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
+                            final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
 
-                              return SliverStickyHeader(
-                                header: NamidaInkWell(
-                                  borderRadius: 0.0,
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  bgColor: context.theme.scaffoldBackgroundColor,
-                                  onTap: () {
-                                    _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
-                                    _hiddenGroupsMap.refresh();
-                                  },
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(width: 12.0),
-                                      NamidaInkWell(
-                                        borderRadius: 8.0,
-                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                        bgColor: context.theme.cardColor,
-                                        child: Text(
-                                          "${list.length}",
-                                          style: context.textTheme.displayLarge,
-                                        ),
+                            return SliverStickyHeader(
+                              header: NamidaInkWell(
+                                borderRadius: 0.0,
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                bgColor: context.theme.scaffoldBackgroundColor,
+                                onTap: () {
+                                  _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
+                                  _hiddenGroupsMap.refresh();
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(width: 12.0),
+                                    NamidaInkWell(
+                                      borderRadius: 8.0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                      bgColor: context.theme.cardColor,
+                                      child: Text(
+                                        "${list.length}",
+                                        style: context.textTheme.displayLarge,
                                       ),
-                                      const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
+                                            style: context.textTheme.displayMedium,
+                                          ),
+                                          if (lastEditedAgo != null)
                                             Text(
-                                              groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
-                                              style: context.textTheme.displayMedium,
+                                              lastEditedAgo,
+                                              style: context.textTheme.displaySmall,
                                             ),
-                                            if (lastEditedAgo != null)
-                                              Text(
-                                                lastEditedAgo,
-                                                style: context.textTheme.displaySmall,
-                                              ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () {
-                                          YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
-                                        },
-                                        icon: const Icon(Broken.play, size: 18.0),
-                                      ),
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () {
-                                          YoutubeController.inst.pauseDownloadTask(
+                                    ),
+                                    IconButton.filledTonal(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: () {
+                                        YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
+                                      },
+                                      icon: const Icon(Broken.play, size: 18.0),
+                                    ),
+                                    IconButton.filledTonal(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: () {
+                                        YoutubeController.inst.pauseDownloadTask(
+                                          itemsConfig: [],
+                                          groupName: groupName,
+                                          allInGroupName: true,
+                                        );
+                                      },
+                                      icon: const Icon(Broken.pause, size: 18.0),
+                                    ),
+                                    IconButton.filledTonal(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: () async {
+                                        final confirmed = await _confirmCancelDialog(
+                                          context: context,
+                                          operationTitle: lang.CANCEL,
+                                          confirmMessage: lang.REMOVE,
+                                          groupTitle: groupName.groupName,
+                                          itemsLength: list.length,
+                                        );
+                                        if (confirmed) {
+                                          YoutubeController.inst.cancelDownloadTask(
                                             itemsConfig: [],
                                             groupName: groupName,
                                             allInGroupName: true,
                                           );
-                                        },
-                                        icon: const Icon(Broken.pause, size: 18.0),
-                                      ),
-                                      IconButton.filledTonal(
-                                        padding: EdgeInsets.zero,
-                                        visualDensity: VisualDensity.compact,
-                                        onPressed: () async {
-                                          final confirmed = await _confirmCancelDialog(
-                                            context: context,
-                                            operationTitle: lang.CANCEL,
-                                            confirmMessage: lang.REMOVE,
-                                            groupTitle: groupName.groupName,
-                                            itemsLength: list.length,
-                                          );
-                                          if (confirmed) {
-                                            YoutubeController.inst.cancelDownloadTask(
-                                              itemsConfig: [],
+                                        }
+                                      },
+                                      icon: const Icon(Broken.close_circle, size: 18.0),
+                                    ),
+                                    const SizedBox(width: 4.0),
+                                    const Icon(
+                                      Broken.arrow_down_2,
+                                      size: 20.0,
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                  ],
+                                ),
+                              ),
+                              sliver: ObxO(
+                                rx: _hiddenGroupsMap,
+                                builder: (context, hiddenGroups) => hiddenGroups[groupName] == true
+                                    ? const SliverToBoxAdapter()
+                                    : SliverPadding(
+                                        padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
+                                        sliver: SliverList.builder(
+                                          itemCount: list.length,
+                                          itemBuilder: (context, index) {
+                                            return YTDownloadTaskItemCard(
+                                              videos: list,
+                                              index: index,
                                               groupName: groupName,
-                                              allInGroupName: true,
                                             );
-                                          }
-                                        },
-                                        icon: const Icon(Broken.close_circle, size: 18.0),
-                                      ),
-                                      const SizedBox(width: 4.0),
-                                      const Icon(
-                                        Broken.arrow_down_2,
-                                        size: 20.0,
-                                      ),
-                                      const SizedBox(width: 12.0),
-                                    ],
-                                  ),
-                                ),
-                                sliver: ObxO(
-                                  rx: _hiddenGroupsMap,
-                                  builder: (context, hiddenGroups) => hiddenGroups[groupName] == true
-                                      ? const SliverToBoxAdapter()
-                                      : SliverPadding(
-                                          padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                                          sliver: SliverList.builder(
-                                            itemCount: list.length,
-                                            itemBuilder: (context, index) {
-                                              return YTDownloadTaskItemCard(
-                                                videos: list,
-                                                index: index,
-                                                groupName: groupName,
-                                              );
-                                            },
-                                          ),
+                                          },
                                         ),
-                                ),
-                              );
-                            },
-                          ).toList()
-                        : [
-                            ObxO(
-                              rx: _downloadTasksTempList,
-                              builder: (context, downloadTasksTempList) {
-                                final videos = downloadTasksTempList.map((e) => e.$2).toList();
-                                return SliverList.builder(
-                                  itemCount: downloadTasksTempList.length,
-                                  itemBuilder: (context, index) {
-                                    final groupNameAndItem = downloadTasksTempList[index];
-                                    return YTDownloadTaskItemCard(
-                                      videos: videos,
-                                      index: index,
-                                      groupName: groupNameAndItem.$1,
-                                    );
-                                  },
+                                      ),
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        ObxO(
+                          rx: _downloadTasksTempList,
+                          builder: (context, downloadTasksTempList) {
+                            final videos = downloadTasksTempList.map((e) => e.$2).toList();
+                            return SliverList.builder(
+                              itemCount: downloadTasksTempList.length,
+                              itemBuilder: (context, index) {
+                                final groupNameAndItem = downloadTasksTempList[index];
+                                return YTDownloadTaskItemCard(
+                                  videos: videos,
+                                  index: index,
+                                  groupName: groupNameAndItem.$1,
                                 );
                               },
-                            ),
-                            kBottomPaddingWidgetSliver,
-                          ],
+                            );
+                          },
+                        ),
+                      kBottomPaddingWidgetSliver,
+                    ],
                   );
                 },
               ),
