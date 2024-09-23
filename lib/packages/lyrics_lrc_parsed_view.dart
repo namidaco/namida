@@ -440,68 +440,65 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                           final color = CurrentColor.inst.miniplayerColor;
                                           return ObxO(
                                             rx: _latestUpdatedLine,
-                                            builder: (context, highlightedTimeStamp) => PageStorage(
-                                              bucket: PageStorageBucket(),
-                                              child: ScrollablePositionedList.builder(
-                                                padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                                                itemScrollController: controller,
-                                                itemCount: lyrics.length,
-                                                itemBuilder: (context, index) {
-                                                  final lrc = lyrics[index];
-                                                  final text = lrc.lyrics;
-                                                  final selected = highlightedTimeStamp == lrc.timestamp;
-                                                  final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                                                  final bgColor = selected
-                                                      ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
-                                                      : null;
-                                                  final padding = selected ? 2.0 : 0.0;
+                                            builder: (context, highlightedTimeStamp) => ScrollablePositionedList.builder(
+                                              padding: EdgeInsets.symmetric(vertical: _paddingVertical),
+                                              itemScrollController: controller,
+                                              itemCount: lyrics.length,
+                                              itemBuilder: (context, index) {
+                                                final lrc = lyrics[index];
+                                                final text = lrc.lyrics;
+                                                final selected = highlightedTimeStamp == lrc.timestamp;
+                                                final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                                                final bgColor = selected
+                                                    ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
+                                                    : null;
+                                                final padding = selected ? 2.0 : 0.0;
 
-                                                  return Stack(
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      Positioned.fill(
-                                                        child: Material(
-                                                          type: MaterialType.transparency,
-                                                          child: InkWell(
-                                                            splashFactory: InkSparkle.splashFactory,
-                                                            onTap: () {
-                                                              Player.inst.seek(lrc.timestamp);
-                                                              _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
-                                                            },
-                                                          ),
+                                                return Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    Positioned.fill(
+                                                      child: Material(
+                                                        type: MaterialType.transparency,
+                                                        child: InkWell(
+                                                          splashFactory: InkSparkle.splashFactory,
+                                                          onTap: () {
+                                                            Player.inst.seek(lrc.timestamp);
+                                                            _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
+                                                          },
                                                         ),
                                                       ),
-                                                      IgnorePointer(
-                                                        child: NamidaHero(
-                                                          tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                                          enabled: false,
-                                                          child: AnimatedScale(
-                                                            duration: const Duration(milliseconds: 400),
-                                                            curve: Curves.easeInOutCubicEmphasized,
-                                                            scale: selected ? 1.0 : 0.95,
-                                                            child: NamidaInkWell(
-                                                              bgColor: bgColor,
-                                                              borderRadius: selectedAndEmpty ? 5.0 : 8.0,
-                                                              animationDurationMS: 300,
-                                                              margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
-                                                              padding: selectedAndEmpty
-                                                                  ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
-                                                                  : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                                                              child: Text(
-                                                                text,
-                                                                style: normalTextStyle.copyWith(
-                                                                  color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
-                                                                ),
-                                                                textAlign: TextAlign.center,
+                                                    ),
+                                                    IgnorePointer(
+                                                      child: NamidaHero(
+                                                        tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                                        enabled: false,
+                                                        child: AnimatedScale(
+                                                          duration: const Duration(milliseconds: 400),
+                                                          curve: Curves.easeInOutCubicEmphasized,
+                                                          scale: selected ? 1.0 : 0.95,
+                                                          child: NamidaInkWell(
+                                                            bgColor: bgColor,
+                                                            borderRadius: selectedAndEmpty ? 5.0 : 8.0,
+                                                            animationDurationMS: 300,
+                                                            margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
+                                                            padding: selectedAndEmpty
+                                                                ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
+                                                                : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                                                            child: Text(
+                                                              text,
+                                                              style: normalTextStyle.copyWith(
+                                                                color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
                                                               ),
+                                                              textAlign: TextAlign.center,
                                                             ),
                                                           ),
                                                         ),
                                                       ),
-                                                    ],
-                                                  );
-                                                },
-                                              ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
                                             ),
                                           );
                                         },

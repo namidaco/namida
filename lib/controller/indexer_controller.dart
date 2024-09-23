@@ -980,14 +980,18 @@ class Indexer<T extends Track> {
 
   static List<String> splitByCommaList(String listText) {
     final moodsFinalLookup = <String, bool>{};
+    final moodsFinal = <String>[];
     final moodsPre = listText.split(',');
     moodsPre.loop((m) {
       if (m.isNotEmpty && m != ' ') {
         final cleaned = m.trimAll();
-        moodsFinalLookup[cleaned] ??= true;
+        if (moodsFinalLookup[cleaned] == null) {
+          moodsFinalLookup[cleaned] = true;
+          moodsFinal.add(cleaned);
+        }
       }
     });
-    return moodsFinalLookup.keys.toList();
+    return moodsFinal;
   }
 
   /// Returns new [TrackStats].

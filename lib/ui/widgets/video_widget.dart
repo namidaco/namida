@@ -11,7 +11,6 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -1984,7 +1983,6 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           totalLength: null,
           streamInfoItem: null,
           videoId: videoId,
-          url: YTUrlUtils.buildVideoUrl(videoId),
           channelID: null,
           playlistID: null,
           idsNamesLookup: {videoId: item.title},
