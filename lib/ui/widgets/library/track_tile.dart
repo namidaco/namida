@@ -715,7 +715,7 @@ class TrackTileManager {
     TrackTileItem.format: (track) => track.format,
     TrackTileItem.sampleRate: (track) => '${track.sampleRate}Hz',
     TrackTileItem.size: (track) => track.size.fileSizeFormatted,
-    TrackTileItem.bitrate: (track) => "${(track.bitrate)} kps",
+    TrackTileItem.bitrate: (track) => "${(track.bitrate)} kbps",
     TrackTileItem.dateModified: (track) {
       final finalDate = track.dateModified.dateFormatted;
       final finalClock = track.dateModified.clockFormatted;

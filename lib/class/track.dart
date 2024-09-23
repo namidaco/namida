@@ -449,7 +449,7 @@ extension TrackExtUtils on TrackExtended {
     final initial = [
       trExt.durationMS.milliSecondsLabel,
       trExt.size.fileSizeFormatted,
-      "${trExt.bitrate} kps",
+      "${trExt.bitrate} kbps",
       "${trExt.sampleRate} hz",
     ].join(' • ');
     final gainFormatted = trExt.gainDataFormatted;
@@ -473,7 +473,7 @@ extension TrackExtUtils on TrackExtended {
     return [
       trExt.format,
       "${trExt.channels} ch",
-      "${trExt.bitrate} kps",
+      "${trExt.bitrate} kbps",
       "${trExt.sampleRate / 1000} khz",
     ].joinText(separator: ' • ');
   }

@@ -442,7 +442,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                 final audioStream = Player.inst.currentAudioStream.valueR;
                 final formatName = audioStream?.codecInfo.codec;
                 final bitrate = audioStream?.bitrate ?? Player.inst.currentCachedAudio.valueR?.bitrate;
-                final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kps";
+                final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kbps";
                 final sampleRate = audioStream?.codecInfo.embeddedAudioInfo?.audioSampleRate;
                 final sampleRateText = sampleRate == null ? null : "$sampleRate khz";
                 final language = audioStream?.audioTrack?.langCode ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;
