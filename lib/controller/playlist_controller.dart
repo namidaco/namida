@@ -328,6 +328,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     for (final path in paths) {
       final file = File(path);
       final filename = file.path.getFilenameWOExt;
+      final fileParentDirectory = file.path.getDirectoryPath;
       final fullTracks = <Track>[];
       String? latestInfo;
       for (String line in file.readAsLinesSync()) {
@@ -344,7 +345,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
           if (pathExists(fullPath)) fileExists = true;
 
           if (!fileExists) {
-            fullPath = p.join(file.path.getDirectoryPath, p.normalize(line)); // maybe was relative
+            fullPath = p.relative(p.join(fileParentDirectory, p.normalize(line))); // maybe was relative
             if (pathExists(fullPath)) fileExists = true;
           }
 
