@@ -95,7 +95,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int index, {String? defaultFilename}) {
     final streamInfoItem = widget.infoLookup[id];
-    final filename = defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id;
+    final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
+    final filename =
+        filenameBuilderSettings.isNotEmpty ? filenameBuilderSettings : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id);
     return YoutubeItemDownloadConfig(
       index: index,
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,

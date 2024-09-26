@@ -78,12 +78,34 @@ Future<void> showDownloadVideoBottomSheet({
   updateTagsMap(defaultInitialTags);
   updateTagsMap(settings.youtube.initialDefaultMetadataTags);
 
+  bool videoOutputFilenameWasUserEdited = false;
   void updatefilenameOutput({String customName = ''}) {
+    if (videoOutputFilenameWasUserEdited) return;
+
     if (customName != '') {
       videoOutputFilenameController.text = customName;
       return;
     }
-    if (initialItemConfig != null) return; // cuz already set.
+
+    final filenameBuilderInSetting = settings.youtube.downloadFilenameBuilder.value;
+    if (filenameBuilderInSetting.isNotEmpty) {
+      final finalFilenameTempRebuilt = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+        filenameBuilderInSetting,
+        videoId,
+        streamResult.value,
+        null,
+        streamInfoItem ?? initialItemConfig?.streamInfoItem,
+        playlistInfo,
+        selectedVideoOnlyStream.value,
+        selectedAudioOnlyStream.value,
+        initialItemConfig?.index,
+        initialItemConfig?.totalLength,
+      );
+      if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
+        videoOutputFilenameController.text = finalFilenameTempRebuilt;
+        return;
+      }
+    }
 
     final videoTitle = videoInfo.value?.title ?? videoId;
     if (selectedAudioOnlyStream.value == null && selectedVideoOnlyStream.value == null) {
@@ -98,6 +120,14 @@ Future<void> showDownloadVideoBottomSheet({
         videoOutputFilenameController.text = filenameRealVideo;
       }
     }
+  }
+
+  if (initialItemConfig != null) {
+    updatefilenameOutput(customName: initialItemConfig.filename.filename);
+    updateTagsMap(initialItemConfig.ffmpegTags);
+    videoOutputFilenameWasUserEdited = true;
+  } else {
+    updatefilenameOutput(customName: settings.youtube.downloadFilenameBuilder.value);
   }
 
   void showWebmWarning() {
@@ -117,11 +147,6 @@ Future<void> showDownloadVideoBottomSheet({
 
   void onVideoSelectionChanged() {
     if (selectedVideoOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
-  }
-
-  if (initialItemConfig != null) {
-    updatefilenameOutput(customName: initialItemConfig.filename.filename);
-    updateTagsMap(initialItemConfig.ffmpegTags);
   }
 
   void onStreamsObtained(VideoStreamsResult? streams) {
@@ -629,6 +654,7 @@ Future<void> showDownloadVideoBottomSheet({
                       controller: videoOutputFilenameController,
                       hintText: videoOutputFilenameController.text,
                       labelText: lang.FILE_NAME,
+                      onChanged: (_) => videoOutputFilenameWasUserEdited = true,
                       validatorMode: AutovalidateMode.always,
                       validator: (value) {
                         if (value == null) return lang.PLEASE_ENTER_A_NAME;
