@@ -524,9 +524,9 @@ class JsonToHistoryParser {
         _updatingYoutubeStatsDirectoryTotal.value = mapOfAffectedIds.length;
         await _updateYoutubeStatsDirectory(
           affectedIds: mapOfAffectedIds,
-          onProgress: (updatedIds) {
-            _updatingYoutubeStatsDirectoryProgress.value += updatedIds.length;
-            printy('updatedIds: ${updatedIds.length}');
+          onProgress: (updatedIdsCount) {
+            _updatingYoutubeStatsDirectoryProgress.value += updatedIdsCount;
+            printy('updatedIds: $updatedIdsCount');
           },
         );
         YoutubeInfoController.utils.fillBackupInfoMap();
@@ -662,7 +662,7 @@ class JsonToHistoryParser {
         tracks.loop((item) {
           final day = item.dateTimeAdded.toDaysSince1970();
           daysToSaveLocal.add(day);
-          localHistory.insertForce(0, day, item);
+          localHistory.addForce(day, item);
           addedLocalHistoryCount++;
         });
 
@@ -683,7 +683,7 @@ class JsonToHistoryParser {
             );
             final day = ytid.dateTimeAdded.toDaysSince1970();
             daysToSaveYT.add(day);
-            ytHistory.insertForce(0, day, ytid);
+            ytHistory.addForce(day, ytid);
             addedYTHistoryCount++;
           }
         });
@@ -993,7 +993,7 @@ class JsonToHistoryParser {
             );
             final day = tr.dateTimeAdded.toDaysSince1970();
             daysToSaveLocal.add(day);
-            localHistory.insertForce(0, day, tr);
+            localHistory.addForce(day, tr);
             addedHistoryCount++;
           }
         } else {
@@ -1035,13 +1035,13 @@ class JsonToHistoryParser {
 
   Future<void> _updateYoutubeStatsDirectory({
     required Map<String, YoutubeVideoHistory> affectedIds,
-    required void Function(List<String> updatedIds) onProgress,
+    required void Function(int updatedIdsCount) onProgress,
   }) async {
     final progressPort = ReceivePort();
 
     final StreamSubscription streamSub;
     streamSub = progressPort.listen((message) {
-      onProgress(message as List<String>);
+      onProgress(message as int);
     });
     await _updateYoutubeStatsDirectoryIsolate.thready({
       "affectedIds": affectedIds,
@@ -1101,7 +1101,7 @@ class JsonToHistoryParser {
         updatedIds.add(id);
       }
       file.writeAsJsonSync(videosMapInStorage.values.toList());
-      progressPort.send(updatedIds);
+      progressPort.send(updatedIds.length);
     }
   }
 }
