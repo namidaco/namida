@@ -111,6 +111,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             );
             return replayGainEnabled
                 ? NamidaTooltip(
+                    triggerMode: TooltipTriggerMode.tap,
                     message: () => lang.NORMALIZE_AUDIO,
                     child: AnimatedEnabled(
                       enabled: !replayGainEnabled,
@@ -135,6 +136,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             );
             return replayGainEnabled
                 ? NamidaTooltip(
+                    triggerMode: TooltipTriggerMode.tap,
                     message: () => lang.NORMALIZE_AUDIO,
                     child: AnimatedEnabled(
                       enabled: !replayGainEnabled,

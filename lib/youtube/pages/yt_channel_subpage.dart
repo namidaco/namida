@@ -176,12 +176,10 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         if (value != null) {
           _channelInfoSubButton.value = value;
           final tabToBeSelected = _setTabsData(value);
-          if (mounted) {
-            setState(() {
-              if (_tabIndex == 0 && tabToBeSelected != null) _tabIndex = tabToBeSelected; // only set if tab wasnt changed
-              _channelInfo = value;
-            });
-          }
+          refreshState(() {
+            if (_tabIndex == 0 && tabToBeSelected != null) _tabIndex = tabToBeSelected; // only set if tab wasnt changed
+            _channelInfo = value;
+          });
           onRefresh(() => _fetchCurrentTab(value, forceRequest: true), forceProceed: true);
         }
       },

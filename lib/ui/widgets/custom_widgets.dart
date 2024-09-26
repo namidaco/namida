@@ -3110,12 +3110,14 @@ class NamidaHero extends StatelessWidget {
 class NamidaTooltip extends StatelessWidget {
   final String Function()? message;
   final bool? preferBelow;
+  final TooltipTriggerMode? triggerMode;
   final Widget child;
 
   const NamidaTooltip({
     super.key,
     required this.message,
     this.preferBelow,
+    this.triggerMode,
     required this.child,
   });
 
@@ -3125,6 +3127,7 @@ class NamidaTooltip extends StatelessWidget {
     return Tooltip(
       message: message,
       preferBelow: preferBelow,
+      triggerMode: triggerMode,
       child: child,
     );
   }
