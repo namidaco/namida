@@ -402,7 +402,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 subtitle: "${lang.EXTRACT_FEAT_ARTIST_SUBTITLE} ${lang.INSTANTLY_APPLIES}.",
                 onChanged: (isTrue) async {
                   settings.save(extractFeatArtistFromTitle: !isTrue);
-                  Indexer.inst.rebuildTracksAfterSplitConfigChanges();
+                  Indexer.inst.rebuildTracksAfterExtractFeatArtistChanges();
                 },
                 value: settings.extractFeatArtistFromTitle.valueR,
               ),

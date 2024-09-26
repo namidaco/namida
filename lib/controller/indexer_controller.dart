@@ -207,7 +207,25 @@ class Indexer<T extends Track> {
         ),
       );
     }
+    _afterIndexing();
+    tracksInfoList.refresh();
+  }
 
+  void rebuildTracksAfterExtractFeatArtistChanges() {
+    final artistsSplitConfig = ArtistsSplitConfig.settings();
+    final keysList = allTracksMappedByPath.keys.toList();
+    for (int i = 0; i < keysList.length; i++) {
+      var trPath = keysList[i];
+      final oldtr = allTracksMappedByPath[trPath]!;
+      allTracksMappedByPath[trPath] = oldtr.copyWith(
+        artistsList: Indexer.splitArtist(
+          title: oldtr.title,
+          originalArtist: oldtr.originalArtist,
+          config: artistsSplitConfig,
+        ),
+      );
+    }
+    _afterIndexing();
     tracksInfoList.refresh();
   }
 
