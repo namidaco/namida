@@ -67,6 +67,7 @@ Future<void> showGeneralPopupDialog(
   String? heroTag,
   String? additionalHero,
   IconData? trailingIcon,
+  bool showRemoveFromPlaylist = true,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -115,7 +116,7 @@ Future<void> showGeneralPopupDialog(
   final isLoadingFilesToShare = false.obso;
 
   bool shoulShowPlaylistUtils() => tracksWithDates.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
-  bool shoulShowRemoveFromPlaylist() => tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+  bool shoulShowRemoveFromPlaylist() => showRemoveFromPlaylist && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return NamidaInkWell(
