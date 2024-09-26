@@ -224,12 +224,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           final c = scrollController;
           if (c != null) onPointerMove(c, event);
         },
-        onPointerUp: (event) async {
-          onRefresh(() async {
-            await PlaylistController.inst.prepareM3UPlaylists();
-            PlaylistController.inst.sortPlaylists();
-          });
-        },
+        onPointerUp: (event) => onRefresh(PlaylistController.inst.prepareM3UPlaylists),
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: NamidaScrollbar(
           controller: scrollController,

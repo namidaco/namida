@@ -166,6 +166,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   }
 
   @override
+  void onPlaylistRemovedFromMap(YoutubePlaylist playlist) {
+    // -- the ui uses the playlist map directly. this can be used to remove from other lists if required.
+  }
+
+  @override
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override

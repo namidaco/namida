@@ -250,13 +250,33 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     return listy;
   }
 
+  void removeM3UPlaylists() {
+    final keysToRemove = <String>[];
+    for (final e in playlistsMap.value.entries) {
+      final isM3U = e.value.m3uPath?.isNotEmpty == true;
+      if (isM3U) keysToRemove.add(e.key);
+    }
+    keysToRemove.loop(
+      (key) {
+        final pl = playlistsMap.value[key]!;
+        final canRemove = canRemovePlaylist(pl);
+        if (canRemove) {
+          onPlaylistRemovedFromMap(pl);
+          playlistsMap.value.remove(key);
+        }
+      },
+    );
+    playlistsMap.refresh();
+  }
+
   final _m3uPlaylistsCompleter = Completer<bool>();
   Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
 
   bool _addedM3UPlaylists = false;
   Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true}) async {
     if (forPaths.isEmpty && addAsM3U && !settings.enableM3USyncStartup.value) {
-      if (_addedM3UPlaylists) PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+      if (_addedM3UPlaylists) removeM3UPlaylists();
+
       _addedM3UPlaylists = false;
       return null;
     }
@@ -289,7 +309,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
 
       // -- removing old m3u playlists (only if preparing all)
       if (forPaths.isEmpty) {
-        PlaylistController.inst.playlistsMap.removeWhere((key, value) => value.m3uPath != null && value.m3uPath != '');
+        removeM3UPlaylists();
       }
 
       for (final e in paths.entries) {
@@ -480,7 +500,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
 
   @override
   FutureOr<bool> canSavePlaylist(LocalPlaylist playlist) {
-    return playlist.m3uPath == null; // dont save m3u-based playlists;
+    final m3uPath = playlist.m3uPath;
+    return m3uPath == null || m3uPath.isEmpty; // dont save m3u-based playlists;
   }
 
   @override
@@ -517,9 +538,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   Map<String, dynamic> itemToJson(TrackWithDate item) => item.toJson();
 
   @override
-  FutureOr<bool> canRemovePlaylist(GeneralPlaylist<TrackWithDate> playlist) {
+  bool canRemovePlaylist(GeneralPlaylist<TrackWithDate> playlist) {
     _popPageIfCurrent(() => playlist.name);
     return true;
+  }
+
+  @override
+  void onPlaylistRemovedFromMap(GeneralPlaylist<TrackWithDate> playlist) {
+    final plIndex = SearchSortController.inst.playlistSearchList.value.indexWhere((element) => playlist.name == element);
+    if (plIndex > -1) SearchSortController.inst.playlistSearchList.removeAt(plIndex);
   }
 
   /// Navigate back in case the current route is this playlist.
