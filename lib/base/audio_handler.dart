@@ -467,7 +467,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration;
     bool checkInterrupted() {
-      if (item.track != currentItem.value) {
+      if (item != currentItem.value) {
         return true;
       } else {
         if (duration != null) _currentItemDuration.value = duration;
