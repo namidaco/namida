@@ -111,7 +111,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
       try {
         final canDragVertically = dy > 0 && (sc.hasClients && sc.positions.first.pixels <= 0);
-        final horizontalAllowance = dxabs < 0.8;
+        final horizontalAllowance = dxabs < 1.2;
         _isDraggingVertically = canDragVertically && horizontalAllowance;
       } catch (_) {}
     }
