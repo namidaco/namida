@@ -40,6 +40,9 @@ class YoutubeAccountController {
     YoutiPieOperation.fetchUserPlaylists: false,
     YoutiPieOperation.fetchUserPlaylistsNext: false,
     YoutiPieOperation.getPlaylistsForVideo: false,
+    YoutiPieOperation.getPlaylistEditInfo: false,
+    YoutiPieOperation.addRemoveVideosPlaylist: false,
+    YoutiPieOperation.createPlaylist: false,
   };
 
   static void initialize() {
