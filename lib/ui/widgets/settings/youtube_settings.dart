@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
@@ -583,6 +584,8 @@ class _YTFlagsOptions extends StatefulWidget {
 }
 
 class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
+  bool didRefreshJsPlayer = false;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -650,6 +653,14 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               value: settings.youtube.enableDimInLightMode,
               onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
               title: 'enable_dim_in_light_mode'.toUpperCase(),
+            ),
+            CustomListTile(
+              enabled: !didRefreshJsPlayer,
+              title: 'refresh_js_player'.toUpperCase(),
+              onTap: () {
+                setState(() => didRefreshJsPlayer = true);
+                YoutubeInfoController.video.forceRefreshJSPlayer();
+              },
             ),
           ],
         ),

@@ -107,9 +107,9 @@ jobs:
           done <<< "$COMMITS"
 
           # Encode special characters
-          CHANGELOG="${CHANGELOG//$'%'/%25}"
-          CHANGELOG="${CHANGELOG//$'\n'/%0A}"
-          CHANGELOG="${CHANGELOG//$'\r'/%0D}"
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
           echo "CHANGELOG=$CHANGELOG" >> $GITHUB_ENV
 
       - name: Creating Snapshot Release at namida-snapshots
