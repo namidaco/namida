@@ -537,7 +537,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
         if (checkInterrupted()) return;
         if (hadPermissionBefore) {
-          pause();
+          final wasPlayWhenReady = willPlayWhenReady;
+          onPauseRaw().then((_) => setPlayWhenReady(wasPlayWhenReady));
           cancelPlayErrorSkipTimer();
           playErrorRemainingSecondsToSkip.value = 7;
 
