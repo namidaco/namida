@@ -748,7 +748,7 @@ class _NamidaMiniPlayerBaseState<E extends Playable> extends State<NamidaMiniPla
                                 child: SizedBox(
                                   height: velpy(a: 82.0, b: panelFinal, c: cp),
                                   width: double.infinity,
-                                  child: AnimatedDecoration(
+                                  child: _AnimatedDecorationOrDecoration(
                                     duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                     decoration: BoxDecoration(
                                       color: context.theme.scaffoldBackgroundColor,
@@ -1584,5 +1584,32 @@ class _QueueListChildWrapper extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _AnimatedDecorationOrDecoration extends StatelessWidget {
+  final Duration duration;
+  final Decoration decoration;
+  final Widget child;
+
+  const _AnimatedDecorationOrDecoration({
+    super.key,
+    required this.duration,
+    required this.decoration,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return settings.animatedTheme.value
+        ? AnimatedDecoration(
+            decoration: decoration,
+            duration: duration,
+            child: child,
+          )
+        : DecoratedBox(
+            decoration: decoration,
+            child: child,
+          );
   }
 }

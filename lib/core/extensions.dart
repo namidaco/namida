@@ -446,13 +446,10 @@ extension CloseDialogIfTrueFuture on FutureOr<bool> {
   }
 }
 
-extension ThreadOpener<M, R> on ComputeCallback<M, R> {
-  /// Executes function on a separate thread using compute().
+extension IsolateOpener<M, R> on ComputeCallback<M, R> {
+  /// Executes function on a separate isolate using compute().
   /// Must be `static` or `global` function.
   Future<R> thready(M parameter) async {
-    try {
-      WidgetsFlutterBinding.ensureInitialized();
-    } catch (_) {}
     return await compute(this, parameter);
   }
 }

@@ -548,12 +548,13 @@ class TrackTile extends StatelessWidget {
           ),
         ),
         if (track is Video)
-          const Positioned(
+          Positioned(
             top: 6.0,
             right: 6.0,
             child: Icon(
               Broken.video,
               size: 12.0,
+              color: textColor?.withAlpha(100) ?? context.textTheme.displaySmall?.color?.withAlpha(100),
             ),
           ),
       ],

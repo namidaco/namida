@@ -339,20 +339,18 @@ class NamidaFFMPEG {
   }) async {
     assert(quality >= 1 && quality <= 31, 'quality ranges only between 1 & 31');
 
+    final didExecute = await _ffmpegExecute('-i "$videoPath" -map 0:v -map -0:V -c copy -y "$thumbnailSavePath"');
+    if (didExecute) return true;
+
     int? atMillisecond = atDuration?.inMilliseconds;
     if (atMillisecond == null) {
       final duration = await getMediaDuration(videoPath);
       if (duration != null) atMillisecond = duration.inMilliseconds;
     }
 
-    final didExecute = await _ffmpegExecute('-i "$videoPath" -map 0:v -map -0:V -c copy -y "$thumbnailSavePath"');
-    if (didExecute) {
-      return true;
-    } else {
-      final totalSeconds = (atMillisecond ?? 0) / 1000; // converting to decimal seconds.
-      final extractFromSecond = totalSeconds * 0.1; // thumbnail at 10% of duration.
-      return await _ffmpegExecute('-ss $extractFromSecond -i "$videoPath" -frames:v 1 -q:v $quality -y "$thumbnailSavePath"');
-    }
+    final totalSeconds = (atMillisecond ?? 0) / 1000; // converting to decimal seconds.
+    final extractFromSecond = totalSeconds * 0.1; // thumbnail at 10% of duration.
+    return await _ffmpegExecute('-ss $extractFromSecond -i "$videoPath" -frames:v 1 -q:v $quality -y "$thumbnailSavePath"');
   }
 
   Future<Duration?> getMediaDuration(String path) async {

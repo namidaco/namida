@@ -2859,6 +2859,18 @@ class NamidaInkWell extends StatelessWidget {
   Widget build(BuildContext context) {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
     final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
+    final childFinal = Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Padding(
+          padding: padding,
+          child: child,
+        ),
+      ),
+    );
     return AnimatedContainer(
       alignment: alignment,
       height: height,
@@ -2874,18 +2886,7 @@ class NamidaInkWell extends StatelessWidget {
         borderRadius: borderR,
       ),
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
-        ),
-      ),
+      child: childFinal,
     );
   }
 }

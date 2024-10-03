@@ -115,6 +115,7 @@ class _SettingsController with SettingsFileWriter {
   final heatmapListensView = false.obs;
   final RxList<String> backupItemslist = [
     AppPaths.TRACKS,
+    AppPaths.TRACKS_STATS_OLD,
     AppPaths.TRACKS_STATS_DB_INFO.file.path,
     AppPaths.TOTAL_LISTEN_TIME,
     AppPaths.VIDEOS_CACHE,
@@ -131,6 +132,7 @@ class _SettingsController with SettingsFileWriter {
     AppDirs.YT_PLAYLISTS,
     AppDirs.YT_HISTORY_PLAYLIST,
     AppPaths.YT_LIKES_PLAYLIST,
+    AppDirs.YT_DOWNLOAD_TASKS,
   ].obs;
   final enableVideoPlayback = true.obs;
   final enableLyrics = false.obs;
