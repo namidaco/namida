@@ -4047,6 +4047,7 @@ class EqualizerIconButton extends StatelessWidget {
     final tooltip = lang.EQUALIZER;
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
     final child = StreamBuilder<bool>(
+      initialData: Player.inst.equalizer.enabled,
       stream: Player.inst.equalizer.enabledStream,
       builder: (context, snapshot) {
         return Obx(

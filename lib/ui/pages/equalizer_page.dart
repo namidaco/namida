@@ -263,6 +263,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                     ),
                     const SizedBox(height: 6.0),
                     StreamBuilder<bool>(
+                      initialData: _equalizer.enabled,
                       stream: _equalizer.enabledStream,
                       builder: (context, snapshot) {
                         final enabled = snapshot.data ?? false;
@@ -366,10 +367,12 @@ class EqualizerPageState extends State<EqualizerPage> {
                       const SizedBox(height: 12.0),
                     ],
                     StreamBuilder<bool>(
+                      initialData: _loudnessEnhancer.enabled,
                       stream: _loudnessEnhancer.enabledStream,
                       builder: (context, snapshot) {
                         final enabled = snapshot.data ?? false;
                         return StreamBuilder<double>(
+                          initialData: _loudnessEnhancer.targetGain,
                           stream: _loudnessEnhancer.targetGainStream,
                           builder: (context, snapshot) {
                             final targetGain = snapshot.data ?? 0.0;
@@ -707,6 +710,7 @@ class EqualizerControls extends StatelessWidget {
                         children: [
                           Expanded(
                             child: StreamBuilder<double>(
+                              initialData: band.gain,
                               stream: band.gainStream,
                               builder: (context, snapshot) {
                                 return Column(
