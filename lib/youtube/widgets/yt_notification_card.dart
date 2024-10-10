@@ -76,17 +76,20 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   Future<void> _onTapInternal() async {
     if (widget.notification.isComment) return;
 
-    final itemsToPlay = <YoutubeID>[];
     final mainList = widget.mainList();
-    mainList.items.reverseLoop(
-      (item) {
+    int startIndex = mainList.length - widget.index - 1;
+    final itemsToPlay = <YoutubeID>[];
+    mainList.items.reverseLoopAdv(
+      (item, index) {
         if (item.isComment == false) {
           itemsToPlay.add(YoutubeID(id: item.id, playlistID: null));
+        } else {
+          if (index > widget.index) startIndex--;
         }
       },
     );
     Player.inst.playOrPause(
-      itemsToPlay.length - widget.index - 1,
+      startIndex,
       itemsToPlay,
       QueueSource.others,
     );
