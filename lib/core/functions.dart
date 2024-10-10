@@ -611,6 +611,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   HistoryManager<T, E>? historyController,
   void Function(List<DateTime> dates)? onChanged,
   required void Function(List<DateTime> dates) onGenerate,
+  DateTime? initialDate,
 }) async {
   historyController ??= HistoryController.inst as HistoryManager<T, E>;
 
@@ -668,6 +669,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         ),
       ],
       child: CalendarDatePicker2(
+        displayedMonthDate: initialDate,
         onValueChanged: (value) {
           final dts = value.whereType<DateTime>().toList();
           dates.assignAll(dts);
@@ -679,6 +681,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         },
         config: CalendarDatePicker2Config(
           calendarType: calendarType,
+          currentDate: initialDate,
           firstDate: useHistoryDates ? historyController.oldestTrack?.dateTimeAdded : firstDate,
           lastDate: useHistoryDates ? historyController.newestTrack?.dateTimeAdded : lastDate,
         ),

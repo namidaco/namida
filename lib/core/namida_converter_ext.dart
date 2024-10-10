@@ -33,6 +33,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -902,9 +903,27 @@ extension RouteUtils on NamidaRoute {
               route == RouteType.SUBPAGE_queueTracks,
         ),
 
-      getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: HistoryController.inst), shouldShow: route == RouteType.SUBPAGE_historyTracks),
+      getAnimatedCrossFade(
+        child: HistoryJumpToDayIcon(
+          controller: HistoryController.inst,
+          itemExtentAndDayHeaderExtent: () => (
+            itemExtent: Dimensions.inst.trackTileItemExtent,
+            dayHeaderExtent: kHistoryDayHeaderHeightWithPadding,
+          ),
+        ),
+        shouldShow: route == RouteType.SUBPAGE_historyTracks,
+      ),
 
-      getAnimatedCrossFade(child: HistoryJumpToDayIcon(controller: YoutubeHistoryController.inst), shouldShow: route == RouteType.YOUTUBE_HISTORY_SUBPAGE),
+      getAnimatedCrossFade(
+        child: HistoryJumpToDayIcon(
+          controller: YoutubeHistoryController.inst,
+          itemExtentAndDayHeaderExtent: () => (
+            itemExtent: Dimensions.youtubeCardItemExtent,
+            dayHeaderExtent: kYoutubeHistoryDayHeaderHeightWithPadding,
+          ),
+        ),
+        shouldShow: route == RouteType.YOUTUBE_HISTORY_SUBPAGE,
+      ),
 
       // ---- Playlist Tracks ----
       getAnimatedCrossFade(

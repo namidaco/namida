@@ -2985,7 +2985,8 @@ class NamidaInkWellButton extends StatelessWidget {
 
 class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> controller;
-  const HistoryJumpToDayIcon({super.key, required this.controller});
+  final ({double itemExtent, double dayHeaderExtent}) Function() itemExtentAndDayHeaderExtent;
+  const HistoryJumpToDayIcon({super.key, required this.controller, required this.itemExtentAndDayHeaderExtent});
 
   @override
   Widget build(BuildContext context) {
@@ -2993,12 +2994,15 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
       icon: Broken.calendar,
       tooltip: () => lang.JUMP_TO_DAY,
       onPressed: () {
+        final info = itemExtentAndDayHeaderExtent();
+        final currentScrolledDay = controller.currentScrollPositionToDay(info.itemExtent, info.dayHeaderExtent);
         showCalendarDialog(
           historyController: controller,
           title: lang.JUMP_TO_DAY,
           buttonText: lang.JUMP,
           calendarType: CalendarDatePicker2Type.single,
           useHistoryDates: true,
+          initialDate: currentScrolledDay == null ? null : DateTime(1970, 0, currentScrolledDay),
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
             final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
