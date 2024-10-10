@@ -19,7 +19,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
   final double? itemExtent;
   final Widget Function(Widget timeRangeChips, double bottomPadding) header;
-  final Widget Function(BuildContext context, int i, RxMap<E, List<int>> listensMap) itemBuilder;
+  final Widget Function(BuildContext context, int i, Map<E, List<int>> listensMap) itemBuilder;
   final Rx<DateRange> customDateRange;
 
   const MostPlayedItemsPage({
@@ -195,7 +195,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     return BackgroundWrapper(
       child: Obx(
         (context) {
-          final finalListenMap = historyController.currentTopTracksMapListens;
+          final finalListenMap = historyController.currentTopTracksMapListensR;
           return NamidaListView(
             itemExtent: itemExtent,
             header: header(bottomWidget, bottomPadding),

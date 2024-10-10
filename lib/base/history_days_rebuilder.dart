@@ -20,7 +20,9 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
 
   void _updateDays() {
     if (mounted) {
-      historyDays = _listifyHistoryDays();
+      setState(() {
+        historyDays = _listifyHistoryDays();
+      });
     }
   }
 

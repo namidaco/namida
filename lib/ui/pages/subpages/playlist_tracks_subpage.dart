@@ -190,67 +190,65 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
           playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
           draggableThumbnail: false,
         ),
-        builder: (properties) => Obx(
-          (context) {
-            final tracks = QueueSource.mostPlayed.toTracks();
-            return MostPlayedItemsPage(
-              itemExtent: Dimensions.inst.trackTileItemExtent,
-              historyController: HistoryController.inst,
-              customDateRange: settings.mostPlayedCustomDateRange,
-              activeTimeRangeChip: settings.mostPlayedTimeRange,
-              onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-                settings.save(
-                  mostPlayedTimeRange: mptr,
-                  mostPlayedCustomDateRange: dateCustom,
-                  mostPlayedCustomisStartOfDay: isStartOfDay,
-                );
-              },
-              header: (timeRangeChips, bottomPadding) {
-                return SubpagesTopContainer(
-                  source: QueueSource.mostPlayed,
-                  title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
-                  subtitle: tracks.displayTrackKeyword,
+        builder: (properties) {
+          final tracks = QueueSource.mostPlayed.toTracks();
+          return MostPlayedItemsPage(
+            itemExtent: Dimensions.inst.trackTileItemExtent,
+            historyController: HistoryController.inst,
+            customDateRange: settings.mostPlayedCustomDateRange,
+            activeTimeRangeChip: settings.mostPlayedTimeRange,
+            onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
+              settings.save(
+                mostPlayedTimeRange: mptr,
+                mostPlayedCustomDateRange: dateCustom,
+                mostPlayedCustomisStartOfDay: isStartOfDay,
+              );
+            },
+            header: (timeRangeChips, bottomPadding) {
+              return SubpagesTopContainer(
+                source: QueueSource.mostPlayed,
+                title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
+                subtitle: tracks.displayTrackKeyword,
+                heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+                imageWidget: MultiArtworkContainer(
                   heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                  imageWidget: MultiArtworkContainer(
-                    heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                    size: context.width * 0.35,
-                    tracks: tracks.toImageTracks(),
-                  ),
-                  tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
-                  bottomPadding: bottomPadding,
-                  bottomWidget: timeRangeChips,
-                );
-              },
-              itemBuilder: (context, i, listensMap) {
-                final track = tracks[i];
-                final listens = listensMap[track] ?? [];
+                  size: context.width * 0.35,
+                  tracks: tracks.toImageTracks(),
+                ),
+                tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
+                bottomPadding: bottomPadding,
+                bottomWidget: timeRangeChips,
+              );
+            },
+            itemBuilder: (context, i, listensMap) {
+              final track = tracks[i];
+              final listens = listensMap[track] ?? [];
 
-                return AnimatingTile(
+              return AnimatingTile(
+                key: Key("${track}_$i"),
+                position: i,
+                child: TrackTile(
+                  properties: properties,
                   key: Key("${track}_$i"),
-                  position: i,
-                  child: TrackTile(
-                    properties: properties,
-                    key: Key("${track}_$i"),
-                    index: i,
-                    trackOrTwd: tracks[i],
-                    onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
-                    trailingWidget: Container(
-                      padding: const EdgeInsets.all(6.0),
-                      decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        listens.length.formatDecimal(),
-                        style: context.textTheme.displaySmall,
-                      ),
+                  index: i,
+                  trackOrTwd: tracks[i],
+                  onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
+                  trailingWidget: Container(
+                    padding: const EdgeInsets.all(6.0),
+                    decoration: BoxDecoration(
+                      color: context.theme.scaffoldBackgroundColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      listens.length.formatDecimal(),
+                      style: context.textTheme.displaySmall,
                     ),
                   ),
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

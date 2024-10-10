@@ -8,6 +8,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
@@ -98,11 +99,11 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   }
 
   @override
-  MostPlayedTimeRange get currentMostPlayedTimeRange => settings.ytMostPlayedTimeRange.value;
+  Rx<MostPlayedTimeRange> get currentMostPlayedTimeRange => settings.ytMostPlayedTimeRange;
 
   @override
-  DateRange get mostPlayedCustomDateRange => settings.ytMostPlayedCustomDateRange.value;
+  Rx<DateRange> get mostPlayedCustomDateRange => settings.ytMostPlayedCustomDateRange;
 
   @override
-  bool get mostPlayedCustomIsStartOfDay => settings.ytMostPlayedCustomisStartOfDay.value;
+  Rx<bool> get mostPlayedCustomIsStartOfDay => settings.ytMostPlayedCustomisStartOfDay;
 }

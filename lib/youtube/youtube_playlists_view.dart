@@ -119,8 +119,6 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     const playlistThumbnailHeight = playlistsItemExtent - Dimensions.tileBottomMargin - (Dimensions.youtubeCardItemVerticalPadding * 2);
     const playlistThumbnailWidth = playlistThumbnailHeight * 16 / 9;
 
-    const yTMostPlayedVideosPage = YTMostPlayedVideosPage();
-
     return NamidaScrollbarWithController(
       child: (sc) => CustomScrollView(
         controller: sc,
@@ -146,30 +144,32 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
               },
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
-            Obx(
-              (context) {
-                final length = YoutubeHistoryController.inst.totalHistoryItemsCount.valueR;
-                final mostPlayed = YoutubeHistoryController.inst.currentMostPlayedTracks.toList();
-                final listensMap = YoutubeHistoryController.inst.currentTopTracksMapListens.valueR;
-                return _HorizontalSliverList(
-                  title: lang.MOST_PLAYED,
-                  icon: Broken.crown_1,
-                  viewAllPage: () => const YTMostPlayedVideosPage(),
-                  padding: const EdgeInsets.only(top: 8.0),
-                  videos: YoutubeHistoryController.inst.currentMostPlayedTracks
+            ObxO(
+              rx: YoutubeHistoryController.inst.totalHistoryItemsCount,
+              builder: (context, totalLength) => Obx(
+                (context) {
+                  final listensMap = YoutubeHistoryController.inst.currentTopTracksMapListensR;
+                  final videos = listensMap.keys
                       .map((e) => YoutubeID(
                             id: e,
                             playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
                           ))
-                      .toList(),
-                  subHeader: yTMostPlayedVideosPage.getMainWidget(mostPlayed).getChipsRow(context),
-                  playlistName: '',
-                  playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
-                  totalVideosCountInMainList: mostPlayed.length,
-                  displayShimmer: length == -1,
-                  listensMap: listensMap,
-                );
-              },
+                      .toList();
+                  return _HorizontalSliverList(
+                    title: lang.MOST_PLAYED,
+                    icon: Broken.crown_1,
+                    viewAllPage: () => const YTMostPlayedVideosPage(),
+                    padding: const EdgeInsets.only(top: 8.0),
+                    videos: videos,
+                    subHeader: YTMostPlayedVideosPage.getChipRow(context),
+                    playlistName: '',
+                    playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
+                    totalVideosCountInMainList: videos.length,
+                    displayShimmer: totalLength == -1,
+                    listensMap: listensMap,
+                  );
+                },
+              ),
             ),
             const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
             ObxOClass(

@@ -11,6 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class HistoryController with HistoryManager<TrackWithDate, Track> {
@@ -175,11 +176,11 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   }
 
   @override
-  MostPlayedTimeRange get currentMostPlayedTimeRange => settings.mostPlayedTimeRange.value;
+  Rx<MostPlayedTimeRange> get currentMostPlayedTimeRange => settings.mostPlayedTimeRange;
 
   @override
-  DateRange get mostPlayedCustomDateRange => settings.mostPlayedCustomDateRange.value;
+  Rx<DateRange> get mostPlayedCustomDateRange => settings.mostPlayedCustomDateRange;
 
   @override
-  bool get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay.value;
+  Rx<bool> get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay;
 }
