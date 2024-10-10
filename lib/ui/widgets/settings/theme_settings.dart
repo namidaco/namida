@@ -228,7 +228,7 @@ class ThemeSetting extends SettingSubpageProvider {
             getAutoColoringTile(),
 
             // Android S/12+
-            if (NamidaDeviceInfo.sdkVersion >= 31)
+            if (NamidaFeaturesVisibility.wallpaperColors)
               getItemWrapper(
                 key: _ThemeSettingsKeys.wallpaperColors,
                 child: Obx(

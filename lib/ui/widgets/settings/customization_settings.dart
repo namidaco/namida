@@ -493,7 +493,8 @@ class CustomizationSettings extends SettingSubpageProvider {
       dialog: CustomBlurryDialog(
         title: lang.CHOOSE,
         normalTitleStyle: true,
-        insetPadding: const EdgeInsets.all(64.0),
+        horizontalInset: 64.0,
+        verticalInset: 64.0,
         child: SizedBox(
           height: namida.height * 0.5,
           width: namida.width,

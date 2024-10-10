@@ -10,6 +10,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/split_config.dart';
@@ -18,6 +19,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -102,11 +104,35 @@ class Indexer<T extends Track> {
   final _artworksMap = <String, Completer<void>>{};
   final _artworksMapFullRes = <String, Completer<void>>{};
   Future<(File?, Uint8List?)> getArtwork({
-    required String imagePath,
+    required String? imagePath,
+    String? trackPath,
     bool checkFileFirst = true,
     required bool compressed,
     int? size,
   }) async {
+    if (!NamidaFeaturesVisibility.onAudioQueryAvailable) {
+      if (compressed) return (null, null);
+      if (trackPath == null) return (null, null);
+      final isVideo = trackPath.isVideo();
+      final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
+      String filename;
+      if (TagsExtractor.defaultGroupArtworksByAlbum) {
+        final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
+        final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
+        filename = TagsExtractor.getArtworkIdentifier(albumName: trExt?.album, albumArtist: trExt?.albumArtist, year: trExt?.year.toString(), identifiers: identifiersSet);
+      } else {
+        filename = trackPath.getFilename;
+      }
+      final res = await TagsExtractor.extractThumbnailCustom(
+        trackPath: trackPath,
+        isVideo: isVideo,
+        artworkDirectory: artworkDirectory,
+        filename: filename,
+      );
+      return (res, null);
+    }
+    if (imagePath == null) return (null, null);
+
     if (compressed && _artworksMap[imagePath] != null) {
       await _artworksMap[imagePath]!.future;
       return (null, artworksMap[imagePath]);
@@ -137,7 +163,7 @@ class Indexer<T extends Track> {
           _artworksMapFullRes[imagePath] = Completer<void>();
           // -- try extracting full res using taggers
           File? file;
-          final res = await FAudioTaggerController.inst.extractMetadata(trackPath: info.$1.path, isVideo: info.$1 is Video);
+          final res = await NamidaTaggerController.inst.extractMetadata(trackPath: info.$1.path, isVideo: info.$1 is Video);
           file = res.tags.artwork.file;
           if (file == null) {
             artwork = await _audioQuery.queryArtwork(
@@ -660,7 +686,7 @@ class Indexer<T extends Track> {
     bool checkForDuplicates = true,
     bool tryExtractingFromFilename = true,
   }) async {
-    final res = await FAudioTaggerController.inst.extractMetadata(
+    final res = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
       overrideArtwork: deleteOldArtwork,
       isVideo: trackPath.isVideo(),
@@ -754,7 +780,7 @@ class Indexer<T extends Track> {
 
     tracksMissing.loop((e) => onProgress(false));
 
-    final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
+    final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
       paths: tracksRealPaths,
       overrideArtwork: updateArtwork,
     );
@@ -859,7 +885,7 @@ class Indexer<T extends Track> {
             splittersConfigs: splitConfig,
           );
 
-      final stream = await FAudioTaggerController.inst.extractMetadataAsStream(paths: tracksToExtract);
+      final stream = await NamidaTaggerController.inst.extractMetadataAsStream(paths: tracksToExtract);
       await for (final item in stream) {
         final p = item.tags.path;
         final obj = Track.orVideo(p);
@@ -938,7 +964,7 @@ class Indexer<T extends Track> {
       _currentFileNamesMap.clear();
       trs.loop((e) => _addTrackToLists(e.$1, false, null));
     } else {
-      FAudioTaggerController.inst.currentPathsBeingExtracted.clear();
+      NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
       if (prevDuplicated) {
         /// skip duplicated tracks according to filename
@@ -978,7 +1004,7 @@ class Indexer<T extends Track> {
               splittersConfigs: splittersConfigs,
             );
 
-        final stream = await FAudioTaggerController.inst.extractMetadataAsStream(
+        final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
           paths: chunkList,
           overrideArtwork: false,
         );
@@ -1293,7 +1319,7 @@ class Indexer<T extends Track> {
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (respectNoMedia) {
       for (final d in allAvailableDirectories.keys) {
-        final hasNoMedia = File("${d.path}/.nomedia").existsSync();
+        final hasNoMedia = FileParts.join(d.path, ".nomedia").existsSync();
         if (hasNoMedia) {
           if (strictNoMedia) {
             // strictly applies bool to all subdirectories.
@@ -1312,6 +1338,7 @@ class Indexer<T extends Track> {
   }
 
   Future<List<(TrackExtended, int)>> _fetchMediaStoreTracks() async {
+    if (!NamidaFeaturesVisibility.onAudioQueryAvailable) return [];
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [settings.useMediaStore.value] is enabled.
     allMusic.retainWhere((element) =>

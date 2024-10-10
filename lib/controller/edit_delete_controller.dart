@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -108,7 +109,7 @@ class EditDeleteController {
     }
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
     final saveDirPath = saveDir.path;
-    final info = await FAudioTaggerController.inst.extractMetadata(
+    final info = await NamidaTaggerController.inst.extractMetadata(
       trackPath: track.path,
       cacheDirectoryPath: saveDirPath,
       isVideo: track is Video,
@@ -125,7 +126,7 @@ class EditDeleteController {
     }
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
     final saveDirPath = saveDir.path;
-    final newPath = "$saveDirPath${Platform.pathSeparator}${imageFile.path.getFilenameWOExt}.png";
+    final newPath = FileParts.joinPath(saveDirPath, "${imageFile.path.getFilenameWOExt}.png");
     try {
       await imageFile.copy(newPath);
       return saveDirPath;

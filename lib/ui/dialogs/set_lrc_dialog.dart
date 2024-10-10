@@ -306,7 +306,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 38.0, vertical: 32.0),
+      horizontalInset: 38.0,
       title: lang.LYRICS,
       actions: [
         NamidaButton(

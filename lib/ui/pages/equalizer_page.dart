@@ -6,8 +6,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -232,7 +232,15 @@ class EqualizerPageState extends State<EqualizerPage> {
                     verticalInBetweenPadding,
                     Row(
                       children: [
-                        const SizedBox(width: 12.0),
+                        const SizedBox(width: 6.0),
+                        NamidaIconButton(
+                          verticalPadding: 6.0,
+                          horizontalPadding: 12.0,
+                          icon: Broken.arrow_left_1,
+                          iconSize: 24.0,
+                          onPressed: NamidaNavigator.inst.popRoot,
+                        ),
+                        const SizedBox(width: 6.0),
                         const Icon(Broken.sound),
                         const SizedBox(width: 12.0),
                         Expanded(
@@ -280,14 +288,15 @@ class EqualizerPageState extends State<EqualizerPage> {
                             displayValue: false,
                             trailing: Row(
                               children: [
-                                NamidaIconButton(
-                                  horizontalPadding: 4.0,
-                                  tooltip: () => lang.OPEN_APP,
-                                  icon: Broken.export_2,
-                                  iconColor: context.defaultIconColor(),
-                                  iconSize: 20.0,
-                                  onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
-                                ),
+                                if (NamidaFeaturesVisibility.methodOpenSystemEqualizer)
+                                  NamidaIconButton(
+                                    horizontalPadding: 4.0,
+                                    tooltip: () => lang.OPEN_APP,
+                                    icon: Broken.export_2,
+                                    iconColor: context.defaultIconColor(),
+                                    iconSize: 20.0,
+                                    onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
+                                  ),
                                 const SizedBox(width: 12.0),
                                 CustomSwitch(
                                   active: enabled,

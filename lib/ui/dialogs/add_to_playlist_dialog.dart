@@ -13,7 +13,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void showAddToPlaylistDialog(List<Track> tracks) {
   NamidaNavigator.inst.navigateDialog(
     dialog: CustomBlurryDialog(
-      insetPadding: const EdgeInsets.all(30.0),
+      horizontalInset: 30.0,
+      verticalInset: 30.0,
       contentPadding: EdgeInsets.zero,
       titleWidget: Container(
         padding: const EdgeInsets.all(12.0),

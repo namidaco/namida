@@ -106,6 +106,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         final resPath = await Indexer.inst
             .getArtwork(
               imagePath: wPath,
+              trackPath: widget.track?.path,
               compressed: false,
               checkFileFirst: false,
               size: widget.useTrackTileCacheHeight ? 240 : null,
@@ -123,6 +124,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         final resBytes = await Indexer.inst
             .getArtwork(
               imagePath: wPath,
+              trackPath: widget.track?.path,
               compressed: widget.compressed,
               checkFileFirst: false,
               size: widget.useTrackTileCacheHeight ? 240 : null,

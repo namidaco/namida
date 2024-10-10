@@ -13,6 +13,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -89,7 +90,8 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget getMediaStoreWidget() {
+  Widget? getMediaStoreWidget() {
+    if (!NamidaFeaturesVisibility.showToggleMediaStore) return null;
     return getItemWrapper(
       key: _IndexerSettingsKeys.useMediaStore,
       child: Obx(
@@ -295,6 +297,8 @@ class IndexerSettings extends SettingSubpageProvider {
   Widget build(BuildContext context) {
     const refreshIconKey1 = 'kurukuru';
     const refreshIconKey2 = 'kururin';
+
+    final useMediaStore = getMediaStoreWidget();
     return SettingsCard(
       title: lang.INDEXER,
       subtitle: lang.INDEXER_SUBTITLE,
@@ -555,7 +559,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getMediaStoreWidget(),
+          if (useMediaStore != null) useMediaStore,
           getItemWrapper(
             key: _IndexerSettingsKeys.refreshOnStartup,
             child: Obx(
@@ -974,7 +978,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
       onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
       child: Obx(
         (context) {
-          final paths = FAudioTaggerController.inst.currentPathsBeingExtracted.values;
+          final paths = NamidaTaggerController.inst.currentPathsBeingExtracted.values;
           return paths.isEmpty
               ? const SizedBox()
               : Column(

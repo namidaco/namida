@@ -248,15 +248,17 @@ class ChangeGridCountWidget extends StatelessWidget {
       transparentHighlight: true,
       onTap: onTap,
       child: StackedIcon(
-        baseIcon: currentCount == 2
-            ? forStaggered
-                ? Broken.grid_3
-                : Broken.grid_2
-            : currentCount == 3
-                ? Broken.grid_8
-                : currentCount == 4
-                    ? Broken.grid_1
-                    : Broken.row_vertical,
+        baseIcon: currentCount == 1
+            ? Broken.row_vertical
+            : currentCount == 2
+                ? forStaggered
+                    ? Broken.grid_3
+                    : Broken.grid_2
+                : currentCount == 3
+                    ? Broken.grid_8
+                    : currentCount == 4
+                        ? Broken.grid_1
+                        : Broken.grid_8,
         secondaryText: currentCount.toString(),
         iconSize: 22.0,
       ),

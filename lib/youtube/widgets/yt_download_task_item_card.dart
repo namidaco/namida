@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
@@ -139,7 +140,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
             text: info.availableDescription ?? '',
           );
 
-    final saveLocation = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}/${item.filename}".replaceAll('//', '/');
+    final saveLocation = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName, item.filename.filename);
 
     List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget, Color? iconColor}) {
       return [
@@ -166,7 +167,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 38.0, vertical: 32.0),
+        horizontalInset: 38.0,
         title: lang.INFO,
         normalTitleStyle: true,
         trailingWidgets: [
@@ -283,7 +284,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   }) {
     final item = videos[index];
     final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}";
-    final file = File("$itemDirectoryPath/${item.filename}");
+    final file = FileParts.join(itemDirectoryPath, item.filename.filename);
 
     final videoStream = item.videoStream;
     final audioStream = item.audioStream;
@@ -456,9 +457,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
+    final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
     final item = videos[index];
-    final downloadedFile = File("${directory.path}/${item.filename.filename}");
+    final downloadedFile = FileParts.join(directory.path, item.filename.filename);
 
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;

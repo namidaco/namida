@@ -37,3 +37,5 @@
 -dontwarn java.awt.**
 -dontwarn javax.imageio.**
 -dontwarn javax.swing.filechooser.FileFilter
+
+-keep class net.sqlcipher.** { *; }

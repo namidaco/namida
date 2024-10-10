@@ -484,7 +484,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // -- we check if it exists to avoid refreshing notification redundently.
       // -- otherwise `getArtwork` already handles duplications.
       if (!exists) {
-        Indexer.inst.getArtwork(imagePath: tr.pathToImage, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
+        Indexer.inst.getArtwork(imagePath: tr.pathToImage, trackPath: tr.path, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
       }
     });
 

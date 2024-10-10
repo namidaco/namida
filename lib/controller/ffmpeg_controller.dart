@@ -2,10 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_min/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter_min/ffprobe_kit.dart';
-
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -17,21 +14,24 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+import 'platform/ffmpeg_executer/ffmpeg_executer.dart';
+
 class NamidaFFMPEG {
   static NamidaFFMPEG get inst => _instance;
   static final NamidaFFMPEG _instance = NamidaFFMPEG._internal();
   NamidaFFMPEG._internal() {
-    FFmpegKitConfig.disableLogs();
-    FFmpegKitConfig.setSessionHistorySize(99);
+    _executer.init();
   }
+
+  final _executer = FFMPEGExecuter.platform();
+
   final currentOperations = <OperationType, Rx<OperationProgress>>{
     OperationType.imageCompress: OperationProgress().obs,
     OperationType.ytdlpThumbnailFix: OperationProgress().obs,
   };
 
   Future<MediaInfo?> extractMetadata(String path) async {
-    final output = await _ffprobeExecute('-show_streams -show_format -show_entries stream_tags:format_tags -of json "$path"');
-
+    final output = await _executer.ffprobeExecute(['-show_streams', '-show_format', '-show_entries', 'stream_tags:format_tags', '-of', 'json', path]);
     if (output != null && output != '') {
       try {
         final decoded = jsonDecode(output);
@@ -43,15 +43,12 @@ class NamidaFFMPEG {
       } catch (_) {}
     }
 
-    final mediaInfo = await FFprobeKit.getMediaInformation(path);
-    final information = mediaInfo.getMediaInformation();
-
-    final map = information?.getAllProperties();
+    final map = await _executer.getMediaInformation(path);
     if (map != null) {
       map["PATH"] = path;
       final miBackup = MediaInfo.fromMap(map);
       final format = miBackup.format;
-      Map? tags = information?.getTags();
+      Map? tags = map['tags'];
       if (tags == null) {
         try {
           final mainTags = (map['streams'] as List?)?.firstWhereEff((e) {
@@ -65,15 +62,15 @@ class NamidaFFMPEG {
         path: path,
         streams: miBackup.streams,
         format: MIFormat(
-          bitRate: format?.bitRate ?? information?.getBitrate(),
-          duration: format?.duration ?? information?.getDuration().getDuration(),
-          filename: format?.filename ?? information?.getFilename(),
-          formatName: format?.formatName ?? information?.getFormat(),
+          bitRate: format?.bitRate ?? map['bit_rate'] ?? map['bitrate'],
+          duration: format?.duration ?? (map['duration'] as String?).getDuration(),
+          filename: format?.filename ?? map['filename'],
+          formatName: format?.formatName ?? map['format_name'],
           nbPrograms: format?.nbPrograms,
           nbStreams: format?.nbStreams,
           probeScore: format?.probeScore,
-          size: format?.size ?? information?.getSize().getIntValue(),
-          startTime: format?.startTime ?? information?.getStartTime(),
+          size: format?.size ?? (map['size'] as String?).getIntValue(),
+          startTime: format?.startTime ?? map['start_time'],
           tags: tags == null ? null : MIFormatTags.fromMap(tags),
         ),
       );
@@ -91,9 +88,7 @@ class NamidaFFMPEG {
   }) async {
     final originalFile = File(path);
     final originalStats = keepFileStats ? await originalFile.stat() : null;
-    final tempFile = await originalFile.copy("${AppDirs.INTERNAL_STORAGE}/.temp_${path.hashCode}");
-
-    tagsMap.updateAll((key, value) => value?.replaceAll('"', r'\"'));
+    final tempFile = await originalFile.copy(FileParts.joinPath(AppDirs.INTERNAL_STORAGE, ".temp_${path.hashCode}"));
 
     // if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
     //   oldTags ??= await extractMetadata(path).then((value) => value?.format?.tags);
@@ -115,9 +110,30 @@ class NamidaFFMPEG {
     //   plsAddDT("disc", (tagsMapToEditConverted["disc"] ?? discNT?.$1 ?? "0", trackNT?.$2));
     // }
 
-    final tagsString = tagsMap.entries.map((e) => e.value == null ? '' : '-metadata ${e.key}="${e.value}"').join(' '); // check if need to remove empty value tag
+    final params = [
+      '-i',
+      tempFile.path,
+    ];
+    for (final e in tagsMap.entries) {
+      final val = e.value;
+      if (val != null) {
+        final valueCleaned = val.replaceAll('"', r'\"');
+        params.add('-metadata');
+        params.add('${e.key}=$valueCleaned');
+      }
+    }
+    params.addAll([
+      '-id3v2_version',
+      '3',
+      '-write_id3v2',
+      '1',
+      '-c',
+      'copy',
+      '-y',
+      path,
+    ]);
 
-    final didExecute = await _ffmpegExecute('-i "${tempFile.path}" $tagsString -id3v2_version 3 -write_id3v2 1 -c copy -y "$path"');
+    final didExecute = await _executer.ffmpegExecute(params);
     // -- restoring original stats.
     if (originalStats != null) {
       await setFileStats(originalFile, originalStats);
@@ -136,12 +152,12 @@ class NamidaFFMPEG {
       return File(thumbnailSavePath);
     }
 
-    final codec = compress ? '-filter:v scale=-2:250 -an' : '-c copy';
-    final didSuccess = await _ffmpegExecute('-i "$audioPath" -map 0:v -map -0:V $codec -y "$thumbnailSavePath"');
+    final codecParams = compress ? ['-filter:v', 'scale=-2:250', '-an'] : ['-c', 'copy'];
+    final didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-map', '0:v', '-map', '-0:V', ...codecParams, '-y', thumbnailSavePath]);
     if (didSuccess) {
       return File(thumbnailSavePath);
     } else {
-      final didSuccess = await _ffmpegExecute('-i "$audioPath" -an -c:v copy -y "$thumbnailSavePath"');
+      final didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-an', '-c:v', 'copy', '-y', thumbnailSavePath]);
       return didSuccess ? File(thumbnailSavePath) : null;
     }
   }
@@ -159,8 +175,23 @@ class NamidaFFMPEG {
       ext = audioPath.getExtension;
     } catch (_) {}
 
-    final cacheFile = File("${AppDirs.APP_CACHE}/${audioPath.hashCode}.$ext");
-    final didSuccess = await _ffmpegExecute('-i "$audioPath" -i "$thumbnailPath" -map 0:a -map 1 -codec copy -disposition:v attached_pic -y "${cacheFile.path}"');
+    final cacheFile = FileParts.join(AppDirs.APP_CACHE, "${audioPath.hashCode}.$ext");
+    final didSuccess = await _executer.ffmpegExecute([
+      '-i',
+      audioPath,
+      '-i',
+      thumbnailPath,
+      '-map',
+      '0',
+      '-map',
+      '1',
+      '-codec',
+      'copy',
+      '-disposition:v',
+      'attached_pic',
+      '-y',
+      cacheFile.path,
+    ]);
     bool canSafelyMoveBack = false;
     try {
       canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
@@ -201,8 +232,8 @@ class NamidaFFMPEG {
 
     final imageFile = File(path);
     final originalStats = keepOriginalFileStats ? await imageFile.stat() : null;
-    final newFilePath = "$saveDir/${path.getFilenameWOExt}.jpg";
-    final didSuccess = await _ffmpegExecute('-i "$path" -qscale:v $toQSC -y "$newFilePath"');
+    final newFilePath = FileParts.joinPath(saveDir, "${path.getFilenameWOExt}.jpg");
+    final didSuccess = await _executer.ffmpegExecute(['-i', path, '-qscale:v', '$toQSC', '-y', newFilePath]);
 
     if (originalStats != null) {
       await setFileStats(File(newFilePath), originalStats);
@@ -298,7 +329,7 @@ class NamidaFFMPEG {
         if (cachedThumbnail == null) {
           currentFailed++;
         } else {
-          final copiedArtwork = await FAudioTaggerController.inst.copyArtworkToCache(
+          final copiedArtwork = await NamidaTaggerController.inst.copyArtworkToCache(
             trackPath: filee.path,
             trackExtended: tr,
             artworkFile: cachedThumbnail,
@@ -339,7 +370,7 @@ class NamidaFFMPEG {
   }) async {
     assert(quality >= 1 && quality <= 31, 'quality ranges only between 1 & 31');
 
-    final didExecute = await _ffmpegExecute('-i "$videoPath" -map 0:v -map -0:V -c copy -y "$thumbnailSavePath"');
+    final didExecute = await _executer.ffmpegExecute(['-i', videoPath, '-map', '0:v', '-map', '-0:V', '-c', 'copy', '-y', thumbnailSavePath]);
     if (didExecute) return true;
 
     int? atMillisecond = atDuration?.inMilliseconds;
@@ -350,11 +381,11 @@ class NamidaFFMPEG {
 
     final totalSeconds = (atMillisecond ?? 0) / 1000; // converting to decimal seconds.
     final extractFromSecond = totalSeconds * 0.1; // thumbnail at 10% of duration.
-    return await _ffmpegExecute('-ss $extractFromSecond -i "$videoPath" -frames:v 1 -q:v $quality -y "$thumbnailSavePath"');
+    return await _executer.ffmpegExecute(['-ss', '$extractFromSecond', '-i', videoPath, '-frames:v', '1', '-q:v', '$quality', '-y', thumbnailSavePath]);
   }
 
   Future<Duration?> getMediaDuration(String path) async {
-    final output = await _ffprobeExecute('-show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$path"');
+    final output = await _executer.ffprobeExecute(['-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', path]);
     final duration = output == null ? null : double.tryParse(output);
     return duration == null ? null : Duration(microseconds: (duration * 1000 * 1000).floor());
   }
@@ -371,21 +402,16 @@ class NamidaFFMPEG {
     required String outputPath,
     bool override = true,
   }) async {
-    final ovrr = override ? '-y' : '';
-    return await _ffmpegExecute('-i "$videoPath" -i "$audioPath" -c copy $ovrr "$outputPath"');
-  }
-
-  /// Automatically appends `-hide_banner -loglevel quiet` for fast execution
-  Future<bool> _ffmpegExecute(String command) async {
-    final res = await FFmpegKit.execute("-hide_banner -loglevel quiet $command");
-    final rc = await res.getReturnCode();
-    return rc?.isValueSuccess() ?? false;
-  }
-
-  /// Automatically appends `-loglevel quiet -v quiet ` for fast execution
-  Future<String?> _ffprobeExecute(String command) async {
-    final res = await FFprobeKit.execute("-loglevel quiet -v quiet $command");
-    return await res.getOutput();
+    return await _executer.ffmpegExecute([
+      '-i',
+      videoPath,
+      '-i',
+      audioPath,
+      '-c',
+      'copy',
+      if (override) '-y',
+      outputPath,
+    ]);
   }
 
   /// First field is track/disc number, can be 0 or more.

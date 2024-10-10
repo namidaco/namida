@@ -1,18 +1,13 @@
-import 'dart:async';
-
-import 'package:flutter/services.dart';
-
-import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
+part of 'namida_channel.dart';
 
 /// The new flutter update, calls AppLifecycleState.inactive whenever the app
 /// loses focus, like swiping notification center, not ideal for what we need.
 /// so we use a method channel whenever `onUserLeaveHint`, etc is called from FlutterActivity
-class NamidaChannel {
-  static final NamidaChannel inst = NamidaChannel._internal();
+class _NamidaChannelAndroid extends NamidaChannel {
+  late final MethodChannel _channel;
+  late final EventChannel _channelEvent;
 
-  NamidaChannel._internal() {
+  _NamidaChannelAndroid._init() {
     _channel = const MethodChannel('namida');
     _channelEvent = const EventChannel('namida_events');
 
@@ -25,16 +20,17 @@ class NamidaChannel {
 
   StreamSubscription? _streamSub;
 
-  final isInPip = false.obs;
-
+  @override
   Future<void> updatePipRatio({int? width, int? height}) async {
     await _channel.invokeMethod('updatePipRatio', {'width': width, 'height': height});
   }
 
+  @override
   Future<void> setCanEnterPip(bool canEnter) async {
     await _channel.invokeMethod('setCanEnterPip', {"canEnter": canEnter});
   }
 
+  @override
   Future<void> showToast({
     required String message,
     int seconds = 5,
@@ -48,11 +44,13 @@ class NamidaChannel {
     );
   }
 
+  @override
   Future<int> getPlatformSdk() async {
     final version = await _channel.invokeMethod<int?>('sdk');
     return version ?? 0;
   }
 
+  @override
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
     final t = <int>[];
     types.loop((e) {
@@ -63,13 +61,11 @@ class NamidaChannel {
     return res ?? false;
   }
 
+  @override
   Future<bool> openSystemEqualizer(int? sessionId) async {
     final res = await _channel.invokeMethod<bool?>('openEqualizer', {'sessionId': sessionId});
     return res ?? false;
   }
-
-  late final MethodChannel _channel;
-  late final EventChannel _channelEvent;
 
   void _initLiseners() {
     _channel.setMethodCallHandler((call) async {
@@ -89,34 +85,6 @@ class NamidaChannel {
           }
       }
     });
-  }
-
-  final _onResume = <String, FutureOr<void> Function()>{};
-  final _onSuspending = <String, FutureOr<void> Function()>{};
-  final _onDestroy = <String, FutureOr<void> Function()>{};
-
-  void addOnDestroy(String key, FutureOr<void> Function() fn) {
-    _onDestroy[key] = fn;
-  }
-
-  void addOnResume(String key, FutureOr<void> Function() fn) {
-    _onResume[key] = fn;
-  }
-
-  void addOnSuspending(String key, FutureOr<void> Function() fn) {
-    _onSuspending[key] = fn;
-  }
-
-  void removeOnDestroy(String key) {
-    _onDestroy.remove(key);
-  }
-
-  void removeOnResume(String key) {
-    _onResume.remove(key);
-  }
-
-  void removeOnSuspending(String key) {
-    _onSuspending.remove(key);
   }
 
   late final _setMusicAsActionConverter = {

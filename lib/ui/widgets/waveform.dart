@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';

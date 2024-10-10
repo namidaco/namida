@@ -279,25 +279,26 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.displayFavButtonInNotif,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
-            title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
-            icon: Broken.heart_tick,
-            value: settings.displayFavouriteButtonInNotification.valueR,
-            onChanged: (val) {
-              settings.save(displayFavouriteButtonInNotification: !val);
-              Player.inst.refreshNotification();
-              if (!val && NamidaDeviceInfo.sdkVersion < 31) {
-                snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
-              }
-            },
+      if (NamidaFeaturesVisibility.displayFavButtonInNotif)
+        getItemWrapper(
+          key: _PlaybackSettingsKeys.displayFavButtonInNotif,
+          child: Obx(
+            (context) => CustomSwitchListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
+              title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
+              icon: Broken.heart_tick,
+              value: settings.displayFavouriteButtonInNotification.valueR,
+              onChanged: (val) {
+                settings.save(displayFavouriteButtonInNotification: !val);
+                Player.inst.refreshNotification();
+                if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
+                  snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
+                }
+              },
+            ),
           ),
         ),
-      ),
-      if (NamidaDeviceInfo.sdkVersion < 33)
+      if (NamidaFeaturesVisibility.displayArtworkOnLockscreen)
         getItemWrapper(
           key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
           child: Obx(

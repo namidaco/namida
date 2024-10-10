@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:intl/intl.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -92,7 +93,7 @@ class BackupController {
 
     // creates directories and file
     final dir = await Directory(backupDirPath).create();
-    final backupFile = await File("${dir.path}/Namida Backup - $date$fileSuffix.zip").create();
+    final backupFile = await FileParts.join(dir.path, "Namida Backup - $date$fileSuffix.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files
@@ -117,7 +118,7 @@ class BackupController {
       for (final d in dirsOnly) {
         try {
           final prefix = d.path.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? 'YOUTUBE_' : '';
-          final dirZipFile = File("${AppDirs.USER_DATA}/${prefix}TEMPDIR_${d.path.getFilename}.zip");
+          final dirZipFile = FileParts.join(AppDirs.USER_DATA, "${prefix}TEMPDIR_${d.path.getFilename}.zip");
           await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
           compressedDirectories.add(dirZipFile);
         } catch (e) {
@@ -126,12 +127,12 @@ class BackupController {
       }
 
       if (localFilesOnly.isNotEmpty) {
-        tempAllLocal = await File("${AppDirs.USER_DATA}/LOCAL_FILES.zip").create();
+        tempAllLocal = await FileParts.join(AppDirs.USER_DATA, "LOCAL_FILES.zip").create();
         await ZipFile.createFromFiles(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
       }
 
       if (youtubeFilesOnly.isNotEmpty) {
-        tempAllYoutube = await File("${AppDirs.USER_DATA}/YOUTUBE_FILES.zip").create();
+        tempAllYoutube = await FileParts.join(AppDirs.USER_DATA, "YOUTUBE_FILES.zip").create();
         await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
@@ -265,7 +266,7 @@ class BackupController {
 
             await ZipFile.extractToDirectory(
               zipFile: backupItem,
-              destinationDir: Directory("$dir/${filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', '')}"),
+              destinationDir: Directory(FileParts.joinPath(dir, filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', ''))),
             );
             await backupItem.tryDeleting();
           }

@@ -80,7 +80,8 @@ Future<void> showTrackInfoDialog(
             data: theme,
             child: CustomBlurryDialog(
               theme: theme,
-              insetPadding: const EdgeInsets.all(24.0),
+              horizontalInset: 24.0,
+              verticalInset: 24.0,
               title: lang.PREVIEW,
               normalTitleStyle: true,
               child: Row(
@@ -181,7 +182,8 @@ Future<void> showTrackInfoDialog(
           data: theme,
           child: CustomBlurryDialog(
             theme: theme,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 86.0),
+            horizontalInset: 32.0,
+            verticalInset: 86.0,
             normalTitleStyle: true,
             title: lang.TRACK_INFO,
             trailingWidgets: [

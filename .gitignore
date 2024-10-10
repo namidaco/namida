@@ -13,6 +13,7 @@ migrate_working_dir/
 /android/app/keystore.base64
 /android/key.properties
 /android/key.properties.base64
+.certificates
 
 # IntelliJ related
 *.iml

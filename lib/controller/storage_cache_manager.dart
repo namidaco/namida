@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:jiffy/jiffy.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -231,7 +232,7 @@ class StorageCacheManager {
         currentSort.close();
       },
       dialog: CustomBlurryDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+        horizontalInset: 24.0,
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
         isWarning: true,
         normalTitleStyle: true,
@@ -610,7 +611,7 @@ class _ImageTrimmer {
   }
 
   Future<void> _trimExcessImageCacheTemp() async {
-    final dirPath = "${AppDirs.YT_THUMBNAILS}/temp";
+    final dirPath = FileParts.joinPath(AppDirs.YT_THUMBNAILS, 'temp');
     if (!await Directory(dirPath).exists()) return;
     return await _trimExcessImageCacheTempIsolate.thready(dirPath);
   }

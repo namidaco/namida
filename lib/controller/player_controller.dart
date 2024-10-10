@@ -2,9 +2,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
-import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -15,12 +16,13 @@ import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -171,7 +173,7 @@ class Player {
 
     prepareTotalListenTime();
     setSkipSilenceEnabled(settings.player.skipSilenceEnabled.value);
-    AudioService.setLockScreenArtwork(settings.player.lockscreenArtwork.value);
+    if (NamidaFeaturesVisibility.displayArtworkOnLockscreen) AudioService.setLockScreenArtwork(settings.player.lockscreenArtwork.value);
     _notificationClickedSub?.cancel();
     _notificationClickedSub = AudioService.notificationClicked.listen((clicked) {
       if (clicked) {

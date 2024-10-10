@@ -44,7 +44,6 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 import 'custom_reorderable_list.dart';
-// import 'custom_tab_bar.dart';
 
 class NamidaReordererableListener extends StatelessWidget {
   final int index;
@@ -346,7 +345,8 @@ class CustomBlurryDialog extends StatelessWidget {
   final String? bodyText;
   final bool isWarning;
   final bool scrollable;
-  final EdgeInsets insetPadding;
+  final double horizontalInset;
+  final double verticalInset;
   final EdgeInsetsGeometry contentPadding;
   final ThemeData? theme;
 
@@ -362,22 +362,33 @@ class CustomBlurryDialog extends StatelessWidget {
     this.normalTitleStyle = false,
     this.bodyText,
     this.isWarning = false,
-    this.insetPadding = const EdgeInsets.symmetric(horizontal: 50.0, vertical: 32.0),
+    this.horizontalInset = 50.0,
+    this.verticalInset = 32.0,
     this.scrollable = true,
     this.contentPadding = const EdgeInsets.all(14.0),
     this.leftAction,
     this.theme,
   });
 
+  static double calculateHorizontalMargin(BuildContext context, double minimum) {
+    final screenWidth = context.width;
+    final val = (screenWidth / 1000).clamp(0.0, 1.0);
+    double percentage = 0.25 * val * val;
+    percentage = percentage.clamp(0.0, 0.25);
+    return (screenWidth * percentage).withMinimum(minimum);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ctxth = theme ?? context.theme;
+    final vInsets = verticalInset;
+    double horizontalMargin = calculateHorizontalMargin(context, horizontalInset);
     return Center(
       child: SingleChildScrollView(
         child: Dialog(
           backgroundColor: ctxth.dialogBackgroundColor,
           surfaceTintColor: Colors.transparent,
-          insetPadding: insetPadding,
+          insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
           clipBehavior: Clip.antiAlias,
           child: TapDetector(
             onTap: () {},
@@ -469,7 +480,7 @@ class CustomBlurryDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                       child: FittedBox(
                         child: SizedBox(
-                          width: context.width - insetPadding.left - insetPadding.right,
+                          width: context.width - horizontalInset,
                           child: Wrap(
                             alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
                             crossAxisAlignment: WrapCrossAlignment.center,

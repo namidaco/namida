@@ -28,10 +28,10 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
-import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -76,7 +76,7 @@ void mainInitialization() async {
   NamidaDeviceInfo.fetchPackageInfo().then((value) {
     // -- in case full path was updated before fetching version
     logger.updateLoggerPath();
-    FAudioTaggerController.inst.updateLogsPath();
+    NamidaTaggerController.inst.updateLogsPath();
   });
   NamidaDeviceInfo.sdkVersion = await NamidaChannel.inst.getPlatformSdk();
 
@@ -96,7 +96,7 @@ void mainInitialization() async {
     final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
     AppDirs.USER_DATA = appDatas.firstOrNull ?? '';
     logger.updateLoggerPath();
-    FAudioTaggerController.inst.updateLogsPath();
+    NamidaTaggerController.inst.updateLogsPath();
   }
 
   Future<void> fetchRootDir() async {
@@ -125,18 +125,23 @@ void mainInitialization() async {
   _initErrorInterpreters();
   _cleanOldLogs.thready({'dirPath': AppDirs.LOGS_DIRECTORY, 'fileSuffix': AppPaths.getLogsSuffix()});
 
-  if (paths.isEmpty) paths.add('/storage/emulated/0');
+  if (paths.isEmpty) {
+    final fallback = NamidaStorage.inst.defaultFallbackStoragePath;
+    if (fallback != null) paths.add(fallback);
+  }
 
   // -- creating directories
   AppDirs.values.loop((p) => Directory(p).createSync(recursive: true));
 
   kStoragePaths.addAll(paths);
 
-  AppDirs.INTERNAL_STORAGE = "${paths[0]}/Namida";
-  final downloadsFolder = "${paths[0]}/Download/";
+  final pSep = Platform.pathSeparator;
+
+  AppDirs.INTERNAL_STORAGE = "${paths[0]}${pSep}Namida";
+  final downloadsFolder = "${paths[0]}${pSep}Download$pSep";
 
   kInitialDirectoriesToScan.addAll([
-    ...paths.mappedUniqued((path) => "$path/Music"),
+    ...paths.mappedUniqued((path) => "$path${pSep}Music"),
     downloadsFolder,
     AppDirs.INTERNAL_STORAGE,
   ]);
@@ -361,14 +366,16 @@ void _initializeIntenties() {
     });
   }
 
-  // -- Recieving Initial Android Shared Intent.
-  FlutterSharingIntent.instance.getInitialSharing().then(playFiles);
+  if (NamidaFeaturesVisibility.recieveSharingIntents) {
+    // -- Recieving Initial Android Shared Intent.
+    FlutterSharingIntent.instance.getInitialSharing().then(playFiles);
 
-  // -- Listening to Android Shared Intents.
-  FlutterSharingIntent.instance.getMediaStream().listen(
-        playFiles,
-        onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
-      );
+    // -- Listening to Android Shared Intents.
+    FlutterSharingIntent.instance.getMediaStream().listen(
+          playFiles,
+          onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
+        );
+  }
 }
 
 /// returns [true] if played successfully.
@@ -433,7 +440,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
 
 Future<bool> requestManageStoragePermission({bool request = true, bool showError = true}) async {
   Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
-  if (NamidaDeviceInfo.sdkVersion < 30) {
+  if (!NamidaFeaturesVisibility.shouldRequestManageAllFilesPermission) {
     await createDir();
     return true;
   }
@@ -592,6 +599,10 @@ class Namida extends StatelessWidget {
 
 class ScrollBehaviorModified extends ScrollBehavior {
   const ScrollBehaviorModified();
+
+  @override
+  Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) => child;
+
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
     switch (getPlatform(context)) {

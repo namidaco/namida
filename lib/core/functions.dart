@@ -656,7 +656,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         ),
       ),
       normalTitleStyle: true,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28.0),
+      horizontalInset: 28.0,
       actions: [
         const CancelButton(),
         Obx(
@@ -1153,7 +1153,7 @@ class TracksAddOnTap {
                 },
                 dialog: CustomBlurryDialog(
                   normalTitleStyle: true,
-                  insetPadding: const EdgeInsets.symmetric(horizontal: 48.0),
+                  horizontalInset: 48.0,
                   title: lang.MOODS,
                   actions: [
                     const CancelButton(),

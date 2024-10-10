@@ -150,7 +150,7 @@ class YoutubeImportController {
     final playlistsMetadata = <String, _YTPlaylistDetails>{};
 
     // final plMetaFile = File("$dirPath/playlists.csv");
-    final plMetaFileIndex = files.indexWhere((element) => element.path.endsWith('/playlists.csv'));
+    final plMetaFileIndex = files.indexWhere((element) => element.path.endsWith('${Platform.pathSeparator}playlists.csv'));
     final plMetaFile = plMetaFileIndex == -1 ? null : files[plMetaFileIndex];
 
     if (plMetaFile != null && plMetaFile is File) {

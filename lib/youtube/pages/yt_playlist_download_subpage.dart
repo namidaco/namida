@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -7,6 +6,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -313,7 +313,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                               labelText: lang.FILE_NAME,
                               validator: (value) {
                                 if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                                final file = File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.value}/$value");
+                                final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, _groupName.value, value);
                                 if (file.existsSync()) {
                                   return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
                                 }
@@ -463,7 +463,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             (context) {
                               final isSelected = _selectedList.contains(id);
                               final filename = _configMap[id]?.filenameR;
-                              final fileExists = filename == null ? false : File("${AppDirs.YOUTUBE_DOWNLOADS}${_groupName.valueR}/${filename.filename}").existsSync();
+                              final fileExists = filename == null ? false : FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, _groupName.valueR, filename.filename).existsSync();
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,

@@ -5,8 +5,8 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -94,21 +94,22 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.pip,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.pip),
-                icon: Broken.screenmirroring,
-                title: lang.ENABLE_PICTURE_IN_PICTURE,
-                value: settings.enablePip.valueR,
-                onChanged: (isTrue) {
-                  settings.save(enablePip: !isTrue);
-                  NamidaChannel.inst.setCanEnterPip(!isTrue);
-                },
+          if (NamidaFeaturesVisibility.methodSetCanEnterPip)
+            getItemWrapper(
+              key: _ExtraSettingsKeys.pip,
+              child: Obx(
+                (context) => CustomSwitchListTile(
+                  bgColor: getBgColor(_ExtraSettingsKeys.pip),
+                  icon: Broken.screenmirroring,
+                  title: lang.ENABLE_PICTURE_IN_PICTURE,
+                  value: settings.enablePip.valueR,
+                  onChanged: (isTrue) {
+                    settings.save(enablePip: !isTrue);
+                    NamidaChannel.inst.setCanEnterPip(!isTrue);
+                  },
+                ),
               ),
             ),
-          ),
           getItemWrapper(
             key: _ExtraSettingsKeys.foldersHierarchy,
             child: Obx(
@@ -363,19 +364,20 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.immersiveMode,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
-                icon: Broken.external_drive,
-                title: lang.IMMERSIVE_MODE,
-                subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
-                value: settings.hideStatusBarInExpandedMiniplayer.valueR,
-                onChanged: (p0) => settings.save(hideStatusBarInExpandedMiniplayer: !p0),
+          if (NamidaFeaturesVisibility.showToggleImmersiveMode)
+            getItemWrapper(
+              key: _ExtraSettingsKeys.immersiveMode,
+              child: Obx(
+                (context) => CustomSwitchListTile(
+                  bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
+                  icon: Broken.external_drive,
+                  title: lang.IMMERSIVE_MODE,
+                  subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
+                  value: settings.hideStatusBarInExpandedMiniplayer.valueR,
+                  onChanged: (p0) => settings.save(hideStatusBarInExpandedMiniplayer: !p0),
+                ),
               ),
             ),
-          ),
           getItemWrapper(
             key: _ExtraSettingsKeys.swipeToOpenDrawer,
             child: Obx(

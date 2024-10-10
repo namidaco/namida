@@ -8,8 +8,8 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/namida_channel_storage.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -87,7 +87,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                 theme: theme,
                 title: lang.SEARCH_YOUTUBE,
                 contentPadding: EdgeInsets.zero,
-                insetPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                horizontalInset: 24.0,
                 child: SizedBox(
                   width: namida.width,
                   height: namida.height * 0.7,
@@ -157,7 +157,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   _editingInProgress[singleTrack.path] = true;
-                  await FAudioTaggerController.inst.updateTracksMetadata(
+                  await NamidaTaggerController.inst.updateTracksMetadata(
                     tracks: [singleTrack],
                     editedTags: {},
                     commentToInsert: controller.text,
@@ -223,7 +223,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   FTags? tags;
   FArtwork? artwork;
 
-  final infoFull = await FAudioTaggerController.inst.extractMetadata(trackPath: track.path, isVideo: track is Video, saveArtworkToCache: false);
+  final infoFull = await NamidaTaggerController.inst.extractMetadata(trackPath: track.path, isVideo: track is Video, saveArtworkToCache: false);
   tags = infoFull.tags;
   artwork = tags.artwork;
   if (infoFull.hasError) {
@@ -312,7 +312,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
             child: Form(
               key: formKey,
               child: CustomBlurryDialog(
-                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                horizontalInset: 20.0,
                 normalTitleStyle: true,
                 scrollable: false,
                 icon: Broken.edit,
@@ -469,7 +469,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                         if (formKey.currentState!.validate() == false) return;
 
                         _editingInProgress[track.path] = true;
-                        await FAudioTaggerController.inst.updateTracksMetadata(
+                        await NamidaTaggerController.inst.updateTracksMetadata(
                           tracks: [track],
                           editedTags: editedTags,
                           imagePath: currentImagePath.value,
@@ -744,7 +744,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
     dialog: Form(
       key: formKey,
       child: CustomBlurryDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+        horizontalInset: 20.0,
         normalTitleStyle: true,
         scrollable: false,
         icon: Broken.edit,
@@ -780,7 +780,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
                       title: lang.NOTE,
-                      insetPadding: const EdgeInsets.all(42.0),
+                      horizontalInset: 42.0,
+                      verticalInset: 42.0,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
                       isWarning: true,
                       normalTitleStyle: true,
@@ -898,7 +899,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               ),
                             );
                             String? errorMsg;
-                            await FAudioTaggerController.inst.updateTracksMetadata(
+                            await NamidaTaggerController.inst.updateTracksMetadata(
                               tracks: tracks.value,
                               editedTags: editedTags,
                               trimWhiteSpaces: trimWhiteSpaces.value,
@@ -977,7 +978,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                       NamidaNavigator.inst.navigateDialog(
                         dialog: CustomBlurryDialog(
                           title: lang.NOTE,
-                          insetPadding: const EdgeInsets.all(42.0),
+                          horizontalInset: 42.0,
+                          verticalInset: 42.0,
                           contentPadding: EdgeInsets.zero,
                           child: toBeEditedTracksColumn,
                         ),
@@ -1053,7 +1055,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                           NamidaNavigator.inst.navigateDialog(
                                             dialog: CustomBlurryDialog(
                                               title: lang.NOTE,
-                                              insetPadding: const EdgeInsets.all(42.0),
+                                              horizontalInset: 42.0,
+                                              verticalInset: 42.0,
                                               contentPadding: EdgeInsets.zero,
                                               actions: [
                                                 NamidaButton(

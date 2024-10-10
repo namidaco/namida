@@ -235,10 +235,10 @@ extension CacheGetterVideo on VideoStream {
 }
 
 extension MediaInfoToFAudioModel on MediaInfo {
-  FAudioModel toFAudioModel() {
+  FAudioModel toFAudioModel({required FArtwork? artwork}) {
     final infoFull = this;
     final info = infoFull.format?.tags;
-    if (info == null) return FAudioModel.dummy(path);
+    if (info == null) return FAudioModel.dummy(path, artwork);
     final trackNumberTotal = info.track?.split('/');
     final discNumberTotal = info.disc?.split('/');
     final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
@@ -248,7 +248,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
     return FAudioModel(
       tags: FTags(
         path: infoFull.path,
-        artwork: FArtwork(),
+        artwork: artwork ?? FArtwork(),
         title: info.title,
         album: info.album,
         albumArtist: info.albumArtist,

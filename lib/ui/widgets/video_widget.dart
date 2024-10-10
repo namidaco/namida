@@ -18,11 +18,12 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
-import 'package:namida/controller/namida_channel.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -1410,7 +1411,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       child: Row(
                                         children: [
                                           const SizedBox(width: 2.0),
-                                          if (widget.isFullScreen)
+                                          if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen)
                                             // -- rotate screen button
                                             NamidaIconButton(
                                               verticalPadding: 2.0,

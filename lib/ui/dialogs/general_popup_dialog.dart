@@ -261,7 +261,7 @@ Future<void> showGeneralPopupDialog(
                 text: lang.SAVE,
                 onPressed: () async {
                   isEditing.value = true;
-                  await FAudioTaggerController.inst.updateTracksMetadata(
+                  await NamidaTaggerController.inst.updateTracksMetadata(
                     tracks: [firstTrack],
                     editedTags: {
                       TagField.rating: ratingController.text,
@@ -761,11 +761,12 @@ Future<void> showGeneralPopupDialog(
       builder: (context, colorDelightened) {
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
+        double horizontalMargin = CustomBlurryDialog.calculateHorizontalMargin(context, 34.0);
         return AnimatedThemeOrTheme(
           data: theme,
           child: Dialog(
             backgroundColor: theme.dialogBackgroundColor,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 34.0, vertical: 24.0),
+            insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 24.0),
             clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
               child: Column(

@@ -234,8 +234,8 @@ class FAudioModel {
     this.errorsMap = const {},
   });
 
-  factory FAudioModel.dummy(String? path) {
-    return FAudioModel(tags: FTags(path: path ?? '', artwork: FArtwork(size: 0)), hasError: true);
+  factory FAudioModel.dummy(String? path, FArtwork? artwork) {
+    return FAudioModel(tags: FTags(path: path ?? '', artwork: artwork ?? FArtwork(size: 0)), hasError: true);
   }
 
   factory FAudioModel.fromMap(Map<String, dynamic> map) {

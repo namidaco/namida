@@ -1,7 +1,9 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -10,6 +12,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -212,18 +215,22 @@ class NamidaLinkUtils {
 class AppPaths {
   static String get _USER_DATA => AppDirs.USER_DATA;
 
+  static String _join(String part1, String part2, [String? part3]) {
+    return FileParts.joinPath(part1, part2, part3);
+  }
+
   // ================= User Data =================
-  static final SETTINGS = '$_USER_DATA/namida_settings.json';
-  static final SETTINGS_EQUALIZER = '$_USER_DATA/namida_settings_eq.json';
-  static final SETTINGS_PLAYER = '$_USER_DATA/namida_settings_player.json';
-  static final SETTINGS_YOUTUBE = '$_USER_DATA/namida_settings_youtube.json';
-  static final SETTINGS_EXTRA = '$_USER_DATA/namida_settings_extra.json';
-  static final TRACKS = '$_USER_DATA/tracks.json';
-  static final TRACKS_STATS_OLD = '$_USER_DATA/tracks_stats.json';
+  static final SETTINGS = _join(_USER_DATA, 'namida_settings.json');
+  static final SETTINGS_EQUALIZER = _join(_USER_DATA, 'namida_settings_eq.json');
+  static final SETTINGS_PLAYER = _join(_USER_DATA, 'namida_settings_player.json');
+  static final SETTINGS_YOUTUBE = _join(_USER_DATA, 'namida_settings_youtube.json');
+  static final SETTINGS_EXTRA = _join(_USER_DATA, 'namida_settings_extra.json');
+  static final TRACKS = _join(_USER_DATA, 'tracks.json');
+  static final TRACKS_STATS_OLD = _join(_USER_DATA, 'tracks_stats.json');
   static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
-  static final VIDEOS_LOCAL = '$_USER_DATA/local_videos.json';
-  static final VIDEOS_CACHE = '$_USER_DATA/cache_videos.json';
-  static final LATEST_QUEUE = '$_USER_DATA/latest_queue.json';
+  static final VIDEOS_LOCAL = _join(_USER_DATA, 'local_videos.json');
+  static final VIDEOS_CACHE = _join(_USER_DATA, 'cache_videos.json');
+  static final LATEST_QUEUE = _join(_USER_DATA, 'latest_queue.json');
 
   static String get LOGS => _getLogsFile('');
   static String get LOGS_TAGGER => _getLogsFile('_tagger');
@@ -239,15 +246,15 @@ class AppPaths {
     return '_${info.version}_${info.buildNumber}';
   }
 
-  static final TOTAL_LISTEN_TIME = '$_USER_DATA/total_listen.txt';
-  static final FAVOURITES_PLAYLIST = '$_USER_DATA/favs.json';
+  static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');
+  static final FAVOURITES_PLAYLIST = _join(_USER_DATA, 'favs.json');
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
   static final NAMIDA_LOGO_MONET = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK_MONET.PNG';
 
   // ================= Youtube =================
-  static final YT_LIKES_PLAYLIST = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_likes.json';
-  static final YT_SUBSCRIPTIONS = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_subs.json';
-  static final YT_SUBSCRIPTIONS_GROUPS_ALL = '${AppDirs.YOUTUBE_MAIN_DIRECTORY}/yt_sub_groups.json';
+  static final YT_LIKES_PLAYLIST = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_likes.json');
+  static final YT_SUBSCRIPTIONS = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_subs.json');
+  static final YT_SUBSCRIPTIONS_GROUPS_ALL = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_sub_groups.json');
 }
 
 /// Directories used by Namida
@@ -257,43 +264,48 @@ class AppDirs {
   static String APP_CACHE = '';
   static String INTERNAL_STORAGE = '';
 
+  static final _sep = Platform.pathSeparator;
+  static String _join(String part1, String part2, [String? part3]) {
+    return FileParts.joinPath(part1, part2, part3) + _sep;
+  }
+
   // ================= User Data =================
-  static final HISTORY_PLAYLIST = '$USER_DATA/History/';
-  static final PLAYLISTS = '$USER_DATA/Playlists/';
-  static final QUEUES = '$USER_DATA/Queues/';
-  static final ARTWORKS = '$USER_DATA/Artworks/'; // extracted audio artworks
-  static final PALETTES = '$USER_DATA/Palettes/';
-  static final VIDEOS_CACHE = '$USER_DATA/Videos/';
-  static final AUDIOS_CACHE = '$USER_DATA/Audios/';
-  static final VIDEOS_CACHE_TEMP = '$USER_DATA/Videos/Temp/';
-  static final THUMBNAILS = '$USER_DATA/Thumbnails/'; // extracted video thumbnails
-  static final LYRICS = '$USER_DATA/Lyrics/';
-  static final M3UBackup = '$USER_DATA/M3U Backup/'; // backups m3u on first found
-  static final RECENTLY_DELETED = '$USER_DATA/Recently Deleted/'; // stores files that was deleted recently
-  static String get LOGS_DIRECTORY => '$USER_DATA/Logs/';
+  static final HISTORY_PLAYLIST = _join(USER_DATA, 'History');
+  static final PLAYLISTS = _join(USER_DATA, 'Playlists');
+  static final QUEUES = _join(USER_DATA, 'Queues');
+  static final ARTWORKS = _join(USER_DATA, 'Artworks'); // extracted audio artworks
+  static final PALETTES = _join(USER_DATA, 'Palettes');
+  static final VIDEOS_CACHE = _join(USER_DATA, 'Videos');
+  static final AUDIOS_CACHE = _join(USER_DATA, 'Audios');
+  static final VIDEOS_CACHE_TEMP = _join(USER_DATA, 'Videos', 'Temp');
+  static final THUMBNAILS = _join(USER_DATA, 'Thumbnails'); // extracted video thumbnails
+  static final LYRICS = _join(USER_DATA, 'Lyrics');
+  static final M3UBackup = _join(USER_DATA, 'M3U Backup'); // backups m3u on first found
+  static final RECENTLY_DELETED = _join(USER_DATA, 'Recently Deleted'); // stores files that was deleted recently
+  static String get LOGS_DIRECTORY => _join(USER_DATA, 'Logs');
 
   // ================= Internal Storage =================
-  static final SAVED_ARTWORKS = '$INTERNAL_STORAGE/Artworks/';
-  static final BACKUPS = '$INTERNAL_STORAGE/Backups'; // only one without ending slash.
-  static final COMPRESSED_IMAGES = '$INTERNAL_STORAGE/Compressed/';
-  static final M3UPlaylists = '$INTERNAL_STORAGE/M3U Playlists/';
-  static final YOUTUBE_DOWNLOADS_DEFAULT = '$INTERNAL_STORAGE/Downloads/';
+  static final SAVED_ARTWORKS = _join(INTERNAL_STORAGE, 'Artworks');
+  static final BACKUPS = _join(INTERNAL_STORAGE, 'Backups'); // only one without ending slash.
+  static final COMPRESSED_IMAGES = _join(INTERNAL_STORAGE, 'Compressed');
+  static final M3UPlaylists = _join(INTERNAL_STORAGE, 'M3U Playlists');
+  static final YOUTUBE_DOWNLOADS_DEFAULT = _join(INTERNAL_STORAGE, 'Downloads');
   static String get YOUTUBE_DOWNLOADS => settings.youtube.ytDownloadLocation.value;
 
   // ================= Youtube =================
-  static final YOUTUBE_MAIN_DIRECTORY = '$USER_DATA/Youtube';
+  static final YOUTUBE_MAIN_DIRECTORY = _join(USER_DATA, 'Youtube');
 
-  static final YOUTIPIE_CACHE = '$YOUTUBE_MAIN_DIRECTORY/Youtipie/';
-  static final YOUTIPIE_DATA = '$ROOT_DIR/Youtipie/Youtipie_data/'; // this should never be accessed/backed up etc.
+  static final YOUTIPIE_CACHE = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtipie');
+  static final YOUTIPIE_DATA = _join(ROOT_DIR, 'Youtipie', 'Youtipie_data'); // this should never be accessed/backed up etc.
 
-  static final YT_PLAYLISTS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Playlists/';
-  static final YT_HISTORY_PLAYLIST = '$YOUTUBE_MAIN_DIRECTORY/Youtube History/';
-  static final YT_THUMBNAILS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails/';
-  static final YT_THUMBNAILS_CHANNELS = '$YOUTUBE_MAIN_DIRECTORY/YTThumbnails Channels/';
+  static final YT_PLAYLISTS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists');
+  static final YT_HISTORY_PLAYLIST = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube History');
+  static final YT_THUMBNAILS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails');
+  static final YT_THUMBNAILS_CHANNELS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails Channels');
 
-  static final YT_STATS = '$YOUTUBE_MAIN_DIRECTORY/Youtube Stats/';
-  static final YT_PALETTES = '$YOUTUBE_MAIN_DIRECTORY/Palettes/';
-  static final YT_DOWNLOAD_TASKS = '$YOUTUBE_MAIN_DIRECTORY/Download Tasks/';
+  static final YT_STATS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Stats');
+  static final YT_PALETTES = _join(YOUTUBE_MAIN_DIRECTORY, 'Palettes');
+  static final YT_DOWNLOAD_TASKS = _join(YOUTUBE_MAIN_DIRECTORY, 'Download Tasks');
 
   // ===========================================
   static final List<String> values = [
@@ -480,4 +492,27 @@ const kMaximumSleepTimerMins = 180;
 
 extension PathTypeUtils on String {
   bool isVideo() => NamidaFileExtensionsWrapper.video.isPathValid(this);
+}
+
+class NamidaFeaturesVisibility {
+  static final _platform = defaultTargetPlatform;
+  static final _isAndroid = _platform == TargetPlatform.android;
+
+  static final wallpaperColors = _isAndroid && NamidaDeviceInfo.sdkVersion >= 31;
+  static final displayArtworkOnLockscreen = _isAndroid && NamidaDeviceInfo.sdkVersion < 33;
+  static final displayFavButtonInNotif = _isAndroid;
+  static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaDeviceInfo.sdkVersion < 31;
+  static final shouldRequestManageAllFilesPermission = _isAndroid && NamidaDeviceInfo.sdkVersion >= 30;
+  static final showEqualizerBands = _isAndroid;
+  static final showToggleMediaStore = _isAndroid;
+  static final showToggleImmersiveMode = _isAndroid;
+  static final showRotateScreenInFullScreen = _isAndroid;
+
+  static final methodSetCanEnterPip = _isAndroid;
+  static final methodGetPlatformSdk = _isAndroid;
+  static final methodSetMusicAs = _isAndroid;
+  static final methodOpenSystemEqualizer = _isAndroid;
+
+  static final onAudioQueryAvailable = _isAndroid;
+  static final recieveSharingIntents = _isAndroid;
 }

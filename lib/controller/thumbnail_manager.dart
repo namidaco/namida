@@ -41,7 +41,7 @@ class ThumbnailManager {
     String? symlinkId,
     bool isTemp = false,
   }) {
-    final dirPrefix = isTemp ? 'temp/' : '';
+    final dirPrefix = isTemp ? 'temp${Platform.pathSeparator}' : '';
 
     final goodId = id != null && id.isNotEmpty;
     if (goodId || type == ThumbnailType.video) {
@@ -299,6 +299,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     final requesters = <String, Map<String, HttpClientWrapper>?>{}; // itemId: {urlPath: HttpClientWrapper}
 
     const bool deleteOldExtracted = true;
+    final sep = Platform.pathSeparator;
 
     void updateLastAccessed(File file) async {
       try {
@@ -389,13 +390,18 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
               File? newFile;
               final downloadStream = response.asBroadcastStream();
-              await fileStream.addStream(downloadStream);
+              await for (final e in downloadStream) {
+                fileStream.add(e);
+              }
+              await fileStream.flush();
+              await fileStream.close(); // this is already done by diposeIdRequestResources() but we do here bcz renaming can require that no processes are using the file
+
               newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
               if (symlinkId != null) {
-                Link("${newFile.parent.path}/$symlinkId").create(newFile.path).catchError((_) => Link(''));
+                Link("${newFile.parent.path}$sep$symlinkId").create(newFile.path).catchError((_) => Link(''));
               }
               if (deleteOldExtracted) {
-                File("${destinationFile.parent.path}/EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
+                File("${destinationFile.parent.path}${sep}EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
               }
 
               final res = _YTThumbnailDownloadResult(

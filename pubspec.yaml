@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 4.5.2-beta+241003152
+version: 4.5.3-beta+241010185
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -43,7 +43,7 @@ dependencies:
   url_launcher: ^6.3.0
   connectivity_plus: ^6.0.3
   selectable_autolink_text: ^2.6.0
-  share_plus: ^9.0.0
+  share_plus: ^10.0.2
   calendar_date_picker2: ^1.0.2
   wakelock_plus: ^1.1.1
   flutter_local_notifications: ^17.2.1+2
@@ -130,6 +130,10 @@ dependencies:
   focused_menu: ^1.0.5
   paged_vertical_calendar: ^1.1.6
 
+  # ---- Windows Packages ----
+  filepicker_windows: ^2.1.4
+  just_audio_windows: ^0.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -142,6 +146,7 @@ dev_dependencies:
     git:
       url: https://github.com/MSOB7YY/nampack
       path: packages/obx_lints
+  msix: ^3.16.8
 
 flutter_native_splash:
   image: assets/namida_icon.png
@@ -184,3 +189,13 @@ flutter:
         - asset: assets/fonts/LexendDeca/LexendDeca-Regular.ttf
         - asset: assets/fonts/LexendDeca/LexendDeca-SemiBold.ttf
         - asset: assets/fonts/LexendDeca/LexendDeca-Thin.ttf
+
+msix_config:
+  display_name: Namida
+  publisher_display_name: namidaco
+  identity_name: com.msob7y.namida
+  logo_path: assets\namida_icon_monet.png
+  capabilities: musicLibrary, videosLibrary, internetClient
+  # certificate_path: .certificates\CERTIFICATE.pfx
+  install_certificate: true
+  file_extension: .audio, .music, .video

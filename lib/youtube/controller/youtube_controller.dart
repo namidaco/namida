@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -124,11 +125,11 @@ class YoutubeController {
     downloadTasksGroupDB.delete(oldFilename);
     downloadTasksGroupDB.claimFreeSpace();
 
-    final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
-    final existingFile = File("${directory.path}/$oldFilename");
+    final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
+    final existingFile = FileParts.join(directory.path, oldFilename);
     if (existingFile.existsSync()) {
       try {
-        existingFile.renameSync("${directory.path}/$newFilename");
+        existingFile.renameSync(FileParts.joinPath(directory.path, newFilename));
       } catch (_) {}
     }
     if (renameCacheFiles) {
@@ -373,14 +374,14 @@ class YoutubeController {
           downloadTasksGroupDB.loadEverything((itemMap) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
             final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}${group.groupName}";
-            final file = File("$saveDirPath/${ytitem.filename.filename}");
+            final file = FileParts.join(saveDirPath, ytitem.filename.filename);
             final fileExists = file.existsSync();
             final itemFileName = ytitem.filename;
             youtubeDownloadTasksMap.value[group]![itemFileName] = ytitem;
             downloadedFilesMap.value[group]![itemFileName] = fileExists ? file : null;
             if (!fileExists) {
-              final aFile = File("$saveDirPath/.tempa_${ytitem.filename.filename}");
-              final vFile = File("$saveDirPath/.tempv_${ytitem.filename.filename}");
+              final aFile = FileParts.join(saveDirPath, ".tempa_${ytitem.filename.filename}");
+              final vFile = FileParts.join(saveDirPath, ".tempv_${ytitem.filename.filename}");
               if (aFile.existsSync()) {
                 downloadsAudioProgressMap.value[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
                 downloadsAudioProgressMap.value[ytitem.id]!.value[ytitem.filename] = DownloadProgress(
@@ -541,7 +542,7 @@ class YoutubeController {
     youtubeDownloadTasksMap.value[groupName] ??= {};
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
     if (remove) {
-      final directory = Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
+      final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
       final itemsToCancel = allInGroupName ? youtubeDownloadTasksMap.value[groupName]!.values.toList() : itemsConfig;
       for (int i = 0; i < itemsToCancel.length; i++) {
         var c = itemsToCancel[i];
@@ -556,7 +557,7 @@ class YoutubeController {
           YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList.remove((groupName, c));
         }
         try {
-          await File("$directory/${c.filename.filename}").delete();
+          await FileParts.join(directory.path, c.filename.filename).delete();
         } catch (_) {}
         downloadedFilesMap[groupName]?[c.filename] = null;
         downloadTasksGroupDB.claimFreeSpace();
@@ -812,7 +813,7 @@ class YoutubeController {
     Directory? saveDir,
   }) {
     final saveDirPath = saveDir?.path ?? "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
-    return "$saveDirPath/$prefix$fullFilename";
+    return FileParts.joinPath(saveDirPath, "$prefix$fullFilename");
   }
 
   static final filenameBuilder = _YtFilenameRebuilder();
@@ -881,11 +882,11 @@ class YoutubeController {
 
     _startNotificationTimer();
 
-    saveDirectory ??= Directory("${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}");
+    saveDirectory ??= Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
     await saveDirectory.create(recursive: true);
 
     if (deleteOldFile) {
-      final file = File("${saveDirectory.path}/$finalFilenameTemp");
+      final file = FileParts.join(saveDirectory.path, finalFilenameTemp);
       try {
         if (await file.exists()) {
           await file.delete();
@@ -1029,7 +1030,7 @@ class YoutubeController {
       // -----------------------------------
 
       // ----- merging if both video & audio were downloaded
-      final output = "${saveDirectory.path}/${finalFilenameWrapper.filename}";
+      final output = FileParts.joinPath(saveDirectory.path, finalFilenameWrapper.filename);
       if (merge && videoFile != null && audioFile != null) {
         bool didMerge = await NamidaFFMPEG.inst.mergeAudioAndVideo(
           videoPath: videoFile.path,

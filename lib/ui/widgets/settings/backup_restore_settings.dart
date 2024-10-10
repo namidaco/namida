@@ -747,7 +747,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 matchAll.close();
                               },
                               dialog: CustomBlurryDialog(
-                                insetPadding: const EdgeInsets.all(38.0),
+                                horizontalInset: 38.0,
+                                verticalInset: 38.0,
                                 title: lang.CONFIGURE,
                                 actions: [
                                   const CancelButton(),

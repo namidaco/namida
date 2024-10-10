@@ -1,41 +1,37 @@
-import 'dart:async';
+part of 'namida_storage.dart';
 
-import 'package:flutter/services.dart';
-
-import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/language.dart';
-
-class NamidaStorage {
-  static final NamidaStorage inst = NamidaStorage._internal();
-
-  late final MethodChannel _channel;
-
-  NamidaStorage._internal() {
+class _NamidaStorageAndroid extends NamidaStorage {
+  _NamidaStorageAndroid._init() : super('/storage/emulated/0') {
     _channel = const MethodChannel('namida/storage');
   }
 
+  late final MethodChannel _channel;
+
+  @override
   Future<List<String>> getStorageDirectories() async {
     final res = await _channel.invokeMethod<List<Object?>?>('getStorageDirs');
     return res?.cast() ?? [];
   }
 
+  @override
   Future<List<String>> getStorageDirectoriesAppData() async {
     final res = await _channel.invokeMethod<List<Object?>?>('getStorageDirsData');
     return res?.cast() ?? [];
   }
 
+  @override
   Future<List<String>> getStorageDirectoriesAppCache() async {
     final res = await _channel.invokeMethod<List<Object?>?>('getStorageDirsCache');
     return res?.cast() ?? [];
   }
 
+  @override
   Future<String?> getRealPath(String? contentUri) async {
     if (contentUri == null) return null;
     return await _channel.invokeMethod<String?>('getRealPath', {'contentUri': contentUri});
   }
 
+  @override
   Future<List<String>> pickFiles({
     String? note,
     bool multiple = false,
@@ -75,6 +71,7 @@ class NamidaStorage {
     }
   }
 
+  @override
   Future<String?> pickDirectory({String? note}) async {
     try {
       final res = await _channel.invokeListMethod<String?>('pickDirectory', {'note': note});
@@ -84,12 +81,4 @@ class NamidaStorage {
     }
     return null;
   }
-}
-
-class NamidaStorageFileMemeType {
-  static const image = "image/*";
-  static const audio = "audio/*";
-  static const video = "video/*";
-  static const media = "$audio,$video";
-  static const any = "*/*";
 }

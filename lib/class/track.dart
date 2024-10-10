@@ -181,6 +181,8 @@ extension SelectableListUtils on Iterable<Selectable> {
 }
 
 class Track extends Selectable<String> {
+  Folder get folder => Folder.explicit(folderPath);
+
   @override
   Track get track => this;
 
@@ -622,8 +624,6 @@ extension TrackExtUtils on TrackExtended {
 }
 
 extension TrackUtils on Track {
-  Folder get folder => Folder.explicit(folderPath);
-
   bool hasInfoInLibrary() => toTrackExtOrNull() != null;
   TrackExtended toTrackExt() => toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path);
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path];
