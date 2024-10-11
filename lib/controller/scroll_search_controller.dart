@@ -89,7 +89,6 @@ class ScrollSearchController {
   }
 
   void _assignScrollController(LibraryTab tab) {
-    scrollController.removeListener(() {});
     scrollController.dispose();
     scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
     scrollController.addListener(() {
@@ -98,26 +97,23 @@ class ScrollSearchController {
   }
 
   RxBaseCore<bool> getIsSearchBoxVisible(LibraryTab tab) {
-    if (isSearchBoxVisibleMap[tab] != null) {
-      return isSearchBoxVisibleMap[tab]!;
+    if (isSearchBoxVisibleMap[tab] == null) {
+      isSearchBoxVisibleMap[tab] = false.obs;
     }
-    isSearchBoxVisibleMap[tab] = false.obs;
     return isSearchBoxVisibleMap[tab]!;
   }
 
   RxBaseCore<bool> getIsBarVisible(LibraryTab tab) {
-    if (isBarVisibleMap[tab] != null) {
-      return isBarVisibleMap[tab]!;
+    if (isBarVisibleMap[tab] == null) {
+      isBarVisibleMap[tab] = true.obs;
     }
-    isBarVisibleMap[tab] = true.obs;
     return isBarVisibleMap[tab]!;
   }
 
   double getScrollPosition(LibraryTab tab) {
-    if (scrollPositionsMap[tab] != null) {
-      return scrollPositionsMap[tab]!;
+    if (scrollPositionsMap[tab] == null) {
+      scrollPositionsMap[tab] = 0.0;
     }
-    scrollPositionsMap[tab] = 0.0;
     return scrollPositionsMap[tab]!;
   }
 

@@ -826,12 +826,10 @@ Future<void> showGeneralPopupDialog(
                                     maxLines: 1,
                                     style: theme.textTheme.displayLarge?.copyWith(
                                       fontSize: 17.0,
+                                      height: 1.2,
                                       color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
                                     ),
                                   ),
-                                const SizedBox(
-                                  height: 1.0,
-                                ),
                                 if (subtitle.isNotEmpty)
                                   Text(
                                     subtitle.overflow,
@@ -839,19 +837,18 @@ Future<void> showGeneralPopupDialog(
                                     maxLines: 1,
                                     style: theme.textTheme.displayMedium?.copyWith(
                                       fontSize: 14.0,
+                                      height: 1.1,
                                       color: Color.alphaBlend(colorDelightened.withAlpha(80), theme.textTheme.displayMedium!.color!),
                                     ),
                                   ),
                                 if (thirdLineText.isNotEmpty) ...[
-                                  const SizedBox(
-                                    height: 1.0,
-                                  ),
                                   Text(
                                     thirdLineText.overflow,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     style: theme.textTheme.displaySmall?.copyWith(
                                       fontSize: 12.5,
+                                      height: 1.0,
                                       color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
                                     ),
                                   ),

@@ -1274,7 +1274,7 @@ class _RawImageContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = velpy(a: width, b: screenSize.width - 84.0, c: cp);
+    final size = velpy(a: width, b: screenSize.width.withMaximum(screenSize.height / 2) - 84.0, c: cp);
     final verticalOffset = bottomOffset + (-maxOffset / 2.15 * p.clamp(0, 2));
     return Transform.translate(
       offset: Offset(0, verticalOffset),
@@ -1325,7 +1325,7 @@ class _TrackInfo<T extends Playable, E> extends StatelessWidget {
         child: Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0).add(EdgeInsets.only(bottom: velpy(a: 0, b: screenSize.width / 9, c: cp))),
+            padding: const EdgeInsets.symmetric(vertical: 12.0).add(EdgeInsets.only(bottom: velpy(a: 0, b: (screenSize.width.withMaximum(screenSize.height / 2)) / 9, c: cp))),
             child: SizedBox(
               height: velpy(a: 58.0, b: 82, c: cp),
               child: Row(
