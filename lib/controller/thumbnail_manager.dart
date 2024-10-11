@@ -164,7 +164,15 @@ class ThumbnailManager {
       lowerResYTID: false,
     );
 
-    return downloaded;
+    if (downloaded != null) return downloaded;
+
+    if (!isTemp) {
+      // return the low res if high res failed
+      final filetemp = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+      if (filetemp != null && filetemp.existsSync()) return filetemp;
+    }
+
+    return null;
   }
 
   Future<File?> getLowResYoutubeVideoThumbnail(String? videoId, {String? symlinkId, bool useHighQualityIfEnoughListens = true, VoidCallback? onNotFound}) async {
