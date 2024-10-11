@@ -40,8 +40,7 @@ Future<void> showTrackInfoDialog(
   final trackExt = track.toTrackExtOrNull();
 
   final totalListens = HistoryController.inst.topTracksMapListens.value[track] ?? [];
-  totalListens.sortByReverse((e) => e);
-  final firstListenTrack = totalListens.lastOrNull;
+  final firstListenTrack = totalListens.firstOrNull;
 
   final color = (colorScheme ?? CurrentColor.inst.color).obso;
 

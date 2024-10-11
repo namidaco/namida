@@ -92,20 +92,31 @@ class YTUtils {
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
     return [
       if (listens.isNotEmpty)
-        NamidaInkWell(
-          borderRadius: 6.0,
-          bgColor: context.theme.scaffoldBackgroundColor.withOpacity(0.5),
-          onTap: () {
-            showVideoListensDialog(videoId);
-          },
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-          child: Text(
-            listens.length.formatDecimal(),
-            style: context.textTheme.displaySmall,
+        Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            onTap: () => showVideoListensDialog(videoId),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0), // extra hittest margin
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                  color: context.theme.scaffoldBackgroundColor.withOpacity(0.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                  child: Text(
+                    listens.length.formatDecimal(),
+                    style: context.textTheme.displaySmall,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       if (displayCacheIcons) ...[
-        const SizedBox(width: 4.0),
         Tooltip(
           message: lang.VIDEO_CACHE,
           child: Icon(

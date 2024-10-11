@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
 
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
+
 mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate, S> on State<T> {
   HistoryManager<E, S> get historyManager;
 
@@ -36,5 +40,38 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   void dispose() {
     historyManager.modifiedDays.removeListener(_updateDays);
     super.dispose();
+  }
+
+  Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle) {
+    final listens = historyManager.topTracksMapListens[subitem];
+    Widget? topRightWidget;
+    if (listens != null) {
+      final listensLength = listens.length;
+      final watchMS = watch.dateTimeAdded.millisecondsSinceEpoch;
+      if (listensLength > 1) {
+        final firstListen = listens.firstOrNull;
+        if (watchMS == firstListen) {
+          topRightWidget = const Icon(
+            Broken.cake,
+            size: 12.0,
+          );
+        } else {
+          final watchOrder = listens.indexOf(watchMS) + 1;
+          topRightWidget = Text(
+            '$watchOrder',
+            style: smallTextStyle,
+          );
+        }
+      }
+    }
+
+    if (topRightWidget != null) {
+      topRightWidget = NamidaBlurryContainer(
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+        child: topRightWidget,
+      );
+    }
+    return topRightWidget;
   }
 }

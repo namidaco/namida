@@ -310,7 +310,6 @@ class YTLocalSearchController with PortsProvider<Map> {
   //   final yt = YoutubeHistoryController.inst.topTracksMapListens.value[id] ?? [];
 
   //   finalListens.addAll(yt);
-  //   finalListens.sortByReverse((e) => e);
   //   return finalListens;
   // }
 

@@ -45,6 +45,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   final bool isImportantInCache;
   final Color? bgColor;
   final bool canHaveDuplicates;
+  final Widget? topRightWidget;
 
   const YTHistoryVideoCard({
     super.key,
@@ -71,6 +72,7 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.isImportantInCache = true,
     this.bgColor,
     required this.canHaveDuplicates,
+    this.topRightWidget,
   });
 
   @override
@@ -104,6 +106,7 @@ class YTHistoryVideoCard extends StatelessWidget {
       bgColor: bgColor,
       canHaveDuplicates: canHaveDuplicates,
       info: null,
+      topRightWidget: topRightWidget,
     );
   }
 }
@@ -134,6 +137,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
   final Color? bgColor;
   final bool canHaveDuplicates;
   final StreamInfoItem? Function(T item)? info;
+  final Widget? topRightWidget;
 
   const YTHistoryVideoCardBase({
     super.key,
@@ -162,6 +166,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     this.bgColor,
     required this.canHaveDuplicates,
     required this.info,
+    this.topRightWidget,
   });
 
   YoutubeID itemToYTIDPlay(T item) {
@@ -390,6 +395,12 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
+                if (topRightWidget != null)
+                  Positioned(
+                    top: 0.0,
+                    right: 0.0,
+                    child: topRightWidget!,
                   ),
                 if (fadeOpacity > 0)
                   Positioned.fill(

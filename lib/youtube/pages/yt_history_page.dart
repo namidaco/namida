@@ -46,6 +46,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
     final daysLength = historyDays.length;
 
     final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
+    final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
     return BackgroundWrapper(
       child: CustomScrollView(
@@ -100,6 +101,8 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: videos.length,
                       itemBuilder: (context, i) {
+                        final watch = videos[i];
+                        final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle);
                         return YTHistoryVideoCard(
                           videos: videos,
                           index: i,
@@ -109,6 +112,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                           playlistName: k_PLAYLIST_NAME_HISTORY,
                           isImportantInCache: false, // long old history is lowkey useless
                           canHaveDuplicates: true,
+                          topRightWidget: topRightWidget,
                         );
                       },
                     ),

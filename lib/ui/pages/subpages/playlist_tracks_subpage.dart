@@ -61,6 +61,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
     final daysLength = historyDays.length;
 
     final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
+    final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
     return BackgroundWrapper(
       child: TrackTilePropertiesProvider(
@@ -149,12 +150,14 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                           itemCount: tracks.length,
                           itemBuilder: (context, i) {
                             final tr = tracks[i];
+                            final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle);
                             return TrackTile(
                               properties: properties,
                               trackOrTwd: tr,
                               index: i,
                               bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
                               thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
+                              topRightWidget: topRightWidget,
                             );
                           },
                         ),

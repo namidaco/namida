@@ -205,6 +205,7 @@ class TrackTile extends StatelessWidget {
   final double fadeOpacity;
   final void Function()? onRightAreaTap;
   final Widget? trailingWidget;
+  final Widget? topRightWidget;
   final String? thirdLineText;
 
   const TrackTile({
@@ -219,6 +220,7 @@ class TrackTile extends StatelessWidget {
     this.fadeOpacity = 0.0,
     this.onRightAreaTap,
     this.trailingWidget,
+    this.topRightWidget,
     this.thirdLineText,
   });
 
@@ -341,6 +343,15 @@ class TrackTile extends StatelessWidget {
     final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
     final heroTag = '${properties.comingFromQueue}${index}_sussydialogs_${track.path}$additionalHero';
+
+    final topRightWidget = this.topRightWidget;
+    final videoIcon = track is Video
+        ? Icon(
+            Broken.video,
+            size: 12.0,
+            color: textColor?.withAlpha(100) ?? context.textTheme.displaySmall?.color?.withAlpha(100),
+          )
+        : null;
 
     Widget finalChild = Stack(
       alignment: Alignment.centerRight,
@@ -547,15 +558,30 @@ class TrackTile extends StatelessWidget {
             color: Colors.transparent,
           ),
         ),
-        if (track is Video)
+        if (videoIcon != null && topRightWidget != null)
+          Positioned(
+            top: 0.0,
+            right: 0.0,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                videoIcon,
+                const SizedBox(width: 2.0),
+                topRightWidget,
+              ],
+            ),
+          )
+        else if (videoIcon != null)
           Positioned(
             top: 6.0,
             right: 6.0,
-            child: Icon(
-              Broken.video,
-              size: 12.0,
-              color: textColor?.withAlpha(100) ?? context.textTheme.displaySmall?.color?.withAlpha(100),
-            ),
+            child: videoIcon,
+          )
+        else if (topRightWidget != null)
+          Positioned(
+            top: 0.0,
+            right: 0.0,
+            child: topRightWidget,
           ),
       ],
     );

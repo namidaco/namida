@@ -44,7 +44,6 @@ void showListensDialog({
   required void Function(int listen) onListenTap,
 }) async {
   if (datesOfListen.isEmpty) return;
-  datesOfListen.sortByReverse((e) => e);
 
   final color = (colorScheme ?? CurrentColor.inst.color).obso;
 
@@ -54,19 +53,24 @@ void showListensDialog({
     });
   }
 
-  final datesMapByDay = <DateTime, List<DateTime>>{};
-  final datesMapByMonth = <DateTime, List<DateTime>>{};
-  for (int i = 0; i < datesOfListen.length; i++) {
-    var d = datesOfListen[i];
-    final date = DateTime.fromMillisecondsSinceEpoch(d);
-    final dayDate = DateTime(date.year, date.month, date.day);
-    final monthDate = DateTime(date.year, date.month);
-    datesMapByDay.addForce(dayDate, date);
-    datesMapByMonth.addForce(monthDate, date);
+  late final datesMapByDay = <DateTime, List<DateTime>>{};
+  late final datesMapByMonth = <DateTime, List<DateTime>>{};
+  void initializeDatesCalendarMapIfNeccessary() {
+    if (datesMapByDay.isEmpty && datesMapByMonth.isEmpty) {
+      datesOfListen.reverseLoop(
+        (d) {
+          final date = DateTime.fromMillisecondsSinceEpoch(d);
+          final dayDate = DateTime(date.year, date.month, date.day);
+          final monthDate = DateTime(date.year, date.month);
+          datesMapByDay.addForce(dayDate, date);
+          datesMapByMonth.addForce(monthDate, date);
+        },
+      );
+    }
   }
 
-  final firstListen = DateTime.fromMillisecondsSinceEpoch(datesOfListen.last);
-  final lastListen = DateTime.fromMillisecondsSinceEpoch(datesOfListen.first);
+  late final firstListen = DateTime.fromMillisecondsSinceEpoch(datesOfListen.first);
+  late final lastListen = DateTime.fromMillisecondsSinceEpoch(datesOfListen.last);
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -103,8 +107,10 @@ void showListensDialog({
                 width: namida.width,
                 child: ObxO(
                   rx: settings.heatmapListensView,
-                  builder: (context, heatmapListensView) => heatmapListensView
-                      ? Padding(
+                  builder: (context, heatmapListensView) {
+                    if (heatmapListensView) {
+                      initializeDatesCalendarMapIfNeccessary();
+                      return Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: PagedVerticalCalendar(
                             minDate: firstListen.subtract(const Duration(days: 8)),
@@ -174,29 +180,34 @@ void showListensDialog({
                                 ),
                               );
                             },
-                          ))
-                      : NamidaListView(
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (context, i) {
-                            final t = datesOfListen[i];
-                            return SmallListTile(
-                              key: ValueKey(i),
-                              borderRadius: 14.0,
-                              title: t.dateAndClockFormattedOriginal,
-                              subtitle: Jiffy.parseFromMillisecondsSinceEpoch(t).fromNow(),
-                              leading: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                    color: theme.cardColor,
-                                  ),
-                                  child: Text((datesOfListen.length - i).toString())),
-                              onTap: () => onListenTap(t),
-                            );
-                          },
-                          itemCount: datesOfListen.length,
-                          itemExtent: null,
-                        ),
+                          ));
+                    } else {
+                      return NamidaListView(
+                        padding: EdgeInsets.zero,
+                        itemBuilder: (context, indexPre) {
+                          final i = datesOfListen.length - indexPre - 1;
+                          final t = datesOfListen[i];
+                          return SmallListTile(
+                            key: ValueKey(i),
+                            borderRadius: 14.0,
+                            title: t.dateAndClockFormattedOriginal,
+                            subtitle: Jiffy.parseFromMillisecondsSinceEpoch(t).fromNow(),
+                            leading: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                color: theme.cardColor,
+                              ),
+                              child: Text((i + 1).toString()),
+                            ),
+                            onTap: () => onListenTap(t),
+                          );
+                        },
+                        itemCount: datesOfListen.length,
+                        itemExtent: null,
+                      );
+                    }
+                  },
                 ),
               ),
             ),

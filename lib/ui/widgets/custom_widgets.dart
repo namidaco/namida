@@ -1126,31 +1126,6 @@ class SmallIconButton extends StatelessWidget {
   }
 }
 
-class BlurryContainer extends StatelessWidget {
-  final Container? container;
-  final BorderRadius borderRadius;
-  final Widget? child;
-  final bool disableBlur;
-  const BlurryContainer({super.key, this.container, this.child, this.borderRadius = BorderRadius.zero, this.disableBlur = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget? finalChild = container ?? child;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-      ),
-      child: disableBlur || finalChild == null
-          ? finalChild
-          : NamidaBgBlur(
-              blur: 5.0,
-              child: finalChild,
-            ),
-    );
-  }
-}
-
 class CancelButton extends StatelessWidget {
   final void Function()? onPressed;
   const CancelButton({super.key, this.onPressed});
@@ -1243,31 +1218,47 @@ class NamidaBlurryContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final blurredAlphaLight = context.isDarkMode ? 60 : 140;
-    final con = BlurryContainer(
-      disableBlur: !settings.enableBlurEffect.value,
-      borderRadius: borderRadius ??
-          BorderRadius.only(
-            bottomLeft: Radius.circular(8.0.multipliedRadius),
-          ),
-      container: Container(
-          width: width,
-          height: height,
+    final blurEnabled = settings.enableBlurEffect.value;
+
+    Widget? finalChild = ColoredBox(
+      color: context.theme.cardColor.withAlpha(blurEnabled ? blurredAlphaLight : 220),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Padding(
           padding: padding,
-          decoration: BoxDecoration(
-            color: context.theme.cardColor.withAlpha(settings.enableBlurEffect.value ? blurredAlphaLight : 220),
-            borderRadius: borderRadius ??
-                BorderRadius.only(
-                  bottomLeft: Radius.circular(8.0.multipliedRadius),
-                ),
-          ),
-          child: child),
+          child: child,
+        ),
+      ),
     );
-    return onTap != null
-        ? InkWell(
-            onTap: onTap,
-            child: con,
-          )
-        : con;
+
+    if (blurEnabled) {
+      finalChild = NamidaBgBlur(
+        blur: 5.0,
+        child: finalChild,
+      );
+    }
+
+    final brr = borderRadius ?? BorderRadius.only(bottomLeft: Radius.circular(8.0.multipliedRadius));
+
+    if (blurEnabled || brr != BorderRadius.zero) {
+      finalChild = ClipPath(
+        clipper: DecorationClipper(
+          decoration: BoxDecoration(
+            borderRadius: brr,
+          ),
+        ),
+        child: finalChild,
+      );
+    }
+
+    if (onTap != null) {
+      finalChild = InkWell(
+        onTap: onTap,
+        child: finalChild,
+      );
+    }
+    return finalChild;
   }
 }
 
