@@ -79,8 +79,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   final _lostMemoriesYears = <int>[];
 
   int currentYearLostMemories = 0;
+  DateRange? currentYearLostMemoriesDateRange;
   late final ScrollController _scrollController;
   late final ScrollController _lostMemoriesScrollController;
+
+  final MostPlayedTimeRange _topRecentsTimeRange = MostPlayedTimeRange.day3;
 
   @override
   void initState() {
@@ -136,7 +139,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _topRecentListened.addAllIfEmpty(
       HistoryController.inst
           .getMostListensInTimeRange(
-            mptr: MostPlayedTimeRange.day3,
+            mptr: _topRecentsTimeRange,
             isStartOfDay: false,
             mainItemToSubItem: (item) => item.track,
           )
@@ -210,17 +213,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
+    final dateRange = DateRange(
+      oldest: DateTime(year, timeNow.month, timeNow.day - 5),
+      newest: DateTime(year, timeNow.month, timeNow.day + 5),
+    );
+    currentYearLostMemories = year;
+    currentYearLostMemoriesDateRange = dateRange;
     _sameTimeYearAgo = HistoryController.inst.getMostListensInTimeRange(
       mptr: MostPlayedTimeRange.custom,
-      customDate: DateRange(
-        oldest: DateTime(year, timeNow.month, timeNow.day - 5),
-        newest: DateTime(year, timeNow.month, timeNow.day + 5),
-      ),
+      customDate: dateRange,
       isStartOfDay: false,
       mainItemToSubItem: (item) => item.track,
     );
-    currentYearLostMemories = year;
     if (_lostMemoriesScrollController.hasClients) _lostMemoriesScrollController.jumpTo(0);
+  }
+
+  void _onGoingToMostPlayedPage({
+    required MostPlayedTimeRange mptr,
+    DateRange? dateCustom,
+  }) {
+    settings.save(
+      mostPlayedTimeRange: mptr,
+      mostPlayedCustomDateRange: dateCustom,
+    );
+    HistoryController.inst.updateTempMostPlayedPlaylist(
+      mptr: mptr,
+      customDateRange: dateCustom,
+    );
+    NamidaOnTaps.inst.onMostPlayedPlaylistTap();
   }
 
   List<E?> _listOrShimmer<E>(List<E> listy) {
@@ -443,7 +463,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   icon: Broken.crown_1,
                                   listy: const [],
                                   listWithListens: _topRecentListened,
-                                  onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
+                                  onTap: () {
+                                    _onGoingToMostPlayedPage(
+                                      mptr: _topRecentsTimeRange,
+                                    );
+                                  },
                                 );
 
                               case HomePageItems.lostMemories:
@@ -459,7 +483,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   icon: Broken.link_21,
                                   listy: const [],
                                   listWithListens: _sameTimeYearAgo,
-                                  onTap: NamidaOnTaps.inst.onMostPlayedPlaylistTap,
+                                  onTap: () {
+                                    _onGoingToMostPlayedPage(
+                                      mptr: MostPlayedTimeRange.custom,
+                                      dateCustom: currentYearLostMemoriesDateRange,
+                                    );
+                                  },
                                   thirdWidget: SizedBox(
                                     height: 32.0,
                                     width: context.width,
