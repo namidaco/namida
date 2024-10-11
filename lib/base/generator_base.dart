@@ -9,10 +9,10 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   const NamidaGeneratorBase(this.historyController);
 
   /// Generated items listened to in a time range.
-  List<T> generateItemsFromHistoryDates(DateTime? oldestDate, DateTime? newestDate) {
+  List<T> generateItemsFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, {bool sortByListensInRangeIfRequired = true}) {
     final items = historyController.generateTracksFromHistoryDates(oldestDate, newestDate, removeDuplicates: false);
 
-    final shouldDefaultSort = QueueInsertionType.listenTimeRange.toQueueInsertion().sortBy == InsertionSortingType.none;
+    final shouldDefaultSort = sortByListensInRangeIfRequired && QueueInsertionType.listenTimeRange.toQueueInsertion().sortBy == InsertionSortingType.none;
     if (shouldDefaultSort) {
       final listensCountInThisRange = <E, int>{};
       items.loop((item) => listensCountInThisRange.update(historyController.mainItemToSubItem(item), (value) => value + 1, ifAbsent: () => 1));

@@ -129,7 +129,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _recentlyAdded.addAll(alltracks.take(40));
 
     // -- Recent Listens --
-    _recentListened.addAllIfEmpty(NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow).take(40));
+    _recentListened.addAllIfEmpty(
+        NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
 
     // -- Top Recents --
     _topRecentListened.addAllIfEmpty(
