@@ -106,8 +106,10 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     if (channelID == channel?.channelID) {
       refreshState(() {
         isLoadingInitialStreams = false;
-        this.channelVideoTab = newResult;
-        if (newResult != null) trySortStreams();
+        if (newResult != null) {
+          this.channelVideoTab = newResult;
+          trySortStreams();
+        }
       });
     }
   }

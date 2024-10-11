@@ -44,7 +44,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
     if (tabResult != null) widget.onSuccessFetch();
 
     refreshState(() {
-      _tabResult = tabResult;
+      if (tabResult != null) _tabResult = tabResult;
       _currentSort = tabResult?.customSort ?? tabResult?.itemsSort.firstWhereEff((e) => e.initiallySelected);
       _isLoadingInitial = false;
     });

@@ -42,7 +42,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
     if (aboutResult != null) widget.onSuccessFetch();
 
     refreshState(() {
-      _aboutResult = aboutResult;
+      if (aboutResult != null) _aboutResult = aboutResult;
       _isLoadingInitial = false;
     });
 
