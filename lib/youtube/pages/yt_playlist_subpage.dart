@@ -51,8 +51,6 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
     final config = MostPlayedItemsPage(
       itemExtent: Dimensions.youtubeCardItemExtent,
       historyController: YoutubeHistoryController.inst,
-      customDateRange: settings.ytMostPlayedCustomDateRange,
-      activeTimeRangeChip: settings.ytMostPlayedTimeRange,
       onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
         settings.save(
           ytMostPlayedTimeRange: mptr,
@@ -61,62 +59,66 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
         );
       },
       header: (timeRangeChips, bottomPadding) => const SizedBox(),
-      itemBuilder: (context, i, listensMap) => const SizedBox(),
+      itemsCount: 0,
+      itemBuilder: (context, i) => const SizedBox(),
     );
     return config.getChipsRow(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final videos = <String>[];
-        final ytIds = <YoutubeID>[];
-        for (final e in YoutubeHistoryController.inst.currentTopTracksMapListensR.keys) {
-          videos.add(e);
-          ytIds.add(
-            YoutubeID(
-              id: e,
-              playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-            ),
+    return ObxO(
+      rx: YoutubeHistoryController.inst.currentMostPlayedTimeRange,
+      builder: (context, currentMostPlayedTimeRange) => ObxO(
+        rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
+        builder: (context, listensMap) {
+          final videos = <String>[];
+          final ytIds = <YoutubeID>[];
+          for (final e in listensMap.keys) {
+            videos.add(e);
+            ytIds.add(
+              YoutubeID(
+                id: e,
+                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+              ),
+            );
+          }
+
+          return MostPlayedItemsPage(
+            itemExtent: Dimensions.youtubeCardItemExtent,
+            historyController: YoutubeHistoryController.inst,
+            onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
+              settings.save(
+                ytMostPlayedTimeRange: mptr,
+                ytMostPlayedCustomDateRange: dateCustom,
+                ytMostPlayedCustomisStartOfDay: isStartOfDay,
+              );
+            },
+            header: (timeRangeChips, bottomPadding) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: timeRangeChips,
+              );
+            },
+            itemsCount: listensMap.length,
+            itemBuilder: (context, i) {
+              final videoID = videos[i];
+              final listens = listensMap[videoID] ?? [];
+
+              return YTHistoryVideoCard(
+                key: Key("${videoID}_$i"),
+                videos: ytIds,
+                index: i,
+                day: null,
+                overrideListens: listens,
+                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+                playlistName: '',
+                canHaveDuplicates: false,
+              );
+            },
           );
-        }
-
-        return MostPlayedItemsPage(
-          itemExtent: Dimensions.youtubeCardItemExtent,
-          historyController: YoutubeHistoryController.inst,
-          customDateRange: settings.ytMostPlayedCustomDateRange,
-          activeTimeRangeChip: settings.ytMostPlayedTimeRange,
-          onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-            settings.save(
-              ytMostPlayedTimeRange: mptr,
-              ytMostPlayedCustomDateRange: dateCustom,
-              ytMostPlayedCustomisStartOfDay: isStartOfDay,
-            );
-          },
-          header: (timeRangeChips, bottomPadding) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: timeRangeChips,
-            );
-          },
-          itemBuilder: (context, i, listensMap) {
-            final videoID = videos[i];
-            final listens = listensMap[videoID] ?? [];
-
-            return YTHistoryVideoCard(
-              key: Key("${videoID}_$i"),
-              videos: ytIds,
-              index: i,
-              day: null,
-              overrideListens: listens,
-              playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-              playlistName: '',
-              canHaveDuplicates: false,
-            );
-          },
-        );
-      },
+        },
+      ),
     );
   }
 }

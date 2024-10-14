@@ -15,22 +15,20 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> historyController;
-  final Rx<MostPlayedTimeRange> activeTimeRangeChip;
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
-  final double? itemExtent;
+  final double itemExtent;
   final Widget Function(Widget timeRangeChips, double bottomPadding) header;
-  final Widget Function(BuildContext context, int i, Map<E, List<int>> listensMap) itemBuilder;
-  final Rx<DateRange> customDateRange;
+  final Widget Function(BuildContext context, int i) itemBuilder;
+  final int itemsCount;
 
   const MostPlayedItemsPage({
     super.key,
     required this.historyController,
-    required this.activeTimeRangeChip,
     required this.onSavingTimeRange,
     required this.itemExtent,
     required this.header,
     required this.itemBuilder,
-    required this.customDateRange,
+    required this.itemsCount,
   });
 
   void _onSelectingTimeRange({
@@ -39,7 +37,6 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     bool? isStartOfDay,
   }) {
     onSavingTimeRange(mptr: mptr, dateCustom: dateCustom, isStartOfDay: isStartOfDay);
-
     historyController.updateTempMostPlayedPlaylist(
       mptr: mptr,
       customDateRange: dateCustom,
@@ -61,7 +58,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: ObxO(
-        rx: activeTimeRangeChip,
+        rx: historyController.currentMostPlayedTimeRange,
         builder: (context, activeChip) {
           final isActive = activeChip == mptr;
           final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
@@ -109,7 +106,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
         children: [
           const SizedBox(width: 8.0),
           ObxO(
-            rx: activeTimeRangeChip,
+            rx: historyController.currentMostPlayedTimeRange,
             builder: (context, activeChip) => NamidaInkWell(
               animationDurationMS: 200,
               borderRadius: 6.0,
@@ -149,9 +146,9 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  Obx(
-                    (context) {
-                      final dateRange = customDateRange.valueR;
+                  ObxO(
+                    rx: historyController.mostPlayedCustomDateRange,
+                    builder: (context, dateRange) {
                       return _getChipChild(
                         context: context,
                         mptr: MostPlayedTimeRange.custom,
@@ -162,7 +159,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           iconSize: 14.0,
                           iconColor: textColor,
                           onPressed: () => _onSelectingTimeRange(
-                            mptr: activeTimeRangeChip.value == MostPlayedTimeRange.custom ? MostPlayedTimeRange.allTime : null,
+                            mptr: historyController.currentMostPlayedTimeRange.value == MostPlayedTimeRange.custom ? MostPlayedTimeRange.allTime : null,
                             dateCustom: DateRange.dummy(),
                           ),
                         ),
@@ -192,18 +189,14 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomWidget = getChipsRow(context);
     const bottomPadding = 0.0;
+    final headerWidget = header(bottomWidget, bottomPadding);
     return BackgroundWrapper(
-      child: Obx(
-        (context) {
-          final finalListenMap = historyController.currentTopTracksMapListensR;
-          return NamidaListView(
-            itemExtent: itemExtent,
-            header: header(bottomWidget, bottomPadding),
-            padding: kBottomPaddingInsets,
-            itemCount: finalListenMap.length,
-            itemBuilder: (context, i) => itemBuilder(context, i, finalListenMap),
-          );
-        },
+      child: NamidaListView(
+        itemExtent: itemExtent,
+        header: headerWidget,
+        padding: kBottomPaddingInsets,
+        itemCount: itemsCount,
+        itemBuilder: (context, i) => itemBuilder(context, i),
       ),
     );
   }

@@ -186,73 +186,74 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimationLimiter(
-      child: TrackTilePropertiesProvider(
-        configs: const TrackTilePropertiesConfigs(
-          queueSource: QueueSource.mostPlayed,
-          playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
-          draggableThumbnail: false,
-        ),
-        builder: (properties) {
-          final tracks = QueueSource.mostPlayed.toTracks();
-          return MostPlayedItemsPage(
-            itemExtent: Dimensions.inst.trackTileItemExtent,
-            historyController: HistoryController.inst,
-            customDateRange: settings.mostPlayedCustomDateRange,
-            activeTimeRangeChip: settings.mostPlayedTimeRange,
-            onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-              settings.save(
-                mostPlayedTimeRange: mptr,
-                mostPlayedCustomDateRange: dateCustom,
-                mostPlayedCustomisStartOfDay: isStartOfDay,
-              );
-            },
-            header: (timeRangeChips, bottomPadding) {
-              return SubpagesTopContainer(
-                source: QueueSource.mostPlayed,
-                title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
-                subtitle: tracks.displayTrackKeyword,
-                heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                imageWidget: MultiArtworkContainer(
-                  heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                  size: context.width * 0.35,
-                  tracks: tracks.toImageTracks(),
-                ),
-                tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
-                bottomPadding: bottomPadding,
-                bottomWidget: timeRangeChips,
-              );
-            },
-            itemBuilder: (context, i, listensMap) {
-              final track = tracks[i];
-              final listens = listensMap[track] ?? [];
-
-              return AnimatingTile(
-                key: Key("${track}_$i"),
-                position: i,
-                child: TrackTile(
-                  properties: properties,
-                  key: Key("${track}_$i"),
-                  index: i,
-                  trackOrTwd: tracks[i],
-                  onRightAreaTap: () => showTrackListensDialog(track.track, datesOfListen: listens),
-                  trailingWidget: Container(
-                    padding: const EdgeInsets.all(6.0),
-                    decoration: BoxDecoration(
-                      color: context.theme.scaffoldBackgroundColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      listens.length.formatDecimal(),
-                      style: context.textTheme.displaySmall,
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+    return TrackTilePropertiesProvider(
+      configs: const TrackTilePropertiesConfigs(
+        queueSource: QueueSource.mostPlayed,
+        playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
+        draggableThumbnail: false,
       ),
+      builder: (properties) {
+        return ObxO(
+          rx: HistoryController.inst.currentMostPlayedTimeRange,
+          builder: (context, currentMostPlayedTimeRange) => ObxO(
+            rx: HistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
+            builder: (context, listensMap) {
+              final tracks = listensMap.keys.toList();
+              return MostPlayedItemsPage(
+                itemExtent: Dimensions.inst.trackTileItemExtent,
+                historyController: HistoryController.inst,
+                onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
+                  settings.save(
+                    mostPlayedTimeRange: mptr,
+                    mostPlayedCustomDateRange: dateCustom,
+                    mostPlayedCustomisStartOfDay: isStartOfDay,
+                  );
+                },
+                header: (timeRangeChips, bottomPadding) {
+                  return SubpagesTopContainer(
+                    source: QueueSource.mostPlayed,
+                    title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
+                    subtitle: tracks.displayTrackKeyword,
+                    heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+                    imageWidget: MultiArtworkContainer(
+                      heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+                      size: context.width * 0.35,
+                      tracks: tracks.toImageTracks(),
+                    ),
+                    tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
+                    bottomPadding: bottomPadding,
+                    bottomWidget: timeRangeChips,
+                  );
+                },
+                itemsCount: listensMap.length,
+                itemBuilder: (context, i) {
+                  final track = tracks[i];
+                  final listens = listensMap[track] ?? [];
+
+                  return TrackTile(
+                    key: Key("${track}_$i"),
+                    properties: properties,
+                    index: i,
+                    trackOrTwd: track,
+                    onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens),
+                    trailingWidget: Container(
+                      padding: const EdgeInsets.all(6.0),
+                      decoration: BoxDecoration(
+                        color: context.theme.scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        listens.length.formatDecimal(),
+                        style: context.textTheme.displaySmall,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
