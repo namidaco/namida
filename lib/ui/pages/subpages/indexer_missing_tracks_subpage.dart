@@ -29,9 +29,9 @@ enum _LoadingProgress {
   initializing('Initializing'),
   preparingFiles('Preparing files'),
   collectingPlaylistTracks('Collecting playlist tracks'),
-  fillingHistoryTracks('Filling history tracks'),
-  fillingLibraryTracks('Filling library tracks'),
-  fillingPlaylistTracks('Filling playlist tracks');
+  findingHistoryTracks('Finding history tracks'),
+  findingLibraryTracks('Finding library tracks'),
+  findingPlaylistTracks('Finding playlist tracks');
 
   final String value;
   const _LoadingProgress(this.value);
@@ -53,7 +53,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   final _selectedTracksToUpdate = <String, bool>{}.obs;
 
   bool _isLoading = false;
-  final _loadingProgress = _LoadingProgress.initializing.obs;
+  final _loadingProgressOnGoing = <_LoadingProgress, bool>{_LoadingProgress.initializing: true}.obs;
+  final _loadingProgressActualTracksCount = <_LoadingProgress, int>{}.obs;
+  final _subLoadingProgress = 0.0.obs;
   final _loadingCountTotalSteps = _LoadingProgress.values.length;
 
   bool _isUpdatingPaths = false;
@@ -63,6 +65,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   Isolate? _isolate;
   ReceivePort? _resultPort;
   ReceivePort? _portLoadingProgress;
+  ReceivePort? _portSublistsLoadingProgress;
 
   @override
   void initState() {
@@ -76,7 +79,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     _missingTracksSuggestions.close();
     _selectedTracksToUpdate.close();
     _scrollController.dispose();
-    _loadingProgress.close();
+    _loadingProgressOnGoing.close();
+    _subLoadingProgress.close();
     _stopPreviousIsolates();
     super.dispose();
   }
@@ -86,9 +90,11 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       _isolate?.kill(priority: Isolate.immediate);
       _resultPort?.close();
       _portLoadingProgress?.close();
+      _portSublistsLoadingProgress?.close();
       _isolate = null;
       _resultPort = null;
       _portLoadingProgress = null;
+      _portSublistsLoadingProgress = null;
     } catch (_) {}
   }
 
@@ -103,7 +109,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     setState(() => _isLoading = true);
     _stopPreviousIsolates();
 
-    _loadingProgress.value = _LoadingProgress.preparingFiles;
+    _loadingProgressOnGoing[_LoadingProgress.preparingFiles] = true;
 
     late final Set<String> audioFiles;
     await Future.wait([
@@ -114,40 +120,54 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       PlaylistController.inst.waitForM3UPlaylistsLoad,
     ]);
 
-    _loadingProgress.value = _LoadingProgress.collectingPlaylistTracks;
+    _loadingProgressOnGoing[_LoadingProgress.collectingPlaylistTracks] = true;
 
     _resultPort = ReceivePort();
     _portLoadingProgress = ReceivePort();
+    _portSublistsLoadingProgress = ReceivePort();
 
     try {
       StreamSubscription? portLoadingProgressSub;
       portLoadingProgressSub = _portLoadingProgress!.listen((stepProgress) {
-        _loadingProgress.value = stepProgress as _LoadingProgress;
+        _loadingProgressOnGoing[stepProgress] = true;
+      });
+
+      StreamSubscription? portSublistsLoadingProgressSub;
+      portSublistsLoadingProgressSub = _portSublistsLoadingProgress!.listen((subProgress) {
+        _subLoadingProgress.value = subProgress as double;
       });
 
       final indicesProgressMap = <int, _LoadingProgress>{};
       final allTracks = <String, bool>{};
-      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingHistoryTracks;
+      indicesProgressMap[allTracks.length] = _LoadingProgress.findingHistoryTracks;
+      void addTracksCountToStep(_LoadingProgress step) {
+        final alreadyExistedCount = _loadingProgressActualTracksCount.value.values.fold(0, (previousValue, element) => previousValue + element);
+        _loadingProgressActualTracksCount[step] = allTracks.length - alreadyExistedCount;
+      }
 
       // -- history first to be sorted & has no duplicates
       for (final track in HistoryController.inst.topTracksMapListens.keys) {
         allTracks[track.path] = true;
       }
+      addTracksCountToStep(_LoadingProgress.findingHistoryTracks);
 
-      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingLibraryTracks;
+      indicesProgressMap[allTracks.length] = _LoadingProgress.findingLibraryTracks;
       for (final path in Indexer.inst.allTracksMappedByPath.keys) {
         allTracks[path] ??= true;
       }
+      addTracksCountToStep(_LoadingProgress.findingLibraryTracks);
 
-      indicesProgressMap[allTracks.length] = _LoadingProgress.fillingPlaylistTracks;
-      for (final tracks in PlaylistController.inst.playlistsMap.value.values.map((e) => e.tracks)) {
-        tracks.loop((e) {
+      indicesProgressMap[allTracks.length - 1] = _LoadingProgress.findingPlaylistTracks;
+      for (final p in PlaylistController.inst.playlistsMap.value.values) {
+        p.tracks.loop((e) {
           allTracks[e.track.path] ??= true;
         });
       }
+      addTracksCountToStep(_LoadingProgress.findingPlaylistTracks);
 
-      final params = (audioFiles, allTracks, indicesProgressMap, _portLoadingProgress!.sendPort, _resultPort!.sendPort);
+      final params = (audioFiles, allTracks, indicesProgressMap, _portLoadingProgress!.sendPort, _resultPort!.sendPort, _portSublistsLoadingProgress!.sendPort);
       _isolate = await Isolate.spawn(_fetchMissingTracksIsolate, params);
+
       final res = await _resultPort!.first as (List<String>, Map<String, String?>);
 
       _missingTracksPaths = res.$1;
@@ -156,16 +176,19 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       _resultPort?.close();
       _portLoadingProgress?.close();
       portLoadingProgressSub.cancel();
+      portSublistsLoadingProgressSub.cancel();
     } catch (_) {}
 
     setState(() => _isLoading = false);
   }
 
-  static void _fetchMissingTracksIsolate((Set<String>, Map<String, bool>, Map<int, _LoadingProgress>, SendPort, SendPort) params) {
+  static void _fetchMissingTracksIsolate((Set<String>, Map<String, bool>, Map<int, _LoadingProgress>, SendPort, SendPort, SendPort) params) {
     final allAudioFiles = params.$1;
     final allTracks = params.$2;
     final indicesProgressMap = params.$3;
     final progressPort = params.$4;
+    final resultsPort = params.$5;
+    final subProgressPort = params.$6;
 
     String? getSuggestion(String path) {
       final all = NamidaGenerator.getHighMatcheFilesFromFilename(allAudioFiles, path.getFilename);
@@ -187,15 +210,18 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       missingTracksSuggestions[path] = getSuggestion(path);
     }
 
+    final int totalIndices = allTracks.length - 1;
     int index = 0;
     for (final path in allTracks.keys) {
+      subProgressPort.send(index / totalIndices);
+
       _onAdd(path);
       final progress = indicesProgressMap[index];
       if (progress != null) progressPort.send(progress);
       index++;
     }
 
-    params.$5.send((missingTracksPaths, missingTracksSuggestions));
+    resultsPort.send((missingTracksPaths, missingTracksSuggestions));
   }
 
   void _pickNewPathFor(String path) async {
@@ -241,37 +267,61 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
         children: [
           _isLoading
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
+                  child: ObxO(
+                    rx: _loadingProgressOnGoing,
+                    builder: (context, loadingProgressDone) => ObxO(
+                      rx: _loadingProgressActualTracksCount,
+                      builder: (context, stepTracksCountMap) => Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          ThreeArchedCircle(
-                            size: 56.0,
-                            color: context.theme.colorScheme.secondary,
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              ThreeArchedCircle(
+                                size: 56.0,
+                                color: context.theme.colorScheme.secondary,
+                              ),
+                              ObxO(
+                                rx: _subLoadingProgress,
+                                builder: (context, subProgress) => Text(
+                                  "${(subProgress * 100).toStringAsFixed(2)}%",
+                                  style: context.textTheme.displaySmall,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
-                          ObxO(
-                            rx: _loadingProgress,
-                            builder: (context, progress) => Text(
-                              "${progress.index + 1}/$_loadingCountTotalSteps",
-                              style: context.textTheme.displayMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
+                          const SizedBox(height: 12.0),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ..._LoadingProgress.values.map(
+                                (e) {
+                                  String val = '${e.index + 1}. ${e.value}';
+                                  final isDone =
+                                      loadingProgressDone[e] == true && (loadingProgressDone.length == _loadingCountTotalSteps || loadingProgressDone.keys.lastOrNull != e);
+                                  val += isDone ? ' ✓' : '...';
+                                  final opacity = isDone ? 0.8 : 0.5;
+                                  final trsCount = stepTracksCountMap[e];
+                                  if (trsCount != null) val += ' (${trsCount.formatDecimal()})';
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                    child: Text(
+                                      val,
+                                      style: context.textTheme.displaySmall?.copyWith(
+                                        color: context.textTheme.displaySmall?.color?.withOpacity(opacity),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          )
                         ],
                       ),
-                      const SizedBox(height: 12.0),
-                      ObxO(
-                        rx: _loadingProgress,
-                        builder: (context, progress) => Text(
-                          "${progress.value}...",
-                          style: context.textTheme.displayMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 )
               : Listener(
