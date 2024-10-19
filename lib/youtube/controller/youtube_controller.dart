@@ -666,7 +666,7 @@ class YoutubeController {
             streams,
             playlistInfo,
             playlistInfo?.id ?? config.playlistId,
-            config.index,
+            config.originalIndex,
             config.totalLength,
             autoExtract: autoExtractTitleAndArtist,
             initialBuilding: config.ffmpegTags,
@@ -847,7 +847,7 @@ class YoutubeController {
     bool requiresRenaming = false;
 
     final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
-        finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.index, config.totalLength);
+        finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.originalIndex, config.totalLength);
     if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
       finalFilenameTemp = finalFilenameTempRebuilt;
       requiresRenaming = true;

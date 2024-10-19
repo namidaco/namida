@@ -14,7 +14,7 @@ class _YtFilenameRebuilder {
     PlaylistBasicInfo? playlistInfo,
     VideoStream? videoStream,
     AudioStream? audioStream,
-    int? index,
+    int? originalIndex,
     int? totalLength,
   ) {
     bool didConvertSmth = false;
@@ -33,7 +33,7 @@ class _YtFilenameRebuilder {
               playlistInfo,
               videoStream,
               audioStream,
-              index,
+              originalIndex,
               totalLength,
             );
             if (converted != null) {
@@ -98,7 +98,7 @@ class _YtFilenameRebuilder {
   String buildParamForFilename(String e) => '%($e)s';
 
   String? _keywordToInfo(String keyword, String videoId, VideoStreamsResult? streams, YoutiPieVideoPageResult? pageResult, StreamInfoItem? videoItem,
-      PlaylistBasicInfo? playlistInfo, VideoStream? videoStream, AudioStream? audioStream, int? index, int? totalLength) {
+      PlaylistBasicInfo? playlistInfo, VideoStream? videoStream, AudioStream? audioStream, int? originalIndex, int? totalLength) {
     return switch (keyword) {
       'none' => '',
       'id' || 'video_id' => videoId,
@@ -161,10 +161,10 @@ class _YtFilenameRebuilder {
           return finalTitle;
         }(),
       'playlist_count' => (playlistInfo?.videosCount ?? totalLength)?.toString(),
-      'playlist_index' => (videoItem?.indexInPlaylist ?? index)?.toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
-      'playlist_autonumber' => index == null && videoItem?.indexInPlaylist == null
+      'playlist_index' => (videoItem?.indexInPlaylist ?? originalIndex)?.toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
+      'playlist_autonumber' => originalIndex == null && videoItem?.indexInPlaylist == null
           ? null
-          : ((videoItem?.indexInPlaylist ?? index)! + 1).toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
+          : ((videoItem?.indexInPlaylist ?? originalIndex)! + 1).toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
       _ => throw const _NonMatched(),
     };
   }

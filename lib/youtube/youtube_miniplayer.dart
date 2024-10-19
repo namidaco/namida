@@ -604,7 +604,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
                                                                 icon: icon,
                                                                 onLongPress: () async => await showDownloadVideoBottomSheet(
-                                                                    videoId: currentId, index: null, totalLength: null, playlistId: null, streamInfoItem: null),
+                                                                    videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
                                                                 onPressed: () async {
                                                                   if (isDownloading) {
                                                                     YoutubeController.inst.pauseDownloadTask(
@@ -619,7 +619,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     );
                                                                   } else {
                                                                     await showDownloadVideoBottomSheet(
-                                                                        videoId: currentId, index: null, totalLength: null, playlistId: null, streamInfoItem: null);
+                                                                        videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null);
                                                                   }
                                                                 },
                                                               );

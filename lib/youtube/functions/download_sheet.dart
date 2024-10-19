@@ -45,7 +45,7 @@ Future<void> showDownloadVideoBottomSheet({
   YoutubeItemDownloadConfig? initialItemConfig,
   PlaylistBasicInfo? playlistInfo,
   required String? playlistId,
-  required int? index,
+  required int? originalIndex,
   required int? totalLength,
   required StreamInfoItem? streamInfoItem,
   bool preferAudioOnly = false,
@@ -99,7 +99,7 @@ Future<void> showDownloadVideoBottomSheet({
         playlistInfo,
         selectedVideoOnlyStream.value,
         selectedAudioOnlyStream.value,
-        initialItemConfig?.index,
+        initialItemConfig?.originalIndex,
         initialItemConfig?.totalLength,
       );
       if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
@@ -189,7 +189,7 @@ Future<void> showDownloadVideoBottomSheet({
         streamResult.value,
         playlistInfo,
         playlistId,
-        index,
+        originalIndex,
         totalLength,
         autoExtract: settings.youtube.autoExtractVideoTagsFromInfo.value,
         initialBuilding: initialItemConfig?.ffmpegTags,
@@ -717,7 +717,7 @@ Future<void> showDownloadVideoBottomSheet({
                                       : const BoxDecoration(),
                                   onTap: () async {
                                     final itemConfig = YoutubeItemDownloadConfig(
-                                      index: index,
+                                      originalIndex: originalIndex,
                                       totalLength: totalLength,
                                       playlistId: playlistId,
                                       id: DownloadTaskVideoId(videoId: videoId),

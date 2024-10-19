@@ -76,6 +76,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   void initState() {
     _groupName.value = widget.playlistName;
     _addAllYTIDsToSelected();
+    onRenameAllTasks(settings.youtube.downloadFilenameBuilder.value); // needed to provide initial data specially original indices
     super.initState();
   }
 
@@ -90,16 +91,16 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void onRenameAllTasks(String? defaultFilename) {
-    widget.ids.mapIndexed((ytid, index) => _configMap[ytid.id] = _getDummyDownloadConfig(ytid.id, index, defaultFilename: defaultFilename)).toList();
+    widget.ids.mapIndexed((ytid, originalIndex) => _configMap[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, defaultFilename: defaultFilename)).toList();
   }
 
-  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int index, {String? defaultFilename}) {
+  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, {String? defaultFilename}) {
     final streamInfoItem = widget.infoLookup[id];
     final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
     final filename =
         filenameBuilderSettings.isNotEmpty ? filenameBuilderSettings : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id);
     return YoutubeItemDownloadConfig(
-      index: index,
+      originalIndex: originalIndex,
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
       playlistId: widget.playlistInfo?.id,
       id: DownloadTaskVideoId(videoId: id),
@@ -123,10 +124,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   Future<void> _onEditIconTap({
     required String id,
-    required int index,
+    required int originalIndex,
   }) async {
     await showDownloadVideoBottomSheet(
-      index: _configMap[id]?.index,
+      originalIndex: _configMap[id]?.originalIndex,
       totalLength: _configMap[id]?.totalLength,
       streamInfoItem: widget.infoLookup[id],
       playlistInfo: widget.playlistInfo,
@@ -454,8 +455,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       SliverFixedExtentList.builder(
                         itemExtent: Dimensions.youtubeCardItemExtent * _hmultiplier,
                         itemCount: widget.ids.length,
-                        itemBuilder: (context, index) {
-                          final id = widget.ids[index].id;
+                        itemBuilder: (context, originalIndex) {
+                          final id = widget.ids[originalIndex].id;
                           final info = widget.infoLookup[id] ?? YoutubeInfoController.utils.getStreamInfoSync(id);
                           final duration = info?.durSeconds?.secondsLabel;
 
@@ -488,8 +489,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                       break;
                                     }
                                   }
-                                  if (latestIndex != null && index > latestIndex) {
-                                    final selectedRange = widget.ids.getRange(latestIndex + 1, index + 1);
+                                  if (latestIndex != null && originalIndex > latestIndex) {
+                                    final selectedRange = widget.ids.getRange(latestIndex + 1, originalIndex + 1);
                                     selectedRange.toList().loop((e) {
                                       if (!_selectedList.contains(e.id)) _selectedList.add(e.id);
                                     });
@@ -553,7 +554,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                           horizontalPadding: 4.0,
                                           icon: Broken.edit_2,
                                           iconSize: 20.0,
-                                          onPressed: () => _onEditIconTap(id: id, index: index),
+                                          onPressed: () => _onEditIconTap(id: id, originalIndex: originalIndex),
                                         ),
                                         Checkbox.adaptive(
                                           visualDensity: VisualDensity.compact,
@@ -572,7 +573,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
                                         padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                         child: Text(
-                                          '${index + 1}',
+                                          '${originalIndex + 1}',
                                           style: context.textTheme.displaySmall,
                                         ),
                                       ),
@@ -627,10 +628,22 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       onPressed: () async {
                         if (_selectedList.isEmpty) return;
                         if (!await requestManageStoragePermission()) return;
+                        final itemsConfig = _selectedList.value
+                            .map(
+                              (id) =>
+                                  _configMap[id] ??
+
+                                  // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
+                                  _getDummyDownloadConfig(
+                                    id,
+                                    widget.ids.indexWhere((element) => element.id == id),
+                                  ),
+                            )
+                            .toList();
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
-                          groupName: DownloadTaskGroupName(groupName: widget.playlistName),
-                          itemsConfig: _selectedList.value.mapIndexed((id, index) => _configMap[id] ?? _getDummyDownloadConfig(id, index)).toList(),
+                          groupName: DownloadTaskGroupName(groupName: _groupName.value),
+                          itemsConfig: itemsConfig,
                           useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
                           autoExtractTitleAndArtist: autoExtractTitleAndArtist,
                           keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,

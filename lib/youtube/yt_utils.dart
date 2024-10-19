@@ -432,7 +432,7 @@ class YTUtils {
         onTap: () {
           showDownloadVideoBottomSheet(
             videoId: videoId,
-            index: downloadIndex,
+            originalIndex: downloadIndex,
             playlistId: playlistId,
             totalLength: totalLength,
             streamInfoItem: streamInfoItem,
@@ -559,7 +559,7 @@ class YTUtils {
     VideoStreamsResult? streams,
     PlaylistBasicInfo? playlistInfo,
     String? playlistId,
-    int? index,
+    int? originalIndex,
     int? totalLength, {
     bool autoExtract = true,
     Map<String, String?>? initialBuilding,
@@ -577,7 +577,7 @@ class YTUtils {
         final userText = ib.value;
         if (userText != null) {
           infoMap[ib.key] = YoutubeController.filenameBuilder
-                  .rebuildFilenameWithDecodedParams(userText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+                  .rebuildFilenameWithDecodedParams(userText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
               userText;
         }
       }
@@ -587,7 +587,7 @@ class YTUtils {
     for (final di in defaultInfoSett.entries) {
       final defaultText = di.value;
       infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
           defaultText;
     }
 
@@ -595,7 +595,7 @@ class YTUtils {
     for (final di in defaultInfo.entries) {
       final defaultText = di.value;
       infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, index, totalLength) ??
+              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
           '';
     }
 

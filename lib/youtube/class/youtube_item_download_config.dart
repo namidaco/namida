@@ -24,7 +24,7 @@ class YoutubeItemDownloadConfig {
   final String? prefferedAudioQualityID;
   final bool? fetchMissingAudio;
   final bool? fetchMissingVideo;
-  final int? index;
+  final int? originalIndex;
   final int? totalLength;
   final String? playlistId;
 
@@ -41,7 +41,7 @@ class YoutubeItemDownloadConfig {
     required this.prefferedAudioQualityID,
     required this.fetchMissingAudio,
     required this.fetchMissingVideo,
-    required this.index,
+    required this.originalIndex,
     required this.totalLength,
     required this.playlistId,
   }) : _filename = filename.obs;
@@ -79,7 +79,7 @@ class YoutubeItemDownloadConfig {
       prefferedAudioQualityID: map['prefferedAudioQualityID'],
       fetchMissingAudio: map['fetchMissingAudio'],
       fetchMissingVideo: map['fetchMissingVideo'],
-      index: map['index'],
+      originalIndex: map['index'],
       totalLength: map['totalLength'],
       playlistId: map['playlistId'],
     );
@@ -99,7 +99,7 @@ class YoutubeItemDownloadConfig {
       'prefferedAudioQualityID': prefferedAudioQualityID,
       'fetchMissingAudio': fetchMissingAudio,
       'fetchMissingVideo': fetchMissingVideo,
-      'index': index,
+      'index': originalIndex,
       'totalLength': totalLength,
       'playlistId': playlistId,
     };
