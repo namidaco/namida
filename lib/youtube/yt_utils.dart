@@ -283,6 +283,118 @@ class YTUtils {
     return items;
   }
 
+  static void showCopyItemsDialog(String videoId) {
+    final videoLink = YTUrlUtils.buildVideoUrl(videoId);
+    String? videoLinkTimeStamp;
+    final title = YoutubeInfoController.utils.getVideoName(videoId) ?? '';
+    final channelTitle = YoutubeInfoController.utils.getVideoChannelName(videoId) ?? '';
+
+    if (videoId == Player.inst.currentVideo?.id) {
+      int currentSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
+      if (currentSeconds > 0) {
+        videoLinkTimeStamp = YTUrlUtils.buildVideoUrl(videoId, timestampSeconds: currentSeconds);
+      }
+    }
+
+    void copy(String text) {
+      Clipboard.setData(ClipboardData(text: text));
+      snackyy(
+        title: lang.COPIED_TO_CLIPBOARD,
+        message: text.replaceAll('\n', ' '),
+        maxLinesMessage: 2,
+        leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
+        top: false,
+      );
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.COPY,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomListTile(
+              title: lang.TITLE,
+              subtitle: title,
+              onTap: () => copy(title),
+            ),
+            CustomListTile(
+              title: lang.CHANNEL,
+              subtitle: channelTitle,
+              onTap: () => copy(channelTitle),
+            ),
+            CustomListTile(
+              title: "${lang.CHANNEL} + ${lang.TITLE}",
+              subtitle: '$channelTitle $title',
+              onTap: () => copy('$channelTitle $title'),
+            ),
+            CustomListTile(
+              title: lang.LINK,
+              subtitle: videoLink,
+              onTap: () => copy(videoLink),
+            ),
+            if (videoLinkTimeStamp != null)
+              CustomListTile(
+                title: "${lang.LINK} + ${lang.SECONDS}",
+                subtitle: videoLinkTimeStamp,
+                onTap: () => copy(videoLinkTimeStamp!),
+              ),
+            CustomListTile(
+              title: lang.VIDEO,
+              subtitle: videoId,
+              onTap: () => copy(videoId),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static NamidaPopupItem getVideoCopyItemsPopupItem(String videoId) {
+    return NamidaPopupItem(
+      icon: Broken.copy,
+      title: lang.COPY,
+      onTap: () {
+        final videoLink = YTUrlUtils.buildVideoUrl(videoId);
+        final text = videoLink;
+        Clipboard.setData(ClipboardData(text: text));
+        snackyy(
+          title: lang.COPIED_TO_CLIPBOARD,
+          message: text,
+          maxLinesMessage: 2,
+          leftBarIndicatorColor: CurrentColor.inst.color,
+          top: false,
+        );
+      },
+      onLongPress: () => YTUtils.showCopyItemsDialog(videoId),
+      titleBuilder: (style) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: Text(
+              lang.COPY,
+              style: style,
+            ),
+          ),
+          const SizedBox(width: 4.0),
+          NamidaIconButton(
+            disableColor: true,
+            icon: Broken.share,
+            iconSize: 18.0,
+            onPressed: () {
+              final videoLink = YTUrlUtils.buildVideoUrl(videoId);
+              Share.share(videoLink);
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   static List<NamidaPopupItem> getVideoCardMenuItems({
     required int? downloadIndex,
     required int? totalLength,
@@ -305,6 +417,7 @@ class YTUtils {
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
+
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -326,12 +439,7 @@ class YTUtils {
           );
         },
       ),
-      if (displayShareUrl)
-        NamidaPopupItem(
-          icon: Broken.share,
-          title: lang.SHARE,
-          onTap: () => Share.share(YTUrlUtils.buildVideoUrl(videoId)),
-        ),
+      if (displayShareUrl) getVideoCopyItemsPopupItem(videoId),
       if (copyUrl)
         NamidaPopupItem(
           icon: Broken.copy,
@@ -765,16 +873,15 @@ class YTUtils {
 
   void copyCurrentVideoUrl(String videoId, {required bool withTimestamp}) {
     if (videoId != '') {
-      String finalUrl = 'https://www.youtube.com/watch?v=$videoId';
-      if (withTimestamp) {
-        final atSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
-        if (atSeconds > 0) finalUrl += '?t=$atSeconds';
-      }
+      int? timeStampSeconds = withTimestamp ? Player.inst.nowPlayingPosition.value ~/ 1000 : null;
+      timeStampSeconds = timeStampSeconds.toIf(null, 0);
+      String finalUrl = YTUrlUtils.buildVideoUrl(videoId, timestampSeconds: timeStampSeconds);
       Clipboard.setData(ClipboardData(text: finalUrl));
       snackyy(
         title: lang.COPIED_TO_CLIPBOARD,
         message: finalUrl,
         top: false,
+        maxLinesMessage: 2,
         leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
       );
     }

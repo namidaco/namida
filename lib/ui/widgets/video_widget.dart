@@ -1457,7 +1457,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             onLongPress: () {
                                               _startTimer();
                                               final id = Player.inst.currentVideo?.id;
-                                              if (id != null) const YTUtils().copyCurrentVideoUrl(id, withTimestamp: true);
+                                              if (id != null) YTUtils.showCopyItemsDialog(id);
                                             },
                                           ),
                                           if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
