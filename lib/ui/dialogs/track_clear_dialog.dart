@@ -85,7 +85,6 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
       const YTUtils().showVideoClearDialog(
         ctx,
         singleVideoId,
-        colorScheme,
         afterDeleting: (pathsDeleted) {
           final details = localArtworkDetails;
           if (details != null && pathsDeleted[details.$1] != null) {

@@ -260,7 +260,7 @@ class YTUtils {
       icon: Broken.trash,
       title: lang.CLEAR,
       onTap: () {
-        const YTUtils().showVideoClearDialog(context, videoId, CurrentColor.inst.miniplayerColor);
+        const YTUtils().showVideoClearDialog(context, videoId);
       },
     );
     final isFavourite = currentItem is YoutubeID
@@ -508,7 +508,7 @@ class YTUtils {
           title: lang.CLEAR,
           onTap: () {
             final ctx = namida.context;
-            if (ctx != null) const YTUtils().showVideoClearDialog(ctx, videoId, CurrentColor.inst.miniplayerColor);
+            if (ctx != null) const YTUtils().showVideoClearDialog(ctx, videoId);
           },
         ),
       if (moreMenuChildren != null) ...moreMenuChildren,
@@ -683,8 +683,7 @@ class YTUtils {
 
   void showVideoClearDialog(
     BuildContext context,
-    String videoId,
-    Color colorScheme, {
+    String videoId, {
     final void Function(Map<String, bool> pathsDeleted)? afterDeleting,
     List<NamidaClearDialogExpansionTile<dynamic>> Function(RxMap<String, bool> pathsToDelete, Rx<int> totalSizeToDelete, Rx<bool> allSelected)? extraTiles,
   }) {
