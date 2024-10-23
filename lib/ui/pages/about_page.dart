@@ -1,6 +1,7 @@
 // ignore_for_file: implementation_imports, depend_on_referenced_packages
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -417,16 +418,28 @@ class _AboutPageState extends State<AboutPage> {
                     icon: Broken.direct_send,
                     tooltip: () => AppSocial.EMAIL,
                     onPressed: () async {
+                      final taggerLogsFileSize = File(AppPaths.LOGS_TAGGER).fileSizeSync();
+                      final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
                       final mailOptions = MailOptions(
                         body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
                         subject: 'Namida Logs Report',
                         recipients: [AppSocial.EMAIL],
-                        attachments: [AppPaths.LOGS, AppPaths.LOGS_TAGGER],
+                        attachments: [
+                          AppPaths.LOGS,
+                          if (goodTaggerLogsFile) AppPaths.LOGS_TAGGER,
+                        ],
                       );
                       await FlutterMailer.send(mailOptions);
                     },
                   ),
-                  onTap: () => Share.shareXFiles([XFile(AppPaths.LOGS), XFile(AppPaths.LOGS_TAGGER)]),
+                  onTap: () {
+                    final taggerLogsFileSize = File(AppPaths.LOGS_TAGGER).fileSizeSync();
+                    final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
+                    Share.shareXFiles([
+                      XFile(AppPaths.LOGS),
+                      if (goodTaggerLogsFile) XFile(AppPaths.LOGS_TAGGER),
+                    ]);
+                  },
                 )
               ],
             ),

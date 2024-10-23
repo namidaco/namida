@@ -40,6 +40,7 @@ import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
   @override
@@ -343,29 +344,37 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
                       itemBuilder: (context, index) {
-                        return YTHistoryVideoCard(
-                          key: ValueKey(index),
-                          videos: playlist.tracks,
-                          index: index,
-                          reversedList: widget.reversedList,
-                          day: null,
-                          playlistID: playlist.playlistID,
-                          playlistName: playlistCurrentName,
-                          draggingEnabled: YoutubePlaylistController.inst.canReorderVideos.value,
-                          openMenuOnLongPress: !canReorderVideos,
-                          draggableThumbnail: true,
-                          showMoreIcon: true,
-                          draggingBarsBuilder: (color) {
-                            threeCColor ??= color;
-                            return threeC;
-                          },
-                          draggingThumbnailBuilder: (draggingTrigger) {
-                            return ObxO(
-                              rx: YoutubePlaylistController.inst.canReorderVideos,
-                              builder: (context, canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
-                            );
-                          },
-                          canHaveDuplicates: true,
+                        final video = playlist.tracks[index];
+                        return FadeDismissible(
+                          key: Key("Diss_$index$video"),
+                          draggableRx: YoutubePlaylistController.inst.canReorderVideos,
+                          onDismissed: (direction) => YTUtils.onRemoveVideosFromPlaylist(playlist.name, [video]),
+                          child: YTHistoryVideoCard(
+                            key: ValueKey(index),
+                            videos: playlist.tracks,
+                            index: index,
+                            downloadIndex: index,
+                            downloadTotalLength: playlist.tracks.length,
+                            reversedList: widget.reversedList,
+                            day: null,
+                            playlistID: playlist.playlistID,
+                            playlistName: playlistCurrentName,
+                            draggingEnabled: canReorderVideos,
+                            openMenuOnLongPress: !canReorderVideos,
+                            draggableThumbnail: true,
+                            showMoreIcon: true,
+                            draggingBarsBuilder: (color) {
+                              threeCColor ??= color;
+                              return threeC;
+                            },
+                            draggingThumbnailBuilder: (draggingTrigger) {
+                              return ObxO(
+                                rx: YoutubePlaylistController.inst.canReorderVideos,
+                                builder: (context, canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
+                              );
+                            },
+                            canHaveDuplicates: true,
+                          ),
                         );
                       },
                     ),
