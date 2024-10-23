@@ -53,6 +53,10 @@ Future<void> showDownloadVideoBottomSheet({
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
 
+  originalIndex ??= initialItemConfig?.originalIndex;
+  totalLength ??= initialItemConfig?.totalLength;
+  streamInfoItem ??= initialItemConfig?.streamInfoItem;
+
   final showAudioWebm = false.obs;
   final showVideoWebm = false.obs;
   final streamResult = Rxn<VideoStreamsResult>();
@@ -95,12 +99,12 @@ Future<void> showDownloadVideoBottomSheet({
         videoId,
         streamResult.value,
         null,
-        streamInfoItem ?? initialItemConfig?.streamInfoItem,
+        streamInfoItem,
         playlistInfo,
         selectedVideoOnlyStream.value,
         selectedAudioOnlyStream.value,
-        initialItemConfig?.originalIndex,
-        initialItemConfig?.totalLength,
+        originalIndex,
+        totalLength,
       );
       if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
         videoOutputFilenameController.text = finalFilenameTempRebuilt;
@@ -117,7 +121,8 @@ Future<void> showDownloadVideoBottomSheet({
         final filenameRealAudio = videoTitle;
         videoOutputFilenameController.text = filenameRealAudio;
       } else {
-        final filenameRealVideo = "${videoTitle}_${selectedVideoOnlyStream.value?.qualityLabel}";
+        final ql = selectedVideoOnlyStream.value?.qualityLabel;
+        final filenameRealVideo = ql == null ? videoTitle : "${videoTitle}_$ql";
         videoOutputFilenameController.text = filenameRealVideo;
       }
     }

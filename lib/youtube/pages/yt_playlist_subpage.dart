@@ -287,13 +287,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         ids: playlist.tracks,
                                         playlistName: playlistCurrentName,
                                         infoLookup: const {},
-                                        playlistInfo: PlaylistBasicInfo(
-                                          id: playlist.playlistID.id,
-                                          title: playlist.name,
-                                          videosCountText: playlist.tracks.length.toString(),
-                                          videosCount: playlist.tracks.length,
-                                          thumbnails: [],
-                                        ),
+                                        playlistInfo: null, // this is a local playlist, passing info messes things up inside.
                                       ).navigate();
                                     },
                                   ),

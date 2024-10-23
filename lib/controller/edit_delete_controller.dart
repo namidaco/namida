@@ -65,8 +65,7 @@ class EditDeleteController {
   }
 
   Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks) async {
-    if (!dir.endsWith('/')) dir += '/';
-    final files = tracks.map((e) => "$dir${e.track.filename}.$extension").toList();
+    final files = tracks.map((e) => FileParts.joinPath(dir, "${e.track.filename}.$extension")).toList();
     await Isolate.run(() => _deleteAllIsolate(files));
   }
 

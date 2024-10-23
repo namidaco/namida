@@ -46,6 +46,8 @@ class YTHistoryVideoCard extends StatelessWidget {
   final Color? bgColor;
   final bool canHaveDuplicates;
   final Widget? topRightWidget;
+  final int? downloadIndex;
+  final int? downloadTotalLength;
 
   const YTHistoryVideoCard({
     super.key,
@@ -73,6 +75,8 @@ class YTHistoryVideoCard extends StatelessWidget {
     this.bgColor,
     required this.canHaveDuplicates,
     this.topRightWidget,
+    this.downloadIndex,
+    this.downloadTotalLength,
   });
 
   @override
@@ -85,6 +89,8 @@ class YTHistoryVideoCard extends StatelessWidget {
       },
       day: day,
       index: index,
+      downloadIndex: downloadIndex,
+      downloadTotalLength: downloadTotalLength,
       overrideListens: overrideListens,
       playlistID: playlistID,
       minimalCard: minimalCard,
@@ -138,6 +144,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
   final bool canHaveDuplicates;
   final StreamInfoItem? Function(T item)? info;
   final Widget? topRightWidget;
+  final int? downloadIndex;
+  final int? downloadTotalLength;
 
   const YTHistoryVideoCardBase({
     super.key,
@@ -167,6 +175,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     required this.canHaveDuplicates,
     required this.info,
     this.topRightWidget,
+    this.downloadIndex,
+    this.downloadTotalLength,
   });
 
   YoutubeID itemToYTIDPlay(T item) {
@@ -216,8 +226,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       openOnTap: false,
       openOnLongPress: openMenuOnLongPress,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        downloadIndex: null,
-        totalLength: null,
+        downloadIndex: downloadIndex,
+        totalLength: downloadTotalLength,
         streamInfoItem: info,
         videoId: videoId,
         channelID: info?.channelId ?? info?.channel.id,
@@ -379,8 +389,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     right: 0.0,
                     child: NamidaPopupWrapper(
                       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-                        downloadIndex: null,
-                        totalLength: null,
+                        downloadIndex: downloadIndex,
+                        totalLength: downloadTotalLength,
                         streamInfoItem: info,
                         videoId: videoId,
                         channelID: info?.channelId ?? info?.channel.id,

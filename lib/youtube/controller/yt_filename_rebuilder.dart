@@ -160,11 +160,9 @@ class _YtFilenameRebuilder {
           if (finalTitle == null || finalTitle.isEmpty) finalTitle = playlistInfo?.id;
           return finalTitle;
         }(),
-      'playlist_count' => (playlistInfo?.videosCount ?? totalLength)?.toString(),
-      'playlist_index' => (videoItem?.indexInPlaylist ?? originalIndex)?.toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
-      'playlist_autonumber' => originalIndex == null && videoItem?.indexInPlaylist == null
-          ? null
-          : ((videoItem?.indexInPlaylist ?? originalIndex)! + 1).toString().padLeft((playlistInfo?.videosCount ?? totalLength)?.toString().length ?? 0, '0'),
+      'playlist_count' => (totalLength ?? playlistInfo?.videosCount)?.toString(),
+      'playlist_index' => originalIndex?.toString().padLeft((totalLength ?? playlistInfo?.videosCount)?.toString().length ?? 0, '0'),
+      'playlist_autonumber' => originalIndex == null ? null : (originalIndex + 1).toString().padLeft((totalLength ?? playlistInfo?.videosCount)?.toString().length ?? 0, '0'),
       _ => throw const _NonMatched(),
     };
   }

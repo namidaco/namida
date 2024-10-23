@@ -56,10 +56,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
 
-    if (ytDownloadLocation != null) {
-      if (!ytDownloadLocation.endsWith('/')) ytDownloadLocation += '/';
-      this.ytDownloadLocation.value = ytDownloadLocation;
-    }
+    if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
     if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
     if (youtubeStyleMiniplayer != null) this.youtubeStyleMiniplayer.value = youtubeStyleMiniplayer;
@@ -99,10 +96,7 @@ class _YoutubeSettings with SettingsFileWriter {
       showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
       autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
 
-      String ytDownloadLocationInStorage = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
-      if (!ytDownloadLocationInStorage.endsWith('/')) ytDownloadLocationInStorage += '/';
-      ytDownloadLocation.value = ytDownloadLocationInStorage;
-
+      ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
       ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
       youtubeStyleMiniplayer.value = json['youtubeStyleMiniplayer'] ?? youtubeStyleMiniplayer.value;

@@ -118,3 +118,41 @@ class YoutubeItemDownloadConfig {
   @override
   int get hashCode => id.videoId.hashCode ^ groupName.hashCode ^ filename.hashCode;
 }
+
+extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
+  YoutubeItemDownloadConfig copyWith({
+    DownloadTaskVideoId? id,
+    DownloadTaskGroupName? groupName,
+    DownloadTaskFilename? filename,
+    Map<String, String?>? ffmpegTags,
+    DateTime? fileDate,
+    VideoStream? videoStream,
+    AudioStream? audioStream,
+    StreamInfoItem? streamInfoItem,
+    String? prefferedVideoQualityID,
+    String? prefferedAudioQualityID,
+    bool? fetchMissingAudio,
+    bool? fetchMissingVideo,
+    int? originalIndex,
+    int? totalLength,
+    String? playlistId,
+  }) {
+    return YoutubeItemDownloadConfig(
+      id: id ?? this.id,
+      groupName: groupName ?? this.groupName,
+      filename: filename ?? this.filename,
+      ffmpegTags: ffmpegTags ?? this.ffmpegTags,
+      fileDate: fileDate ?? this.fileDate,
+      videoStream: videoStream ?? this.videoStream,
+      audioStream: audioStream ?? this.audioStream,
+      streamInfoItem: streamInfoItem ?? this.streamInfoItem,
+      prefferedVideoQualityID: prefferedVideoQualityID ?? this.prefferedVideoQualityID,
+      prefferedAudioQualityID: prefferedAudioQualityID ?? this.prefferedAudioQualityID,
+      fetchMissingAudio: fetchMissingAudio ?? this.fetchMissingAudio,
+      fetchMissingVideo: fetchMissingVideo ?? this.fetchMissingVideo,
+      originalIndex: originalIndex ?? this.originalIndex,
+      totalLength: totalLength ?? this.totalLength,
+      playlistId: playlistId ?? this.playlistId,
+    );
+  }
+}

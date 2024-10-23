@@ -94,6 +94,15 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     widget.ids.mapIndexed((ytid, originalIndex) => _configMap[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, defaultFilename: defaultFilename)).toList();
   }
 
+  void _updateAudioOnly(bool audioOnly) {
+    downloadAudioOnly.value = audioOnly;
+    _configMap.entries.toList().loop(
+      (c) {
+        _configMap[c.key] = c.value.copyWith(fetchMissingVideo: !audioOnly);
+      },
+    );
+  }
+
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, {String? defaultFilename}) {
     final streamInfoItem = widget.infoLookup[id];
     final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
@@ -253,7 +262,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           icon: Broken.musicnote,
                           title: lang.AUDIO,
                           onTap: () {
-                            downloadAudioOnly.value = true;
+                            _updateAudioOnly(true);
                           },
                         ),
                         ...kStockVideoQualities.map(
@@ -261,7 +270,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             icon: Broken.story,
                             title: e,
                             onTap: () {
-                              downloadAudioOnly.value = false;
+                              _updateAudioOnly(false);
                               preferredQuality.value = e;
                             },
                           ),
@@ -413,7 +422,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   trailingPadding: 12.0,
                   playlistName: widget.playlistName,
                   initialFolder: _groupName.valueR,
-                  subtitle: (value) => "${AppDirs.YOUTUBE_DOWNLOADS}$value",
+                  subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
                   onDownloadGroupNameChanged: (newGroupName) {
                     _groupName.value = newGroupName;
                   },

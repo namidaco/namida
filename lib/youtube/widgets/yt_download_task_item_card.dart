@@ -283,7 +283,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     required BuildContext context,
   }) {
     final item = videos[index];
-    final itemDirectoryPath = "${AppDirs.YOUTUBE_DOWNLOADS}${groupName.groupName}";
+    final itemDirectoryPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName);
     final file = FileParts.join(itemDirectoryPath, item.filename.filename);
 
     final videoStream = item.videoStream;

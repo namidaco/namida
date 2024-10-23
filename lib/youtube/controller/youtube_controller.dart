@@ -373,7 +373,7 @@ class YoutubeController {
           final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(group.groupName);
           downloadTasksGroupDB.loadEverything((itemMap) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
-            final saveDirPath = "${AppDirs.YOUTUBE_DOWNLOADS}${group.groupName}";
+            final saveDirPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, group.groupName);
             final file = FileParts.join(saveDirPath, ytitem.filename.filename);
             final fileExists = file.existsSync();
             final itemFileName = ytitem.filename;
@@ -566,9 +566,7 @@ class YoutubeController {
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
         youtubeDownloadTasksMap.value.remove(groupName);
-        try {
-          downloadTasksGroupDB.fileInfo.file.deleteSync();
-        } catch (_) {}
+        downloadTasksGroupDB.deleteEverything().catchError((_) {});
       }
     } else {
       itemsConfig.loop((c) {
@@ -812,7 +810,7 @@ class YoutubeController {
     required String prefix,
     Directory? saveDir,
   }) {
-    final saveDirPath = saveDir?.path ?? "${AppDirs.YOUTUBE_DOWNLOADS}$groupName";
+    final saveDirPath = saveDir?.path ?? FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName);
     return FileParts.joinPath(saveDirPath, "$prefix$fullFilename");
   }
 
