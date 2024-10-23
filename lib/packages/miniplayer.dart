@@ -94,20 +94,25 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
             // -- MiniPlayers
             RepaintBoundary(
               child: ObxO(
-                rx: Player.inst.currentItem,
-                builder: (context, currentItem) => currentItem is YoutubeID
-                    ? ObxO(
-                        rx: settings.youtube.youtubeStyleMiniplayer,
-                        builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: youtubeStyleMiniplayer
-                              ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
-                              : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
-                        ),
-                      )
-                    : currentItem is Selectable
-                        ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
-                        : const SizedBox(key: Key('empty_miniplayer')),
+                rx: settings.mixedQueue,
+                builder: (context, mixedQueue) => mixedQueue
+                    ? const NamidaMiniPlayerMixed()
+                    : ObxO(
+                        rx: Player.inst.currentItem,
+                        builder: (context, currentItem) => currentItem is YoutubeID
+                            ? ObxO(
+                                rx: settings.youtube.youtubeStyleMiniplayer,
+                                builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  child: youtubeStyleMiniplayer
+                                      ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
+                                      : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
+                                ),
+                              )
+                            : currentItem is Selectable
+                                ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
+                                : const SizedBox(key: Key('empty_miniplayer')),
+                      ),
               ),
             ),
           ],
@@ -117,16 +122,69 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   }
 }
 
+class NamidaMiniPlayerMixed extends StatelessWidget {
+  const NamidaMiniPlayerMixed({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final trackConfig = const NamidaMiniPlayerTrack().getMiniPlayerBase(context);
+    final ytConfig = _NamidaMiniPlayerYoutubeIDState().getMiniPlayerBase(context);
+
+    return NamidaMiniPlayerBase(
+      trackTileConfigs: trackConfig.trackTileConfigs,
+      queueItemExtent: null,
+      queueItemExtentBuilder: (item) {
+        return item is Selectable ? trackConfig.queueItemExtent : ytConfig.queueItemExtent;
+      },
+      itemBuilder: (context, index, currentIndex, queue, properties) {
+        final item = queue[index];
+        return item is Selectable
+            ? trackConfig.itemBuilder(context, index, currentIndex, queue, properties)
+            : ytConfig.itemBuilder(context, index, currentIndex, queue, properties);
+      },
+      getDurationMS: (currentItem) {
+        return (currentItem is Selectable ? trackConfig.getDurationMS?.call(currentItem) : ytConfig.getDurationMS?.call(currentItem)) ?? 0;
+      },
+      itemsKeyword: (number, item) {
+        return item is Selectable ? trackConfig.itemsKeyword(number, item) : ytConfig.itemsKeyword(number, item);
+      },
+      onAddItemsTap: (currentItem) {
+        return currentItem is Selectable ? trackConfig.onAddItemsTap(currentItem) : ytConfig.onAddItemsTap(currentItem);
+      },
+      topText: (currentItem) {
+        return currentItem is Selectable ? trackConfig.topText(currentItem) : ytConfig.topText(currentItem);
+      },
+      onTopTextTap: (currentItem) {
+        return currentItem is Selectable ? trackConfig.onTopTextTap(currentItem) : ytConfig.onTopTextTap(currentItem);
+      },
+      onMenuOpen: (currentItem, details) {
+        return currentItem is Selectable ? trackConfig.onMenuOpen(currentItem, details) : ytConfig.onMenuOpen(currentItem, details);
+      },
+      focusedMenuOptions: (item) => item is Selectable ? trackConfig.focusedMenuOptions(item) : ytConfig.focusedMenuOptions(item),
+      imageBuilder: (item, cp) {
+        return item is Selectable ? trackConfig.imageBuilder(item, cp) : ytConfig.imageBuilder(item, cp);
+      },
+      currentImageBuilder: (item, bcp) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp) : ytConfig.currentImageBuilder(item, bcp);
+      },
+      textBuilder: (item) {
+        return item is Selectable ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track> : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String>;
+      },
+      canShowBuffering: (item) => item is Selectable ? trackConfig.canShowBuffering(item) : ytConfig.canShowBuffering(item),
+    );
+  }
+}
+
 class NamidaMiniPlayerTrack extends StatelessWidget {
   const NamidaMiniPlayerTrack({super.key});
 
   void _openMenu(Track track) => NamidaDialogs.inst.showTrackDialog(track, source: QueueSource.playerQueue);
 
-  MiniplayerInfoData<TrackWithDate, Track> _textBuilder(Selectable selectable) {
+  MiniplayerInfoData<Track> _textBuilder(Playable playable) {
     String firstLine = '';
     String secondLine = '';
 
-    final track = selectable.track;
+    final track = (playable as Selectable).track;
     final trExt = track.toTrackExt();
     final title = trExt.title;
     final artist = trExt.originalArtist;
@@ -155,9 +213,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return NamidaMiniPlayerBase(
+  NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+    return NamidaMiniPlayerBase<Track>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
       trackTileConfigs: const TrackTilePropertiesConfigs(
         displayRightDragHandler: true,
@@ -188,13 +245,13 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           key,
         );
       },
-      getDurationMS: (currentItem) => currentItem.track.durationMS,
-      itemsKeyword: (number) => number.displayTrackKeyword,
+      getDurationMS: (currentItem) => (currentItem as Selectable).track.durationMS,
+      itemsKeyword: (number, item) => number.displayTrackKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
-      topText: (currentItem) => currentItem.track.album,
-      onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap(currentItem.track.albumIdentifier),
-      onMenuOpen: (currentItem, _) => _openMenu(currentItem.track),
-      focusedMenuOptions: FocusedMenuOptions<Selectable>(
+      topText: (currentItem) => (currentItem as Selectable).track.album,
+      onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumIdentifier),
+      onMenuOpen: (currentItem, _) => _openMenu((currentItem as Selectable).track),
+      focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onOpen: (currentItem) {
           if (settings.enableVideoPlayback.value) return true;
 
@@ -230,7 +287,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                       children: [
                         if (settings.displayAudioInfoMiniplayer.valueR)
                           TextSpan(
-                            text: " • ${currentItem.track.audioInfoFormattedCompact}",
+                            text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
                             style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 11.0),
                           )
                       ],
@@ -275,12 +332,12 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                   );
           });
         },
-        currentId: (item) => item.track.youtubeID,
-        loadQualities: (item) async => await VideoController.inst.fetchYTQualities(item.track),
+        currentId: (item) => (item as Selectable).track.youtubeID,
+        loadQualities: (item) async => await VideoController.inst.fetchYTQualities((item as Selectable).track),
         localVideos: VideoController.inst.currentPossibleLocalVideos,
         streams: VideoController.inst.currentYTStreams,
         onLocalVideoTap: (item, video) async {
-          VideoController.inst.playVideoCurrent(video: video, track: item.track);
+          VideoController.inst.playVideoCurrent(video: video, track: (item as Selectable).track);
         },
         onStreamVideoTap: (item, videoId, stream, cacheFile, streams) async {
           final cacheExists = cacheFile != null;
@@ -288,21 +345,26 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           VideoController.inst.playVideoCurrent(
             video: null,
             cacheIdAndPath: (videoId ?? '', cacheFile?.path ?? ''),
-            track: item.track,
+            track: (item as Selectable).track,
           );
         },
       ),
       imageBuilder: (item, cp) => _TrackImage(
-        track: item.track,
+        track: (item as Selectable).track,
         cp: cp,
       ),
       currentImageBuilder: (item, bcp) => _AnimatingTrackImage(
-        track: item.track,
+        track: (item as Selectable).track,
         cp: bcp,
       ),
       textBuilder: _textBuilder,
-      canShowBuffering: false,
+      canShowBuffering: (currentItem) => false,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return getMiniPlayerBase(context);
   }
 }
 
@@ -314,6 +376,8 @@ class NamidaMiniPlayerYoutubeID extends StatefulWidget {
 }
 
 class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
+  _NamidaMiniPlayerYoutubeIDState();
+
   final _videoLikeManager = YtVideoLikeManager();
   final _numberOfRepeats = 1.obs;
 
@@ -353,7 +417,8 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  MiniplayerInfoData<YoutubeID, String> _textBuilder(BuildContext context, YoutubeID video) {
+  MiniplayerInfoData<String> _textBuilder(BuildContext context, Playable playbale) {
+    final video = playbale as YoutubeID;
     String firstLine = '';
     String secondLine = '';
 
@@ -378,9 +443,8 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return NamidaMiniPlayerBase<YoutubeID>(
+  NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+    return NamidaMiniPlayerBase<String>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
       itemBuilder: (context, i, currentIndex, queue, _) {
         final video = queue[i] as YoutubeID;
@@ -408,22 +472,22 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         );
       },
       getDurationMS: null,
-      itemsKeyword: (number) => number.displayVideoKeyword,
+      itemsKeyword: (number, item) => number.displayVideoKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddVideosTap(context),
       topText: (currentItem) =>
           YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.title ??
           YoutubeInfoController.current.currentYTStreams.value?.info?.channelName ??
-          YoutubeInfoController.utils.getVideoChannelName(currentItem.id) ??
+          YoutubeInfoController.utils.getVideoChannelName((currentItem as YoutubeID).id) ??
           '',
       onTopTextTap: (currentItem) {
         final pageChannel = YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
         final channelId = pageChannel?.id ??
             YoutubeInfoController.current.currentYTStreams.value?.info?.channelId ?? //
-            YoutubeInfoController.utils.getVideoChannelID(currentItem.id);
+            YoutubeInfoController.utils.getVideoChannelID((currentItem as YoutubeID).id);
         if (channelId != null) YTChannelSubpage(channelID: channelId, channel: pageChannel).navigate();
       },
-      onMenuOpen: (currentItem, d) => _openMenu(context, currentItem, d),
-      focusedMenuOptions: FocusedMenuOptions<YoutubeID>(
+      onMenuOpen: (currentItem, d) => _openMenu(context, (currentItem as YoutubeID), d),
+      focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onOpen: (currentItem) => true,
         onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
         videoIconBuilder: (currentItem, size, color) => Obx(
@@ -519,7 +583,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
             }
           });
         },
-        currentId: (item) => item.id,
+        currentId: (item) => (item as YoutubeID).id,
         loadQualities: null,
         localVideos: YoutubeInfoController.current.currentCachedQualities,
         streams: YoutubeInfoController.current.currentYTStreams,
@@ -539,21 +603,26 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
             stream: stream,
             cachedFile: null,
             useCache: true,
-            videoId: item.id,
+            videoId: (item as YoutubeID).id,
           );
         },
       ),
       imageBuilder: (item, cp) => _YoutubeIDImage(
-        video: item,
+        video: item as YoutubeID,
         cp: cp,
       ),
       currentImageBuilder: (item, bcp) => _AnimatingYoutubeIDImage(
-        video: item,
+        video: item as YoutubeID,
         cp: bcp,
       ),
       textBuilder: (item) => _textBuilder(context, item),
-      canShowBuffering: true,
+      canShowBuffering: (currentItem) => true,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return getMiniPlayerBase(context);
   }
 }
 

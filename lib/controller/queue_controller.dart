@@ -114,13 +114,17 @@ class QueueController {
       _saveLatestQueueToStorage(items),
       () async {
         // updating last queue inside queuesMap.
-        final firstItem = items.firstOrNull;
-        if (firstItem is Selectable) {
-          final latestQueueInsideMap = _latestQueueInMap;
-          final tracks = items.cast<Selectable>().tracks.toList();
-          if (latestQueueInsideMap != null) {
-            await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
+        try {
+          final firstItem = items.firstOrNull;
+          if (firstItem is Selectable) {
+            final latestQueueInsideMap = _latestQueueInMap;
+            final tracks = items.cast<Selectable>().tracks.toList();
+            if (latestQueueInsideMap != null) {
+              await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
+            }
           }
+        } catch (_) {
+          // -- is mixed queue
         }
       }(),
     ]);

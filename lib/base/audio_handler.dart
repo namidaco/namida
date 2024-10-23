@@ -266,6 +266,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
+    if (settings.mixedQueue.value) return;
     if (currentQueue.value.isEmpty) return;
 
     // this is what keeps local & youtube separated. this shall be removed if mixed playback ever got supported.

@@ -29,7 +29,7 @@ class _SettingsController with SettingsFileWriter {
     this.extra.prepareSettingsFile();
   }
 
-  EqualizerSettings get equalizer => EqualizerSettings.inst;
+  final equalizer = EqualizerSettings._internal();
   final player = _PlayerSettings._internal();
   final youtube = _YoutubeSettings._internal();
   final extra = _ExtraSettings._internal();
@@ -172,6 +172,7 @@ class _SettingsController with SettingsFileWriter {
   final previousButtonReplays = false.obs;
   final refreshOnStartup = false.obs;
   final alwaysExpandedSearchbar = false.obs;
+  final mixedQueue = false.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -425,6 +426,7 @@ class _SettingsController with SettingsFileWriter {
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
       alwaysExpandedSearchbar.value = json['alwaysExpandedSearchbar'] ?? alwaysExpandedSearchbar.value;
+      mixedQueue.value = json['mixedQueue'] ?? mixedQueue.value;
 
       final tagFieldsToEditStorage = json['tagFieldsToEdit'];
       if (tagFieldsToEditStorage is List) {
@@ -606,6 +608,7 @@ class _SettingsController with SettingsFileWriter {
         'previousButtonReplays': previousButtonReplays.value,
         'refreshOnStartup': refreshOnStartup.value,
         'alwaysExpandedSearchbar': alwaysExpandedSearchbar.value,
+        'mixedQueue': mixedQueue.value,
         'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
         'wakelockMode': wakelockMode.value.name,
         'localVideoMatchingType': localVideoMatchingType.value.name,
@@ -772,6 +775,7 @@ class _SettingsController with SettingsFileWriter {
     bool? previousButtonReplays,
     bool? refreshOnStartup,
     bool? alwaysExpandedSearchbar,
+    bool? mixedQueue,
     List<TagField>? tagFieldsToEdit,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
@@ -985,6 +989,7 @@ class _SettingsController with SettingsFileWriter {
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
     if (alwaysExpandedSearchbar != null) this.alwaysExpandedSearchbar.value = alwaysExpandedSearchbar;
+    if (mixedQueue != null) this.mixedQueue.value = mixedQueue;
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d) {
         if (!this.tagFieldsToEdit.contains(d)) {

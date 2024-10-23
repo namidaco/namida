@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableListView, ReorderCallback, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
+import 'package:flutter/rendering.dart' as fr;
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
@@ -2652,6 +2653,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final double? itemExtent;
+  final fr.ItemExtentBuilder? itemExtentBuilder;
   final int itemCount;
 
   const NamidaSliverReorderableList({
@@ -2662,6 +2664,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
+    this.itemExtentBuilder,
     required this.itemCount,
   });
 
@@ -2679,6 +2682,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverReorderableList(
       itemExtent: itemExtent,
+      itemExtentBuilder: itemExtentBuilder,
       itemBuilder: _reorderableItemBuilder,
       itemCount: itemCount,
       onReorder: onReorder,

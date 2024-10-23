@@ -202,7 +202,7 @@ class Player {
   }
 
   void _initializeEqualizer() async {
-    final eq = EqualizerSettings.inst;
+    final eq = settings.equalizer;
     _audioHandler.equalizer.setEnabled(eq.equalizerEnabled);
     if (eq.preset != null) {
       _audioHandler.equalizer.setPreset(eq.preset!);
@@ -594,8 +594,12 @@ class Player {
       onQueueDifferent: (finalizedQueue) {
         if (updateQueue) {
           if (queue.firstOrNull is Selectable) {
-            final trs = finalizedQueue.cast<Selectable>().tracks.toList();
-            QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
+            try {
+              final trs = finalizedQueue.cast<Selectable>().tracks.toList();
+              QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
+            } catch (_) {
+              // -- is mixed queue
+            }
           }
           QueueController.inst.updateLatestQueue(finalizedQueue);
         }
@@ -619,13 +623,6 @@ class Player {
 
   Future<void> disposeVideo() async {
     await _audioHandler.setVideo(null);
-  }
-}
-
-extension QueueListExt on List<Playable> {
-  Iterable<T> mapAs<T extends Playable>() {
-    if (Player._instance.currentItem.value is! T) return <T>[];
-    return this.map((e) => e as T);
   }
 }
 

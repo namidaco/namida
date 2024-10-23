@@ -328,7 +328,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               tooltip: lang.ADD_TO_PLAYLIST,
                               onTap: () {
                                 showAddToPlaylistSheet(
-                                  ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().map((e) => e.id),
+                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
                                   idsNamesLookup: const {},
                                 );
                               },
@@ -339,7 +339,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               tooltip: lang.DOWNLOAD,
                               onTap: () {
                                 YTPlaylistDownloadPage(
-                                  ids: Player.inst.currentQueue.value.mapAs<YoutubeID>().toList(),
+                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
                                   playlistName: lang.QUEUE,
                                   infoLookup: const {},
                                   playlistInfo: PlaylistBasicInfo(

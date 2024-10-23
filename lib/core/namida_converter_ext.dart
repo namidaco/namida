@@ -339,7 +339,7 @@ extension QUEUESOURCEtoTRACKS on QueueSource {
         addThese(SelectedTracksController.inst.selectedTracks.value);
         break;
       case QueueSource.playerQueue:
-        addThese(Player.inst.currentQueue.value.mapAs<Selectable>());
+        addThese(Player.inst.currentQueue.value.whereType<Selectable>());
         break;
       case QueueSource.recentlyAdded:
         addThese(Indexer.inst.recentlyAddedTracksSorted());

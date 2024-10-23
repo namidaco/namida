@@ -28,7 +28,7 @@ class SelectedTracksController {
 
   Iterable<Selectable> getCurrentAllTracks() {
     if (MiniPlayerController.inst.isInQueue) {
-      return Player.inst.currentQueue.value.mapAs<Selectable>();
+      return Player.inst.currentQueue.value.whereType<Selectable>();
     } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return SearchSortController.inst.trackSearchTemp.value;
     }
@@ -88,7 +88,7 @@ class SelectedTracksController {
     List<Selectable>? tracks;
     NamidaRoute? routeTracks; // if the tracks are obtained from route
     if (MiniPlayerController.inst.isInQueue) {
-      tracks = Player.inst.currentQueue.value.mapAs<Selectable>().toList();
+      tracks = Player.inst.currentQueue.value.whereType<Selectable>().toList();
     } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       tracks = SearchSortController.inst.trackSearchTemp.value;
     } else {
