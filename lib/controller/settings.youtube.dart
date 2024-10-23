@@ -3,6 +3,8 @@ part of 'settings_controller.dart';
 class _YoutubeSettings with SettingsFileWriter {
   _YoutubeSettings._internal();
 
+  static const _defaultFilenameBuilder = '[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s';
+
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
   final showChannelWatermarkFullscreen = true.obs;
@@ -21,7 +23,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final dragToSeek = YTSeekActionMode.all.obs;
-  final downloadFilenameBuilder = ''.obs;
+  final downloadFilenameBuilder = _defaultFilenameBuilder.obs;
   final initialDefaultMetadataTags = <String, String>{};
 
   bool markVideoWatched = true;

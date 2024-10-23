@@ -74,6 +74,7 @@ class _YtFilenameRebuilder {
     'video_title', // 'fulltitle'
     'title',
     'artist',
+    'genre',
     'ext',
     'channel_fulltitle',
     'channel', // 'uploader'
@@ -106,7 +107,12 @@ class _YtFilenameRebuilder {
       'video_title' || 'fulltitle' => pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title,
       'title' => () {
           final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
-          return fulltitle?.splitArtistAndTitle().$2?.keepFeatKeywordsOnly() ?? streams?.info?.title ?? fulltitle;
+          final splitted = fulltitle?.splitArtistAndTitle();
+
+          final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$2?.keepFeatKeywordsOnly(), streams, pageResult, videoItem);
+          if (possibleExtracted != null) return possibleExtracted;
+
+          return splitted?.$2?.keepFeatKeywordsOnly() ?? streams?.info?.title ?? fulltitle;
         }(),
       'artist' => () {
           // tries extracting artist from video title, or else uses channel name
@@ -114,11 +120,24 @@ class _YtFilenameRebuilder {
 
           if (fulltitle != null) {
             final splitted = fulltitle.splitArtistAndTitle();
-            if (splitted.$1 != null) return splitted.$1;
+            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$1, streams, pageResult, videoItem);
+            if (possibleExtracted != null) return possibleExtracted;
+            final String? artist = splitted.$1;
+            if (artist != null) return artist;
+          } else {
+            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(null, (infos) => infos.$1, streams, pageResult, videoItem);
+            if (possibleExtracted != null) return possibleExtracted;
           }
 
           final fullChannelName = pageResult?.channelInfo?.title ?? videoItem?.channel.title ?? streams?.info?.channelName;
           return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
+        }(),
+      'genre' => () {
+          final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
+          if (fulltitle != null && fulltitle.contains(RegExp('nightcore', caseSensitive: false))) {
+            return 'Nightcore';
+          }
+          return null;
         }(),
       'ext' => videoStream?.codecInfo.container ?? audioStream?.codecInfo.container ?? 'mp4',
       'channel_fulltitle' => pageResult?.channelInfo?.title ?? videoItem?.channel.title ?? streams?.info?.channelName,
@@ -141,13 +160,7 @@ class _YtFilenameRebuilder {
       'view_count' =>
         streams?.info?.viewsCount?.toString() ?? pageResult?.videoInfo?.viewsCount?.toString() ?? pageResult?.videoInfo?.viewsText ?? videoItem?.viewsCount?.toString(),
       'like_count' => pageResult?.videoInfo?.engagement?.likesCount?.toString() ?? pageResult?.videoInfo?.engagement?.likesCountText,
-      'description' => () {
-          final parts = pageResult?.videoInfo?.description?.parts;
-          if (parts != null && parts.isNotEmpty) {
-            return _formatDescription(parts);
-          }
-          return pageResult?.videoInfo?.description?.rawText ?? streams?.info?.availableDescription ?? videoItem?.availableDescription;
-        }(),
+      'description' => _getDescription(streams, pageResult, videoItem),
       'duration' => (videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streams?.info?.durSeconds ?? videoItem?.durSeconds)?.toString(),
       'duration_string' => () {
           final durSeconds = videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streams?.info?.durSeconds ?? videoItem?.durSeconds;
@@ -165,6 +178,51 @@ class _YtFilenameRebuilder {
       'playlist_autonumber' => originalIndex == null ? null : (originalIndex + 1).toString().padLeft((totalLength ?? playlistInfo?.videosCount)?.toString().length ?? 0, '0'),
       _ => throw const _NonMatched(),
     };
+  }
+
+  String? _getDescription(
+    VideoStreamsResult? streams,
+    YoutiPieVideoPageResult? pageResult,
+    StreamInfoItem? videoItem,
+  ) {
+    final parts = pageResult?.videoInfo?.description?.parts;
+    if (parts != null && parts.isNotEmpty) {
+      return _formatDescription(parts);
+    }
+    return pageResult?.videoInfo?.description?.rawText ?? streams?.info?.availableDescription ?? videoItem?.availableDescription;
+  }
+
+  T? _extractArtistTitleFromDescriptionIfNecessary<T>(
+    (String? artist, String? title)? info,
+    T? Function((String? artist, String? title) infos) onMatch,
+    VideoStreamsResult? streams,
+    YoutiPieVideoPageResult? pageResult,
+    StreamInfoItem? videoItem,
+  ) {
+    if ((info?.$1 == null && info?.$2 == null) || info?.$1?.toLowerCase() == 'nightcore') {
+      final description = _getDescription(streams, pageResult, videoItem);
+      if (description != null) {
+        final title = info?.$2?.splitFirst('(').splitFirst('[');
+        final regex = title == null ? RegExp('(song|info|details)\\W+(.+)', caseSensitive: false) : RegExp('(song|info|details)?\\W+(.+$title.+)', caseSensitive: false);
+        final regexArtist = RegExp('artist:(.*)', caseSensitive: false);
+        final regexTitle = RegExp('title:(.*)', caseSensitive: false);
+        for (final line in description.split('\n')) {
+          final m = regex.firstMatch(line);
+          try {
+            var infosLine = m?.group(2)?.splitArtistAndTitle();
+            if (infosLine == null) {
+              final fallback = (regexArtist.firstMatch(line)?.group(1)?.trim(), regexTitle.firstMatch(line)?.group(1)?.trim());
+              if (fallback.$1 != null || fallback.$2 != null) infosLine = fallback;
+            }
+            if (infosLine != null) {
+              final resolved = onMatch(infosLine);
+              if (resolved != null) return resolved;
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    return null;
   }
 
   String _removeTopicKeyword(String text) {

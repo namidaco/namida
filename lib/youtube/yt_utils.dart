@@ -539,6 +539,7 @@ class YTUtils {
       else
         FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
       if (autoExtract) FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
+      if (autoExtract) FFMPEGTagField.genre: YoutubeController.filenameBuilder.buildParamForFilename('genre'),
       FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('title'),
       FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('artist'),
       FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),

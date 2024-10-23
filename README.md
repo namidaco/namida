@@ -85,6 +85,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - `video_title`, `fulltitle`: video full title
   - `title`: extracted music title from video title (*Navjaxx - **<ins>Fading Light</ins>** (Slowed)*)
   - `artist`: extracted music artist from video title (***<ins>Navjaxx</ins>** - Fading Light (Slowed)*) or else `channel`
+  - `genre`: music genre. automatically set to ***Nightcore*** when the video title contains "nightcore".
   - `ext`: format container extension (mp4, m4a, webm). this is not necessary as it would be added automatically
   - `channel_fulltitle`: channel full name
   - `channel`, `uploader`: channel name (excluding ` - Topic`)
