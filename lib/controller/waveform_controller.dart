@@ -1,5 +1,4 @@
-import 'package:waveform_extractor/waveform_extractor.dart';
-
+import 'package:namida/controller/platform/waveform_extractor/waveform_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -36,13 +35,13 @@ class WaveformController {
       scaleFactor: 0.4,
     );
 
-    List<int> waveformData = [];
+    List<num> waveformData = [];
     await Future.wait([
-      _waveformExtractor.extractWaveformDataOnly(path, samplePerSecond: samplePerSecond).catchError((_) => <int>[]).then((value) async {
+      _waveformExtractor.extractWaveformData(path, samplesPerSecond: samplePerSecond).catchError((_) => <num>[]).then((value) async {
         if (value.isNotEmpty) {
           waveformData = value;
         } else if (stillPlaying(path)) {
-          waveformData = await _waveformExtractor.extractWaveformDataOnly(path).catchError((_) => <int>[]); // re-extracting without samples (out of boundaries error)
+          waveformData = await _waveformExtractor.extractWaveformData(path).catchError((_) => <num>[]); // re-extracting without samples (out of boundaries error)
         }
       }),
       Future.delayed(const Duration(milliseconds: 800)),
@@ -88,8 +87,8 @@ class WaveformController {
     return downscaled;
   }
 
-  static Map<int, List<double>> _downscaledWaveformLists(({List<int> original, List<int> targetSizes}) params) {
-    final newLists = <int, List<double>>{};
+  static Map<num, List<double>> _downscaledWaveformLists(({List<num> original, List<int> targetSizes}) params) {
+    final newLists = <num, List<double>>{};
     const maxClamping = 64.0;
     params.targetSizes.loop((targetSize) {
       newLists[targetSize] = params.original.changeListSize(
@@ -114,5 +113,5 @@ class WaveformController {
     return finalScale.isNaN ? 0.01 : finalScale;
   }
 
-  final _waveformExtractor = WaveformExtractor();
+  final _waveformExtractor = WaveformExtractor.platform()..init();
 }

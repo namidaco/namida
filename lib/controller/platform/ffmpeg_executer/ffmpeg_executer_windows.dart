@@ -9,16 +9,9 @@ class _FFMPEGExecuterWindows extends FFMPEGExecuter {
 
   @override
   void init() {
-    if (kDebugMode) {
-      var processDir = p.dirname(Platform.resolvedExecutable);
-      var midway = p.normalize(r'..\..\..\..\..\..\ffmpeg_build');
-      ffmpegExePath = p.normalize(p.join(processDir, midway, 'ffmpeg.exe'));
-      ffprobeExePath = p.normalize(p.join(processDir, midway, 'ffprobe.exe'));
-    } else {
-      var processDir = p.dirname(Platform.resolvedExecutable);
-      ffmpegExePath = p.join(processDir, 'bin', 'ffmpeg.exe');
-      ffprobeExePath = p.join(processDir, 'bin', 'ffprobe.exe');
-    }
+    final executablesPath = NamidaPlatformBuilder.getExecutablesPath();
+    ffmpegExePath = p.join(executablesPath, 'ffmpeg.exe');
+    ffprobeExePath = p.join(executablesPath, 'ffprobe.exe');
   }
 
   @override
