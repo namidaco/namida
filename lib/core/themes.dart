@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -79,12 +80,17 @@ class AppThemes {
         endIndent: 0.0,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: light
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+          ),
+          iconSize: const WidgetStatePropertyAll(21.0),
+          backgroundColor: WidgetStatePropertyAll(light
               ? Color.alphaBlend(getMainColorWithAlpha(30), Colors.white)
               : pitchBlack != null
                   ? Color.alphaBlend(getMainColorWithAlpha(40), const Color.fromARGB(222, 10, 10, 10))
-                  : null,
+                  : null),
         ),
       ),
       dialogBackgroundColor: lighterDialog
@@ -109,6 +115,16 @@ class AppThemes {
           getMainColorWithAlpha(80),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: Platform.isWindows
+            ? const ButtonStyle(
+                padding: WidgetStatePropertyAll(
+                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                ),
+                visualDensity: VisualDensity.compact,
+              )
+            : null,
       ),
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(

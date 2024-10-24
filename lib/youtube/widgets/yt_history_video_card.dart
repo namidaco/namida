@@ -370,8 +370,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                         children: children,
                       ),
                 Positioned(
-                  bottom: 6.0,
-                  right: minimalCard ? 6.0 : 12.0,
+                  bottom: 4.0,
+                  right: minimalCard ? 2.0 : 12.0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: YTUtils.getVideoCacheStatusIcons(

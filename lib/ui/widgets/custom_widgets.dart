@@ -479,21 +479,19 @@ class CustomBlurryDialog extends StatelessWidget {
                   if (actions != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                      child: FittedBox(
-                        child: SizedBox(
-                          width: context.width - horizontalInset,
-                          child: Wrap(
-                            alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              if (leftAction != null) ...[
-                                const SizedBox(width: 6.0),
-                                leftAction!,
-                                const SizedBox(width: 6.0),
-                              ],
-                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                      child: SizedBox(
+                        width: context.width - horizontalInset,
+                        child: Wrap(
+                          alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (leftAction != null) ...[
+                              const SizedBox(width: 6.0),
+                              leftAction!,
+                              const SizedBox(width: 6.0),
                             ],
-                          ),
+                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                          ],
                         ),
                       ),
                     ),
@@ -549,7 +547,7 @@ class NamidaButton extends StatelessWidget {
             child: AnimatedOpacity(
               opacity: enabled! ? 1.0 : 0.6,
               duration: const Duration(milliseconds: 250),
-              child: RepaintBoundary(child: child),
+              child: child,
             ),
           );
   }
@@ -3883,8 +3881,7 @@ class QueueUtilsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        SizedBox(width: context.width * 0.23),
-        const SizedBox(width: 6.0),
+        const SizedBox(width: 12.0),
         NamidaButton(
           tooltip: () => lang.REMOVE_DUPLICATES,
           icon: Broken.broom,
@@ -3954,7 +3951,7 @@ class QueueUtilsRow extends StatelessWidget {
             onPressed: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
           ),
         ),
-        const SizedBox(width: 8.0),
+        const SizedBox(width: 12.0),
       ],
     );
   }

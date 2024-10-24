@@ -420,6 +420,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
                               child: QueueUtilsRow(
                                 itemsKeyword: (number) => number.displayVideoKeyword,
                                 onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
