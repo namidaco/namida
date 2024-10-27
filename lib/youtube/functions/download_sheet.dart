@@ -49,6 +49,7 @@ Future<void> showDownloadVideoBottomSheet({
   required int? totalLength,
   required StreamInfoItem? streamInfoItem,
   bool preferAudioOnly = false,
+  String? initialGroupName,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
@@ -70,7 +71,7 @@ Future<void> showDownloadVideoBottomSheet({
   final formKey = GlobalKey<FormState>();
   final filenameExists = false.obs;
 
-  String groupName = '';
+  String groupName = initialGroupName ?? '';
 
   final tagsMap = <String, String?>{};
   void updateTagsMap(Map<String, String?> map) {
@@ -470,6 +471,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           groupName = newGroupName;
                                           formKey.currentState?.validate();
                                         },
+                                        initialGroupName: initialGroupName,
                                       );
                                     },
                                   ),

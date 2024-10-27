@@ -25,6 +25,7 @@ Future<void> showVideoDownloadOptionsSheet({
   required void Function(String newGroupName) onDownloadGroupNameChanged,
   required bool showSpecificFileOptions,
   Widget Function(TextEditingController? Function() currentControllerFn, Function(String text) onChanged)? preWidget,
+  required String? initialGroupName,
 }) async {
   final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t] ?? tagMapsForFillingInfoOnly?[t])};
   String? currentActiveField;
@@ -131,6 +132,8 @@ Future<void> showVideoDownloadOptionsSheet({
                         ),
                       ),
                       YTDownloadOptionFolderListTile(
+                        initialFolder: initialGroupName ?? '',
+                        playlistName: initialGroupName ?? '',
                         onDownloadGroupNameChanged: onDownloadGroupNameChanged,
                         visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                       ),

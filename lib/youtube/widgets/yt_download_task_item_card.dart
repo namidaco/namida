@@ -397,6 +397,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       totalLength: config.totalLength,
       streamInfoItem: config.streamInfoItem,
       playlistId: config.playlistId,
+      initialGroupName: config.groupName.groupName,
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: config.id.videoId,
       initialItemConfig: config,

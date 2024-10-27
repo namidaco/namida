@@ -396,6 +396,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                         channelID: info?.channelId ?? info?.channel.id,
                         playlistID: playlistID,
                         idsNamesLookup: {videoId: videoTitle},
+                        playlistName: playlistName,
+                        videoYTID: itemToYTIDPlay(item),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
