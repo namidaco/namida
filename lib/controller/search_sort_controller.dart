@@ -150,6 +150,7 @@ class SearchSortController {
     SortType.rating: (e) => e.effectiveRating,
     SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
     SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
+    SortType.firstListen: (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0,
   };
 
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
@@ -743,6 +744,9 @@ class SearchSortController {
         break;
       case SortType.latestPlayed:
         sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0);
+        break;
+      case SortType.firstListen:
+        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0);
         break;
 
       case null:

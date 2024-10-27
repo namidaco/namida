@@ -294,7 +294,7 @@ class BackupController {
     VideoController.inst.initialize();
 
     PlaylistController.inst.prepareAllPlaylists();
-    HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksSubListsAfterHistoryPrepared());
+    HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());
     PlaylistController.inst.prepareDefaultPlaylistsFile();
     // await QueueController.inst.prepareLatestQueueSync();
 

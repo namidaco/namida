@@ -1097,6 +1097,7 @@ class _NamidaConverters {
         SortType.shuffle: lang.SHUFFLE,
         SortType.mostPlayed: lang.MOST_PLAYED,
         SortType.latestPlayed: lang.RECENT_LISTENS,
+        SortType.firstListen: lang.FIRST_LISTEN,
       },
       GroupSortType: {
         GroupSortType.title: lang.TITLE,
@@ -1147,6 +1148,7 @@ class _NamidaConverters {
         TrackTileItem.tags: lang.TAGS,
         TrackTileItem.listenCount: lang.TOTAL_LISTENS,
         TrackTileItem.latestListenDate: lang.RECENT_LISTENS,
+        TrackTileItem.firstListenDate: lang.FIRST_LISTEN,
       },
       QueueSource: {
         QueueSource.allTracks: lang.TRACKS,

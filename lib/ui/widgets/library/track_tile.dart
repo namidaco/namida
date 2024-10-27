@@ -46,7 +46,8 @@ class TrackTilePropertiesProvider extends StatelessWidget {
     final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = context.theme.focusColor;
 
-    final listenToTopHistoryItems = settings.trackItem.values.any((element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate);
+    final listenToTopHistoryItems =
+        settings.trackItem.values.any((element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate);
 
     return ObxO(
       rx: settings.forceSquaredTrackThumbnail,
@@ -694,7 +695,7 @@ class TrackTileManager {
     for (int i = 0; i < length; i++) {
       final itemPosition = positions[i];
       final trackItem = settings.trackItem.value[itemPosition];
-      if (trackItem == TrackTileItem.latestListenDate) shouldNotCache = true;
+      if (trackItem == TrackTileItem.latestListenDate || trackItem == TrackTileItem.listenCount) shouldNotCache = true;
 
       var info = _buildChoosenTrackTileItem(trackItem, track);
 
@@ -765,6 +766,11 @@ class TrackTileManager {
       final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.lastOrNull;
       if (date == null) return '';
       return Jiffy.parseFromDateTime(date.milliSecondsSinceEpoch).fromNow();
+    },
+    TrackTileItem.firstListenDate: (track) {
+      final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;
+      if (date == null) return '';
+      return date.dateFormatted;
     },
   };
 }

@@ -178,7 +178,7 @@ void mainInitialization() async {
 
   FlutterNativeSplash.remove();
 
-  HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksSubListsAfterHistoryPrepared());
+  HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());
   YoutubeHistoryController.inst.prepareHistoryFile();
 
   PlaylistController.inst.prepareDefaultPlaylistsFile();

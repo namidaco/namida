@@ -40,6 +40,7 @@ class SortByMenuTracks extends StatelessWidget {
           SortType.rating,
           SortType.latestPlayed,
           SortType.mostPlayed,
+          SortType.firstListen,
           SortType.shuffle,
         ].map(
           (e) => ObxO(
@@ -124,6 +125,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                               SortType.rating,
                               SortType.latestPlayed,
                               SortType.mostPlayed,
+                              SortType.firstListen,
                               SortType.shuffle,
                             ].map(
                               (e) => SmallListTile(

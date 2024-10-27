@@ -24,6 +24,7 @@ enum SortType {
   shuffle,
   mostPlayed,
   latestPlayed,
+  firstListen,
 }
 
 enum GroupSortType {
@@ -91,6 +92,7 @@ enum TrackTileItem {
   moods,
   listenCount,
   latestListenDate,
+  firstListenDate,
 }
 
 enum TrackSearchFilter {

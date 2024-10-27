@@ -406,11 +406,21 @@ class Indexer<T extends Track> {
   }
 
   /// re-sorts media subtracks that depend on history.
-  void sortMediaTracksSubListsAfterHistoryPrepared() {
+  void sortMediaTracksAndSubListsAfterHistoryPrepared() {
+    bool dependsOnHistory(SortType type) => type == SortType.mostPlayed || type == SortType.latestPlayed || type == SortType.firstListen;
+
+    final tracksSort = settings.tracksSort.value;
+    if (dependsOnHistory(tracksSort)) {
+      SearchSortController.inst.sortMedia(MediaType.track);
+    }
+
     final requiredToSort = <MediaType>[];
     for (final e in settings.mediaItemsTrackSorting.entries) {
-      if (e.value.contains(SortType.mostPlayed)) {
-        requiredToSort.add(e.key);
+      for (final sort in e.value) {
+        if (dependsOnHistory(sort)) {
+          requiredToSort.add(e.key);
+          break;
+        }
       }
     }
     sortMediaTracksSubLists(requiredToSort);
