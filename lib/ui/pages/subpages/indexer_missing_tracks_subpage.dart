@@ -199,21 +199,21 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     }
 
     final missingTracksPaths = <String>[];
-    final existingTracksLookup = <String, bool>{};
     final missingTracksSuggestions = <String, String?>{};
 
     // ignore: no_leading_underscores_for_local_identifiers
     void _onAdd(String path) {
       final exists = File(path).existsSync();
-      if (!exists) missingTracksPaths.add(path);
-      existingTracksLookup[path] = exists;
-      missingTracksSuggestions[path] = getSuggestion(path);
+      if (!exists) {
+        missingTracksPaths.add(path);
+        missingTracksSuggestions[path] = getSuggestion(path);
+      }
     }
 
     final int totalIndices = allTracks.length - 1;
     int index = 0;
     for (final path in allTracks.keys) {
-      subProgressPort.send(index / totalIndices);
+      if (index % 10 == 0) subProgressPort.send(index / totalIndices);
 
       _onAdd(path);
       final progress = indicesProgressMap[index];
