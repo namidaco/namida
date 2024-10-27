@@ -1495,12 +1495,7 @@ class Indexer<T extends Track> {
   }
 
   static SplitArtistGenreConfigsWrapper _createSplitConfig() {
-    return SplitArtistGenreConfigsWrapper(
-      path: AppPaths.TRACKS,
-      artistsConfig: ArtistsSplitConfig.settings(),
-      genresConfig: GenresSplitConfig.settings(),
-      generalConfig: GeneralSplitConfig(),
-    );
+    return SplitArtistGenreConfigsWrapper.settings();
   }
 }
 

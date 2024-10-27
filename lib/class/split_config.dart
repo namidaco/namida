@@ -1,4 +1,5 @@
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class SplitArtistGenreConfigsWrapper {
@@ -13,6 +14,15 @@ class SplitArtistGenreConfigsWrapper {
     required this.genresConfig,
     required this.generalConfig,
   });
+
+  factory SplitArtistGenreConfigsWrapper.settings() {
+    return SplitArtistGenreConfigsWrapper(
+      path: AppPaths.TRACKS,
+      artistsConfig: ArtistsSplitConfig.settings(),
+      genresConfig: GenresSplitConfig.settings(),
+      generalConfig: GeneralSplitConfig(),
+    );
+  }
 }
 
 class ArtistsSplitConfig extends SplitterConfig {

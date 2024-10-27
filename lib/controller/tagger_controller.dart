@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:nampack/reactive/reactive.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -144,7 +145,7 @@ class NamidaTaggerController {
               return null;
             }(),
           );
-
+    final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
     final tracksMap = <Track, TrackExtended>{};
     for (int i = 0; i < tracks.length; i++) {
       var track = tracks[i];
@@ -177,7 +178,7 @@ class NamidaTaggerController {
 
           if (didUpdate) {
             final trExt = track.toTrackExt();
-            final newTrExt = trExt.copyWithTag(tag: newTags);
+            final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs);
             tracksMap[track] = newTrExt;
             if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
           }

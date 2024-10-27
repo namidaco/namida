@@ -506,19 +506,46 @@ extension TrackExtUtils on TrackExtended {
 
   TrackExtended copyWithTag({
     required FTags tag,
+    required SplitArtistGenreConfigsWrapper splittersConfigs,
     int? dateModified,
     String? path,
   }) {
+    final finaltitle = tag.title ?? title;
+    final finalartists = tag.artist != null
+        ? Indexer.splitArtist(
+            title: finaltitle,
+            originalArtist: tag.artist!,
+            config: splittersConfigs.artistsConfig,
+          )
+        : artistsList;
+    final finalgenres = tag.genre != null
+        ? Indexer.splitGenre(
+            tag.genre,
+            config: splittersConfigs.genresConfig,
+          )
+        : genresList;
+    final finalmoods = tag.mood != null
+        ? Indexer.splitGeneral(
+            tag.mood,
+            config: splittersConfigs.generalConfig,
+          )
+        : moodList;
+    final finaltagsEmbedded = tag.tags != null
+        ? Indexer.splitGeneral(
+            tag.tags,
+            config: splittersConfigs.generalConfig,
+          )
+        : tagsList;
     return TrackExtended(
-      title: tag.title ?? title,
+      title: finaltitle,
       originalArtist: tag.artist ?? originalArtist,
-      artistsList: tag.artist != null ? [tag.artist!] : artistsList,
+      artistsList: finalartists,
       album: tag.album ?? album,
       albumArtist: tag.albumArtist ?? albumArtist,
       originalGenre: tag.genre ?? originalGenre,
-      genresList: tag.genre != null ? [tag.genre!] : genresList,
+      genresList: finalgenres,
       originalMood: tag.mood ?? originalMood,
-      moodList: tag.mood != null ? [tag.mood!] : moodList,
+      moodList: finalmoods,
       composer: tag.composer ?? composer,
       trackNo: tag.trackNumber.getIntValue() ?? trackNo,
       year: TrackExtended.enforceYearFormat(tag.year) ?? year,
@@ -533,7 +560,7 @@ extension TrackExtUtils on TrackExtended {
       label: tag.recordLabel ?? label,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
-      tagsList: tag.tags != null ? [tag.tags!] : tagsList,
+      tagsList: finaltagsEmbedded,
       gainData: tag.gainData ?? gainData,
 
       // -- uneditable fields
