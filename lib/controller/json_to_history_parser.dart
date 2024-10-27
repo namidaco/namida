@@ -363,8 +363,8 @@ class JsonToHistoryParser {
 
   Timer? _notificationTimer;
 
-  Future<void> addFileSourceToNamidaHistory({
-    required File file,
+  Future<void> addFilesSourceToNamidaHistory({
+    required List<File> files,
     required TrackSource source,
     bool matchAll = false,
     bool ytIsMatchingTypeLink = true,
@@ -383,8 +383,6 @@ class JsonToHistoryParser {
 
     // TODO: warning to backup history
 
-    final isytsource = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
-
     await Future.delayed(Duration.zero);
 
     final startTime = DateTime.now();
@@ -396,37 +394,42 @@ class JsonToHistoryParser {
     final datesAdded = <int>[];
     final datesAddedYoutube = <int>[];
     var allMissingEntries = <_MissingListenEntry, List<int>>{};
-    if (isytsource) {
-      currentParsingSource.value = TrackSource.youtube;
-      final res = await _parseYTHistoryJsonAndAdd(
-        file: file,
-        isMatchingTypeLink: ytIsMatchingTypeLink,
-        isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
-        matchYT: ytMatchYT,
-        matchYTMusic: ytMatchYTMusic,
-        oldestDate: oldestDate,
-        newestDate: newestDate,
-        matchAll: matchAll,
-      );
-      if (res != null) {
-        allMissingEntries = res.missingEntries;
-        datesAdded.addAll(res.historyDays);
-        datesAddedYoutube.addAll(res.ytHistoryDays);
-      }
-      // await _addYoutubeSourceFromDirectory(isMatchingTypeLink, matchYT, matchYTMusic);
-    }
-    if (source == TrackSource.lastfm) {
-      currentParsingSource.value = TrackSource.lastfm;
-      final res = await _addLastFmSource(
-        file: file,
-        matchAll: matchAll,
-        oldestDate: oldestDate,
-        newestDate: newestDate,
-      );
-      if (res != null) {
-        allMissingEntries = res.missingEntries;
-        datesAdded.addAll(res.historyDays);
-      }
+
+    switch (source) {
+      case TrackSource.youtube || TrackSource.youtubeMusic:
+        currentParsingSource.value = TrackSource.youtube;
+        final res = await _parseYTHistoryJsonAndAdd(
+          files: files,
+          isMatchingTypeLink: ytIsMatchingTypeLink,
+          isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
+          matchYT: ytMatchYT,
+          matchYTMusic: ytMatchYTMusic,
+          oldestDate: oldestDate,
+          newestDate: newestDate,
+          matchAll: matchAll,
+        );
+        if (res != null) {
+          allMissingEntries = res.missingEntries;
+          datesAdded.addAll(res.historyDays);
+          datesAddedYoutube.addAll(res.ytHistoryDays);
+        }
+        break;
+
+      case TrackSource.lastfm:
+        currentParsingSource.value = TrackSource.lastfm;
+        final res = await _addLastFmSource(
+          files: files,
+          matchAll: matchAll,
+          oldestDate: oldestDate,
+          newestDate: newestDate,
+        );
+        if (res != null) {
+          allMissingEntries = res.missingEntries;
+          datesAdded.addAll(res.historyDays);
+        }
+        break;
+      case TrackSource.local:
+        break;
     }
 
     // -- local history --
@@ -452,7 +455,7 @@ class JsonToHistoryParser {
   }
 
   Future<({List<int> historyDays, List<int> ytHistoryDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _parseYTHistoryJsonAndAdd({
-    required File file,
+    required List<File> files,
     required bool isMatchingTypeLink,
     required bool isMatchingTypeTitleAndArtist,
     required bool matchYT,
@@ -477,7 +480,7 @@ class JsonToHistoryParser {
                 'v': e.isVideo,
               })
           .toList(),
-      'file': file,
+      'files': files,
       'isMatchingTypeLink': isMatchingTypeLink,
       'isMatchingTypeTitleAndArtist': isMatchingTypeTitleAndArtist,
       'matchYT': matchYT,
@@ -570,7 +573,7 @@ class JsonToHistoryParser {
     Map<_MissingListenEntry, List<int>> missingEntries,
   })? _parseYTHistoryJsonAndAddIsolate(Map params) {
     final allTracks = params['tracks'] as List<Map>;
-    final file = params['file'] as File;
+    final files = params['files'] as List<File>;
     final isMatchingTypeLink = params['isMatchingTypeLink'] as bool;
     final isMatchingTypeTitleAndArtist = params['isMatchingTypeTitleAndArtist'] as bool;
     final matchYT = params['matchYT'] as bool;
@@ -602,10 +605,18 @@ class JsonToHistoryParser {
       });
     }
 
-    final jsonResponse = file.readAsJsonSync() as List?;
+    final jsonResponse = <dynamic>[];
+    files.loop(
+      (file) {
+        try {
+          final res = file.readAsJsonSync() as List?;
+          if (res != null) jsonResponse.addAll(res);
+        } catch (_) {}
+      },
+    );
 
-    portLoadingProgress.send(jsonResponse?.length ?? 0); // 1
-    if (jsonResponse == null) return null;
+    portLoadingProgress.send(jsonResponse.length); // 1
+    if (jsonResponse.isEmpty) return null;
 
     final mapOfAffectedIds = <String, YoutubeVideoHistory>{};
     final missingEntries = <_MissingListenEntry, List<int>>{};
@@ -826,7 +837,7 @@ class JsonToHistoryParser {
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   Future<({List<int> historyDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _addLastFmSource({
-    required File file,
+    required List<File> files,
     required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
@@ -846,7 +857,7 @@ class JsonToHistoryParser {
           .toList(),
       'oldestDay': oldestDate?.toDaysSince1970(),
       'newestDay': newestDate?.toDaysSince1970(),
-      'file': file,
+      'files': files,
       'matchAll': matchAll,
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
       'portProgressParsed': portProgressParsed.sendPort,
@@ -907,7 +918,7 @@ class JsonToHistoryParser {
     final allTracks = params['tracks'] as List<Map>;
     final oldestDay = params['oldestDay'] as int?;
     final newestDay = params['newestDay'] as int?;
-    final file = params['file'] as File;
+    final files = params['files'] as List<File>;
     final matchAll = params['matchAll'] as bool;
     final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
 
@@ -919,14 +930,18 @@ class JsonToHistoryParser {
     final portProgressAdded = params['portProgressAdded'] as SendPort;
     final portLoadingProgress = params['portLoadingProgress'] as SendPort;
 
-    final List<String> lines;
-    try {
-      lines = file.readAsLinesSync();
-      portLoadingProgress.send(lines.length);
-    } catch (e) {
-      portLoadingProgress.send(0);
-      return null;
-    }
+    final lines = <dynamic>[];
+    files.loop(
+      (file) {
+        try {
+          final res = file.readAsLinesSync();
+          lines.addAll(res);
+        } catch (_) {}
+      },
+    );
+
+    portLoadingProgress.send(lines.length);
+    if (lines.isEmpty) return null;
 
     final missingEntries = <_MissingListenEntry, List<int>>{};
     int totalParsed = 0;

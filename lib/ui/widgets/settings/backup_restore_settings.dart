@@ -592,8 +592,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 child: Text("- $text", style: namida.textTheme.displayLarge),
                               );
 
-                          final jsonfile = await NamidaFileBrowser.pickFile(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.json);
-                          if (jsonfile != null) {
+                          final jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.json);
+                          if (jsonfiles.isNotEmpty) {
                             final isMatchingTypeLink = true.obs;
                             final isMatchingTypeTitleAndArtist = false.obs;
                             final matchYT = true.obs;
@@ -619,8 +619,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                       textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                       onPressed: () async {
                                         NamidaNavigator.inst.closeDialog();
-                                        await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                          file: File(jsonfile.path),
+                                        await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                                          files: jsonfiles,
                                           source: TrackSource.youtube,
                                           ytIsMatchingTypeLink: isMatchingTypeLink.value,
                                           isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
@@ -735,9 +735,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
 
-                          final csvFiles = await NamidaFileBrowser.pickFile(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.csv);
-                          final csvFilePath = csvFiles?.path;
-                          if (csvFiles != null && csvFilePath != null) {
+                          final csvFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.csv);
+                          if (csvFiles.isNotEmpty) {
                             final oldestDate = Rxn<DateTime>();
                             DateTime? newestDate;
                             final matchAll = false.obs;
@@ -756,8 +755,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                                     textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
                                     onPressed: () async {
                                       NamidaNavigator.inst.closeDialog();
-                                      await JsonToHistoryParser.inst.addFileSourceToNamidaHistory(
-                                        file: File(csvFilePath),
+                                      await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                                        files: csvFiles,
                                         source: TrackSource.lastfm,
                                         oldestDate: oldestDate.value,
                                         newestDate: newestDate,
