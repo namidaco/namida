@@ -57,3 +57,5 @@ temp_changelog.md
 temp_changelog_hash.md
 test.dart
 CHANGELOG_pretty.txt
+
+windows/flutter/generated_**

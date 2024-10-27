@@ -310,7 +310,7 @@ class YoutubeController {
     }
   }
 
-  static const String cleanupFilenameRegex = r'[*#\$|/\\!^:"]';
+  static const String cleanupFilenameRegex = r'[*#\$|/\\!^:"\?]';
   String cleanupFilename(String filename) => filename.replaceAll(RegExp(cleanupFilenameRegex, caseSensitive: false), '_');
 
   // -- things here are not refreshed. should be called in startup only.
@@ -582,7 +582,7 @@ class YoutubeController {
     latestEditedGroupDownloadTask[groupName] = DateTime.now().millisecondsSinceEpoch;
   }
 
-  final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult>>{};
+  final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult?>>{};
 
   Future<void> downloadYoutubeVideos({
     required List<YoutubeItemDownloadConfig> itemsConfig,

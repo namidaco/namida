@@ -194,19 +194,23 @@ class Folders<T extends Folder> {
     }
     if (charCodes.isNotEmpty) {
       final startIndex = codes.length - charCodes.length;
-      return _ParsedResult(
-        extractedNumber: int.parse(String.fromCharCodes(charCodes.reversed)),
-        charactersCount: charCodes.length,
-        startAtIndex: startIndex,
-        textPart: text.substring(0, startIndex),
-      );
+      try {
+        return _ParsedResult(
+          extractedNumber: num.parse(String.fromCharCodes(charCodes.reversed)),
+          charactersCount: charCodes.length,
+          startAtIndex: startIndex,
+          textPart: text.substring(0, startIndex),
+        );
+      } catch (_) {
+        // -- big numbers and format exception
+      }
     }
     return null;
   }
 }
 
 class _ParsedResult {
-  final int extractedNumber;
+  final num extractedNumber;
   final int charactersCount;
   final int startAtIndex;
   final String textPart;

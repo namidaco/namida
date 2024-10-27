@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -288,7 +287,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     int rootFiles = 0;
     Directory(AppDirs.YOUTUBE_DOWNLOADS).listSyncSafe().loop((d) {
       if (d is Directory) {
-        availableDirectoriesNames[d.path.getDirectoryName] = 0;
+        availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = 0;
       } else {
         rootFiles++;
       }
@@ -312,7 +311,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
   void onFolderAdd(String name) {
     onGroupNameChanged(name);
     try {
-      availableDirectoriesNames[name] = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, name)).listSyncSafe().length; // prolly 0 but eghh maybe edge cases
+      availableDirectoriesNames[name] = 0;
     } catch (_) {}
     widget.onDownloadFolderAdded?.call(name);
   }

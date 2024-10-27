@@ -439,10 +439,12 @@ class JsonToHistoryParser {
     HistoryController.inst.updateMostPlayedPlaylist();
 
     // -- youtube history --
-    YoutubeHistoryController.inst.removeDuplicatedItems(datesAddedYoutube);
-    YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
-    await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
-    YoutubeHistoryController.inst.updateMostPlayedPlaylist();
+    if (datesAddedYoutube.isNotEmpty) {
+      YoutubeHistoryController.inst.removeDuplicatedItems(datesAddedYoutube);
+      YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
+      await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
+      YoutubeHistoryController.inst.updateMostPlayedPlaylist();
+    }
 
     isParsing.value = false;
 
@@ -597,8 +599,8 @@ class JsonToHistoryParser {
     if (isMatchingTypeLink) {
       tracksIdsMap = <String, List<Track>>{};
       allTracks.loop((trMap) {
-        String? videoId = NamidaLinkUtils.extractYoutubeId(trMap['comment'] as String);
-        videoId ??= NamidaLinkUtils.extractYoutubeId(trMap['filename'] as String);
+        String? videoId = NamidaLinkUtils.extractYoutubeId(trMap['comment'] as String? ?? '');
+        videoId ??= NamidaLinkUtils.extractYoutubeId(trMap['filename'] as String? ?? '');
         if (videoId != null && videoId.isNotEmpty) {
           tracksIdsMap!.addForce(videoId, Track.decide(trMap['path'], trMap['v']));
         }
@@ -767,8 +769,8 @@ class JsonToHistoryParser {
     Iterable<Track> tracks = <Track>[];
 
     if (tracksIdsMap != null) {
-      final match = tracksIdsMap[vh.id] ?? [];
-      if (match.isNotEmpty) {
+      final match = tracksIdsMap[vh.id];
+      if (match != null && match.isNotEmpty) {
         tracks = matchAll ? match : [match.first];
       }
     }

@@ -109,8 +109,8 @@ class WaveformController {
     final dynamicScale = _currentScaleMap[posInMap] ?? 0.01;
     final intensity = settings.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * intensity * 0.00005;
-
-    return finalScale.isNaN ? 0.01 : finalScale;
+    if (finalScale.isNaN || finalScale > 0.3) return 0.01;
+    return finalScale;
   }
 
   final _waveformExtractor = WaveformExtractor.platform()..init();

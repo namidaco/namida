@@ -7,7 +7,10 @@ class _WaveformExtractorWindows extends WaveformExtractor {
   late String ffmpegExePath;
   late String waveformExePath;
 
-  static const _supportedFormats = <String>{'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm'};
+  static const _supportedFormats = <String>{
+    'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm', //
+    'WAV', 'FLAC', 'MP3', 'OGG', 'OPUS', 'WEBM',
+  };
 
   @override
   void init() {
