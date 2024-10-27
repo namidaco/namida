@@ -62,13 +62,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
 
   bool useCachedVersionsIfAvailable = true;
-  bool autoExtractTitleAndArtist = settings.youtube.autoExtractVideoTagsFromInfo.value;
-  bool keepCachedVersionsIfDownloaded = settings.downloadFilesKeepCachedVersions.value;
-  bool downloadFilesWriteUploadDate = settings.downloadFilesWriteUploadDate.value;
-  bool addAudioToLocalLibrary = settings.downloadAddAudioToLocalLibrary.value;
-  bool overrideOldFiles = false;
   final preferredQuality = (settings.youtubeVideoQualities.value.firstOrNull ?? kStockVideoQualities.first).obs;
-  final downloadAudioOnly = false.obs;
 
   void _onItemTap(String id) => _selectedList.addOrRemove(id);
 
@@ -86,7 +80,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _configMap.close();
     _groupName.close();
     preferredQuality.close();
-    downloadAudioOnly.close();
     super.dispose();
   }
 
@@ -95,7 +88,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _updateAudioOnly(bool audioOnly) {
-    downloadAudioOnly.value = audioOnly;
+    settings.save(downloadAudioOnly: audioOnly);
     _configMap.entries.toList().loop(
       (c) {
         _configMap[c.key] = c.value.copyWith(fetchMissingVideo: !audioOnly);
@@ -123,7 +116,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       prefferedVideoQualityID: null,
       prefferedAudioQualityID: null,
       fetchMissingAudio: true,
-      fetchMissingVideo: !downloadAudioOnly.value,
+      fetchMissingVideo: !settings.downloadAudioOnly.value,
     );
   }
 
@@ -141,8 +134,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       streamInfoItem: widget.infoLookup[id],
       playlistInfo: widget.playlistInfo,
       playlistId: widget.playlistInfo?.id,
+      initialGroupName: widget.playlistName,
       showSpecificFileOptionsInEditTagDialog: false,
-      preferAudioOnly: downloadAudioOnly.value,
+      preferAudioOnly: settings.downloadAudioOnly.value,
       videoId: id,
       initialItemConfig: _configMap[id],
       confirmButtonText: lang.CONFIRM,
@@ -154,9 +148,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _showAllConfigDialog(BuildContext context) {
-    final st = Rxn<void>();
-    void rebuildy() => st.refresh();
-
     const visualDensity = null;
 
     NamidaNavigator.inst.navigateDialog(
@@ -181,107 +172,103 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
-        child: ObxO(
-            rx: st,
-            builder: (context, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12.0),
-                  YTDownloadOptionFolderListTile(
-                    maxTrailingWidth: context.width * 0.2,
-                    visualDensity: visualDensity,
-                    playlistName: widget.playlistName,
-                    initialFolder: _groupName.value,
-                    onDownloadGroupNameChanged: (newGroupName) {
-                      _groupName.value = newGroupName;
-                      _folderController.currentState?.onGroupNameChanged(newGroupName);
-                    },
-                    onDownloadFolderAdded: (newFolderName) {
-                      _folderController.currentState?.onFolderAdd(newFolderName);
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12.0),
+            YTDownloadOptionFolderListTile(
+              maxTrailingWidth: context.width * 0.2,
+              visualDensity: visualDensity,
+              playlistName: widget.playlistName,
+              initialFolder: _groupName.value,
+              onDownloadGroupNameChanged: (newGroupName) {
+                _groupName.value = newGroupName;
+                _folderController.currentState?.onGroupNameChanged(newGroupName);
+              },
+              onDownloadFolderAdded: (newFolderName) {
+                _folderController.currentState?.onFolderAdd(newFolderName);
+              },
+            ),
+            ObxO(
+              rx: settings.youtube.autoExtractVideoTagsFromInfo,
+              builder: (context, autoExtractVideoTagsFromInfo) => CustomSwitchListTile(
+                visualDensity: visualDensity,
+                icon: Broken.magicpen,
+                title: lang.AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE,
+                value: autoExtractVideoTagsFromInfo,
+                onChanged: (isTrue) => settings.youtube.save(autoExtractVideoTagsFromInfo: !isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.downloadFilesKeepCachedVersions,
+              builder: (context, downloadFilesKeepCachedVersions) => CustomSwitchListTile(
+                visualDensity: visualDensity,
+                icon: Broken.copy,
+                title: lang.KEEP_CACHED_VERSIONS,
+                value: downloadFilesKeepCachedVersions,
+                onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.downloadFilesWriteUploadDate,
+              builder: (context, downloadFilesWriteUploadDate) => CustomSwitchListTile(
+                visualDensity: visualDensity,
+                icon: Broken.document_code,
+                title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                value: downloadFilesWriteUploadDate,
+                onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.downloadAddAudioToLocalLibrary,
+              builder: (context, addAudioToLocalLibrary) => CustomSwitchListTile(
+                visualDensity: visualDensity,
+                enabled: true,
+                icon: Broken.music_library_2,
+                title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                value: addAudioToLocalLibrary,
+                onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.downloadOverrideOldFiles,
+              builder: (context, override) => CustomSwitchListTile(
+                visualDensity: visualDensity,
+                icon: Broken.danger,
+                title: lang.OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER,
+                value: override,
+                onChanged: (isTrue) => settings.save(downloadOverrideOldFiles: !isTrue),
+              ),
+            ),
+            CustomListTile(
+              visualDensity: visualDensity,
+              icon: Broken.story,
+              title: lang.VIDEO_QUALITY,
+              trailing: NamidaPopupWrapper(
+                childrenDefault: () => [
+                  NamidaPopupItem(
+                    icon: Broken.musicnote,
+                    title: lang.AUDIO,
+                    onTap: () {
+                      _updateAudioOnly(true);
                     },
                   ),
-                  CustomSwitchListTile(
-                    visualDensity: visualDensity,
-                    icon: Broken.magicpen,
-                    title: lang.AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE,
-                    value: autoExtractTitleAndArtist,
-                    onChanged: (isTrue) {
-                      autoExtractTitleAndArtist = !autoExtractTitleAndArtist;
-                      rebuildy();
-                    },
-                  ),
-                  CustomSwitchListTile(
-                    visualDensity: visualDensity,
-                    icon: Broken.copy,
-                    title: lang.KEEP_CACHED_VERSIONS,
-                    value: keepCachedVersionsIfDownloaded,
-                    onChanged: (isTrue) {
-                      keepCachedVersionsIfDownloaded = !keepCachedVersionsIfDownloaded;
-                      rebuildy();
-                    },
-                  ),
-                  CustomSwitchListTile(
-                    visualDensity: visualDensity,
-                    icon: Broken.document_code,
-                    title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
-                    value: downloadFilesWriteUploadDate,
-                    onChanged: (isTrue) {
-                      downloadFilesWriteUploadDate = !downloadFilesWriteUploadDate;
-                      rebuildy();
-                    },
-                  ),
-                  CustomSwitchListTile(
-                    visualDensity: visualDensity,
-                    enabled: true,
-                    icon: Broken.music_library_2,
-                    title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
-                    value: addAudioToLocalLibrary,
-                    onChanged: (isTrue) {
-                      addAudioToLocalLibrary = !addAudioToLocalLibrary;
-                      rebuildy();
-                    },
-                  ),
-                  CustomSwitchListTile(
-                    visualDensity: visualDensity,
-                    icon: Broken.danger,
-                    title: lang.OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER,
-                    value: overrideOldFiles,
-                    onChanged: (isTrue) {
-                      overrideOldFiles = !overrideOldFiles;
-                      rebuildy();
-                    },
-                  ),
-                  CustomListTile(
-                    visualDensity: visualDensity,
-                    icon: Broken.story,
-                    title: lang.VIDEO_QUALITY,
-                    trailing: NamidaPopupWrapper(
-                      childrenDefault: () => [
-                        NamidaPopupItem(
-                          icon: Broken.musicnote,
-                          title: lang.AUDIO,
-                          onTap: () {
-                            _updateAudioOnly(true);
-                          },
-                        ),
-                        ...kStockVideoQualities.map(
-                          (e) => NamidaPopupItem(
-                            icon: Broken.story,
-                            title: e,
-                            onTap: () {
-                              _updateAudioOnly(false);
-                              preferredQuality.value = e;
-                            },
-                          ),
-                        )
-                      ],
-                      child: Obx((context) => Text(downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+                  ...kStockVideoQualities.map(
+                    (e) => NamidaPopupItem(
+                      icon: Broken.story,
+                      title: e,
+                      onTap: () {
+                        _updateAudioOnly(false);
+                        preferredQuality.value = e;
+                      },
                     ),
-                  ),
+                  )
                 ],
-              );
-            }),
+                child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -363,6 +350,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                           onChanged: onChangedFn,
                                         ),
                                       ),
+                                      initialGroupName: _groupName.value,
                                     );
                                     settings.youtube.save();
                                   },
@@ -415,18 +403,16 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                 ),
               ),
-              Obx(
-                (context) => YTDownloadOptionFolderListTile(
-                  key: _folderController,
-                  visualDensity: VisualDensity.compact,
-                  trailingPadding: 12.0,
-                  playlistName: widget.playlistName,
-                  initialFolder: _groupName.valueR,
-                  subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
-                  onDownloadGroupNameChanged: (newGroupName) {
-                    _groupName.value = newGroupName;
-                  },
-                ),
+              YTDownloadOptionFolderListTile(
+                key: _folderController,
+                visualDensity: VisualDensity.compact,
+                trailingPadding: 12.0,
+                playlistName: widget.playlistName,
+                initialFolder: _groupName.value,
+                subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
+                onDownloadGroupNameChanged: (newGroupName) {
+                  _groupName.value = newGroupName;
+                },
               ),
               ObxO(
                 rx: settings.youtube.downloadFilenameBuilder,
@@ -654,12 +640,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           groupName: DownloadTaskGroupName(groupName: _groupName.value),
                           itemsConfig: itemsConfig,
                           useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
-                          autoExtractTitleAndArtist: autoExtractTitleAndArtist,
-                          keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded,
-                          downloadFilesWriteUploadDate: downloadFilesWriteUploadDate,
-                          addAudioToLocalLibrary: addAudioToLocalLibrary,
-                          deleteOldFile: overrideOldFiles,
-                          audioOnly: downloadAudioOnly.value,
+                          autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                          keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                          downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                          addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                          deleteOldFile: settings.downloadOverrideOldFiles.value,
+                          audioOnly: settings.downloadAudioOnly.value,
                           preferredQualities: () {
                             final list = <String>[];
                             for (final q in kStockVideoQualities) {
