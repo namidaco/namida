@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum YTLocalSearchSortType {
   mostPlayed,
@@ -104,7 +104,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     final params = {
       'databasesDir': AppDirs.YOUTIPIE_CACHE,
       'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
-      'tempBackupYTVH': YoutubeInfoController.utils.tempBackupVideoInfo,
+      'statsDir': AppDirs.YT_STATS,
       'enableFuzzySearch': enableFuzzySearch,
       'sendPort': port,
     };
@@ -125,7 +125,7 @@ class YTLocalSearchController with PortsProvider<Map> {
   static void _prepareResourcesAndSearch(Map params) async {
     final databasesDir = params['databasesDir'] as String;
     final sensitiveDataDir = params['sensitiveDataDir'] as String;
-    final tempBackupYTVH = params['tempBackupYTVH'] as Map<String, YoutubeVideoHistory>;
+    final statsDir = params['statsDir'] as String;
     final enableFuzzySearch = params['enableFuzzySearch'] as bool;
     final sendPort = params['sendPort'] as SendPort;
 
@@ -283,13 +283,26 @@ class YTLocalSearchController with PortsProvider<Map> {
       },
     );
 
-    for (final id in tempBackupYTVH.keys) {
-      if (lookupItemAvailable[id] == null) {
-        final val = tempBackupYTVH[id]!;
-        lookupListYTVH.add(val);
-        lookupItemAvailable[id] = (list: 4, index: lookupListYTVH.length - 1);
+    Directory(statsDir).listSyncSafe().loop((f) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          if (response is List) {
+            response.loop(
+              (r) {
+                final id = r['id'] as String? ?? '';
+                if (lookupItemAvailable[id] == null) {
+                  final val = YoutubeVideoHistory.fromJson(r);
+                  lookupListYTVH.add(val);
+                  lookupItemAvailable[id] = (list: 4, index: lookupListYTVH.length - 1);
+                }
+              },
+            );
+          }
+        } catch (_) {}
       }
-    }
+    });
+
     sendPort.send(null); // finished filling
 
     final durationTaken = start.difference(DateTime.now());

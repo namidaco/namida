@@ -79,8 +79,11 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     super.initState();
     fetchSearch();
     YTLocalSearchController.inst.addOnSearchDone(_searchListenerKey, _onSearchDone);
-    YTLocalSearchController.inst.initialize().then((value) {
-      fetchSearch(customText: currentSearchText);
+    YTLocalSearchController.inst.initialize().then((_) {
+      YTLocalSearchController.inst.search(
+        currentSearchText,
+        maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini,
+      );
     });
   }
 

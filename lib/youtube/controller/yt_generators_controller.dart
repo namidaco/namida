@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/services.dart';
@@ -10,14 +11,12 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/generator_base.dart';
 import 'package:namida/base/ports_provider.dart';
-import 'package:namida/class/video.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider<Map> {
@@ -98,7 +97,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final params = {
       'databasesDir': AppDirs.YOUTIPIE_CACHE,
       'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
-      'tempBackupYTVH': YoutubeInfoController.utils.tempBackupVideoInfo,
+      'statsDir': AppDirs.YT_STATS,
       'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.keys,
       'favouritesPlaylist': YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
       'playlists': playlists,
@@ -111,7 +110,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   static void _prepareResourcesAndListen(Map params) async {
     final databasesDir = params['databasesDir'] as String;
     final sensitiveDataDir = params['sensitiveDataDir'] as String;
-    final tempBackupYTVH = params['tempBackupYTVH'] as Map<String, YoutubeVideoHistory>;
+    final statsDir = params['statsDir'] as String;
 
     final mostplayedPlaylist = params['mostplayedPlaylist'] as Iterable<String>;
     final favouritesPlaylist = params['favouritesPlaylist'] as List<YoutubeID>;
@@ -240,13 +239,26 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       );
     });
 
-    for (final id in tempBackupYTVH.keys) {
-      if (releaseDateMap[id] == null) {
-        allIds.add(id);
-        allIdsAdded[id] = true;
-        // releaseDateMap[id] = null;
+    Directory(statsDir).listSyncSafe().loop((f) {
+      if (f is File) {
+        try {
+          final response = f.readAsJsonSync();
+          if (response is List) {
+            response.loop(
+              (r) {
+                final id = r['id'] as String? ?? '';
+                if (releaseDateMap[id] == null) {
+                  allIds.add(id);
+                  allIdsAdded[id] = true;
+                  // releaseDateMap[id] = null;
+                }
+              },
+            );
+          }
+        } catch (_) {}
       }
-    }
+    });
+
     // -- filling from playlists
     for (final id in mostplayedPlaylist) {
       if (allIdsAdded[id] == null) {
