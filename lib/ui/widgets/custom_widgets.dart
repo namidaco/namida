@@ -3490,6 +3490,7 @@ class NamidaTabView extends StatefulWidget {
   final void Function(int index) onIndexChanged;
   final bool isScrollable;
   final bool compact;
+  final bool reportIndexChangedOnInit;
 
   const NamidaTabView({
     super.key,
@@ -3500,6 +3501,7 @@ class NamidaTabView extends StatefulWidget {
     required this.onIndexChanged,
     this.isScrollable = false,
     this.compact = false,
+    this.reportIndexChangedOnInit = true,
   });
 
   @override
@@ -3513,7 +3515,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
+    if (widget.reportIndexChangedOnInit) Future.delayed(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
     controller = TabController(
       length: widget.children.length,
       vsync: this,

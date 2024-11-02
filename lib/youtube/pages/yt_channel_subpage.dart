@@ -92,6 +92,8 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   final _tabLastFetched = <int, DateTime>{};
 
   final _aboutPageKey = GlobalKey<_YTChannelSubpageAboutState>();
+  final _videosPageKey = GlobalKey<_YTChannelVideosTabState>();
+  final _pagesKeys = <String, GlobalKey<_YTChannelSubpageTabState>>{};
   DateTime? _aboutPageLastFetched;
 
   late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
@@ -99,6 +101,10 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   late final _itemsScrollController = ScrollController();
   late final _scrollControllersOffsets = <int, double>{};
   int _tabIndex = 0;
+
+  GlobalKey<_YTChannelSubpageTabState> _createPageKey<T>(ChannelTab tab) {
+    return _pagesKeys[tab.title] ??= GlobalKey<_YTChannelSubpageTabState>(); // use cached state to avoid disposing
+  }
 
   /// returns tab to be selected possible index.
   int? _setTabsData(YoutiPieChannelPageResult res) {
@@ -113,9 +119,9 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
       if (videoTabIndex == null && tab.isVideosTab()) {
         videoTabIndex = i;
-        _tabsGlobalKeys[i] = GlobalKey<_YTChannelVideosTabState>();
+        _tabsGlobalKeys[i] = _videosPageKey;
       } else {
-        _tabsGlobalKeys[i] = GlobalKey<_YTChannelSubpageTabState>();
+        _tabsGlobalKeys[i] = _createPageKey(tab);
       }
     }
 
@@ -167,7 +173,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       if (tabToBeSelected != null) _tabIndex = tabToBeSelected;
       _fetchCurrentTab(channelInfoCache);
     } else {
-      _tabsGlobalKeys[0] = GlobalKey<_YTChannelVideosTabState>();
+      _tabsGlobalKeys[0] = _videosPageKey;
     }
 
     // -- always get new info.
@@ -448,6 +454,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                 Expanded(
                   child: NamidaTabView(
                     key: Key("${_tabIndex}_${_tabsGlobalKeys.length}"),
+                    reportIndexChangedOnInit: false,
                     isScrollable: true,
                     compact: true,
                     tabs: [
