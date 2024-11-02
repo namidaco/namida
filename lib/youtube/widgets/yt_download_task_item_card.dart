@@ -467,15 +467,14 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     final videoIdWrapper = item.id;
     final videoId = videoIdWrapper.videoId;
-    final info = YoutubeInfoController.utils.getStreamInfoSync(videoId);
-    final duration = info?.durSeconds?.secondsLabel;
 
     final itemIcon = item.videoStream != null
         ? Broken.video
         : item.audioStream != null
             ? Broken.musicnote
             : null;
-    final infoFinal = videos[index].streamInfoItem ?? info;
+    final infoFinal = videos[index].streamInfoItem ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
+    final duration = (infoFinal?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
     return NamidaPopupWrapper(
       openOnTap: true,
       openOnLongPress: true,

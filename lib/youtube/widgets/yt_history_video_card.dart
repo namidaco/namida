@@ -199,8 +199,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       thumbWidth -= 3.0;
     }
 
-    final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId) /* ??  YoutubeInfoController.video.fetchVideoPageSync(videoId) */;
-    final duration = info?.durSeconds?.secondsLabel;
+    final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
+    final duration = (info?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
     final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(videoId) ?? videoId;
     final videoChannel = info?.channelName ?? info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
 

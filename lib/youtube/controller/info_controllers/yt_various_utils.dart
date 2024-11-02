@@ -9,13 +9,19 @@ class _YoutubeInfoUtils {
   /// This comes mainly after a youtube history import
   var tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
 
+  final _tempInfoTitle = <String, String?>{};
+  final _tempInfoChannelTitle = <String, String?>{};
+  final _tempInfoChannelID = <String, String?>{};
+  final _tempInfoVideoReleaseDate = <String, DateTime?>{};
+  final _tempInfoVideoDurationSeconds = <String, int?>{};
+
   Future<void> fillBackupInfoMap() async {
-    final map = await _fillBackupInfoMapIsolate.thready(AppDirs.YT_STATS);
+    final map = await _parseBackupHistoryInfoIsolate.thready(AppDirs.YT_STATS);
     tempBackupVideoInfo = map;
     tempBackupVideoInfo.remove('');
   }
 
-  static Map<String, YoutubeVideoHistory> _fillBackupInfoMapIsolate(String dirPath) {
+  static Map<String, YoutubeVideoHistory> _parseBackupHistoryInfoIsolate(String dirPath) {
     final map = <String, YoutubeVideoHistory>{};
     Directory(dirPath).listSyncSafe().loop((f) {
       if (f is File) {
@@ -50,7 +56,7 @@ class _YoutubeInfoUtils {
   String? getVideoName(String videoId, {bool checkFromStorage = true /* am sorry every follow me */}) {
     String? name = tempVideoInfosFromStreams[videoId]?.title.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.title.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return getStreamInfoSync(videoId)?.title.nullifyEmpty() ??
+    return _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.title.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.title.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyEmpty();
   }
@@ -58,13 +64,13 @@ class _YoutubeInfoUtils {
   String? getVideoChannelName(String videoId, {bool checkFromStorage = true}) {
     String? name = tempVideoInfosFromStreams[videoId]?.channelName?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channel.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
+    return _tempInfoChannelTitle[videoId] ??= getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelName?.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.channelInfo?.title.nullifyEmpty();
   }
 
   String? getVideoChannelID(String videoId) {
-    return tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
+    return _tempInfoChannelID[videoId] ??= tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
         getStreamInfoSync(videoId)?.channelId?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelId?.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty();
@@ -72,15 +78,16 @@ class _YoutubeInfoUtils {
 
   DateTime? getVideoReleaseDate(String videoId) {
     // -- we check for streams result first cuz others are approximation.
-    return _getVideoStreamResultSync(videoId)?.info?.publishedAt.date ??
+    return _tempInfoVideoReleaseDate[videoId] ??= _getVideoStreamResultSync(videoId)?.info?.publishedAt.date ??
         tempVideoInfosFromStreams[videoId]?.publishedAt.date ??
         getStreamInfoSync(videoId)?.publishedAt.date ?? //
         _getVideoPageResultSync(videoId)?.videoInfo?.publishedAt.date;
   }
 
   int? getVideoDurationSeconds(String videoId) {
-    return tempVideoInfosFromStreams[videoId]?.durSeconds ??
-        getStreamInfoSync(videoId)?.durSeconds ?? //
+    final cached = tempVideoInfosFromStreams[videoId]?.durSeconds;
+    if (cached != null) return cached;
+    return _tempInfoVideoDurationSeconds[videoId] ??= getStreamInfoSync(videoId)?.durSeconds ?? //
         _getVideoStreamResultSync(videoId)?.info?.durSeconds;
   }
 }
