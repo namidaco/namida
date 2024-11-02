@@ -95,15 +95,15 @@ class MainPage extends StatelessWidget {
             rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
             builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
                 ? ObxO(
-                    rx: SearchSortController.inst.runningSearches,
-                    builder: (context, runningSearches) => Stack(
+                    rx: SearchSortController.inst.runningSearchesTempCount,
+                    builder: (context, runningSearchesCount) => Stack(
                       alignment: Alignment.center,
                       children: [
                         const Icon(
                           Broken.search_status_1,
                           color: Color.fromRGBO(255, 255, 255, 0.8),
                         ),
-                        if (runningSearches.values.any((running) => running)) searchProgressWidget,
+                        if (runningSearchesCount > 0) searchProgressWidget,
                       ],
                     ),
                   )

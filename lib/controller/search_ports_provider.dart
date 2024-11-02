@@ -35,8 +35,7 @@ class SearchPortsProvider with PortsProviderBase {
       portN: _ports[type],
       onPortNull: () async {
         await closePorts(type);
-        _ports[type] = (items: ReceivePort(), search: Completer<SendPort>());
-        return _ports[type]!;
+        return _ports[type] = (items: ReceivePort(), search: Completer<SendPort>());
       },
       onResult: onResult,
       isolateFunction: isolateFunction,

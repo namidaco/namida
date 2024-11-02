@@ -83,13 +83,12 @@ class SearchSortController {
 
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
-  RxBaseCore<Map<MediaType, bool>> get runningSearches => _runningSearches;
-
-  final _runningSearches = <MediaType, bool>{}.obs;
+  final runningSearchesTempCount = 0.obs;
 
   void searchAll(String text) {
     lastSearchText = text;
     final enabledSearches = settings.activeSearchMediaTypes;
+    if (text.isNotEmpty) runningSearchesTempCount.value = runningSearchesTempCount.value + enabledSearches.value.length;
 
     _searchTracks(text, temp: true);
 
@@ -170,6 +169,8 @@ class SearchSortController {
     final enabledSearches = <MediaType, bool>{};
     enabledSearchesList.loop((f) => enabledSearches[f] = true);
 
+    runningSearchesTempCount.value = runningSearchesTempCount.value + 1;
+
     final mainMapArtists = Indexer.inst.mainMapArtists.value.keys;
     final mainMapAA = Indexer.inst.mainMapAlbumArtists.value.keys;
     final mainMapComposers = Indexer.inst.mainMapComposer.value.keys;
@@ -177,20 +178,26 @@ class SearchSortController {
     final mainMapAlbums = Indexer.inst.mainMapAlbums.value.keys;
     final mainMapGenres = Indexer.inst.mainMapGenres.value.keys;
 
+    Future prepareOrDispose(MediaType type, Future<dynamic> Function() prepareFn) {
+      if (enabledSearches[type] ?? false) {
+        return prepareFn();
+      } else {
+        return SearchPortsProvider.inst.closePorts(type);
+      }
+    }
+
     await Future.wait([
       _prepareTracksPorts(),
-      if (enabledSearches[MediaType.album] ?? false) _prepareMediaPorts(mainMapAlbums, MediaType.album) else SearchPortsProvider.inst.closePorts(MediaType.album),
-      if (enabledSearches[MediaType.artist] ?? false) _prepareMediaPorts(mainMapArtists, MediaType.artist) else SearchPortsProvider.inst.closePorts(MediaType.artist),
-      if (enabledSearches[MediaType.albumArtist] ?? false) _prepareMediaPorts(mainMapAA, MediaType.albumArtist) else SearchPortsProvider.inst.closePorts(MediaType.albumArtist),
-      if (enabledSearches[MediaType.composer] ?? false) _prepareMediaPorts(mainMapComposers, MediaType.composer) else SearchPortsProvider.inst.closePorts(MediaType.composer),
-      if (enabledSearches[MediaType.genre] ?? false) _prepareMediaPorts(mainMapGenres, MediaType.genre) else SearchPortsProvider.inst.closePorts(MediaType.genre),
-      if (enabledSearches[MediaType.playlist] ?? false) _preparePlaylistPorts() else SearchPortsProvider.inst.closePorts(MediaType.playlist),
-      if (enabledSearches[MediaType.folder] ?? false) _prepareMediaPorts(mainMapFolder.keys, MediaType.folder) else SearchPortsProvider.inst.closePorts(MediaType.folder),
-      if (enabledSearches[MediaType.folderVideo] ?? false)
-        _prepareMediaPorts(mainMapFolderVideos.keys, MediaType.folderVideo)
-      else
-        SearchPortsProvider.inst.closePorts(MediaType.folderVideo),
+      prepareOrDispose(MediaType.album, () => _prepareMediaPorts(mainMapAlbums, MediaType.album)),
+      prepareOrDispose(MediaType.artist, () => _prepareMediaPorts(mainMapArtists, MediaType.artist)),
+      prepareOrDispose(MediaType.albumArtist, () => _prepareMediaPorts(mainMapAA, MediaType.albumArtist)),
+      prepareOrDispose(MediaType.composer, () => _prepareMediaPorts(mainMapComposers, MediaType.composer)),
+      prepareOrDispose(MediaType.genre, () => _prepareMediaPorts(mainMapGenres, MediaType.genre)),
+      prepareOrDispose(MediaType.playlist, () => _preparePlaylistPorts()),
+      prepareOrDispose(MediaType.folder, () => _prepareMediaPorts(mainMapFolder.keys, MediaType.folder)),
+      prepareOrDispose(MediaType.folderVideo, () => _prepareMediaPorts(mainMapFolderVideos.keys, MediaType.folderVideo)),
     ]);
+    runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
   }
 
   void disposeResources() {
@@ -202,7 +209,9 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.track,
       onResult: (result) {
-        _runningSearches[MediaType.track] = false;
+        runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
+        if (result == null) return; // -- prepared
+
         final r = result as (List<Track>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -222,7 +231,7 @@ class SearchSortController {
     );
   }
 
-  Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort, {bool sendPrepared = false}) {
+  Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort) {
     final params = {
       'tracks': Indexer.inst.allTracksMappedByPath.values
           .map((e) => {
@@ -240,10 +249,8 @@ class SearchSortController {
           .toList(),
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
       'genresSplitConfig': GenresSplitConfig.settings().toMap(),
-      // ignore: invalid_use_of_protected_member
       'filters': settings.trackSearchFilter.value,
       'cleanup': _shouldCleanup,
-      'sendPrepared': sendPrepared,
       'sendPort': sendPort,
     };
     return params;
@@ -253,7 +260,8 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: MediaType.playlist,
       onResult: (result) {
-        _runningSearches[MediaType.playlist] = false;
+        runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
+        if (result == null) return; // -- prepared
 
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
@@ -287,7 +295,9 @@ class SearchSortController {
     return await SearchPortsProvider.inst.preparePorts(
       type: type,
       onResult: (result) {
-        _runningSearches[type] = false;
+        runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
+        if (result == null) return; // -- prepared
+
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -321,7 +331,6 @@ class SearchSortController {
       }
       return;
     }
-    _runningSearches[MediaType.track] = true;
     final sp = await _prepareTracksPorts();
     sp.send({
       'text': text,
@@ -335,7 +344,6 @@ class SearchSortController {
     final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
     final tsf = params['filters'] as List<TrackSearchFilter>;
     final cleanup = params['cleanup'] as bool;
-    final sendPrepared = params['sendPrepared'] as bool?;
     final sendPort = params['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
@@ -442,7 +450,8 @@ class SearchSortController {
 
       sendPort.send((result, temp, text));
     });
-    if (sendPrepared == true) sendPort.send(null);
+
+    sendPort.send(null);
   }
 
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
@@ -477,7 +486,6 @@ class SearchSortController {
       return;
     }
 
-    _runningSearches[type] = true;
     final sp = await _prepareMediaPorts(keys, type);
     sp.send({
       'text': text,
@@ -495,7 +503,7 @@ class SearchSortController {
       }
       return;
     }
-    _runningSearches[MediaType.playlist] = true;
+
     final sp = await _preparePlaylistPorts();
     sp.send({
       'text': text,
@@ -583,6 +591,8 @@ class SearchSortController {
       });
       sendPort.send((results, temp, text));
     });
+
+    sendPort.send(null);
   }
 
   void sortAll() {
@@ -1011,6 +1021,8 @@ class SearchSortController {
       }
       sendPort.send((results, temp, text));
     });
+
+    sendPort.send(null);
   }
 
   bool get _shouldCleanup => settings.enableSearchCleanup.value;

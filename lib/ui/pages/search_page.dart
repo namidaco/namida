@@ -214,22 +214,25 @@ class SearchPage extends StatelessWidget {
                                   (context) {
                                     final activeList = settings.activeSearchMediaTypes.valueR;
 
-                                    final tracksSearchTemp = SearchSortController.inst.trackSearchTemp.valueR;
-                                    final albumSearchTemp = SearchSortController.inst.albumSearchTemp.valueR;
-                                    final artistSearchTemp = SearchSortController.inst.artistSearchTemp.valueR;
-                                    final albumArtistSearchTemp = SearchSortController.inst.albumArtistSearchTemp.valueR;
-                                    final composerSearchTemp = SearchSortController.inst.composerSearchTemp.valueR;
-                                    final genreSearchTemp = SearchSortController.inst.genreSearchTemp.valueR;
-                                    final playlistSearchTemp = SearchSortController.inst.playlistSearchTemp.valueR;
-                                    final folderSearchTemp = SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder.explicit(f).tracks().isNotEmpty).toList();
-                                    final folderVideosSearchTemp =
-                                        SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracks().isNotEmpty).toList();
+                                    final tracksSearchTemp = !activeList.contains(MediaType.track) ? null : SearchSortController.inst.trackSearchTemp.valueR;
+                                    final albumSearchTemp = !activeList.contains(MediaType.album) ? null : SearchSortController.inst.albumSearchTemp.valueR;
+                                    final artistSearchTemp = !activeList.contains(MediaType.artist) ? null : SearchSortController.inst.artistSearchTemp.valueR;
+                                    final albumArtistSearchTemp = !activeList.contains(MediaType.albumArtist) ? null : SearchSortController.inst.albumArtistSearchTemp.valueR;
+                                    final composerSearchTemp = !activeList.contains(MediaType.composer) ? null : SearchSortController.inst.composerSearchTemp.valueR;
+                                    final genreSearchTemp = !activeList.contains(MediaType.genre) ? null : SearchSortController.inst.genreSearchTemp.valueR;
+                                    final playlistSearchTemp = !activeList.contains(MediaType.playlist) ? null : SearchSortController.inst.playlistSearchTemp.valueR;
+                                    final folderSearchTemp = !activeList.contains(MediaType.folder)
+                                        ? null
+                                        : SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder.explicit(f).tracks().isNotEmpty).toList();
+                                    final folderVideosSearchTemp = !activeList.contains(MediaType.folderVideo)
+                                        ? null
+                                        : SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracks().isNotEmpty).toList();
 
                                     return CustomScrollView(
                                       controller: sc,
                                       slivers: [
                                         // == Albums ==
-                                        if (activeList.contains(MediaType.album) && albumSearchTemp.isNotEmpty) ...[
+                                        if (albumSearchTemp != null && albumSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
                                               title: '${lang.ALBUMS} • ${albumSearchTemp.length}',
@@ -260,7 +263,7 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Artists ==
-                                        if (activeList.contains(MediaType.artist) && artistSearchTemp.isNotEmpty)
+                                        if (artistSearchTemp != null && artistSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
                                             title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
                                             icon: Broken.user,
@@ -272,7 +275,7 @@ class SearchPage extends StatelessWidget {
                                           ),
 
                                         // == Album Artists ==
-                                        if (activeList.contains(MediaType.albumArtist) && albumArtistSearchTemp.isNotEmpty)
+                                        if (albumArtistSearchTemp != null && albumArtistSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
                                             title: '${lang.ALBUM_ARTISTS} • ${albumArtistSearchTemp.length}',
                                             icon: Broken.user,
@@ -284,7 +287,7 @@ class SearchPage extends StatelessWidget {
                                           ),
 
                                         // == Composers ==
-                                        if (activeList.contains(MediaType.composer) && composerSearchTemp.isNotEmpty)
+                                        if (composerSearchTemp != null && composerSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
                                             title: '${lang.COMPOSER} • ${composerSearchTemp.length}',
                                             icon: Broken.profile_2user,
@@ -296,7 +299,7 @@ class SearchPage extends StatelessWidget {
                                           ),
 
                                         // == Genres ==
-                                        if (activeList.contains(MediaType.genre) && genreSearchTemp.isNotEmpty) ...[
+                                        if (genreSearchTemp != null && genreSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
                                               title: '${lang.GENRES} • ${genreSearchTemp.length}',
@@ -327,7 +330,7 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Playlists ==
-                                        if (activeList.contains(MediaType.playlist) && playlistSearchTemp.isNotEmpty) ...[
+                                        if (playlistSearchTemp != null && playlistSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
                                               title: '${lang.PLAYLISTS} • ${playlistSearchTemp.length}',
@@ -360,7 +363,7 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Folders ==
-                                        if (activeList.contains(MediaType.folder) && folderSearchTemp.isNotEmpty) ...[
+                                        if (folderSearchTemp != null && folderSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
                                               title: '${lang.FOLDERS} • ${folderSearchTemp.length}',
@@ -382,7 +385,7 @@ class SearchPage extends StatelessWidget {
                                           ),
                                         ],
                                         // == Video Folders ==
-                                        if (activeList.contains(MediaType.folderVideo) && folderVideosSearchTemp.isNotEmpty) ...[
+                                        if (folderVideosSearchTemp != null && folderVideosSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
                                               title: '${lang.VIDEOS} • ${folderVideosSearchTemp.length}',
@@ -405,7 +408,7 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Tracks ==
-                                        if (activeList.contains(MediaType.track) && tracksSearchTemp.isNotEmpty) ...[
+                                        if (tracksSearchTemp != null && tracksSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: Tooltip(
                                               message: lang.TRACK_PLAY_MODE,

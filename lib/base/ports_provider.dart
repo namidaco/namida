@@ -23,6 +23,7 @@ mixin PortsProvider<E> {
   bool get isInitialized => _isInitialized ?? false;
 
   Completer<SendPort>? _portCompleter;
+  SendPort? _portCompleterResult;
   ReceivePort? _recievePort;
   StreamSubscription? _streamSub;
   Isolate? _isolate;
@@ -31,7 +32,7 @@ mixin PortsProvider<E> {
   Completer<void>? _initializingCompleter;
 
   Future<void> sendPort(Object? message) async {
-    (await _portCompleter?.future)?.send(message);
+    (_portCompleterResult ?? await _portCompleter?.future)?.send(message);
   }
 
   static bool isDisposeMessage(dynamic message) => message == _PortsProviderDisposeMessage;
@@ -46,6 +47,7 @@ mixin PortsProvider<E> {
     onPreparing(false);
     _initializingCompleter = null;
     _portCompleter = null;
+    _portCompleterResult = null;
     _recievePort = null;
     _streamSub = null;
     _isolate = null;
@@ -65,6 +67,7 @@ mixin PortsProvider<E> {
     _streamSub = _recievePort?.listen((result) {
       if (result is SendPort) {
         _portCompleter?.completeIfWasnt(result);
+        _portCompleterResult = result;
       } else {
         onResult(result);
       }

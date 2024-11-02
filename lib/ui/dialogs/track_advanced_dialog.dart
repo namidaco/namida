@@ -735,13 +735,14 @@ class _TracksSearchTemp with PortsProvider<Map> {
 
   @override
   void onResult(dynamic result) {
+    if (result == null) return;
     final r = result as (List<Track>, bool, String);
     _onResult(r.$1);
   }
 
   @override
   IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
-    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, sendPrepared: true);
+    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port);
     return IsolateFunctionReturnBuild(SearchSortController.searchTracksIsolate, params);
   }
 
