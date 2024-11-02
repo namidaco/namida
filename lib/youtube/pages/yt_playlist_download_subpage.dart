@@ -136,7 +136,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       playlistId: widget.playlistInfo?.id,
       initialGroupName: widget.playlistName,
       showSpecificFileOptionsInEditTagDialog: false,
-      preferAudioOnly: settings.downloadAudioOnly.value,
       videoId: id,
       initialItemConfig: _configMap[id],
       confirmButtonText: lang.CONFIRM,

@@ -48,7 +48,6 @@ Future<void> showDownloadVideoBottomSheet({
   required int? originalIndex,
   required int? totalLength,
   required StreamInfoItem? streamInfoItem,
-  bool preferAudioOnly = false,
   String? initialGroupName,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
@@ -167,7 +166,7 @@ Future<void> showDownloadVideoBottomSheet({
         showAudioWebm.value = true;
       }
     }
-    if (!preferAudioOnly) {
+    if (settings.downloadAudioOnly.value == false) {
       selectedVideoOnlyStream.value = streams?.videoStreams.firstWhereEff(
             (e) {
               final cached = e.getCachedFile(videoId);

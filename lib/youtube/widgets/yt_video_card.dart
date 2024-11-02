@@ -60,6 +60,7 @@ class YoutubeVideoCard extends StatelessWidget {
       channelID: video.channel.id,
       playlistID: playlistID,
       idsNamesLookup: {videoId: video.title},
+      playlistName: playlist?.basicInfo.title ?? '',
     );
   }
 
@@ -169,6 +170,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
       channelID: null,
       playlistID: playlistID,
       idsNamesLookup: {videoId: short.title},
+      playlistName: playlist?.basicInfo.title ?? '',
     );
   }
 
