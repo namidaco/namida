@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/folder.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -74,11 +74,11 @@ class SearchSortController {
 
   RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
   Map<String, List<Track>> get mainMapFolder {
-    return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path.getDirectoryName, value));
+    return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path, value));
   }
 
   Map<String, List<Video>> get mainMapFolderVideos {
-    return Indexer.inst.mainMapFoldersVideos.map((key, value) => MapEntry(key.path.getDirectoryName, value));
+    return Indexer.inst.mainMapFoldersVideos.map((key, value) => MapEntry(key.path, value));
   }
 
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
@@ -995,13 +995,11 @@ class SearchSortController {
 
       final results = <String>[];
       if (keyIsPath) {
-        keys.loop((path) {
-          String pathN = path;
-          while (pathN.isNotEmpty && pathN[pathN.length - 1] == Platform.pathSeparator) {
-            pathN = pathN.substring(0, pathN.length);
-          }
-          if (cleanupFunction(pathN.splitLast(Platform.pathSeparator)).contains(cleanupFunction(text))) {
-            results.add(pathN);
+        keys.loop((folderPath) {
+          final folder = Folder.explicit(folderPath);
+          final folderName = folder.folderName;
+          if (cleanupFunction(folderName).contains(cleanupFunction(text))) {
+            results.add(folderPath);
           }
         });
       } else {
