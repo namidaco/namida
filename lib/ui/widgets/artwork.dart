@@ -10,12 +10,14 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/drop_shadow.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class ArtworkWidget extends StatefulWidget {
   /// path of image file.
@@ -91,9 +93,19 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   void initState() {
     if (widget.path != null && File(widget.path!).existsSync()) {
       _imagePath = widget.path;
-    } else {
-      Future.delayed(Duration.zero, _extractArtwork);
+      return;
     }
+    if (widget.track != null) {
+      final id = widget.track!.youtubeID;
+      final ytImg = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(type: ThumbnailType.video, id: id, isTemp: false);
+      if (ytImg != null) {
+        _imagePath = ytImg.path;
+        return;
+      }
+    }
+
+    Future.delayed(Duration.zero, _extractArtwork);
+
     super.initState();
   }
 
