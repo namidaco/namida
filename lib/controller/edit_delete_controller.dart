@@ -198,7 +198,7 @@ class EditDeleteController {
   }
 
   Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
-    settings.save(directoriesToScan: [newDir]);
+    if (!settings.directoriesToScan.value.any((dirPath) => newDir.startsWith(dirPath))) settings.save(directoriesToScan: [newDir]);
     final pathSeparator = Platform.pathSeparator;
     if (!oldDir.endsWith(pathSeparator)) oldDir += pathSeparator;
     if (!newDir.endsWith(pathSeparator)) newDir += pathSeparator;
