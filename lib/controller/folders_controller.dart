@@ -153,13 +153,8 @@ class Folders<T extends Folder> {
           final parsedA = parsedMap[a];
           final parsedB = parsedMap[b];
           if (parsedA != null && parsedB != null) {
-            if (parsedA.startAtIndex == parsedB.startAtIndex) {
-              // -- basically checking textPart is enough to know but we check startAtIndex to speed things up.
-              if (parsedA.textPart == parsedB.textPart) {
-                final numbersCompare = parsedA.extractedNumber.compareTo(parsedB.extractedNumber);
-                if (numbersCompare != 0) return numbersCompare;
-              }
-            }
+            final numbersCompare = parsedA.compare(parsedB);
+            if (numbersCompare != null && numbersCompare != 0) return numbersCompare;
           }
           return a.compareTo(b);
         },
@@ -172,12 +167,35 @@ class Folders<T extends Folder> {
   Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {
     final parsedMap = <String, _ParsedResult?>{};
     for (final n in names) {
-      parsedMap[n] = _parseNumberAtEnd(n);
+      parsedMap[n] = _numberInFilename(n) ?? _parseNumberAtEnd(n);
     }
     return parsedMap;
   }
 
-  _ParsedResult? _parseNumberAtEnd(String text) {
+  static final _numberInFilenameRegex = RegExp(r'(.*music\W*)(\d+(\.\d+)?)', caseSensitive: false);
+  static _ParsedResult? _numberInFilename(String text) {
+    final m = _numberInFilenameRegex.firstMatch(text);
+    if (m != null) {
+      final nmbrtxt = m.group(2);
+      if (nmbrtxt != null) {
+        final parsednmbr = num.tryParse(nmbrtxt);
+        if (parsednmbr != null) {
+          int numberStartIndex = m[0]?.indexOf(nmbrtxt) ?? 0;
+          if (numberStartIndex < 0) numberStartIndex = 0;
+          return _ParsedResult(
+            extractedNumber: parsednmbr,
+            charactersCount: nmbrtxt.length,
+            startAtIndex: numberStartIndex,
+            textPart: m.group(1) ?? text.substring(0, numberStartIndex),
+          );
+        }
+      }
+    }
+
+    return null;
+  }
+
+  static _ParsedResult? _parseNumberAtEnd(String text) {
     final codes = text.codeUnits;
     final codesL = codes.length;
     bool wasAddingNumber = false;
@@ -221,6 +239,18 @@ class _ParsedResult {
     required this.startAtIndex,
     required this.textPart,
   });
+
+  int? compare(_ParsedResult parsedB) {
+    final parsedA = this;
+    if (parsedA.startAtIndex == parsedB.startAtIndex) {
+      // -- basically checking textPart is enough to know but we check startAtIndex to speed things up.
+      if (parsedA.textPart == parsedB.textPart) {
+        final numbersCompare = parsedA.extractedNumber.compareTo(parsedB.extractedNumber);
+        if (numbersCompare != 0) return numbersCompare;
+      }
+    }
+    return null;
+  }
 }
 
 class FoldersPageConfig {
