@@ -300,16 +300,27 @@ class TrackExtended {
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
 
+  static final _yearFormatRegex = RegExp(r'[\s]');
   static int? enforceYearFormat(String? fromYearString) {
     final intVal = fromYearString.getIntValue();
     if (intVal != null) return intVal;
     if (fromYearString != null) {
       try {
-        final yearDate = DateTime.parse(fromYearString.replaceAll(RegExp(r'[\s]'), '-'));
+        final yearDate = DateTime.parse(fromYearString.replaceAll(_yearFormatRegex, '-'));
         return int.parse("${yearDate.year}${_padInt(yearDate.month)}${_padInt(yearDate.day)}");
       } catch (_) {}
     }
     return null;
+  }
+
+  static final _trNmbrRegex = RegExp(r'[/\\|,-]');
+  static (int?, int?)? parseTrackNumber(String? trnmbr) {
+    if (trnmbr == null) return null;
+    final parts = trnmbr.split(_trNmbrRegex);
+    return (
+      parts[0].getIntValue(),
+      parts.length > 1 ? parts[1].getIntValue() : null,
+    );
   }
 
   factory TrackExtended.fromJson(
@@ -547,14 +558,14 @@ extension TrackExtUtils on TrackExtended {
       originalMood: tag.mood ?? originalMood,
       moodList: finalmoods,
       composer: tag.composer ?? composer,
-      trackNo: tag.trackNumber.getIntValue() ?? trackNo,
+      trackNo: TrackExtended.parseTrackNumber(tag.trackNumber)?.$1 ?? trackNo,
       year: TrackExtended.enforceYearFormat(tag.year) ?? year,
       dateModified: dateModified ?? this.dateModified,
       path: path ?? this.path,
       comment: tag.comment ?? comment,
       description: tag.description ?? description,
       synopsis: tag.synopsis ?? synopsis,
-      discNo: tag.discNumber.getIntValue() ?? discNo,
+      discNo: TrackExtended.parseTrackNumber(tag.discNumber)?.$1 ?? discNo,
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
