@@ -538,10 +538,12 @@ SnackbarController? snackyy({
 
   bool alreadyTappedButton = false;
 
+  final snackWidth = view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio;
+
   final content = Padding(
     padding: paddingInsets,
     child: SizedBox(
-      width: view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio,
+      width: snackWidth,
       child: Row(
         children: [
           if (icon != null)
@@ -570,7 +572,14 @@ SnackbarController? snackyy({
           ),
           if (button != null)
             TextButton(
-              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              style: ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                maximumSize: snackWidth == null
+                    ? null
+                    : material.WidgetStatePropertyAll(
+                        Size(snackWidth * 0.5, double.infinity),
+                      ),
+              ),
               onPressed: () {
                 if (alreadyTappedButton) return;
                 alreadyTappedButton = true;

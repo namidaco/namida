@@ -195,8 +195,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     double thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
     if (minimalCard) {
       // this might crop the image since we enabling forceSquared.
-      thumbHeight -= 3.0;
-      thumbWidth -= 3.0;
+      thumbHeight -= 6.0;
+      thumbWidth -= 8.0;
     }
 
     final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
@@ -263,25 +263,27 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
             if (threeLines != null) draggingBarsBuilder?.call(itemsColor5) ?? threeLines,
             SizedBox(
               width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
-              height: minimalCard ? 1.0 : null,
             ),
             Stack(
               alignment: Alignment.center,
               children: [
                 Center(
-                  child: YoutubeThumbnail(
-                    type: ThumbnailType.video,
-                    key: Key(videoId),
-                    borderRadius: 8.0,
-                    isImportantInCache: isImportantInCache,
-                    width: thumbWidth,
-                    height: thumbHeight,
-                    videoId: videoId,
-                    preferLowerRes: true,
-                    customUrl: info?.liveThumbs.pick()?.url,
-                    smallBoxText: duration,
-                    smallBoxIcon: willSleepAfterThis ? Broken.timer_1 : null,
-                    forceSquared: true, // -- if false, low quality images with black bars would appear
+                  child: Padding(
+                    padding: const EdgeInsets.all(1.0),
+                    child: YoutubeThumbnail(
+                      type: ThumbnailType.video,
+                      key: Key(videoId),
+                      borderRadius: 8.0,
+                      isImportantInCache: isImportantInCache,
+                      width: thumbWidth,
+                      height: thumbHeight,
+                      videoId: videoId,
+                      preferLowerRes: true,
+                      customUrl: info?.liveThumbs.pick()?.url,
+                      smallBoxText: duration,
+                      smallBoxIcon: willSleepAfterThis ? Broken.timer_1 : null,
+                      forceSquared: true, // -- if false, low quality images with black bars would appear
+                    ),
                   ),
                 ),
                 if (draggingThumbWidget != null) draggingThumbnailBuilder?.call(draggingThumbWidget) ?? draggingThumbWidget
@@ -290,7 +292,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
             const SizedBox(width: 12.0),
             Expanded(
               child: Padding(
-                  padding: minimalCard ? const EdgeInsets.all(4.0) : EdgeInsets.zero,
+                  padding: minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,

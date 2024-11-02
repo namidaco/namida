@@ -95,7 +95,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   }
 
   void startDimTimer() {
-    cancelDimTimer();
+    _dimTimer?.cancel();
     if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) return;
     final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
     if (defaultMiniplayerDimSeconds <= 0) return;
@@ -1213,7 +1213,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 final finalspace5sb = space5sb * inversePerc;
                                 final finalpadding = 4.0 * inversePerc;
                                 final finalbr = (8.0 * inversePerc).multipliedRadius;
-                                final finalthumbnailWidth = (space2ForThumbnail + maxWidth * percentage).clamp(space2ForThumbnail, maxWidth - finalspace1sb - finalspace3sb);
+                                final double finalthumbnailWidth = (space2ForThumbnail + maxWidth * percentage).clamp(space2ForThumbnail, maxWidth - finalspace1sb - finalspace3sb);
                                 final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
                                 return Stack(

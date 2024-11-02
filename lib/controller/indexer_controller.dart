@@ -1279,7 +1279,6 @@ class Indexer<T extends Track> {
 
     tracksExcludedByNoMedia.value += excludedByNoMedia.length;
 
-    // ignore: invalid_use_of_protected_member
     allAudioFiles.value = allPaths;
     allFolderCovers = folderCovers;
 

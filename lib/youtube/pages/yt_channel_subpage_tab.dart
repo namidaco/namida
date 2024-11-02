@@ -88,15 +88,16 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
   @override
   Widget build(BuildContext context) {
     final tabResult = _tabResult;
-    const itemThumbnailHeight = Dimensions.youtubeThumbnailHeight;
-    const itemThumbnailWidth = Dimensions.youtubeThumbnailWidth;
-    const itemThumbnailItemExtent = itemThumbnailHeight + 8.0 * 2;
-
     final displaySortChips = tabResult != null && tabResult.itemsSort.isNotEmpty;
 
     const paddingBeforeHeader = 18.0;
     const paddingForThumbnail = 12.0;
     const paddingAfterHeader = 6.0;
+
+    const itemThumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const itemThumbnailWidth = Dimensions.youtubeThumbnailWidth;
+    const itemThumbnailItemExtent = itemThumbnailHeight + 8.0 * 2;
+
     const homeSectionHeight = itemThumbnailHeight * 2.1;
 
     return Column(
@@ -251,7 +252,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                           child: ListView.builder(
                                             padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                             scrollDirection: Axis.horizontal,
-                                            itemExtent: itemThumbnailWidth,
+                                            itemExtent: itemThumbnailWidth + paddingForThumbnail,
                                             itemCount: subItems.length,
                                             itemBuilder: (context, index) {
                                               final subItem = subItems[index];
@@ -261,7 +262,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                                   playlist: subItem,
                                                   minimalCard: true,
                                                   thumbnailHeight: itemThumbnailHeight,
-                                                  thumbnailWidth: itemThumbnailWidth,
+                                                  thumbnailWidth: itemThumbnailWidth + paddingForThumbnail,
                                                   subtitle: subItem.subtitle,
                                                   firstVideoID: subItem.initialVideos.firstOrNull?.id,
                                                   playingId: null,
@@ -318,7 +319,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                                   }
                                                   return null;
                                                 },
-                                                minimalCardWidth: itemThumbnailWidth,
+                                                minimalCardWidth: itemThumbnailWidth + paddingForThumbnail,
                                               );
                                             },
                                           ),

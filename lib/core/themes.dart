@@ -83,7 +83,7 @@ class AppThemes {
         style: ButtonStyle(
           visualDensity: VisualDensity.compact,
           padding: const WidgetStatePropertyAll(
-            EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+            EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           ),
           iconSize: const WidgetStatePropertyAll(21.0),
           backgroundColor: WidgetStatePropertyAll(light
@@ -124,7 +124,12 @@ class AppThemes {
                 ),
                 visualDensity: VisualDensity.compact,
               )
-            : null,
+            : const ButtonStyle(
+                padding: WidgetStatePropertyAll(
+                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
       ),
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(

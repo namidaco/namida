@@ -520,6 +520,7 @@ class NamidaButton extends StatelessWidget {
   final double? iconSize;
   final String? text;
   final Widget? textWidget;
+  final ButtonStyle? style;
 
   /// will be used if the icon only is sent.
   final String Function()? tooltip;
@@ -533,6 +534,7 @@ class NamidaButton extends StatelessWidget {
     this.iconSize,
     this.text,
     this.textWidget,
+    this.style,
     this.tooltip,
     required this.onPressed,
     this.minimumSize = false,
@@ -560,7 +562,7 @@ class NamidaButton extends StatelessWidget {
             minimumSize: const Size(32.0, 38.0),
             padding: EdgeInsets.zero,
           )
-        : null;
+        : this.style;
     if (textWidget != null) {
       return _getWidget(
         ElevatedButton(
@@ -941,9 +943,10 @@ class NamidaExpansionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTileTheme(
-      // horizontalTitleGap: 12.0,
       dense: true,
       child: ExpansionTile(
+        visualDensity: VisualDensity.compact,
+        controlAffinity: ListTileControlAffinity.trailing,
         collapsedBackgroundColor: bgColor,
         backgroundColor: bgColor,
         initiallyExpanded: initiallyExpanded,
@@ -3867,7 +3870,7 @@ class AnimatedEnabled extends StatelessWidget {
 class QueueUtilsRow extends StatelessWidget {
   final String Function(int number) itemsKeyword;
   final void Function() onAddItemsTap;
-  final Widget scrollQueueWidget;
+  final Widget Function(ButtonStyle buttonStyle) scrollQueueWidget;
 
   const QueueUtilsRow({
     super.key,
@@ -3880,11 +3883,17 @@ class QueueUtilsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     const tileHeight = 48.0;
     const tileVPadding = 3.0;
+    const buttonStyle = ButtonStyle(
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+      ),
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         const SizedBox(width: 12.0),
         NamidaButton(
+          style: buttonStyle,
           tooltip: () => lang.REMOVE_DUPLICATES,
           icon: Broken.broom,
           onPressed: () {
@@ -3898,12 +3907,13 @@ class QueueUtilsRow extends StatelessWidget {
         ),
         const SizedBox(width: 6.0),
         NamidaButton(
+          style: buttonStyle,
           tooltip: () => lang.NEW_TRACKS_ADD,
           icon: Broken.add_circle,
           onPressed: () => onAddItemsTap(),
         ),
         const SizedBox(width: 6.0),
-        scrollQueueWidget,
+        scrollQueueWidget(buttonStyle),
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
@@ -3948,6 +3958,7 @@ class QueueUtilsRow extends StatelessWidget {
             );
           },
           child: NamidaButton(
+            style: buttonStyle,
             text: lang.SHUFFLE,
             icon: Broken.shuffle,
             onPressed: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),

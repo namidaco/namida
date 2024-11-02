@@ -416,8 +416,8 @@ Future<void> showTrackInfoDialog(
                               title: lang.FORMAT,
                               value: [
                                 track.audioInfoFormattedCompact,
-                                track.gainDataFormatted,
                                 '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
+                                track.gainDataFormatted,
                               ].joinText(separator: '\n'),
                               icon: Broken.voice_cricle,
                             ),
@@ -498,37 +498,45 @@ class TrackInfoListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const iconSize = 17.0;
+    const textToIconPaddingCorrector = EdgeInsets.only(top: 1.0);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: NamidaInkWell(
         borderRadius: 16.0,
         onTap: () => _copyField(context),
         onLongPress: () => _copyField(context),
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 6.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
         child: Wrap(
           runSpacing: 6.0,
           children: [
             Icon(
               icon,
-              size: 17.0,
+              size: iconSize,
               color: context.theme.colorScheme.onSurface.withAlpha(220),
             ),
             const SizedBox(width: 6.0),
-            Text(
-              '$title:',
-              style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(220)),
+            Padding(
+              padding: textToIconPaddingCorrector,
+              child: Text(
+                '$title:',
+                style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(220)),
+              ),
             ),
             const SizedBox(width: 4.0),
-            child ??
-                (isComment
-                    ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
-                    : Text(
-                        value == '' ? '?' : value,
-                        style: context.theme.textTheme.displayMedium?.copyWith(
-                          color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
-                          fontSize: 13.5,
-                        ),
-                      )),
+            Padding(
+              padding: textToIconPaddingCorrector,
+              child: child ??
+                  (isComment
+                      ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
+                      : Text(
+                          value == '' ? '?' : value,
+                          style: context.theme.textTheme.displayMedium?.copyWith(
+                            color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
+                            fontSize: 13.5,
+                          ),
+                        )),
+            ),
           ],
         ),
       ),
