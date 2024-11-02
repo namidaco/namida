@@ -2991,21 +2991,22 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
       tooltip: () => lang.JUMP_TO_DAY,
       onPressed: () {
         final info = itemExtentAndDayHeaderExtent();
-        final currentScrolledDay = controller.currentScrollPositionToDay(info.itemExtent, info.dayHeaderExtent);
+        const topPadding = 100.0;
+        final currentScrolledDay = controller.currentScrollPositionToDay(info.itemExtent, info.dayHeaderExtent, topPadding: topPadding);
         showCalendarDialog(
           historyController: controller,
           title: lang.JUMP_TO_DAY,
           buttonText: lang.JUMP,
           calendarType: CalendarDatePicker2Type.single,
           useHistoryDates: true,
-          initialDate: currentScrolledDay == null ? null : DateTime(1970, 0, currentScrolledDay),
+          initialDate: currentScrolledDay == null ? null : DateTime(1970).add(Duration(days: currentScrolledDay)),
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
             final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
             final days = controller.historyDays.toList();
             days.removeWhere((element) => element <= dayToScrollTo);
             double totalScrollOffset = controller.daysToSectionExtent(days);
-            controller.scrollController.jumpTo(totalScrollOffset + 100.0);
+            controller.scrollController.jumpTo(totalScrollOffset + topPadding);
           },
         );
       },
