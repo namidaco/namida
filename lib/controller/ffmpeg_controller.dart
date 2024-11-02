@@ -6,7 +6,6 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -175,6 +174,7 @@ class NamidaFFMPEG {
       ext = audioPath.getExtension;
     } catch (_) {}
 
+    final isVideoFile = NamidaFileExtensionsWrapper.video.isExtensionValid(ext);
     final cacheFile = FileParts.join(AppDirs.APP_CACHE, "${audioPath.hashCode}.$ext");
     final didSuccess = await _executer.ffmpegExecute([
       '-i',
@@ -182,12 +182,16 @@ class NamidaFFMPEG {
       '-i',
       thumbnailPath,
       '-map',
-      '0',
+      '0:a?',
+      if (isVideoFile) ...[
+        '-map',
+        '0:v:0?',
+      ],
       '-map',
       '1',
       '-codec',
       'copy',
-      '-disposition:v',
+      isVideoFile ? '-disposition:v:1' : '-disposition:v:0',
       'attached_pic',
       '-y',
       cacheFile.path,
