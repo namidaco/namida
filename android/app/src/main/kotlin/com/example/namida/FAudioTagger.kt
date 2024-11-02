@@ -140,6 +140,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
               BetterEventChannel(binaryMessenger, "faudiotagger/stream/" + streamKey)
           )
           val eventChannel = eventChannels.get(streamKey)!!
+          val eventChannelIndices = BetterEventChannel(binaryMessenger, "faudiotagger/stream/" + streamKey + ".index")
 
           streamCompleters.set(streamKey, CompletableFuture<Number>())
           result.success(streamKey)
@@ -148,10 +149,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             _addLogsUser()
             // waiting for confirmation before posting to stream
             streamCompleters.get(streamKey)!!.get()
+            var index: Int = -1
             for (p in paths) {
+              var map = HashMap<String, Any>()
+              index++
+              withContext(Dispatchers.Main) { eventChannelIndices.success(index) }
+
               try {
                 withTimeout(6000) {
-                  val map =
+                  map =
                       readAllData(
                           p,
                           artworkDirectory,
@@ -159,18 +165,19 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                           extractArtwork,
                           overrideArtwork,
                       )
-                  map["path"] = p
-                  withContext(Dispatchers.Main) { eventChannel.success(map) }
                 }
               } catch (_: Exception) {
-                val map = HashMap<String, Any>()
-                map["path"] = p
                 map["ERROR_FAULTY"] = true
-                withContext(Dispatchers.Main) { eventChannel.success(map) }
               }
+              map["path"] = p
+              map["_i_"] = index
+              withContext(Dispatchers.Main) { eventChannel.success(map) }
             }
             withContext(Dispatchers.Main) { eventChannel.endOfStream() }
+            withContext(Dispatchers.Main) { eventChannelIndices.endOfStream() }
             _removeLogsUser()
+            eventChannels.remove(streamKey)
+            streamCompleters.remove(streamKey)
           }
         } else {
           result.error("Failure", "path parameter isn't provided", "")

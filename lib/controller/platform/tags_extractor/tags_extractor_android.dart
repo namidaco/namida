@@ -52,30 +52,6 @@ class _TagsExtractorAndroid extends TagsExtractor {
     }
   }
 
-  Future<Stream<Map<String, dynamic>>> _readAllDataAsStream({
-    required int streamKey,
-    required List<String> paths,
-    String? artworkDirectory,
-    bool extractArtwork = true,
-    bool overrideArtwork = false,
-  }) async {
-    await _channel.invokeMethod("readAllDataAsStream", {
-      "streamKey": streamKey,
-      "paths": paths,
-      "artworkDirectory": artworkDirectory,
-      "extractArtwork": extractArtwork,
-      "overrideArtwork": overrideArtwork,
-      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
-    });
-    final channelEvent = EventChannel('faudiotagger/stream/$streamKey');
-    final stream = channelEvent.receiveBroadcastStream().map((event) {
-      final message = event as Map<Object?, Object?>;
-      final map = message.cast<String, dynamic>();
-      return map;
-    });
-    return stream;
-  }
-
   @override
   Future<FAudioModel> extractMetadata({
     required String trackPath,
@@ -152,15 +128,18 @@ class _TagsExtractorAndroid extends TagsExtractor {
     bool overrideArtwork = false,
   }) async {
     final streamKey = DateTime.now().microsecondsSinceEpoch;
-    final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
-    final initialStream = await _readAllDataAsStream(
-      streamKey: streamKey,
-      paths: paths,
-      extractArtwork: extractArtwork,
-      artworkDirectory: artworkDirectory,
-      overrideArtwork: overrideArtwork,
-    );
     StreamSubscription<dynamic>? streamSub;
+    StreamSubscription<dynamic>? streamSubIndices;
+    final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
+
+    await _channel.invokeMethod("readAllDataAsStream", {
+      "streamKey": streamKey,
+      "paths": paths,
+      "artworkDirectory": artworkDirectory,
+      "extractArtwork": extractArtwork,
+      "overrideArtwork": overrideArtwork,
+      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
+    });
     final usingStream = Completer<void>();
     int toExtract = paths.length;
 
@@ -171,54 +150,50 @@ class _TagsExtractorAndroid extends TagsExtractor {
       await usingStream.future;
       streamController.close();
       streamSub?.cancel();
+      streamSubIndices?.cancel();
       _streamControllers.remove(streamKey);
       currentPathsBeingExtracted.remove(streamKey);
     }
 
-    int extractingCount = 0;
-    void incrementCurrentExtracting() {
-      if (paths.isEmpty) return;
-      try {
-        extractingCount++;
-        currentPathsBeingExtracted[streamKey] = paths[extractingCount];
-      } catch (_) {}
-    }
-
-    void onExtract(FAudioModel info) {
+    void onExtract(FAudioModel info, int index) {
       streamController.add(info);
       toExtract--;
-      incrementCurrentExtracting();
       if (toExtract <= 0) {
         usingStream.completeIfWasnt();
         closeStreams();
       }
     }
 
-    // currentPathsBeingExtracted[streamKey] = paths[0];
-
-    streamSub = initialStream.listen(
-      (map) {
-        final path = map['path'] as String;
-        if (map["ERROR_FAULTY"] == true) {
-          extractMetadata(
-            trackPath: path,
-            tagger: false,
-            identifiers: identifiersSet,
-            extractArtwork: extractArtwork,
-            overrideArtwork: overrideArtwork,
-            isVideo: path.isVideo(),
-          ).then(onExtract);
-        } else {
-          try {
-            onExtract(FAudioModel.fromMap(map));
-          } catch (e) {
-            onExtract(_getFallbackFAudioModel(path, map));
-          }
-        }
+    final channelEvent = EventChannel('faudiotagger/stream/$streamKey');
+    final channelEventIndices = EventChannel('faudiotagger/stream/$streamKey.index');
+    streamSubIndices = channelEventIndices.receiveBroadcastStream().listen(
+      (index) {
+        currentPathsBeingExtracted[streamKey] = paths[index as int];
       },
-      onDone: closeStreams,
-      onError: (e) => closeStreams(),
     );
+    streamSub = channelEvent.receiveBroadcastStream().listen((event) {
+      final message = event as Map<Object?, Object?>;
+      final map = message.cast<String, dynamic>();
+      final path = map['path'] as String;
+      final index = map['_i_'] as int;
+      if (map["ERROR_FAULTY"] == true) {
+        extractMetadata(
+          trackPath: path,
+          tagger: false,
+          identifiers: identifiersSet,
+          extractArtwork: extractArtwork,
+          overrideArtwork: overrideArtwork,
+          isVideo: path.isVideo(),
+        ).catchError((_) => _getFallbackFAudioModel(path, map)).then((value) => onExtract(value, index));
+      } else {
+        try {
+          onExtract(FAudioModel.fromMap(map), index);
+        } catch (e) {
+          onExtract(_getFallbackFAudioModel(path, map), index);
+        }
+      }
+    });
+
     _channel.invokeMethod("streamReady", {"streamKey": streamKey, "count": paths.length}); // we ready to recieve
     return streamController.stream;
   }

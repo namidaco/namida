@@ -6,10 +6,11 @@ import io.flutter.plugin.common.EventChannel.EventSink
 
 class BetterEventChannel(messenger: BinaryMessenger, id: String) : EventSink {
   private var eventSink: EventSink? = null
+  private var eventChannel: EventChannel? = null
 
   init {
-    val eventChannel: EventChannel = EventChannel(messenger, id)
-    eventChannel.setStreamHandler(
+    eventChannel = EventChannel(messenger, id)
+    eventChannel!!.setStreamHandler(
         object : EventChannel.StreamHandler {
           override fun onListen(arguments: Any?, es: EventChannel.EventSink) {
             eventSink = es
@@ -23,14 +24,15 @@ class BetterEventChannel(messenger: BinaryMessenger, id: String) : EventSink {
   }
 
   override public fun success(event: Any) {
-    if (eventSink != null) eventSink?.success(event)
+    eventSink?.success(event)
   }
 
   override public fun error(errorCode: String, errorMessage: String, errorDetails: Any) {
-    if (eventSink != null) eventSink?.error(errorCode, errorMessage, errorDetails)
+    eventSink?.error(errorCode, errorMessage, errorDetails)
   }
 
   override public fun endOfStream() {
-    if (eventSink != null) eventSink?.endOfStream()
+    eventSink?.endOfStream()
+    eventChannel?.setStreamHandler(null)
   }
 }

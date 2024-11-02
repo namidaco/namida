@@ -399,7 +399,11 @@ class NamidaFileExtensionsWrapper {
   const NamidaFileExtensionsWrapper._(this.extensions);
 
   bool isPathValid(String path) {
-    return extensions.contains(path.splitLast('.'));
+    return isExtensionValid(path.splitLast('.'));
+  }
+
+  bool isExtensionValid(String ext) {
+    return extensions.contains(ext);
   }
 
   static const _audioExtensions = {
