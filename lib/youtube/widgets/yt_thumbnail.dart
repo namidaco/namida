@@ -92,6 +92,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   Timer? _dontTouchMeImFetchingThumbnail;
 
+  bool? requestedThumbnailTemp;
+  bool? requestedThumbnailNonTemp;
+
   @override
   void initState() {
     super.initState();
@@ -100,8 +103,14 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   @override
   void dispose() {
-    if (widget.videoId != null) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!);
-    if (widget.customUrl != null) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!);
+    if (widget.videoId != null) {
+      if (requestedThumbnailTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, true);
+      if (requestedThumbnailNonTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, false);
+    }
+    if (widget.customUrl != null) {
+      if (requestedThumbnailTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!, true);
+      if (requestedThumbnailNonTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!, false);
+    }
     _dontTouchMeImFetchingThumbnail?.cancel();
     _dontTouchMeImFetchingThumbnail = null;
     super.dispose();
@@ -139,6 +148,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
           // --- isImportantInCache -> fetch to file
           // --- !isImportantInCache -> fetch lowres temp file only
           if (widget.isImportantInCache && !widget.preferLowerRes) {
+            requestedThumbnailNonTemp = true;
             res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
               id: videoId,
               isImportantInCache: true,
@@ -149,6 +159,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
           }
         } else {
           // for channels/playlists -> default
+          widget.isImportantInCache ? requestedThumbnailNonTemp = true : requestedThumbnailTemp = true;
           res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
             customUrl: widget.customUrl,
             symlinkId: widget.urlSymLinkId,

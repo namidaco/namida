@@ -329,18 +329,10 @@ class NamidaFFMPEG {
         if (cachedThumbnail == null) {
           currentFailed++;
         } else {
-          final copiedArtwork = await NamidaTaggerController.inst.copyArtworkToCache(
-            trackPath: filee.path,
-            trackExtended: tr,
-            artworkFile: cachedThumbnail,
+          final didUpdate = await editAudioThumbnail(
+            audioPath: filee.path,
+            thumbnailPath: cachedThumbnail.path,
           );
-
-          final didUpdate = copiedArtwork == null
-              ? false
-              : await editAudioThumbnail(
-                  audioPath: filee.path,
-                  thumbnailPath: copiedArtwork.path,
-                );
           if (!didUpdate) currentFailed++;
         }
 

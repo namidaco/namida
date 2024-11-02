@@ -166,9 +166,9 @@ class ThumbnailManager {
 
     if (downloaded != null) return downloaded;
 
-    if (!isTemp) {
+    if (isTemp == false) {
       // return the low res if high res failed
-      final filetemp = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+      final filetemp = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
       if (filetemp != null && filetemp.existsSync()) return filetemp;
     }
 
@@ -202,8 +202,8 @@ class ThumbnailManager {
     return downloaded;
   }
 
-  void closeThumbnailClients(String itemId) {
-    _thumbnailDownloader.stopDownload(id: itemId);
+  void closeThumbnailClients(String itemId, bool isTemp) {
+    _thumbnailDownloader.stopDownload(id: itemId, isTemp: isTemp);
   }
 
   Future<File?> _getYoutubeThumbnail({
@@ -217,15 +217,15 @@ class ThumbnailManager {
     required File destinationFile,
     required String? symlinkId,
   }) async {
-    final activeRequest = _thumbnailDownloader.resultForId(itemId);
+    final activeRequest = _thumbnailDownloader.resultForId(itemId, isTemp);
     if (activeRequest != null) return activeRequest;
 
     final links = <String>[];
+    if (urls != null) links.addAll(urls);
     if (isVideo) {
       final yth = lowerResYTID ? YoutiPieVideoThumbnail.mixLow(itemId) : YoutiPieVideoThumbnail.mix(itemId);
       links.addAll(yth);
     }
-    if (urls != null) links.addAll(urls);
     if (links.isEmpty) return null;
 
     return _thumbnailDownloader.download(
@@ -240,13 +240,32 @@ class ThumbnailManager {
   }
 }
 
+class _VideoIdAndTemp {
+  final String videoId;
+  final bool isTemp;
+
+  const _VideoIdAndTemp({
+    required this.videoId,
+    required this.isTemp,
+  });
+
+  @override
+  bool operator ==(covariant _VideoIdAndTemp other) {
+    if (identical(this, other)) return true;
+    return other.videoId == videoId && other.isTemp == isTemp;
+  }
+
+  @override
+  int get hashCode => videoId.hashCode ^ isTemp.hashCode;
+}
+
 class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
-  final _downloadCompleters = <String, Completer<File?>?>{}; // item id
+  final _downloadCompleters = <_VideoIdAndTemp, Completer<File?>?>{}; // item id
   final _requestsCountForId = <String, int>{}; // item id
   final _shouldRetry = <String, bool>{}; // item id
   final _notFoundThumbnails = <String, bool?>{}; // item id
 
-  Future<File?>? resultForId(String id) => _downloadCompleters[id]?.future;
+  Future<File?>? resultForId(String id, bool temp) => _downloadCompleters[_VideoIdAndTemp(videoId: id, isTemp: temp)]?.future;
 
   Future<File?> download({
     required List<String> urls,
@@ -257,19 +276,20 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     required File destinationFile,
     required String? symlinkId,
   }) async {
+    final mapKey = _VideoIdAndTemp(videoId: id, isTemp: isTemp);
     if (_notFoundThumbnails[id] == true) return null;
 
     _requestsCountForId.update(id, (value) => value + 1, ifAbsent: () => 1);
 
-    if (forceRequest == false && _downloadCompleters[id] != null) {
-      final res = await _downloadCompleters[id]!.future;
-      _requestsCountForId.update(id, (value) => value--);
+    if (forceRequest == false && _downloadCompleters[mapKey] != null) {
+      final res = await _downloadCompleters[mapKey]!.future;
+      _requestsCountForId.update(id, (value) => value - 1);
       if (res != null || _shouldRetry[id] != true) {
         return res;
       }
     }
-    _downloadCompleters[id]?.completeIfWasnt(null);
-    _downloadCompleters[id] = Completer<File?>();
+    _downloadCompleters[mapKey]?.completeIfWasnt(null);
+    _downloadCompleters[mapKey] = Completer<File?>();
 
     final p = {
       'urls': urls,
@@ -282,18 +302,17 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     };
     if (!isInitialized) await initialize();
     await sendPort(p);
-    final res = await _downloadCompleters[id]?.future;
+    final res = await _downloadCompleters[mapKey]?.future;
 
-    _requestsCountForId.update(id, (value) => value--);
+    _requestsCountForId.update(id, (value) => value - 1);
     return res;
   }
 
-  Future<void> stopDownload({required String? id}) async {
-    if (id == null) return;
+  Future<void> stopDownload({required String id, required bool isTemp}) async {
     final otherActiveRequests = _requestsCountForId[id];
     if (otherActiveRequests == null || otherActiveRequests <= 1) {
       // -- only close if active requests only 1
-      _onFileFinish(id, null, null, true);
+      _onFileFinish(id, null, null, true, isTemp);
       final p = {'id': id, 'stop': true};
       await sendPort(p);
     }
@@ -344,6 +363,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
             isTempFile: isTemp,
             aborted: false,
             notfound: false,
+            isTemp: isTemp,
           );
           if (isImportantInCache) updateLastAccessed(destinationFile);
           return sendPort.send(res);
@@ -387,6 +407,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                 isTempFile: isTemp,
                 aborted: true,
                 notfound: null,
+                isTemp: isTemp,
               );
               return res;
             }
@@ -420,6 +441,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
                 isTempFile: isTemp,
                 aborted: false,
                 notfound: false,
+                isTemp: isTemp,
               );
               return res;
             } catch (_) {
@@ -440,6 +462,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
           isTempFile: isTemp,
           aborted: true,
           notfound: notfound,
+          isTemp: isTemp,
         );
 
         sendPort.send(downloadedRes);
@@ -473,7 +496,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   @override
   void onResult(dynamic result) {
     if (result is _YTThumbnailDownloadResult) {
-      _onFileFinish(result.itemId, result.file, result.notfound, result.aborted);
+      _onFileFinish(result.itemId, result.file, result.notfound, result.aborted, result.isTemp);
     }
   }
 
@@ -482,10 +505,11 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
   }
 
-  void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted) {
+  void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted, bool isTemp) {
     if (notfound != null) _notFoundThumbnails[itemId] = notfound;
     _shouldRetry[itemId] = aborted;
-    _downloadCompleters[itemId]?.completeIfWasnt(downloadedFile);
+    final mapKey = _VideoIdAndTemp(videoId: itemId, isTemp: isTemp);
+    _downloadCompleters[mapKey]?.completeIfWasnt(downloadedFile);
   }
 }
 
@@ -497,6 +521,7 @@ class _YTThumbnailDownloadResult {
   final bool isTempFile;
   final bool aborted;
   final bool? notfound;
+  final bool isTemp;
 
   const _YTThumbnailDownloadResult({
     required this.url,
@@ -506,5 +531,6 @@ class _YTThumbnailDownloadResult {
     required this.isTempFile,
     required this.aborted,
     required this.notfound,
+    required this.isTemp,
   });
 }
