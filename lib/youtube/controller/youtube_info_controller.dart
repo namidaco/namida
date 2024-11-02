@@ -73,8 +73,8 @@ class YoutubeInfoController {
       final currentId = Player.inst.currentVideo?.id;
       current.resetAll();
       if (currentId != null) {
-        current.updateVideoPageSync(currentId);
-        current.updateCurrentCommentsSync(currentId);
+        current.updateVideoPageCache(currentId);
+        current.updateCurrentCommentsCache(currentId);
       }
     });
   }

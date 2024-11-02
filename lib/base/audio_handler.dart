@@ -599,6 +599,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentVideoStream.value = stream;
     currentCachedVideo.value = null;
 
+    mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
+
     if (useCache && cachedFile != null && cachedFile.existsSync()) {
       currentCachedVideo.value = videoItem;
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
@@ -638,7 +640,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         } else {
           AudioStream? audioStream = currentAudioStream.value;
           if (audioStream == null) {
-            final streamRes = YoutubeInfoController.video.fetchVideoStreamsSync(videoId)?.audioStreams;
+            final streamRes = mainStreams?.audioStreams;
             if (streamRes != null) audioStream = YoutubeController.inst.getPreferredAudioStream(streamRes);
           }
           if (audioStream != null) {
@@ -648,7 +650,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 url,
                 stream: audioStream,
                 videoId: videoId,
-                streamsResult: mainStreams ?? YoutubeInfoController.current.currentYTStreams.value,
+                streamsResult: mainStreams,
               );
             }
           }
@@ -658,7 +660,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             url,
             stream: stream,
             videoId: videoId,
-            streamsResult: mainStreams ?? YoutubeInfoController.current.currentYTStreams.value,
+            streamsResult: mainStreams,
           ),
           loop: false,
           videoOnly: false,
@@ -722,6 +724,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final wasPlayWhenReady = willPlayWhenReady;
 
     currentAudioStream.value = stream;
+    mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
 
     final cachedAudio = stream?.getCachedFile(videoId);
 
@@ -749,7 +752,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             url,
             stream: stream,
             videoId: videoId,
-            streamsResult: mainStreams ?? YoutubeInfoController.current.currentYTStreams.value,
+            streamsResult: mainStreams,
           ),
           initialPosition: positionToRestore,
           item: currentItem.value,
@@ -970,8 +973,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     VideoStreamsResult? streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(item.id);
 
     YoutubeInfoController.current.currentYTStreams.value = streamsResult;
-    final hadCachedVideoPage = YoutubeInfoController.current.updateVideoPageSync(item.id);
-    final hadCachedComments = YoutubeInfoController.current.updateCurrentCommentsSync(item.id);
+    final hadCachedVideoPageCompleter = Completer()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
+    final hadCachedCommentsCompleter = Completer()..complete(YoutubeInfoController.current.updateCurrentCommentsCache(item.id));
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
@@ -994,6 +997,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     Future<void> fetchFullVideoPage() async {
+      final hadCachedVideoPage = await hadCachedVideoPageCompleter.future;
+      final hadCachedComments = await hadCachedCommentsCompleter.future;
+      if (checkInterrupted(refreshNoti: false)) return;
       final requestComments = settings.youtube.preferNewComments.value ? true : !hadCachedComments;
       await YoutubeInfoController.current.updateVideoPage(
         item.id,

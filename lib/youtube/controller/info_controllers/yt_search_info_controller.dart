@@ -14,13 +14,4 @@ class _SearchInfoController {
       peopleAlsoWatched: peopleAlsoWatched,
     );
   }
-
-  YoutiPieSearchResult? searchSync(
-    String query, {
-    ExecuteDetails? details,
-    bool peopleAlsoWatched = true,
-  }) {
-    final cache = YoutiPie.cacheBuilder.forSearchResults(query: query);
-    return cache.read();
-  }
 }

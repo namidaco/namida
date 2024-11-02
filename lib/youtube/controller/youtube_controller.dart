@@ -121,9 +121,7 @@ class YoutubeController {
     // ignore: invalid_use_of_protected_member
     config.rename(newFilename);
     final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName);
-    downloadTasksGroupDB.put(newFilename, config.toJson());
-    downloadTasksGroupDB.delete(oldFilename);
-    downloadTasksGroupDB.claimFreeSpace();
+    await downloadTasksGroupDB.putAsync(config.filename.key, config.toJson());
 
     final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
     final existingFile = FileParts.join(directory.path, oldFilename);
@@ -560,8 +558,8 @@ class YoutubeController {
           await FileParts.join(directory.path, c.filename.filename).delete();
         } catch (_) {}
         downloadedFilesMap[groupName]?[c.filename] = null;
-        downloadTasksGroupDB.claimFreeSpace();
       }
+      downloadTasksGroupDB.claimFreeSpaceAsync();
 
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
@@ -569,11 +567,15 @@ class YoutubeController {
         downloadTasksGroupDB.deleteEverything().catchError((_) {});
       }
     } else {
-      itemsConfig.loop((c) {
-        youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
-        youtubeDownloadTasksInQueueMap[groupName]![c.filename] = true;
-        downloadTasksGroupDB.put(c.filename.filename, c.toJson());
-      });
+      await downloadTasksGroupDB.putAllAsync(
+        itemsConfig,
+        (c) {
+          youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
+          youtubeDownloadTasksInQueueMap[groupName]![c.filename] = true; // hehe
+          final key = c.filename.key;
+          return MapEntry(key, c.toJson());
+        },
+      );
     }
 
     youtubeDownloadTasksMap.refresh();

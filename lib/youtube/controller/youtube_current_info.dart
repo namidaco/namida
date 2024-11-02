@@ -51,25 +51,30 @@ class _YoutubeCurrentInfoController {
     _isCurrentCommentsFromCache.value = null;
   }
 
-  bool updateVideoPageSync(String videoId) {
+  Future<bool> updateVideoPageCache(String videoId) async {
     final vidcache = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
-    final vidPageCached = vidcache.read();
+    final vidPageCached = await vidcache.readAsync();
+    if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentVideoPage.value = vidPageCached;
 
     final chId = vidPageCached?.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
-    final chPage = chId == null ? null : YoutiPie.cacheBuilder.forChannel(channelId: chId).read();
+    final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).readAsync();
+    if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentChannelPage.value = chPage;
 
     final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId);
-    _currentRelatedVideos.value = relatedcache.read() ?? vidPageCached?.relatedVideosResult;
+    final relatedVideos = await relatedcache.readAsync() ?? vidPageCached?.relatedVideosResult;
+    if (!_canSafelyModifyMetadata(videoId)) return false;
+    _currentRelatedVideos.value = relatedVideos;
     return vidPageCached != null;
   }
 
-  bool updateCurrentCommentsSync(String videoId) {
+  Future<bool> updateCurrentCommentsCache(String videoId) async {
     final commcache = YoutiPie.cacheBuilder.forComments(videoId: videoId);
-    final comms = commcache.read();
+    final comms = await commcache.readAsync();
+    if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentComments.value = comms;
-    if (_currentComments.value != null) _isCurrentCommentsFromCache.value = true;
+    _isCurrentCommentsFromCache.value = _currentComments.value != null;
     return comms != null;
   }
 

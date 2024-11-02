@@ -112,7 +112,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
       result = await YoutubeInfoController.search.search(newSearch, details: ExecuteDetails.forceRequest());
       _cachedSearchResults = false;
     } else {
-      result = YoutubeInfoController.search.searchSync(newSearch);
+      result = await YoutubeInfoController.search.search(newSearch);
       _cachedSearchResults = result != null;
     }
 

@@ -185,11 +185,6 @@ class _YoutubeHistoryLinker {
   Future<YoutiPieHistoryResult?> fetchHistory({ExecuteDetails? details}) {
     return YoutiPie.history.fetchHistory(details: details);
   }
-
-  YoutiPieHistoryResult? fetchHistorySync() {
-    final cache = YoutiPie.cacheBuilder.forHistoryVideos();
-    return cache.read();
-  }
 }
 
 enum YTMarkVideoWatchedResult {

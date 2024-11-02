@@ -1109,7 +1109,7 @@ class Indexer<T extends Track> {
       lastPositionInMs: lastPositionInMs,
     );
     trackStatsMap[track] = newStats;
-    _trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack());
+    _trackStatsDBManager.putAsync(track.path, newStats.toJsonWithoutTrack());
     return newStats;
   }
 
