@@ -26,9 +26,8 @@ class DownloadTaskVideoId {
   });
 
   @override
-  bool operator ==(Object other) {
-    if (other is DownloadTaskVideoId) return videoId == other.videoId;
-    return false;
+  bool operator ==(covariant DownloadTaskVideoId other) {
+    return videoId == other.videoId;
   }
 
   @override
@@ -48,9 +47,8 @@ class DownloadTaskGroupName {
   const DownloadTaskGroupName.defaulty() : groupName = '';
 
   @override
-  bool operator ==(Object other) {
-    if (other is DownloadTaskGroupName) return groupName == other.groupName;
-    return false;
+  bool operator ==(covariant DownloadTaskGroupName other) {
+    return groupName == other.groupName;
   }
 
   @override

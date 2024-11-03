@@ -1203,11 +1203,8 @@ class _MissingListenEntry {
   });
 
   @override
-  bool operator ==(other) {
-    if (other is _MissingListenEntry) {
-      return youtubeID == other.youtubeID && source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
-    }
-    return false;
+  bool operator ==(covariant _MissingListenEntry other) {
+    return youtubeID == other.youtubeID && source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
   }
 
   @override

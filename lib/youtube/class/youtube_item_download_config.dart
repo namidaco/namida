@@ -106,11 +106,8 @@ class YoutubeItemDownloadConfig {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is YoutubeItemDownloadConfig) {
-      return id == other.id && groupName == other.groupName && filename == other.filename;
-    }
-    return false;
+  bool operator ==(covariant YoutubeItemDownloadConfig other) {
+    return id == other.id && groupName == other.groupName && filename == other.filename;
   }
 
   /// only [id], [groupName] && [filename] are matched, since map lookup will

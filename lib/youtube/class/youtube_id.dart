@@ -38,7 +38,6 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
     );
   }
 
-
   @override
   Map<String, dynamic> toJson() {
     return {
@@ -50,10 +49,7 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
 
   @override
   bool operator ==(other) {
-    if (other is YoutubeID) {
-      return id == other.id && _date.millisecondsSinceEpoch == other._date.millisecondsSinceEpoch;
-    }
-    return false;
+    return other is YoutubeID && id == other.id && _date.millisecondsSinceEpoch == other._date.millisecondsSinceEpoch;
   }
 
   @override

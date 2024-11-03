@@ -55,11 +55,8 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
   DateTime get dateTimeAdded => DateTime.fromMillisecondsSinceEpoch(dateAdded);
 
   @override
-  bool operator ==(other) {
-    if (other is TrackWithDate) {
-      return dateAdded == other.dateAdded && source == other.source && track == other.track;
-    }
-    return false;
+  bool operator ==(covariant TrackWithDate other) {
+    return dateAdded == other.dateAdded && source == other.source && track == other.track;
   }
 
   @override
@@ -165,10 +162,7 @@ abstract class Selectable<T extends Object> extends Playable<T> {
 
   @override
   bool operator ==(other) {
-    if (other is Selectable) {
-      return track == other.track;
-    }
-    return false;
+    return other is Selectable && track == other.track;
   }
 
   @override
@@ -207,11 +201,8 @@ class Track extends Selectable<String> {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is Track) {
-      return path == other.path;
-    }
-    return false;
+  bool operator ==(covariant Track other) {
+    return path == other.path;
   }
 
   @override
@@ -414,11 +405,8 @@ class TrackExtended {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is Track) {
-      return path == other.path;
-    }
-    return false;
+  bool operator ==(covariant Track other) {
+    return path == other.path;
   }
 
   @override

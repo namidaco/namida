@@ -34,11 +34,8 @@ class YoutubeSubscription {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is YoutubeSubscription) {
-      return title == other.title && channelID == other.channelID && subscribed == other.subscribed && lastFetched == other.lastFetched;
-    }
-    return false;
+  bool operator ==(covariant YoutubeSubscription other) {
+    return title == other.title && channelID == other.channelID && subscribed == other.subscribed && lastFetched == other.lastFetched;
   }
 
   @override

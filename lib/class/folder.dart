@@ -62,11 +62,8 @@ class Folder {
   String folderNameAvoidingConflicts() => hasSimilarFolderNames ? path.formatPath() : folderName;
 
   @override
-  bool operator ==(other) {
-    if (other is Folder) {
-      return _key == other._key;
-    }
-    return false;
+  bool operator ==(covariant Folder other) {
+    return _key == other._key;
   }
 
   @override

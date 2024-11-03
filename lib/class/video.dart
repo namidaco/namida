@@ -72,11 +72,8 @@ class YTWatch {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is YTWatch) {
-      return _date == other._date && isYTMusic == other.isYTMusic;
-    }
-    return false;
+  bool operator ==(covariant YTWatch other) {
+    return _date == other._date && isYTMusic == other.isYTMusic;
   }
 
   @override
@@ -142,17 +139,14 @@ class NamidaVideo {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is NamidaVideo) {
-      return path == other.path &&
-          ytID == other.ytID &&
-          height == other.height &&
-          width == other.width &&
-          sizeInBytes == other.sizeInBytes &&
-          frameratePrecise == other.frameratePrecise &&
-          creationTimeMS == other.creationTimeMS;
-    }
-    return false;
+  bool operator ==(covariant NamidaVideo other) {
+    return path == other.path &&
+        ytID == other.ytID &&
+        height == other.height &&
+        width == other.width &&
+        sizeInBytes == other.sizeInBytes &&
+        frameratePrecise == other.frameratePrecise &&
+        creationTimeMS == other.creationTimeMS;
   }
 
   @override

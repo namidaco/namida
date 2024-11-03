@@ -33,11 +33,8 @@ class NamidaLanguage {
   }
 
   @override
-  bool operator ==(other) {
-    if (other is NamidaLanguage) {
-      return code == other.code && name == other.name && country == other.country;
-    }
-    return false;
+  bool operator ==(covariant NamidaLanguage other) {
+    return code == other.code && name == other.name && country == other.country;
   }
 
   @override

@@ -18,16 +18,13 @@ class LyricsModel {
   });
 
   @override
-  bool operator ==(other) {
-    if (other is LyricsModel) {
-      return lyrics == other.lyrics &&
-          synced == other.synced &&
-          isInCache == other.isInCache &&
-          fromInternet == other.fromInternet &&
-          isEmbedded == other.isEmbedded &&
-          file == other.file;
-    }
-    return false;
+  bool operator ==(covariant LyricsModel other) {
+    return lyrics == other.lyrics &&
+        synced == other.synced &&
+        isInCache == other.isInCache &&
+        fromInternet == other.fromInternet &&
+        isEmbedded == other.isEmbedded &&
+        file == other.file;
   }
 
   @override

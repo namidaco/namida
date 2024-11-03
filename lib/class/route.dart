@@ -36,11 +36,8 @@ abstract class NamidaRoute {
   bool isSameRouteAs(NamidaRoute r);
 
   @override
-  bool operator ==(other) {
-    if (other is NamidaRoute) {
-      return route == other.route && name == other.name;
-    }
-    return false;
+  bool operator ==(covariant NamidaRoute other) {
+    return route == other.route && name == other.name;
   }
 
   @override
