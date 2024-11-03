@@ -116,8 +116,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     );
   }
 
-  void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, {bool keepInList = false}) {
-    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName, keepInList: keepInList);
+  void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, {bool keepInList = false, required bool delete}) {
+    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName, keepInList: keepInList, delete: delete);
   }
 
   void _showInfoDialog(
@@ -340,19 +340,35 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     ];
   }
 
-  Future<bool> _confirmOperation({
+  Future<({bool confirmed, bool delete})> _confirmOperation({
     required BuildContext context,
     required String operationTitle,
     String confirmMessage = '',
+    bool deleteButton = false,
   }) async {
     final item = videos[index];
     bool confirmed = false;
+    bool delete = false;
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.WARNING,
         normalTitleStyle: true,
         isWarning: true,
         actions: [
+          if (deleteButton) ...[
+            NamidaButton(
+              text: lang.DELETE.toUpperCase(),
+              style: ButtonStyle(
+                foregroundColor: WidgetStatePropertyAll(Colors.red),
+              ),
+              onPressed: () {
+                confirmed = true;
+                delete = true;
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+            const SizedBox(width: 4.0),
+          ],
           const CancelButton(),
           const SizedBox(width: 4.0),
           NamidaButton(
@@ -388,7 +404,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         ),
       ),
     );
-    return confirmed;
+    return (confirmed: confirmed, delete: delete);
   }
 
   void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
@@ -403,7 +419,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       initialItemConfig: config,
       confirmButtonText: lang.RESTART,
       onConfirmButtonTap: (groupName, newConfig) {
-        _onCancelDeleteDownloadTap([config], keepInList: true);
+        _onCancelDeleteDownloadTap([config], keepInList: true, delete: true);
         _onResumeDownloadTap([newConfig], context);
         YTOnGoingFinishedDownloads.inst.refreshList();
         return true;
@@ -640,12 +656,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                             title: lang.RESTART,
                                             icon: Broken.refresh,
                                             onTap: () async {
-                                              final confirmed = await _confirmOperation(
+                                              final confirmation = await _confirmOperation(
                                                 context: context,
                                                 operationTitle: lang.RESTART,
                                               );
-                                              if (confirmed) {
-                                                _onCancelDeleteDownloadTap([item], keepInList: true);
+                                              if (confirmation.confirmed) {
+                                                _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
                                                 // ignore: use_build_context_synchronously
                                                 _onResumeDownloadTap([item], context);
                                               }
@@ -681,11 +697,12 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                         icon: Broken.trash,
                                         betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
                                         onTap: () async {
-                                          final confirmed = await _confirmOperation(
+                                          final confirmation = await _confirmOperation(
                                             context: context,
-                                            operationTitle: lang.DELETE,
+                                            operationTitle: lang.REMOVE,
+                                            deleteButton: true,
                                           );
-                                          if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                          if (confirmation.confirmed) _onCancelDeleteDownloadTap([item], delete: confirmation.delete);
                                         },
                                       )
                                     : _getChip(
@@ -693,12 +710,17 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                         title: lang.CANCEL,
                                         icon: Broken.close_circle,
                                         onTap: () async {
-                                          final confirmed = await _confirmOperation(
+                                          final confirmation = await _confirmOperation(
                                             context: context,
                                             operationTitle: lang.CANCEL,
                                             confirmMessage: lang.REMOVE,
                                           );
-                                          if (confirmed) _onCancelDeleteDownloadTap([item]);
+                                          if (confirmation.confirmed) {
+                                            _onCancelDeleteDownloadTap(
+                                              [item],
+                                              delete: true, // even tho we want to cancel, we delete to clean up unfinished downloads.
+                                            );
+                                          }
                                         },
                                       ),
                                 _getChip(

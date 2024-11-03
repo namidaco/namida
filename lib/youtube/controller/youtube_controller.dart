@@ -518,11 +518,13 @@ class YoutubeController {
     required DownloadTaskGroupName groupName,
     bool allInGroupName = false,
     bool keepInList = false,
+    required bool delete,
   }) async {
     await _updateDownloadTask(
       itemsConfig: itemsConfig,
       groupName: groupName,
       remove: true,
+      delete: delete,
       keepInListIfRemoved: keepInList,
       allInGroupName: allInGroupName,
     );
@@ -532,6 +534,7 @@ class YoutubeController {
     required List<YoutubeItemDownloadConfig> itemsConfig,
     required DownloadTaskGroupName groupName,
     bool remove = false,
+    bool delete = false,
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
@@ -554,9 +557,11 @@ class YoutubeController {
           youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);
           YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList.remove((groupName, c));
         }
-        try {
-          await FileParts.join(directory.path, c.filename.filename).delete();
-        } catch (_) {}
+        if (delete) {
+          try {
+            FileParts.join(directory.path, c.filename.filename).deleteSync();
+          } catch (_) {}
+        }
         downloadedFilesMap[groupName]?[c.filename] = null;
       }
       downloadTasksGroupDB.claimFreeSpaceAsync();

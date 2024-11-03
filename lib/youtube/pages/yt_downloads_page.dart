@@ -69,7 +69,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     );
   }
 
-  Future<bool> _confirmCancelDialog({
+  Future<({bool confirmed, bool delete})> _confirmCancelDialog({
     required BuildContext context,
     String operationTitle = '',
     String confirmMessage = '',
@@ -77,6 +77,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     required int itemsLength,
   }) async {
     bool confirmed = false;
+    bool delete = false;
 
     final groupTitleText = groupTitle == '' ? lang.DEFAULT : groupTitle;
     await NamidaNavigator.inst.navigateDialog(
@@ -85,6 +86,18 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         normalTitleStyle: true,
         isWarning: true,
         actions: [
+          NamidaButton(
+            text: lang.DELETE.toUpperCase(),
+            style: ButtonStyle(
+              foregroundColor: WidgetStatePropertyAll(Colors.red),
+            ),
+            onPressed: () {
+              confirmed = true;
+              delete = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+          const SizedBox(width: 4.0),
           const CancelButton(),
           const SizedBox(width: 4.0),
           NamidaButton(
@@ -119,7 +132,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         ),
       ),
     );
-    return confirmed;
+    return (confirmed: confirmed, delete: delete);
   }
 
   void _showParallelDownloadsDialog() {
@@ -271,17 +284,18 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                             icon: Broken.close_circle,
                             iconSize: 24.0,
                             onPressed: () async {
-                              final confirmed = await _confirmCancelDialog(
+                              final confirmation = await _confirmCancelDialog(
                                 context: context,
                                 operationTitle: lang.CANCEL,
                                 groupTitle: lang.ONGOING,
                                 itemsLength: _downloadTasksTempList.length,
                               );
-                              if (confirmed) {
+                              if (confirmation.confirmed) {
                                 _downloadTasksTempList.loop((e) {
                                   YoutubeController.inst.cancelDownloadTask(
                                     itemsConfig: [e.$2],
                                     groupName: e.$1,
+                                    delete: confirmation.delete,
                                   );
                                 });
                               }
@@ -375,18 +389,19 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                       padding: EdgeInsets.zero,
                                       visualDensity: VisualDensity.compact,
                                       onPressed: () async {
-                                        final confirmed = await _confirmCancelDialog(
+                                        final confirmation = await _confirmCancelDialog(
                                           context: context,
                                           operationTitle: lang.CANCEL,
                                           confirmMessage: lang.REMOVE,
                                           groupTitle: groupName.groupName,
                                           itemsLength: list.length,
                                         );
-                                        if (confirmed) {
+                                        if (confirmation.confirmed) {
                                           YoutubeController.inst.cancelDownloadTask(
                                             itemsConfig: [],
                                             groupName: groupName,
                                             allInGroupName: true,
+                                            delete: confirmation.delete,
                                           );
                                         }
                                       },
