@@ -5,10 +5,12 @@ import 'package:youtipie/core/http.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
+import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -597,11 +599,17 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
           shrinkWrap: true,
           children: [
             CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.video,
+                secondaryIcon: Broken.tick_circle,
+                secondaryIconSize: 12.0,
+              ),
               value: settings.youtube.markVideoWatched,
               onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
               title: 'mark_video_watched'.toUpperCase(),
             ),
             CustomListTile(
+              icon: Broken.cpu,
               title: 'innertube_client'.toUpperCase(),
               trailing: NamidaPopupWrapper(
                   childrenDefault: () => [
@@ -645,21 +653,56 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onTap: () {},
             ),
             CustomSwitchListTile(
+              icon: Broken.sun_1,
               value: settings.youtube.whiteVideoBGInLightMode,
               onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
               title: 'white_video_bg_in_light_mode'.toUpperCase(),
             ),
             CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.sun_1,
+                secondaryIcon: Broken.moon,
+                secondaryIconSize: 12.0,
+              ),
               value: settings.youtube.enableDimInLightMode,
               onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
               title: 'enable_dim_in_light_mode'.toUpperCase(),
             ),
             CustomListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.code_1,
+                secondaryIcon: Broken.refresh,
+                secondaryIconSize: 12.0,
+              ),
               enabled: !didRefreshJsPlayer,
               title: 'refresh_js_player'.toUpperCase(),
               onTap: () {
                 setState(() => didRefreshJsPlayer = true);
                 YoutubeInfoController.video.forceRefreshJSPlayer();
+              },
+            ),
+            CustomListTile(
+              icon: Broken.hierarchy_square,
+              title: 'copy_yt_history_to_local_history'.toUpperCase(),
+              onTap: () {
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: CustomBlurryDialog(
+                    isWarning: true,
+                    normalTitleStyle: true,
+                    bodyText: lang.CONFIRM,
+                    actions: [
+                      const CancelButton(),
+                      NamidaButton(
+                        text: lang.CONFIRM.toUpperCase(),
+                        onPressed: () async {
+                          await NamidaNavigator.inst.closeDialog(2);
+                          final count = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
+                          snackyy(message: '${lang.ADDED.capitalizeFirst()}: ${count.displayTrackKeyword}');
+                        },
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           ],

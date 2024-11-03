@@ -181,7 +181,7 @@ class NamidaOnTaps {
       await HistoryController.inst.removeTracksFromHistory(tracksWithDates);
       showSnacky(
         whatDoYouWant: () async {
-          final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList);
+          final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList, preventDuplicate: true);
           HistoryController.inst.updateMostPlayedPlaylist(tempList);
           HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSince1970()));
           await HistoryController.inst.saveHistoryToStorage(daysToSave);

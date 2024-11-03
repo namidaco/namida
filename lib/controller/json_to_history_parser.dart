@@ -145,7 +145,7 @@ class JsonToHistoryParser {
           source: entry.key.source,
         ),
       );
-      final days = HistoryController.inst.addTracksToHistoryOnly(twds.toList());
+      final days = HistoryController.inst.addTracksToHistoryOnly(twds.toList(), preventDuplicate: true);
       _latestMissingMapAddedStatus[entry.key] = choosen;
       return days;
     }
@@ -563,6 +563,46 @@ class JsonToHistoryParser {
           );
   }
 
+  Future<int> copyYTHistoryContentToLocalHistory({required bool matchAll}) async {
+    final allTracks = Indexer.inst.allTracksMappedByPath.values;
+    final allInsideYTHistory = YoutubeHistoryController.inst.historyTracks;
+    final tracksIdsMap = <String, List<Track>>{};
+
+    for (final trExt in allTracks) {
+      final videoId = trExt.youtubeID;
+      if (videoId.isNotEmpty) {
+        tracksIdsMap.addForce(videoId, trExt.asTrack());
+      }
+    }
+    int totalAdded = 0;
+    final datesAdded = <int>[];
+    for (final vh in allInsideYTHistory) {
+      final match = tracksIdsMap[vh.id];
+      if (match != null && match.isNotEmpty) {
+        final tracks = matchAll ? match : [match.first];
+        final tracksWithDates = tracks
+            .map(
+              (e) => TrackWithDate(
+                dateAdded: vh.dateTimeAdded.millisecondsSinceEpoch,
+                track: e,
+                source: vh.watch.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+              ),
+            )
+            .toList();
+        totalAdded += tracksWithDates.length;
+        final days = HistoryController.inst.addTracksToHistoryOnly(tracksWithDates, preventDuplicate: true);
+        datesAdded.addAll(days);
+      }
+    }
+    if (datesAdded.isNotEmpty) {
+      HistoryController.inst.removeDuplicatedItems(datesAdded);
+      HistoryController.inst.sortHistoryTracks(datesAdded);
+      await HistoryController.inst.saveHistoryToStorage(datesAdded);
+      HistoryController.inst.updateMostPlayedPlaylist();
+    }
+    return totalAdded;
+  }
+
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static ({
     Map<String, YoutubeVideoHistory>? affectedIds,
@@ -674,9 +714,12 @@ class JsonToHistoryParser {
         totalAdded += tracks.length;
         tracks.loop((item) {
           final day = item.dateTimeAdded.toDaysSince1970();
-          daysToSaveLocal.add(day);
-          localHistory.addForce(day, item);
-          addedLocalHistoryCount++;
+          final tracks = localHistory[day] ??= [];
+          if (!tracks.contains(item)) {
+            daysToSaveLocal.add(day);
+            tracks.add(item);
+            addedLocalHistoryCount++;
+          }
         });
 
         // -- youtube history --
@@ -695,9 +738,12 @@ class JsonToHistoryParser {
               playlistID: null,
             );
             final day = ytid.dateTimeAdded.toDaysSince1970();
-            daysToSaveYT.add(day);
-            ytHistory.addForce(day, ytid);
-            addedYTHistoryCount++;
+            final videos = ytHistory[day] ??= [];
+            if (!videos.contains(ytid)) {
+              daysToSaveYT.add(day);
+              videos.add(ytid);
+              addedYTHistoryCount++;
+            }
           }
         });
 
@@ -1003,15 +1049,18 @@ class JsonToHistoryParser {
         totalAdded += tracks.length;
         if (tracks.isNotEmpty) {
           for (final trMap in tracks) {
-            final tr = TrackWithDate(
+            final twd = TrackWithDate(
               dateAdded: date,
               track: Track.decide(trMap['path'] ?? '', trMap['v']),
               source: TrackSource.lastfm,
             );
-            final day = tr.dateTimeAdded.toDaysSince1970();
-            daysToSaveLocal.add(day);
-            localHistory.addForce(day, tr);
-            addedHistoryCount++;
+            final day = twd.dateTimeAdded.toDaysSince1970();
+            final tracks = localHistory[day] ??= [];
+            if (!tracks.contains(twd)) {
+              daysToSaveLocal.add(day);
+              tracks.add(twd);
+              addedHistoryCount++;
+            }
           }
         } else {
           final me = _MissingListenEntry(
