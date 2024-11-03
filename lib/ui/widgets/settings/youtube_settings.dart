@@ -608,6 +608,16 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
               title: 'mark_video_watched'.toUpperCase(),
             ),
+            CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.document_text_1,
+                secondaryIcon: Broken.export_1,
+                secondaryIconSize: 12.0,
+              ),
+              value: settings.youtube.fallbackExtractInfoDescription.value,
+              onChanged: (isTrue) => setState(() => settings.youtube.save(fallbackExtractInfoDescription: !isTrue)),
+              title: 'try_extract_tags_info_from_description'.toUpperCase(),
+            ),
             CustomListTile(
               icon: Broken.cpu,
               title: 'innertube_client'.toUpperCase(),

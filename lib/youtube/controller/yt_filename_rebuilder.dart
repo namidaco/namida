@@ -5,6 +5,8 @@ class _YtFilenameRebuilder {
 
   final paramRegex = RegExp(r'%\((\w+)\)s');
 
+  bool get fallbackExtractInfoFromDescription => settings.youtube.fallbackExtractInfoDescription.value;
+
   String? rebuildFilenameWithDecodedParams(
     String filenameEncoded,
     String videoId,
@@ -109,8 +111,10 @@ class _YtFilenameRebuilder {
           final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
           final splitted = fulltitle?.splitArtistAndTitle();
 
-          final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$2?.keepFeatKeywordsOnly(), streams, pageResult, videoItem);
-          if (possibleExtracted != null) return possibleExtracted;
+          if (fallbackExtractInfoFromDescription) {
+            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$2?.keepFeatKeywordsOnly(), streams, pageResult, videoItem);
+            if (possibleExtracted != null) return possibleExtracted;
+          }
 
           return splitted?.$2?.keepFeatKeywordsOnly() ?? streams?.info?.title ?? fulltitle;
         }(),
@@ -120,8 +124,10 @@ class _YtFilenameRebuilder {
 
           if (fulltitle != null) {
             final splitted = fulltitle.splitArtistAndTitle();
-            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$1, streams, pageResult, videoItem);
-            if (possibleExtracted != null) return possibleExtracted;
+            if (fallbackExtractInfoFromDescription) {
+              final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$1, streams, pageResult, videoItem);
+              if (possibleExtracted != null) return possibleExtracted;
+            }
             final String? artist = splitted.$1;
             if (artist != null) return artist;
           } else {
@@ -203,10 +209,11 @@ class _YtFilenameRebuilder {
       final description = _getDescription(streams, pageResult, videoItem);
       if (description != null) {
         final title = info?.$2?.splitFirst('(').splitFirst('[');
-        final regex = title == null ? RegExp('(song|info|details)\\W+(.+)', caseSensitive: false) : RegExp('(song|info|details)?\\W+(.+$title.+)', caseSensitive: false);
+        final regex = title == null ? RegExp('^\\W*(song|info|details)(.*)', caseSensitive: false) : RegExp('^\\W*(song|info|details)?(.*$title.*)', caseSensitive: false);
         final regexArtist = RegExp('artist:(.*)', caseSensitive: false);
         final regexTitle = RegExp('title:(.*)', caseSensitive: false);
-        for (final line in description.split('\n')) {
+        for (String line in description.split('\n')) {
+          line = line.replaceFirst(RegExp('Nightcore\\W*', caseSensitive: false), '');
           final m = regex.firstMatch(line);
           try {
             var infosLine = m?.group(2)?.splitArtistAndTitle();

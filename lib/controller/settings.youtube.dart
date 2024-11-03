@@ -17,6 +17,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final youtubeStyleMiniplayer = true.obs;
   final preferNewComments = false.obs;
   final autoExtractVideoTagsFromInfo = true.obs;
+  final fallbackExtractInfoDescription = true.obs;
   final isAudioOnlyMode = false.obs;
   final rememberAudioOnly = false.obs;
   final topComments = true.obs;
@@ -44,6 +45,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? rememberAudioOnly,
     bool? topComments,
     bool? autoExtractVideoTagsFromInfo,
+    bool? fallbackExtractInfoDescription,
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     YTSeekActionMode? tapToSeek,
     YTSeekActionMode? dragToSeek,
@@ -67,6 +69,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (rememberAudioOnly != null) this.rememberAudioOnly.value = rememberAudioOnly;
     if (topComments != null) this.topComments.value = topComments;
     if (autoExtractVideoTagsFromInfo != null) this.autoExtractVideoTagsFromInfo.value = autoExtractVideoTagsFromInfo;
+    if (fallbackExtractInfoDescription != null) this.fallbackExtractInfoDescription.value = fallbackExtractInfoDescription;
     if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
     if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
@@ -104,6 +107,7 @@ class _YoutubeSettings with SettingsFileWriter {
       youtubeStyleMiniplayer.value = json['youtubeStyleMiniplayer'] ?? youtubeStyleMiniplayer.value;
       preferNewComments.value = json['preferNewComments'] ?? preferNewComments.value;
       autoExtractVideoTagsFromInfo.value = json['autoExtractVideoTagsFromInfo'] ?? autoExtractVideoTagsFromInfo.value;
+      fallbackExtractInfoDescription.value = json['fallbackExtractInfoDescription'] ?? fallbackExtractInfoDescription.value;
       rememberAudioOnly.value = json['rememberAudioOnly'] ?? rememberAudioOnly.value;
       if (rememberAudioOnly.value) isAudioOnlyMode.value = json['isAudioOnlyMode'] ?? isAudioOnlyMode.value;
       topComments.value = json['topComments'] ?? topComments.value;
@@ -142,6 +146,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'youtubeStyleMiniplayer': youtubeStyleMiniplayer.value,
         'preferNewComments': preferNewComments.value,
         'autoExtractVideoTagsFromInfo': autoExtractVideoTagsFromInfo.value,
+        'fallbackExtractInfoDescription': fallbackExtractInfoDescription.value,
         'isAudioOnlyMode': isAudioOnlyMode.value,
         'rememberAudioOnly': rememberAudioOnly.value,
         'topComments': topComments.value,
