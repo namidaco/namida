@@ -7,6 +7,7 @@ class _YoutubeCurrentInfoController {
   bool get _canShowComments => settings.youtube.youtubeStyleMiniplayer.value;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
+  RxBaseCore<VideoStreamInfo?> get currentStreamInfo => _currentStreamInfo;
   RxBaseCore<YoutiPieChannelPageResult?> get currentChannelPage => _currentChannelPage;
   RxBaseCore<YoutiPieCommentResult?> get currentComments => _currentComments;
   RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
@@ -21,6 +22,7 @@ class _YoutubeCurrentInfoController {
   final currentCachedQualities = <NamidaVideo>[].obs;
 
   final _currentVideoPage = Rxn<YoutiPieVideoPageResult>();
+  final _currentStreamInfo = Rxn<VideoStreamInfo>();
   final _currentChannelPage = Rxn<YoutiPieChannelPageResult>();
   final _currentRelatedVideos = Rxn<YoutiPieRelatedVideosResult>();
   final _currentComments = Rxn<YoutiPieCommentResult>();
@@ -41,6 +43,7 @@ class _YoutubeCurrentInfoController {
   void resetAll() {
     currentCachedQualities.clear();
     _currentVideoPage.value = null;
+    _currentStreamInfo.value = null;
     _currentChannelPage.value = null;
     _currentRelatedVideos.value = null;
     _currentComments.value = null;
@@ -56,6 +59,11 @@ class _YoutubeCurrentInfoController {
     final vidPageCached = await vidcache.readAsync();
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentVideoPage.value = vidPageCached;
+
+    final streamInfo = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
+    final streamInfoCached = await streamInfo.readAsync();
+    if (!_canSafelyModifyMetadata(videoId)) return false;
+    _currentStreamInfo.value = streamInfoCached?.info;
 
     final chId = vidPageCached?.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
     final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).readAsync();

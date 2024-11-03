@@ -1,23 +1,22 @@
-library namidayoutubeinfo;
-
 import 'dart:async';
 import 'dart:io';
 
 import 'package:logger/logger.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:queue/queue.dart';
-import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/channels/channel_page_about.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/channels/channel_tab.dart';
 import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/related_videos_request_params.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/result_wrapper/history_result.dart';
 import 'package:youtipie/class/result_wrapper/related_videos_result.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/enum.dart';

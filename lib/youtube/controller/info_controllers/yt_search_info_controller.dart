@@ -1,4 +1,4 @@
-part of namidayoutubeinfo;
+part of '../youtube_info_controller.dart';
 
 class _SearchInfoController {
   const _SearchInfoController();
