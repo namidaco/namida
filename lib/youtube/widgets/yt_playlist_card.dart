@@ -32,7 +32,6 @@ class YoutubePlaylistCard extends StatefulWidget {
   final double? thumbnailHeight;
   final bool playOnTap;
   final String? firstVideoID;
-  final String Function()? playingId;
   final bool isMixPlaylist;
   final bool minimalCard;
 
@@ -44,7 +43,6 @@ class YoutubePlaylistCard extends StatefulWidget {
     this.thumbnailHeight,
     this.playOnTap = false,
     required this.firstVideoID,
-    required this.playingId,
     required this.isMixPlaylist,
     this.minimalCard = false,
   });
@@ -61,7 +59,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) async {
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
     if (widget.isMixPlaylist) {
-      final videoId = widget.firstVideoID ?? widget.playingId?.call() ?? widget.playlist.id.substring(2);
+      final videoId = widget.firstVideoID ?? widget.playlist.id.substring(2);
       if (videoId.isEmpty) return null;
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,

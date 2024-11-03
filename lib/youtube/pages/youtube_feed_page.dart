@@ -118,7 +118,6 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                           thumbnailHeight: thumbnailHeight,
                           subtitle: item.subtitle,
                           playOnTap: true,
-                          playingId: null,
                           isMixPlaylist: item.isMix,
                         ),
                   _ => const YoutubeVideoCardDummy(

@@ -265,7 +265,6 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                                   thumbnailWidth: itemThumbnailWidth + paddingForThumbnail,
                                                   subtitle: subItem.subtitle,
                                                   firstVideoID: subItem.initialVideos.firstOrNull?.id,
-                                                  playingId: null,
                                                   isMixPlaylist: subItem.isMix,
                                                 );
                                               }
@@ -355,7 +354,6 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                       subtitle: item.subtitle,
                                       playOnTap: false,
                                       firstVideoID: item.initialVideos.firstOrNull?.id,
-                                      playingId: null,
                                       isMixPlaylist: item.isMix,
                                     ),
                                   const (YoutiPieChannelInfo) => YoutubeChannelCard(

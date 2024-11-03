@@ -94,7 +94,6 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
             thumbnailHeight: thumbnailHeight,
             firstVideoID: null,
             isMixPlaylist: playlist.isMix,
-            playingId: null,
             playOnTap: false,
           );
         });

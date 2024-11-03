@@ -375,7 +375,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                                   firstVideoID: item.initialVideos.firstOrNull?.id,
                                                                   subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
                                                                   isMixPlaylist: item.isMix,
-                                                                  playingId: null,
                                                                 ),
                                                           const (YoutiPieChannelInfo) => YoutubeChannelCard(
                                                               channel: item as YoutiPieChannelInfo,
