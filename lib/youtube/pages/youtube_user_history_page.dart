@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'package:youtipie/class/chunks/history_chunk.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/result_wrapper/history_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -214,8 +216,12 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
                     return (e.id, null);
                   } else if (e is StreamInfoItemShort) {
                     return (e.id, null);
+                  } else if (e is ChannelInfoItem) {
+                    return (e.id, null);
+                  } else if (e is PlaylistInfoItem) {
+                    return (e.id, null);
                   }
-                  throw Exception('itemToYTID unknown type');
+                  throw Exception('itemToYTID unknown type ${e.runtimeType}');
                 },
                 day: null,
                 index: index,

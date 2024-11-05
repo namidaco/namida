@@ -282,8 +282,12 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                                     return (e.id, null);
                                                   } else if (e is StreamInfoItemShort) {
                                                     return (e.id, null);
+                                                  } else if (e is ChannelInfoItem) {
+                                                    return (e.id, null);
+                                                  } else if (e is PlaylistInfoItem) {
+                                                    return (e.id, null);
                                                   }
-                                                  throw Exception('itemToYTID unknown type');
+                                                  throw Exception('itemToYTID unknown type ${e.runtimeType}');
                                                 },
                                                 day: null,
                                                 index: index,
