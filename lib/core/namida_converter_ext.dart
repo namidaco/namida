@@ -246,6 +246,8 @@ extension MediaInfoToFAudioModel on MediaInfo {
     int? parsy(String? v) => v == null ? null : int.tryParse(v);
     final bitrate = parsy(infoFull.format?.bitRate); // 234292
     final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
+    String? format = infoFull.format?.formatName;
+    if (format != null && format.isNotEmpty) format = format.replaceFirst(RegExp('flac', caseSensitive: false), 'FLAC');
     return FAudioModel(
       tags: FTags(
         path: infoFull.path,
@@ -283,7 +285,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
                 2: 'stereo',
               }[audioStream?.channels] ??
               'unknown',
-      format: infoFull.format?.formatName,
+      format: format,
       sampleRate: parsy(audioStream?.sampleRate),
     );
   }

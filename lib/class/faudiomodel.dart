@@ -239,13 +239,15 @@ class FAudioModel {
   }
 
   factory FAudioModel.fromMap(Map<String, dynamic> map) {
+    String? format = map["format"];
+    if (format != null && format.isNotEmpty) format = format.replaceFirst(RegExp('flac', caseSensitive: false), 'FLAC');
     return FAudioModel(
       tags: FTags.fromMap(map),
       durationMS: map["durationMS"],
       bitRate: map["bitRate"],
       channels: map["channels"],
       encodingType: map["encodingType"],
-      format: map["format"],
+      format: format,
       sampleRate: map["sampleRate"],
       isVariableBitRate: map["isVariableBitRate"],
       isLoseless: map["isLoseless"],
