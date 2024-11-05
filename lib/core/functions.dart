@@ -178,7 +178,7 @@ class NamidaOnTaps {
 
     if (isHistory) {
       final tempList = List<TrackWithDate>.from(tracksWithDates);
-      await HistoryController.inst.removeTracksFromHistory(tracksWithDates);
+      await HistoryController.inst.removeTracksFromHistory(tempList);
       showSnacky(
         whatDoYouWant: () async {
           final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList, preventDuplicate: true);

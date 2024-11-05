@@ -654,7 +654,7 @@ class YTUtils {
 
     if (isHistory) {
       final tempList = List<YoutubeID>.from(videosToDelete);
-      await YoutubeHistoryController.inst.removeTracksFromHistory(videosToDelete);
+      await YoutubeHistoryController.inst.removeTracksFromHistory(tempList);
       showSnacky(
         whatDoYouWant: () async {
           await YoutubeHistoryController.inst.addTracksToHistory(tempList);
