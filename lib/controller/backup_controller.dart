@@ -45,7 +45,8 @@ class BackupController {
       final diff = DateTime.now().difference(lastModified).abs().inDays;
       if (diff > interval) {
         final itemsToBackup = [
-          AppPaths.TRACKS,
+          AppPaths.TRACKS_OLD,
+          AppPaths.TRACKS_DB_INFO.file.path,
           AppPaths.TRACKS_STATS_OLD,
           AppPaths.TRACKS_STATS_DB_INFO.file.path,
           AppPaths.TOTAL_LISTEN_TIME,

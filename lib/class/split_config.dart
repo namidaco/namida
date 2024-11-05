@@ -3,13 +3,13 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 class SplitArtistGenreConfigsWrapper {
-  final String path;
+  final String dbPath;
   final ArtistsSplitConfig artistsConfig;
   final GenresSplitConfig genresConfig;
   final GeneralSplitConfig generalConfig;
 
   const SplitArtistGenreConfigsWrapper({
-    required this.path,
+    required this.dbPath,
     required this.artistsConfig,
     required this.genresConfig,
     required this.generalConfig,
@@ -17,7 +17,7 @@ class SplitArtistGenreConfigsWrapper {
 
   factory SplitArtistGenreConfigsWrapper.settings() {
     return SplitArtistGenreConfigsWrapper(
-      path: AppPaths.TRACKS,
+      dbPath: AppPaths.TRACKS_DB_INFO.file.path,
       artistsConfig: ArtistsSplitConfig.settings(),
       genresConfig: GenresSplitConfig.settings(),
       generalConfig: GeneralSplitConfig(),

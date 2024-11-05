@@ -114,7 +114,8 @@ class _SettingsController with SettingsFileWriter {
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
   final RxList<String> backupItemslist = [
-    AppPaths.TRACKS,
+    AppPaths.TRACKS_OLD,
+    AppPaths.TRACKS_DB_INFO.file.path,
     AppPaths.TRACKS_STATS_OLD,
     AppPaths.TRACKS_STATS_DB_INFO.file.path,
     AppPaths.TOTAL_LISTEN_TIME,

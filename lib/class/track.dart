@@ -317,6 +317,7 @@ class TrackExtended {
   }
 
   factory TrackExtended.fromJson(
+    String path,
     Map<String, dynamic> json, {
     required ArtistsSplitConfig artistsSplitConfig,
     required GenresSplitConfig genresSplitConfig,
@@ -349,7 +350,7 @@ class TrackExtended {
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,
       dateModified: json['dateModified'] ?? 0,
-      path: json['path'] ?? '',
+      path: path,
       comment: json['comment'] ?? '',
       description: json['description'] ?? '',
       synopsis: json['synopsis'] ?? '',
@@ -372,7 +373,7 @@ class TrackExtended {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJsonWithoutPath() {
     return {
       if (title.isNotEmpty) 'title': title,
       if (originalArtist.isNotEmpty) 'originalArtist': originalArtist,
@@ -387,7 +388,6 @@ class TrackExtended {
       if (size > 0) 'size': size,
       if (dateAdded > 0) 'dateAdded': dateAdded,
       if (dateModified > 0) 'dateModified': dateModified,
-      if (path.isNotEmpty) 'path': path,
       if (comment.isNotEmpty) 'comment': comment,
       if (description.isNotEmpty) 'description': description,
       if (synopsis.isNotEmpty) 'synopsis': synopsis,
