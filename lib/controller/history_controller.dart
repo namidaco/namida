@@ -143,7 +143,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
           (response as List?)?.loop((e) {
             var twd = TrackWithDate.fromJson(e);
             listTracks.add(twd);
-            tempMapTopItems.addForce(twd.track, twd.dateTimeAdded.millisecondsSinceEpoch);
+            tempMapTopItems.addForce(twd.track, twd.dateAdded);
           });
           map[dayOfTrack] = listTracks;
           totalCount += listTracks.length;

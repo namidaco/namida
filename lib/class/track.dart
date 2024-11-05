@@ -52,7 +52,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
   }
 
   @override
-  DateTime get dateTimeAdded => DateTime.fromMillisecondsSinceEpoch(dateAdded);
+  int get dateAddedMS => dateAdded;
 
   @override
   bool operator ==(covariant TrackWithDate other) {

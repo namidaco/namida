@@ -658,7 +658,7 @@ class YTUtils {
       showSnacky(
         whatDoYouWant: () async {
           await YoutubeHistoryController.inst.addTracksToHistory(tempList);
-          YoutubeHistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateTimeAdded.toDaysSince1970()));
+          YoutubeHistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAddedMS.toDaysSince1970()));
         },
       );
     } else {

@@ -43,30 +43,31 @@ class YoutubeVideoHistory {
 }
 
 class YTWatch {
-  final DateTime? dateNull;
+  final int? dateMSNull;
   final bool isYTMusic;
 
-  DateTime get date => _date;
-  DateTime get _date => dateNull ?? DateTime.now();
+  int get dateMS => dateMSNull ?? 0;
 
   const YTWatch({
-    required this.dateNull,
+    required this.dateMSNull,
     required this.isYTMusic,
   });
 
+  static final _millis1970 = DateTime(1970).millisecondsSinceEpoch;
+
   factory YTWatch.fromJson(Map<String, dynamic>? json) {
     if (json == null) {
-      return YTWatch(dateNull: DateTime(1970), isYTMusic: false);
+      return YTWatch(dateMSNull: _millis1970, isYTMusic: false);
     }
     return YTWatch(
-      dateNull: DateTime.fromMillisecondsSinceEpoch(json['date'] ?? 0),
+      dateMSNull: json['date'] ?? 0,
       isYTMusic: json['isYTMusic'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'date': _date.millisecondsSinceEpoch,
+      'date': dateMS,
       'isYTMusic': isYTMusic,
     };
   }
@@ -74,11 +75,11 @@ class YTWatch {
   @override
   bool operator ==(covariant YTWatch other) {
     if (identical(this, other)) return true;
-    return other.dateNull == dateNull && other.isYTMusic == isYTMusic;
+    return other.dateMSNull == dateMSNull && other.isYTMusic == isYTMusic;
   }
 
   @override
-  int get hashCode => dateNull.hashCode ^ isYTMusic.hashCode;
+  int get hashCode => dateMSNull.hashCode ^ isYTMusic.hashCode;
 }
 
 class NamidaVideo {

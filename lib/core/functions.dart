@@ -687,8 +687,8 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         config: CalendarDatePicker2Config(
           calendarType: calendarType,
           currentDate: initialDate,
-          firstDate: useHistoryDates ? historyController.oldestTrack?.dateTimeAdded : firstDate,
-          lastDate: useHistoryDates ? historyController.newestTrack?.dateTimeAdded : lastDate,
+          firstDate: useHistoryDates ? historyController.oldestTrack?.dateAddedMS.milliSecondsSinceEpoch : firstDate,
+          lastDate: useHistoryDates ? historyController.newestTrack?.dateAddedMS.milliSecondsSinceEpoch : lastDate,
         ),
         value: const [],
       ),

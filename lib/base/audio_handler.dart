@@ -392,9 +392,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         await HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },
       youtubeID: (finalItem) async {
+        final dateAddedMS = DateTime.now().millisecondsSinceEpoch;
         final newListen = YoutubeID(
           id: finalItem.id,
-          watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
+          watchNull: YTWatch(dateMSNull: dateAddedMS, isYTMusic: false),
           playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
         );
         await YoutubeHistoryController.inst.addTracksToHistory([newListen]);

@@ -18,11 +18,9 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
   final PlaylistID? playlistID;
 
   @override
-  DateTime get dateTimeAdded => _date;
+  int get dateAddedMS => watchNull?.dateMSNull ?? 0;
 
-  DateTime get _date => watch.date;
-
-  YTWatch get watch => watchNull ?? const YTWatch(dateNull: null, isYTMusic: false);
+  YTWatch get watch => watchNull ?? const YTWatch(dateMSNull: null, isYTMusic: false);
 
   const YoutubeID({
     required this.id,
@@ -49,14 +47,14 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
 
   @override
   bool operator ==(other) {
-    return other is YoutubeID && id == other.id && _date.millisecondsSinceEpoch == other._date.millisecondsSinceEpoch;
+    return other is YoutubeID && id == other.id && dateAddedMS == other.dateAddedMS;
   }
 
   @override
-  int get hashCode => id.hashCode ^ _date.hashCode;
+  int get hashCode => id.hashCode ^ dateAddedMS.hashCode;
 
   @override
-  String toString() => "YoutubeID(id: $id, addedDate: $_date, playlistID: $playlistID)";
+  String toString() => "YoutubeID(id: $id, dateAddedMS: $dateAddedMS, playlistID: $playlistID)";
 }
 
 extension YoutubeIDUtils on YoutubeID {
@@ -67,6 +65,6 @@ extension YoutubeIDUtils on YoutubeID {
 
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
-    await Share.share(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateTimeAdded.millisecondsSinceEpoch.dateAndClockFormattedOriginal}\n").join());
+    await Share.share(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join());
   }
 }

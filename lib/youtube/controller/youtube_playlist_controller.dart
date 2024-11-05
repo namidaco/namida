@@ -46,7 +46,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
       convertItem: (id, dateAdded, playlistID) {
         return YoutubeID(
           id: id,
-          watchNull: YTWatch(dateNull: dateAdded.milliSecondsSinceEpoch, isYTMusic: false),
+          watchNull: YTWatch(dateMSNull: dateAdded, isYTMusic: false),
           playlistID: playlistID,
         );
       },
@@ -70,7 +70,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
       (id, dateAdded) {
         return YoutubeID(
           id: id,
-          watchNull: YTWatch(dateNull: dateAdded.milliSecondsSinceEpoch, isYTMusic: false),
+          watchNull: YTWatch(dateMSNull: dateAdded, isYTMusic: false),
           playlistID: playlist.playlistID,
         );
       },
@@ -93,7 +93,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
     final res = super.toggleTrackFavourite(
       YoutubeID(
         id: videoId,
-        watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
+        watchNull: YTWatch(dateMSNull: DateTime.now().millisecondsSinceEpoch, isYTMusic: false),
         playlistID: favouritesPlaylist.value.playlistID,
       ),
     );

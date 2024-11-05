@@ -47,7 +47,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     Widget? topRightWidget;
     if (listens != null) {
       final listensLength = listens.length;
-      final watchMS = watch.dateTimeAdded.millisecondsSinceEpoch;
+      final watchMS = watch.dateAddedMS;
       if (listensLength > 1) {
         final firstListen = listens.firstOrNull;
         if (watchMS == firstListen) {

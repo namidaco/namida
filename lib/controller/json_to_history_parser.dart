@@ -611,13 +611,13 @@ class JsonToHistoryParser {
         final tracksWithDates = tracks
             .map(
               (e) => TrackWithDate(
-                dateAdded: vh.dateTimeAdded.millisecondsSinceEpoch,
+                dateAdded: vh.dateAddedMS,
                 track: e,
                 source: vh.watch.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
               ),
             )
             .toList();
-        final day = vh.dateTimeAdded.toDaysSince1970();
+        final day = vh.dateAddedMS.toDaysSince1970();
         final dayLengthBefore = historyMap[day]?.length ?? 0;
         totalCount += tracksWithDates.length;
         final days = HistoryController.inst.addTracksToHistoryOnly(tracksWithDates, preventDuplicate: true);
@@ -719,14 +719,14 @@ class JsonToHistoryParser {
           channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
           watches: [
             YTWatch(
-              dateNull: DateTime.parse(p['time'] ?? 0),
+              dateMSNull: DateTime.tryParse(p['time'] ?? '')?.millisecondsSinceEpoch,
               isYTMusic: p['header'] == "YouTube Music",
             )
           ],
         );
         // -- updating affected ids map, used to update youtube stats
         if (mapOfAffectedIds[id] != null) {
-          mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateNull: e.date, isYTMusic: e.isYTMusic)));
+          mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
         } else {
           mapOfAffectedIds[id] = yth;
         }
@@ -747,7 +747,7 @@ class JsonToHistoryParser {
         );
         totalAdded += tracks.length;
         tracks.loop((item) {
-          final day = item.dateTimeAdded.toDaysSince1970();
+          final day = item.dateAdded.toDaysSince1970();
           final tracks = localHistory[day] ??= [];
           if (!tracks.contains(item)) {
             daysToSaveLocal.add(day);
@@ -771,7 +771,7 @@ class JsonToHistoryParser {
               watchNull: w,
               playlistID: null,
             );
-            final day = ytid.dateTimeAdded.toDaysSince1970();
+            final day = ytid.dateAddedMS.toDaysSince1970();
             final videos = ytHistory[day] ??= [];
             if (!videos.contains(ytid)) {
               daysToSaveYT.add(day);
@@ -820,7 +820,7 @@ class JsonToHistoryParser {
 
     // -- if the watch day is outside range specified
     if (oldestDay != null && newestDay != null) {
-      final watchAsDSE = watch.date.toDaysSince1970();
+      final watchAsDSE = watch.dateMS.toDaysSince1970();
       if (watchAsDSE < oldestDay || watchAsDSE > newestDay) return false;
     }
 
@@ -894,7 +894,7 @@ class JsonToHistoryParser {
         if (canAdd) {
           tracksToAdd.addAll(
             tracks.map((tr) => TrackWithDate(
-                  dateAdded: d.date.millisecondsSinceEpoch,
+                  dateAdded: d.dateMS,
                   track: tr,
                   source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
                 )),
@@ -906,7 +906,7 @@ class JsonToHistoryParser {
         vh.watches
             .map((e) => _MissingListenEntry(
                   youtubeID: vh.id,
-                  dateMSSE: e.date.millisecondsSinceEpoch,
+                  dateMSSE: e.dateMS,
                   source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
                   artistOrChannel: vh.channel,
                   title: vh.title,
@@ -1088,7 +1088,7 @@ class JsonToHistoryParser {
               track: Track.decide(trMap['path'] ?? '', trMap['v']),
               source: TrackSource.lastfm,
             );
-            final day = twd.dateTimeAdded.toDaysSince1970();
+            final day = twd.dateAdded.toDaysSince1970();
             final tracks = localHistory[day] ??= [];
             if (!tracks.contains(twd)) {
               daysToSaveLocal.add(day);
@@ -1193,7 +1193,7 @@ class JsonToHistoryParser {
         final video = affectedv.value;
         if (videosMapInStorage[id] != null) {
           // -- video exists inside the file, so we add only new watches
-          videosMapInStorage[id]!.watches.addAllNoDuplicates(video.watches.map((e) => YTWatch(dateNull: e.date, isYTMusic: e.isYTMusic)));
+          videosMapInStorage[id]!.watches.addAllNoDuplicates(video.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
         } else {
           // -- video does NOT exist, so the whole video is added with all its watches.
           videosMapInStorage[id] = video;

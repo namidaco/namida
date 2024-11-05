@@ -206,7 +206,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
 
     String? dateText;
     if (displayTimeAgo) {
-      final watchMS = videoWatch?.date.millisecondsSinceEpoch;
+      final watchMS = videoWatch?.dateMSNull;
       if (watchMS != null) dateText = minimalCard ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow() : watchMS.dateAndClockFormattedOriginal;
     }
 

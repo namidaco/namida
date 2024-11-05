@@ -67,7 +67,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
           (response as List?)?.loop((e) {
             var vid = YoutubeID.fromJson(e);
             listVideos.add(vid);
-            tempMapTopItems.addForce(vid.id, vid.dateTimeAdded.millisecondsSinceEpoch);
+            tempMapTopItems.addForce(vid.id, vid.dateAddedMS);
           });
           map[dayOfVideo] = listVideos;
           totalCount += listVideos.length;
