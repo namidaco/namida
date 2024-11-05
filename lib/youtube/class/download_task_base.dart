@@ -1,21 +1,46 @@
-abstract class DownloadTask<T> {
-  const DownloadTask();
-
-  @override
-  String toString();
-}
-
-class DownloadTaskFilename extends DownloadTask {
+class DownloadTaskFilename {
   String filename;
-
-  String get key => hashCode.toString();
+  late String key;
+  late int _uniqueKey;
 
   DownloadTaskFilename.create({
     required String initialFilename,
-  }) : filename = initialFilename;
+  }) : filename = initialFilename {
+    _uniqueKey = hashCode ^ DateTime.now().microsecondsSinceEpoch.hashCode;
+    key = _uniqueKey.toString();
+  }
+
+  DownloadTaskFilename._({
+    required this.filename,
+    required String? key,
+  }) {
+    this._uniqueKey = (key == null ? null : int.tryParse(key)) ?? (hashCode ^ DateTime.now().microsecondsSinceEpoch);
+    this.key = _uniqueKey.toString();
+  }
 
   @override
   String toString() => filename;
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'filename': filename,
+      'key': key,
+    };
+  }
+
+  factory DownloadTaskFilename.fromMap(dynamic value) {
+    if (value is Map) {
+      return DownloadTaskFilename._(
+        filename: value['filename'] as String? ?? 'UNKNOWN_FILENAME',
+        key: value['key'] as String?,
+      );
+    }
+    // -- old string only
+    return DownloadTaskFilename._(
+      filename: value as String,
+      key: null,
+    );
+  }
 }
 
 class DownloadTaskVideoId {

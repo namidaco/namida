@@ -283,7 +283,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
     if (forceRequest == false && _downloadCompleters[mapKey] != null) {
       final res = await _downloadCompleters[mapKey]!.future;
-      _requestsCountForId.update(id, (value) => value - 1);
+      _requestsCountForId.update(id, (value) => value - 1, ifAbsent: () => 0);
       if (res != null || _shouldRetry[id] != true) {
         return res;
       }
@@ -304,7 +304,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     await sendPort(p);
     final res = await _downloadCompleters[mapKey]?.future;
 
-    _requestsCountForId.update(id, (value) => value - 1);
+    _requestsCountForId.update(id, (value) => value - 1, ifAbsent: () => 0);
     return res;
   }
 

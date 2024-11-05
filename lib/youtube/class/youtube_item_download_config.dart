@@ -66,9 +66,10 @@ class YoutubeItemDownloadConfig {
     try {
       streamInfoItem = StreamInfoItem.fromMap(map['streamInfoItem']);
     } catch (_) {}
+
     return YoutubeItemDownloadConfig(
       id: DownloadTaskVideoId(videoId: map['id'] ?? 'UNKNOWN_ID'),
-      filename: DownloadTaskFilename.create(initialFilename: map['filename'] ?? 'UNKNOWN_FILENAME'),
+      filename: DownloadTaskFilename.fromMap(map['filename']),
       groupName: DownloadTaskGroupName(groupName: map['groupName'] ?? ''),
       fileDate: DateTime.fromMillisecondsSinceEpoch(map['fileDate'] ?? 0),
       ffmpegTags: (map['ffmpegTags'] as Map<String, dynamic>?)?.cast() ?? {},
@@ -89,7 +90,7 @@ class YoutubeItemDownloadConfig {
     return {
       'id': id.videoId,
       'groupName': groupName.groupName,
-      'filename': filename.filename,
+      'filename': filename.toMap(),
       'ffmpegTags': ffmpegTags,
       'fileDate': fileDate?.millisecondsSinceEpoch,
       'videoStream': videoStream?.toMap(),
