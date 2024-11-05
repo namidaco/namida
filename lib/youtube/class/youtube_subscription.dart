@@ -35,11 +35,14 @@ class YoutubeSubscription {
 
   @override
   bool operator ==(covariant YoutubeSubscription other) {
-    return title == other.title && channelID == other.channelID && subscribed == other.subscribed && lastFetched == other.lastFetched;
+    if (identical(this, other)) return true;
+    return other.title == title && other.channelID == channelID && other.subscribed == subscribed && other.lastFetched == lastFetched;
   }
 
   @override
-  int get hashCode => "${title}_${channelID}_${subscribed}_$lastFetched".hashCode;
+  int get hashCode {
+    return title.hashCode ^ channelID.hashCode ^ subscribed.hashCode ^ lastFetched.hashCode;
+  }
 
   @override
   String toString() => "YoutubeSubscription(title: $title, channelID: $channelID, subscribed: $subscribed, lastFetched: $lastFetched)";

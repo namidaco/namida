@@ -56,11 +56,12 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
 
   @override
   bool operator ==(covariant TrackWithDate other) {
-    return dateAdded == other.dateAdded && source == other.source && track == other.track;
+    if (identical(this, other)) return true;
+    return other.dateAdded == dateAdded && other._track == _track && other.source == source;
   }
 
   @override
-  int get hashCode => "$track$source$dateAdded".hashCode;
+  int get hashCode => dateAdded.hashCode ^ _track.hashCode ^ source.hashCode;
 
   @override
   String toString() => "track: ${track.toString()}, source: $source, dateAdded: $dateAdded";

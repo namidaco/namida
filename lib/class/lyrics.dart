@@ -19,14 +19,17 @@ class LyricsModel {
 
   @override
   bool operator ==(covariant LyricsModel other) {
-    return lyrics == other.lyrics &&
-        synced == other.synced &&
-        isInCache == other.isInCache &&
-        fromInternet == other.fromInternet &&
-        isEmbedded == other.isEmbedded &&
-        file == other.file;
+    if (identical(this, other)) return true;
+    return other.lyrics == lyrics &&
+        other.synced == synced &&
+        other.isInCache == isInCache &&
+        other.fromInternet == fromInternet &&
+        other.isEmbedded == isEmbedded &&
+        other.file == file;
   }
 
   @override
-  int get hashCode => "$lyrics$synced$isInCache$fromInternet$isEmbedded$file".hashCode;
+  int get hashCode {
+    return lyrics.hashCode ^ synced.hashCode ^ isInCache.hashCode ^ fromInternet.hashCode ^ isEmbedded.hashCode ^ file.hashCode;
+  }
 }

@@ -53,7 +53,7 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
   }
 
   @override
-  int get hashCode => "${id}_${_date.millisecondsSinceEpoch}".hashCode;
+  int get hashCode => id.hashCode ^ _date.hashCode;
 
   @override
   String toString() => "YoutubeID(id: $id, addedDate: $_date, playlistID: $playlistID)";

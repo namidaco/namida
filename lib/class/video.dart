@@ -73,11 +73,12 @@ class YTWatch {
 
   @override
   bool operator ==(covariant YTWatch other) {
-    return _date == other._date && isYTMusic == other.isYTMusic;
+    if (identical(this, other)) return true;
+    return other.dateNull == dateNull && other.isYTMusic == isYTMusic;
   }
 
   @override
-  int get hashCode => "${_date}_$isYTMusic".hashCode;
+  int get hashCode => dateNull.hashCode ^ isYTMusic.hashCode;
 }
 
 class NamidaVideo {

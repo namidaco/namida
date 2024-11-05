@@ -1204,9 +1204,12 @@ class _MissingListenEntry {
 
   @override
   bool operator ==(covariant _MissingListenEntry other) {
-    return youtubeID == other.youtubeID && source == other.source && title == other.title && artistOrChannel == other.artistOrChannel;
+    if (identical(this, other)) return true;
+    return other.dateMSSE == dateMSSE && other.source == source && other.youtubeID == youtubeID && other.title == title && other.artistOrChannel == artistOrChannel;
   }
 
   @override
-  int get hashCode => "$youtubeID$source$title$artistOrChannel".hashCode;
+  int get hashCode {
+    return dateMSSE.hashCode ^ source.hashCode ^ youtubeID.hashCode ^ title.hashCode ^ artistOrChannel.hashCode;
+  }
 }

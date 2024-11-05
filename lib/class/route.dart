@@ -37,11 +37,12 @@ abstract class NamidaRoute {
 
   @override
   bool operator ==(covariant NamidaRoute other) {
-    return route == other.route && name == other.name;
+    if (identical(this, other)) return true;
+    return other.route == route && other.name == name;
   }
 
   @override
-  int get hashCode => "$route$name".hashCode;
+  int get hashCode => route.hashCode ^ name.hashCode;
 }
 
 extension NamidaRouteWidgetUtils on NamidaRouteWidget {
