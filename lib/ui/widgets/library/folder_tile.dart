@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -25,12 +26,24 @@ class FolderTile extends StatelessWidget {
     required this.itemsToCountText,
   });
 
+  static final _infoMap = <Folder, String>{};
+  static String _getFolderExtraInfo(Folder folder) {
+    final file = FileParts.join(folder.path, '.info.txt');
+    if (file.existsSync()) {
+      try {
+        return file.readAsStringSync();
+      } catch (_) {}
+    }
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks();
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5);
+    final extraInfo = _infoMap[folder] ??= _getFolderExtraInfo(folder);
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
@@ -85,16 +98,30 @@ class FolderTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      folder.folderName,
-                      style: context.textTheme.displayMedium!,
-                    ),
+                    extraInfo.isNotEmpty
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                folder.folderName,
+                                style: context.textTheme.displayMedium,
+                              ),
+                              Text(
+                                ' - ($extraInfo)',
+                                style: context.textTheme.displaySmall,
+                              ),
+                            ],
+                          )
+                        : Text(
+                            folder.folderName,
+                            style: context.textTheme.displayMedium,
+                          ),
                     if (subtitle != null)
                       Text(
                         subtitle!,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
-                        style: context.textTheme.displaySmall!,
+                        style: context.textTheme.displaySmall,
                       ),
                     Text(
                       [
@@ -103,7 +130,7 @@ class FolderTile extends StatelessWidget {
                       ].join(' - '),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
-                      style: context.textTheme.displaySmall!,
+                      style: context.textTheme.displaySmall,
                     ),
                   ],
                 ),
