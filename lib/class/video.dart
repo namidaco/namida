@@ -141,17 +141,20 @@ class NamidaVideo {
 
   @override
   bool operator ==(covariant NamidaVideo other) {
-    return path == other.path &&
-        ytID == other.ytID &&
-        height == other.height &&
-        width == other.width &&
-        sizeInBytes == other.sizeInBytes &&
-        frameratePrecise == other.frameratePrecise &&
-        creationTimeMS == other.creationTimeMS;
+    if (identical(this, other)) return true;
+    return other.path == path &&
+        other.ytID == ytID &&
+        other.height == height &&
+        other.width == width &&
+        other.sizeInBytes == sizeInBytes &&
+        other.frameratePrecise == frameratePrecise &&
+        other.creationTimeMS == creationTimeMS;
   }
 
   @override
-  int get hashCode => "$path$ytID$height$width$sizeInBytes$frameratePrecise$creationTimeMS".hashCode;
+  int get hashCode {
+    return path.hashCode ^ ytID.hashCode ^ height.hashCode ^ width.hashCode ^ sizeInBytes.hashCode ^ frameratePrecise.hashCode ^ creationTimeMS.hashCode;
+  }
 
   @override
   String toString() {

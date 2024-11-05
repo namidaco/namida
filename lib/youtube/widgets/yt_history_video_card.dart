@@ -261,15 +261,12 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
           final threeLines = draggableThumbnail ? ThreeLineSmallContainers(enabled: draggingEnabled, color: itemsColor5) : null;
           final children = [
             if (threeLines != null) draggingBarsBuilder?.call(itemsColor5) ?? threeLines,
-            SizedBox(
-              width: minimalCard ? null : Dimensions.youtubeCardItemVerticalPadding,
-            ),
             Stack(
               alignment: Alignment.center,
               children: [
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(1.0),
+                    padding: minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
                     child: YoutubeThumbnail(
                       type: ThumbnailType.video,
                       key: Key(videoId),
@@ -289,7 +286,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                 if (draggingThumbWidget != null) draggingThumbnailBuilder?.call(draggingThumbWidget) ?? draggingThumbWidget
               ],
             ),
-            const SizedBox(width: 12.0),
+            const SizedBox(width: 8.0),
             Expanded(
               child: Padding(
                   padding: minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,

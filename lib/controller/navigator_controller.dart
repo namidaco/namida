@@ -515,6 +515,7 @@ SnackbarController? snackyy({
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
         fontWeight: fontWeight,
         fontSize: size,
+        height: 1.25,
         color: action ? null : itemsColor,
         fontFamily: "LexendDeca",
         fontFamilyFallback: const ['sans-serif', 'Roboto'],
@@ -526,9 +527,9 @@ SnackbarController? snackyy({
   final EdgeInsets paddingInsets;
   if (button != null) {
     if (title.isNotEmpty && message.isNotEmpty) {
-      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0);
+      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
     } else {
-      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0);
+      paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
     }
   } else if (icon != null || title != '') {
     paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
