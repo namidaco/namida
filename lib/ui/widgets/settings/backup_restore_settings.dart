@@ -578,113 +578,131 @@ class BackupAndRestore extends SettingSubpageProvider {
               onTap: () {
                 if (!_canDoImport(isYT: true)) return;
 
+                void onConfirm(bool pickDirectory) async {
+                  Widget getTitleText(String text) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
+                        child: Text("- $text", style: namida.textTheme.displayLarge),
+                      );
+
+                  var jsonfiles = <File>[];
+                  Directory? mainDirectory;
+                  if (pickDirectory) {
+                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.IMPORT_YOUTUBE_HISTORY);
+                  } else {
+                    jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.json);
+                  }
+                  if (jsonfiles.isNotEmpty || mainDirectory != null) {
+                    final isMatchingTypeLink = true.obs;
+                    final isMatchingTypeTitleAndArtist = false.obs;
+                    final matchYT = true.obs;
+                    final matchYTMusic = true.obs;
+                    final matchAll = false.obs;
+                    final oldestDate = Rxn<DateTime>();
+                    DateTime? newestDate;
+                    NamidaNavigator.inst.navigateDialog(
+                      onDisposing: () {
+                        isMatchingTypeLink.close();
+                        isMatchingTypeTitleAndArtist.close();
+                        matchYT.close();
+                        matchYTMusic.close();
+                        matchAll.close();
+                        oldestDate.close();
+                      },
+                      dialog: CustomBlurryDialog(
+                        title: lang.CONFIGURE,
+                        actions: [
+                          Obx(
+                            (context) => NamidaButton(
+                              enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
+                              textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                              onPressed: () async {
+                                NamidaNavigator.inst.closeDialog();
+                                await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                                  files: jsonfiles,
+                                  mainDirectory: mainDirectory,
+                                  source: TrackSource.youtube,
+                                  ytIsMatchingTypeLink: isMatchingTypeLink.value,
+                                  isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
+                                  ytMatchYT: matchYT.value,
+                                  ytMatchYTMusic: matchYTMusic.value,
+                                  oldestDate: oldestDate.value,
+                                  newestDate: newestDate,
+                                  matchAll: matchAll.value,
+                                );
+                              },
+                            ),
+                          )
+                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            getTitleText(lang.SOURCE),
+                            ListTileWithCheckMark(
+                              activeRx: matchYT,
+                              title: lang.YOUTUBE,
+                              onTap: matchYT.toggle,
+                            ),
+                            const SizedBox(height: 8.0),
+                            ListTileWithCheckMark(
+                              activeRx: matchYTMusic,
+                              title: lang.YOUTUBE_MUSIC,
+                              onTap: matchYTMusic.toggle,
+                            ),
+                            getDivider(),
+                            getTitleText(lang.MATCHING_TYPE),
+                            ListTileWithCheckMark(
+                              activeRx: isMatchingTypeLink,
+                              title: lang.LINK,
+                              onTap: isMatchingTypeLink.toggle,
+                            ),
+                            const SizedBox(height: 8.0),
+                            ListTileWithCheckMark(
+                              activeRx: isMatchingTypeTitleAndArtist,
+                              title: [lang.TITLE, lang.ARTIST].join(' & '),
+                              onTap: isMatchingTypeTitleAndArtist.toggle,
+                            ),
+                            getDivider(),
+                            Obx(
+                              (context) => matchAllTracksListTile(
+                                active: matchAll.valueR,
+                                onTap: matchAll.toggle,
+                                displayPerfWarning: isMatchingTypeTitleAndArtist.valueR, // link matching wont result in perf issue
+                              ),
+                            ),
+                            getDivider(),
+                            BetweenDatesTextButton(
+                              useHistoryDates: false,
+                              maxToday: true,
+                              onConfirm: (dates) {
+                                oldestDate.value = dates.firstOrNull;
+                                newestDate = dates.lastOrNull;
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                }
+
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.GUIDE,
                     actions: [
                       NamidaButton(
-                        text: lang.CONFIRM,
-                        onPressed: () async {
+                        text: lang.FOLDER,
+                        onPressed: () {
                           NamidaNavigator.inst.closeDialog();
-
-                          Widget getTitleText(String text) => Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
-                                child: Text("- $text", style: namida.textTheme.displayLarge),
-                              );
-
-                          final jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.json);
-                          if (jsonfiles.isNotEmpty) {
-                            final isMatchingTypeLink = true.obs;
-                            final isMatchingTypeTitleAndArtist = false.obs;
-                            final matchYT = true.obs;
-                            final matchYTMusic = true.obs;
-                            final matchAll = false.obs;
-                            final oldestDate = Rxn<DateTime>();
-                            DateTime? newestDate;
-                            NamidaNavigator.inst.navigateDialog(
-                              onDisposing: () {
-                                isMatchingTypeLink.close();
-                                isMatchingTypeTitleAndArtist.close();
-                                matchYT.close();
-                                matchYTMusic.close();
-                                matchAll.close();
-                                oldestDate.close();
-                              },
-                              dialog: CustomBlurryDialog(
-                                title: lang.CONFIGURE,
-                                actions: [
-                                  Obx(
-                                    (context) => NamidaButton(
-                                      enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
-                                      textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
-                                      onPressed: () async {
-                                        NamidaNavigator.inst.closeDialog();
-                                        await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
-                                          files: jsonfiles,
-                                          source: TrackSource.youtube,
-                                          ytIsMatchingTypeLink: isMatchingTypeLink.value,
-                                          isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
-                                          ytMatchYT: matchYT.value,
-                                          ytMatchYTMusic: matchYTMusic.value,
-                                          oldestDate: oldestDate.value,
-                                          newestDate: newestDate,
-                                          matchAll: matchAll.value,
-                                        );
-                                      },
-                                    ),
-                                  )
-                                ],
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    getTitleText(lang.SOURCE),
-                                    ListTileWithCheckMark(
-                                      activeRx: matchYT,
-                                      title: lang.YOUTUBE,
-                                      onTap: matchYT.toggle,
-                                    ),
-                                    const SizedBox(height: 8.0),
-                                    ListTileWithCheckMark(
-                                      activeRx: matchYTMusic,
-                                      title: lang.YOUTUBE_MUSIC,
-                                      onTap: matchYTMusic.toggle,
-                                    ),
-                                    getDivider(),
-                                    getTitleText(lang.MATCHING_TYPE),
-                                    ListTileWithCheckMark(
-                                      activeRx: isMatchingTypeLink,
-                                      title: lang.LINK,
-                                      onTap: isMatchingTypeLink.toggle,
-                                    ),
-                                    const SizedBox(height: 8.0),
-                                    ListTileWithCheckMark(
-                                      activeRx: isMatchingTypeTitleAndArtist,
-                                      title: [lang.TITLE, lang.ARTIST].join(' & '),
-                                      onTap: isMatchingTypeTitleAndArtist.toggle,
-                                    ),
-                                    getDivider(),
-                                    Obx(
-                                      (context) => matchAllTracksListTile(
-                                        active: matchAll.valueR,
-                                        onTap: matchAll.toggle,
-                                        displayPerfWarning: isMatchingTypeTitleAndArtist.valueR, // link matching wont result in perf issue
-                                      ),
-                                    ),
-                                    getDivider(),
-                                    BetweenDatesTextButton(
-                                      useHistoryDates: false,
-                                      maxToday: true,
-                                      onConfirm: (dates) {
-                                        oldestDate.value = dates.firstOrNull;
-                                        newestDate = dates.lastOrNull;
-                                        NamidaNavigator.inst.closeDialog();
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
+                          onConfirm(true);
+                        },
+                      ),
+                      SizedBox(width: 2.0),
+                      NamidaButton(
+                        text: lang.CONFIRM,
+                        onPressed: () {
+                          NamidaNavigator.inst.closeDialog();
+                          onConfirm(false);
                         },
                       ),
                     ],
@@ -726,70 +744,89 @@ class BackupAndRestore extends SettingSubpageProvider {
               onTap: () {
                 if (!_canDoImport(isYT: false)) return;
 
+                void onConfirm(bool pickDirectory) async {
+                  var csvFiles = <File>[];
+                  Directory? mainDirectory;
+                  if (pickDirectory) {
+                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.IMPORT_LAST_FM_HISTORY);
+                  } else {
+                    csvFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.csv);
+                  }
+
+                  if (csvFiles.isNotEmpty || mainDirectory != null) {
+                    final oldestDate = Rxn<DateTime>();
+                    DateTime? newestDate;
+                    final matchAll = false.obs;
+                    NamidaNavigator.inst.navigateDialog(
+                      onDisposing: () {
+                        oldestDate.close();
+                        matchAll.close();
+                      },
+                      dialog: CustomBlurryDialog(
+                        horizontalInset: 38.0,
+                        verticalInset: 38.0,
+                        title: lang.CONFIGURE,
+                        actions: [
+                          const CancelButton(),
+                          NamidaButton(
+                            textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                            onPressed: () async {
+                              NamidaNavigator.inst.closeDialog();
+                              await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                                files: csvFiles,
+                                mainDirectory: mainDirectory,
+                                source: TrackSource.lastfm,
+                                oldestDate: oldestDate.value,
+                                newestDate: newestDate,
+                                matchAll: matchAll.value,
+                              );
+                            },
+                          )
+                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Obx(
+                              (context) => matchAllTracksListTile(
+                                active: matchAll.valueR,
+                                onTap: matchAll.toggle,
+                                displayPerfWarning: true,
+                              ),
+                            ),
+                            getDivider(),
+                            BetweenDatesTextButton(
+                              useHistoryDates: false,
+                              maxToday: true,
+                              onConfirm: (dates) {
+                                NamidaNavigator.inst.closeDialog();
+                                oldestDate.value = dates.firstOrNull;
+                                newestDate = dates.lastOrNull;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                }
+
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     title: lang.GUIDE,
                     actions: [
                       NamidaButton(
+                        text: lang.FOLDER,
+                        onPressed: () {
+                          NamidaNavigator.inst.closeDialog();
+                          onConfirm(true);
+                        },
+                      ),
+                      SizedBox(width: 2.0),
+                      NamidaButton(
                         text: lang.CONFIRM,
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
-
-                          final csvFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.csv);
-                          if (csvFiles.isNotEmpty) {
-                            final oldestDate = Rxn<DateTime>();
-                            DateTime? newestDate;
-                            final matchAll = false.obs;
-                            NamidaNavigator.inst.navigateDialog(
-                              onDisposing: () {
-                                oldestDate.close();
-                                matchAll.close();
-                              },
-                              dialog: CustomBlurryDialog(
-                                horizontalInset: 38.0,
-                                verticalInset: 38.0,
-                                title: lang.CONFIGURE,
-                                actions: [
-                                  const CancelButton(),
-                                  NamidaButton(
-                                    textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
-                                    onPressed: () async {
-                                      NamidaNavigator.inst.closeDialog();
-                                      await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
-                                        files: csvFiles,
-                                        source: TrackSource.lastfm,
-                                        oldestDate: oldestDate.value,
-                                        newestDate: newestDate,
-                                        matchAll: matchAll.value,
-                                      );
-                                    },
-                                  )
-                                ],
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Obx(
-                                      (context) => matchAllTracksListTile(
-                                        active: matchAll.valueR,
-                                        onTap: matchAll.toggle,
-                                        displayPerfWarning: true,
-                                      ),
-                                    ),
-                                    getDivider(),
-                                    BetweenDatesTextButton(
-                                      useHistoryDates: false,
-                                      maxToday: true,
-                                      onConfirm: (dates) {
-                                        NamidaNavigator.inst.closeDialog();
-                                        oldestDate.value = dates.firstOrNull;
-                                        newestDate = dates.lastOrNull;
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
+                          onConfirm(false);
                         },
                       ),
                     ],

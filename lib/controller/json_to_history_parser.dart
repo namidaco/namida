@@ -365,6 +365,7 @@ class JsonToHistoryParser {
 
   Future<void> addFilesSourceToNamidaHistory({
     required List<File> files,
+    Directory? mainDirectory,
     required TrackSource source,
     bool matchAll = false,
     bool ytIsMatchingTypeLink = true,
@@ -394,6 +395,31 @@ class JsonToHistoryParser {
     final datesAdded = <int>[];
     final datesAddedYoutube = <int>[];
     var allMissingEntries = <_MissingListenEntry, List<int>>{};
+
+    if (files.isEmpty) {
+      if (mainDirectory == null) return;
+      final contents = await mainDirectory.listAllIsolate(recursive: true);
+      if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
+        contents.loop(
+          (file) {
+            if (file is File && NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
+              final name = file.path.getFilename;
+              if (name.contains('watch-history')) files.add(file);
+            }
+          },
+        );
+      } else {
+        contents.loop(
+          (file) {
+            if (file is File && NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+              // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
+              final name = file.path.getFilename;
+              if (name != 'subscriptions.csv') files.add(file);
+            }
+          },
+        );
+      }
+    }
 
     switch (source) {
       case TrackSource.youtube || TrackSource.youtubeMusic:
