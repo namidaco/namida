@@ -269,16 +269,51 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       icon: Broken.add_circle,
                       text: lang.IMPORT,
                       enabled: !isImportingPlaylists,
-                      onTap: () async {
-                        final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
-                        if (dirPath != null) {
-                          final imported = await YoutubeImportController.inst.importPlaylists(dirPath);
-                          if (imported > 0) {
-                            snackyy(message: lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '$imported'));
-                          } else {
-                            snackyy(message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout", isError: true);
-                          }
-                        }
+                      onTap: () {
+                        NamidaNavigator.inst.navigateDialog(
+                          dialog: CustomBlurryDialog(
+                            title: lang.NOTE,
+                            normalTitleStyle: true,
+                            bodyText:
+                                'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
+                            actions: [
+                              NamidaButton(
+                                onPressed: () async {
+                                  NamidaNavigator.inst.closeDialog();
+
+                                  final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
+                                  if (dirPath == null) return;
+
+                                  final details = await YoutubeImportController.inst.importPlaylists(dirPath);
+                                  if (details == null) {
+                                    snackyy(
+                                      icon: Broken.forbidden,
+                                      message: "Operation Canceled",
+                                    );
+                                    return;
+                                  }
+                                  if (details.totalCount <= 0) {
+                                    snackyy(
+                                      icon: Broken.danger,
+                                      message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout",
+                                      isError: true,
+                                    );
+                                    return;
+                                  }
+
+                                  final importedSucessText = lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '${details.countAfterMerging}');
+                                  final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
+                                  snackyy(
+                                    icon: Broken.copy_success,
+                                    message: '$importedSucessText\n$detailsText',
+                                    borderColor: Colors.green.withOpacity(0.8),
+                                  );
+                                },
+                                text: lang.PICK_FROM_STORAGE,
+                              )
+                            ],
+                          ),
+                        );
                       },
                     ),
                   ),

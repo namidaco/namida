@@ -26,6 +26,7 @@ import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class JsonToHistoryParser {
@@ -375,6 +376,36 @@ class JsonToHistoryParser {
     DateTime? oldestDate,
     DateTime? newestDate,
   }) async {
+    if (files.isEmpty) {
+      if (mainDirectory != null) {
+        final contents = await mainDirectory.listAllIsolate(recursive: true);
+        if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
+          contents.loop(
+            (file) {
+              if (file is File && NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
+                final name = file.path.getFilename;
+                if (name.contains('watch-history')) files.add(file);
+              }
+            },
+          );
+        } else {
+          contents.loop(
+            (file) {
+              if (file is File && NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+                // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
+                final name = file.path.getFilename;
+                if (name != 'subscriptions.csv') files.add(file);
+              }
+            },
+          );
+        }
+      }
+    }
+    if (files.isEmpty) {
+      snackyy(message: 'No related files were found in this directory.', isError: true);
+      return;
+    }
+
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
@@ -395,31 +426,6 @@ class JsonToHistoryParser {
     final datesAdded = <int>[];
     final datesAddedYoutube = <int>[];
     var allMissingEntries = <_MissingListenEntry, List<int>>{};
-
-    if (files.isEmpty) {
-      if (mainDirectory == null) return;
-      final contents = await mainDirectory.listAllIsolate(recursive: true);
-      if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
-        contents.loop(
-          (file) {
-            if (file is File && NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
-              final name = file.path.getFilename;
-              if (name.contains('watch-history')) files.add(file);
-            }
-          },
-        );
-      } else {
-        contents.loop(
-          (file) {
-            if (file is File && NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
-              // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
-              final name = file.path.getFilename;
-              if (name != 'subscriptions.csv') files.add(file);
-            }
-          },
-        );
-      }
-    }
 
     switch (source) {
       case TrackSource.youtube || TrackSource.youtubeMusic:
@@ -719,7 +725,7 @@ class JsonToHistoryParser {
           channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
           watches: [
             YTWatch(
-              dateMSNull: DateTime.tryParse(p['time'] ?? '')?.millisecondsSinceEpoch,
+              dateMSNull: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
               isYTMusic: p['header'] == "YouTube Music",
             )
           ],

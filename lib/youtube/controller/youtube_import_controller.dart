@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
@@ -13,19 +15,61 @@ import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart'
 
 enum _YTPlaylistVisibility { public, unlisted, private, unknown }
 
-typedef _YTPlaylistEntry = ({String name, _YTPlaylistDetails? details});
+class _YTPlaylistEntry {
+  final String name;
+  final _YTPlaylistDetails? details;
 
-typedef _YTPlaylistDetails = ({
-  String playlistID,
-  String channelID,
-  DateTime? timeCreated,
-  DateTime? timeUpdated,
-  String name,
-  String description,
-  _YTPlaylistVisibility visibility,
-});
+  const _YTPlaylistEntry({
+    required this.name,
+    required this.details,
+  });
+}
 
-typedef _VideoEntry = ({String id, DateTime? dateAdded});
+class _YTPlaylistDetails {
+  final String playlistID;
+  final String channelID;
+  final DateTime? timeCreated;
+  final DateTime? timeUpdated;
+  final String name;
+  final String description;
+  final _YTPlaylistVisibility visibility;
+
+  const _YTPlaylistDetails({
+    required this.playlistID,
+    required this.channelID,
+    required this.timeCreated,
+    required this.timeUpdated,
+    required this.name,
+    required this.description,
+    required this.visibility,
+  });
+}
+
+class _VideoEntry {
+  final String id;
+  final DateTime? dateAdded;
+
+  const _VideoEntry({
+    required this.id,
+    required this.dateAdded,
+  });
+}
+
+class YoutubePlaylistImportDetails {
+  int get mergedCount => totalCount - countAfterMerging;
+
+  final int totalCount;
+  final int countAfterMerging;
+  final List<String> playlistsNames;
+  final List<(_YTPlaylistEntry, List<_VideoEntry>)> _data;
+
+  const YoutubePlaylistImportDetails._(
+    this._data, {
+    required this.totalCount,
+    required this.countAfterMerging,
+    required this.playlistsNames,
+  });
+}
 
 class YoutubeImportController {
   static final YoutubeImportController inst = YoutubeImportController._internal();
@@ -34,45 +78,62 @@ class YoutubeImportController {
   final isImportingPlaylists = false.obs;
   final isImportingSubscriptions = false.obs;
 
-  Future<int> importPlaylists(String playlistsDirectoryPath) async {
+  Future<YoutubePlaylistImportDetails?> importPlaylists(String directoryPath) async {
     isImportingPlaylists.value = true;
-    final res = await _parsePlaylistsFiles.thready(playlistsDirectoryPath);
+    final resDetails = await _scanAllPlaylistTakeoutDirectoriesCompute.thready(directoryPath);
+    final res = resDetails._data;
     if (res.isEmpty) {
       isImportingPlaylists.value = false;
-      return 0;
+      return resDetails;
+    }
+
+    final actionIfPlaylistsExist = await NamidaOnTaps.inst.showDuplicatedDialogAction(
+      PlaylistAddDuplicateAction.values,
+      displayTitle: false,
+      initiallySelected: PlaylistAddDuplicateAction.mergeAndSortByAddedDate,
+    );
+    if (actionIfPlaylistsExist == null) {
+      isImportingPlaylists.value = false;
+      return null;
     }
 
     final completer = Completer<void>();
     res.loopAdv((playlist, index) {
       final details = playlist.$1.details;
       final plID = details != null ? PlaylistID(id: details.playlistID) : null;
-      YoutubePlaylistController.inst.addNewPlaylistRaw(
+      final newTracks = <String>[];
+      final newTracksDates = <String, int?>{};
+      playlist.$2.loop((e) {
+        newTracks.add(e.id);
+        newTracksDates[e.id] = e.dateAdded?.millisecondsSinceEpoch;
+      });
+      YoutubePlaylistController.inst
+          .addNewPlaylistRaw(
         playlist.$1.name,
         creationDate: details?.timeCreated?.millisecondsSinceEpoch,
         modifiedDate: details?.timeUpdated?.millisecondsSinceEpoch,
         playlistID: plID,
         comment: details?.description ?? '',
-        tracks: (playlistID) {
-          return playlist.$2
-              .map(
-                (e) => YoutubeID(
-                  id: e.id,
-                  watchNull: YTWatch(
-                    dateNull: e.dateAdded,
-                    isYTMusic: false,
-                  ),
-                  playlistID: playlistID,
-                ),
-              )
-              .toList();
-        },
-      ).then((value) {
+        tracks: newTracks,
+        convertItem: (id, dateAddedFallback, playlistID) => YoutubeID(
+          id: id,
+          watchNull: YTWatch(
+            dateMSNull: newTracksDates[id] ?? dateAddedFallback,
+            isYTMusic: false,
+          ),
+          playlistID: playlistID,
+        ),
+        actionIfAlreadyExists: () => actionIfPlaylistsExist,
+      )
+          .then((value) {
         if (index == res.length - 1) completer.complete();
       });
     });
+
     await completer.future;
+    YoutubePlaylistController.inst.playlistsMap.refresh();
     isImportingPlaylists.value = false;
-    return res.length;
+    return resDetails;
   }
 
   Future<int> importSubscriptions(String subscriptionsFilePath) async {
@@ -96,6 +157,10 @@ class YoutubeImportController {
     return res.length;
   }
 
+  static DateTime? parseDate(String dateText) {
+    return DateTime.tryParse(dateText) ?? DateTime.tryParse(dateText.replaceFirst(' ', 'T').replaceFirst(' Z', 'Z').replaceFirst(' UTC', 'Z')); // fixes weird date format
+  }
+
   /// there are 2 types of takeouts for playlists as encountered:
   /// - old takeouts: playlist file that contains playlist metadata as header, and the second part is the actual videos
   /// - new takeouts: playlist file that contains the actual videos only. metadata is inside a separate `playlists.csv` file
@@ -112,7 +177,7 @@ class YoutubeImportController {
       lines.loop((e) {
         try {
           final parts = e.split(','); // id, dateAdded
-          if (parts.length >= 2) videos.add((id: parts[0], dateAdded: DateTime.tryParse(parts[1]))); // should be only 2, but maybe more stuff will be appended in future
+          if (parts.length >= 2) videos.add(_VideoEntry(id: parts[0], dateAdded: parseDate(parts[1]))); // should be only 2, but maybe more stuff will be appended in future
         } catch (_) {}
       });
       return videos;
@@ -122,11 +187,11 @@ class YoutubeImportController {
       final map = <String, String>{};
       header.loopAdv((part, index) => map[part.toLowerCase()] ??= split[index]);
 
-      return (
+      return _YTPlaylistDetails(
         playlistID: map['playlist id'] ?? '',
         channelID: map['channel id'] ?? '',
-        timeCreated: DateTime.tryParse(map['time created'] ?? ''),
-        timeUpdated: DateTime.tryParse(map['time updated'] ?? ''),
+        timeCreated: parseDate(map['time created'] ?? ''),
+        timeUpdated: parseDate(map['time updated'] ?? ''),
         name: map['title'] ?? '',
         description: map['description'] ?? '',
         visibility: _YTPlaylistVisibility.values.getEnumLoose(map['visibility']) ?? _YTPlaylistVisibility.unknown,
@@ -136,11 +201,11 @@ class YoutubeImportController {
     _YTPlaylistDetails getPlaylistDetailsNew(List<String> header, List<String> split) {
       final map = <String, String>{};
       header.loopAdv((part, index) => map[part.toLowerCase().splitLast('playlist').splitFirst('(')] ??= split[index]);
-      return (
+      return _YTPlaylistDetails(
         playlistID: map['playlist id'] ?? '',
         channelID: map['channel id'] ?? '',
-        timeCreated: DateTime.tryParse(map['create timestamp'] ?? ''),
-        timeUpdated: DateTime.tryParse(map['update timestamp'] ?? ''),
+        timeCreated: parseDate(map['create timestamp'] ?? ''),
+        timeUpdated: parseDate(map['update timestamp'] ?? ''),
         name: map['title'] ?? '',
         description: map['description'] ?? '',
         visibility: _YTPlaylistVisibility.values.getEnumLoose(map['visibility']) ?? _YTPlaylistVisibility.unknown,
@@ -182,13 +247,13 @@ class YoutubeImportController {
               final header = lines.removeAt(0);
               final headerParts = header.split(',');
               final pld = getPlaylistDetailsOld(headerParts, lines[0].split(','));
-              final videosStartIndex = lines.indexWhere((element) => element.toLowerCase().startsWith('video id,time added'));
+              final videosStartIndex = lines.indexWhere((element) => element.toLowerCase().startsWith('video id,'));
               lines.removeRange(0, videosStartIndex + 1);
-              playlists.add(((name: playlistName, details: pld), getVideos(lines)));
+              playlists.add((_YTPlaylistEntry(name: playlistName, details: pld), getVideos(lines)));
             } else {
               // -- new method, doesnt contain playlist header.
               lines.removeAt(0);
-              playlists.add(((name: playlistName, details: playlistsMetadata[playlistName]), getVideos(lines)));
+              playlists.add((_YTPlaylistEntry(name: playlistName, details: playlistsMetadata[playlistName]), getVideos(lines)));
             }
           }
         } catch (_) {}
@@ -214,5 +279,60 @@ class YoutubeImportController {
     } catch (e) {
       return [];
     }
+  }
+
+  static YoutubePlaylistImportDetails _scanAllPlaylistTakeoutDirectoriesCompute(String mainDir) {
+    final playlistsMap = <String, List<List<_VideoEntry>>>{};
+    final playlistsDetailsMap = <String, _YTPlaylistDetails?>{};
+
+    bool isPlaylistDirectory(String dirPath) {
+      return dirPath.splitLast(Platform.pathSeparator) == 'playlists';
+    }
+
+    void onDirMatch(String plsdirPath) {
+      final details = _parsePlaylistsFiles(plsdirPath);
+      details.loop(
+        (pl) {
+          final playlistName = pl.$1.name;
+          playlistsDetailsMap[playlistName] = pl.$1.details;
+          playlistsMap[playlistName] ??= [];
+          playlistsMap[playlistName]!.add(pl.$2);
+        },
+      );
+    }
+
+    if (isPlaylistDirectory(mainDir)) {
+      onDirMatch(mainDir);
+    } else {
+      Directory(mainDir).listSync(recursive: true).loop(
+        (plsdir) {
+          final plsDirPath = plsdir.path;
+          if (plsdir is Directory && isPlaylistDirectory(plsDirPath)) {
+            onDirMatch(plsDirPath);
+          }
+        },
+      );
+    }
+
+    final playlistsListMerged = <(_YTPlaylistEntry, List<_VideoEntry>)>[];
+    for (final entries in playlistsMap.entries) {
+      final mainList = <_VideoEntry>[];
+      entries.value.loop(mainList.addAll);
+      mainList.removeDuplicates((element) => '${element.id}${element.dateAdded}');
+      mainList.sortBy((e) => e.dateAdded ?? DateTime(0));
+      playlistsListMerged.add((_YTPlaylistEntry(name: entries.key, details: playlistsDetailsMap[entries.key]), mainList));
+    }
+
+    int totalCount = playlistsMap.values.fold(0, (previousValue, element) => previousValue + element.length);
+    int countAfterMerging = playlistsListMerged.length;
+    final playlistsNames = playlistsMap.keys.toList();
+
+    final details = YoutubePlaylistImportDetails._(
+      playlistsListMerged,
+      totalCount: totalCount,
+      countAfterMerging: countAfterMerging,
+      playlistsNames: playlistsNames,
+    );
+    return details;
   }
 }
