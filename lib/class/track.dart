@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
@@ -15,7 +16,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
-class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWithDate {
+class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWithDate, PlaylistItemWithDate {
   @override
   Track get track => _track;
 

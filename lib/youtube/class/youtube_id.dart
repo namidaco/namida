@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/core/url_utils.dart';
 
@@ -12,7 +13,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate {
+class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, PlaylistItemWithDate {
   final String id;
   final YTWatch? watchNull;
   final PlaylistID? playlistID;
