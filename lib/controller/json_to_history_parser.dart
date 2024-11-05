@@ -563,7 +563,7 @@ class JsonToHistoryParser {
           );
   }
 
-  Future<int> copyYTHistoryContentToLocalHistory({required bool matchAll}) async {
+  Future<(int, int)> copyYTHistoryContentToLocalHistory({required bool matchAll}) async {
     final allTracks = Indexer.inst.allTracksMappedByPath.values;
     final allInsideYTHistory = YoutubeHistoryController.inst.historyTracks;
     final tracksIdsMap = <String, List<Track>>{};
@@ -574,7 +574,9 @@ class JsonToHistoryParser {
         tracksIdsMap.addForce(videoId, trExt.asTrack());
       }
     }
-    int totalAdded = 0;
+    int totalCount = 0;
+    int removedDuplicates = 0;
+    final historyMap = HistoryController.inst.historyMap.value;
     final datesAdded = <int>[];
     for (final vh in allInsideYTHistory) {
       final match = tracksIdsMap[vh.id];
@@ -589,18 +591,24 @@ class JsonToHistoryParser {
               ),
             )
             .toList();
-        totalAdded += tracksWithDates.length;
+        final day = vh.dateTimeAdded.toDaysSince1970();
+        final dayLengthBefore = historyMap[day]?.length ?? 0;
+        totalCount += tracksWithDates.length;
         final days = HistoryController.inst.addTracksToHistoryOnly(tracksWithDates, preventDuplicate: true);
+        final dayLengthAfter = historyMap[day]?.length ?? 0;
+        final actuallyAddedCount = (dayLengthAfter - dayLengthBefore);
+        removedDuplicates += tracks.length - actuallyAddedCount;
         datesAdded.addAll(days);
       }
     }
     if (datesAdded.isNotEmpty) {
-      HistoryController.inst.removeDuplicatedItems(datesAdded);
+      removedDuplicates += HistoryController.inst.removeDuplicatedItems(datesAdded);
       HistoryController.inst.sortHistoryTracks(datesAdded);
       await HistoryController.inst.saveHistoryToStorage(datesAdded);
       HistoryController.inst.updateMostPlayedPlaylist();
+      return (totalCount, totalCount - removedDuplicates);
     }
-    return totalAdded;
+    return (totalCount, 0);
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].

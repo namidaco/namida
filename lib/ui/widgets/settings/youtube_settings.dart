@@ -706,8 +706,10 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
                         text: lang.CONFIRM.toUpperCase(),
                         onPressed: () async {
                           await NamidaNavigator.inst.closeDialog(2);
-                          final count = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
-                          snackyy(message: '${lang.ADDED.capitalizeFirst()}: ${count.displayTrackKeyword}');
+                          final totalAndActual = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
+                          final total = totalAndActual.$1;
+                          final actual = totalAndActual.$2;
+                          snackyy(message: '${lang.TOTAL_TRACKS.capitalizeFirst()}: ${total.displayTrackKeyword} | ${lang.ADDED.capitalizeFirst()}: ${actual.displayTrackKeyword}');
                         },
                       ),
                     ],
