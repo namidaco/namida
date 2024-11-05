@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
@@ -1318,6 +1319,8 @@ class _NamidaConverters {
         PlaylistAddDuplicateAction.justAddEverything: lang.ADD_ALL,
         PlaylistAddDuplicateAction.addAllAndRemoveOldOnes: lang.ADD_ALL_AND_REMOVE_OLD_ONES,
         PlaylistAddDuplicateAction.addOnlyMissing: lang.ADD_ONLY_MISSING,
+        PlaylistAddDuplicateAction.mergeAndSortByAddedDate: '${lang.MERGE} + ${lang.SORT_BY}: ${lang.DATE_ADDED}',
+        PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist: '${lang.DELETE_PLAYLIST} + ${lang.CREATE_NEW_PLAYLIST}',
       },
       YTSeekActionMode: {
         YTSeekActionMode.none: lang.NONE,

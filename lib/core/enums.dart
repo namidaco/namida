@@ -396,12 +396,6 @@ enum SetMusicAsAction {
   alarm,
 }
 
-enum PlaylistAddDuplicateAction {
-  justAddEverything,
-  addAllAndRemoveOldOnes,
-  addOnlyMissing,
-}
-
 enum YTSeekActionMode {
   none,
   minimizedMiniplayer,

@@ -7,11 +7,13 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -37,52 +39,54 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
     List<String> moods = const [],
     PlaylistID? playlistID,
   }) async {
+    final videoIdsList = videoIds?.toList() ?? [];
     super.addNewPlaylistRaw(
       name,
-      tracks: (playlistID) {
-        final newTracks = videoIds
-            ?.map(
-              (id) => YoutubeID(
-                id: id,
-                watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
-                playlistID: playlistID,
-              ),
-            )
-            .toList();
-        return newTracks;
+      tracks: videoIdsList,
+      convertItem: (id, dateAdded, playlistID) {
+        return YoutubeID(
+          id: id,
+          watchNull: YTWatch(dateNull: dateAdded.milliSecondsSinceEpoch, isYTMusic: false),
+          playlistID: playlistID,
+        );
       },
       creationDate: creationDate,
       comment: comment,
       moods: moods,
       playlistID: playlistID,
+      actionIfAlreadyExists: () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
     );
   }
 
-  /// Returns added ids, when [preventDuplicates] is true;
-  Future<Iterable<YoutubeID>> addTracksToPlaylist(YoutubePlaylist playlist, Iterable<String> videoIds, {bool preventDuplicates = true}) async {
-    late Iterable<String> idsToAdd;
+  Future<void> addTracksToPlaylist(YoutubePlaylist playlist, Iterable<String> videoIds) async {
+    final originalModifyDate = playlist.modifiedDate;
+    final oldVideosList = List<YoutubeID>.from(playlist.tracks); // for undo
 
-    if (preventDuplicates) {
-      final existingIds = <String, bool>{};
-      playlist.tracks.loop((e) {
-        existingIds[e.id] = true;
-      });
-      // only add ids that doesnt exist inside playlist.
-      idsToAdd = videoIds.where((element) => existingIds[element] == null);
-    } else {
-      idsToAdd = videoIds;
-    }
-    final newtracks = idsToAdd
-        .map(
-          (id) => YoutubeID(
-            id: id,
-            watchNull: YTWatch(dateNull: DateTime.now(), isYTMusic: false),
-            playlistID: playlist.playlistID,
-          ),
-        )
-        .toList();
-    await super.addTracksToPlaylistRaw(playlist, newtracks);
-    return newtracks;
+    final videoIdsList = videoIds.toList();
+    final addedVideosLength = await super.addTracksToPlaylistRaw(
+      playlist,
+      videoIdsList,
+      () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
+      (id, dateAdded) {
+        return YoutubeID(
+          id: id,
+          watchNull: YTWatch(dateNull: dateAdded.milliSecondsSinceEpoch, isYTMusic: false),
+          playlistID: playlist.playlistID,
+        );
+      },
+    );
+
+    if (addedVideosLength == null) return;
+
+    snackyy(
+      message: "${lang.ADDED} ${addedVideosLength.displayVideoKeyword}",
+      button: addedVideosLength > 0
+          ? (
+              lang.UNDO,
+              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldVideosList, modifiedDate: originalModifyDate),
+            )
+          : null,
+    );
   }
 
   bool favouriteButtonOnPressed(String videoId, {bool refreshNotification = true}) {

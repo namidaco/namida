@@ -7,6 +7,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
@@ -537,8 +538,12 @@ class NamidaOnTaps {
     );
   }
 
-  Future<PlaylistAddDuplicateAction?> showDuplicatedDialogAction(List<PlaylistAddDuplicateAction> duplicationActions, {bool displayTitle = true}) async {
-    final actionRx = Rxn<PlaylistAddDuplicateAction>();
+  Future<PlaylistAddDuplicateAction?> showDuplicatedDialogAction(
+    List<PlaylistAddDuplicateAction> duplicationActions, {
+    bool displayTitle = true,
+    PlaylistAddDuplicateAction? initiallySelected,
+  }) async {
+    final actionRx = Rxn<PlaylistAddDuplicateAction>(initiallySelected);
     PlaylistAddDuplicateAction? actionToUse;
     await NamidaNavigator.inst.navigateDialog(
       onDismissing: () {

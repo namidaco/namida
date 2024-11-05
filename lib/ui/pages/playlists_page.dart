@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
@@ -416,6 +417,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     duplicationActions: [
                                       PlaylistAddDuplicateAction.addAllAndRemoveOldOnes,
                                       PlaylistAddDuplicateAction.addOnlyMissing,
+                                      PlaylistAddDuplicateAction.mergeAndSortByAddedDate,
                                     ],
                                   ),
                                 ),

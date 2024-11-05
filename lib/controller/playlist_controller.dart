@@ -45,18 +45,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     List<String> moods = const [],
     String? m3uPath,
   }) async {
-    final newTracks = tracks.mapped((e) => TrackWithDate(
-          dateAdded: currentTimeMS,
-          track: e,
-          source: TrackSource.local,
-        ));
     super.addNewPlaylistRaw(
       name,
-      tracks: (playlistID) => newTracks,
+      tracks: tracks,
+      convertItem: (e, dateAdded, playlistID) => TrackWithDate(
+        dateAdded: dateAdded,
+        track: e,
+        source: TrackSource.local,
+      ),
       creationDate: creationDate,
       comment: comment,
       moods: moods,
       m3uPath: m3uPath,
+      actionIfAlreadyExists: () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
     );
   }
 
@@ -64,74 +65,35 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
     LocalPlaylist playlist,
     List<Track> tracks, {
     TrackSource source = TrackSource.local,
-    List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.values,
+    List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.valuesForAdd,
   }) async {
-    Iterable<TrackWithDate> convertTracks(List<Track> trs) => trs.map((e) => TrackWithDate(
-          dateAdded: currentTimeMS,
+    final originalModifyDate = playlist.modifiedDate;
+    final oldTracksList = List<TrackWithDate>.from(playlist.tracks); // for undo
+
+    final addedTracksLength = await super.addTracksToPlaylistRaw(
+      playlist,
+      tracks,
+      () => NamidaOnTaps.inst.showDuplicatedDialogAction(duplicationActions),
+      (e, dateAdded) {
+        return TrackWithDate(
+          dateAdded: dateAdded,
           track: e,
           source: source,
-        ));
-    final oldTracksList = List<TrackWithDate>.from(playlist.tracks); // for undo
-    int addedTracksLength = tracks.length;
+        );
+      },
+    );
 
-    if (playlist.tracks.any((element) => tracks.contains(element.track))) {
-      TrackWithDate convertTrack(Track e) => TrackWithDate(
-            dateAdded: currentTimeMS,
-            track: e,
-            source: source,
-          );
-      final action = await NamidaOnTaps.inst.showDuplicatedDialogAction(duplicationActions);
-      switch (action) {
-        case PlaylistAddDuplicateAction.justAddEverything:
-          playlist.tracks.addAll(convertTracks(tracks));
-          break;
-        case PlaylistAddDuplicateAction.addAllAndRemoveOldOnes:
-          final currentTracks = <Track, List<int>>{};
-          playlist.tracks.loopAdv((e, index) => currentTracks.addForce(e.track, index));
-
-          final indicesToRemove = <int>[];
-          tracks.loop((e) {
-            // -- removing same tracks existing in playlist
-            final indexesInPlaylist = currentTracks[e];
-            if (indexesInPlaylist != null) {
-              indicesToRemove.addAll(indexesInPlaylist);
-            }
-          });
-          indicesToRemove.sortByReverse((e) => e);
-          indicesToRemove.loop((indexToRemove) => playlist.tracks.removeAt(indexToRemove));
-          playlist.tracks.addAll(convertTracks(tracks));
-          break;
-        case PlaylistAddDuplicateAction.addOnlyMissing:
-          final currentTracks = <Track, int>{};
-          playlist.tracks.loopAdv((e, index) => currentTracks[e.track] = index);
-          tracks.loop((e) {
-            if (currentTracks[e] == null) {
-              playlist.tracks.add(convertTrack(e));
-            } else {
-              addedTracksLength--;
-            }
-          });
-
-          break;
-        default:
-          addedTracksLength = 0;
-          return;
-      }
-    } else {
-      playlist.tracks.addAll(convertTracks(tracks));
-    }
+    if (addedTracksLength == null) return;
 
     snackyy(
       message: "${lang.ADDED} ${addedTracksLength.displayTrackKeyword}",
       button: addedTracksLength > 0
           ? (
               lang.UNDO,
-              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: currentTimeMS),
+              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
             )
           : null,
     );
-
-    super.addTracksToPlaylistRaw(playlist, [] /* added manually */);
   }
 
   bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true}) {

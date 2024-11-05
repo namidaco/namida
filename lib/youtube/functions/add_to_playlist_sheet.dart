@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:playlist_manager/core/enum.dart';
 import 'package:youtipie/class/playlist_for_video.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/core/enum.dart';
@@ -11,7 +12,6 @@ import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
