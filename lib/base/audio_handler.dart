@@ -1714,12 +1714,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   // ------------------------------------------------------------
 
-  Future<void> togglePlayPause() async {
+  Future<void> togglePlayPause() {
     if (isPlaying.value) {
-      await pause();
-    } else {
-      await play();
+      return pause();
     }
+    if (currentState.value == ProcessingState.completed) {
+      // return seek(Duration.zero);
+      setPlayWhenReady(true);
+      return skipToNext(andPlay: true);
+    }
+    return play();
   }
 
   @override
