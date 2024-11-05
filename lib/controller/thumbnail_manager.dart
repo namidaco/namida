@@ -418,10 +418,9 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
               if (notfound == true) throw Exception('not found'); // as if request failed.
 
               File? newFile;
+
               final downloadStream = response.asBroadcastStream();
-              await for (final e in downloadStream) {
-                fileStream.add(e);
-              }
+              await fileStream.addStream(downloadStream); // this should throw if connection closed unexpectedly
               await fileStream.flush();
               await fileStream.close(); // this is already done by diposeIdRequestResources() but we do here bcz renaming can require that no processes are using the file
 
