@@ -10,6 +10,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final showChannelWatermarkFullscreen = true.obs;
   final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
+  final personalizedRelatedVideos = true.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final ytMiniplayerDimAfterSeconds = 15.obs;
@@ -36,6 +37,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? showChannelWatermarkFullscreen,
     bool? showVideoEndcards,
     bool? autoStartRadio,
+    bool? personalizedRelatedVideos,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
@@ -59,6 +61,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
+    if (personalizedRelatedVideos != null) this.personalizedRelatedVideos.value = personalizedRelatedVideos;
 
     if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
@@ -100,6 +103,7 @@ class _YoutubeSettings with SettingsFileWriter {
       showChannelWatermarkFullscreen.value = json['showChannelWatermarkFullscreen'] ?? showChannelWatermarkFullscreen.value;
       showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
       autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
+      personalizedRelatedVideos.value = json['personalizedRelatedVideos'] ?? personalizedRelatedVideos.value;
 
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
@@ -140,6 +144,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen.value,
         'showVideoEndcards': showVideoEndcards.value,
         'autoStartRadio': autoStartRadio.value,
+        'personalizedRelatedVideos': personalizedRelatedVideos.value,
         'ytDownloadLocation': ytDownloadLocation.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
         'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,

@@ -5,10 +5,12 @@ class _YoutubeCurrentInfoController {
 
   RelatedVideosRequestParams get _relatedVideosParams => const RelatedVideosRequestParams.allowAll(); // -- from settings
   bool get _canShowComments => settings.youtube.youtubeStyleMiniplayer.value;
+  bool get _personzaliedRelatedVideos => settings.youtube.personalizedRelatedVideos.value;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
   RxBaseCore<VideoStreamInfo?> get currentStreamInfo => _currentStreamInfo;
   RxBaseCore<YoutiPieChannelPageResult?> get currentChannelPage => _currentChannelPage;
+  RxBaseCore<YoutiPieRelatedVideosResult?> get currentRelatedVideos => _currentRelatedVideos;
   RxBaseCore<YoutiPieCommentResult?> get currentComments => _currentComments;
   RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
   RxBaseCore<bool> get isLoadingInitialComments => _isLoadingInitialComments;
@@ -54,6 +56,23 @@ class _YoutubeCurrentInfoController {
     _isCurrentCommentsFromCache.value = null;
   }
 
+  Future<void> onPersonalizedRelatedVideosChanged(bool personalized) async {
+    YoutiPieRelatedVideosResult? relatedResult;
+    if (personalized) {
+      relatedResult = _currentVideoPage.value?.relatedVideosResult;
+    }
+    if (relatedResult == null) {
+      final videoId = Player.inst.currentVideo?.id ?? _currentVideoPage.value?.videoId;
+      if (videoId != null) {
+        final relatedRes = await YoutubeInfoController.video.fetchRelatedVideos(videoId, personalized, details: ExecuteDetails.normal());
+        if (_canSafelyModifyMetadata(videoId)) {
+          relatedResult = relatedRes;
+        }
+      }
+    }
+    _currentRelatedVideos.value = relatedResult;
+  }
+
   Future<bool> updateVideoPageCache(String videoId) async {
     final vidcache = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
     final vidPageCached = await vidcache.readAsync();
@@ -70,8 +89,13 @@ class _YoutubeCurrentInfoController {
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentChannelPage.value = chPage;
 
-    final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId);
-    final relatedVideos = await relatedcache.readAsync() ?? vidPageCached?.relatedVideosResult;
+    final personzaliedRelatedVideos = _personzaliedRelatedVideos;
+    final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId, userPersonalized: _personzaliedRelatedVideos);
+    YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.readAsync();
+    if (relatedVideos == null) {
+      final hasAcc = YoutubeAccountController.current.activeAccountChannel.value != null;
+      if (personzaliedRelatedVideos || (hasAcc && !personzaliedRelatedVideos)) relatedVideos = vidPageCached?.relatedVideosResult;
+    }
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentRelatedVideos.value = relatedVideos;
     return vidPageCached != null;
@@ -96,13 +120,20 @@ class _YoutubeCurrentInfoController {
       );
       return;
     }
-    if (!requestPage && !requestComments) return;
+    if (!requestPage && !requestComments) {
+      if (requestPage && !_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+      return;
+    }
+
+    final requestCustomRelatedVideos = requestPage && !_personzaliedRelatedVideos;
 
     if (requestPage) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
       _currentVideoPage.value = null;
+      _currentRelatedVideos.value = null;
       _currentChannelPage.value = null;
     }
+
     if (requestComments) {
       _currentComments.value = null;
       _initialCommentsContinuation = null;
@@ -131,6 +162,12 @@ class _YoutubeCurrentInfoController {
       if (requestPage) {
         _currentVideoPage.value = page; // page is still requested cuz comments need it
       }
+      if (_personzaliedRelatedVideos) {
+        _currentRelatedVideos.value = page?.relatedVideosResult;
+      } else {
+        if (requestCustomRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+      }
+
       if (requestComments) {
         final commentsContinuation = page?.commentResult.continuation;
         if (commentsContinuation != null && _canShowComments) {
@@ -150,6 +187,13 @@ class _YoutubeCurrentInfoController {
           }
         }
       }
+    }
+  }
+
+  Future<void> _fetchAndUpdateRelatedVideos(String videoId) async {
+    final relatedVideos = await YoutubeInfoController.video.fetchRelatedVideos(videoId, false, details: ExecuteDetails.forceRequest());
+    if (_canSafelyModifyMetadata(videoId)) {
+      _currentRelatedVideos.value = relatedVideos;
     }
   }
 

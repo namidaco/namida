@@ -34,6 +34,12 @@ class _VideoInfoController {
     return res;
   }
 
+  Future<YoutiPieRelatedVideosResult?> fetchRelatedVideos(String videoId, bool userPersonalized, {ExecuteDetails? details}) async {
+    final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
+    final res = await YoutiPie.video.fetchRelatedVideos(videoId: videoId, userPersonalized: userPersonalized, relatedVideosParams: relatedVideosParams, details: details);
+    return res;
+  }
+
   YoutiPieVideoPageResult? fetchVideoPageSync(String videoId) {
     final res = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
     return res.read();

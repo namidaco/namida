@@ -32,6 +32,7 @@ enum _YoutubeSettingKeys {
   showChannelWatermarkFullscreen,
   showVideoEndcards,
   autoStartRadio,
+  personalizedRelatedVideos,
   dimMiniplayerAfter,
   dimIntensity,
   downloadsMetadataTags,
@@ -58,6 +59,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.showChannelWatermarkFullscreen: [lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN],
         _YoutubeSettingKeys.showVideoEndcards: [lang.SHOW_VIDEO_ENDCARDS],
         _YoutubeSettingKeys.autoStartRadio: [lang.AUTO_START_RADIO, lang.AUTO_START_RADIO_SUBTITLE],
+        _YoutubeSettingKeys.personalizedRelatedVideos: [lang.PERSONALIZED_RELATED_VIDEOS, lang.PERSONALIZED_RELATED_VIDEOS_SUBTITLE],
         _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
         _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
         _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
@@ -228,6 +230,27 @@ class YoutubeSettings extends SettingSubpageProvider {
                 subtitle: lang.AUTO_START_RADIO_SUBTITLE,
                 value: autoStartRadio,
                 onChanged: (isTrue) => settings.youtube.save(autoStartRadio: !isTrue),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.personalizedRelatedVideos,
+            child: ObxO(
+              rx: settings.youtube.personalizedRelatedVideos,
+              builder: (context, personalizedRelatedVideos) => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.personalizedRelatedVideos),
+                leading: const StackedIcon(
+                  baseIcon: Broken.video_square,
+                  secondaryIcon: Broken.profile_circle,
+                  secondaryIconSize: 12.0,
+                ),
+                value: personalizedRelatedVideos,
+                onChanged: (isTrue) {
+                  YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(!isTrue);
+                  settings.youtube.save(personalizedRelatedVideos: !isTrue);
+                },
+                title: lang.PERSONALIZED_RELATED_VIDEOS,
+                subtitle: lang.PERSONALIZED_RELATED_VIDEOS_SUBTITLE,
               ),
             ),
           ),
