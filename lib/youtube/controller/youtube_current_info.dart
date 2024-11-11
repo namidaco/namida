@@ -93,8 +93,8 @@ class _YoutubeCurrentInfoController {
     final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId, userPersonalized: _personzaliedRelatedVideos);
     YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.readAsync();
     if (relatedVideos == null) {
-      final hasAcc = YoutubeAccountController.current.activeAccountChannel.value != null;
-      if (personzaliedRelatedVideos || (hasAcc && !personzaliedRelatedVideos)) relatedVideos = vidPageCached?.relatedVideosResult;
+      final alreadyAnonymous = YoutubeAccountController.current.activeAccountChannel.value == null;
+      if (personzaliedRelatedVideos || (alreadyAnonymous && !personzaliedRelatedVideos)) relatedVideos = vidPageCached?.relatedVideosResult;
     }
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentRelatedVideos.value = relatedVideos;

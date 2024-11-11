@@ -545,7 +545,9 @@ class YoutubeController {
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
     if (remove) {
       final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
-      final itemsToCancel = allInGroupName ? youtubeDownloadTasksMap.value[groupName]!.values.toList() : itemsConfig;
+      final itemsToCancel = allInGroupName
+          ? youtubeDownloadTasksMap.value[groupName]!.values.toList()
+          : List<YoutubeItemDownloadConfig>.from(itemsConfig); // copy bcz we can remove if from original list
       for (int i = 0; i < itemsToCancel.length; i++) {
         var c = itemsToCancel[i];
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);

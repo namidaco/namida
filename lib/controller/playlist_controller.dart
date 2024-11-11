@@ -305,6 +305,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
 
     bool pathExists(String path) => File(path).existsSync();
 
+    final pathSep = Platform.pathSeparator;
+
     final all = <String, (String, List<Track>)>{};
     final infoMap = <String, String?>{};
     for (final path in paths) {
@@ -338,9 +340,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
               // if (pathExists(fullPath)) fileExists = true; // no further checks
             }
           }
-
-          fullTracks.add(Track.orVideo(fullPath));
-          infoMap[fullPath] = latestInfo;
+          final fullPathFinal = fullPath.startsWith(pathSep) ? fullPath : '$pathSep$fullPath';
+          fullTracks.add(Track.orVideo(fullPathFinal));
+          infoMap[fullPathFinal] = latestInfo;
         }
       }
       if (all[filename] == null) {

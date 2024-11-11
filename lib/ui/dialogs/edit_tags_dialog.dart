@@ -162,7 +162,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                     editedTags: {},
                     commentToInsert: controller.text,
                     trimWhiteSpaces: false,
-                  );
+                  ).ignoreError();
                   _editingInProgress[singleTrack.path] = false;
                   NamidaNavigator.inst.closeDialog();
                 }
@@ -479,7 +479,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                               snackyy(title: lang.METADATA_EDIT_FAILED, message: error ?? '', isError: true);
                             }
                           },
-                        );
+                        ).ignoreError();
                         _editingInProgress[track.path] = false;
 
                         NamidaNavigator.inst.closeDialog();
@@ -899,23 +899,25 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                               ),
                             );
                             String? errorMsg;
-                            await NamidaTaggerController.inst.updateTracksMetadata(
-                              tracks: tracks.value,
-                              editedTags: editedTags,
-                              trimWhiteSpaces: trimWhiteSpaces.value,
-                              imagePath: currentImagePath.value,
-                              onEdit: (didUpdate, error, track) {
-                                if (didUpdate) {
-                                  successfullEdits.value++;
-                                } else {
-                                  failedEditsTracks.add(track);
-                                  errorMsg = error;
-                                }
-                              },
-                              onUpdatingTracksStart: () {
-                                updatingLibrary.value = '...';
-                              },
-                            );
+                            await NamidaTaggerController.inst
+                                .updateTracksMetadata(
+                                  tracks: tracks.value,
+                                  editedTags: editedTags,
+                                  trimWhiteSpaces: trimWhiteSpaces.value,
+                                  imagePath: currentImagePath.value,
+                                  onEdit: (didUpdate, error, track) {
+                                    if (didUpdate) {
+                                      successfullEdits.value++;
+                                    } else {
+                                      failedEditsTracks.add(track);
+                                      errorMsg = error;
+                                    }
+                                  },
+                                  onUpdatingTracksStart: () {
+                                    updatingLibrary.value = '...';
+                                  },
+                                )
+                                .ignoreError();
 
                             if (failedEditsTracks.isNotEmpty) {
                               snackyy(

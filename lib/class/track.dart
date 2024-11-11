@@ -56,7 +56,8 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
   int get dateAddedMS => dateAdded;
 
   @override
-  bool operator ==(covariant TrackWithDate other) {
+  bool operator ==(other) {
+    if (other is! TrackWithDate) return false;
     if (identical(this, other)) return true;
     return other.dateAdded == dateAdded && other._track == _track && other.source == source;
   }
@@ -203,8 +204,8 @@ class Track extends Selectable<String> {
   }
 
   @override
-  bool operator ==(covariant Track other) {
-    return path == other.path;
+  bool operator ==(other) {
+    return other is Track && path == other.path;
   }
 
   @override
@@ -407,8 +408,8 @@ class TrackExtended {
   }
 
   @override
-  bool operator ==(covariant Track other) {
-    return path == other.path;
+  bool operator ==(other) {
+    return other is TrackExtended && path == other.path;
   }
 
   @override

@@ -671,6 +671,13 @@ extension ExecuteDelayedMinUtils<T> on Future<T> {
     ]);
     return v;
   }
+
+  Future<T?> ignoreError() async {
+    try {
+      return await this;
+    } catch (_) {}
+    return null;
+  }
 }
 
 extension StatefulWUtils<T extends StatefulWidget> on State<T> {

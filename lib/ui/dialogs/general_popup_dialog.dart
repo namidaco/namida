@@ -280,7 +280,7 @@ Future<void> showGeneralPopupDialog(
                     },
                     keepFileDates: true,
                     trimWhiteSpaces: false, // we did here
-                  );
+                  ).ignoreError();
                   isEditing.value = false;
                   NamidaNavigator.inst.closeDialog();
                 },

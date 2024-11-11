@@ -73,7 +73,8 @@ class YTWatch {
   }
 
   @override
-  bool operator ==(covariant YTWatch other) {
+  bool operator ==(other) {
+    if (other is! YTWatch) return false;
     if (identical(this, other)) return true;
     return other.dateMSNull == dateMSNull && other.isYTMusic == isYTMusic;
   }
@@ -141,7 +142,8 @@ class NamidaVideo {
   }
 
   @override
-  bool operator ==(covariant NamidaVideo other) {
+  bool operator ==(other) {
+    if (other is! NamidaVideo) return false;
     if (identical(this, other)) return true;
     return other.path == path &&
         other.ytID == ytID &&

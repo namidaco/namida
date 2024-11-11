@@ -75,12 +75,14 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
-    snackyy(
-      title: lang.ERROR,
-      message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
-      isError: true,
-      top: false,
-    );
+    Future.delayed(Duration.zero, () {
+      snackyy(
+        title: lang.ERROR,
+        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
+        isError: true,
+        top: false,
+      );
+    });
   }
 
   Future<void> _fetchReplies() async {
