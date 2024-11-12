@@ -149,7 +149,7 @@ extension GroupSortToText on GroupSortType {
 extension YTVideoQuality on String {
   String settingLabeltoVideoLabel() {
     final val = split('p').first;
-    return <String, String>{
+    return const <String, String>{
           '144': '144',
           '240': '240',
           '360': '360',
@@ -165,7 +165,7 @@ extension YTVideoQuality on String {
 
   String videoLabelToSettingLabel() {
     final val = split('p').first;
-    return <String, String>{
+    return const <String, String>{
           '144': '144p',
           '240': '240p',
           '360': '360p',

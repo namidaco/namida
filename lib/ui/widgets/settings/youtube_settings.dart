@@ -701,6 +701,17 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
               title: 'enable_dim_in_light_mode'.toUpperCase(),
             ),
+            CustomSwitchListTile(
+              leading: StackedIcon(
+                baseIcon: Broken.story,
+                secondaryIcon: Broken.cpu_charge,
+                secondaryIconSize: 12.0,
+              ),
+              value: settings.youtube.allowExperimentalCodecs,
+              onChanged: (isTrue) => setState(() => settings.youtube.save(allowExperimentalCodecs: !isTrue)),
+              title: 'allow_experimental_codecs'.toUpperCase(),
+              subtitle: 'av1 & vp9',
+            ),
             CustomListTile(
               leading: StackedIcon(
                 baseIcon: Broken.code_1,

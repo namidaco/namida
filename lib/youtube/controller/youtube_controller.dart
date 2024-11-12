@@ -153,22 +153,33 @@ class YoutubeController {
 
   VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
     if (streams.isEmpty) return null;
-    final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value).map((element) => element.settingLabeltoVideoLabel());
-    VideoStream? plsLoop(bool webm) {
+    final allowExperimentalCodecs = settings.youtube.allowExperimentalCodecs;
+
+    final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value);
+    VideoStream? plsLoop(bool webm, bool experimentalCodecs) {
       for (int i = 0; i < streams.length; i++) {
         final q = streams[i];
-        final webmCondition = webm ? true : !q.isWebm;
-        if (webmCondition && preferredQualities.contains(q.qualityLabel.splitFirst('p'))) {
+        if (!webm && q.isWebm) continue;
+        if (!experimentalCodecs && q.codecInfo.isExperimentalCodec()) continue;
+        if (preferredQualities.any((e) => e.settingLabeltoVideoLabel() == q.qualityLabel.splitFirst('p'))) {
           return q;
         }
       }
       return null;
     }
 
+    VideoStream? plsLoopMain(bool webm) {
+      if (allowExperimentalCodecs) {
+        return plsLoop(webm, true);
+      } else {
+        return plsLoop(webm, false) ?? plsLoop(webm, true);
+      }
+    }
+
     if (preferIncludeWebm) {
-      return plsLoop(true) ?? streams.last;
+      return plsLoopMain(true) ?? streams.last;
     } else {
-      return plsLoop(false) ?? plsLoop(true) ?? streams.last;
+      return plsLoopMain(false) ?? plsLoopMain(true) ?? streams.last;
     }
   }
 

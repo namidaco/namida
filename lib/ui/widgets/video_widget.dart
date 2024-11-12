@@ -1081,7 +1081,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               } else {
                                 streams = YoutubeInfoController.current.currentYTStreams.value;
                               }
-                              final ytQualities = streams?.videoStreams.where((s) => !s.isWebm);
+                              final ytQualities =
+                                  streams?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
                               final cachedQualitiesAll = widget.isLocal ? VideoController.inst.currentPossibleLocalVideos : YoutubeInfoController.current.currentCachedQualities;
                               final cachedQualities = List<NamidaVideo>.from(cachedQualitiesAll.value);
                               final videoId = Player.inst.currentVideoR?.id;

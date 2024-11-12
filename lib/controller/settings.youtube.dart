@@ -32,6 +32,7 @@ class _YoutubeSettings with SettingsFileWriter {
   InnertubeClients? innertubeClient;
   bool whiteVideoBGInLightMode = false;
   bool enableDimInLightMode = true;
+  bool allowExperimentalCodecs = false;
 
   void save({
     bool? showChannelWatermarkFullscreen,
@@ -57,6 +58,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool setDefaultInnertubeClient = false,
     bool? whiteVideoBGInLightMode,
     bool? enableDimInLightMode,
+    bool? allowExperimentalCodecs,
   }) {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
@@ -82,6 +84,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
+    if (allowExperimentalCodecs != null) this.allowExperimentalCodecs = allowExperimentalCodecs;
     _writeToStorage();
   }
 
@@ -134,6 +137,7 @@ class _YoutubeSettings with SettingsFileWriter {
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
+      allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
     } catch (e) {
       printy(e, isError: true);
     }
@@ -166,6 +170,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'innertubeClient': innertubeClient?.name,
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
         'enableDimInLightMode': enableDimInLightMode,
+        'allowExperimentalCodecs': allowExperimentalCodecs,
       };
 
   Future<void> _writeToStorage() => writeToStorage();
