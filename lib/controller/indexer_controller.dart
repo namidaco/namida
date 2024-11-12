@@ -452,7 +452,7 @@ class Indexer<T extends Track> {
     _currentFileNamesMap.remove(tr.filename);
   }
 
-  void _addTheseTracksToAlbumGenreArtistEtc(List<T> tracks) {
+  void _addTheseTracksToAlbumGenreArtistEtc(Map<TrackExtended, TrackExtended?> tracksMap) {
     final mainMapAlbums = this.mainMapAlbums.value;
     final mainMapArtists = this.mainMapArtists.value;
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
@@ -461,78 +461,118 @@ class Indexer<T extends Track> {
     final mainMapFolders = this.mainMapFolders.value;
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
 
-    final List<String> addedAlbums = [];
-    final List<String> addedArtists = [];
-    final List<String> addedAlbumArtists = [];
-    final List<String> addedComposers = [];
-    final List<String> addedGenres = [];
-    final List<Folder> addedFolders = [];
-    final List<VideoFolder> addedFoldersVideos = [];
+    final addedItemsLists = <MediaType, ({Map<dynamic, List<dynamic>> map, List<dynamic> newKeys, Set<dynamic> modifiedKeys})>{
+      MediaType.album: (map: mainMapAlbums, newKeys: [], modifiedKeys: {}),
+      MediaType.artist: (map: mainMapArtists, newKeys: [], modifiedKeys: {}),
+      MediaType.albumArtist: (map: mainMapAlbumArtists, newKeys: [], modifiedKeys: {}),
+      MediaType.composer: (map: mainMapComposer, newKeys: [], modifiedKeys: {}),
+      MediaType.genre: (map: mainMapGenres, newKeys: [], modifiedKeys: {}),
+      MediaType.folder: (map: mainMapFolders, newKeys: [], modifiedKeys: {}),
+      MediaType.folderVideo: (map: mainMapFoldersVideos, newKeys: [], modifiedKeys: {}),
+    };
 
-    // -- this gurantees that [newlyAddedList] will not contain duplicates.
-    void addCustom<K, E>(Map<K, List<E>> map, K key, E item, List<K> newlyAddedList) {
+    void removeCustom<K, E>(MediaType type, Map<K, List<E>> map, K key, E item) {
       final list = map[key];
-      if (list == null) {
-        map[key] = [item];
-        newlyAddedList.add(key);
-      } else {
-        if (!list.contains(item)) {
-          list.add(item);
+      if (list != null) {
+        list.remove(item);
+        if (list.isEmpty) {
+          map.remove(key);
+          addedItemsLists[type]!.modifiedKeys.add(key);
         }
       }
     }
 
-    tracks.loop((tr) {
-      final trExt = tr.toTrackExt();
-
-      // -- Assigning Albums
-      addCustom(mainMapAlbums, trExt.albumIdentifier, tr, addedAlbums);
-
-      // -- Assigning Artists
-      trExt.artistsList.loop((artist) {
-        addCustom(mainMapArtists, artist, tr, addedArtists);
-      });
-      addCustom(mainMapAlbumArtists, trExt.albumArtist, tr, addedAlbumArtists);
-      addCustom(mainMapComposer, trExt.composer, tr, addedComposers);
-
-      // -- Assigning Genres
-      trExt.genresList.loop((genre) {
-        addCustom(mainMapGenres, genre, tr, addedGenres);
-      });
-
-      // -- Assigning Folders
-      tr is Video ? addCustom(mainMapFoldersVideos, tr.folder, tr, addedFoldersVideos) : addCustom(mainMapFolders, tr.folder, tr, addedFolders);
-    });
-
-    final albumSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.album);
-    final artistSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist);
-    final genreSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.genre);
-    final folderSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folder);
-    final folderVideosSorters = SearchSortController.inst.getMediaTracksSortingComparables(MediaType.folderVideo);
-
-    void cleanyLoopy<A, E>(MediaType type, List<E> added, Map<E, List<A>> map, List<Comparable<dynamic> Function(A tr)> sorters, {bool printt = false}) {
-      if (added.isEmpty) return;
-
-      SearchSortController.inst.sortMedia(type); // main list sorting
-
-      final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
-      if (reverse) {
-        added.loop((e) => map[e]?.sortByReverseAlts(sorters)); // sub-list sorting
+    // -- this gurantees that [newlyAddedList] will not contain duplicates.
+    void addCustom<K, E>(MediaType type, Map<K, List<E>> map, K? oldKey, K newKey, E item) {
+      if (oldKey == newKey) return;
+      if (oldKey != null) removeCustom(type, map, oldKey, item);
+      final list = map[oldKey];
+      if (list == null) {
+        map[newKey] = [item];
+        addedItemsLists[type]!.newKeys.add(newKey);
+        addedItemsLists[type]!.modifiedKeys.add(newKey);
       } else {
-        added.loop((e) => map[e]?.sortByAlts(sorters)); // sub-list sorting
+        if (!list.contains(item)) {
+          list.add(item);
+          addedItemsLists[type]!.modifiedKeys.add(newKey);
+        }
       }
     }
 
-    cleanyLoopy(MediaType.album, addedAlbums, mainMapAlbums, albumSorters);
-    cleanyLoopy(MediaType.artist, addedArtists, mainMapArtists, artistSorters, printt: true);
-    cleanyLoopy(MediaType.albumArtist, addedAlbumArtists, mainMapAlbumArtists, artistSorters, printt: true);
-    cleanyLoopy(MediaType.composer, addedComposers, mainMapComposer, artistSorters, printt: true);
-    cleanyLoopy(MediaType.genre, addedGenres, mainMapGenres, genreSorters);
-    cleanyLoopy(MediaType.folder, addedFolders, mainMapFolders, folderSorters);
-    cleanyLoopy(MediaType.folderVideo, addedFoldersVideos, mainMapFoldersVideos, folderVideosSorters);
+    (List<String> newOnes, List<String> oldOnes) differenceLists(List<String> newOnes, List<String> oldOnes) {
+      final oldOnesCopy = List<String>.from(oldOnes);
+      final newOnesFinal = <String>[];
+      newOnes.loop(
+        (element) {
+          final alreadyExistedInOld = oldOnesCopy.remove(element);
+          if (!alreadyExistedInOld) newOnesFinal.add(element);
+        },
+      );
+      return (newOnesFinal, oldOnesCopy);
+    }
 
-    Folders.tracks.onMapChanged(mainMapFolders);
-    Folders.videos.onMapChanged(mainMapFoldersVideos);
+    for (final e in tracksMap.entries) {
+      final newtr = e.key;
+      final oldtr = e.value;
+      final oldTrack = oldtr?.asTrack();
+      final newTrack = newtr.asTrack();
+
+      // -- Assigning Albums
+      addCustom(MediaType.album, mainMapAlbums, oldtr?.albumIdentifier, newtr.albumIdentifier, newTrack);
+
+      // -- Assigning Artists
+      final newOldArtists = oldtr == null ? (newtr.artistsList, const []) : differenceLists(newtr.artistsList, oldtr.artistsList);
+
+      for (final arNew in newOldArtists.$1) {
+        addCustom(MediaType.artist, mainMapArtists, null, arNew, newTrack);
+      }
+      for (final arOld in newOldArtists.$2) {
+        removeCustom(MediaType.artist, mainMapArtists, arOld, oldTrack);
+      }
+      addCustom(MediaType.albumArtist, mainMapAlbumArtists, oldTrack?.albumArtist, newTrack.albumArtist, newTrack);
+      addCustom(MediaType.composer, mainMapComposer, oldTrack?.composer, newTrack.composer, newTrack);
+
+      // -- Assigning Genres
+      final newOldGenres = oldtr == null ? (newtr.genresList, const []) : differenceLists(newtr.genresList, oldtr.genresList);
+      for (final genNew in newOldGenres.$1) {
+        addCustom(MediaType.genre, mainMapGenres, null, genNew, newTrack);
+      }
+      for (final genOld in newOldGenres.$2) {
+        removeCustom(MediaType.genre, mainMapGenres, genOld, oldTrack);
+      }
+
+      // -- Assigning Folders
+      newTrack is Video
+          ? addCustom(MediaType.folderVideo, mainMapFoldersVideos, oldTrack?.folder, newTrack.folder, newTrack)
+          : addCustom(MediaType.folder, mainMapFolders, oldTrack?.folder, newTrack.folder, newTrack);
+    }
+
+    for (final sec in addedItemsLists.entries) {
+      final type = sec.key;
+      final modifiedKeys = sec.value.modifiedKeys;
+
+      if (modifiedKeys.isNotEmpty) SearchSortController.inst.sortMedia(type); // main list sorting
+      if (modifiedKeys.isNotEmpty) {
+        final map = sec.value.map as Map<dynamic, List<T>>;
+        final sorters = type == MediaType.albumArtist || type == MediaType.composer
+            ? SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist)
+            : SearchSortController.inst.getMediaTracksSortingComparables(type);
+        final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
+
+        if (reverse) {
+          for (final k in modifiedKeys) {
+            map[k]?.sortByReverseAlts(sorters); // sub-list sorting
+          }
+        } else {
+          for (final k in modifiedKeys) {
+            map[k]?.sortByAlts(sorters); // sub-list sorting
+          }
+        }
+      }
+    }
+
+    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) Folders.tracks.onMapChanged(mainMapFolders);
+    if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) Folders.videos.onMapChanged(mainMapFoldersVideos);
   }
 
   TrackExtended? _convertTagToTrack({
@@ -782,6 +822,7 @@ class Indexer<T extends Track> {
     final tracksReal = <T>[];
     final tracksRealPaths = <String>[];
     final tracksMissing = <T>[];
+    final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
     tracks.loop((tr) {
       bool exists = false;
       try {
@@ -824,29 +865,28 @@ class Indexer<T extends Track> {
         onProgress(false);
       } else {
         final tr = Track.orVideo(path);
+        final oldTr = tr.toTrackExtOrNull();
         allTracksMappedByYTID.remove(tr.youtubeID);
         _currentFileNamesMap.remove(path.getFilename);
-        _removeThisTrackFromAlbumGenreArtistEtc(tr);
-        if (trext != null) _addTrackToLists(trext, true, item.tags.artwork);
+        // _removeThisTrackFromAlbumGenreArtistEtc(tr);
+        if (trext != null) {
+          finalNewOldTracks[trext] = oldTr;
+          _addTrackToLists(trext, true, item.tags.artwork);
+        }
         onProgress(true);
       }
     }
 
-    final finalTrack = <T>[];
-    tracksReal.loop((p) {
-      if (p.hasInfoInLibrary()) finalTrack.add(p);
-    });
-    _addTheseTracksToAlbumGenreArtistEtc(finalTrack);
+    _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
     Player.inst.refreshNotification();
     _sortAndRefreshTracks();
-    onFinish(finalTrack.length);
+    onFinish(finalNewOldTracks.length);
   }
 
   Future<void> updateTrackMetadata({
     required Map<T, TrackExtended> tracksMap,
     bool artworkWasEdited = true,
   }) async {
-    final oldTracks = <T>[];
     final newTracks = <T>[];
 
     if (artworkWasEdited) {
@@ -855,16 +895,18 @@ class Indexer<T extends Track> {
       AudioService.evictArtworkCache();
     }
 
+    final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
+
     for (final e in tracksMap.entries) {
       final ot = e.key;
+      finalNewOldTracks[e.value] = ot.toTrackExtOrNull();
       final nt = e.value.asTrack() as T;
-      oldTracks.add(ot);
       newTracks.add(nt);
       allTracksMappedByPath[ot.path] = e.value;
       _tracksDBManager.putAsync(ot.path, e.value.toJsonWithoutPath());
       allTracksMappedByYTID.addForce(e.value.youtubeID, ot);
-      _currentFileNamesMap.remove(ot.filename);
-      _currentFileNamesMap[nt.filename] = true;
+      // _currentFileNamesMap.remove(ot.filename); // same path alr
+      // _currentFileNamesMap[nt.filename] = true; // --^
       TrackTileManager.rebuildTrackInfo(ot);
 
       if (artworkWasEdited) {
@@ -872,17 +914,20 @@ class Indexer<T extends Track> {
         CurrentColor.inst.reExtractTrackColorPalette(track: ot, newNC: null, imagePath: ot.pathToImage);
       }
     }
-    oldTracks.loop((tr) => _removeThisTrackFromAlbumGenreArtistEtc(tr));
-    _addTheseTracksToAlbumGenreArtistEtc(newTracks);
+    _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
 
     Player.inst.refreshRxVariables();
     Player.inst.refreshNotification();
-    SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+    SearchSortController.inst.sortMedia(MediaType.track);
+    tracksInfoList.refresh();
+    final globalSearchText = ScrollSearchController.inst.searchTextEditingController.text;
+    if (globalSearchText.isNotEmpty) SearchSortController.inst.searchAll(globalSearchText);
   }
 
   Future<List<T>> convertPathsToTracksAndAddToLists(Iterable<String> tracksPathPre) async {
     final finalTracks = <T>[];
     final tracksToExtract = <String>[];
+    final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
 
     final orderLookup = <String, int>{};
     int index = 0;
@@ -916,11 +961,14 @@ class Indexer<T extends Track> {
         final obj = Track.orVideo(p);
         finalTracks.add(obj as T);
         final trext = extractFunction(item);
-        if (trext != null) _addTrackToLists(trext, true, item.tags.artwork);
+        if (trext != null) {
+          _addTrackToLists(trext, true, item.tags.artwork);
+          finalNewOldTracks[trext] = null;
+        }
       }
     }
 
-    _addTheseTracksToAlbumGenreArtistEtc(finalTracks);
+    _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
     _sortAndRefreshTracks();
 
     finalTracks.sortBy((e) => orderLookup[e.path] ?? 0);
