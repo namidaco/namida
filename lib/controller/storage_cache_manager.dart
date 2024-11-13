@@ -473,7 +473,9 @@ class _VideoTrimmer {
   int get _videosMaxCacheInMB => settings.videosMaxCacheInMB.value;
 
   Future<int> _trimExcessVideoCache() async {
-    final totalMaxBytes = _videosMaxCacheInMB * 1024 * 1024;
+    final maxMB = _videosMaxCacheInMB;
+    if (maxMB < 0) return 0;
+    final totalMaxBytes = maxMB * 1024 * 1024;
     final paramters = {
       'maxBytes': totalMaxBytes,
       'dirPath': AppDirs.VIDEOS_CACHE,
@@ -532,7 +534,9 @@ class _AudioTrimmer {
 
   /// Returns total deleted bytes.
   Future<int> _trimExcessAudioCache() async {
-    final totalMaxBytes = _audiosMaxCacheInMB * 1024 * 1024;
+    final maxMB = _audiosMaxCacheInMB;
+    if (maxMB < 0) return 0;
+    final totalMaxBytes = maxMB * 1024 * 1024;
     final paramters = {
       'maxBytes': totalMaxBytes,
       'dirPath': AppDirs.AUDIOS_CACHE,
@@ -582,7 +586,9 @@ class _ImageTrimmer {
 
   /// Returns total deleted bytes.
   Future<int> _trimExcessImageCache() async {
-    final totalMaxBytes = _imagesMaxCacheInMB * 1024 * 1024;
+    final maxMB = _imagesMaxCacheInMB;
+    if (maxMB < 0) return 0;
+    final totalMaxBytes = maxMB * 1024 * 1024;
     final paramters = {
       'maxBytes': totalMaxBytes,
       'dirPath': AppDirs.YT_THUMBNAILS,

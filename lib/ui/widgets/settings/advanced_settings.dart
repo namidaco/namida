@@ -221,6 +221,45 @@ class AdvancedSettings extends SettingSubpageProvider {
     );
   }
 
+  Widget _getCacheSliderWidget({
+    required int stepper,
+    required int maxGB,
+    required _AdvancedSettingKeys key,
+    required IconData icon,
+    required String title,
+    required Rx<int> rx,
+    required void Function(int val) onSave,
+  }) {
+    final minimumValue = stepper;
+    final maxValue = maxGB * 1024;
+    int getValue(int mb) => (mb - minimumValue) ~/ stepper;
+    return getItemWrapper(
+      key: key,
+      child: CustomListTile(
+        bgColor: getBgColor(key),
+        leading: StackedIcon(
+          baseIcon: icon,
+          secondaryIcon: Broken.cpu,
+        ),
+        title: title,
+        trailing: ObxO(
+          rx: rx,
+          builder: (context, valInSettings) {
+            return NamidaWheelSlider(
+              totalCount: 1 + getValue(maxValue),
+              initValue: valInSettings < 0 ? getValue(maxValue) + 1 : getValue(valInSettings),
+              text: valInSettings < 0 ? lang.UNLIMITED : (valInSettings * 1024 * 1024).fileSizeFormatted,
+              onValueChanged: (val) {
+                final finalValue = minimumValue + (val * stepper);
+                onSave(finalValue < maxValue ? finalValue : -1);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -427,96 +466,33 @@ class AdvancedSettings extends SettingSubpageProvider {
             ),
           ),
 
-          () {
-            const stepper = 8 * 4;
-            const minimumValue = stepper;
-            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return getItemWrapper(
-              key: _AdvancedSettingKeys.maxImageCache,
-              child: CustomListTile(
-                bgColor: getBgColor(_AdvancedSettingKeys.maxImageCache),
-                leading: const StackedIcon(
-                  baseIcon: Broken.gallery,
-                  secondaryIcon: Broken.cpu,
-                ),
-                title: lang.MAX_IMAGE_CACHE_SIZE,
-                trailing: Obx(
-                  (context) {
-                    final maxInSettings = settings.imagesMaxCacheInMB.valueR;
-                    return NamidaWheelSlider(
-                      totalCount: getValue(4 * 1024), // 4 GB
-                      initValue: getValue(maxInSettings),
-
-                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
-                      onValueChanged: (val) {
-                        settings.save(imagesMaxCacheInMB: minimumValue + (val * stepper));
-                      },
-                    );
-                  },
-                ),
-              ),
-            );
-          }(),
-
-          () {
-            const stepper = 8 * 4;
-            const minimumValue = stepper;
-            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return getItemWrapper(
-              key: _AdvancedSettingKeys.maxAudioCache,
-              child: CustomListTile(
-                bgColor: getBgColor(_AdvancedSettingKeys.maxAudioCache),
-                leading: const StackedIcon(
-                  baseIcon: Broken.audio_square,
-                  secondaryIcon: Broken.cpu,
-                ),
-                title: lang.MAX_AUDIO_CACHE_SIZE,
-                trailing: Obx(
-                  (context) {
-                    final maxInSettings = settings.audiosMaxCacheInMB.valueR;
-                    return NamidaWheelSlider(
-                      totalCount: getValue(12 * 1024), // 12 GB
-                      initValue: getValue(maxInSettings),
-                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
-                      onValueChanged: (val) {
-                        settings.save(audiosMaxCacheInMB: minimumValue + (val * stepper));
-                      },
-                    );
-                  },
-                ),
-              ),
-            );
-          }(),
-
-          () {
-            const stepper = 8 * 32;
-            const minimumValue = stepper;
-            int getValue(int mb) => (mb - minimumValue) ~/ stepper;
-            return getItemWrapper(
-              key: _AdvancedSettingKeys.maxVideoCache,
-              child: CustomListTile(
-                bgColor: getBgColor(_AdvancedSettingKeys.maxVideoCache),
-                leading: const StackedIcon(
-                  baseIcon: Broken.video,
-                  secondaryIcon: Broken.cpu,
-                ),
-                title: lang.MAX_VIDEO_CACHE_SIZE,
-                trailing: Obx(
-                  (context) {
-                    final maxInSettings = settings.videosMaxCacheInMB.valueR;
-                    return NamidaWheelSlider(
-                      totalCount: getValue(32 * 1024), // 32 GB
-                      initValue: getValue(maxInSettings),
-                      text: (maxInSettings * 1024 * 1024).fileSizeFormatted,
-                      onValueChanged: (val) {
-                        settings.save(videosMaxCacheInMB: minimumValue + (val * stepper));
-                      },
-                    );
-                  },
-                ),
-              ),
-            );
-          }(),
+          _getCacheSliderWidget(
+            stepper: 8 * 4,
+            maxGB: 4,
+            key: _AdvancedSettingKeys.maxImageCache,
+            icon: Broken.gallery,
+            title: lang.MAX_IMAGE_CACHE_SIZE,
+            rx: settings.imagesMaxCacheInMB,
+            onSave: (val) => settings.save(imagesMaxCacheInMB: val),
+          ),
+          _getCacheSliderWidget(
+            stepper: 8 * 4,
+            maxGB: 12,
+            key: _AdvancedSettingKeys.maxAudioCache,
+            icon: Broken.audio_square,
+            title: lang.MAX_AUDIO_CACHE_SIZE,
+            rx: settings.audiosMaxCacheInMB,
+            onSave: (val) => settings.save(audiosMaxCacheInMB: val),
+          ),
+          _getCacheSliderWidget(
+            stepper: 8 * 32,
+            maxGB: 32,
+            key: _AdvancedSettingKeys.maxVideoCache,
+            icon: Broken.video,
+            title: lang.MAX_VIDEO_CACHE_SIZE,
+            rx: settings.videosMaxCacheInMB,
+            onSave: (val) => settings.save(videosMaxCacheInMB: val),
+          ),
 
           getItemWrapper(
             key: _AdvancedSettingKeys.clearImageCache,

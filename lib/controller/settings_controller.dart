@@ -324,9 +324,9 @@ class _SettingsController with SettingsFileWriter {
     isTrackPlayedSecondsCount.value = 25;
     isTrackPlayedPercentageCount.value = 25;
     waveformTotalBars.value = 111;
-    videosMaxCacheInMB.value = (24 * 1024); // 24GB
-    audiosMaxCacheInMB.value = (8 * 1024); // 8GB
-    imagesMaxCacheInMB.value = (1 * 1024); // 1GB
+    videosMaxCacheInMB.value = -1;
+    audiosMaxCacheInMB.value = -1;
+    imagesMaxCacheInMB.value = (2 * 1024); // 2GB
     showUnknownFieldsInTrackInfoDialog.value = false;
     dismissibleMiniplayer.value = true;
     alwaysExpandedSearchbar.value = true;
