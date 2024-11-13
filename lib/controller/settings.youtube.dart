@@ -98,6 +98,23 @@ class _YoutubeSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
+  @override
+  void applyKuruSettings() {
+    ytVisibleShorts.value = <YTVisibleShortPlaces, bool>{
+      YTVisibleShortPlaces.history: false,
+      YTVisibleShortPlaces.homeFeed: false,
+      YTVisibleShortPlaces.relatedVideos: false,
+      YTVisibleShortPlaces.search: false,
+    };
+    personalizedRelatedVideos.value = false;
+    ytMiniplayerDimAfterSeconds.value = 12;
+    ytMiniplayerDimOpacity.value = 0.7;
+    fallbackExtractInfoDescription.value = false;
+    rememberAudioOnly.value = true;
+    whiteVideoBGInLightMode = true;
+    enableDimInLightMode = false;
+  }
+
   void prepareSettingsFile() {
     final json = prepareSettingsFile_();
     if (json is! Map) return;

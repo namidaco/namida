@@ -29,6 +29,12 @@ class _ExtraSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
+  @override
+  void applyKuruSettings() {
+    selectedLibraryTab.value = LibraryTab.playlists;
+    staticLibraryTab.value = LibraryTab.playlists;
+  }
+
   void prepareSettingsFile() {
     final json = prepareSettingsFile_();
     if (json is! Map) return;

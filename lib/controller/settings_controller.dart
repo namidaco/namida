@@ -49,7 +49,7 @@ class _SettingsController with SettingsFileWriter {
     LibraryTab.folders,
     LibraryTab.youtube,
   ].obs;
-  final searchResultsPlayMode = 1.obs;
+
   final borderRadiusMultiplier = 1.0.obs;
   final fontScaleFactor = 0.9.obs;
   final artworkCacheHeightMultiplier = 0.8.obs;
@@ -293,6 +293,79 @@ class _SettingsController with SettingsFileWriter {
   bool canAskForBatteryOptimizations = true;
   bool didSupportNamida = false;
 
+  @override
+  void applyKuruSettings() {
+    floatingActionButton.value = FABType.search;
+    borderRadiusMultiplier.value = 0.9;
+    fontScaleFactor.value = 0.85;
+    artworkCacheHeightMultiplier.value = 1.2;
+    trackThumbnailSizeinList.value = 90.0;
+    trackListTileHeight.value = 60.0;
+    forceSquaredTrackThumbnail.value = false;
+    dateTimeFormat.value = '[dd.MM.yyyy]';
+    trackArtistsSeparatorsBlacklist.value = <String>['T & Sugah', 'Miles & Miles'];
+    tracksSort.value = SortType.firstListen;
+    tracksSortSearch.value = SortType.mostPlayed;
+    tracksSortSearchReversed.value = true;
+    tracksSortSearchIsAuto.value = false;
+    albumSort.value = GroupSortType.numberOfTracks;
+    albumSortReversed.value = true;
+    artistSort.value = GroupSortType.numberOfTracks;
+    artistSortReversed.value = true;
+    trackSearchFilter.value = [
+      TrackSearchFilter.filename,
+      TrackSearchFilter.title,
+      TrackSearchFilter.artist,
+      TrackSearchFilter.album,
+      TrackSearchFilter.comment,
+      TrackSearchFilter.year,
+    ];
+    autoBackupIntervalDays.value = 1;
+    isTrackPlayedSecondsCount.value = 25;
+    isTrackPlayedPercentageCount.value = 25;
+    waveformTotalBars.value = 111;
+    videosMaxCacheInMB.value = (24 * 1024); // 24GB
+    audiosMaxCacheInMB.value = (8 * 1024); // 8GB
+    imagesMaxCacheInMB.value = (1 * 1024); // 1GB
+    showUnknownFieldsInTrackInfoDialog.value = false;
+    dismissibleMiniplayer.value = true;
+    alwaysExpandedSearchbar.value = true;
+    tagFieldsToEdit.value = <TagField>[
+      TagField.trackNumber,
+      TagField.year,
+      TagField.title,
+      TagField.artist,
+      TagField.album,
+      TagField.genre,
+      TagField.comment,
+      TagField.description,
+      TagField.lyrics,
+    ];
+    trackPlayMode.value = TrackPlayMode.selectedTrack;
+    onTrackSwipeLeft.value = OnTrackTileSwapActions.playafter;
+    downloadFilesKeepCachedVersions.value = false;
+    downloadAudioOnly.value = true;
+    trackItem.value = {
+      TrackTilePosition.row1Item1: TrackTileItem.title,
+      TrackTilePosition.row1Item2: TrackTileItem.none,
+      TrackTilePosition.row1Item3: TrackTileItem.none,
+      TrackTilePosition.row2Item1: TrackTileItem.artists,
+      TrackTilePosition.row2Item2: TrackTileItem.none,
+      TrackTilePosition.row2Item3: TrackTileItem.none,
+      TrackTilePosition.row3Item1: TrackTileItem.album,
+      TrackTilePosition.row3Item2: TrackTileItem.firstListenDate,
+      TrackTilePosition.row3Item3: TrackTileItem.none,
+      TrackTilePosition.rightItem1: TrackTileItem.duration,
+      TrackTilePosition.rightItem2: TrackTileItem.none,
+    };
+    activeSearchMediaTypes.value = <MediaType>[
+      MediaType.track,
+      MediaType.album,
+      MediaType.artist,
+      MediaType.folder,
+    ];
+  }
+
   void prepareSettingsFile() {
     final json = prepareSettingsFile_();
     if (json is! Map) return;
@@ -320,7 +393,6 @@ class _SettingsController with SettingsFileWriter {
       final albumIdentifiersFromStorage = json['albumIdentifiers'];
       if (albumIdentifiersFromStorage is List) albumIdentifiers.value = albumIdentifiersFromStorage.map((e) => AlbumIdentifier.values.getEnum(e)).toListy();
 
-      searchResultsPlayMode.value = json['searchResultsPlayMode'] ?? searchResultsPlayMode.value;
       borderRadiusMultiplier.value = json['borderRadiusMultiplier'] ?? borderRadiusMultiplier.value;
       fontScaleFactor.value = json['fontScaleFactor'] ?? fontScaleFactor.value;
       artworkCacheHeightMultiplier.value = json['artworkCacheHeightMultiplier'] ?? artworkCacheHeightMultiplier.value;
@@ -515,7 +587,6 @@ class _SettingsController with SettingsFileWriter {
         'activeArtistType': activeArtistType.value.name,
         'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.name),
         'albumIdentifiers': albumIdentifiers.mapped((element) => element.name),
-        'searchResultsPlayMode': searchResultsPlayMode.value,
         'borderRadiusMultiplier': borderRadiusMultiplier.value,
         'fontScaleFactor': fontScaleFactor.value,
         'artworkCacheHeightMultiplier': artworkCacheHeightMultiplier.value,
@@ -668,7 +739,6 @@ class _SettingsController with SettingsFileWriter {
     bool? animatedTheme,
     int? staticColor,
     int? staticColorDark,
-    int? searchResultsPlayMode,
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
     MediaType? activeArtistType,
@@ -841,7 +911,6 @@ class _SettingsController with SettingsFileWriter {
       });
     }
 
-    if (searchResultsPlayMode != null) this.searchResultsPlayMode.value = searchResultsPlayMode;
     if (borderRadiusMultiplier != null) this.borderRadiusMultiplier.value = borderRadiusMultiplier;
     if (fontScaleFactor != null) this.fontScaleFactor.value = fontScaleFactor;
     if (artworkCacheHeightMultiplier != null) this.artworkCacheHeightMultiplier.value = artworkCacheHeightMultiplier;

@@ -10,9 +10,17 @@ mixin SettingsFileWriter {
   Object get jsonToWrite;
   Duration get delay => const Duration(seconds: 2);
 
+  static const _isKuru = bool.fromEnvironment('IS_KURU_BUILD');
+
+  void applyKuruSettings();
+
   @protected
   dynamic prepareSettingsFile_() {
-    final file = File(filePath)..createSync(recursive: true);
+    final file = File(filePath);
+    if (!file.existsSync()) {
+      if (_isKuru) applyKuruSettings();
+      return null;
+    }
     try {
       return file.readAsJsonSync();
     } catch (e) {

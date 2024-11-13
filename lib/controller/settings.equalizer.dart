@@ -30,6 +30,11 @@ class EqualizerSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
+  @override
+  void applyKuruSettings() {
+    uiTapToUpdate.value = false;
+  }
+
   void prepareSettingsFile() {
     final json = prepareSettingsFile_();
     if (json is! Map) return;

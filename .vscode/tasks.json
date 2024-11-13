@@ -22,7 +22,7 @@
         "--target-platform",
         "android-arm64",
         "--release",
-        "-v"
+        "--dart-define=IS_KURU_BUILD=true"
       ],
       "group": {
         "kind": "build",

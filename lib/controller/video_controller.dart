@@ -956,6 +956,9 @@ class _VideoControllerCacheVideosFileSaver with SettingsFileWriter {
   _VideoControllerCacheVideosFileSaver._();
 
   @override
+  void applyKuruSettings() {}
+
+  @override
   Object get jsonToWrite {
     final mapValuesTotal = <Map<String, dynamic>>[];
     for (final e in VideoController.inst._videoCacheIDMap.values) {
@@ -972,6 +975,9 @@ class _VideoControllerCacheVideosFileSaver with SettingsFileWriter {
 
 class _VideoControllerLocalVideosFileSaver with SettingsFileWriter {
   _VideoControllerLocalVideosFileSaver._();
+
+  @override
+  void applyKuruSettings() {}
 
   @override
   Object get jsonToWrite {

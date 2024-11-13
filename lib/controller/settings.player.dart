@@ -110,6 +110,17 @@ class _PlayerSettings with SettingsFileWriter {
     _writeToStorage();
   }
 
+  @override
+  void applyKuruSettings() {
+    enableCrossFade.value = true;
+    crossFadeDurationMS.value = 1500;
+    crossFadeAutoTriggerSeconds.value = 0;
+    playOnNextPrev.value = false;
+    jumpToFirstTrackAfterFinishingQueue.value = false;
+    killAfterDismissingApp.value = KillAppMode.never;
+    replayGain.value = true;
+  }
+
   void prepareSettingsFile() {
     final json = prepareSettingsFile_();
     if (json is! Map) return;
