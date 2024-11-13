@@ -139,6 +139,7 @@ class Indexer<T extends Track> {
       return (res, null);
     }
     if (imagePath == null) return (null, null);
+    if (!settings.useMediaStore.value) return (null, null); // bcz it can generate non-accurate artworks (thanks media store)
 
     if (compressed && _artworksMap[imagePath] != null) {
       await _artworksMap[imagePath]!.future;
