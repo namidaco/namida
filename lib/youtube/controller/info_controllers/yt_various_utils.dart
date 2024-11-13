@@ -41,6 +41,26 @@ class _YoutubeInfoUtils {
     return map;
   }
 
+  VideoStreamInfo buildVideoStreamInfoFromCache(String videoId) {
+    return VideoStreamInfo(
+      id: videoId,
+      title: getVideoName(videoId) ?? '',
+      durSeconds: getVideoDurationSeconds(videoId),
+      keywords: [],
+      channelName: getVideoChannelName(videoId),
+      channelId: getVideoChannelID(videoId),
+      description: getVideoDescription(videoId),
+      thumbnails: [],
+      viewsCount: tempVideoInfosFromStreams[videoId]?.viewsCount,
+      isPrivate: null,
+      isUnlisted: null,
+      isLive: null,
+      category: null,
+      publishDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? PublishTime.unknown(),
+      uploadDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? PublishTime.unknown(),
+    );
+  }
+
   StreamInfoItem? getStreamInfoSync(String videoId) {
     return YoutiPie.cacheBuilder.forStreamInfoItem(videoId: videoId).read();
   }
@@ -59,6 +79,14 @@ class _YoutubeInfoUtils {
     return _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.title.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.title.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyEmpty();
+  }
+
+  String? getVideoDescription(String videoId, {bool checkFromStorage = true /* am sorry every follow me */}) {
+    String? name = tempVideoInfosFromStreams[videoId]?.availableDescription?.nullifyEmpty();
+    if (name != null || checkFromStorage == false) return name;
+    return _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.availableDescription?.nullifyEmpty() ??
+        _getVideoStreamResultSync(videoId)?.info?.description?.nullifyEmpty() ?? //
+        _getVideoPageResultSync(videoId)?.videoInfo?.description?.rawText?.nullifyEmpty();
   }
 
   String? getVideoChannelName(String videoId, {bool checkFromStorage = true}) {

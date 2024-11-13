@@ -10,6 +10,7 @@ import 'package:youtipie/class/channels/channel_tab.dart';
 import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/items_sort.dart';
+import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/related_videos_request_params.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/result_wrapper/history_result.dart';

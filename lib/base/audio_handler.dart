@@ -974,8 +974,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     VideoStreamsResult? streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(item.id);
 
     YoutubeInfoController.current.currentYTStreams.value = streamsResult;
-    final hadCachedVideoPageCompleter = Completer()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
-    final hadCachedCommentsCompleter = Completer()..complete(YoutubeInfoController.current.updateCurrentCommentsCache(item.id));
+    final hadCachedVideoPageCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
+    final hadCachedCommentsCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateCurrentCommentsCache(item.id));
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
@@ -1001,10 +1001,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final hadCachedVideoPage = await hadCachedVideoPageCompleter.future;
       final hadCachedComments = await hadCachedCommentsCompleter.future;
       if (checkInterrupted(refreshNoti: false)) return;
+      final requestPage = !hadCachedVideoPage;
       final requestComments = settings.youtube.preferNewComments.value ? true : !hadCachedComments;
       await YoutubeInfoController.current.updateVideoPage(
         item.id,
-        requestPage: !hadCachedVideoPage,
+        requestPage: requestPage,
         requestComments: requestComments,
       );
     }

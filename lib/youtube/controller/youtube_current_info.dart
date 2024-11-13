@@ -82,7 +82,7 @@ class _YoutubeCurrentInfoController {
     final streamInfo = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
     final streamInfoCached = await streamInfo.readAsync();
     if (!_canSafelyModifyMetadata(videoId)) return false;
-    _currentStreamInfo.value = streamInfoCached?.info;
+    _currentStreamInfo.value = streamInfoCached?.info ?? YoutubeInfoController.utils.buildVideoStreamInfoFromCache(videoId);
 
     final chId = vidPageCached?.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
     final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).readAsync();
@@ -121,11 +121,9 @@ class _YoutubeCurrentInfoController {
       return;
     }
     if (!requestPage && !requestComments) {
-      if (requestPage && !_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+      if (!_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
       return;
     }
-
-    final requestCustomRelatedVideos = requestPage && !_personzaliedRelatedVideos;
 
     if (requestPage) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
@@ -165,7 +163,7 @@ class _YoutubeCurrentInfoController {
       if (_personzaliedRelatedVideos) {
         _currentRelatedVideos.value = page?.relatedVideosResult;
       } else {
-        if (requestCustomRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+        _fetchAndUpdateRelatedVideos(videoId);
       }
 
       if (requestComments) {
