@@ -41,7 +41,7 @@ class ArtworkWidget extends StatefulWidget {
   final Widget? child;
   final List<Widget> onTopWidgets;
   final List<BoxShadow>? boxShadow;
-  final bool forceEnableGlow;
+  final bool enableGlow;
   final bool displayIcon;
   final IconData? icon;
   final bool isCircle;
@@ -70,7 +70,7 @@ class ArtworkWidget extends StatefulWidget {
     this.staggered = false,
     this.boxShadow,
     this.onTopWidgets = const <Widget>[],
-    this.forceEnableGlow = false,
+    this.enableGlow = true,
     this.displayIcon = true,
     this.icon,
     this.isCircle = false,
@@ -250,7 +250,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             height: widget.staggered ? null : boxHeight,
             child: Align(
               child: _DropShadowWrapper(
-                enabled: widget.forceEnableGlow || (settings.enableGlowEffect.value && widget.blur != 0.0),
+                enabled: widget.enableGlow && (settings.enableGlowEffect.value && widget.blur != 0.0),
                 borderRadius: borderR,
                 blur: widget.blur,
                 child: Container(

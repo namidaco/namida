@@ -85,7 +85,9 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                   }
                                 }
 
-                                final backgroundColorPlaying = comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme;
+                                final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                                    ? CurrentColor.inst.miniplayerColor
+                                    : CurrentColor.inst.currentColorScheme; // always follow track color
 
                                 final properties = TrackTileProperties(
                                   backgroundColorPlaying: backgroundColorPlaying,

@@ -119,8 +119,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
   Future<void> _getThumbnail() async {
     if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
     if (imagePath != null && imageColors != null) return;
-    _dontTouchMeImFetchingThumbnail = null;
-    _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
 
     if (imagePath == null) {
       final videoId = widget.videoId;
@@ -141,6 +139,8 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       }
 
       if (res == null) {
+        _dontTouchMeImFetchingThumbnail = null;
+        _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems()) return;
         if (videoId != null) {

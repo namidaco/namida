@@ -762,6 +762,7 @@ class _TrackImage extends StatelessWidget {
         ),
       ],
       iconSize: 24.0 + 114 * cp,
+      enableGlow: false,
     );
   }
 }
