@@ -39,7 +39,7 @@ class Indexer<T extends Track> {
   Indexer._internal();
 
   bool get _defaultUseMediaStore => settings.useMediaStore.value;
-  bool get _includeVideosAsTracks => true; // TODO: settings.includeVideosAsTracks.value
+  bool get _includeVideosAsTracks => settings.includeVideos.value;
 
   void _clearTracksDBAndReOpen() {
     _tracksDBManager

@@ -116,6 +116,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   Widget build(BuildContext context) {
     const indexer = IndexerSettings();
     final useMediaStore = indexer.getMediaStoreWidget();
+    final includeVideosWidget = indexer.getIncludeVideosWidget();
     final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: true);
     final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: true);
     final groupArtworksByAlbum = indexer.getGroupArtworksByAlbumWidget();
@@ -173,6 +174,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 performanceTile,
                                 libraryTabsTile,
                                 if (useMediaStore != null) useMediaStore,
+                                includeVideosWidget,
                                 groupArtworksByAlbum,
                                 foldersToScan,
                                 foldersToExclude,

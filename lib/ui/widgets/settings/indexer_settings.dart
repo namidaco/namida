@@ -38,6 +38,7 @@ enum _IndexerSettingsKeys {
   minimumFileSize,
   minimumTrackDur,
   useMediaStore,
+  includeVideos,
   refreshOnStartup,
   missingTracks,
   reindex,
@@ -64,6 +65,7 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.minimumFileSize: [lang.MIN_FILE_SIZE],
         _IndexerSettingsKeys.minimumTrackDur: [lang.MIN_FILE_DURATION],
         _IndexerSettingsKeys.useMediaStore: [lang.USE_MEDIA_STORE, lang.USE_MEDIA_STORE_SUBTITLE],
+        _IndexerSettingsKeys.includeVideos: [lang.INCLUDE_VIDEOS],
         _IndexerSettingsKeys.refreshOnStartup: [lang.REFRESH_ON_STARTUP],
         _IndexerSettingsKeys.missingTracks: [lang.MISSING_TRACKS],
         _IndexerSettingsKeys.reindex: [lang.RE_INDEX, lang.RE_INDEX_SUBTITLE],
@@ -103,6 +105,29 @@ class IndexerSettings extends SettingSubpageProvider {
           value: settings.useMediaStore.valueR,
           onChanged: (isTrue) {
             settings.save(useMediaStore: !isTrue);
+            showRefreshPromptDialog(false);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget getIncludeVideosWidget() {
+    return getItemWrapper(
+      key: _IndexerSettingsKeys.includeVideos,
+      child: ObxO(
+        rx: settings.includeVideos,
+        builder: (context, includeVideos) => CustomSwitchListTile(
+          bgColor: getBgColor(_IndexerSettingsKeys.includeVideos),
+          leading: StackedIcon(
+            baseIcon: Broken.video_play,
+            secondaryIcon: Broken.tick_circle,
+            secondaryIconSize: 12.0,
+          ),
+          title: lang.INCLUDE_VIDEOS,
+          value: includeVideos,
+          onChanged: (isTrue) {
+            settings.save(includeVideos: !isTrue);
             showRefreshPromptDialog(false);
           },
         ),
@@ -302,7 +327,8 @@ class IndexerSettings extends SettingSubpageProvider {
     const refreshIconKey1 = 'kurukuru';
     const refreshIconKey2 = 'kururin';
 
-    final useMediaStore = getMediaStoreWidget();
+    final useMediaStoreWidget = getMediaStoreWidget();
+    final includeVideosWidget = getIncludeVideosWidget();
     return SettingsCard(
       title: lang.INDEXER,
       subtitle: lang.INDEXER_SUBTITLE,
@@ -563,7 +589,8 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          if (useMediaStore != null) useMediaStore,
+          if (useMediaStoreWidget != null) useMediaStoreWidget,
+          includeVideosWidget,
           getItemWrapper(
             key: _IndexerSettingsKeys.refreshOnStartup,
             child: Obx(

@@ -309,6 +309,7 @@ abstract class LanguageKeys {
   String get IMPORT_TIME_RANGE => _getKey('IMPORT_TIME_RANGE');
   String get IMPORT_YOUTUBE_HISTORY_GUIDE => _getKey('IMPORT_YOUTUBE_HISTORY_GUIDE');
   String get IMPORT_YOUTUBE_HISTORY => _getKey('IMPORT_YOUTUBE_HISTORY');
+  String get INCLUDE_VIDEOS => _getKey('INCLUDE_VIDEOS');
   String get INDEX_REFRESH_REQUIRED => _getKey('INDEX_REFRESH_REQUIRED');
   String get INDEXER_NOTE => _getKey('INDEXER_NOTE');
   String get INDEXER_SUBTITLE => _getKey('INDEXER_SUBTITLE');
