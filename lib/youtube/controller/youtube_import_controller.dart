@@ -43,6 +43,37 @@ class _YTPlaylistDetails {
     required this.description,
     required this.visibility,
   });
+
+  static _YTPlaylistDetails merge(_YTPlaylistDetails current, _YTPlaylistDetails other) {
+    final _YTPlaylistDetails latestUpdatedPlaylist;
+    final _YTPlaylistDetails otherPlaylist;
+
+    if (current.timeUpdated != null && other.timeUpdated != null) {
+      if (current.timeUpdated!.isAfter(other.timeUpdated!)) {
+        latestUpdatedPlaylist = current;
+        otherPlaylist = other;
+      } else {
+        latestUpdatedPlaylist = other;
+        otherPlaylist = current;
+      }
+    } else if (current.timeUpdated != null) {
+      latestUpdatedPlaylist = current;
+      otherPlaylist = other;
+    } else {
+      latestUpdatedPlaylist = other;
+      otherPlaylist = current;
+    }
+
+    return _YTPlaylistDetails(
+      playlistID: latestUpdatedPlaylist.playlistID.isNotEmpty ? latestUpdatedPlaylist.playlistID : otherPlaylist.playlistID,
+      channelID: latestUpdatedPlaylist.channelID.isNotEmpty ? latestUpdatedPlaylist.channelID : otherPlaylist.channelID,
+      timeCreated: latestUpdatedPlaylist.timeCreated ?? otherPlaylist.timeCreated,
+      timeUpdated: latestUpdatedPlaylist.timeUpdated ?? otherPlaylist.timeUpdated,
+      name: latestUpdatedPlaylist.name.isNotEmpty ? latestUpdatedPlaylist.name : otherPlaylist.name,
+      description: latestUpdatedPlaylist.description.isNotEmpty ? latestUpdatedPlaylist.description : otherPlaylist.description,
+      visibility: latestUpdatedPlaylist.visibility != _YTPlaylistVisibility.unknown ? latestUpdatedPlaylist.visibility : otherPlaylist.visibility,
+    );
+  }
 }
 
 class _VideoEntry {
@@ -198,11 +229,12 @@ class YoutubeImportController {
       );
     }
 
+    final plHeaderNormalizeRegex = RegExp('.*playlist', caseSensitive: false);
     _YTPlaylistDetails getPlaylistDetailsNew(List<String> header, List<String> split) {
       final map = <String, String>{};
-      header.loopAdv((part, index) => map[part.toLowerCase().splitLast('playlist').splitFirst('(')] ??= split[index]);
+      header.loopAdv((part, index) => map[part.toLowerCase().replaceFirst(plHeaderNormalizeRegex, '').splitFirst('(').trim()] ??= split[index]);
       return _YTPlaylistDetails(
-        playlistID: map['playlist id'] ?? '',
+        playlistID: map['id'] ?? map['playlist id'] ?? '',
         channelID: map['channel id'] ?? '',
         timeCreated: parseDate(map['create timestamp'] ?? ''),
         timeUpdated: parseDate(map['update timestamp'] ?? ''),
@@ -294,7 +326,10 @@ class YoutubeImportController {
       details.loop(
         (pl) {
           final playlistName = pl.$1.name;
-          playlistsDetailsMap[playlistName] = pl.$1.details;
+          final existingDetails = playlistsDetailsMap[playlistName];
+          final newDetails = pl.$1.details;
+          final finalDetails = existingDetails != null && newDetails != null ? _YTPlaylistDetails.merge(newDetails, existingDetails) : newDetails ?? existingDetails;
+          playlistsDetailsMap[playlistName] = finalDetails;
           playlistsMap[playlistName] ??= [];
           playlistsMap[playlistName]!.add(pl.$2);
         },
