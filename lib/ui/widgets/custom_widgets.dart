@@ -918,6 +918,8 @@ class NamidaExpansionTile extends StatelessWidget {
   final ValueChanged? onExpansionChanged;
   final bool normalRightPadding;
   final Color? bgColor;
+  final bool bigahh;
+  final bool compact;
 
   const NamidaExpansionTile({
     super.key,
@@ -938,14 +940,16 @@ class NamidaExpansionTile extends StatelessWidget {
     this.onExpansionChanged,
     this.normalRightPadding = false,
     this.bgColor,
+    this.bigahh = false,
+    this.compact = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTileTheme(
-      dense: true,
+      dense: !bigahh,
       child: ExpansionTile(
-        visualDensity: VisualDensity.compact,
+        visualDensity: compact ? VisualDensity.compact : VisualDensity.comfortable,
         controlAffinity: ListTileControlAffinity.trailing,
         collapsedBackgroundColor: bgColor,
         backgroundColor: bgColor,

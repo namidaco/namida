@@ -406,6 +406,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         key: _PlaybackSettingsKeys.crossfade,
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
+          bigahh: true,
           normalRightPadding: true,
           initiallyExpanded: settings.player.enableCrossFade.value,
           leading: const StackedIcon(
@@ -471,6 +472,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         key: _PlaybackSettingsKeys.fadeEffectOnPlayPause,
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
+          bigahh: true,
           normalRightPadding: true,
           initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value,
           leading: const StackedIcon(
@@ -553,6 +555,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         key: _PlaybackSettingsKeys.onVolume0,
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.onVolume0),
+          bigahh: true,
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
           icon: Broken.volume_slash,
@@ -604,6 +607,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         key: _PlaybackSettingsKeys.onInterruption,
         child: NamidaExpansionTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.onInterruption),
+          bigahh: true,
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
           icon: Broken.notification_bing,

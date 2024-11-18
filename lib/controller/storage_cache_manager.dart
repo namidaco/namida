@@ -11,16 +11,15 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 enum _CacheSorting { recommended, size, listenCount, accessTime }
 
@@ -354,14 +353,15 @@ class StorageCacheManager {
                           },
                           child: Row(
                             children: [
-                              ArtworkWidget(
+                              YoutubeThumbnail(
                                 key: Key(id ?? ''),
-                                thumbnailSize: 92.0,
+                                type: ThumbnailType.video,
+                                videoId: id,
                                 iconSize: 24.0,
-                                width: 92,
+                                width: 92.0,
                                 height: 92 * 9 / 16,
-                                path: ThumbnailManager.getPathToYTImage(id),
                                 forceSquared: true,
+                                isImportantInCache: false,
                               ),
                               const SizedBox(width: 8.0),
                               Expanded(

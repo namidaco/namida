@@ -356,6 +356,8 @@ class CustomizationSettings extends SettingSubpageProvider {
       key: _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION,
       child: NamidaExpansionTile(
         bgColor: getBgColor(_CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION),
+        bigahh: true,
+        compact: false,
         initiallyExpanded: settings.useSettingCollapsedTiles.value,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
@@ -526,6 +528,8 @@ class CustomizationSettings extends SettingSubpageProvider {
       key: _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION,
       child: NamidaExpansionTile(
         bgColor: getBgColor(_CustomizationSettingsKeys.TRACKTILECUSTOMIZATION),
+        bigahh: true,
+        compact: false,
         initiallyExpanded: settings.useSettingCollapsedTiles.value,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
@@ -822,6 +826,8 @@ class CustomizationSettings extends SettingSubpageProvider {
       key: _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION,
       child: NamidaExpansionTile(
         bgColor: getBgColor(_CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION),
+        bigahh: true,
+        compact: false,
         initiallyExpanded: settings.useSettingCollapsedTiles.value,
         leading: const StackedIcon(
           baseIcon: Broken.brush,

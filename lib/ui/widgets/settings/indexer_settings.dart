@@ -141,6 +141,8 @@ class IndexerSettings extends SettingSubpageProvider {
           opacity: settings.useMediaStore.valueR ? 0.5 : 1.0,
           child: NamidaExpansionTile(
             bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
+            bigahh: true,
+            compact: false,
             initiallyExpanded: initiallyExpanded,
             icon: Broken.folder,
             titleText: lang.LIST_OF_FOLDERS,
@@ -221,6 +223,8 @@ class IndexerSettings extends SettingSubpageProvider {
         rx: settings.directoriesToExclude,
         builder: (context, directoriesToExclude) => NamidaExpansionTile(
           bgColor: getBgColor(_IndexerSettingsKeys.foldersToExclude),
+          bigahh: true,
+          compact: false,
           initiallyExpanded: initiallyExpanded,
           icon: Broken.folder_minus,
           titleText: lang.EXCLUDED_FODLERS,

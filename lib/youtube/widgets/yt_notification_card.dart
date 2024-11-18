@@ -11,6 +11,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -129,10 +130,20 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     final thumbnailWidth = this.widget.thumbnailWidth;
     final thumbnailHeight = this.widget.thumbnailHeight;
 
-    final title = widget.notification.shortText;
-
     DateTime? publishedDate = widget.notification.publishedAt.date;
     final uploadDateAgo = publishedDate == null ? null : Jiffy.parseFromDateTime(publishedDate).fromNow();
+
+    String firstLine;
+    String secondLine;
+
+    final possibleInfo = widget.notification.possibleInfo;
+    if (possibleInfo != null && possibleInfo.channelTitle.isNotEmpty) {
+      firstLine = possibleInfo.title;
+      secondLine = [possibleInfo.channelTitle, uploadDateAgo].joinText(separator: ' - ');
+    } else {
+      firstLine = widget.notification.shortText;
+      secondLine = uploadDateAgo ?? '';
+    }
 
     const verticalPadding = 8.0;
     final channelThumbSize = thumbnailWidth * 0.35;
@@ -172,7 +183,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 borderRadius: 4.0,
                 shimmerEnabled: false,
                 child: Text(
-                  title,
+                  firstLine,
                   style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * widget.fontMultiplier),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -185,7 +196,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 borderRadius: 4.0,
                 shimmerEnabled: false,
                 child: Text(
-                  uploadDateAgo ?? '',
+                  secondLine,
                   style: context.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w400,
                     fontSize: 13.0 * widget.fontMultiplier,
