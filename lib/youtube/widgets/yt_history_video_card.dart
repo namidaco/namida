@@ -146,6 +146,9 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
   final Widget? topRightWidget;
   final int? downloadIndex;
   final int? downloadTotalLength;
+  final bool playSingle;
+  final void Function()? onTap;
+  final double minimalCardFontMultiplier;
 
   const YTHistoryVideoCardBase({
     super.key,
@@ -177,12 +180,19 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     this.topRightWidget,
     this.downloadIndex,
     this.downloadTotalLength,
+    this.playSingle = false,
+    this.onTap,
+    this.minimalCardFontMultiplier = 1.0,
   });
 
   YoutubeID itemToYTIDPlay(T item) {
     final e = itemToYTVideoId(item);
     return YoutubeID(id: e.$1, watchNull: e.$2, playlistID: playlistID);
   }
+
+  static const minimalCardExtraThumbCropHeight = 6.0;
+  static const minimalCardExtraThumbCropWidth = 8.0;
+  static EdgeInsets cardMargin(bool minimal) => EdgeInsets.symmetric(horizontal: minimal ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding);
 
   @override
   Widget build(BuildContext context) {
@@ -195,8 +205,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     double thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
     if (minimalCard) {
       // this might crop the image since we enabling forceSquared.
-      thumbHeight -= 6.0;
-      thumbWidth -= 8.0;
+      thumbHeight -= minimalCardExtraThumbCropHeight;
+      thumbWidth -= minimalCardExtraThumbCropWidth;
     }
 
     final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
@@ -299,7 +309,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                         maxLines: minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: context.textTheme.displayMedium?.copyWith(
-                          fontSize: minimalCard ? 12.0 : null,
+                          fontSize: minimalCard ? 12.0 * minimalCardFontMultiplier : null,
                           color: itemsColor7,
                         ),
                       ),
@@ -309,7 +319,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.displaySmall?.copyWith(
-                            fontSize: minimalCard ? 11.5 : null,
+                            fontSize: minimalCard ? 11.5 * minimalCardFontMultiplier : null,
                             color: itemsColor6,
                           ),
                         ),
@@ -319,7 +329,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.displaySmall?.copyWith(
-                            fontSize: minimalCard ? 11.0 : null,
+                            fontSize: minimalCard ? 11.0 * minimalCardFontMultiplier : null,
                             color: itemsColor5,
                           ),
                         ),
@@ -332,25 +342,35 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
           return NamidaInkWell(
             borderRadius: minimalCard ? 8.0 : 10.0,
             width: minimalCard ? thumbWidth : null,
-            onTap: () {
-              YTUtils.expandMiniplayer();
-              if (fromPlayerQueue) {
-                final i = this.index;
-                if (i == Player.inst.currentIndex.value) {
-                  Player.inst.togglePlayPause();
-                } else {
-                  Player.inst.skipToQueueItem(this.index);
-                }
-              } else {
-                Player.inst.playOrPause(
-                  this.index,
-                  (reversedList ? mainList.reversed : mainList).map(itemToYTIDPlay),
-                  QueueSource.others,
-                );
-              }
-            },
+            onTap: onTap ??
+                () {
+                  YTUtils.expandMiniplayer();
+                  if (fromPlayerQueue) {
+                    final i = this.index;
+                    if (i == Player.inst.currentIndex.value) {
+                      Player.inst.togglePlayPause();
+                    } else {
+                      Player.inst.skipToQueueItem(this.index);
+                    }
+                  } else {
+                    final finalList = reversedList ? mainList.reversed : mainList;
+                    if (playSingle) {
+                      Player.inst.playOrPause(
+                        0,
+                        [itemToYTIDPlay(finalList.elementAt(this.index))],
+                        QueueSource.others,
+                      );
+                    } else {
+                      Player.inst.playOrPause(
+                        this.index,
+                        finalList.map(itemToYTIDPlay),
+                        QueueSource.others,
+                      );
+                    }
+                  }
+                },
             height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
-            margin: EdgeInsets.symmetric(horizontal: minimalCard ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding),
+            margin: cardMargin(minimalCard),
             bgColor: bgColor ??
                 (isCurrentlyPlaying
                     ? (fromPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
@@ -379,6 +399,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                       iconsColor: itemsColor5,
                       overrideListens: overrideListens,
                       displayCacheIcons: !minimalCard,
+                      fontMultiplier: minimalCard ? minimalCardFontMultiplier : null,
                     ),
                   ),
                 ),

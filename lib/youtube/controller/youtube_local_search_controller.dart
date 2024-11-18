@@ -35,13 +35,17 @@ class YTLocalSearchController with PortsProvider<Map> {
 
   ScrollController? scrollController;
 
-  // String _latestSearch = '';
+  String _latestSearch = '';
 
   YTLocalSearchSortType _sortType = YTLocalSearchSortType.mostPlayed;
   YTLocalSearchSortType get sortType => _sortType;
   set sortType(YTLocalSearchSortType t) {
     _sortType = t;
-    _sortStreams(searchResults);
+    final searchList = searchResults.value;
+    if (searchList != null) {
+      _sortStreams(searchList);
+      searchResults.refresh();
+    }
   }
 
   void _sortStreams(List<StreamInfoItem> streams) {
@@ -55,48 +59,35 @@ class YTLocalSearchController with PortsProvider<Map> {
     }
   }
 
-  var searchResults = <StreamInfoItem>[];
+  /// null means a search is on-going
+  /// empty means no search request or empty search results.
+  final searchResults = Rxn<List<StreamInfoItem>>(const []);
 
-  void search(String text, {int? maxResults}) async {
-    // _latestSearch = text;
-    if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
-    if (text == '') return;
-
-    for (final l in _onSearchStartListeners.entries) {
-      l.value();
+  void search(String text) async {
+    if (text == _latestSearch) {
+      if (searchResults.value == null) searchResults.value = const [];
+      return;
     }
+
+    _latestSearch = text;
+    if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
+    if (text == '') {
+      if (searchResults.value == null) searchResults.value = const [];
+      return;
+    }
+
+    if (isInitialized) searchResults.value = null; // display as loading only if initialized
+
     final possibleID = text.length == 11 ? text : null;
-    final p = {'text': text, 'maxResults': maxResults, 'possibleID': possibleID};
+    final p = {'text': text, 'possibleID': possibleID};
     await sendPort(p);
-  }
-
-  final _onSearchDoneListeners = <String, void Function(bool hasItems)>{};
-  final _onSearchStartListeners = <String, void Function()>{};
-
-  void addOnSearchDone(String key, void Function(bool hasItems) onDone) {
-    _onSearchDoneListeners[key] = onDone;
-  }
-
-  void removeOnSearchDone(String key) {
-    _onSearchDoneListeners.remove(key);
-  }
-
-  void addOnSearchStart(String key, void Function() onStart) {
-    _onSearchStartListeners[key] = onStart;
-  }
-
-  void removeOnSearchStart(String key) {
-    _onSearchStartListeners.remove(key);
   }
 
   @override
   void onResult(dynamic result) {
     result as List<StreamInfoItem>;
     _sortStreams(result);
-    searchResults = result;
-    for (final l in _onSearchDoneListeners.entries) {
-      l.value(result.isNotEmpty);
-    }
+    searchResults.value = result;
   }
 
   @override
@@ -157,7 +148,6 @@ class YTLocalSearchController with PortsProvider<Map> {
       }
       p as Map;
       final textPre = p['text'] as String;
-      final maxResults = p['maxResults'] as int?;
       final possibleID = p['possibleID'] as String?;
 
       final searchResults = <StreamInfoItem>[];
@@ -195,45 +185,33 @@ class YTLocalSearchController with PortsProvider<Map> {
         return enableFuzzySearch ? _isMatchFuzzy(textPre.split(' ').map((e) => e.cleanUpForComparison), title, channel) : _isMatchStrict(textCleaned, title, channel);
       }
 
-      bool shouldBreak() => maxResults != null && searchResults.length >= maxResults;
-
       // -----------------------------------
-
-      if (!shouldBreak()) {
-        final list2 = lookupListStreamInfoMap;
-        final l2 = list2.length;
-        for (int i = 0; i < l2; i++) {
-          final info = list2[i];
-          if (isMatch(info['title'], info['channel']?['title'] as String?)) {
-            searchResults.add(StreamInfoItem.fromMap(info));
-            if (shouldBreak()) break;
-          }
+      final list2 = lookupListStreamInfoMap;
+      final l2 = list2.length;
+      for (int i = 0; i < l2; i++) {
+        final info = list2[i];
+        if (isMatch(info['title'], info['channel']?['title'] as String?)) {
+          searchResults.add(StreamInfoItem.fromMap(info));
         }
       }
 
       // -----------------------------------
-      if (!shouldBreak()) {
-        final list3 = lookupListVideoStreamsMap;
-        final l3 = list3.length;
-        for (int i = 0; i < l3; i++) {
-          final info = list3[i];
-          if (isMatch(info['title'], info['channelName'])) {
-            searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
-            if (shouldBreak()) break;
-          }
+      final list3 = lookupListVideoStreamsMap;
+      final l3 = list3.length;
+      for (int i = 0; i < l3; i++) {
+        final info = list3[i];
+        if (isMatch(info['title'], info['channelName'])) {
+          searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
         }
       }
-      // -----------------------------------
 
-      if (!shouldBreak()) {
-        final list4 = lookupListYTVH;
-        final l4 = list4.length;
-        for (int i = 0; i < l4; i++) {
-          final info = list4[i];
-          if (isMatch(info.title, info.channel)) {
-            searchResults.add(info.toStreamInfo());
-            if (shouldBreak()) break;
-          }
+      // -----------------------------------
+      final list4 = lookupListYTVH;
+      final l4 = list4.length;
+      for (int i = 0; i < l4; i++) {
+        final info = list4[i];
+        if (isMatch(info.title, info.channel)) {
+          searchResults.add(info.toStreamInfo());
         }
       }
       sendPort.send(searchResults);
@@ -345,13 +323,13 @@ class YTLocalSearchController with PortsProvider<Map> {
     _disposingTimer = null;
   }
 
-  void cleanResources({int afterSeconds = 10}) {
+  void cleanResources() {
     _cancelDisposingTimer();
-    _disposingTimer = Timer(Duration(seconds: afterSeconds), () {
+    searchResults.value = const [];
+    _disposingTimer = Timer(Duration(minutes: 1), () {
       fillingCompleter?.completeIfWasnt();
       fillingCompleter = null;
       disposePort();
-      searchResults.clear();
       scrollController?.dispose();
       scrollController = null;
     });

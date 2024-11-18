@@ -27,13 +27,14 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 import 'package:namida/youtube/pages/yt_local_search_results.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
 class YoutubeSearchResultsPage extends StatefulWidget {
-  final String searchText;
+  final String Function()? searchTextCallback;
   final void Function(StreamInfoItem video)? onVideoTap;
-  const YoutubeSearchResultsPage({super.key, required this.searchText, this.onVideoTap});
+  const YoutubeSearchResultsPage({super.key, required this.searchTextCallback, this.onVideoTap});
 
   @override
   State<YoutubeSearchResultsPage> createState() => YoutubeSearchResultsPageState();
@@ -54,7 +55,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     updateKeepAlive();
   }
 
-  String get currentSearchText => _latestSearched ?? widget.searchText;
+  String? get currentSearchText => widget.searchTextCallback?.call() ?? _latestSearched;
   String? _latestSearched;
 
   YoutiPieSearchResult? _searchResult;
@@ -62,48 +63,30 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   bool? _loadingFirstResults;
   bool? _cachedSearchResults;
 
-  List<StreamInfoItem> get _searchResultsLocal => YTLocalSearchController.inst.searchResults;
-
-  int get _maxSearchResultsMini => 100;
-
   final _offlineSearchPageKey = GlobalKey<YTLocalSearchResultsState>();
-
-  void _onSearchDone(bool hasItems) {
-    if (mounted) setState(() {});
-  }
-
-  final _searchListenerKey = "YoutubeSearchResultsPage";
 
   @override
   void initState() {
     super.initState();
     fetchSearch();
-    YTLocalSearchController.inst.addOnSearchDone(_searchListenerKey, _onSearchDone);
     YTLocalSearchController.inst.initialize().then((_) {
-      YTLocalSearchController.inst.search(
-        currentSearchText,
-        maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini,
-      );
+      YTLocalSearchController.inst.search(currentSearchText ?? '');
     });
   }
 
   @override
   void dispose() {
     _isFetchingMoreResults.close();
-    YTLocalSearchController.inst.removeOnSearchDone(_searchListenerKey);
     _keepAliveTimer?.cancel();
     _keepAliveTimer = Timer(const Duration(seconds: 20), _keepDead);
     super.dispose();
   }
 
   Future<void> fetchSearch({String customText = ''}) async {
-    final newSearch = customText == '' ? widget.searchText : customText;
+    final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? '' : customText;
     _latestSearched = newSearch;
 
-    YTLocalSearchController.inst.search(
-      newSearch,
-      maxResults: NamidaNavigator.inst.isytLocalSearchInFullPage ? null : _maxSearchResultsMini,
-    );
+    YTLocalSearchController.inst.search(newSearch);
     if (_searchResult != null) refreshState(() => _searchResult = null);
     if (newSearch == '') return;
     if (NamidaNavigator.inst.isytLocalSearchInFullPage) return;
@@ -137,18 +120,34 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
     return fetched;
   }
 
+  void _onOfflineSearchTap() {
+    // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
+    NamidaNavigator.inst.isytLocalSearchInFullPage = true;
+    NamidaNavigator.inst.ytLocalSearchNavigatorKey.currentState?.pushPage(
+      YTLocalSearchResults(
+        key: _offlineSearchPageKey,
+        initialSearch: currentSearchText ?? ScrollSearchController.inst.searchTextEditingController.text,
+        onVideoTap: widget.onVideoTap,
+      ),
+      maintainState: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
-    const localMultiplier = 0.7;
+
+    const localMultiplier = 0.9;
     const thumbnailWidthLocal = thumbnailWidth * localMultiplier;
     const thumbnailHeightLocal = thumbnailHeight * localMultiplier;
-    const thumbnailItemExtentLocal = thumbnailItemExtent * localMultiplier;
+    const thumbnailItemExtentLocal = thumbnailWidthLocal - 2 * 2.0; // - card margin
+    final horizontalListHeight = 112.0 * localMultiplier;
 
     final searchResult = _searchResult;
+    const maxLocalSeachHorizontalCount = 40;
 
     return BackgroundWrapper(
       child: Navigator(
@@ -172,21 +171,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         child: NamidaInkWell(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                           margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                          onTap: () {
-                            // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
-                            NamidaNavigator.inst.isytLocalSearchInFullPage = true;
-                            NamidaNavigator.inst.ytLocalSearchNavigatorKey.currentState?.pushPage(
-                              YTLocalSearchResults(
-                                key: _offlineSearchPageKey,
-                                initialSearch: currentSearchText,
-                                onVideoTap: widget.onVideoTap,
-                                onPopping: (didChangeSort) {
-                                  if (didChangeSort) refreshState();
-                                },
-                              ),
-                              maintainState: false,
-                            );
-                          },
+                          onTap: _onOfflineSearchTap,
                           child: Row(
                             children: [
                               const Icon(Broken.radar_2),
@@ -200,6 +185,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               if (_cachedSearchResults == true) ...[
                                 const SizedBox(width: 6.0),
                                 const Icon(Broken.global_refresh, size: 20.0),
+                                const SizedBox(width: 6.0),
                               ],
                               ObxO(
                                 rx: YTLocalSearchController.inst.didLoadLookupLists,
@@ -212,22 +198,84 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         ),
                       ),
                     ),
-                    SliverFixedExtentList.builder(
-                      itemExtent: thumbnailItemExtentLocal,
-                      itemCount: _searchResultsLocal.length.withMaximum(3),
-                      itemBuilder: (context, index) {
-                        final item = _searchResultsLocal[index];
-                        return YoutubeVideoCard(
-                          fontMultiplier: 0.8,
-                          thumbnailWidthPercentage: 0.6,
-                          thumbnailHeight: thumbnailHeightLocal,
-                          thumbnailWidth: thumbnailWidthLocal,
-                          showThirdLine: false,
-                          dateInsteadOfChannel: true,
-                          isImageImportantInCache: false,
-                          video: item,
-                          playlistID: null,
-                          onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                    ObxO(
+                      rx: YTLocalSearchController.inst.searchResults,
+                      builder: (context, searchResultsLocal) {
+                        if (searchResultsLocal == null) {
+                          return SliverToBoxAdapter(
+                            child: ShimmerWrapper(
+                              shimmerEnabled: true,
+                              child: SizedBox(
+                                height: horizontalListHeight,
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: 10,
+                                  itemBuilder: (context, index) {
+                                    return NamidaInkWell(
+                                      animationDurationMS: 0,
+                                      margin: YTHistoryVideoCardBase.cardMargin(true),
+                                      width: thumbnailWidthLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth,
+                                      height: thumbnailHeightLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight,
+                                      bgColor: context.theme.cardColor,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        if (searchResultsLocal.isEmpty) {
+                          return SliverToBoxAdapter();
+                        }
+                        final localSearchDisplayExtraCardWithRemainingCount = searchResultsLocal.length > maxLocalSeachHorizontalCount;
+                        return SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: horizontalListHeight,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                              scrollDirection: Axis.horizontal,
+                              itemExtent: thumbnailItemExtentLocal,
+                              itemCount: localSearchDisplayExtraCardWithRemainingCount ? maxLocalSeachHorizontalCount + 1 : searchResultsLocal.length,
+                              itemBuilder: (context, index) {
+                                if (index == maxLocalSeachHorizontalCount && localSearchDisplayExtraCardWithRemainingCount) {
+                                  final remainingVideosCount = searchResultsLocal.length - maxLocalSeachHorizontalCount;
+                                  return remainingVideosCount <= 0
+                                      ? const SizedBox()
+                                      : NamidaInkWell(
+                                          onTap: _onOfflineSearchTap,
+                                          margin: const EdgeInsets.all(12.0),
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Center(
+                                            child: Text(
+                                              "+${remainingVideosCount.formatDecimalShort()}",
+                                              style: context.textTheme.displayMedium,
+                                            ),
+                                          ),
+                                        );
+                                }
+                                final item = searchResultsLocal[index];
+                                return YTHistoryVideoCardBase(
+                                  mainList: searchResultsLocal,
+                                  itemToYTVideoId: (e) => (e.id, null),
+                                  day: null,
+                                  index: index,
+                                  playlistID: null,
+                                  playlistName: lang.HISTORY,
+                                  canHaveDuplicates: true,
+                                  minimalCard: true,
+                                  info: (item) => item,
+                                  thumbnailHeight: thumbnailHeightLocal,
+                                  minimalCardWidth: thumbnailWidthLocal,
+                                  playSingle: true,
+                                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                                  minimalCardFontMultiplier: localMultiplier * 0.95,
+                                  isImportantInCache: false,
+                                );
+                              },
+                            ),
+                          ),
                         );
                       },
                     ),

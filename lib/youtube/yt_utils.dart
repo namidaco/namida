@@ -87,6 +87,7 @@ class YTUtils {
     Color? iconsColor,
     List<int> overrideListens = const [],
     bool displayCacheIcons = true,
+    double? fontMultiplier,
   }) {
     iconsColor ??= context.theme.iconTheme.color;
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
@@ -109,7 +110,9 @@ class YTUtils {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                   child: Text(
                     listens.length.formatDecimal(),
-                    style: context.textTheme.displaySmall,
+                    style: fontMultiplier != null
+                        ? context.textTheme.displaySmall?.copyWith(fontSize: (context.textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier)
+                        : context.textTheme.displaySmall,
                   ),
                 ),
               ),

@@ -498,7 +498,7 @@ class SearchPage extends StatelessWidget {
           ),
           YoutubeSearchResultsPage(
             key: ScrollSearchController.inst.ytSearchKey,
-            searchText: '',
+            searchTextCallback: null,
           ),
         ],
       ),

@@ -110,7 +110,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
                       Expanded(
                         child: YoutubeSearchResultsPage(
                           key: ytSearchPageController,
-                          searchText: searchText,
+                          searchTextCallback: () => ytSearchController.text,
                           onVideoTap: (video) {
                             NamidaNavigator.inst.closeDialog();
                             final url = video.buildUrl();
