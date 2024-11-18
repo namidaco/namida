@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
@@ -265,12 +266,14 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     VoidCallback? onStart,
     VoidCallback? onEnd,
     void Function(YoutiPieFetchAllRes fetchAllRes)? controller,
+    ExecuteDetails? executeDetails,
   }) async {
     final currentCount = playlist.items.length.obs;
     final fetchAllRes = playlist.fetchAll(
       onProgress: () {
         currentCount.value = playlist.items.length;
       },
+      details: executeDetails,
     );
     if (fetchAllRes == null) return true; // no continuation left
 
@@ -379,7 +382,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     required YoutiPiePlaylistResultBase playlistToFetch,
   }) async {
     final playlist = this;
-    final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
+    final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch, executeDetails: ExecuteDetails.forceRequest());
     if (!didFetch) snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
     final plId = PlaylistID(id: this.id);
     return playlistToFetch.items
