@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 mixin SettingsFileWriter {
@@ -10,15 +11,13 @@ mixin SettingsFileWriter {
   Object get jsonToWrite;
   Duration get delay => const Duration(seconds: 2);
 
-  static const _isKuru = bool.fromEnvironment('IS_KURU_BUILD');
-
   void applyKuruSettings();
 
   @protected
   dynamic prepareSettingsFile_() {
     final file = File(filePath);
     if (!file.existsSync()) {
-      if (_isKuru) applyKuruSettings();
+      if (isKuru) applyKuruSettings();
       return null;
     }
     try {

@@ -1,5 +1,6 @@
 import 'package:namida/controller/platform/waveform_extractor/waveform_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
@@ -17,13 +18,15 @@ class WaveformController {
 
   List<double> _currentWaveform = [];
 
-  var _currentScaleMap = <int, double>{};
+  var _currentScaleLookup = <double>[];
+  int _currentScaleMaxIndex = -1;
 
   bool get isDummy => _currentWaveform.isEmpty;
 
   void resetWaveform() {
     _currentWaveform = [];
-    _currentScaleMap = {};
+    _currentScaleLookup = [];
+    _currentScaleMaxIndex = -1;
     _isWaveformUIEnabled.value = false;
   }
 
@@ -50,14 +53,15 @@ class WaveformController {
     if (waveformData.isNotEmpty && stillPlaying(path)) {
       // ----- Updating [_currentWaveform]
       const maxWaveformCount = 2000;
-      final numberOfScales = duration.inMilliseconds ~/ 50;
+      final numberOfScales = duration.inMilliseconds ~/ _positionDividor;
       final downscaledLists = await _downscaledWaveformLists.thready((
         targetSizes: [maxWaveformCount, numberOfScales],
         original: waveformData,
       ));
 
       _currentWaveform = downscaledLists[maxWaveformCount] ?? [];
-      _currentScaleMap = downscaledLists[numberOfScales]?.asMap() ?? {};
+      _currentScaleLookup = downscaledLists[numberOfScales] ?? [];
+      _currentScaleMaxIndex = _currentScaleLookup.length - 1;
 
       calculateUIWaveform();
     }
@@ -104,9 +108,12 @@ class WaveformController {
     return newLists;
   }
 
+  static const _positionDividor = 50;
+  static const _positionDividorWithOffset = isKuru ? _positionDividor - 3.58 : 50;
+
   double getCurrentAnimatingScale(int positionInMs) {
-    final posInMap = positionInMs ~/ 50;
-    final dynamicScale = _currentScaleMap[posInMap] ?? 0.01;
+    final posInMap = positionInMs ~/ _positionDividorWithOffset;
+    final dynamicScale = posInMap > _currentScaleMaxIndex ? 0.01 : _currentScaleLookup[posInMap];
     final intensity = settings.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * intensity * 0.00005;
     if (finalScale.isNaN || finalScale > 0.3) return 0.01;

@@ -97,6 +97,8 @@ final Set<String> kInitialDirectoriesToScan = {};
 const Color kMainColorLight = Color(0xFF9c99c1);
 const Color kMainColorDark = Color(0xFF4e4c72);
 
+const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
+
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
   static const phoneNumber = r'[+0]\d+[\d-]+\d';
