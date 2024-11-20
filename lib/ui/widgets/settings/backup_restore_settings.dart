@@ -182,7 +182,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   }
                 }
 
-                final totalFiles = [
+                final totalFiles = <String>[
                   AppPaths.SETTINGS,
                   AppPaths.SETTINGS_EQUALIZER,
                   AppPaths.SETTINGS_PLAYER,
@@ -192,8 +192,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppPaths.TRACKS_DB_INFO.file.path,
                   AppPaths.TRACKS_STATS_OLD,
                   AppPaths.TRACKS_STATS_DB_INFO.file.path,
-                  AppPaths.VIDEOS_LOCAL,
-                  AppPaths.VIDEOS_CACHE,
+                  AppPaths.VIDEOS_LOCAL_OLD,
+                  AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
+                  AppPaths.VIDEOS_CACHE_OLD,
+                  AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
                   AppPaths.LATEST_QUEUE,
                   AppPaths.TOTAL_LISTEN_TIME,
                   AppPaths.FAVOURITES_PLAYLIST,
@@ -202,7 +204,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
                 ];
 
-                final totalDirs = [
+                final totalDirs = <String>[
                   AppDirs.PLAYLISTS,
                   AppDirs.HISTORY_PLAYLIST,
                   AppDirs.LYRICS,
@@ -377,8 +379,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 AppPaths.TRACKS_STATS_OLD,
                                 AppPaths.TRACKS_STATS_DB_INFO.file.path,
                                 AppPaths.TOTAL_LISTEN_TIME,
-                                AppPaths.VIDEOS_CACHE,
-                                AppPaths.VIDEOS_LOCAL,
+                                AppPaths.VIDEOS_CACHE_OLD,
+                                AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
+                                AppPaths.VIDEOS_LOCAL_OLD,
+                                AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
                                 AppDirs.YT_DOWNLOAD_TASKS,
                               ],
                               youtubeAvailable: true,

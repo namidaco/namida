@@ -298,7 +298,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               ),
               title: lang.RESCAN_VIDEOS,
               onTap: () async {
-                await VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
+                await VideoController.inst.rescanLocalVideosPaths();
                 snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
               },
             ),

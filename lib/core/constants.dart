@@ -227,13 +227,18 @@ class AppPaths {
   static final SETTINGS_PLAYER = _join(_USER_DATA, 'namida_settings_player.json');
   static final SETTINGS_YOUTUBE = _join(_USER_DATA, 'namida_settings_youtube.json');
   static final SETTINGS_EXTRA = _join(_USER_DATA, 'namida_settings_extra.json');
-  static final TRACKS_OLD = _join(_USER_DATA, 'tracks.json');
   static final TRACKS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks');
-  static final TRACKS_STATS_OLD = _join(_USER_DATA, 'tracks_stats.json');
   static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
-  static final VIDEOS_LOCAL = _join(_USER_DATA, 'local_videos.json');
-  static final VIDEOS_CACHE = _join(_USER_DATA, 'cache_videos.json');
+  static final VIDEOS_LOCAL_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'local_videos');
+  static final VIDEOS_CACHE_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos');
   static final LATEST_QUEUE = _join(_USER_DATA, 'latest_queue.json');
+
+  // -- obsolete
+  static final TRACKS_OLD = _join(_USER_DATA, 'tracks.json');
+  static final TRACKS_STATS_OLD = _join(_USER_DATA, 'tracks_stats.json');
+  static final VIDEOS_LOCAL_OLD = _join(_USER_DATA, 'local_videos.json');
+  static final VIDEOS_CACHE_OLD = _join(_USER_DATA, 'cache_videos.json');
+  // ---------
 
   static String get LOGS => _getLogsFile('');
   static String get LOGS_TAGGER => _getLogsFile('_tagger');

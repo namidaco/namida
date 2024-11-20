@@ -897,7 +897,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               await Future.delayed(const Duration(milliseconds: 300));
-              VideoController.inst.scanLocalVideos(forceReScan: true, fillPathsOnly: true);
+              VideoController.inst.rescanLocalVideosPaths();
               await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
             },
           ),

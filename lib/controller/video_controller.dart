@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
-import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -186,12 +186,15 @@ class VideoController {
   final isNoVideosAvailable = false.obs;
 
   /// `path`: `NamidaVideo`
-  final _videoPathsMap = <String, NamidaVideo>{};
+  var _videoPathsInfoMap = <String, NamidaVideo>{};
 
   var _allVideoPaths = <String>{};
 
   /// `id`: `<NamidaVideo>[]`
-  final _videoCacheIDMap = <String, List<NamidaVideo>>{};
+  var _videoCacheIDMap = <String, List<NamidaVideo>>{};
+
+  late final _videoCacheIDMapDB = DBWrapper.openFromInfo(fileInfo: AppPaths.VIDEOS_CACHE_DB_INFO, createIfNotExist: true);
+  late final _videoLocalMapDB = DBWrapper.openFromInfo(fileInfo: AppPaths.VIDEOS_LOCAL_DB_INFO, createIfNotExist: true);
 
   Iterable<NamidaVideo> get videosInCache sync* {
     for (final vids in _videoCacheIDMap.values) {
@@ -204,6 +207,7 @@ class VideoController {
     _videoCacheIDMap.addNoDuplicatesForce(id, nv);
     // well, no matter what happens, sometimes the info coming has extra info
     _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.resolution}_${element.path}");
+    _saveCachedVideos(id);
   }
 
   NamidaVideo addLocalVideoFileInfoToCacheMap(String path, MediaInfo info, FileStat fileStats, {String? ytID}) {
@@ -213,8 +217,8 @@ class VideoController {
       path: path,
       stats: fileStats,
     );
-    _videoPathsMap[path] = nv;
-    _saveLocalVideosFile();
+    _videoPathsInfoMap[path] = nv;
+    _videoLocalMapDB.putAsync(path, nv.toJson());
     return nv;
   }
 
@@ -260,16 +264,21 @@ class VideoController {
 
   void removeNVFromCacheMap(String youtubeId, String path) {
     _videoCacheIDMap[youtubeId]?.removeWhere((element) => element.path == path);
+    _saveCachedVideos(youtubeId);
   }
 
   void deleteAllVideosForVideoId(String youtubeId) {
     final videos = _videoCacheIDMap[youtubeId];
     videos?.loop((item) => File(item.path).deleteSync());
     _videoCacheIDMap.remove(youtubeId);
+    _saveCachedVideos(youtubeId);
   }
 
   void clearCachedVideosMap() {
     _videoCacheIDMap.clear();
+    _videoCacheIDMapDB
+      ..deleteEverything()
+      ..claimFreeSpaceAsync();
   }
 
   Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, bool handleVideoPlayback = true}) async {
@@ -281,7 +290,7 @@ class VideoController {
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
     if (track is Video) {
-      final info = _videoPathsMap[track.path];
+      final info = _videoPathsInfoMap[track.path];
       final nv = info ??
           NamidaVideo(
               path: track.path,
@@ -511,8 +520,11 @@ class VideoController {
     updateCurrentBytes();
 
     if (downloadedVideo != null) {
-      _videoCacheIDMap.addNoDuplicatesForce(downloadedVideo.ytID ?? '', downloadedVideo);
-      await _saveCachedVideosFile();
+      final ytId = downloadedVideo.ytID;
+      if (ytId != null) {
+        _videoCacheIDMap.addNoDuplicatesForce(ytId, downloadedVideo);
+        await _saveCachedVideos(ytId);
+      }
     }
     if (_canExecuteForCurrentTrackOnly(initialTrack)) {
       currentDownloadedBytes.value = null;
@@ -587,7 +599,7 @@ class VideoController {
     final possibleLocal = <NamidaVideo>[];
     for (int i = 0; i < local.length; i++) {
       var l = local[i];
-      NamidaVideo? nv = _videoPathsMap[l];
+      NamidaVideo? nv = _videoPathsInfoMap[l];
       if (nv == null) {
         try {
           final v = await NamidaFFMPEG.inst.extractMetadata(l);
@@ -616,106 +628,75 @@ class VideoController {
   }
 
   Future<void> initialize() async {
-    // -- Fetching Cached Videos Info.
-    final file = File(AppPaths.VIDEOS_CACHE);
-    final cacheVideosInfoFile = await file.readAsJson() as List?;
-    final vl = cacheVideosInfoFile?.mapped((e) => NamidaVideo.fromJson(e));
-    _videoCacheIDMap.clear();
-    vl?.loop((e) => _videoCacheIDMap.addForce(e.ytID ?? '', e));
-
     Future<void> fetchCachedVideos() async {
-      final cachedVideos = await _checkIfVideosInMapValid(_videoCacheIDMap);
+      final cachedVideosAndToDelete = await _fetchAndCheckIfVideosInMapValid();
+      final cachedVideos = cachedVideosAndToDelete.validMap;
       printy('videos cached: ${cachedVideos.length}');
-      _videoCacheIDMap.clear();
-      cachedVideos.entries.toList().loop((videoEntry) {
-        videoEntry.value.loop((e) {
-          _videoCacheIDMap.addForce(videoEntry.key, e);
-        });
-      });
+      _videoCacheIDMap = cachedVideos;
+
+      for (final idKey in cachedVideosAndToDelete.shouldBeReSaved) {
+        _saveCachedVideos(idKey); // will write the map value and delete if required
+      }
 
       final newCachedVideos = await _checkForNewVideosInCache(cachedVideos);
       printy('videos cached new: ${newCachedVideos.length}');
-      newCachedVideos.entries.toList().loop((videoEntry) {
-        videoEntry.value.loop((e) {
-          _videoCacheIDMap.addForce(videoEntry.key, e);
+      for (final newv in newCachedVideos.entries) {
+        newv.value.loop((e) {
+          _videoCacheIDMap.addForce(newv.key, e);
         });
-      });
+        _saveCachedVideos(newv.key);
+      }
+    }
 
-      // -- saving files
-      await _saveCachedVideosFile();
+    Future<void> fetchLocalVideos() async {
+      await rescanLocalVideosPaths();
+
+      final localVideos = await _VideoControllerIsolateFunctions._readLocalVideosDb.thready([AppPaths.VIDEOS_LOCAL_OLD, _videoLocalMapDB.fileInfo]);
+      printy('videos local: ${localVideos.length}');
+      _videoPathsInfoMap = localVideos;
     }
 
     await Future.wait([
       fetchCachedVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
-      scanLocalVideos(
-          fillPathsOnly: true, extractIfFileNotFound: false, readCachedLocalFile: true), // this will get paths only and disables extracting whole local videos on startup
+      fetchLocalVideos(), // this will get paths only and disables extracting whole local videos on startup
     ]);
 
     if (Player.inst.videoPlayerInfo.value?.isInitialized != true) await updateCurrentVideo(Player.inst.currentTrack?.track);
   }
 
-  Future<void> scanLocalVideos({
-    bool strictNoMedia = true,
-    bool forceReScan = false,
-    bool extractIfFileNotFound = false,
-    required bool fillPathsOnly,
-    bool readCachedLocalFile = false,
-  }) async {
-    if (fillPathsOnly) {
-      localVideoExtractCurrent.value = 0;
-      final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
-      _allVideoPaths = videos;
-      localVideoExtractCurrent.value = null;
-
-      if (readCachedLocalFile) {
-        final videosJson = await _videoLocalMapFileSaver._readFile();
-        videosJson?.loop((e) {
-          final nv = NamidaVideo.fromJson(e);
-          _videoPathsMap[nv.path] = nv;
-        });
-      }
-
-      return;
-    }
-
-    void resetCounters() {
-      localVideoExtractCurrent.value = 0;
-      localVideoExtractTotal.value = 0;
-    }
-
-    resetCounters();
-    final localVideos = await _getLocalVideos(
-      strictNoMedia: strictNoMedia,
-      forceReScan: forceReScan,
-      extractIfFileNotFound: extractIfFileNotFound,
-      onProgress: (didExtract, total) {
-        if (didExtract) localVideoExtractCurrent.value = (localVideoExtractCurrent.value ?? 0) + 1;
-        localVideoExtractTotal.value = total;
-      },
-    );
-    printy('videos local: ${localVideos.length}');
-    localVideos.loop((e) {
-      _videoPathsMap[e.path] = e;
-    });
-    resetCounters();
+  Future<void> rescanLocalVideosPaths({bool strictNoMedia = true}) async {
+    localVideoExtractCurrent.value = 0;
+    final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: true);
+    _allVideoPaths = videos;
     localVideoExtractCurrent.value = null;
   }
 
-  final _videoCacheIDMapFileSaver = _VideoControllerCacheVideosFileSaver._();
-  Future<void> _saveCachedVideosFile() => _videoCacheIDMapFileSaver._writeToStorage();
-
-  final _videoLocalMapFileSaver = _VideoControllerLocalVideosFileSaver._();
-  Future<void> _saveLocalVideosFile() => _videoLocalMapFileSaver._writeToStorage();
+  Future<void> _saveCachedVideos(String id) {
+    final videos = _videoCacheIDMap[id];
+    if (videos == null || videos.isEmpty) {
+      return _videoCacheIDMapDB.deleteAsync(id);
+    }
+    final map = <String, Map<String, dynamic>>{};
+    for (int i = 0; i < videos.length; i++) {
+      var item = videos[i];
+      map['$i'] = item.toJson();
+    }
+    return _videoCacheIDMapDB.putAsync(id, map);
+  }
 
   /// - Loops the map sent, makes sure that everything exists & valid.
   /// - Detects: `deleted` & `needs-to-be-updated` files
   /// - DOES NOT handle: `new files`.
   /// - Returns a copy of the map but with valid videos only.
-  Future<Map<String, List<NamidaVideo>>> _checkIfVideosInMapValid(Map<String, List<NamidaVideo>> idsMap) async {
-    final res = await _checkIfVideosInMapValidIsolate.thready(idsMap);
+  Future<({Map<String, List<NamidaVideo>> validMap, Set<String> shouldBeReSaved})> _fetchAndCheckIfVideosInMapValid() async {
+    final res = await _VideoControllerIsolateFunctions._fetchAndCheckIfVideosInMapValidIsolate.thready([AppPaths.VIDEOS_CACHE_OLD, _videoCacheIDMapDB.fileInfo]);
 
     final validMap = res['validMap'] as Map<String, List<NamidaVideo>>;
     final shouldBeReExtracted = res['newIdsMap'] as Map<String, List<(FileStat, String)>>;
+    final shouldBeRemoved = res['shouldBeRemoved'] as Map<String, List<NamidaVideo>>;
+
+    final videoKeysToReSave = <String>{};
+    videoKeysToReSave.addAll(shouldBeRemoved.keys);
 
     for (final newId in shouldBeReExtracted.entries) {
       for (final statAndPath in newId.value) {
@@ -725,45 +706,11 @@ class VideoController {
           path: statAndPath.$2,
         );
         validMap.addForce(newId.key, nv);
+        videoKeysToReSave.add(newId.key);
       }
     }
 
-    return validMap;
-  }
-
-  static Future<Map> _checkIfVideosInMapValidIsolate(Map<String, List<NamidaVideo>> idsMap) async {
-    final validMap = <String, List<NamidaVideo>>{};
-    final newIdsMap = <String, List<(FileStat, String)>>{};
-
-    final videosInMap = idsMap.entries.toList();
-
-    videosInMap.loop((ve) {
-      final id = ve.key;
-      final vl = ve.value;
-      vl.loop((v) {
-        final file = File(v.path);
-        // --- File Exists, will be added either instantly, or by fetching new metadata.
-        if (file.existsSync()) {
-          final stats = file.statSync();
-          // -- Video Exists, and already updated.
-          if (v.sizeInBytes == stats.size) {
-            validMap.addForce(id, v);
-          }
-          // -- Video exists but needs to be updated.
-          else {
-            newIdsMap.addForce(id, (stats, v.path));
-          }
-        }
-
-        // else {
-        // -- File doesnt exist, ie. has been removed
-        // }
-      });
-    });
-    return {
-      "validMap": validMap,
-      "newIdsMap": newIdsMap,
-    };
+    return (validMap: validMap, shouldBeReSaved: videoKeysToReSave);
   }
 
   /// - Loops the currently existing files
@@ -772,7 +719,7 @@ class VideoController {
   /// - Returns a map with **new videos only**.
   /// - **New**: excludes files ending with `.part`
   Future<Map<String, List<NamidaVideo>>> _checkForNewVideosInCache(Map<String, List<NamidaVideo>> idsMap) async {
-    final newIds = await _checkForNewVideosInCacheIsolate.thready({
+    final newIds = await _VideoControllerIsolateFunctions._checkForNewVideosInCacheIsolate.thready({
       'dirPath': AppDirs.VIDEOS_CACHE,
       'idsMap': idsMap,
     });
@@ -791,90 +738,6 @@ class VideoController {
     }
 
     return newIdsMap;
-  }
-
-  static Future<Map<String, List<(FileStat, String)>>> _checkForNewVideosInCacheIsolate(Map params) async {
-    final dirPath = params['dirPath'] as String;
-    final idsMap = params['idsMap'] as Map<String, List<NamidaVideo>>;
-    final dir = Directory(dirPath);
-    final newIdsMap = <String, List<(FileStat, String)>>{};
-
-    final dirFiles = dir.listSyncSafe();
-    for (int i = 0; i < dirFiles.length; i++) {
-      var df = dirFiles[i];
-      if (df is File) {
-        final filename = df.path.getFilename;
-        if (filename.endsWith('.part')) continue; // first thing first
-        if (filename.endsWith('.mime')) continue; // second thing second
-
-        final id = filename.substring(0, 11);
-        final videosInMap = idsMap[id];
-        final stats = df.statSync();
-        final sizeInBytes = stats.size;
-        if (videosInMap != null) {
-          // if file exists in map and is valid
-          if (videosInMap.firstWhereEff((element) => element.sizeInBytes == sizeInBytes) != null) {
-            continue; // skipping since the map will contain only new entries
-          }
-        }
-        // -- hmmm looks like a new video, needs extraction
-        try {
-          newIdsMap.addForce(id, (stats, df.path));
-        } catch (e) {
-          continue;
-        }
-      }
-    }
-    return newIdsMap;
-  }
-
-  Future<List<NamidaVideo>> _getLocalVideos({
-    bool strictNoMedia = true,
-    bool forceReScan = false,
-    bool extractIfFileNotFound = true,
-    required void Function(bool didExtract, int total) onProgress,
-  }) async {
-    final videosFile = File(AppPaths.VIDEOS_LOCAL);
-    final namidaVideos = <NamidaVideo>[];
-
-    if (await videosFile.existsAndValid() && !forceReScan) {
-      final videosJson = await videosFile.readAsJson() as List?;
-      final vl = videosJson?.map((e) => NamidaVideo.fromJson(e)) ?? [];
-      namidaVideos.addAll(vl);
-    } else {
-      if (!extractIfFileNotFound) return [];
-      final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia, forceReCheckDir: forceReScan);
-
-      for (final path in videos) {
-        try {
-          final v = await NamidaFFMPEG.inst.extractMetadata(path);
-          if (v != null) {
-            ThumbnailManager.inst.extractVideoThumbnailAndSave(
-              videoPath: path,
-              isLocal: true,
-              idOrFileNameWithExt: path.getFilename,
-              isExtracted: true,
-            );
-            final stats = await File(path).stat();
-            final nv = _getNVFromFFMPEGMap(
-              path: path,
-              mediaInfo: v,
-              stats: stats,
-              ytID: null,
-            );
-            namidaVideos.add(nv);
-          }
-        } catch (e) {
-          printy(e, isError: true);
-          continue;
-        }
-
-        onProgress(true, videos.length);
-      }
-      await videosFile.writeAsJson(namidaVideos.mapped((e) => e.toJson()));
-    }
-
-    return namidaVideos;
   }
 
   Future<NamidaVideo> _extractNVFromFFMPEG({
@@ -952,42 +815,136 @@ extension _GlobalPaintBounds on BuildContext {
   }
 }
 
-class _VideoControllerCacheVideosFileSaver with SettingsFileWriter {
-  _VideoControllerCacheVideosFileSaver._();
+class _VideoControllerIsolateFunctions {
+  const _VideoControllerIsolateFunctions();
 
-  @override
-  void applyKuruSettings() {}
+  static Map<String, NamidaVideo> _readLocalVideosDb(List params) {
+    final oldJsonFilePath = params[0] as String;
+    final dbFileInfo = params[1] as DbWrapperFileInfo;
+    final oldJsonFile = File(oldJsonFilePath);
+    NamicoDBWrapper.initialize();
+    final db = DBWrapper.openFromInfo(fileInfo: dbFileInfo, createIfNotExist: true);
 
-  @override
-  Object get jsonToWrite {
-    final mapValuesTotal = <Map<String, dynamic>>[];
-    for (final e in VideoController.inst._videoCacheIDMap.values) {
-      mapValuesTotal.addAll(e.map((e) => e.toJson()));
+    // -- migrating old json file
+    if (oldJsonFile.existsSync()) {
+      try {
+        final localVideosInfoFile = oldJsonFile.readAsJsonSync() as List?;
+        if (localVideosInfoFile != null) {
+          for (final map in localVideosInfoFile) {
+            final path = map['path'] as String?;
+            if (path != null) db.put(path, map);
+          }
+        }
+        oldJsonFile.deleteSync();
+      } catch (_) {}
     }
-    return mapValuesTotal;
+
+    final localVids = <String, NamidaVideo>{};
+    db.loadEverything(
+      (e) {
+        final nv = NamidaVideo.fromJson(e);
+        localVids[nv.path] = nv;
+      },
+    );
+    return localVids;
   }
 
-  Future<void> _writeToStorage() async => await writeToStorage();
+  static Future<Map> _fetchAndCheckIfVideosInMapValidIsolate(List params) async {
+    final oldJsonFilePath = params[0] as String;
+    final dbFileInfo = params[1] as DbWrapperFileInfo;
+    final oldJsonFile = File(oldJsonFilePath);
+    NamicoDBWrapper.initialize();
+    final db = DBWrapper.openFromInfo(fileInfo: dbFileInfo, createIfNotExist: true);
 
-  @override
-  String get filePath => AppPaths.VIDEOS_CACHE;
-}
+    // -- migrating old json file
+    if (oldJsonFile.existsSync()) {
+      try {
+        final cacheVideosInfoFile = oldJsonFile.readAsJsonSync() as List?;
+        if (cacheVideosInfoFile != null) {
+          final videosInMap = <String, Map<String, Map<String, dynamic>>>{};
+          for (final map in cacheVideosInfoFile) {
+            final youtubeId = map['ytID'] as String?;
+            if (youtubeId != null) {
+              videosInMap[youtubeId] ??= {};
+              final indexString = '${videosInMap[youtubeId]!.length}';
+              videosInMap[youtubeId]![indexString] = map;
+            }
+          }
+          for (final e in videosInMap.entries) {
+            db.put(e.key, e.value);
+          }
+        }
+        oldJsonFile.deleteSync();
+      } catch (_) {}
+    }
 
-class _VideoControllerLocalVideosFileSaver with SettingsFileWriter {
-  _VideoControllerLocalVideosFileSaver._();
+    final validMap = <String, List<NamidaVideo>>{};
+    final newIdsMap = <String, List<(FileStat, String)>>{};
+    final shouldBeRemoved = <String, List<NamidaVideo>>{};
 
-  @override
-  void applyKuruSettings() {}
+    db.loadEverythingKeyed(
+      (id, value) {
+        for (final videoJson in value.values) {
+          final v = NamidaVideo.fromJson(videoJson);
+          final file = File(v.path);
+          // --- File Exists, will be added either instantly, or by fetching new metadata.
+          if (file.existsSync()) {
+            final stats = file.statSync();
+            // -- Video Exists, and already updated.
+            if (v.sizeInBytes == stats.size) {
+              validMap.addForce(id, v);
+            }
+            // -- Video exists but needs to be updated.
+            else {
+              newIdsMap.addForce(id, (stats, v.path));
+            }
+          } else {
+            // -- File doesnt exist, ie. has been removed
+            shouldBeRemoved.addForce(id, v);
+          }
+        }
+      },
+    );
 
-  @override
-  Object get jsonToWrite {
-    return VideoController.inst._videoPathsMap.values.map((e) => e.toJson()).toList();
+    return {
+      "validMap": validMap,
+      "newIdsMap": newIdsMap,
+      "shouldBeRemoved": shouldBeRemoved,
+    };
   }
 
-  Future<List?> _readFile() async => await prepareSettingsFile_() as List?;
+  static Future<Map<String, List<(FileStat, String)>>> _checkForNewVideosInCacheIsolate(Map params) async {
+    final dirPath = params['dirPath'] as String;
+    final idsMap = params['idsMap'] as Map<String, List<NamidaVideo>>;
+    final dir = Directory(dirPath);
+    final newIdsMap = <String, List<(FileStat, String)>>{};
 
-  Future<void> _writeToStorage() => writeToStorage();
+    final dirFiles = dir.listSyncSafe();
+    for (int i = 0; i < dirFiles.length; i++) {
+      var df = dirFiles[i];
+      if (df is File) {
+        final filename = df.path.getFilename;
+        if (filename.endsWith('.part')) continue; // first thing first
+        if (filename.endsWith('.mime')) continue; // second thing second
 
-  @override
-  String get filePath => AppPaths.VIDEOS_LOCAL;
+        final id = filename.substring(0, 11);
+        final videosInMap = idsMap[id];
+        final stats = df.statSync();
+        final sizeInBytes = stats.size;
+        if (videosInMap != null) {
+          // if file exists in map and is valid
+          if (videosInMap.firstWhereEff((element) => element.sizeInBytes == sizeInBytes) != null) {
+            continue; // skipping since the map will contain only new entries
+          }
+        }
+        // -- hmmm looks like a new video, needs extraction
+        try {
+          newIdsMap.addForce(id, (stats, df.path));
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    return newIdsMap;
+  }
 }
