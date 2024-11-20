@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
@@ -98,9 +99,13 @@ class YoutubeVideoCard extends StatelessWidget {
           if (uploadDateAgo != null) uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: showThirdLine,
-        thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channel.title,
+        thirdLineText: dateInsteadOfChannel
+            ? video.badges?.join(' - ') ?? ''
+            : video.channel.title.isNotEmpty
+                ? video.channel.title
+                : video.channelName ?? '',
         displayChannelThumbnail: !dateInsteadOfChannel,
-        channelThumbnailUrl: video.channel.thumbnails.pick()?.url,
+        channelThumbnailUrl: video.channel.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnails(videoId, checkFromStorage: false)?.pick()?.url,
         onTap: onTap ??
             () async {
               _VideoCardUtils.onVideoTap(

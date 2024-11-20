@@ -104,6 +104,12 @@ class _YoutubeInfoUtils {
         _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty();
   }
 
+  List<YoutiPieThumbnail>? getVideoChannelThumbnails(String videoId, {bool checkFromStorage = true}) {
+    var thumbnails = tempVideoInfosFromStreams[videoId]?.channel.thumbnails;
+    if ((thumbnails != null && thumbnails.isNotEmpty) || checkFromStorage == false) return thumbnails;
+    return getStreamInfoSync(videoId)?.channel.thumbnails ?? _getVideoPageResultSync(videoId)?.channelInfo?.thumbnails;
+  }
+
   DateTime? getVideoReleaseDate(String videoId) {
     // -- we check for streams result first cuz others are approximation.
     return _tempInfoVideoReleaseDate[videoId] ??= _getVideoStreamResultSync(videoId)?.info?.publishedAt.date ??
