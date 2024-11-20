@@ -1269,7 +1269,7 @@ class YoutubeController {
 
 class _YTDownloadManager with PortsProvider<SendPort> {
   final _downloadCompleters = <String, Completer<bool>?>{}; // file path
-  final _progressPorts = <String, ReceivePort?>{}; // file path
+  final _progressPorts = <String, RawReceivePort?>{}; // file path
 
   /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
   Future<bool> download({
@@ -1288,9 +1288,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     _downloadCompleters[filePath] = Completer<bool>();
 
     _progressPorts[filePath]?.close();
-    _progressPorts[filePath] = ReceivePort();
-    final progressPort = _progressPorts[filePath]!;
-    progressPort.listen((message) {
+    final progressPort = _progressPorts[filePath] = RawReceivePort((message) {
       downloadingStream(message as int);
     });
     final p = {
@@ -1326,7 +1324,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     await sendPort(p);
   }
 
-  static Future<void> _prepareDownloadResources(SendPort sendPort) async {
+  static void _prepareDownloadResources(SendPort sendPort) {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 

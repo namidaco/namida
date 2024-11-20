@@ -498,8 +498,12 @@ class JsonToHistoryParser {
     required DateTime? newestDate,
     required bool matchAll,
   }) async {
-    final portProgressParsed = ReceivePort();
-    final portProgressAdded = ReceivePort();
+    final portProgressParsed = RawReceivePort((message) {
+      parsedHistoryJson.value += message as int;
+    });
+    final portProgressAdded = RawReceivePort((message) {
+      addedHistoryJsonToPlaylist.value += message as int;
+    });
     final portLoadingProgress = ReceivePort();
 
     final params = {
@@ -537,22 +541,12 @@ class JsonToHistoryParser {
       portLoadingProgress.close();
       portLoadingProgressSub?.cancel();
     });
-    final StreamSubscription portProgressParsedSub;
-    portProgressParsedSub = portProgressParsed.listen((message) {
-      parsedHistoryJson.value += message as int;
-    });
-    final StreamSubscription portProgressAddedSub;
-    portProgressAddedSub = portProgressAdded.listen((message) {
-      addedHistoryJsonToPlaylist.value += message as int;
-    });
     HistoryController.inst.setIdleStatus(true);
     YoutubeHistoryController.inst.setIdleStatus(true);
 
     final res = await _parseYTHistoryJsonAndAddIsolate.thready(params);
     portProgressParsed.close();
     portProgressAdded.close();
-    portProgressParsedSub.cancel();
-    portProgressAddedSub.cancel();
 
     if (res != null) {
       final mapOfAffectedIds = res.affectedIds;
@@ -930,8 +924,12 @@ class JsonToHistoryParser {
     required DateTime? oldestDate,
     required DateTime? newestDate,
   }) async {
-    final portProgressParsed = ReceivePort();
-    final portProgressAdded = ReceivePort();
+    final portProgressParsed = RawReceivePort((message) {
+      parsedHistoryJson.value += message as int;
+    });
+    final portProgressAdded = RawReceivePort((message) {
+      addedHistoryJsonToPlaylist.value += message as int;
+    });
     final portLoadingProgress = ReceivePort();
 
     final params = {
@@ -960,14 +958,6 @@ class JsonToHistoryParser {
       portLoadingProgress.close();
       portLoadingProgressSub?.cancel();
     });
-    final StreamSubscription portProgressParsedSub;
-    portProgressParsedSub = portProgressParsed.listen((message) {
-      parsedHistoryJson.value += message as int;
-    });
-    final StreamSubscription portProgressAddedSub;
-    portProgressAddedSub = portProgressAdded.listen((message) {
-      addedHistoryJsonToPlaylist.value += message as int;
-    });
 
     HistoryController.inst.setIdleStatus(true);
 
@@ -975,8 +965,6 @@ class JsonToHistoryParser {
 
     portProgressParsed.close();
     portProgressAdded.close();
-    portProgressParsedSub.cancel();
-    portProgressAddedSub.cancel();
 
     if (res != null) {
       HistoryController.inst.historyMap.value = res.localHistory;
@@ -1143,10 +1131,7 @@ class JsonToHistoryParser {
     required Map<String, YoutubeVideoHistory> affectedIds,
     required void Function(int updatedIdsCount) onProgress,
   }) async {
-    final progressPort = ReceivePort();
-
-    final StreamSubscription streamSub;
-    streamSub = progressPort.listen((message) {
+    final progressPort = RawReceivePort((message) {
       onProgress(message as int);
     });
     await _updateYoutubeStatsDirectoryIsolate.thready({
@@ -1155,7 +1140,6 @@ class JsonToHistoryParser {
       "progressPort": progressPort.sendPort,
     });
     progressPort.close();
-    streamSub.cancel();
   }
 
   static void _updateYoutubeStatsDirectoryIsolate(Map params) {
