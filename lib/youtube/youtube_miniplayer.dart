@@ -363,7 +363,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       child: ShimmerWrapper(
                                                         shimmerDurationMS: 550,
                                                         shimmerDelayMS: 250,
-                                                        shimmerEnabled: shimmerEnabled,
+                                                        shimmerEnabled: shimmerEnabled && videoTitle == null,
                                                         child: ExpansionTile(
                                                           // key: Key(currentId),
                                                           initiallyExpanded: false,
@@ -380,9 +380,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           trailing: Row(
                                                             mainAxisSize: MainAxisSize.min,
                                                             children: [
-                                                              Obx(
-                                                                (context) {
-                                                                  final videoListens = YoutubeHistoryController.inst.topTracksMapListens[currentId] ?? [];
+                                                              ObxO(
+                                                                rx: YoutubeHistoryController.inst.topTracksMapListens,
+                                                                builder: (context, topTracksMapListens) {
+                                                                  final videoListens = topTracksMapListens[currentId] ?? [];
                                                                   if (videoListens.isEmpty) return const SizedBox();
                                                                   return NamidaInkWell(
                                                                     borderRadius: 6.0,
@@ -437,7 +438,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     width: maxWidth * 0.8,
                                                                     height: 24.0,
                                                                     borderRadius: 6.0,
-                                                                    shimmerEnabled: shimmerEnabledDummyContainer,
+                                                                    shimmerEnabled: shimmerEnabledDummyContainer && videoTitle == null,
                                                                     child: Text(
                                                                       videoTitle ?? '',
                                                                       maxLines: isTitleExpanded ? 6 : 2,
@@ -449,7 +450,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   NamidaDummyContainer(
                                                                     width: maxWidth * 0.7,
                                                                     height: 12.0,
-                                                                    shimmerEnabled: shimmerEnabledDummyContainer,
+                                                                    shimmerEnabled: shimmerEnabledDummyContainer && dateToShow == null,
                                                                     child: Text(
                                                                       [
                                                                         if (videoViewCount != null)
@@ -1095,7 +1096,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 NamidaDummyContainer(
                                   borderRadius: 4.0,
                                   height: 16.0,
-                                  shimmerEnabled: shimmerEnabledDummyContainer,
+                                  shimmerEnabled: shimmerEnabledDummyContainer && videoTitle == null,
                                   width: maxWidth - 24.0,
                                   child: Text(
                                     videoTitle ?? '',
@@ -1111,7 +1112,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 NamidaDummyContainer(
                                   borderRadius: 4.0,
                                   height: 10.0,
-                                  shimmerEnabled: shimmerEnabledDummyContainer,
+                                  shimmerEnabled: shimmerEnabledDummyContainer && channelName == null,
                                   width: maxWidth - 24.0 * 2,
                                   child: Text(
                                     channelName ?? '',
