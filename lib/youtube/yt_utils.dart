@@ -439,7 +439,7 @@ class YTUtils {
             playlistId: playlistId,
             totalLength: totalLength,
             streamInfoItem: streamInfoItem,
-            initialGroupName: playlistName,
+            initialGroupName: playlistName.emptyIfHasDefaultPlaylistName(),
           );
         },
       ),

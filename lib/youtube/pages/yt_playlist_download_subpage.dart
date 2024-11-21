@@ -68,7 +68,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   @override
   void initState() {
-    _groupName.value = widget.playlistName;
+    _groupName.value = widget.playlistName.emptyIfHasDefaultPlaylistName();
     _addAllYTIDsToSelected();
     onRenameAllTasks(settings.youtube.downloadFilenameBuilder.value); // needed to provide initial data specially original indices
     super.initState();
@@ -134,7 +134,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       streamInfoItem: widget.infoLookup[id],
       playlistInfo: widget.playlistInfo,
       playlistId: widget.playlistInfo?.id,
-      initialGroupName: widget.playlistName,
+      initialGroupName: widget.playlistName.emptyIfHasDefaultPlaylistName(),
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: id,
       initialItemConfig: _configMap[id],
@@ -178,7 +178,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             YTDownloadOptionFolderListTile(
               maxTrailingWidth: context.width * 0.2,
               visualDensity: visualDensity,
-              playlistName: widget.playlistName,
+              playlistName: widget.playlistName.translatePlaylistName(),
               initialFolder: _groupName.value,
               onDownloadGroupNameChanged: (newGroupName) {
                 _groupName.value = newGroupName;
@@ -289,7 +289,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               Obx(
                 (context) => CustomListTile(
                   icon: Broken.music_playlist,
-                  title: widget.playlistName,
+                  title: widget.playlistName.translatePlaylistName(),
                   subtitle: "${_selectedList.length.formatDecimal()}/${widget.ids.length.formatDecimal()}",
                   visualDensity: VisualDensity.compact,
                   trailingRaw: Row(
@@ -406,7 +406,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 key: _folderController,
                 visualDensity: VisualDensity.compact,
                 trailingPadding: 12.0,
-                playlistName: widget.playlistName,
+                playlistName: widget.playlistName.translatePlaylistName(),
                 initialFolder: _groupName.value,
                 subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
                 onDownloadGroupNameChanged: (newGroupName) {

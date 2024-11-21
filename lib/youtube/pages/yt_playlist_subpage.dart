@@ -286,7 +286,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     onPressed: () async {
                                       YTPlaylistDownloadPage(
                                         ids: playlist.tracks,
-                                        playlistName: playlistCurrentName,
+                                        playlistName: playlistCurrentName.translatePlaylistName(),
                                         infoLookup: const {},
                                         playlistInfo: null, // this is a local playlist, passing info messes things up inside.
                                       ).navigate();

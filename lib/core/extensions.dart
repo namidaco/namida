@@ -279,6 +279,16 @@ extension PLNAME on String {
     if (name == k_PLAYLIST_NAME_MOST_PLAYED) return lang.MOST_PLAYED;
     return name.replaceFirst(k_PLAYLIST_NAME_AUTO_GENERATED, lang.AUTO_GENERATED);
   }
+
+  bool isDefaultPlaylistName() {
+    final name = this;
+    if (name == k_PLAYLIST_NAME_FAV || name == k_PLAYLIST_NAME_HISTORY || name == k_PLAYLIST_NAME_MOST_PLAYED) return true;
+    return false;
+  }
+
+  String emptyIfHasDefaultPlaylistName() {
+    return isDefaultPlaylistName() ? '' : this;
+  }
 }
 
 extension EnumUtils<E extends Enum> on E {
