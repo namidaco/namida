@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/wakelock_controller.dart';
@@ -75,6 +77,18 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _dragheight = _wasExpanded ? _maxHeight : widget.minHeight;
 
     WakelockController.inst.updateMiniplayerStatus(_wasExpanded);
+
+    Timer(
+      Duration(milliseconds: 1000),
+      () {
+        // -- context access in build makes it awful for yt miniplayer (since it has MaterialPage),
+        // -- the keyboard keeps showing/hiding
+        // -- so yeah we only check once
+        final padding = MediaQuery.paddingOf(context);
+        _padding = padding;
+        animateToState(_wasExpanded);
+      },
+    );
   }
 
   void _listenerHeightChange() {
@@ -194,15 +208,6 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    if (_padding == EdgeInsets.zero) {
-      // -- context access makes it awful for yt miniplayer (since it has MaterialPage),
-      // -- the keyboard keeps showing/hiding
-      // -- so yeah we only check once
-      final padding = MediaQuery.paddingOf(context);
-      _padding = padding;
-      animateToState(_wasExpanded);
-    }
-
     final maxWidth = context.width;
     return AnimatedBuilder(
         animation: controller,

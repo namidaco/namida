@@ -429,7 +429,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
               final prevItem = queue.isEmpty ? null : queue[indminus];
               final currentItem = queue[currentIndex];
               final nextItem = queue.isEmpty ? null : queue[indplus];
-              final currentDurationInMS = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? widget.getDurationMS?.call(currentItem) ?? 0;
+              final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;
 
               final prevText = prevItem == null ? null : widget.textBuilder(prevItem);
               final currentText = widget.textBuilder(currentItem);
@@ -501,6 +501,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               toSubtract = Player.inst.nowPlayingPositionR;
                               prefix = '-';
                             }
+                            final currentDurationInMS = currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
                             final msToDisplay = currentDurationInMS - toSubtract;
                             return Text(
                               "$prefix ${msToDisplay.milliSecondsLabel}",
@@ -593,12 +594,14 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       final currentId = focusedMenuOptions.currentId(currentItem);
                                       final cacheFile = currentId == null ? null : element.getCachedFile(currentId);
                                       final cacheExists = cacheFile != null;
+                                      var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                      var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
                                       return _MPQualityButton(
                                         onTap: () => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value),
                                         bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
                                         icon: cacheExists ? Broken.tick_circle : Broken.import,
                                         title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
-                                        subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                        subtitle: "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText",
                                       );
                                     },
                                   ),
@@ -803,10 +806,12 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                         ),
 
                                         /// Smol progress bar
-                                        ObxO(
-                                          rx: Player.inst.nowPlayingPosition,
-                                          builder: (context, nowPlayingPosition) {
-                                            final w = currentDurationInMS == 0 ? 0 : nowPlayingPosition / currentDurationInMS;
+                                        Obx(
+                                          (context) {
+                                            final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
+                                            final currentDurationInMS =
+                                                currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
+                                            final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
                                             return Container(
                                               height: 2 * (1 - cp),
                                               width: w > 0 ? ((context.width * w) * 0.9) : 0,

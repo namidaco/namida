@@ -781,7 +781,7 @@ class VideoController {
       creationTimeMS: stats.creationDate.millisecondsSinceEpoch,
       frameratePrecise: frameratePrecise ?? 0.0,
       durationMS: videoStream?.duration?.inMilliseconds ?? mediaInfo?.format?.duration?.inMilliseconds ?? 0,
-      bitrate: int.tryParse(videoStream?.bitRate ?? '') ?? 0,
+      bitrate: int.tryParse(videoStream?.bitRate ?? mediaInfo?.format?.bitRate ?? '') ?? 0,
     );
   }
 

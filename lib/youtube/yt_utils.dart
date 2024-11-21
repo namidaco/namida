@@ -137,7 +137,7 @@ class YTUtils {
             Broken.audio_square,
             size: 15.0,
             color: iconsColor?.withOpacity(
-              Player.inst.audioCacheMap[videoId] != null || Indexer.inst.allTracksMappedByYTID[videoId] != null ? 0.6 : 0.1,
+              Player.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
             ),
           ),
         ),

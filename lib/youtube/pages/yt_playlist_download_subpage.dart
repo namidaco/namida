@@ -84,16 +84,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void onRenameAllTasks(String? defaultFilename) {
-    widget.ids.mapIndexed((ytid, originalIndex) => _configMap[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, defaultFilename: defaultFilename)).toList();
+    widget.ids.mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, defaultFilename: defaultFilename)).toList();
   }
 
   void _updateAudioOnly(bool audioOnly) {
     settings.save(downloadAudioOnly: audioOnly);
-    _configMap.entries.toList().loop(
-      (c) {
-        _configMap[c.key] = c.value.copyWith(fetchMissingVideo: !audioOnly);
-      },
-    );
+    _configMap.value.updateAll((key, value) => value.copyWith(fetchMissingVideo: !audioOnly));
+    _configMap.refresh();
   }
 
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, {String? defaultFilename}) {
@@ -129,8 +126,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     required int originalIndex,
   }) async {
     await showDownloadVideoBottomSheet(
-      originalIndex: _configMap[id]?.originalIndex,
-      totalLength: _configMap[id]?.totalLength,
+      originalIndex: _configMap.value[id]?.originalIndex,
+      totalLength: _configMap.value[id]?.totalLength,
       streamInfoItem: widget.infoLookup[id],
       playlistInfo: widget.playlistInfo,
       playlistId: widget.playlistInfo?.id,
@@ -140,7 +137,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       initialItemConfig: _configMap[id],
       confirmButtonText: lang.CONFIRM,
       onConfirmButtonTap: (groupName, config) {
-        _configMap[id] = config;
+        _configMap.value[id] = config;
         return true;
       },
     );
@@ -148,6 +145,26 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   void _showAllConfigDialog(BuildContext context) {
     const visualDensity = null;
+
+    List<NamidaPopupItem> qualityMenuChildren() => [
+          NamidaPopupItem(
+            icon: Broken.musicnote,
+            title: lang.AUDIO,
+            onTap: () {
+              _updateAudioOnly(true);
+            },
+          ),
+          ...kStockVideoQualities.map(
+            (e) => NamidaPopupItem(
+              icon: Broken.story,
+              title: e,
+              onTap: () {
+                _updateAudioOnly(false);
+                preferredQuality.value = e;
+              },
+            ),
+          )
+        ];
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
@@ -239,31 +256,16 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 onChanged: (isTrue) => settings.save(downloadOverrideOldFiles: !isTrue),
               ),
             ),
-            CustomListTile(
-              visualDensity: visualDensity,
-              icon: Broken.story,
-              title: lang.VIDEO_QUALITY,
-              trailing: NamidaPopupWrapper(
-                childrenDefault: () => [
-                  NamidaPopupItem(
-                    icon: Broken.musicnote,
-                    title: lang.AUDIO,
-                    onTap: () {
-                      _updateAudioOnly(true);
-                    },
-                  ),
-                  ...kStockVideoQualities.map(
-                    (e) => NamidaPopupItem(
-                      icon: Broken.story,
-                      title: e,
-                      onTap: () {
-                        _updateAudioOnly(false);
-                        preferredQuality.value = e;
-                      },
-                    ),
-                  )
-                ],
-                child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+            NamidaPopupWrapper(
+              childrenDefault: qualityMenuChildren,
+              child: CustomListTile(
+                visualDensity: visualDensity,
+                icon: Broken.story,
+                title: lang.VIDEO_QUALITY,
+                trailing: NamidaPopupWrapper(
+                  childrenDefault: qualityMenuChildren,
+                  child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+                ),
               ),
             ),
           ],
@@ -625,7 +627,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         final itemsConfig = _selectedList.value
                             .map(
                               (id) =>
-                                  _configMap[id] ??
+                                  _configMap.value[id] ??
 
                                   // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
                                   _getDummyDownloadConfig(

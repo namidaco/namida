@@ -1090,7 +1090,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 cachedQualities.removeWhere(
                                   (cq) {
                                     return ytQualities.any((ytq) {
-                                      if (widget.isLocal) return ytq.height == cq.height;
+                                      if (widget.isLocal) return ytq.height == cq.height && ytq.bitrate == cq.bitrate;
                                       final cachePath = videoId == null ? null : ytq.cachePath(videoId);
                                       if (cachePath == cq.path) return true;
                                       if (ytq.sizeInBytes == cq.sizeInBytes) return true;
@@ -1153,11 +1153,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     (context) {
                                       if (widget.isLocal) {
                                         final id = Player.inst.currentVideoR?.id;
-                                        final isSelected = element.height == VideoController.inst.currentVideo.valueR?.height;
+                                        final selectedVideo = VideoController.inst.currentVideo.valueR;
+                                        final isSelected = element.height == selectedVideo?.height && element.bitrate == selectedVideo?.bitrate;
+
+                                        var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                        var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
 
                                         return _getQualityChip(
                                           title: element.qualityLabel,
                                           subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                                          thirdLine: "${element.bitrateText()}$codecIdentifierText",
                                           onPlay: (isSelected) {
                                             if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
                                               Player.inst.onItemPlayYoutubeIDSetQuality(
