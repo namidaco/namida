@@ -10,10 +10,9 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
 class Folders<T extends Folder> {
-  static final Folders<Folder> tracks = Folders.tracks_(LibraryTab.folders, FoldersPageConfig.tracks());
-  static final Folders<VideoFolder> videos = Folders.videos_(LibraryTab.foldersVideos, FoldersPageConfig.videos());
-  Folders.tracks_(this._tab, this._config);
-  Folders.videos_(this._tab, this._config);
+  static final Folders<Folder> tracks = Folders._(LibraryTab.folders, FoldersPageConfig.tracks());
+  static final Folders<VideoFolder> videos = Folders._(LibraryTab.foldersVideos, FoldersPageConfig.videos());
+  Folders._(this._tab, this._config);
 
   final LibraryTab _tab;
   final FoldersPageConfig _config;

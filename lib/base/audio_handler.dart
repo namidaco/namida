@@ -594,6 +594,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required String videoId,
     required NamidaVideo? videoItem,
   }) async {
+    _nextSeekSetAudioCache = null;
+    _nextSeekSetVideoCache = null;
+
     final wasPlayWhenReady = willPlayWhenReady;
     setAudioOnlyPlayback(false);
 
@@ -722,6 +725,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool useCache,
     required String videoId,
   }) async {
+    _nextSeekSetAudioCache = null;
+    _nextSeekSetVideoCache = null;
+
     final wasPlayWhenReady = willPlayWhenReady;
 
     currentAudioStream.value = stream;
@@ -1506,9 +1512,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime');
 
       if (isGood) {
-        final details = _parseAudioCacheDetailsFromFile(fe);
-        newFiles.add(details);
-        break; // since its not likely to find other audios
+        try {
+          final details = _parseAudioCacheDetailsFromFile(fe);
+          newFiles.add(details);
+          break; // since its not likely to find other audios
+        } catch (_) {}
       }
     }
     return newFiles;
@@ -1525,8 +1533,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime');
 
       if (isGood) {
-        final details = _parseAudioCacheDetailsFromFile(fe);
-        newFiles.addForce(details.youtubeId, details);
+        try {
+          final details = _parseAudioCacheDetailsFromFile(fe);
+          newFiles.addForce(details.youtubeId, details);
+        } catch (_) {}
       }
     }
     return newFiles;

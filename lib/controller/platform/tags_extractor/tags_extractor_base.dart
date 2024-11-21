@@ -68,9 +68,9 @@ abstract class TagsExtractor {
           ? await ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: trackPath,
               isLocal: true,
-              isExtracted: true,
               idOrFileNameWithExt: filename,
               cacheDirPath: artworkDirectory,
+              forceExtract: true,
             )
           : await NamidaFFMPEG.inst.extractAudioThumbnail(
               audioPath: trackPath,

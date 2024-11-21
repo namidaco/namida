@@ -871,6 +871,11 @@ class YoutubeController {
     String finalFilenameTemp = finalFilenameWrapper.filename;
     bool requiresRenaming = false;
 
+    if (finalFilenameTemp.isEmpty || finalFilenameTemp == fileExtension || finalFilenameTemp == '.$fileExtension') {
+      finalFilenameTemp = settings.youtube.defaultFilenameBuilder;
+      requiresRenaming = true;
+    }
+
     final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
         finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.originalIndex, config.totalLength);
     if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {

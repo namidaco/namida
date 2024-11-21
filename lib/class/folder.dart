@@ -35,8 +35,8 @@ class Folder {
 
   static String _computeKey(String path) {
     final addAtFirst = !path.startsWith(_pathSeparator);
-    if (!path.endsWith(_pathSeparator)) path += _pathSeparator;
-    return addAtFirst ? "$_pathSeparator$path" : path;
+    final addAtLast = !path.endsWith(_pathSeparator);
+    return "${addAtFirst ? _pathSeparator : ''}$path${addAtLast ? _pathSeparator : ''}";
   }
 
   bool isParentOf(Folder child) {
@@ -62,8 +62,8 @@ class Folder {
   String folderNameAvoidingConflicts() => hasSimilarFolderNames ? path.formatPath() : folderName;
 
   @override
-  bool operator ==(covariant Folder other) {
-    return _key == other._key;
+  bool operator ==(other) {
+    return other is Folder && _key == other._key;
   }
 
   @override

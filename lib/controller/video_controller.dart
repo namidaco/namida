@@ -523,7 +523,7 @@ class VideoController {
       final ytId = downloadedVideo.ytID;
       if (ytId != null) {
         _videoCacheIDMap.addNoDuplicatesForce(ytId, downloadedVideo);
-        await _saveCachedVideos(ytId);
+        _saveCachedVideos(ytId);
       }
     }
     if (_canExecuteForCurrentTrackOnly(initialTrack)) {
@@ -599,8 +599,7 @@ class VideoController {
     final possibleLocal = <NamidaVideo>[];
     for (int i = 0; i < local.length; i++) {
       var l = local[i];
-      NamidaVideo? nv = _videoPathsInfoMap[l];
-      if (nv == null) {
+      if (_videoPathsInfoMap[l] == null) {
         try {
           final v = await NamidaFFMPEG.inst.extractMetadata(l);
           if (v != null) {
@@ -608,16 +607,17 @@ class VideoController {
               videoPath: l,
               isLocal: true,
               idOrFileNameWithExt: l.getFilename,
-              isExtracted: true,
+              forceExtract: true,
             );
             final newVidInfo = addLocalVideoFileInfoToCacheMap(l, v, File(l).statSync());
-            nv = newVidInfo;
+            _videoPathsInfoMap[l] = newVidInfo;
           }
         } catch (e) {
           printy(e, isError: true);
           continue;
         }
       }
+      final nv = _videoPathsInfoMap[l];
       if (nv != null) possibleLocal.add(nv);
     }
     return [...possibleCached, ...possibleLocal];
@@ -700,7 +700,7 @@ class VideoController {
 
     for (final newId in shouldBeReExtracted.entries) {
       for (final statAndPath in newId.value) {
-        final nv = await _extractNVFromFFMPEG(
+        final nv = await _extractNVFromCacheVideo(
           stats: statAndPath.$1,
           id: newId.key,
           path: statAndPath.$2,
@@ -728,7 +728,7 @@ class VideoController {
 
     for (final newId in newIds.entries) {
       for (final statAndPath in newId.value) {
-        final nv = await _extractNVFromFFMPEG(
+        final nv = await _extractNVFromCacheVideo(
           stats: statAndPath.$1,
           id: newId.key,
           path: statAndPath.$2,
@@ -740,16 +740,16 @@ class VideoController {
     return newIdsMap;
   }
 
-  Future<NamidaVideo> _extractNVFromFFMPEG({
+  Future<NamidaVideo> _extractNVFromCacheVideo({
     required FileStat stats,
-    required String? id,
+    required String id,
     required String path,
   }) async {
     ThumbnailManager.inst.extractVideoThumbnailAndSave(
       videoPath: path,
-      isLocal: id == null,
-      idOrFileNameWithExt: id ?? path.getFilename,
-      isExtracted: true,
+      isLocal: false,
+      idOrFileNameWithExt: id,
+      forceExtract: false,
     );
     final info = await NamidaFFMPEG.inst.extractMetadata(path);
     return _getNVFromFFMPEGMap(
@@ -927,18 +927,18 @@ class _VideoControllerIsolateFunctions {
         if (filename.endsWith('.part')) continue; // first thing first
         if (filename.endsWith('.mime')) continue; // second thing second
 
-        final id = filename.substring(0, 11);
-        final videosInMap = idsMap[id];
-        final stats = df.statSync();
-        final sizeInBytes = stats.size;
-        if (videosInMap != null) {
-          // if file exists in map and is valid
-          if (videosInMap.firstWhereEff((element) => element.sizeInBytes == sizeInBytes) != null) {
-            continue; // skipping since the map will contain only new entries
-          }
-        }
-        // -- hmmm looks like a new video, needs extraction
         try {
+          final id = filename.substring(0, 11);
+          final videosInMap = idsMap[id];
+          final stats = df.statSync();
+          final sizeInBytes = stats.size;
+          if (videosInMap != null) {
+            // if file exists in map and is valid
+            if (videosInMap.firstWhereEff((element) => element.sizeInBytes == sizeInBytes) != null) {
+              continue; // skipping since the map will contain only new entries
+            }
+          }
+          // -- hmmm looks like a new video, needs extraction
           newIdsMap.addForce(id, (stats, df.path));
         } catch (e) {
           continue;

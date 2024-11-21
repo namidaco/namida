@@ -3,6 +3,8 @@ part of 'settings_controller.dart';
 class _YoutubeSettings with SettingsFileWriter {
   _YoutubeSettings._internal();
 
+  String get defaultFilenameBuilder => _defaultFilenameBuilder;
+
   static const _defaultFilenameBuilder = '[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s';
 
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;

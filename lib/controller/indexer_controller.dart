@@ -487,7 +487,7 @@ class Indexer<T extends Track> {
     void addCustom<K, E>(MediaType type, Map<K, List<E>> map, K? oldKey, K newKey, E item) {
       if (oldKey == newKey) return;
       if (oldKey != null) removeCustom(type, map, oldKey, item);
-      final list = map[oldKey];
+      final list = map[newKey];
       if (list == null) {
         map[newKey] = [item];
         addedItemsLists[type]!.newKeys.add(newKey);
