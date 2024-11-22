@@ -59,65 +59,7 @@ class MainPage extends StatelessWidget {
       ),
     );
 
-    final searchProgressWidget = Builder(builder: (context) {
-      return CircularProgressIndicator(
-        strokeWidth: 2.0,
-        strokeCap: StrokeCap.round,
-        color: context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4),
-      );
-    });
-
-    final fabChild = Builder(
-      builder: (context) => NamidaTooltip(
-        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
-        child: FloatingActionButton(
-          heroTag: 'main_page_fab_hero',
-          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
-          onPressed: () {
-            final fab = settings.floatingActionButton.value;
-            final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-            if (fab == FABType.search || isMenuOpened) {
-              final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
-              if (isOpen && !isMenuOpened) {
-                SearchSortController.inst.prepareResources();
-                ScrollSearchController.inst.showSearchMenu();
-                ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
-              } else {
-                isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
-                ScrollSearchController.inst.toggleSearchMenu();
-                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
-              }
-            } else if (fab == FABType.shuffle || fab == FABType.play) {
-              Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
-            }
-          },
-          child: ObxO(
-            rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
-            builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
-                ? ObxO(
-                    rx: SearchSortController.inst.runningSearchesTempCount,
-                    builder: (context, runningSearchesCount) => Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(
-                          Broken.search_status_1,
-                          color: Color.fromRGBO(255, 255, 255, 0.8),
-                        ),
-                        if (runningSearchesCount > 0) searchProgressWidget,
-                      ],
-                    ),
-                  )
-                : ObxO(
-                    rx: settings.floatingActionButton,
-                    builder: (context, fabButton) => Icon(
-                      fabButton.toIcon(),
-                      color: const Color.fromRGBO(255, 255, 255, 0.8),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
+    final fabChild = _MainPageFABButton();
     final mainChild = Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
@@ -269,9 +211,123 @@ class MainPage extends StatelessWidget {
   }
 }
 
+class _MainPageFABButton extends StatefulWidget {
+  const _MainPageFABButton();
+
+  @override
+  State<_MainPageFABButton> createState() => __MainPageFABButtonState();
+}
+
+class __MainPageFABButtonState extends State<_MainPageFABButton> {
+  @override
+  void initState() {
+    super.initState();
+    ScrollSearchController.inst.searchTextEditingController.addListener(_onControllerValueChangedListener);
+    ScrollSearchController.inst.latestSubmittedYTSearch.addListener(_onControllerValueChangedListener);
+    _onControllerValueChangedListener();
+  }
+
+  @override
+  void dispose() {
+    ScrollSearchController.inst.searchTextEditingController.removeListener(_onControllerValueChangedListener);
+    ScrollSearchController.inst.latestSubmittedYTSearch.removeListener(_onControllerValueChangedListener);
+    super.dispose();
+  }
+
+  bool _shouldShowSubmitSearch = false;
+
+  void _onControllerValueChangedListener() {
+    final val = ScrollSearchController.inst.searchTextEditingController.text;
+    final latestSubmitted = ScrollSearchController.inst.latestSubmittedYTSearch.value;
+
+    if (val == latestSubmitted || val.isEmpty) {
+      if (_shouldShowSubmitSearch != false) {
+        setState(() => _shouldShowSubmitSearch = false);
+      }
+    } else {
+      if (_shouldShowSubmitSearch != true) {
+        setState(() => _shouldShowSubmitSearch = true);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final searchProgressWidget = Builder(builder: (context) {
+      return CircularProgressIndicator(
+        strokeWidth: 2.0,
+        strokeCap: StrokeCap.round,
+        color: context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4),
+      );
+    });
+    return Builder(
+      builder: (context) => NamidaTooltip(
+        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
+        child: FloatingActionButton(
+          heroTag: 'main_page_fab_hero',
+          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
+          onPressed: () {
+            final fab = settings.floatingActionButton.value;
+            final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+            if (fab == FABType.search || isMenuOpened) {
+              if (_shouldShowSubmitSearch && ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+                ScrollSearchController.inst.searchBarWidget.submit(ScrollSearchController.inst.searchTextEditingController.text);
+                return;
+              }
+              final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
+              if (isOpen && !isMenuOpened) {
+                SearchSortController.inst.prepareResources();
+                ScrollSearchController.inst.showSearchMenu();
+                ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
+              } else {
+                isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
+                ScrollSearchController.inst.toggleSearchMenu();
+                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+              }
+            } else if (fab == FABType.shuffle || fab == FABType.play) {
+              Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
+            }
+          },
+          child: ObxO(
+            rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
+            builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
+                ? ObxO(
+                    rx: SearchSortController.inst.runningSearchesTempCount,
+                    builder: (context, runningSearchesCount) => Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ObxO(
+                          rx: ScrollSearchController.inst.currentSearchType,
+                          builder: (context, currentSearchType) => Icon(
+                            _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
+                            color: Color.fromRGBO(255, 255, 255, 0.8),
+                          ),
+                        ),
+                        if (runningSearchesCount > 0) searchProgressWidget,
+                      ],
+                    ),
+                  )
+                : ObxO(
+                    rx: settings.floatingActionButton,
+                    builder: (context, fabButton) => Icon(
+                      fabButton.toIcon(),
+                      color: const Color.fromRGBO(255, 255, 255, 0.8),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class NamidaSearchBar extends StatelessWidget {
   final GlobalKey<SearchBarAnimationState> searchBarKey;
   const NamidaSearchBar({super.key, required this.searchBarKey});
+
+  void submit(String val) {
+    _onSubmitted(val);
+  }
 
   void _onSubmitted(String val) {
     final didOpen = NamidaLinkUtils.tryOpeningPlaylistOrVideo(val);
@@ -281,6 +337,7 @@ class NamidaSearchBar extends StatelessWidget {
     }
 
     if (ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+      ScrollSearchController.inst.latestSubmittedYTSearch.value = val;
       ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
     }
   }

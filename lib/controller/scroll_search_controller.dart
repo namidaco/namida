@@ -24,6 +24,7 @@ class ScrollSearchController {
   final currentSearchType = SearchType.localTracks.obs;
 
   final isGlobalSearchMenuShown = false.obs;
+  final latestSubmittedYTSearch = ''.obs;
   final TextEditingController searchTextEditingController = TextEditingController();
 
   final Map<LibraryTab, Rx<bool>> isSearchBoxVisibleMap = <LibraryTab, Rx<bool>>{};

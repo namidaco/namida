@@ -121,6 +121,7 @@ class SearchPage extends StatelessWidget {
               ScrollSearchController.inst.currentSearchType.value = SearchType.youtube;
               final searchValue = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
               if (SearchSortController.inst.lastSearchText != searchValue) {
+                ScrollSearchController.inst.latestSubmittedYTSearch.value = SearchSortController.inst.lastSearchText;
                 ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: SearchSortController.inst.lastSearchText);
               }
               break;
