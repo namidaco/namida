@@ -13,7 +13,11 @@ class ReplayGainData {
   double? calculateGainAsVolume({double withRespectiveVolume = 0.75}) {
     final gainFinal = trackGain ?? albumGain;
     if (gainFinal == null) return null;
-    final gainLinear = math.pow(10, gainFinal / 20).clamp(0.1, 1.0);
+    return convertGainToVolume(gain: gainFinal, withRespectiveVolume: withRespectiveVolume);
+  }
+
+  static double? convertGainToVolume({required double gain, double withRespectiveVolume = 0.75}) {
+    final gainLinear = math.pow(10, gain / 20).clamp(0.1, 1.0);
     return gainLinear * withRespectiveVolume;
   }
 

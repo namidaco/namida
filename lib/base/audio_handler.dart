@@ -15,6 +15,7 @@ import 'package:youtipie/core/extensions.dart' show StreamFilterUtils;
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/func_execute_limiter.dart';
+import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -452,8 +453,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final tr = item.track;
     videoPlayerInfo.value = null;
     if (settings.player.replayGain.value) {
-      final gain = item.track.toTrackExt().gainData?.calculateGainAsVolume();
-      _userPlayerVolume = gain ?? 0.75; // save in memory only
+      final vol = item.track.toTrackExt().gainData?.calculateGainAsVolume();
+      _userPlayerVolume = vol ?? 0.75; // save in memory only
     }
     final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
@@ -977,7 +978,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return;
     }
 
-    VideoStreamsResult? streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(item.id);
+    VideoStreamsResult? streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(item.id, infoOnly: true);
+
+    void setReplayGainIfRequired() {
+      if (settings.player.replayGain.value && streamsResult != null) {
+        final loudnessDb = streamsResult.loudnessDBData?.loudnessDb;
+        final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+        _userPlayerVolume = vol ?? 0.75; // save in memory only
+      }
+    }
+
+    setReplayGainIfRequired();
 
     YoutubeInfoController.current.currentYTStreams.value = streamsResult;
     final hadCachedVideoPageCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
@@ -1150,6 +1161,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             snackyy(message: 'Error getting streams', top: false, isError: true);
             return null;
           });
+          setReplayGainIfRequired();
           if (streamsResult != null && (streamsResult.audioStreams.isNotEmpty || streamsResult.mixedStreams.isNotEmpty)) {
             // only when video has actual streams. otherwise its deleted/privated/etc
             if (markedAsWatched != null) {
