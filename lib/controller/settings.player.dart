@@ -28,7 +28,7 @@ class _PlayerSettings with SettingsFileWriter {
   final pauseOnVolume0 = true.obs;
   final resumeAfterOnVolume0Pause = true.obs;
   final resumeAfterWasInterrupted = true.obs;
-  final jumpToFirstTrackAfterFinishingQueue = true.obs;
+  final jumpToFirstTrackAfterFinishingQueue = false.obs;
   final repeatMode = RepeatMode.none.obs;
   final infiniyQueueOnNextPrevious = true.obs;
   final displayRemainingDurInsteadOfTotal = false.obs;
