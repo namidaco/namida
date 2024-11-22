@@ -2,7 +2,7 @@
 name: Bug report
 about: report a bug/issue in the app
 title: "[BUG] "
-labels: ''
+labels: ["bug"]
 assignees: ''
 
 ---
@@ -28,6 +28,7 @@ assignees: ''
 <!--- upload any screenshot/video if u got, makes things easier-->
 
 ## Logs
+<!--- DO NOT IGNORE, U WILL LIKELY NOT GET HELP WITHOUT IT -->
 <!--- Go to settings > about > share logs -->
 
 ## Possible Solution

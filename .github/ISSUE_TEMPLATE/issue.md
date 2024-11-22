@@ -2,7 +2,7 @@
 name: Issue
 about: little problem that is not a bug
 title: "[ISSUE] "
-labels: ''
+labels: ["issue"]
 assignees: ''
 
 ---
@@ -18,6 +18,7 @@ assignees: ''
 <!--- upload any screenshot/video if u got, makes things easier-->
 
 ## Logs
+<!--- DO NOT IGNORE, U WILL LIKELY NOT GET HELP WITHOUT IT -->
 <!--- Go to settings > about > share logs -->
 
 ## Possible Solution

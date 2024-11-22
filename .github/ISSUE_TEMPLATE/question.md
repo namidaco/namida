@@ -2,7 +2,7 @@
 name: Question
 about: i got a smol question/ is it only me or..
 title: "[QUESTION]"
-labels: ''
+labels: ["question"]
 assignees: ''
 
 ---
