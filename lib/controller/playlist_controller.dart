@@ -37,14 +37,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   final canReorderTracks = false.obs;
   void resetCanReorder() => canReorderTracks.value = false;
 
-  void addNewPlaylist(
-    String name, {
-    List<Track> tracks = const <Track>[],
-    int? creationDate,
-    String comment = '',
-    List<String> moods = const [],
-    String? m3uPath,
-  }) async {
+  void addNewPlaylist(String name,
+      {List<Track> tracks = const <Track>[],
+      int? creationDate,
+      String comment = '',
+      List<String> moods = const [],
+      String? m3uPath,
+      PlaylistAddDuplicateAction? actionIfAlreadyExists}) async {
     super.addNewPlaylistRaw(
       name,
       tracks: tracks,
@@ -57,7 +56,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
       comment: comment,
       moods: moods,
       m3uPath: m3uPath,
-      actionIfAlreadyExists: () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
+      actionIfAlreadyExists: () => actionIfAlreadyExists ?? NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
     );
   }
 
@@ -280,7 +279,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
           final m3uPath = e.value.$1;
           final trs = e.value.$2;
           final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
-          PlaylistController.inst.addNewPlaylist(plName, tracks: trs, m3uPath: addAsM3U ? m3uPath : null, creationDate: creationDate);
+          this.addNewPlaylist(
+            plName,
+            tracks: trs,
+            m3uPath: addAsM3U ? m3uPath : null,
+            creationDate: creationDate,
+            actionIfAlreadyExists: PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist,
+          );
         } catch (_) {}
       }
 
