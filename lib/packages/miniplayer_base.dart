@@ -1360,7 +1360,7 @@ class _TrackInfo<E> extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Padding(
-                            padding: EdgeInsets.only(right: 26.0 + (82 * (1 - cp) * (1 - qp)) + (60 * qp)),
+                            padding: EdgeInsets.only(right: 32.0 + (82 * (1 - cp) * (1 - qp)) + (60 * qp)),
                             child: InkWell(
                               onTapUp: cp == 1 ? textData.onMenuOpen : null,
                               highlightColor: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
