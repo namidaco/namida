@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:namida/class/queue.dart';
@@ -261,13 +262,21 @@ class QueueController {
   }
 
   Future<void> _saveLatestQueueToStorage(List<Playable> items) async {
-    final queueObjects = <Object>[];
+    final queueObjects = items
+        .map((e) => {
+              'p': e.toJson(),
+              't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+            })
+        .toList();
 
-    items.loop((e) => queueObjects.add({
-          'p': e.toJson(),
-          't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
-        }));
-    await File(AppPaths.LATEST_QUEUE).writeAsJson(queueObjects);
+    try {
+      final file = File(AppPaths.LATEST_QUEUE);
+      file.createSync(recursive: true);
+      const encoder = JsonEncoder();
+      await file.writeAsString(encoder.convert(queueObjects));
+    } catch (e) {
+      printy(e, isError: true);
+    }
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
