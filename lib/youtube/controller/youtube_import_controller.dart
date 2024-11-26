@@ -80,10 +80,10 @@ class _VideoEntry {
   final String id;
   final DateTime? dateAdded;
 
-  const _VideoEntry({
-    required this.id,
+  _VideoEntry({
+    required String id,
     required this.dateAdded,
-  });
+  }) : this.id = id.replaceFirst(' ', '');
 }
 
 class YoutubePlaylistImportDetails {
