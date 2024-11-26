@@ -263,9 +263,9 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
         val tag: Tag? = audioFile.getTag()
         if (tag != null) {
           // -- Tags
-          val year = tag.getAll(FieldKey.YEAR)
-          val album = tag.getAll(FieldKey.ALBUM)
-          val albumArtist = tag.getAll(FieldKey.ALBUM_ARTIST)
+          val year = tag.getFirst(FieldKey.YEAR)
+          val album = tag.getFirst(FieldKey.ALBUM)
+          val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
           metadata["country"] = tag.getAll(FieldKey.COUNTRY)
           metadata["recordLabel"] = tag.getAll(FieldKey.RECORD_LABEL)
           metadata["language"] = tag.getAll(FieldKey.LANGUAGE)
