@@ -61,6 +61,8 @@ class CurrentColor {
   final currentPlayingTrack = Rxn<Selectable>();
   final currentPlayingIndex = 0.obs;
 
+  YoutubeID? _currentPlayingVideo;
+
   ColorScheme? deviceWallpaperColorScheme;
 
   final isGeneratingAllColorPalettes = false.obs;
@@ -170,8 +172,10 @@ class CurrentColor {
       );
     }
     if (track != null) {
-      currentPlayingTrack.value = null; // nullifying to re-assign safely if subtype has changed
-      currentPlayingTrack.value = track;
+      currentPlayingTrack
+        ..set(null) // nullifying to re-assign safely if subtype has changed
+        ..set(track)
+        ..refresh();
     }
     if (index != null) {
       currentPlayingIndex.value = index;
@@ -181,6 +185,9 @@ class CurrentColor {
   void updatePlayerColorFromYoutubeID(YoutubeID ytIdItem) async {
     final id = ytIdItem.id;
     if (id == '') return;
+
+    if (_currentPlayingVideo == ytIdItem) return;
+    _currentPlayingVideo = ytIdItem;
 
     // -- only extract if same item is still playing, i.e. user didn't skip.
     bool stillPlaying() => ytIdItem == Player.inst.currentItem.value;
@@ -214,7 +221,7 @@ class CurrentColor {
 
         final trColors = await getColorPalette();
         if (trColors == null || !stillPlaying()) return; // -- check current item
-        _namidaColorMiniplayer.value = trColors.color;
+        if (trColors.color != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors.color;
 
         if (settings.autoColor.value) {
           if (_shouldUpdateFromDeviceWallpaper) {
@@ -222,7 +229,7 @@ class CurrentColor {
           } else {
             namidaColor = trColors;
           }
-          if (namidaColor != null) {
+          if (namidaColor != null && namidaColor != _namidaColor.value) {
             _namidaColor.set(namidaColor);
             _namidaColor.refresh(); // force refresh for pitch black/etc
             _updateCurrentPaletteHalfs(
@@ -237,6 +244,7 @@ class CurrentColor {
   void resetCurrentPlayingTrack() {
     currentPlayingTrack.value = null;
     _namidaColorMiniplayer.value = null;
+    _currentPlayingVideo = null;
   }
 
   bool _checkDummyColor(NamidaColor value) => value.palette.isEmpty || (value.palette.length == 1 && value.color == value.palette.first && value.color == value.palette.last);

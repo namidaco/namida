@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:namida/core/extensions.dart';
@@ -30,4 +31,13 @@ class NamidaColor {
       'palette': palette.mapped((e) => e.value),
     };
   }
+
+  @override
+  bool operator ==(covariant NamidaColor other) {
+    if (identical(this, other)) return true;
+    return used == other.used && mix == other.mix && listEquals(palette, other.palette);
+  }
+
+  @override
+  int get hashCode => used.hashCode ^ mix.hashCode ^ palette.hashCode;
 }
