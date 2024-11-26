@@ -29,12 +29,16 @@ class Folders<T extends Folder> {
 
   /// Highlights the track that is meant to be navigated to after calling [stepIn].
   final indexToScrollTo = Rxn<int>();
+  Track? _trackToScrollTo;
 
   final _latestScrollOffset = <T?, double>{};
 
-  void refreshLists() {
+  void refreshAfterSorting() {
     currentFolderslist.refresh(); // refreshes folders
     currentFolder.refresh(); // refreshes tracks
+    if (_trackToScrollTo != null && currentFolder.value != null) {
+      indexToScrollTo.value = currentFolder.value!.tracks().indexOf(_trackToScrollTo!);
+    }
   }
 
   /// Indicates wether the navigator can go back at this point.
@@ -67,8 +71,10 @@ class Folders<T extends Folder> {
 
     if (trackToScrollTo != null) {
       indexToScrollTo.value = folder.tracks().indexOf(trackToScrollTo);
+      _trackToScrollTo = trackToScrollTo;
     } else {
       indexToScrollTo.value = null;
+      _trackToScrollTo = null;
     }
     _scrollJump(jumpTo);
   }
@@ -160,7 +166,7 @@ class Folders<T extends Folder> {
       );
 
     map.assignAllEntries(sorted); // we clear after building new sorted one
-    refreshLists();
+    refreshAfterSorting();
   }
 
   Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {

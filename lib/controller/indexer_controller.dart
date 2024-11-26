@@ -399,12 +399,12 @@ class Indexer<T extends Track> {
         case MediaType.folder:
           sortPls(mainMapFolders.values, MediaType.folder);
           mainMapFolders.refresh();
-          Folders.tracks.refreshLists();
+          Folders.tracks.refreshAfterSorting();
           break;
         case MediaType.folderVideo:
           sortPls(mainMapFoldersVideos.values, MediaType.folderVideo);
           mainMapFoldersVideos.refresh();
-          Folders.videos.refreshLists();
+          Folders.videos.refreshAfterSorting();
           break;
         default:
           null;
