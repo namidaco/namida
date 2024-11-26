@@ -333,7 +333,7 @@ class YoutubeController {
 
     DownloadTaskGroupName fileToGroupName(File file) {
       final filenameWOExt = file.path.getFilenameWOExt;
-      return DownloadTaskGroupName(groupName: filenameWOExt.startsWith('.') ? '' : filenameWOExt);
+      return DownloadTaskGroupName(groupName: filenameWOExt == '.' ? '' : filenameWOExt);
     }
 
     // -- migrating old .json files to .db
@@ -408,6 +408,16 @@ class YoutubeController {
             }
           });
         } catch (_) {}
+
+        if (youtubeDownloadTasksMap.value[group]?.isEmpty ?? true) {
+          // db is empty, delete it. we don't delete immediately at runtime bcz it might be accessed again after deleting and many bad things would happen.
+          youtubeDownloadTasksMap.value.remove(group);
+          downloadedFilesMap.value.remove(group);
+          latestEditedGroupDownloadTask.remove(group);
+          try {
+            file.deleteSync();
+          } catch (_) {}
+        }
       },
     );
   }
