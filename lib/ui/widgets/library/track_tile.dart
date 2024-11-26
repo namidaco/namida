@@ -12,6 +12,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -776,9 +777,23 @@ class TrackTileManager {
       return Jiffy.parseFromDateTime(date.milliSecondsSinceEpoch).fromNow();
     },
     TrackTileItem.firstListenDate: (track) {
-      final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;
-      if (date == null) return '';
-      return date.dateFormatted;
+      final firstListenDateMS = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;
+      if (firstListenDateMS == null) return '';
+      if (isKuru) {
+        final releaseDate = DateTime.tryParse(track.year.toString());
+        if (releaseDate != null) {
+          final firstListenDate = DateTime.fromMillisecondsSinceEpoch(firstListenDateMS);
+          if (firstListenDate.day != releaseDate.day) {
+            final diffDays = firstListenDate.difference(releaseDate).inDays.abs();
+            if (diffDays == 1) {
+              return "${firstListenDateMS.dateFormatted}?";
+            } else if (diffDays > 1 && diffDays <= 8) {
+              return "${firstListenDateMS.dateFormatted}+$diffDays?";
+            }
+          }
+        }
+      }
+      return firstListenDateMS.dateFormatted;
     },
   };
 }
