@@ -10,6 +10,7 @@ class _YoutubeInfoUtils {
   var tempBackupVideoInfo = <String, YoutubeVideoHistory>{}; // {id: YoutubeVideoHistory()}
 
   final _tempInfoTitle = <String, String?>{};
+  final _tempInfoDescription = <String, String?>{};
   final _tempInfoChannelTitle = <String, String?>{};
   final _tempInfoChannelID = <String, String?>{};
   final _tempInfoVideoReleaseDate = <String, DateTime?>{};
@@ -81,12 +82,11 @@ class _YoutubeInfoUtils {
         _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyEmpty();
   }
 
-  String? getVideoDescription(String videoId, {bool checkFromStorage = true /* am sorry every follow me */}) {
-    String? name = tempVideoInfosFromStreams[videoId]?.availableDescription?.nullifyEmpty();
-    if (name != null || checkFromStorage == false) return name;
-    return _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.availableDescription?.nullifyEmpty() ??
-        _getVideoStreamResultSync(videoId)?.info?.description?.nullifyEmpty() ?? //
-        _getVideoPageResultSync(videoId)?.videoInfo?.description?.rawText?.nullifyEmpty();
+  String? getVideoDescription(String videoId) {
+    return _tempInfoDescription[videoId] ??= _getVideoPageResultSync(videoId)?.videoInfo?.description?.rawText?.nullifyEmpty() ??
+        _getVideoStreamResultSync(videoId)?.info?.description?.nullifyEmpty() ??
+        tempVideoInfosFromStreams[videoId]?.availableDescription?.nullifyEmpty() ??
+        getStreamInfoSync(videoId)?.availableDescription?.nullifyEmpty();
   }
 
   String? getVideoChannelName(String videoId, {bool checkFromStorage = true}) {
