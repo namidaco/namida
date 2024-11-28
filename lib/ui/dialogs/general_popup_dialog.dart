@@ -1314,34 +1314,36 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   ),
                                   const SizedBox(width: 8.0),
-                                  isSingle && tracks.first == Player.inst.currentTrack?.track
-                                      ? bigIcon(
-                                          Broken.pause_circle,
-                                          iconWidget: NamidaOpacity(
-                                            opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
-                                            child: IgnorePointer(
-                                              ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
-                                              child: Icon(
-                                                Broken.pause_circle,
-                                                color: iconColor,
+                                  Expanded(
+                                    child: isSingle && tracks.first == Player.inst.currentTrack?.track
+                                        ? bigIcon(
+                                            Broken.pause_circle,
+                                            iconWidget: NamidaOpacity(
+                                              opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
+                                              child: IgnorePointer(
+                                                ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
+                                                child: Icon(
+                                                  Broken.pause_circle,
+                                                  color: iconColor,
+                                                ),
                                               ),
                                             ),
+                                            () => lang.STOP_AFTER_THIS_TRACK,
+                                            () {
+                                              if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
+                                              NamidaNavigator.inst.closeDialog();
+                                              Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
+                                            },
+                                          )
+                                        : bigIcon(
+                                            Broken.play_circle,
+                                            () => isSingle ? lang.PLAY : lang.PLAY_ALL,
+                                            () {
+                                              NamidaNavigator.inst.closeDialog();
+                                              Player.inst.playOrPause(0, tracks, source);
+                                            },
                                           ),
-                                          () => lang.STOP_AFTER_THIS_TRACK,
-                                          () {
-                                            if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
-                                            NamidaNavigator.inst.closeDialog();
-                                            Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
-                                          },
-                                        )
-                                      : bigIcon(
-                                          Broken.play_circle,
-                                          () => isSingle ? lang.PLAY : lang.PLAY_ALL,
-                                          () {
-                                            NamidaNavigator.inst.closeDialog();
-                                            Player.inst.playOrPause(0, tracks, source);
-                                          },
-                                        ),
+                                  ),
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: statsWrapper == null
