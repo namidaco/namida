@@ -188,7 +188,8 @@ class _YoutubeCurrentInfoController {
     }
   }
 
-  Future<void> _fetchAndUpdateRelatedVideos(String videoId) async {
+  Future<void> _fetchAndUpdateRelatedVideos(String videoId, {bool forceRequest = false}) async {
+    if (forceRequest == false && _currentRelatedVideos.value != null) return; // already fetched
     final relatedVideos = await YoutubeInfoController.video.fetchRelatedVideos(videoId, false, details: ExecuteDetails.forceRequest());
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
