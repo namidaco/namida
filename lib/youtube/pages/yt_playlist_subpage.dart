@@ -182,9 +182,10 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
       rx: YoutubePlaylistController.inst.canReorderVideos,
       builder: (context, canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
     );
+    final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: 300),
-      data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
+      data: theme,
       child: BackgroundWrapper(
         child: NamidaScrollbarWithController(
           child: (sc) => Obx(
@@ -251,18 +252,18 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                       children: [
                                         Text(
                                           playlistCurrentName.translatePlaylistName(),
-                                          style: context.textTheme.displayLarge,
+                                          style: theme.textTheme.displayLarge,
                                         ),
                                         const SizedBox(height: 6.0),
                                         Text(
                                           playlist.tracks.length.displayVideoKeyword,
-                                          style: context.textTheme.displaySmall,
+                                          style: theme.textTheme.displaySmall,
                                         ),
                                         if (playlist.comment != '') ...[
                                           const SizedBox(height: 2.0),
                                           Text(
                                             playlist.comment,
-                                            style: context.textTheme.displaySmall,
+                                            style: theme.textTheme.displaySmall,
                                           ),
                                         ],
                                       ],
@@ -573,9 +574,10 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final plIdWrapper = PlaylistID(id: plId);
     final firstID = playlist.items.firstOrNull?.id;
     final hasMoreStreamsLeft = playlist.canFetchNext;
+    final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: 300),
-      data: AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode),
+      data: theme,
       child: BackgroundWrapper(
         child: PullToRefreshWidget(
           state: this,
@@ -648,25 +650,25 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                       children: [
                                         Text(
                                           playlist.basicInfo.title,
-                                          style: context.textTheme.displayLarge,
+                                          style: theme.textTheme.displayLarge,
                                         ),
                                         const SizedBox(height: 6.0),
                                         Text(
                                           videosCountTextFinal ?? '',
-                                          style: context.textTheme.displaySmall,
+                                          style: theme.textTheme.displaySmall,
                                         ),
                                         if (uploaderTitleAndViews.isNotEmpty == true) ...[
                                           const SizedBox(height: 2.0),
                                           Text(
                                             uploaderTitleAndViews,
-                                            style: context.textTheme.displaySmall,
+                                            style: theme.textTheme.displaySmall,
                                           ),
                                         ],
                                         if (description != null && description.isNotEmpty) ...[
                                           const SizedBox(height: 2.0),
                                           Text(
                                             description,
-                                            style: context.textTheme.displaySmall,
+                                            style: theme.textTheme.displaySmall,
                                           ),
                                         ],
                                       ],
@@ -735,7 +737,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                   const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
                   SliverStickyHeader(
                     header: ColoredBox(
-                      color: context.theme.scaffoldBackgroundColor,
+                      color: theme.scaffoldBackgroundColor,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                         child: Row(
