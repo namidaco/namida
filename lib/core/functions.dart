@@ -1479,7 +1479,8 @@ class TracksAddOnTap {
                     if (date == null) {
                       isLoadingVideoDate.value = true;
                       final info = await YoutubeInfoController.video.fetchVideoStreams(currentVideoId, forceRequest: false);
-                      date = info?.info?.publishedAt.date ?? info?.info?.publishDate.date;
+                      date = info?.info?.publishedAt.accurateDate ?? info?.info?.publishDate.accurateDate;
+                      date ??= info?.info?.publishedAt.date ?? info?.info?.publishDate.date;
                       isLoadingVideoDate.value = false;
                     }
                     if (date == null) {

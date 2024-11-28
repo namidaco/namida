@@ -845,7 +845,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             width: prevVideoStream.width,
             sizeInBytes: prevVideoStream.sizeInBytes,
             frameratePrecise: prevVideoStream.fps.toDouble(),
-            creationTimeMS: (prevVideoInfo?.publishedAt.date ?? prevVideoInfo?.publishDate.date)?.millisecondsSinceEpoch ?? 0,
+            creationTimeMS: (prevVideoInfo?.publishedAt.accurateDate ?? prevVideoInfo?.publishDate.accurateDate)?.millisecondsSinceEpoch ?? 0,
             durationMS: prevVideoStream.duration?.inMilliseconds ?? 0,
             bitrate: prevVideoStream.bitrate,
           ),

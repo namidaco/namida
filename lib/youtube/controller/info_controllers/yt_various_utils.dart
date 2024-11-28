@@ -112,10 +112,10 @@ class _YoutubeInfoUtils {
 
   DateTime? getVideoReleaseDate(String videoId) {
     // -- we check for streams result first cuz others are approximation.
-    return _tempInfoVideoReleaseDate[videoId] ??= _getVideoStreamResultSync(videoId)?.info?.publishedAt.date ??
-        tempVideoInfosFromStreams[videoId]?.publishedAt.date ??
-        getStreamInfoSync(videoId)?.publishedAt.date ?? //
-        _getVideoPageResultSync(videoId)?.videoInfo?.publishedAt.date;
+    return _tempInfoVideoReleaseDate[videoId] ??= _getVideoStreamResultSync(videoId)?.info?.publishedAt.accurateDate ??
+        tempVideoInfosFromStreams[videoId]?.publishedAt.accurateDate ??
+        getStreamInfoSync(videoId)?.publishedAt.accurateDate ?? //
+        _getVideoPageResultSync(videoId)?.videoInfo?.publishedAt.accurateDate;
   }
 
   int? getVideoDurationSeconds(String videoId) {

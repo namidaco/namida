@@ -181,7 +181,7 @@ Future<void> showDownloadVideoBottomSheet({
     onAudioSelectionChanged();
     onVideoSelectionChanged();
     updatefilenameOutput();
-    videoDateTime = videoInfo.value?.publishDate.date ?? videoInfo.value?.uploadDate.date ?? streamInfoItem?.publishedAt.accurateDate;
+    videoDateTime = videoInfo.value?.publishDate.accurateDate ?? videoInfo.value?.uploadDate.accurateDate ?? streamInfoItem?.publishedAt.accurateDate;
 
     if (initialItemConfig == null ||
         initialItemConfig.ffmpegTags.isEmpty ||

@@ -156,11 +156,14 @@ class _YtFilenameRebuilder {
           final id = pageResult?.channelInfo?.id ?? videoItem?.channel.id ?? streams?.info?.channelId;
           return id == null ? null : YTUrlUtils.buildChannelUrl(id);
         }(),
-      'timestamp' => (streams?.info?.publishDate.date ?? streams?.info?.uploadDate.date ?? pageResult?.videoInfo?.publishedAt.accurateDate ?? videoItem?.publishedAt.accurateDate)
+      'timestamp' => (streams?.info?.publishDate.accurateDate ??
+              streams?.info?.uploadDate.accurateDate ??
+              pageResult?.videoInfo?.publishedAt.accurateDate ??
+              videoItem?.publishedAt.accurateDate)
           ?.millisecondsSinceEpoch
           .toString(),
       'upload_date' => () {
-          final date = streams?.info?.publishDate.date ?? streams?.info?.uploadDate.date ?? videoItem?.publishedAt.accurateDate;
+          final date = streams?.info?.publishDate.accurateDate ?? streams?.info?.uploadDate.accurateDate ?? videoItem?.publishedAt.accurateDate;
           return date == null ? null : DateFormat('yyyyMMdd').format(date.toLocal());
         }(),
       'view_count' =>
