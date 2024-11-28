@@ -214,7 +214,7 @@ class _SettingsController with SettingsFileWriter {
   final trackTileSeparator = '•'.obs;
   final displayFavouriteIconInListTile = true.obs;
   final editTagsKeepFileDates = true.obs;
-  final downloadFilesWriteUploadDate = true.obs;
+  final downloadFilesWriteUploadDate = false.obs;
   final downloadFilesKeepCachedVersions = true.obs;
   final downloadAddAudioToLocalLibrary = true.obs;
   final downloadAudioOnly = false.obs;
