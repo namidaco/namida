@@ -68,6 +68,7 @@ Future<void> showGeneralPopupDialog(
   String? additionalHero,
   IconData? trailingIcon,
   bool showRemoveFromPlaylist = true,
+  bool showPlayAllReverse = false,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -1139,6 +1140,23 @@ Future<void> showGeneralPopupDialog(
                                   NamidaNavigator.inst.closeDialog();
                                   Player.inst.playOrPause(0, tracks, source);
                                 },
+                                trailing: showPlayAllReverse
+                                    ? IconButton(
+                                        tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
+                                        icon: StackedIcon(
+                                          baseIcon: Broken.play_cricle,
+                                          secondaryIcon: Broken.arrow_swap,
+                                          iconSize: 20.0,
+                                          secondaryIconSize: 10.0,
+                                          baseIconColor: iconColor,
+                                        ),
+                                        iconSize: 20.0,
+                                        onPressed: () {
+                                          NamidaNavigator.inst.closeDialog();
+                                          Player.inst.playOrPause(0, tracks.reversed, source);
+                                        },
+                                      )
+                                    : null,
                               ),
 
                             if (!isSingle)

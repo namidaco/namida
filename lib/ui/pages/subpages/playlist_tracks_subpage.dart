@@ -138,6 +138,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                                 QueueSource.history,
                                 tracksWithDates: tracks,
                                 playlistName: k_PLAYLIST_NAME_HISTORY,
+                                showPlayAllReverse: true,
                               );
                             },
                           ),

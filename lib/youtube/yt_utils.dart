@@ -164,16 +164,44 @@ class YTUtils {
         title: lang.SHARE,
         onTap: videos.shareVideos,
       ),
-      NamidaPopupItem(
-        icon: Broken.play,
-        title: lang.PLAY,
-        onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
-      ),
-      NamidaPopupItem(
-        icon: Broken.shuffle,
-        title: lang.SHUFFLE,
-        onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true),
-      ),
+      if (videos.length > 1)
+        NamidaPopupItem(
+          icon: Broken.play_circle,
+          title: lang.PLAY_ALL,
+          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+          trailing: showPlayAllReverse
+              ? IconButton(
+                  style: ButtonStyle(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
+                  icon: StackedIcon(
+                    baseIcon: Broken.play_cricle,
+                    secondaryIcon: Broken.arrow_swap,
+                    iconSize: 20.0,
+                    secondaryIconSize: 10.0,
+                  ),
+                  iconSize: 20.0,
+                  onPressed: () {
+                    NamidaNavigator.inst.popMenu();
+                    Player.inst.playOrPause(0, videos.reversed, QueueSource.others);
+                  },
+                )
+              : null,
+        )
+      else
+        NamidaPopupItem(
+          icon: Broken.play,
+          title: lang.PLAY,
+          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+        ),
+      if (videos.length > 1)
+        NamidaPopupItem(
+          icon: Broken.shuffle,
+          title: lang.SHUFFLE,
+          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true),
+        ),
       NamidaPopupItem(
         icon: Broken.next,
         title: lang.PLAY_NEXT,
