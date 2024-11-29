@@ -149,6 +149,7 @@ class YTUtils {
     required List<YoutubeID> videos,
     List<NamidaPopupItem> moreItems = const [],
     required String playlistName,
+    bool showPlayAllReverse = true,
   }) {
     final playAfterVid = getPlayerAfterVideo();
     return [

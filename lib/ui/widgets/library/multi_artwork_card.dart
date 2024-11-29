@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
@@ -17,6 +19,7 @@ class MultiArtworkCard extends StatelessWidget {
   final (double, double, double) dimensions;
   final List<Widget> widgetsInStack;
   final bool enableHero;
+  final File? artworkFile;
 
   const MultiArtworkCard({
     super.key,
@@ -29,6 +32,7 @@ class MultiArtworkCard extends StatelessWidget {
     required this.dimensions,
     this.widgetsInStack = const [],
     this.enableHero = true,
+    this.artworkFile,
   });
 
   @override
@@ -55,6 +59,7 @@ class MultiArtworkCard extends StatelessWidget {
                   tracks: tracks.toImageTracks(),
                   thumbnailSize: thumbnailSize,
                   iconSize: 92.0 - 14 * gridCount,
+                  artworkFile: artworkFile,
                 ),
                 Expanded(
                   child: Container(

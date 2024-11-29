@@ -450,6 +450,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                     heroTag: 'playlist_${playlist.name}',
                     size: context.width * 0.35,
                     tracks: tracks.toImageTracks(),
+                    artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
                   ),
                   tracksFn: () => tracks,
                 ),

@@ -280,6 +280,7 @@ class AppDirs {
   // ================= User Data =================
   static final HISTORY_PLAYLIST = _join(USER_DATA, 'History');
   static final PLAYLISTS = _join(USER_DATA, 'Playlists');
+  static final PLAYLISTS_ARTWORKS = _join(USER_DATA, 'Playlists Artworks');
   static final QUEUES = _join(USER_DATA, 'Queues');
   static final ARTWORKS = _join(USER_DATA, 'Artworks'); // extracted audio artworks
   static final PALETTES = _join(USER_DATA, 'Palettes');
@@ -307,6 +308,7 @@ class AppDirs {
   static final YOUTIPIE_DATA = _join(ROOT_DIR, 'Youtipie', 'Youtipie_data'); // this should never be accessed/backed up etc.
 
   static final YT_PLAYLISTS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists');
+  static final YT_PLAYLISTS_ARTWORKS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists Artworks');
   static final YT_HISTORY_PLAYLIST = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube History');
   static final YT_THUMBNAILS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails');
   static final YT_THUMBNAILS_CHANNELS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails Channels');
@@ -320,6 +322,7 @@ class AppDirs {
     // -- User Data
     HISTORY_PLAYLIST,
     PLAYLISTS,
+    PLAYLISTS_ARTWORKS,
     QUEUES,
     ARTWORKS,
     PALETTES,
@@ -334,6 +337,7 @@ class AppDirs {
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,
+    YT_PLAYLISTS_ARTWORKS,
     YT_HISTORY_PLAYLIST,
     YT_THUMBNAILS,
     YT_THUMBNAILS_CHANNELS,

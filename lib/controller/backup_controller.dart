@@ -65,11 +65,13 @@ class BackupController {
           AppPaths.YT_SUBSCRIPTIONS,
           AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
           AppDirs.PLAYLISTS,
+          AppDirs.PLAYLISTS_ARTWORKS,
           AppDirs.HISTORY_PLAYLIST,
           AppDirs.QUEUES,
           AppDirs.YT_DOWNLOAD_TASKS,
           AppDirs.YT_STATS,
           AppDirs.YT_PLAYLISTS,
+          AppDirs.YT_PLAYLISTS_ARTWORKS,
           AppDirs.YT_HISTORY_PLAYLIST,
         ];
         await createBackupFile(itemsToBackup, fileSuffix: " - auto");

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,7 @@ import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -443,6 +445,14 @@ Future<void> showGeneralPopupDialog(
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
 
+    Uint8List? artworkBytes;
+    final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
+    if (await artworkFile.exists()) {
+      try {
+        artworkBytes = await artworkFile.readAsBytes();
+      } catch (_) {}
+    }
+
     await PlaylistController.inst.removePlaylist(pl);
     snackyy(
       title: lang.UNDO_CHANGES,
@@ -450,7 +460,7 @@ Future<void> showGeneralPopupDialog(
       displaySeconds: 3,
       button: (
         lang.UNDO,
-        () async => await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate),
+        () async => await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate, artworkBytes: artworkBytes),
       ),
     );
   }
@@ -745,6 +755,8 @@ Future<void> showGeneralPopupDialog(
 
   if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
 
+  final artworkFile = playlistName == null ? null : PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
+
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       numberOfRepeats.close();
@@ -792,7 +804,7 @@ Future<void> showGeneralPopupDialog(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const SizedBox(width: 16.0),
-                          if (forceSingleArtwork!)
+                          if (forceSingleArtwork! && artworkFile == null)
                             NamidaHero(
                               tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
                               child: ArtworkWidget(
@@ -804,14 +816,15 @@ Future<void> showGeneralPopupDialog(
                                 borderRadius: isCircle ? 200 : 8.0,
                                 useTrackTileCacheHeight: useTrackTileCacheHeight,
                               ),
-                            ),
-                          if (!forceSingleArtwork)
+                            )
+                          else
                             MultiArtworkContainer(
                               heroTag: heroTag ?? 'edittags_artwork',
                               size: 60,
                               tracks: tracks.toImageTracks(),
                               fallbackToFolderCover: false,
                               margin: EdgeInsets.zero,
+                              artworkFile: artworkFile,
                             ),
                           const SizedBox(width: 12.0),
                           Expanded(
@@ -858,8 +871,71 @@ Future<void> showGeneralPopupDialog(
                             ),
                           ),
                           const SizedBox(width: 16.0),
-                          if (trailingIcon != null) Icon(trailingIcon),
-                          if (trailingIcon != null) const SizedBox(width: 16.0),
+                          if (shoulShowPlaylistUtils()) ...[
+                            NamidaIconButton(
+                              icon: Broken.gallery_edit,
+                              onPressed: () async {
+                                if (playlistName == null) return;
+                                final alreadySetArtworkPossible = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
+                                final alreadySetArtwork = alreadySetArtworkPossible.existsSync() ? alreadySetArtworkPossible : null;
+
+                                void showSnackInfo(bool success) {
+                                  if (success) {
+                                    snackyy(icon: Broken.gallery_edit, message: lang.SUCCEEDED, borderColor: Colors.green);
+                                  } else {
+                                    snackyy(icon: Broken.gallery_edit, message: lang.FAILED, borderColor: Colors.red);
+                                  }
+                                }
+
+                                Future<void> onEdit() async {
+                                  final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
+                                  if (artworkFile != null) {
+                                    final didSet = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: artworkFile, artworkBytes: null);
+                                    showSnackInfo(didSet);
+                                  }
+                                }
+
+                                Future<void> onDelete() async {
+                                  final didDelete = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: null, artworkBytes: null);
+                                  showSnackInfo(didDelete);
+                                }
+
+                                if (alreadySetArtwork != null) {
+                                  NamidaNavigator.inst.navigateDialog(
+                                    dialog: CustomBlurryDialog(
+                                      title: lang.CONFIGURE,
+                                      bodyText: lang.CHOOSE,
+                                      actions: [
+                                        NamidaButton(
+                                          text: lang.DELETE.toUpperCase(),
+                                          style: ButtonStyle(
+                                            foregroundColor: WidgetStatePropertyAll(Colors.red),
+                                          ),
+                                          onPressed: () async {
+                                            await onDelete();
+                                            NamidaNavigator.inst.closeDialog();
+                                          },
+                                        ),
+                                        NamidaButton(
+                                          text: lang.EDIT.toUpperCase(),
+                                          onPressed: () async {
+                                            await onEdit();
+                                            NamidaNavigator.inst.closeDialog();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  await onEdit();
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 16.0),
+                          ] else ...[
+                            Icon(trailingIcon),
+                            const SizedBox(width: 16.0),
+                          ],
                         ],
                       ),
                     ),

@@ -206,6 +206,7 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                 final totalDirs = <String>[
                   AppDirs.PLAYLISTS,
+                  AppDirs.PLAYLISTS_ARTWORKS,
                   AppDirs.HISTORY_PLAYLIST,
                   AppDirs.LYRICS,
                   AppDirs.QUEUES,
@@ -217,6 +218,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppDirs.YT_DOWNLOAD_TASKS,
                   AppDirs.YT_STATS,
                   AppDirs.YT_PLAYLISTS,
+                  AppDirs.YT_PLAYLISTS_ARTWORKS,
                   AppDirs.YT_HISTORY_PLAYLIST,
                   AppDirs.YT_PALETTES,
                   AppDirs.YT_THUMBNAILS,
@@ -401,11 +403,13 @@ class BackupAndRestore extends SettingSubpageProvider {
                               icon: Broken.music_library_2,
                               items: [
                                 AppDirs.PLAYLISTS,
+                                AppDirs.PLAYLISTS_ARTWORKS,
                                 AppPaths.FAVOURITES_PLAYLIST,
                               ],
                               youtubeAvailable: true,
                               youtubeItems: [
                                 AppDirs.YT_PLAYLISTS,
+                                AppDirs.YT_PLAYLISTS_ARTWORKS,
                                 AppPaths.YT_LIKES_PLAYLIST,
                               ],
                             ),

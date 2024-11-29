@@ -51,6 +51,7 @@ class PlaylistTile extends StatelessWidget {
                       enableHero: enableHero,
                       size: Dimensions.playlistThumbnailSize,
                       tracks: tracksRaw.toImageTracks(),
+                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlistName),
                     ),
                     Expanded(
                       child: Column(

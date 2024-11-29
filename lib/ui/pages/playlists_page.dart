@@ -470,6 +470,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       gridCount: widget.countPerRow,
                                       showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
                                       onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
                                       widgetsInStack: [
                                         if (playlist.m3uPath != null)
                                           Positioned(

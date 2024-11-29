@@ -184,6 +184,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   String get playlistsDirectory => AppDirs.YT_PLAYLISTS;
 
   @override
+  String get playlistsArtworksDirectory => AppDirs.YT_PLAYLISTS_ARTWORKS;
+
+  @override
   Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() async {
     return await _readPlaylistFilesCompute.thready(playlistsDirectory);
   }

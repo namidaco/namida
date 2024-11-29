@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
@@ -16,6 +18,7 @@ class MultiArtworkContainer extends StatelessWidget {
   final bool fallbackToFolderCover;
   final bool reduceQuality;
   final bool enableHero;
+  final File? artworkFile;
 
   const MultiArtworkContainer({
     super.key,
@@ -28,6 +31,7 @@ class MultiArtworkContainer extends StatelessWidget {
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
     this.enableHero = true,
+    this.artworkFile,
   });
 
   @override
@@ -60,7 +64,7 @@ class MultiArtworkContainer extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.hardEdge,
             children: [
-              if (tracks != null)
+              if (artworkFile != null || tracks != null)
                 MultiArtworks(
                   disableHero: true,
                   heroTag: heroTag,
@@ -68,6 +72,7 @@ class MultiArtworkContainer extends StatelessWidget {
                   thumbnailSize: size - 6.0,
                   fallbackToFolderCover: fallbackToFolderCover,
                   reduceQuality: reduceQuality,
+                  artworkFile: artworkFile,
                 ),
               if (child != null) child!,
               if (onTopWidget != null) onTopWidget!,
