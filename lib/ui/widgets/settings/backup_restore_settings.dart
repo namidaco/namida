@@ -285,32 +285,37 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 child: ListTileWithCheckMark(
                                   active: isLocalIconChecked,
                                   titleWidget: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         title,
                                         style: context.textTheme.displayMedium,
                                       ),
-                                      Row(
-                                        children: [
-                                          AnimatedOpacity(
-                                            duration: const Duration(milliseconds: 200),
-                                            opacity: isLocalIconChecked ? 1.0 : 0.5,
-                                            child: Text(
-                                              "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
-                                              style: context.textTheme.displaySmall,
-                                            ),
-                                          ),
-                                          if (ytSize > 0 || ytUnknown)
+                                      FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
                                             AnimatedOpacity(
                                               duration: const Duration(milliseconds: 200),
-                                              opacity: isYoutubeIconChecked ? 1.0 : 0.5,
+                                              opacity: isLocalIconChecked ? 1.0 : 0.5,
                                               child: Text(
-                                                " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
+                                                "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
                                                 style: context.textTheme.displaySmall,
                                               ),
                                             ),
-                                        ],
+                                            if (ytSize > 0 || ytUnknown)
+                                              AnimatedOpacity(
+                                                duration: const Duration(milliseconds: 200),
+                                                opacity: isYoutubeIconChecked ? 1.0 : 0.5,
+                                                child: Text(
+                                                  " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
+                                                  style: context.textTheme.displaySmall,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -321,7 +326,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                               const SizedBox(width: 8.0),
                               AnimatedOpacity(
                                 duration: const Duration(milliseconds: 300),
-                                opacity: youtubeAvailable ? 1.0 : 0.6,
+                                opacity: youtubeAvailable ? 1.0 : 0.1,
                                 child: NamidaIconButton(
                                   tooltip: () => lang.YOUTUBE,
                                   horizontalPadding: 0.0,
