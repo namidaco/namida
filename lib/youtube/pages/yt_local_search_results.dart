@@ -27,10 +27,18 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
   @override
   void initState() {
     super.initState();
+    NamidaNavigator.inst.isytLocalSearchInFullPage = true;
+
     YTLocalSearchController.inst.scrollController?.dispose();
     YTLocalSearchController.inst.scrollController = ScrollController();
 
     Future(() => YTLocalSearchController.inst.search(widget.initialSearch));
+  }
+
+  @override
+  void dispose() {
+    NamidaNavigator.inst.isytLocalSearchInFullPage = false;
+    super.dispose();
   }
 
   Widget getChipButton({

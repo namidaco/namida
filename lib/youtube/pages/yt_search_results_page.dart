@@ -123,7 +123,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
 
   void _onOfflineSearchTap() {
     // if (_isLoadingLocalLookupList.value || currentSearchText == '') return;
-    NamidaNavigator.inst.isytLocalSearchInFullPage = true;
     NamidaNavigator.inst.ytLocalSearchNavigatorKey.currentState?.pushPage(
       YTLocalSearchResults(
         key: _offlineSearchPageKey,
