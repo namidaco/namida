@@ -537,8 +537,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   }
 
   @override
-  GeneralPlaylist<TrackWithDate>? prepareFavouritePlaylistFunction() {
-    return _prepareFavouritesFile(favouritePlaylistPath);
+  Future<GeneralPlaylist<TrackWithDate>?> prepareFavouritePlaylistFunction() {
+    return _prepareFavouritesFile.thready(favouritePlaylistPath);
   }
 
   static LocalPlaylist? _prepareFavouritesFile(String path) {

@@ -192,8 +192,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   }
 
   @override
-  YoutubePlaylist? prepareFavouritePlaylistFunction() {
-    return _prepareFavouritesFile(favouritePlaylistPath);
+  Future<YoutubePlaylist?> prepareFavouritePlaylistFunction() {
+    return _prepareFavouritesFile.thready(favouritePlaylistPath);
   }
 
   static YoutubePlaylist? _prepareFavouritesFile(String path) {

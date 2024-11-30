@@ -199,13 +199,13 @@ class Indexer<T extends Track> {
     return (null, null);
   }
 
-  void prepareTracksFile() {
+  Future<void> prepareTracksFile() async {
     _fetchMediaStoreTracks(); // to fill ids map
 
     final tracksDBPath = AppPaths.TRACKS_DB_INFO.file.path;
     if (File(tracksDBPath).existsAndValidSync(21 * 1024) || File(AppPaths.TRACKS_OLD).existsAndValidSync()) {
       // -- only block load if the track file exists..
-      _readTrackData();
+      await _readTrackData();
       _afterIndexing();
     } else {
       // -- otherwise it get into normally and start indexing.
@@ -1188,91 +1188,23 @@ class Indexer<T extends Track> {
     return newStats;
   }
 
-  void _readTrackData() {
-    // reading stats file containing track rating etc.
-    try {
-      _trackStatsDBManager.loadEverythingKeyed(
-        (key, value) {
-          final track = Track.fromJson(key, isVideo: value['v'] == true);
-          final stats = TrackStats.fromJsonWithoutTrack(track, value);
-          trackStatsMap.value[stats.track] = stats;
-        },
-      );
-
-      // -- migrating tracks stats json to db
-      final statsJsonFile = File(AppPaths.TRACKS_STATS_OLD);
-      if (statsJsonFile.existsSync()) {
-        final list = statsJsonFile.readAsJsonSync() as List?;
-        if (list != null) {
-          for (int i = 0; i < list.length; i++) {
-            try {
-              final item = list[i];
-              final trst = TrackStats.fromJson(item);
-              if (trackStatsMap.value[trst.track] == null) {
-                final jsonDetails = trst.toJsonWithoutTrack();
-                if (jsonDetails != null) {
-                  trackStatsMap.value[trst.track] = trst;
-                  _trackStatsDBManager.put(trst.track.path, trst.toJsonWithoutTrack());
-                }
-              }
-            } catch (_) {}
-          }
-        }
-        statsJsonFile.deleteSync();
-      }
-    } catch (_) {}
-
+  Future<void> _readTrackData() async {
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
-    /// Reading actual track file.
-    final splitconfig = _createSplitConfig();
-
-    try {
-      _tracksDBManager.loadEverythingKeyed(
-        (path, item) {
-          final trExt = TrackExtended.fromJson(
-            path,
-            item,
-            artistsSplitConfig: splitconfig.artistsConfig,
-            genresSplitConfig: splitconfig.genresConfig,
-            generalSplitConfig: splitconfig.generalConfig,
-          );
-          final track = trExt.asTrack() as T;
-          allTracksMappedByPath[track.path] = trExt;
-          tracksInfoList.value.add(track);
-          allTracksMappedByYTID.addForce(trExt.youtubeID, track);
+    await Future.wait([
+      _IndexerIsolateExecuter._readTrackStatsDataSync.thready([AppPaths.TRACKS_STATS_DB_INFO, AppPaths.TRACKS_STATS_OLD]).then(
+        (res) {
+          trackStatsMap.value = res;
         },
-      );
-
-      // -- migrating tracks json to db
-      final tracksJsonFile = File(AppPaths.TRACKS_OLD);
-      if (tracksJsonFile.existsSync()) {
-        final list = tracksJsonFile.readAsJsonSync() as List?;
-        if (list != null) {
-          for (int i = 0; i < list.length; i++) {
-            try {
-              final item = list[i];
-              final trExt = TrackExtended.fromJson(
-                item['path'] ?? '',
-                item,
-                artistsSplitConfig: splitconfig.artistsConfig,
-                genresSplitConfig: splitconfig.genresConfig,
-                generalSplitConfig: splitconfig.generalConfig,
-              );
-              final track = trExt.asTrack() as T;
-              allTracksMappedByPath[track.path] = trExt;
-              tracksInfoList.value.add(track);
-              allTracksMappedByYTID.addForce(trExt.youtubeID, track);
-              _tracksDBManager.put(track.path, trExt.toJsonWithoutPath());
-            } catch (_) {}
-          }
-        }
-        tracksJsonFile.deleteSync();
-      }
-    } catch (_) {}
-
-    tracksInfoList.refresh();
-    trackStatsMap.refresh();
+      ),
+      _IndexerIsolateExecuter._readTracksDataSync.thready([AppPaths.TRACKS_DB_INFO, AppPaths.TRACKS_OLD, _createSplitConfig()]).then(
+        (res) {
+          allTracksMappedByPath = res.allTracksMappedByPath;
+          allTracksMappedByYTID = res.allTracksMappedByYTID as Map<String, List<T>>;
+          tracksInfoList.value = res.tracksInfoList as List<T>;
+        },
+      ),
+    ]);
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
@@ -1527,7 +1459,7 @@ class Indexer<T extends Track> {
   }
 
   Future<void> calculateAllImageSizesInStorage() async {
-    final stats = await updateImageSizeInStorageIsolate.thready({
+    final stats = await _caclulateDirectoryInfoIsolate.thready({
       "dirPath": AppDirs.ARTWORKS,
       "token": RootIsolateToken.instance,
     });
@@ -1535,23 +1467,52 @@ class Indexer<T extends Track> {
     artworksSizeInStorage.value = stats.$2;
   }
 
-  static (int, int) updateImageSizeInStorageIsolate(Map p) {
+  static (int, int) _caclulateDirectoryInfoIsolate(Map p) {
     final dirPath = p["dirPath"] as String;
     final token = p["token"] as RootIsolateToken;
     BackgroundIsolateBinaryMessenger.ensureInitialized(token);
 
     int totalCount = 0;
     int totalSize = 0;
-    final dir = Directory(dirPath);
 
-    dir.listSyncSafe().loop((f) {
-      try {
-        totalSize += (f as File).lengthSync();
-        totalCount++;
-      } catch (_) {}
-    });
+    void calDirRecursive(Directory dir) {
+      dir.listSyncSafe().loop((f) {
+        if (f is File) {
+          try {
+            totalSize += (f).lengthSync();
+            totalCount++;
+          } catch (_) {}
+        } else {
+          try {
+            calDirRecursive(f as Directory);
+          } catch (_) {}
+        }
+      });
+    }
+
+    calDirRecursive(Directory(dirPath));
 
     return (totalCount, totalSize);
+  }
+
+  static int _caclulateDirectoryCountIsolate(String dirPath) {
+    int totalCount = 0;
+
+    void calDirRecursive(Directory dir) {
+      dir.listSyncSafe().loop((f) {
+        if (f is File) {
+          totalCount++;
+        } else {
+          try {
+            calDirRecursive(f as Directory);
+          } catch (_) {}
+        }
+      });
+    }
+
+    calDirRecursive(Directory(dirPath));
+
+    return totalCount;
   }
 
   Future<void> updateColorPalettesSizeInStorage({String? newPalettePath}) async {
@@ -1559,23 +1520,8 @@ class Indexer<T extends Track> {
       colorPalettesInStorage.value++;
       return;
     }
-    await _updateDirectoryStats(AppDirs.PALETTES, colorPalettesInStorage, null);
-  }
-
-  Future<void> _updateDirectoryStats(String dirPath, Rx<int>? filesCountVariable, Rx<int>? filesSizeVariable) async {
-    // resets values
-    filesCountVariable?.value = 0;
-    filesSizeVariable?.value = 0;
-
-    final dir = Directory(dirPath);
-
-    await for (final f in dir.list()) {
-      if (f is File) {
-        filesCountVariable?.value++;
-        final fs = await f.fileSize();
-        filesSizeVariable?.value += fs ?? 0;
-      }
-    }
+    final count = await _caclulateDirectoryCountIsolate.thready(AppDirs.PALETTES);
+    colorPalettesInStorage.value = count;
   }
 
   Future<void> clearImageCache() async {
@@ -1625,4 +1571,128 @@ extension _OrderedInsert<T> on List<T> {
     // If the string is not in the list, insert it at the appropriate position
     insert(left, item);
   }
+}
+
+class _IndexerIsolateExecuter {
+  /// reading stats db containing track rating etc.
+  static Map<Track, TrackStats> _readTrackStatsDataSync(List paramsList) {
+    final statsDbInfo = paramsList[0] as DbWrapperFileInfo;
+    final oldJsonFilePath = paramsList[1] as String;
+
+    NamicoDBWrapper.initialize();
+    late final statsDBManager = DBWrapper.openFromInfo(fileInfo: statsDbInfo, createIfNotExist: true);
+
+    final trackStatsMap = <Track, TrackStats>{};
+
+    try {
+      statsDBManager.loadEverythingKeyed(
+        (key, value) {
+          final track = Track.fromJson(key, isVideo: value['v'] == true);
+          final stats = TrackStats.fromJsonWithoutTrack(track, value);
+          trackStatsMap[stats.track] = stats;
+        },
+      );
+
+      // -- migrating tracks stats json to db
+      final statsJsonFile = File(oldJsonFilePath);
+      if (statsJsonFile.existsSync()) {
+        final list = statsJsonFile.readAsJsonSync() as List?;
+        if (list != null) {
+          for (int i = 0; i < list.length; i++) {
+            try {
+              final item = list[i];
+              final trst = TrackStats.fromJson(item);
+              if (trackStatsMap[trst.track] == null) {
+                final jsonDetails = trst.toJsonWithoutTrack();
+                if (jsonDetails != null) {
+                  trackStatsMap[trst.track] = trst;
+                  statsDBManager.put(trst.track.path, trst.toJsonWithoutTrack());
+                }
+              }
+            } catch (_) {}
+          }
+        }
+        statsJsonFile.deleteSync();
+      }
+    } catch (_) {}
+    statsDBManager.close();
+    return trackStatsMap;
+  }
+
+  /// Reading actual tracks db.
+  static _TracksLoadResult _readTracksDataSync(List paramsList) {
+    final tracksDbInfo = paramsList[0] as DbWrapperFileInfo;
+    final oldJsonFilePath = paramsList[1] as String;
+    final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
+
+    NamicoDBWrapper.initialize();
+    late final tracksDBManager = DBWrapper.openFromInfo(fileInfo: tracksDbInfo, createIfNotExist: true);
+
+    final allTracksMappedByPath = <String, TrackExtended>{};
+    final tracksInfoList = <Track>[];
+    var allTracksMappedByYTID = <String, List<Track>>{};
+
+    try {
+      tracksDBManager.loadEverythingKeyed(
+        (path, item) {
+          final trExt = TrackExtended.fromJson(
+            path,
+            item,
+            artistsSplitConfig: splitconfig.artistsConfig,
+            genresSplitConfig: splitconfig.genresConfig,
+            generalSplitConfig: splitconfig.generalConfig,
+          );
+          final track = trExt.asTrack();
+          allTracksMappedByPath[track.path] = trExt;
+          tracksInfoList.add(track);
+          allTracksMappedByYTID.addForce(trExt.youtubeID, track);
+        },
+      );
+
+      // -- migrating tracks json to db
+      final tracksJsonFile = File(oldJsonFilePath);
+      if (tracksJsonFile.existsSync()) {
+        final list = tracksJsonFile.readAsJsonSync() as List?;
+        if (list != null) {
+          for (int i = 0; i < list.length; i++) {
+            try {
+              final item = list[i];
+              final trExt = TrackExtended.fromJson(
+                item['path'] ?? '',
+                item,
+                artistsSplitConfig: splitconfig.artistsConfig,
+                genresSplitConfig: splitconfig.genresConfig,
+                generalSplitConfig: splitconfig.generalConfig,
+              );
+              final track = trExt.asTrack();
+              allTracksMappedByPath[track.path] = trExt;
+              tracksInfoList.add(track);
+              allTracksMappedByYTID.addForce(trExt.youtubeID, track);
+              tracksDBManager.put(track.path, trExt.toJsonWithoutPath());
+            } catch (_) {}
+          }
+        }
+        tracksJsonFile.deleteSync();
+      }
+    } catch (_) {}
+    tracksDBManager.close();
+
+    return _TracksLoadResult(
+      allTracksMappedByPath: allTracksMappedByPath,
+      tracksInfoList: tracksInfoList,
+      allTracksMappedByYTID: allTracksMappedByYTID,
+    );
+  }
+}
+
+class _TracksLoadResult {
+  final Map<String, TrackExtended> allTracksMappedByPath;
+  final List<Track> tracksInfoList;
+  final Map<String, List<Track>> allTracksMappedByYTID;
+
+  const _TracksLoadResult({
+    required this.allTracksMappedByPath,
+    required this.tracksInfoList,
+    required this.allTracksMappedByYTID,
+  });
 }

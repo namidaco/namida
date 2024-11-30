@@ -846,6 +846,7 @@ class _VideoControllerIsolateFunctions {
         localVids[nv.path] = nv;
       },
     );
+    db.close();
     return localVids;
   }
 
@@ -905,7 +906,7 @@ class _VideoControllerIsolateFunctions {
         }
       },
     );
-
+    db.close();
     return {
       "validMap": validMap,
       "newIdsMap": newIdsMap,

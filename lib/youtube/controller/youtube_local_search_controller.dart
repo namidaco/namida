@@ -244,6 +244,7 @@ class YTLocalSearchController with PortsProvider<Map> {
             }
           } catch (_) {}
         });
+        db.close();
       },
     );
     lookupListVideoStreamsMapCacheDetails.loop(
@@ -258,6 +259,7 @@ class YTLocalSearchController with PortsProvider<Map> {
             }
           } catch (_) {}
         });
+        db.close();
       },
     );
 

@@ -50,13 +50,16 @@ class YoutubeSubscriptionsController {
     if (saveToStorage) await saveFile();
   }
 
-  void loadSubscriptionsFileSync() {
+  Future<void> loadSubscriptionsFileAsync() async {
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
     if (!file.existsSync()) return;
+    final res = await _parseSubscriptionsFile.thready(file);
+    _availableChannels.value = res;
+  }
 
+  static Map<String, YoutubeSubscription> _parseSubscriptionsFile(File file) {
     final res = file.readAsJsonSync() as Map?;
-
-    _availableChannels.value = (res?.cast<String, Map>())?.map(
+    return (res?.cast<String, Map>())?.map(
           (key, value) => MapEntry(
             key,
             YoutubeSubscription.fromJson(

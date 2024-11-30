@@ -148,8 +148,22 @@ void mainInitialization() async {
 
   settings.prepareAllSettings();
 
-  if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile();
-  await Language.initialize();
+  YoutubeInfoController.initialize(); // for queue to display properly
+  YoutubeAccountController.initialize();
+
+  await Future.wait([
+    if (!shouldShowOnBoarding) ...[
+      Indexer.inst.prepareTracksFile(),
+      Player.inst.initializePlayer().then((_) => QueueController.inst.prepareLatestQueueAsync()),
+    ] else ...[
+      Player.inst.initializePlayer(),
+    ],
+    Language.initialize(),
+    PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
+    YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
+    YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
+    YoutubeController.inst.loadDownloadTasksInfoFileAsync(),
+  ]);
 
   ConnectivityController.inst.initialize();
   NamidaChannel.inst.setCanEnterPip(settings.enablePip.value);
@@ -167,27 +181,18 @@ void mainInitialization() async {
   const StorageCacheManager().trimExtraFiles();
 
   NamidaDeviceInfo.fetchDeviceId();
-  YoutubeInfoController.initialize();
-  YoutubeAccountController.initialize();
 
-  QueueController.inst.prepareAllQueuesFile();
-
-  await Player.inst.initializePlayer();
-  PlaylistController.inst.prepareAllPlaylists();
   VideoController.inst.initialize();
 
+  PlaylistController.inst.prepareAllPlaylists();
+  YoutubePlaylistController.inst.prepareAllPlaylists();
+  QueueController.inst.prepareAllQueuesFile();
+
+  CurrentColor.inst.initialize();
   FlutterNativeSplash.remove();
 
   HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());
   YoutubeHistoryController.inst.prepareHistoryFile();
-
-  PlaylistController.inst.prepareDefaultPlaylistsFile();
-  if (!shouldShowOnBoarding) QueueController.inst.prepareLatestQueueSync();
-
-  YoutubePlaylistController.inst.prepareDefaultPlaylistsFile();
-  YoutubeSubscriptionsController.inst.loadSubscriptionsFileSync();
-  YoutubeController.inst.loadDownloadTasksInfoFileSync();
-  YoutubePlaylistController.inst.prepareAllPlaylists();
 
   YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.
 
@@ -197,14 +202,12 @@ void mainInitialization() async {
   NamidaNavigator.inst.setDefaultSystemUI();
   FlutterDisplayMode.setHighRefreshRate().catchError((_) {});
 
-  //
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
   NotificationService.init();
   NotificationService.cancelAll();
   FlutterVolumeController.updateShowSystemUI(false);
-  CurrentColor.inst.initialize();
 
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
 

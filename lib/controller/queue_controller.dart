@@ -228,15 +228,28 @@ class QueueController {
   }
 
   /// Assigns the last queue to the [Player]
-  void prepareLatestQueueSync() {
-    int index = 0;
-    final latestQueue = <Playable>[];
+  Future<void> prepareLatestQueueAsync() async {
+    final latestQueue = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
+    if (latestQueue == null || latestQueue.isEmpty) return;
 
-    // -- Reading file.
+    int index = settings.extra.lastPlayedIndex;
+    if (index > latestQueue.length - 1) index = 0;
+
+    Player.inst.playOrPause(
+      index,
+      latestQueue,
+      QueueSource.playerQueue,
+      startPlaying: false,
+      updateQueue: false,
+      maximumItems: null,
+    );
+  }
+
+  static List<Playable>? _prepareLatestQueueSync(String filePath) {
+    final latestQueue = <Playable>[];
     try {
-      final items = File(AppPaths.LATEST_QUEUE).readAsJsonSync() as List?;
+      final items = File(filePath).readAsJsonSync() as List?;
       if (items != null) {
-        index = settings.extra.lastPlayedIndex;
         items.loop((e) {
           final type = e['t'] as String;
           final item = e['p'];
@@ -244,17 +257,7 @@ class QueueController {
         });
       }
     } catch (_) {}
-
-    if (latestQueue.isEmpty) return;
-
-    Player.inst.playOrPause(
-      index > latestQueue.length - 1 ? 0 : index,
-      latestQueue,
-      QueueSource.playerQueue,
-      startPlaying: false,
-      updateQueue: false,
-      maximumItems: null,
-    );
+    return latestQueue;
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {

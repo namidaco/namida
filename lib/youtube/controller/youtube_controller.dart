@@ -98,7 +98,7 @@ class YoutubeController {
   /// {groupName: dateMS}
   ///
   /// used to sort group names by latest edited.
-  final latestEditedGroupDownloadTask = <DownloadTaskGroupName, int>{};
+  var latestEditedGroupDownloadTask = <DownloadTaskGroupName, int>{};
 
   /// Used to keep track of existing downloaded files, more performant than real-time checking.
   ///
@@ -323,114 +323,14 @@ class YoutubeController {
   String cleanupFilename(String filename) => filename.replaceAll(RegExp(cleanupFilenameRegex, caseSensitive: false), '_');
 
   // -- things here are not refreshed. should be called in startup only.
-  void loadDownloadTasksInfoFileSync() {
-    final allFiles = Directory(AppDirs.YT_DOWNLOAD_TASKS).listSyncSafe();
-    final oldJsonFiles = <File>[];
-    final newDBFiles = <File>[];
-    allFiles.loop((item) {
-      if (item is File) item.path.endsWith('.json') ? oldJsonFiles.add(item) : newDBFiles.add(item);
-    });
-
-    DownloadTaskGroupName fileToGroupName(File file) {
-      final filenameWOExt = file.path.getFilenameWOExt;
-      return filenameWOExt.startsWith('.') ? DownloadTaskGroupName.defaulty() : DownloadTaskGroupName(groupName: filenameWOExt);
-    }
-
-    // -- migrating old .json files to .db
-    oldJsonFiles.loop(
-      (file) {
-        final group = fileToGroupName(file);
-
-        try {
-          final res = file.readAsJsonSync() as Map<String, dynamic>?;
-          if (res != null) {
-            final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true);
-            for (final r in res.entries) {
-              downloadTasksGroupDB.put(r.key, r.value);
-            }
-            final downloadTasksGroupDBFile = downloadTasksGroupDB.fileInfo.file;
-            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDBFile.path) == null;
-            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDBFile);
-            try {
-              final originalFileDates = file.statSync();
-              downloadTasksGroupDBFile.setLastModifiedSync(originalFileDates.modified);
-              downloadTasksGroupDBFile.setLastAccessedSync(originalFileDates.accessed);
-            } catch (_) {}
-          }
-        } catch (_) {}
-
-        try {
-          file.deleteSync();
-        } catch (_) {}
-      },
-    );
-
-    bool hadEmptyGroups = false;
-
-    newDBFiles.loop(
-      (dbFile) {
-        final group = fileToGroupName(dbFile);
-
-        if (youtubeDownloadTasksMap.value[group] == null) {
-          final fileModified = dbFile.statSync().modified;
-          youtubeDownloadTasksMap.value[group] = {};
-          downloadedFilesMap.value[group] = {};
-          if (fileModified != DateTime(1970)) {
-            latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
-          }
-        }
-
-        try {
-          final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(group.groupName);
-          downloadTasksGroupDB.loadEverything((itemMap) {
-            final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
-            final saveDirPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, group.groupName);
-            final file = FileParts.join(saveDirPath, ytitem.filename.filename);
-            final fileExists = file.existsSync();
-            final itemFileName = ytitem.filename;
-            youtubeDownloadTasksMap.value[group]![itemFileName] = ytitem;
-            downloadedFilesMap.value[group]![itemFileName] = fileExists ? file : null;
-            if (!fileExists) {
-              final aFile = FileParts.join(saveDirPath, ".tempa_${itemFileName.filename}");
-              final vFile = FileParts.join(saveDirPath, ".tempv_${itemFileName.filename}");
-              if (aFile.existsSync()) {
-                downloadsAudioProgressMap.value[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
-                downloadsAudioProgressMap.value[ytitem.id]!.value[itemFileName] = DownloadProgress(
-                  progress: aFile.fileSizeSync() ?? 0,
-                  totalProgress: 0,
-                );
-              }
-              if (vFile.existsSync()) {
-                downloadsVideoProgressMap.value[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
-                downloadsVideoProgressMap.value[ytitem.id]!.value[itemFileName] = DownloadProgress(
-                  progress: vFile.fileSizeSync() ?? 0,
-                  totalProgress: 0,
-                );
-              }
-            }
-          });
-        } catch (_) {}
-        if (!hadEmptyGroups && (youtubeDownloadTasksMap.value[group]?.isEmpty ?? true)) {
-          hadEmptyGroups = true;
-        }
-      },
-    );
-
-    // we loop again to give a chance for duplicated groups, if any.
-    if (hadEmptyGroups) {
-      newDBFiles.loop((dbFile) {
-        final group = fileToGroupName(dbFile);
-        if (youtubeDownloadTasksMap.value[group]?.isEmpty ?? true) {
-          // db is empty, delete it. we don't delete immediately at runtime bcz it might be accessed again after deleting and many bad things would happen.
-          youtubeDownloadTasksMap.value.remove(group);
-          downloadedFilesMap.value.remove(group);
-          latestEditedGroupDownloadTask.remove(group);
-          try {
-            dbFile.deleteSync();
-          } catch (_) {}
-        }
-      });
-    }
+  Future<void> loadDownloadTasksInfoFileAsync() async {
+    final params = _DownloadTasksLoadParams(tasksDatabasesPath: AppDirs.YT_DOWNLOAD_TASKS, downloadLocation: AppDirs.YOUTUBE_DOWNLOADS);
+    final res = await _IsolateFunctions.loadDownloadTasksInfoFileSync.thready(params);
+    youtubeDownloadTasksMap.value = res.youtubeDownloadTasksMap;
+    downloadedFilesMap.value = res.downloadedFilesMap;
+    downloadsVideoProgressMap.value = res.downloadsVideoProgressMap;
+    downloadsAudioProgressMap.value = res.downloadsAudioProgressMap;
+    latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask;
   }
 
   File? doesIDHasFileDownloaded(String id) {
@@ -1474,4 +1374,165 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     _progressPorts[path]?.close();
     _progressPorts[path] = null;
   }
+}
+
+class _IsolateFunctions {
+  static _DownloadTaskInitWrapper loadDownloadTasksInfoFileSync(_DownloadTasksLoadParams params) {
+    NamicoDBWrapper.initialize();
+
+    late final downloadTasksMainDBManager = DBWrapperMain(params.tasksDatabasesPath);
+
+    final youtubeDownloadTasksMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, YoutubeItemDownloadConfig>>{};
+    final downloadedFilesMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File?>>{};
+    final downloadsVideoProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{};
+    final downloadsAudioProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{};
+    final latestEditedGroupDownloadTask = <DownloadTaskGroupName, int>{};
+
+    final allFiles = Directory(params.tasksDatabasesPath).listSyncSafe();
+    final oldJsonFiles = <File>[];
+    final newDBFiles = <File>[];
+    allFiles.loop((item) {
+      if (item is File) item.path.endsWith('.json') ? oldJsonFiles.add(item) : newDBFiles.add(item);
+    });
+
+    DownloadTaskGroupName fileToGroupName(File file) {
+      final filenameWOExt = file.path.getFilenameWOExt;
+      return filenameWOExt.startsWith('.') ? DownloadTaskGroupName.defaulty() : DownloadTaskGroupName(groupName: filenameWOExt);
+    }
+
+    // -- migrating old .json files to .db
+    oldJsonFiles.loop(
+      (file) {
+        final group = fileToGroupName(file);
+
+        try {
+          final res = file.readAsJsonSync() as Map<String, dynamic>?;
+          if (res != null) {
+            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true);
+            for (final r in res.entries) {
+              downloadTasksGroupDB.put(r.key, r.value);
+            }
+            final downloadTasksGroupDBFile = downloadTasksGroupDB.fileInfo.file;
+            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDBFile.path) == null;
+            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDBFile);
+            try {
+              final originalFileDates = file.statSync();
+              downloadTasksGroupDBFile.setLastModifiedSync(originalFileDates.modified);
+              downloadTasksGroupDBFile.setLastAccessedSync(originalFileDates.accessed);
+            } catch (_) {}
+          }
+        } catch (_) {}
+
+        try {
+          file.deleteSync();
+        } catch (_) {}
+      },
+    );
+
+    bool hadEmptyGroups = false;
+    final dbsThatHadError = <DownloadTaskGroupName, bool>{};
+
+    newDBFiles.loop(
+      (dbFile) {
+        final group = fileToGroupName(dbFile);
+
+        if (youtubeDownloadTasksMap[group] == null) {
+          final fileModified = dbFile.statSync().modified;
+          youtubeDownloadTasksMap[group] = {};
+          downloadedFilesMap[group] = {};
+          if (fileModified != DateTime(1970)) {
+            latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
+          }
+        }
+
+        try {
+          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName);
+          downloadTasksGroupDB.loadEverything((itemMap) {
+            final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
+            final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);
+            final file = FileParts.join(saveDirPath, ytitem.filename.filename);
+            final fileExists = file.existsSync();
+            final itemFileName = ytitem.filename;
+            youtubeDownloadTasksMap[group]![itemFileName] = ytitem;
+            downloadedFilesMap[group]![itemFileName] = fileExists ? file : null;
+            if (!fileExists) {
+              final aFile = FileParts.join(saveDirPath, ".tempa_${itemFileName.filename}");
+              final vFile = FileParts.join(saveDirPath, ".tempv_${itemFileName.filename}");
+              if (aFile.existsSync()) {
+                downloadsAudioProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+                downloadsAudioProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
+                  progress: aFile.fileSizeSync() ?? 0,
+                  totalProgress: 0,
+                );
+              }
+              if (vFile.existsSync()) {
+                downloadsVideoProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+                downloadsVideoProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
+                  progress: vFile.fileSizeSync() ?? 0,
+                  totalProgress: 0,
+                );
+              }
+            }
+          });
+        } catch (_) {
+          dbsThatHadError[group] = true;
+        }
+        if (!hadEmptyGroups && (youtubeDownloadTasksMap[group]?.isEmpty ?? true)) {
+          hadEmptyGroups = true;
+        }
+      },
+    );
+
+    // we loop again to give a chance for duplicated groups, if any.
+    if (hadEmptyGroups) {
+      newDBFiles.loop((dbFile) {
+        final group = fileToGroupName(dbFile);
+        if (dbsThatHadError[group] != true && (youtubeDownloadTasksMap[group]?.isEmpty ?? true)) {
+          // db is empty, delete it. we don't delete immediately at runtime bcz it might be accessed again after deleting and many bad things would happen.
+          youtubeDownloadTasksMap.remove(group);
+          downloadedFilesMap.remove(group);
+          latestEditedGroupDownloadTask.remove(group);
+          try {
+            dbFile.deleteSync();
+          } catch (_) {}
+        }
+      });
+    }
+
+    downloadTasksMainDBManager.closeAll();
+
+    return _DownloadTaskInitWrapper(
+      youtubeDownloadTasksMap: youtubeDownloadTasksMap,
+      downloadedFilesMap: downloadedFilesMap,
+      downloadsVideoProgressMap: downloadsVideoProgressMap,
+      downloadsAudioProgressMap: downloadsAudioProgressMap,
+      latestEditedGroupDownloadTask: latestEditedGroupDownloadTask,
+    );
+  }
+}
+
+class _DownloadTaskInitWrapper {
+  final Map<DownloadTaskGroupName, Map<DownloadTaskFilename, YoutubeItemDownloadConfig>> youtubeDownloadTasksMap;
+  final Map<DownloadTaskGroupName, Map<DownloadTaskFilename, File?>> downloadedFilesMap;
+  final Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>> downloadsVideoProgressMap;
+  final Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>> downloadsAudioProgressMap;
+  final Map<DownloadTaskGroupName, int> latestEditedGroupDownloadTask;
+
+  const _DownloadTaskInitWrapper({
+    required this.youtubeDownloadTasksMap,
+    required this.downloadedFilesMap,
+    required this.downloadsVideoProgressMap,
+    required this.downloadsAudioProgressMap,
+    required this.latestEditedGroupDownloadTask,
+  });
+}
+
+class _DownloadTasksLoadParams {
+  final String tasksDatabasesPath;
+  final String downloadLocation;
+
+  const _DownloadTasksLoadParams({
+    required this.tasksDatabasesPath,
+    required this.downloadLocation,
+  });
 }

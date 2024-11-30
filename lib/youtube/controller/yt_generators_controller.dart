@@ -212,6 +212,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
             } catch (_) {}
           },
         );
+        db.close();
       },
     );
     lookupListVideoStreamsMapCacheDetails.loop((db) {
@@ -237,6 +238,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
           } catch (_) {}
         },
       );
+      db.close();
     });
 
     Directory(statsDir).listSyncSafe().loop((f) {
