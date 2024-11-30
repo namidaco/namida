@@ -839,9 +839,7 @@ class Indexer<T extends Track> {
     });
 
     if (updateArtwork) {
-      imageCache.clear();
-      imageCache.clearLiveImages();
-      AudioService.evictArtworkCache();
+      Indexer.clearMemoryImageCache();
     }
 
     tracksMissing.loop((e) => onProgress(false));
@@ -891,9 +889,7 @@ class Indexer<T extends Track> {
     final newTracks = <T>[];
 
     if (artworkWasEdited) {
-      imageCache.clear();
-      imageCache.clearLiveImages();
-      AudioService.evictArtworkCache();
+      Indexer.clearMemoryImageCache();
     }
 
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
@@ -1599,6 +1595,12 @@ class Indexer<T extends Track> {
 
   static SplitArtistGenreConfigsWrapper _createSplitConfig() {
     return SplitArtistGenreConfigsWrapper.settings();
+  }
+
+  static void clearMemoryImageCache() {
+    imageCache.clear();
+    imageCache.clearLiveImages();
+    AudioService.evictArtworkCache();
   }
 }
 

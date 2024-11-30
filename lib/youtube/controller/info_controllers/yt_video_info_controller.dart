@@ -63,6 +63,10 @@ class _VideoInfoController {
     return res;
   }
 
+  Future<File?> fetchMusicVideoThumbnailToFile(String videoId, String filePath) {
+    return YoutiPie.video.fetchMusicVideoThumbnailToFile(id: videoId, filePath: filePath);
+  }
+
   /// Returns cached streams result if exist. you need to ensure that urls didn't expire ![VideoStreamsResult.hasExpired] before consuming them.
   ///
   /// Enable [bypassJSCheck] if you gurantee using [VideoStreamsResult.info] only.

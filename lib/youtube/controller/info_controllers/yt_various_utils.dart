@@ -124,6 +124,38 @@ class _YoutubeInfoUtils {
     return _tempInfoVideoDurationSeconds[videoId] ??= getStreamInfoSync(videoId)?.durSeconds ?? //
         _getVideoStreamResultSync(videoId)?.info?.durSeconds;
   }
+
+  // ==== async methods ====
+
+  Future<StreamInfoItem?> getStreamInfoAsync(String videoId) {
+    return YoutiPie.cacheBuilder.forStreamInfoItem(videoId: videoId).readAsync();
+  }
+
+  Future<VideoStreamsResult?> _getVideoStreamResultAsync(String videoId) {
+    return YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false);
+  }
+
+  Future<YoutiPieVideoPageResult?> _getVideoPageResultAsync(String videoId) {
+    return YoutubeInfoController.video.fetchVideoPage(videoId);
+  }
+
+  Future<String?> getVideoNameAsync(String videoId) async {
+    String? name = tempVideoInfosFromStreams[videoId]?.title.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.title.nullifyEmpty();
+    if (name != null) return name;
+    final title = await getStreamInfoAsync(videoId).then((value) => value?.title.nullifyEmpty()) ??
+        await _getVideoStreamResultAsync(videoId).then((value) => value?.info?.title.nullifyEmpty()) ?? //
+        await _getVideoPageResultAsync(videoId).then((value) => value?.videoInfo?.title.nullifyEmpty());
+    return _tempInfoTitle[videoId] ??= title;
+  }
+
+  Future<String?> getVideoChannelNameAsync(String videoId) async {
+    String? name = tempVideoInfosFromStreams[videoId]?.channelName?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channel.nullifyEmpty();
+    if (name != null) return name;
+    final channelName = await getStreamInfoAsync(videoId).then((value) => value?.channelName?.nullifyEmpty()) ??
+        await _getVideoStreamResultAsync(videoId).then((value) => value?.info?.channelName?.nullifyEmpty()) ?? //
+        await _getVideoPageResultAsync(videoId).then((value) => value?.channelInfo?.title.nullifyEmpty());
+    return _tempInfoChannelTitle[videoId] ??= channelName;
+  }
 }
 
 extension _StringChecker on String {

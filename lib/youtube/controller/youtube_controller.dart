@@ -752,17 +752,36 @@ class YoutubeController {
         onInitialAudioFileSize: (initialFileSize) {},
         ffmpegTags: config.ffmpegTags,
         onAudioFileReady: (audioFile) async {
-          final thumbnailFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-            id: videoID.videoId,
+          final videoId = videoID.videoId;
+          File? thumbnailFile;
+          bool isTempThumbnail = false;
+          try {
+            // -- try getting cropped version if required
+            final channelName = await YoutubeInfoController.utils.getVideoChannelNameAsync(videoId);
+            const topic = '- Topic';
+            if (channelName != null && channelName.endsWith(topic)) {
+              final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
+              final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
+              if (thumbFile != null) {
+                thumbnailFile = thumbFile;
+                isTempThumbnail = true;
+              }
+            }
+          } catch (_) {}
+          thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+            id: videoId,
             isImportantInCache: true,
             type: ThumbnailType.video,
           );
           await YTUtils.writeAudioMetadata(
-            videoId: videoID.videoId,
+            videoId: videoId,
             audioFile: audioFile,
             thumbnailFile: thumbnailFile,
             tagsMap: config.ffmpegTags,
           );
+          if (isTempThumbnail) {
+            thumbnailFile?.tryDeleting();
+          }
         },
         onVideoFileReady: (videoFile) async {
           await NamidaFFMPEG.inst.editMetadata(

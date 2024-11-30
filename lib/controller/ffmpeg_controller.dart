@@ -11,6 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 import 'platform/ffmpeg_executer/ffmpeg_executer.dart';
@@ -323,21 +324,43 @@ class NamidaFFMPEG {
               onMinSizeTrigger: () => null,
             );
         if (tr == null) continue;
-        final ytId = tr.youtubeID;
-        if (ytId.isEmpty) continue;
+        final videoId = tr.youtubeID;
+        if (videoId.isEmpty) continue;
 
-        File? cachedThumbnail;
+        File? thumbnailFile;
+        bool isTempThumbnail = false;
+        try {
+          // -- try getting cropped version if required
+          final channelName = await YoutubeInfoController.utils.getVideoChannelNameAsync(videoId);
+          const topic = '- Topic';
+          if (channelName != null && channelName.endsWith(topic)) {
+            final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
+            final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
+            if (thumbFile != null) {
+              thumbnailFile = thumbFile;
+              isTempThumbnail = true;
+            }
+          }
+        } catch (_) {}
 
-        cachedThumbnail = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: ytId, type: ThumbnailType.video);
+        thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+          id: videoId,
+          isImportantInCache: true,
+          type: ThumbnailType.video,
+        );
 
-        if (cachedThumbnail == null) {
+        if (thumbnailFile == null) {
           currentFailed++;
         } else {
           final didUpdate = await editAudioThumbnail(
             audioPath: filee.path,
-            thumbnailPath: cachedThumbnail.path,
+            thumbnailPath: thumbnailFile.path,
           );
           if (!didUpdate) currentFailed++;
+
+          if (isTempThumbnail) {
+            thumbnailFile.tryDeleting();
+          }
         }
 
         currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(
