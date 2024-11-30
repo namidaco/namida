@@ -65,9 +65,29 @@ class DownloadTaskVideoId {
 class DownloadTaskGroupName {
   final String groupName;
 
-  const DownloadTaskGroupName({
-    required this.groupName,
-  });
+  DownloadTaskGroupName({
+    required String groupName,
+  }) : this.groupName = _sanitize(groupName);
+
+  static String _sanitize(String name) {
+    int charsToRemove = 0;
+    for (int i = 0; i < name.length; i++) {
+      var c = name[i];
+      if (c == '.') {
+        charsToRemove++;
+      } else {
+        break;
+      }
+    }
+    if (charsToRemove > 0) {
+      if (charsToRemove >= name.length) {
+        return '';
+      } else {
+        return name.substring(charsToRemove);
+      }
+    }
+    return name;
+  }
 
   const DownloadTaskGroupName.defaulty() : groupName = '';
 

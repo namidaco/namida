@@ -333,7 +333,7 @@ class YoutubeController {
 
     DownloadTaskGroupName fileToGroupName(File file) {
       final filenameWOExt = file.path.getFilenameWOExt;
-      return DownloadTaskGroupName(groupName: filenameWOExt == '.' ? '' : filenameWOExt);
+      return filenameWOExt.startsWith('.') ? DownloadTaskGroupName.defaulty() : DownloadTaskGroupName(groupName: filenameWOExt);
     }
 
     // -- migrating old .json files to .db
@@ -365,12 +365,14 @@ class YoutubeController {
       },
     );
 
+    bool hadEmptyGroups = false;
+
     newDBFiles.loop(
-      (file) {
-        final group = fileToGroupName(file);
+      (dbFile) {
+        final group = fileToGroupName(dbFile);
 
         if (youtubeDownloadTasksMap.value[group] == null) {
-          final fileModified = file.statSync().modified;
+          final fileModified = dbFile.statSync().modified;
           youtubeDownloadTasksMap.value[group] = {};
           downloadedFilesMap.value[group] = {};
           if (fileModified != DateTime(1970)) {
@@ -408,18 +410,27 @@ class YoutubeController {
             }
           });
         } catch (_) {}
+        if (!hadEmptyGroups && (youtubeDownloadTasksMap.value[group]?.isEmpty ?? true)) {
+          hadEmptyGroups = true;
+        }
+      },
+    );
 
+    // we loop again to give a chance for duplicated groups, if any.
+    if (hadEmptyGroups) {
+      newDBFiles.loop((dbFile) {
+        final group = fileToGroupName(dbFile);
         if (youtubeDownloadTasksMap.value[group]?.isEmpty ?? true) {
           // db is empty, delete it. we don't delete immediately at runtime bcz it might be accessed again after deleting and many bad things would happen.
           youtubeDownloadTasksMap.value.remove(group);
           downloadedFilesMap.value.remove(group);
           latestEditedGroupDownloadTask.remove(group);
           try {
-            file.deleteSync();
+            dbFile.deleteSync();
           } catch (_) {}
         }
-      },
-    );
+      });
+    }
   }
 
   File? doesIDHasFileDownloaded(String id) {

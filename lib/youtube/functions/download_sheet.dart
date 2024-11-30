@@ -722,12 +722,13 @@ Future<void> showDownloadVideoBottomSheet({
                                         )
                                       : const BoxDecoration(),
                                   onTap: () async {
+                                    final group = DownloadTaskGroupName(groupName: groupName);
                                     final itemConfig = YoutubeItemDownloadConfig(
                                       originalIndex: originalIndex,
                                       totalLength: totalLength,
                                       playlistId: playlistId,
                                       id: DownloadTaskVideoId(videoId: videoId),
-                                      groupName: DownloadTaskGroupName(groupName: groupName),
+                                      groupName: group,
                                       filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
                                       ffmpegTags: tagsMap,
                                       fileDate: videoDateTime,
@@ -752,7 +753,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                         downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
                                         addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-                                        groupName: DownloadTaskGroupName(groupName: groupName),
+                                        groupName: group,
                                         itemsConfig: [itemConfig],
                                       );
                                     }

@@ -84,7 +84,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void onRenameAllTasks(String? defaultFilename) {
-    widget.ids.mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, defaultFilename: defaultFilename)).toList();
+    final group = DownloadTaskGroupName(groupName: _groupName.value);
+    widget.ids.mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, group, defaultFilename: defaultFilename)).toList();
   }
 
   void _updateAudioOnly(bool audioOnly) {
@@ -93,7 +94,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _configMap.refresh();
   }
 
-  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, {String? defaultFilename}) {
+  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, DownloadTaskGroupName group, {String? defaultFilename}) {
     final streamInfoItem = widget.infoLookup[id];
     final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
     final filename =
@@ -103,7 +104,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
       playlistId: widget.playlistInfo?.id,
       id: DownloadTaskVideoId(videoId: id),
-      groupName: DownloadTaskGroupName(groupName: _groupName.value),
+      groupName: group,
       filename: DownloadTaskFilename.create(initialFilename: filename),
       ffmpegTags: {},
       fileDate: null,
@@ -624,6 +625,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       onPressed: () async {
                         if (_selectedList.isEmpty) return;
                         if (!await requestManageStoragePermission()) return;
+                        final group = DownloadTaskGroupName(groupName: _groupName.value);
                         final itemsConfig = _selectedList.value
                             .map(
                               (id) =>
@@ -633,12 +635,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                   _getDummyDownloadConfig(
                                     id,
                                     widget.ids.indexWhere((element) => element.id == id),
+                                    group,
                                   ),
                             )
                             .toList();
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
-                          groupName: DownloadTaskGroupName(groupName: _groupName.value),
+                          groupName: group,
                           itemsConfig: itemsConfig,
                           useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
                           autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
