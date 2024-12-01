@@ -148,17 +148,10 @@ void mainInitialization() async {
 
   settings.prepareAllSettings();
 
-  YoutubeInfoController.initialize(); // for queue to display properly
-  YoutubeAccountController.initialize();
-
   await Future.wait([
-    if (!shouldShowOnBoarding) ...[
-      Indexer.inst.prepareTracksFile(),
-      Player.inst.initializePlayer().then((_) => QueueController.inst.prepareLatestQueueAsync()),
-    ] else ...[
-      Player.inst.initializePlayer(),
-    ],
+    if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
     Language.initialize(),
+    Player.inst.initializePlayer(),
     PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
@@ -178,11 +171,15 @@ void mainInitialization() async {
     BackupController.inst.checkForAutoBackup();
   }
 
+  VideoController.inst.initialize();
   const StorageCacheManager().trimExtraFiles();
 
   NamidaDeviceInfo.fetchDeviceId();
 
-  VideoController.inst.initialize();
+  YoutubeInfoController.initialize(); // for queue to display properly
+  YoutubeAccountController.initialize();
+
+  await QueueController.inst.prepareLatestQueueAsync();
 
   PlaylistController.inst.prepareAllPlaylists();
   YoutubePlaylistController.inst.prepareAllPlaylists();
