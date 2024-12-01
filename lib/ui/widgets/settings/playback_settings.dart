@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:audio_service/audio_service.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -18,6 +19,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum _PlaybackSettingsKeys {
   enableVideoPlayback,
@@ -375,9 +378,18 @@ class PlaybackSettings extends SettingSubpageProvider {
               final willBeTrue = !value;
               settings.player.save(replayGain: !value);
               if (willBeTrue) {
-                final gain = Player.inst.currentTrack?.track.toTrackExt().gainData?.calculateGainAsVolume() ?? 0.75;
-                settings.player.volume.value = gain;
-                await Player.inst.setVolume(gain);
+                double? vol;
+                final currentItem = Player.inst.currentItem.value;
+                if (currentItem is Track) {
+                  vol = currentItem.toTrackExt().gainData?.calculateGainAsVolume();
+                } else if (currentItem is YoutubeID) {
+                  final streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(currentItem.id);
+                  final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+                  if (loudnessDb != null) vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+                }
+                vol ??= 0.75;
+                settings.player.volume.value = vol;
+                await Player.inst.setVolume(vol);
               }
             },
             value: replayGain,
