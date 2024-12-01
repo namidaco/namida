@@ -138,6 +138,7 @@ class _SettingsController with SettingsFileWriter {
     AppDirs.YT_PLAYLISTS_ARTWORKS,
     AppDirs.YT_HISTORY_PLAYLIST,
     AppPaths.YT_LIKES_PLAYLIST,
+    AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
     AppDirs.YT_DOWNLOAD_TASKS,
   ].obs;
   final enableVideoPlayback = true.obs;

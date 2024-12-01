@@ -423,3 +423,11 @@ enum OnTrackTileSwapActions {
   playafter,
   addtoplaylist,
 }
+
+enum CacheVideoPriority {
+  VIP,
+  high,
+  normal,
+  low,
+  GETOUT,
+}

@@ -29,6 +29,8 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+part 'video_controller.priority.dart';
+
 class NamidaVideoWidget extends StatelessWidget {
   final bool enableControls;
   final double? disableControlsUnderPercentage;
@@ -192,6 +194,8 @@ class VideoController {
 
   /// `id`: `<NamidaVideo>[]`
   var _videoCacheIDMap = <String, List<NamidaVideo>>{};
+
+  final videosPriorityManager = _VideosPriorityManager();
 
   late final _videoCacheIDMapDB = DBWrapper.openFromInfo(fileInfo: AppPaths.VIDEOS_CACHE_DB_INFO, createIfNotExist: true);
   late final _videoLocalMapDB = DBWrapper.openFromInfo(fileInfo: AppPaths.VIDEOS_LOCAL_DB_INFO, createIfNotExist: true);
@@ -660,6 +664,8 @@ class VideoController {
       fetchCachedVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
       fetchLocalVideos(), // this will get paths only and disables extracting whole local videos on startup
     ]);
+
+    videosPriorityManager.loadDb(); // no wait
 
     if (Player.inst.videoPlayerInfo.value?.isInitialized != true) await updateCurrentVideo(Player.inst.currentTrack?.track);
   }

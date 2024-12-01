@@ -200,6 +200,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppPaths.TOTAL_LISTEN_TIME,
                   AppPaths.FAVOURITES_PLAYLIST,
                   AppPaths.YT_LIKES_PLAYLIST,
+                  AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
                   AppPaths.YT_SUBSCRIPTIONS,
                   AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
                 ];
@@ -391,6 +392,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 AppPaths.VIDEOS_LOCAL_OLD,
                                 AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
                                 AppDirs.YT_DOWNLOAD_TASKS,
+                                AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
                               ],
                               youtubeAvailable: true,
                               youtubeItems: [
