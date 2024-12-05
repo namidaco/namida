@@ -16,6 +16,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
+part 'album_identifier_wrapper.dart';
+
 class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWithDate, PlaylistItemWithDate {
   @override
   Track get track => _track;
@@ -234,6 +236,7 @@ class TrackExtended {
   /// track's duration in milliseconds.
   final int durationMS;
   final int year;
+  final String yearText;
   final int size;
   final int dateAdded;
   final int dateModified;
@@ -254,6 +257,7 @@ class TrackExtended {
   final List<String> tagsList;
   final ReplayGainData? gainData;
 
+  final AlbumIdentifierWrapper? albumIdentifierWrapper;
   final bool isVideo;
 
   const TrackExtended({
@@ -270,6 +274,7 @@ class TrackExtended {
     required this.trackNo,
     required this.durationMS,
     required this.year,
+    required this.yearText,
     required this.size,
     required this.dateAdded,
     required this.dateModified,
@@ -289,6 +294,7 @@ class TrackExtended {
     required this.originalTags,
     required this.tagsList,
     required this.gainData,
+    required this.albumIdentifierWrapper,
     required this.isVideo,
   });
 
@@ -348,6 +354,7 @@ class TrackExtended {
       trackNo: json['trackNo'] ?? 0,
       durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
       year: json['year'] ?? 0,
+      yearText: json['yearText'] ?? '',
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,
       dateModified: json['dateModified'] ?? 0,
@@ -370,6 +377,7 @@ class TrackExtended {
         config: generalSplitConfig,
       ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
+      albumIdentifierWrapper: json['albumIdentifierWrapper'] == null ? null : AlbumIdentifierWrapper.fromMap(json['albumIdentifierWrapper']),
       isVideo: json['v'] ?? false,
     );
   }
@@ -403,6 +411,7 @@ class TrackExtended {
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': gainData?.toMap(),
+      if (albumIdentifierWrapper != null) 'albumIdentifierWrapper': albumIdentifierWrapper?.toMap(),
       'v': isVideo,
     };
   }
@@ -439,9 +448,10 @@ extension TrackExtUtils on TrackExtended {
   String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers.value);
 
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) {
-    final n = identifiers.contains(AlbumIdentifier.albumName) ? album : '';
-    final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? albumArtist : '';
-    final y = identifiers.contains(AlbumIdentifier.year) ? year : '';
+    final idWrapper = albumIdentifierWrapper;
+    final n = identifiers.contains(AlbumIdentifier.albumName) ? idWrapper?.album ?? '' : '';
+    final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? idWrapper?.albumArtist ?? '' : '';
+    final y = identifiers.contains(AlbumIdentifier.year) ? idWrapper?.year ?? '' : '';
     return "$n$aa$y";
   }
 
@@ -538,19 +548,24 @@ extension TrackExtUtils on TrackExtended {
             config: splittersConfigs.generalConfig,
           )
         : tagsList;
+    final album = tag.album ?? this.album;
+    final albumArtist = tag.albumArtist ?? this.albumArtist;
+    final yearText = tag.year ?? this.year.toString();
+    final year = TrackExtended.enforceYearFormat(tag.year) ?? this.year;
     return TrackExtended(
       title: finaltitle,
       originalArtist: tag.artist ?? originalArtist,
       artistsList: finalartists,
-      album: tag.album ?? album,
-      albumArtist: tag.albumArtist ?? albumArtist,
+      album: album,
+      albumArtist: albumArtist,
       originalGenre: tag.genre ?? originalGenre,
       genresList: finalgenres,
       originalMood: tag.mood ?? originalMood,
       moodList: finalmoods,
       composer: tag.composer ?? composer,
       trackNo: TrackExtended.parseTrackNumber(tag.trackNumber)?.$1 ?? trackNo,
-      year: TrackExtended.enforceYearFormat(tag.year) ?? year,
+      year: year,
+      yearText: yearText,
       dateModified: dateModified ?? this.dateModified,
       path: path ?? this.path,
       comment: tag.comment ?? comment,
@@ -573,6 +588,11 @@ extension TrackExtUtils on TrackExtended {
       format: format,
       sampleRate: sampleRate,
       size: size,
+      albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
+        album: album,
+        albumArtist: albumArtist,
+        year: yearText,
+      ),
       isVideo: isVideo,
     );
   }
@@ -593,6 +613,7 @@ extension TrackExtUtils on TrackExtended {
     /// track's duration in milliseconds.
     int? durationMS,
     int? year,
+    String? yearText,
     int? size,
     int? dateAdded,
     int? dateModified,
@@ -612,6 +633,7 @@ extension TrackExtUtils on TrackExtended {
     String? originalTags,
     List<String>? tagsList,
     ReplayGainData? gainData,
+    AlbumIdentifierWrapper? albumIdentifierWrapper,
     bool? isVideo,
   }) {
     return TrackExtended(
@@ -628,6 +650,7 @@ extension TrackExtUtils on TrackExtended {
       trackNo: trackNo ?? this.trackNo,
       durationMS: durationMS ?? this.durationMS,
       year: year ?? this.year,
+      yearText: yearText ?? this.yearText,
       size: size ?? this.size,
       dateAdded: dateAdded ?? this.dateAdded,
       dateModified: dateModified ?? this.dateModified,
@@ -647,6 +670,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
       gainData: gainData ?? this.gainData,
+      albumIdentifierWrapper: albumIdentifierWrapper ?? this.albumIdentifierWrapper,
       isVideo: isVideo ?? this.isVideo,
     );
   }

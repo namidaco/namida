@@ -467,6 +467,7 @@ const kDummyExtendedTrack = TrackExtended(
   trackNo: 0,
   durationMS: 0,
   year: 0,
+  yearText: '',
   size: 0,
   dateAdded: 0,
   dateModified: 0,
@@ -486,6 +487,7 @@ const kDummyExtendedTrack = TrackExtended(
   originalTags: null,
   tagsList: [],
   gainData: null,
+  albumIdentifierWrapper: null,
   isVideo: false,
 );
 

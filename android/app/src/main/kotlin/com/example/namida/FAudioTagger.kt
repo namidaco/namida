@@ -338,7 +338,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         if (artworkIdentifiers[ArtworkIdentifier.year] == true) {
                           if (year != null) parts += year
                         }
-                        filename = parts
+                        filename = parts.replace('/', '_')
                       }
 
                       val artworkSavePath = "$artworkDirectory${filename}.png"

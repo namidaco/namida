@@ -616,6 +616,7 @@ class Indexer<T extends Track> {
         trackNo: 0,
         durationMS: 0,
         year: 0,
+        yearText: '',
         size: fileStat?.size ?? 0,
         dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
         dateModified: fileStat?.modified.millisecondsSinceEpoch ?? 0,
@@ -635,6 +636,7 @@ class Indexer<T extends Track> {
         originalTags: null,
         tagsList: [],
         gainData: null,
+        albumIdentifierWrapper: null,
         isVideo: trackPath.isVideo(),
       );
       if (!trackInfo.hasError) {
@@ -646,6 +648,10 @@ class Indexer<T extends Track> {
         final tags = trackInfo.tags;
 
         splittersConfigs ??= _createSplitConfig();
+
+        final album = tags.album;
+        final albumArtist = tags.albumArtist;
+        final yearText = tags.year;
 
         // -- Split Artists
         final artists = splitArtist(
@@ -689,7 +695,8 @@ class Indexer<T extends Track> {
           composer: doMagic(tags.composer),
           trackNo: TrackExtended.parseTrackNumber(trackInfo.tags.trackNumber)?.$1,
           durationMS: durationInMS,
-          year: TrackExtended.enforceYearFormat(tags.year),
+          year: TrackExtended.enforceYearFormat(yearText),
+          yearText: yearText,
           comment: tags.comment,
           description: tags.description,
           synopsis: tags.synopsis,
@@ -704,6 +711,11 @@ class Indexer<T extends Track> {
           rating: tags.ratingPercentage,
           originalTags: tags.tags,
           tagsList: tagsEmbedded,
+          albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
+            album: album ?? '',
+            albumArtist: albumArtist ?? '',
+            year: yearText ?? '',
+          ),
           gainData: tags.gainData,
         );
 
@@ -1380,6 +1392,8 @@ class Indexer<T extends Track> {
     final generalSplitConfig = GeneralSplitConfig();
     allMusic.loop((e) {
       final map = e.getMap;
+      final album = e.album;
+      final albumArtist = map['album_artist'] as String?;
       final artist = e.artist;
       final artists = artist == null
           ? <String>[]
@@ -1416,8 +1430,8 @@ class Indexer<T extends Track> {
         title: e.title,
         originalArtist: e.artist ?? UnknownTags.ARTIST,
         artistsList: artists,
-        album: e.album ?? UnknownTags.ALBUM,
-        albumArtist: map['album_artist'] ?? UnknownTags.ALBUMARTIST,
+        album: album ?? UnknownTags.ALBUM,
+        albumArtist: albumArtist ?? UnknownTags.ALBUMARTIST,
         originalGenre: e.genre ?? UnknownTags.GENRE,
         genresList: genres,
         originalMood: mood ?? '',
@@ -1426,6 +1440,7 @@ class Indexer<T extends Track> {
         trackNo: e.track ?? 0,
         durationMS: e.duration ?? 0, // `e.duration` => milliseconds
         year: TrackExtended.enforceYearFormat(yearString) ?? 0,
+        yearText: yearString ?? '',
         size: e.size,
         dateAdded: e.dateAdded ?? 0,
         dateModified: e.dateModified ?? 0,
@@ -1445,6 +1460,11 @@ class Indexer<T extends Track> {
         originalTags: tag,
         tagsList: tags,
         gainData: null,
+        albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
+          album: album ?? '',
+          albumArtist: albumArtist ?? '',
+          year: yearString ?? '',
+        ),
         isVideo: e.data.isVideo(),
       );
       tracks.add((trext, e.id));
