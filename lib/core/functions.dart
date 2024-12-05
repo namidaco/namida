@@ -194,7 +194,8 @@ class NamidaOnTaps {
 
       final Map<TrackWithDate, int> twdAndIndexes = {};
       tracksWithDates.loop((twd) {
-        twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
+        final index = playlist.tracks.indexOf(twd);
+        if (index > -1) twdAndIndexes[twd] = index;
       });
 
       await PlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());

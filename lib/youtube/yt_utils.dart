@@ -699,7 +699,8 @@ class YTUtils {
 
       final Map<YoutubeID, int> twdAndIndexes = {};
       videosToDelete.loop((twd) {
-        twdAndIndexes[twd] = playlist.tracks.indexOf(twd);
+        final index = playlist.tracks.indexOf(twd);
+        if (index > -1) twdAndIndexes[twd] = index;
       });
 
       await YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
