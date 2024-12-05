@@ -42,7 +42,7 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, Playlis
     return {
       "id": id,
       "watch": watch.toJson(),
-      "playlistID": playlistID?.toJson(),
+      if (playlistID != null) "playlistID": playlistID?.toJson(),
     };
   }
 

@@ -6,17 +6,14 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class YTVideoLikeParamters {
-  final YoutiPieVideoPageResult? page;
   final bool isActive;
   final LikeAction action;
   final void Function() onStart;
   final void Function() onEnd;
 
   const YTVideoLikeParamters({
-    required this.page,
     required this.isActive,
     required this.action,
     required this.onStart,
@@ -25,6 +22,11 @@ class YTVideoLikeParamters {
 }
 
 class YtVideoLikeManager {
+  final RxBaseCore<YoutiPieVideoPageResult?> page;
+  YtVideoLikeManager({
+    required this.page,
+  });
+
   late final currentVideoLikeStatus = Rxn<LikeStatus>();
 
   Future<bool> _confirmRemoveLike() async {
@@ -62,13 +64,13 @@ class YtVideoLikeManager {
   }
 
   Future<bool> _onChangeLikeStatus(YTVideoLikeParamters parameters) async {
-    final page = parameters.page;
-    if (page == null) return parameters.isActive;
+    final p = page.value;
+    if (p == null) return parameters.isActive;
 
     parameters.onStart();
     final res = await YoutiPie.videoAction.changeLikeStatus(
-      videoPage: page,
-      engagement: page.videoInfo?.engagement,
+      videoPage: p,
+      engagement: p.videoInfo?.engagement,
       action: parameters.action,
     );
     parameters.onEnd();
@@ -82,17 +84,16 @@ class YtVideoLikeManager {
   }
 
   void _onPageChanged() {
-    final page = YoutubeInfoController.current.currentVideoPage.value;
-    currentVideoLikeStatus.value = page?.videoInfo?.engagement?.likeStatus;
+    currentVideoLikeStatus.value = page.value?.videoInfo?.engagement?.likeStatus;
   }
 
   void init() {
     _onPageChanged(); // fill initial values
-    YoutubeInfoController.current.currentVideoPage.addListener(_onPageChanged);
+    page.addListener(_onPageChanged);
   }
 
   void dispose() {
-    YoutubeInfoController.current.currentVideoPage.removeListener(_onPageChanged);
+    page.removeListener(_onPageChanged);
     currentVideoLikeStatus.close();
   }
 }

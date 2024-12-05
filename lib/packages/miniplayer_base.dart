@@ -41,7 +41,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class FocusedMenuOptions {
   final bool Function(Playable currentItem) onOpen;
@@ -1418,7 +1417,6 @@ class _TrackInfo<E> extends StatelessWidget {
                                               onTap: (isLiked) async {
                                                 return ytLikeManager.onLikeClicked(
                                                   YTVideoLikeParamters(
-                                                    page: YoutubeInfoController.current.currentVideoPage.value,
                                                     isActive: isLiked,
                                                     action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
                                                     onStart: loadingController.startLoading,

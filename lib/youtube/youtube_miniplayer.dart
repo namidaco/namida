@@ -115,7 +115,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _isTitleExpanded.value = false;
   }
 
-  final _videoLikeManager = YtVideoLikeManager();
+  final _videoLikeManager = YtVideoLikeManager(page: YoutubeInfoController.current.currentVideoPage);
 
   @override
   void initState() {
@@ -512,7 +512,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                             onTap: (isLiked) {
                                                                               return _videoLikeManager.onLikeClicked(
                                                                                 YTVideoLikeParamters(
-                                                                                  page: page,
                                                                                   isActive: isLiked,
                                                                                   action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
                                                                                   onStart: loadingController.startLoading,
@@ -552,7 +551,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                             onTap: (isDisLiked) async {
                                                                               return _videoLikeManager.onDisLikeClicked(
                                                                                 YTVideoLikeParamters(
-                                                                                  page: page,
                                                                                   isActive: isDisLiked,
                                                                                   action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
                                                                                   onStart: loadingController.startLoading,

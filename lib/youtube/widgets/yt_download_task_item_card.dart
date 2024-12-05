@@ -2,25 +2,20 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -29,8 +24,8 @@ import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
-import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -126,155 +121,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     final StreamInfoItem? info,
     final DownloadTaskGroupName groupName,
   ) {
-    final videoId = item.id.videoId;
-    final videoPage = YoutubeInfoController.video.fetchVideoPageSync(videoId);
-    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(videoId) ?? videoId;
-    final videoSubtitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId) ?? '?';
-    final dateMS = info?.publishedAt.date?.millisecondsSinceEpoch;
-    final dateText = dateMS?.dateAndClockFormattedOriginal ?? '?';
-    final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS).fromNow()})";
-    final duration = info?.durSeconds?.secondsLabel ?? '?';
-    final descriptionWidget = info == null
-        ? null
-        : NamidaSelectableAutoLinkText(
-            text: info.availableDescription ?? '',
-          );
-
-    final saveLocation = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName, item.filename.filename);
-
-    List<Widget> getTrailing(IconData icon, String text, {Widget? iconWidget, Color? iconColor}) {
-      return [
-        iconWidget ??
-            Icon(
-              icon,
-              size: 18.0,
-              color: iconColor,
-            ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: Text(
-            text,
-            style: context.textTheme.displaySmall,
-          ),
-        ),
-      ];
-    }
-
-    final isUserLiked = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
-    final videoPageInfo = videoPage?.videoInfo;
-    final likesCount = videoPageInfo?.engagement?.likesCount;
-    final videoLikeCount = likesCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (likesCount ?? 0);
-
     NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        horizontalInset: 38.0,
-        title: lang.INFO,
-        normalTitleStyle: true,
-        trailingWidgets: [
-          ...getTrailing(
-            Broken.eye,
-            videoPageInfo?.viewsCount?.formatDecimalShort() ?? '?',
-            iconColor: context.theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 6.0),
-          ...getTrailing(
-            Broken.like_1,
-            videoLikeCount?.formatDecimalShort() ?? '?',
-            iconWidget: NamidaRawLikeButton(
-              size: 18.0,
-              likedIcon: Broken.like_filled,
-              normalIcon: Broken.like_1,
-              disabledColor: context.theme.colorScheme.primary,
-              isLiked: isUserLiked,
-              onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
-            ),
-          ),
-        ],
-        child: SizedBox(
-          height: context.height * 0.7,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TrackInfoListTile(
-                        title: lang.TITLE,
-                        value: videoTitle,
-                        icon: Broken.text,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.CHANNEL,
-                        value: videoSubtitle,
-                        icon: Broken.user,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.DATE,
-                        value: "$dateText$dateAgo",
-                        icon: Broken.calendar,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.DURATION,
-                        value: duration,
-                        icon: Broken.clock,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.LINK,
-                        value: YTUrlUtils.buildVideoUrl(videoId),
-                        icon: Broken.link_1,
-                      ),
-                      TrackInfoListTile(
-                        title: 'ID',
-                        value: videoId,
-                        icon: Broken.video_square,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.PATH,
-                        value: saveLocation,
-                        icon: Broken.location,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.DESCRIPTION,
-                        value: info?.availableDescription ?? '',
-                        icon: Broken.message_text_1,
-                        child: descriptionWidget,
-                      ),
-                      TrackInfoListTile(
-                        title: lang.TAGS,
-                        value: item.ffmpegTags.entries.map((e) => "- ${e.key}: ${e.value}").join('\n'),
-                        icon: Broken.tag,
-                      ),
-                    ]
-                        .addSeparators(
-                          separator: NamidaContainerDivider(
-                            height: 1.5,
-                            colorForce: context.theme.colorScheme.onSurface.withOpacity(0.2),
-                          ),
-                          skipFirst: 1,
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6.0),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: context.theme.cardColor.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(6.0),
-                  child: Column(
-                    children: [
-                      ..._getItemLocalInfoWidgets(context: context),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      dialog: VideoInfoDialog(
+        videoId: item.id.videoId,
+        info: info,
+        saveLocation: FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName, item.filename.filename),
+        tags: item.ffmpegTags,
+        extraColumnChildren: _getItemLocalInfoWidgets(context: context),
       ),
     );
   }
@@ -505,17 +358,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         idsNamesLookup: {videoId: infoFinal?.title},
         playlistName: '',
         videoYTID: null,
-      )..insert(
-          0,
-          NamidaPopupItem(
-            icon: Broken.play_circle,
-            title: lang.PLAY_ALL,
-            onTap: () {
-              YTUtils.expandMiniplayer();
-              Player.inst.playOrPause(index, videos.map((e) => YoutubeID(id: e.id.videoId, playlistID: null)), QueueSource.others);
-            },
-          ),
-        ),
+        videosToPlayAll: videos.map((e) => YoutubeID(id: e.id.videoId, playlistID: null)),
+      ),
       child: NamidaInkWell(
         borderRadius: 10.0,
         onTap: null,

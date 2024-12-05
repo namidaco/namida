@@ -220,6 +220,7 @@ Future<void> showTrackInfoDialog(
                         [
                           const SizedBox(height: 12.0),
                           NamidaInkWell(
+                            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                             onTap: () => showTrackListensDialog(track, datesOfListen: totalListens, colorScheme: color.value),
                             borderRadius: 12.0,
                             child: Row(

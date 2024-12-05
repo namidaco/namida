@@ -39,6 +39,7 @@ import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -1935,45 +1936,57 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
   }
 
   List<Widget> _getCustomChildrenVideo(EndScreenItemVideo e) {
+    final videoId = e.videoId;
     String? title = e.title;
     String? subtitle = e.viewsCount?.formatDecimalShort() ?? e.viewsCountText;
 
     return [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Broken.info_circle,
-              size: 20.0,
-            ),
-            const SizedBox(width: 6.0),
-            SizedBox(
-              width: 168.0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.displaySmall,
-                  ),
-                  if (subtitle != null)
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontSize: 10.0,
-                      ),
+        child: TapDetector(
+          onTap: videoId == null
+              ? null
+              : () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: VideoInfoDialog(
+                      videoId: videoId,
                     ),
-                ],
+                  );
+                },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Broken.info_circle,
+                size: 20.0,
               ),
-            ),
-          ],
+              const SizedBox(width: 6.0),
+              SizedBox(
+                width: 168.0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.displaySmall,
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.displaySmall?.copyWith(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       const NamidaContainerDivider(),
@@ -1992,6 +2005,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           videoId: videoId,
           channelID: null,
           playlistID: null,
+          showInfoTile: false,
           idsNamesLookup: {videoId: item.title},
           isInFullScreen: widget.inFullScreen,
         );

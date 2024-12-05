@@ -14,6 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum ThumbnailType {
   video,
@@ -53,6 +54,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final double? iconSize;
   final List<BoxShadow>? boxShadow;
   final bool forceSquared;
+  final bool? fetchMissingIfRequired;
 
   const YoutubeThumbnail({
     required super.key,
@@ -79,6 +81,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.iconSize,
     this.boxShadow,
     this.forceSquared = true,
+    this.fetchMissingIfRequired,
   });
 
   @override
@@ -167,6 +170,10 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             type: widget.type,
           );
         }
+      }
+
+      if (res == null && widget.fetchMissingIfRequired == true && videoId != null) {
+        res = await YoutubeInfoController.missingInfo.fetchMissingThumbnail(videoId);
       }
 
       widget.onImageReady?.call(res);

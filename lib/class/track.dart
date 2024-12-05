@@ -394,6 +394,7 @@ class TrackExtended {
       if (trackNo > 0) 'trackNo': trackNo,
       if (durationMS > 0) 'durationMS': durationMS,
       if (year > 0) 'year': year,
+      if (yearText.isNotEmpty) 'yearText': yearText,
       if (size > 0) 'size': size,
       if (dateAdded > 0) 'dateAdded': dateAdded,
       if (dateModified > 0) 'dateModified': dateModified,

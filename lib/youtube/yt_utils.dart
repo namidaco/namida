@@ -21,7 +21,6 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
-import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -40,6 +39,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -55,6 +55,7 @@ import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 part 'yt_utils.comments.dart';
@@ -145,6 +146,34 @@ class YTUtils {
     ];
   }
 
+  static _getPlayAllTile({required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
+    return NamidaPopupItem(
+      icon: Broken.play_circle,
+      title: lang.PLAY_ALL,
+      onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+      trailing: showPlayAllReverse
+          ? IconButton(
+              style: ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+              tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
+              icon: StackedIcon(
+                baseIcon: Broken.play_cricle,
+                secondaryIcon: Broken.arrow_swap,
+                iconSize: 20.0,
+                secondaryIconSize: 10.0,
+              ),
+              iconSize: 20.0,
+              onPressed: () {
+                NamidaNavigator.inst.popMenu();
+                Player.inst.playOrPause(0, videos.toList().reversed, QueueSource.others);
+              },
+            )
+          : null,
+    );
+  }
+
   static List<NamidaPopupItem> getVideosMenuItems({
     required List<YoutubeID> videos,
     List<NamidaPopupItem> moreItems = const [],
@@ -166,31 +195,7 @@ class YTUtils {
         onTap: videos.shareVideos,
       ),
       if (videos.length > 1)
-        NamidaPopupItem(
-          icon: Broken.play_circle,
-          title: lang.PLAY_ALL,
-          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
-          trailing: showPlayAllReverse
-              ? IconButton(
-                  style: ButtonStyle(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
-                  icon: StackedIcon(
-                    baseIcon: Broken.play_cricle,
-                    secondaryIcon: Broken.arrow_swap,
-                    iconSize: 20.0,
-                    secondaryIconSize: 10.0,
-                  ),
-                  iconSize: 20.0,
-                  onPressed: () {
-                    NamidaNavigator.inst.popMenu();
-                    Player.inst.playOrPause(0, videos.reversed, QueueSource.others);
-                  },
-                )
-              : null,
-        )
+        YTUtils._getPlayAllTile(videos: videos, showPlayAllReverse: showPlayAllReverse)
       else
         NamidaPopupItem(
           icon: Broken.play,
@@ -256,6 +261,7 @@ class YTUtils {
       copyUrl: displayCopyUrl,
       clearTile: false,
       displayShareUrl: false,
+      showFavouritesTile: true,
     );
     if (currentItem is YoutubeID && videoId == currentItem.id) {
       repeatForWidget = NamidaPopupItem(
@@ -295,20 +301,8 @@ class YTUtils {
         const YTUtils().showVideoClearDialog(context, videoId);
       },
     );
-    final isFavourite = currentItem is YoutubeID
-        ? currentItem.isFavourite
-        : currentItem is Track
-            ? currentItem.isFavourite
-            : null;
-    final favouriteItem = isFavourite == null
-        ? null
-        : NamidaPopupItem(
-            icon: isFavourite ? Broken.heart_tick : Broken.heart,
-            title: lang.FAVOURITES,
-            onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
-          );
+
     final items = <NamidaPopupItem>[];
-    if (favouriteItem != null) items.add(favouriteItem);
     items.addAll(defaultItems);
     if (repeatForWidget != null) items.add(repeatForWidget);
     items.add(clearItem);
@@ -427,6 +421,20 @@ class YTUtils {
     );
   }
 
+  static Future<String?> copyThumbnailToStorage(String videoId) async {
+    if (!await requestManageStoragePermission()) {
+      return null;
+    }
+    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
+    final saveDirPath = saveDir.path;
+    final imgFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+      id: videoId,
+      type: ThumbnailType.video,
+    );
+    if (imgFile != null) return saveDirPath;
+    return null;
+  }
+
   static List<NamidaPopupItem> getVideoCardMenuItems({
     required int? downloadIndex,
     required int? totalLength,
@@ -444,13 +452,38 @@ class YTUtils {
     bool isInFullScreen = false,
     bool clearTile = true,
     bool displayShareUrl = true,
+    bool showInfoTile = true,
+    bool showFavouritesTile = true,
+    Iterable<YoutubeID>? videosToPlayAll,
   }) {
     final playAfterVid = getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
 
+    NamidaPopupItem? favouriteItem;
+    if (showFavouritesTile) {
+      final isFavourite = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
+      favouriteItem = NamidaPopupItem(
+        icon: isFavourite ? Broken.heart_tick : Broken.heart,
+        title: lang.FAVOURITES,
+        onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
+      );
+    }
     return [
+      if (showInfoTile)
+        NamidaPopupItem(
+          icon: Broken.info_circle,
+          title: lang.INFO,
+          onTap: () {
+            NamidaNavigator.inst.navigateDialog(
+              dialog: VideoInfoDialog(
+                videoId: videoId,
+              ),
+            );
+          },
+        ),
+      if (favouriteItem != null) favouriteItem,
       NamidaPopupItem(
         icon: Broken.music_library_2,
         title: lang.ADD_TO_PLAYLIST,
@@ -488,6 +521,7 @@ class YTUtils {
             YTChannelSubpage(channelID: channelID!).navigate();
           },
         ),
+      if (videosToPlayAll != null && videosToPlayAll.length > 1) YTUtils._getPlayAllTile(videos: videosToPlayAll, showPlayAllReverse: true),
       isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,

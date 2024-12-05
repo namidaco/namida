@@ -20,25 +20,32 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/thumbnail.dart';
+import 'package:youtipie/class/videos/missing_video_info.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/http.dart';
 import 'package:youtipie/youtipie.dart' hide logger;
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 part 'info_controllers/yt_channel_info_controller.dart';
 part 'info_controllers/yt_history_linker.dart';
+part 'info_controllers/yt_missing_info_controller.dart';
 part 'info_controllers/yt_search_info_controller.dart';
 part 'info_controllers/yt_various_utils.dart';
 part 'info_controllers/yt_video_info_controller.dart';
@@ -57,6 +64,7 @@ class YoutubeInfoController {
   static const search = _SearchInfoController();
   static const feed = YoutiPie.feed;
   static const channel = _ChannelInfoController();
+  static final missingInfo = _MissingInfoController();
 
   static final memoryCache = YoutiPie.memoryCache;
 

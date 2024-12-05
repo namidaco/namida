@@ -360,6 +360,7 @@ class StorageCacheManager {
                                 key: Key(id ?? ''),
                                 type: ThumbnailType.video,
                                 videoId: id,
+                                borderRadius: 8.0,
                                 iconSize: 24.0,
                                 width: 92.0,
                                 height: 92 * 9 / 16,
