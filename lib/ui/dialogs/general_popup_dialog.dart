@@ -724,7 +724,7 @@ Future<void> showGeneralPopupDialog(
                 ),
               ),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.pen_remove, () => lang.DELETE_PLAYLIST, deletePlaylist)),
+              Expanded(child: bigIcon(Broken.trash, () => lang.DELETE_PLAYLIST, deletePlaylist)),
               if (PlaylistController.inst.getPlaylist(playlistName ?? '')?.m3uPath == null) ...[
                 const SizedBox(width: 8.0),
                 Expanded(child: bigIcon(Broken.directbox_send, () => lang.EXPORT_AS_M3U, exportPlaylist)),
@@ -741,7 +741,7 @@ Future<void> showGeneralPopupDialog(
             color: colorDelightened,
             compact: false,
             title: lang.REMOVE_QUEUE,
-            icon: Broken.pen_remove,
+            icon: Broken.trash,
             onTap: () {
               cancelSkipTimer();
               NamidaOnTaps.inst.onQueueDelete(queue);
