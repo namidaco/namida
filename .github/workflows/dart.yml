@@ -99,7 +99,8 @@ jobs:
           while IFS= read -r line; do
             HASH=$(echo "$line" | awk '{print $1}')
             MESSAGE=$(echo "$line" | cut -d' ' -f2-)
-            CHANGELOG="${CHANGELOG} - ${REPO_URL}${HASH} ${MESSAGE}"$'\n'
+            MESSAGE="${MESSAGE//' - '/'%0A   - '}"
+            CHANGELOG="${CHANGELOG} - ${REPO_URL}${HASH} ${MESSAGE}"$'%0A'
           done <<< "$COMMITS"
 
           # Encode special characters
