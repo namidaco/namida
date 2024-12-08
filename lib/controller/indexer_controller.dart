@@ -1600,7 +1600,11 @@ class _IndexerIsolateExecuter {
     final oldJsonFilePath = paramsList[1] as String;
 
     NamicoDBWrapper.initialize();
-    late final statsDBManager = DBWrapper.openFromInfo(fileInfo: statsDbInfo, createIfNotExist: true);
+    late final statsDBManager = DBWrapper.openFromInfo(
+      fileInfo: statsDbInfo,
+      createIfNotExist: true,
+      autoDisposeTimerDuration: null,
+    );
 
     final trackStatsMap = <Track, TrackStats>{};
 
@@ -1646,7 +1650,11 @@ class _IndexerIsolateExecuter {
     final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
 
     NamicoDBWrapper.initialize();
-    late final tracksDBManager = DBWrapper.openFromInfo(fileInfo: tracksDbInfo, createIfNotExist: true);
+    late final tracksDBManager = DBWrapper.openFromInfo(
+      fileInfo: tracksDbInfo,
+      createIfNotExist: true,
+      autoDisposeTimerDuration: null,
+    );
 
     final allTracksMappedByPath = <String, TrackExtended>{};
     final tracksInfoList = <Track>[];

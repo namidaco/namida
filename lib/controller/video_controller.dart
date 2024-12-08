@@ -829,7 +829,11 @@ class _VideoControllerIsolateFunctions {
     final dbFileInfo = params[1] as DbWrapperFileInfo;
     final oldJsonFile = File(oldJsonFilePath);
     NamicoDBWrapper.initialize();
-    final db = DBWrapper.openFromInfo(fileInfo: dbFileInfo, createIfNotExist: true);
+    final db = DBWrapper.openFromInfo(
+      fileInfo: dbFileInfo,
+      createIfNotExist: true,
+      autoDisposeTimerDuration: null,
+    );
 
     // -- migrating old json file
     if (oldJsonFile.existsSync()) {
@@ -861,7 +865,11 @@ class _VideoControllerIsolateFunctions {
     final dbFileInfo = params[1] as DbWrapperFileInfo;
     final oldJsonFile = File(oldJsonFilePath);
     NamicoDBWrapper.initialize();
-    final db = DBWrapper.openFromInfo(fileInfo: dbFileInfo, createIfNotExist: true);
+    final db = DBWrapper.openFromInfo(
+      fileInfo: dbFileInfo,
+      createIfNotExist: true,
+      autoDisposeTimerDuration: null,
+    );
 
     // -- migrating old json file
     if (oldJsonFile.existsSync()) {

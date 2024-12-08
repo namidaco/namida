@@ -1413,7 +1413,7 @@ class _IsolateFunctions {
         try {
           final res = file.readAsJsonSync() as Map<String, dynamic>?;
           if (res != null) {
-            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true);
+            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true, autoDisposeTimerDuration: null);
             for (final r in res.entries) {
               downloadTasksGroupDB.put(r.key, r.value);
             }
@@ -1451,7 +1451,7 @@ class _IsolateFunctions {
         }
 
         try {
-          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName);
+          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, autoDisposeTimerDuration: null);
           downloadTasksGroupDB.loadEverything((itemMap) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
             final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);

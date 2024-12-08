@@ -36,7 +36,6 @@ class _VideosPriorityManager {
     _videosPriorityMap = res;
     _videosPriorityMap.addAll(modifiedValues);
     _loadCompleter.complete();
-    print('--== final $_videosPriorityMap');
   }
 
   static Map<String, CacheVideoPriority> _loadDbSync(DbWrapperFileInfo fileInfo) {
