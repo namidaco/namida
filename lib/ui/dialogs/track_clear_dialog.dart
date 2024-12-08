@@ -133,7 +133,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
     dialogBuilder: (theme) => CustomBlurryDialog(
       theme: theme,
       normalTitleStyle: true,
-      icon: Broken.trash,
+      icon: Broken.broom,
       title: isSingle ? lang.CLEAR_TRACK_ITEM : lang.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.formatDecimal()),
       child: Column(
         children: [

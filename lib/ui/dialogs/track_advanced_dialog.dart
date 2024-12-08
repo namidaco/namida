@@ -121,7 +121,7 @@ void showTrackAdvancedDialog({
                 passedColor: colorScheme,
                 title: lang.CLEAR,
                 subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
-                icon: Broken.trash,
+                icon: Broken.broom,
                 onTap: () => showTrackClearDialog(tracks, colorScheme),
               ),
             ),

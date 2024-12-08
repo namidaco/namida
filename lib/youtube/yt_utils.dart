@@ -295,7 +295,7 @@ class YTUtils {
       );
     }
     final clearItem = NamidaPopupItem(
-      icon: Broken.trash,
+      icon: Broken.broom,
       title: lang.CLEAR,
       onTap: () {
         const YTUtils().showVideoClearDialog(context, videoId);
@@ -571,7 +571,7 @@ class YTUtils {
         ),
       if (clearTile)
         NamidaPopupItem(
-          icon: Broken.trash,
+          icon: Broken.broom,
           title: lang.CLEAR,
           onTap: () {
             final ctx = namida.context;
@@ -842,7 +842,7 @@ class YTUtils {
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
         normalTitleStyle: true,
-        icon: Broken.trash,
+        icon: Broken.broom,
         title: lang.CLEAR,
         trailingWidgets: [
           Obx(

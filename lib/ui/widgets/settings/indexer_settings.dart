@@ -669,7 +669,7 @@ class IndexerSettings extends SettingSubpageProvider {
                               rx: clearArtworks,
                               builder: (context, active) => ListTileWithCheckMark(
                                 dense: true,
-                                icon: Broken.trash,
+                                icon: Broken.broom,
                                 title: lang.CLEAR_IMAGE_CACHE,
                                 subtitle: artworksSizeInStorage.fileSizeFormatted,
                                 active: active,
