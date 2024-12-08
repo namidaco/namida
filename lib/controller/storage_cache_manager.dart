@@ -650,7 +650,7 @@ class _ImageTrimmer {
 
     _Trimmer._sortFiles(images, priorityMap);
 
-    for (int i = 0; i < excess;) {
+    for (int i = 0; i < excess; i++) {
       final element = images[i];
       try {
         element.deleteSync();

@@ -203,7 +203,7 @@ class Indexer<T extends Track> {
     _fetchMediaStoreTracks(); // to fill ids map
 
     final tracksDBPath = AppPaths.TRACKS_DB_INFO.file.path;
-    if (File(tracksDBPath).existsAndValidSync(21 * 1024) || File(AppPaths.TRACKS_OLD).existsAndValidSync()) {
+    if (File(tracksDBPath).existsAndValidSync((4 + 12) * 1024) || File(AppPaths.TRACKS_OLD).existsAndValidSync()) {
       // -- only block load if the track file exists..
       await _readTrackData();
       _afterIndexing();
