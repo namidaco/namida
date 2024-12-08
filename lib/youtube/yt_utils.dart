@@ -453,7 +453,7 @@ class YTUtils {
     bool clearTile = true,
     bool displayShareUrl = true,
     bool showInfoTile = true,
-    bool showFavouritesTile = true,
+    bool showFavouritesTile = false,
     Iterable<YoutubeID>? videosToPlayAll,
   }) {
     final playAfterVid = getPlayerAfterVideo();
