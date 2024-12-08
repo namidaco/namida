@@ -330,10 +330,10 @@ class YoutubeController {
     final params = _DownloadTasksLoadParams(tasksDatabasesPath: AppDirs.YT_DOWNLOAD_TASKS, downloadLocation: AppDirs.YOUTUBE_DOWNLOADS);
     final res = await _IsolateFunctions.loadDownloadTasksInfoFileSync.thready(params);
     // -- assign loaded data and update it with any modified data if any.
-    youtubeDownloadTasksMap.value = res.youtubeDownloadTasksMap..addAll(youtubeDownloadTasksMap.value);
-    downloadedFilesMap.value = res.downloadedFilesMap..addAll(downloadedFilesMap.value);
-    downloadsVideoProgressMap.value = res.downloadsVideoProgressMap..addAll(downloadsVideoProgressMap.value);
-    downloadsAudioProgressMap.value = res.downloadsAudioProgressMap..addAll(downloadsAudioProgressMap.value);
+    youtubeDownloadTasksMap.value = res.youtubeDownloadTasksMap.._addAllEntries(youtubeDownloadTasksMap.value);
+    downloadedFilesMap.value = res.downloadedFilesMap.._addAllEntries(downloadedFilesMap.value);
+    downloadsVideoProgressMap.value = res.downloadsVideoProgressMap.._addAllEntries(downloadsVideoProgressMap.value);
+    downloadsAudioProgressMap.value = res.downloadsAudioProgressMap.._addAllEntries(downloadsAudioProgressMap.value);
     latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask..addAll(latestEditedGroupDownloadTask);
     isLoadingDownloadTasks.value = false;
   }
@@ -1540,4 +1540,28 @@ class _DownloadTasksLoadParams {
     required this.tasksDatabasesPath,
     required this.downloadLocation,
   });
+}
+
+extension _MapUtils<MK, K, V> on Map<MK, Map<K, V>> {
+  void _addAllEntries(Map<MK, Map<K, V>> other) {
+    final mainMap = this;
+    for (final entry in other.entries) {
+      for (final e in entry.value.entries) {
+        mainMap[entry.key] ??= <K, V>{};
+        mainMap[entry.key]![e.key] = e.value;
+      }
+    }
+  }
+}
+
+extension _RxMapUtils<MK, K, V> on Map<MK, RxMap<K, V>> {
+  void _addAllEntries(Map<MK, RxMap<K, V>> other) {
+    final mainMap = this;
+    for (final entry in other.entries) {
+      for (final e in entry.value.entries) {
+        mainMap[entry.key] ??= <K, V>{}.obs;
+        mainMap[entry.key]![e.key] = e.value;
+      }
+    }
+  }
 }
