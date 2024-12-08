@@ -68,6 +68,8 @@ class YoutubeController {
   static final YoutubeController _instance = YoutubeController._internal();
   YoutubeController._internal();
 
+  final isLoadingDownloadTasks = false.obs;
+
   /// {id: <filename, DownloadProgress>{}}
   final downloadsVideoProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{}.obs;
 
@@ -324,13 +326,16 @@ class YoutubeController {
 
   // -- things here are not refreshed. should be called in startup only.
   Future<void> loadDownloadTasksInfoFileAsync() async {
+    isLoadingDownloadTasks.value = true;
     final params = _DownloadTasksLoadParams(tasksDatabasesPath: AppDirs.YT_DOWNLOAD_TASKS, downloadLocation: AppDirs.YOUTUBE_DOWNLOADS);
     final res = await _IsolateFunctions.loadDownloadTasksInfoFileSync.thready(params);
-    youtubeDownloadTasksMap.value = res.youtubeDownloadTasksMap;
-    downloadedFilesMap.value = res.downloadedFilesMap;
-    downloadsVideoProgressMap.value = res.downloadsVideoProgressMap;
-    downloadsAudioProgressMap.value = res.downloadsAudioProgressMap;
-    latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask;
+    // -- assign loaded data and update it with any modified data if any.
+    youtubeDownloadTasksMap.value = res.youtubeDownloadTasksMap..addAll(youtubeDownloadTasksMap.value);
+    downloadedFilesMap.value = res.downloadedFilesMap..addAll(downloadedFilesMap.value);
+    downloadsVideoProgressMap.value = res.downloadsVideoProgressMap..addAll(downloadsVideoProgressMap.value);
+    downloadsAudioProgressMap.value = res.downloadsAudioProgressMap..addAll(downloadsAudioProgressMap.value);
+    latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask..addAll(latestEditedGroupDownloadTask);
+    isLoadingDownloadTasks.value = false;
   }
 
   File? doesIDHasFileDownloaded(String id) {

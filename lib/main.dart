@@ -155,7 +155,6 @@ void mainInitialization() async {
     PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
-    YoutubeController.inst.loadDownloadTasksInfoFileAsync(),
   ]);
 
   ConnectivityController.inst.initialize();
@@ -179,11 +178,12 @@ void mainInitialization() async {
   YoutubeInfoController.initialize(); // for queue to display properly
   YoutubeAccountController.initialize();
 
-  await QueueController.inst.prepareLatestQueueAsync();
+  if (!shouldShowOnBoarding) await QueueController.inst.prepareLatestQueueAsync();
 
   PlaylistController.inst.prepareAllPlaylists();
   YoutubePlaylistController.inst.prepareAllPlaylists();
   QueueController.inst.prepareAllQueuesFile();
+  YoutubeController.inst.loadDownloadTasksInfoFileAsync(); // no longer waiting for it
 
   CurrentColor.inst.initialize();
   FlutterNativeSplash.remove();
