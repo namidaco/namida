@@ -819,11 +819,10 @@ class YTUtils {
     Future<void> deleteItems(Iterable<String> paths) async {
       for (final path in paths) {
         final type = fileTypeLookup[path];
+        await File(path).tryDeleting(); // always delete even if not in fileTypeLookup, for temp files
         if (type == 1) {
-          await File(path).tryDeleting();
           VideoController.inst.removeNVFromCacheMap(videoId, path);
         } else if (type == 0) {
-          await File(path).tryDeleting();
           Player.inst.audioCacheMap[videoId]?.removeWhere((element) => element.file.path == path);
         }
       }
