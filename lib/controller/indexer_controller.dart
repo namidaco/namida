@@ -818,6 +818,14 @@ class Indexer<T extends Track> {
         TrackTileManager.rebuildTrackInfo(tr);
       },
     );
+    this.tracksInfoList.refresh();
+    this.mainMapAlbums.refresh();
+    this.mainMapArtists.refresh();
+    this.mainMapAlbumArtists.refresh();
+    this.mainMapComposer.refresh();
+    this.mainMapGenres.refresh();
+    this.mainMapFolders.refresh();
+    this.mainMapFoldersVideos.refresh();
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
     Folders.tracks.currentFolder.refresh();
