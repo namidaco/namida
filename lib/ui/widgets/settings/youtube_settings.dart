@@ -16,6 +16,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
@@ -610,7 +611,18 @@ class _YTFlagsOptions extends StatefulWidget {
 }
 
 class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
-  bool didRefreshJsPlayer = false;
+  bool isRefreshingJsPlayer = false;
+
+  String? _jsPlayerVersion;
+  void _refreshJSPlayerVersion() {
+    _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
+  }
+
+  @override
+  void initState() {
+    _refreshJSPlayerVersion();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -719,11 +731,22 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 secondaryIcon: Broken.refresh,
                 secondaryIconSize: 12.0,
               ),
-              enabled: !didRefreshJsPlayer,
+              enabled: !isRefreshingJsPlayer,
               title: 'refresh_js_player'.toUpperCase(),
-              onTap: () {
-                setState(() => didRefreshJsPlayer = true);
-                YoutubeInfoController.video.forceRefreshJSPlayer();
+              subtitle: _jsPlayerVersion,
+              trailing: isRefreshingJsPlayer ? const LoadingIndicator() : null,
+              onTap: () async {
+                setState(() {
+                  isRefreshingJsPlayer = true;
+                  _jsPlayerVersion = '?';
+                });
+                await YoutubeInfoController.video.forceRefreshJSPlayer();
+                if (mounted) {
+                  setState(() {
+                    isRefreshingJsPlayer = false;
+                    _refreshJSPlayerVersion();
+                  });
+                }
               },
             ),
             CustomListTile(

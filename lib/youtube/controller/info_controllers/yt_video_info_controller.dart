@@ -28,6 +28,8 @@ class _VideoInfoController {
     return YoutiPie.cipher.forceRefreshJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
   }
 
+  String? getJSPlayerVersion() => YoutiPie.cipher.jsPlayerVersion;
+
   Future<YoutiPieVideoPageResult?> fetchVideoPage(String videoId, {ExecuteDetails? details}) async {
     final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
     final res = await YoutiPie.video.fetchVideoPage(videoId: videoId, relatedVideosParams: relatedVideosParams, details: details);
