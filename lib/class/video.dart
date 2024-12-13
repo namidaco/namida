@@ -68,7 +68,7 @@ class YTWatch {
   Map<String, dynamic> toJson() {
     return {
       'date': dateMS,
-      'isYTMusic': isYTMusic,
+      if (isYTMusic == true) 'isYTMusic': isYTMusic,
     };
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/youtipie.dart';
@@ -211,8 +212,24 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
 
     final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
     final duration = (info?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
-    final videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(videoId) ?? videoId;
-    final videoChannel = info?.channelName ?? info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
+    String? videoTitle = info?.title.nullifyEmpty();
+    bool isVideoUnavailable = false;
+    if (videoTitle != null) {
+      if (videoTitle == '[Private video]' || videoTitle == '[Deleted video]') {
+        VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+        isVideoUnavailable = true;
+        videoTitle = null;
+      }
+    }
+
+    videoTitle ??= YoutubeInfoController.utils.getVideoName(videoId);
+
+    if (videoTitle != null && videoTitle.startsWith('https://')) {
+      VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+      isVideoUnavailable = true;
+    }
+
+    final videoChannel = info?.channelName?.nullifyEmpty() ?? info?.channel.title.nullifyEmpty() ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
 
     String? dateText;
     if (displayTimeAgo) {
@@ -288,7 +305,11 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                       preferLowerRes: true,
                       customUrl: info?.liveThumbs.pick()?.url,
                       smallBoxText: duration,
-                      smallBoxIcon: willSleepAfterThis ? Broken.timer_1 : null,
+                      smallBoxIcon: willSleepAfterThis
+                          ? Broken.timer_1
+                          : isVideoUnavailable
+                              ? Broken.danger
+                              : null,
                       forceSquared: true, // -- if false, low quality images with black bars would appear
                     ),
                   ),
@@ -305,7 +326,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        videoTitle,
+                        videoTitle ?? videoId,
                         maxLines: minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: context.textTheme.displayMedium?.copyWith(
@@ -448,5 +469,12 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+extension _StringChecker on String {
+  String? nullifyEmpty() {
+    if (isEmpty) return null;
+    return this;
   }
 }
