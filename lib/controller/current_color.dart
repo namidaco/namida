@@ -107,34 +107,37 @@ class CurrentColor {
   void updateColorAfterThemeModeChange() {
     if (settings.autoColor.value) {
       final nc = _namidaColor.value ?? _defaultNamidaColor;
-      _namidaColor.value = NamidaColor(
+      _namidaColor.set(NamidaColor(
         used: nc.color.withAlpha(colorAlpha),
         mix: nc.mix,
         palette: nc.palette,
-      );
+      ));
     } else {
       final nc = playerStaticColor.lighter;
-      _namidaColor.value = NamidaColor(
+      _namidaColor.set(NamidaColor(
         used: nc,
         mix: nc,
         palette: [nc],
-      );
+      ));
     }
+    _namidaColor.refresh();
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
-    _namidaColor.value = NamidaColor(
+    _namidaColor.set(NamidaColor(
       used: colorWithAlpha,
       mix: colorWithAlpha,
       palette: [colorWithAlpha],
-    );
+    ));
+    _namidaColor.refresh();
   }
 
   Future<void> refreshColorsAfterResumeApp() async {
     final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
     if (namidaColor != null && settings.autoColor.value && _shouldUpdateFromDeviceWallpaper) {
-      _namidaColor.value = namidaColor;
+      _namidaColor.set(namidaColor);
+      _namidaColor.refresh();
       _updateCurrentPaletteHalfs(namidaColor);
     }
   }
