@@ -327,6 +327,13 @@ extension YTLinkToID on String {
   String get getYoutubeID => NamidaLinkUtils.extractYoutubeId(this) ?? '';
 }
 
+extension YTTitleUtils on String {
+  bool isYTTitleFaulty() {
+    final title = this;
+    return title.startsWith('https://') || title == '[Private video]' || title == '[Deleted video]';
+  }
+}
+
 extension TitleAndArtistUtils on String {
   /// (artist, title)
   (String?, String?) splitArtistAndTitle() {

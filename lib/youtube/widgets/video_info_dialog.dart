@@ -14,6 +14,8 @@ import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
@@ -109,7 +111,14 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
 
     final info = widget.info;
 
-    videoTitle = info?.title ?? YoutubeInfoController.utils.getVideoName(videoId) ?? videoId;
+    String? title = info?.title;
+    if (title == null || title.isEmpty || title.isYTTitleFaulty()) {
+      title = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
+        VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+      });
+    }
+    videoTitle = title ?? '?';
+
     channelTitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
     channelId = info?.channel.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
     dateMS = (info?.publishedAt.accurateDate ?? YoutubeInfoController.utils.getVideoReleaseDate(videoId))?.millisecondsSinceEpoch;

@@ -212,24 +212,21 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
 
     final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
     final duration = (info?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
-    String? videoTitle = info?.title.nullifyEmpty();
+    String? videoTitle = info?.title;
     bool isVideoUnavailable = false;
-    if (videoTitle != null) {
-      if (videoTitle == '[Private video]' || videoTitle == '[Deleted video]') {
+
+    if (videoTitle == null || videoTitle.isEmpty) {
+      videoTitle = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
         VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
         isVideoUnavailable = true;
-        videoTitle = null;
-      }
-    }
-
-    videoTitle ??= YoutubeInfoController.utils.getVideoName(videoId);
-
-    if (videoTitle != null && videoTitle.startsWith('https://')) {
+      });
+    } else if (videoTitle.isYTTitleFaulty()) {
       VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
       isVideoUnavailable = true;
+      videoTitle = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
     }
 
-    final videoChannel = info?.channelName?.nullifyEmpty() ?? info?.channel.title.nullifyEmpty() ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
+    String? videoChannel = info?.channelName?.nullifyEmpty() ?? info?.channel.title.nullifyEmpty() ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
 
     String? dateText;
     if (displayTimeAgo) {

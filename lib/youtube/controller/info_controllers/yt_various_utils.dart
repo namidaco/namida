@@ -74,19 +74,32 @@ class _YoutubeInfoUtils {
     return YoutubeInfoController.video.fetchVideoPageSync(videoId);
   }
 
-  String? getVideoName(String videoId, {bool checkFromStorage = true /* am sorry every follow me */}) {
-    String? name = tempVideoInfosFromStreams[videoId]?.title.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.title.nullifyEmpty();
-    if (name != null || checkFromStorage == false) return name;
-    return _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.title.nullifyEmpty() ??
-        _getVideoStreamResultSync(videoId)?.info?.title.nullifyEmpty() ?? //
-        _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyEmpty();
+  MissingVideoInfo? _getMissingInfoSync(String videoId) {
+    return YoutubeInfoController.missingInfo.fetchMissingInfoCacheSync(videoId);
+  }
+
+  String? getVideoName(String videoId, {void Function()? onMissingInfo, bool checkFromStorage = true /* am sorry every follow me */}) {
+    String? title = tempVideoInfosFromStreams[videoId]?.title.nullifyTitle(onMissingInfo) ?? tempBackupVideoInfo[videoId]?.title.nullifyTitle(onMissingInfo);
+    if (title != null || checkFromStorage == false) return title;
+
+    title = _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.title.nullifyTitle(onMissingInfo) ??
+        _getVideoStreamResultSync(videoId)?.info?.title.nullifyTitle(onMissingInfo) ?? //
+        _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyTitle(onMissingInfo);
+
+    if (title == null) {
+      onMissingInfo?.call();
+      title = _getMissingInfoSync(videoId)?.title?.nullifyTitle();
+    }
+
+    return title;
   }
 
   String? getVideoDescription(String videoId) {
     return _tempInfoDescription[videoId] ??= _getVideoPageResultSync(videoId)?.videoInfo?.description?.rawText?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.description?.nullifyEmpty() ??
         tempVideoInfosFromStreams[videoId]?.availableDescription?.nullifyEmpty() ??
-        getStreamInfoSync(videoId)?.availableDescription?.nullifyEmpty();
+        getStreamInfoSync(videoId)?.availableDescription?.nullifyEmpty() ?? //
+        _getMissingInfoSync(videoId)?.description?.nullifyEmpty();
   }
 
   String? getVideoChannelName(String videoId, {bool checkFromStorage = true}) {
@@ -94,14 +107,16 @@ class _YoutubeInfoUtils {
     if (name != null || checkFromStorage == false) return name;
     return _tempInfoChannelTitle[videoId] ??= getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelName?.nullifyEmpty() ?? //
-        _getVideoPageResultSync(videoId)?.channelInfo?.title.nullifyEmpty();
+        _getVideoPageResultSync(videoId)?.channelInfo?.title.nullifyEmpty() ?? //
+        _getMissingInfoSync(videoId)?.channelName?.nullifyEmpty();
   }
 
   String? getVideoChannelID(String videoId) {
     return _tempInfoChannelID[videoId] ??= tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
         getStreamInfoSync(videoId)?.channelId?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelId?.nullifyEmpty() ?? //
-        _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty();
+        _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty() ?? //
+        _getMissingInfoSync(videoId)?.channelId?.nullifyEmpty();
   }
 
   List<YoutiPieThumbnail>? getVideoChannelThumbnails(String videoId, {bool checkFromStorage = true}) {
@@ -115,14 +130,16 @@ class _YoutubeInfoUtils {
     return _tempInfoVideoReleaseDate[videoId] ??= _getVideoStreamResultSync(videoId)?.info?.publishedAt.accurateDate ??
         tempVideoInfosFromStreams[videoId]?.publishedAt.accurateDate ??
         getStreamInfoSync(videoId)?.publishedAt.accurateDate ?? //
-        _getVideoPageResultSync(videoId)?.videoInfo?.publishedAt.accurateDate;
+        _getVideoPageResultSync(videoId)?.videoInfo?.publishedAt.accurateDate ?? //
+        _getMissingInfoSync(videoId)?.date.accurateDate;
   }
 
   int? getVideoDurationSeconds(String videoId) {
     final cached = tempVideoInfosFromStreams[videoId]?.durSeconds;
     if (cached != null) return cached;
     return _tempInfoVideoDurationSeconds[videoId] ??= getStreamInfoSync(videoId)?.durSeconds ?? //
-        _getVideoStreamResultSync(videoId)?.info?.durSeconds;
+        _getVideoStreamResultSync(videoId)?.info?.durSeconds ?? //
+        _getMissingInfoSync(videoId)?.durSeconds;
   }
 
   // ==== async methods ====
@@ -161,6 +178,16 @@ class _YoutubeInfoUtils {
 extension _StringChecker on String {
   String? nullifyEmpty() {
     if (isEmpty) return null;
+    return this;
+  }
+
+  String? nullifyTitle([void Function()? onMissingInfo]) {
+    if (isEmpty) return null;
+    if (isYTTitleFaulty()) {
+      onMissingInfo?.call();
+      return null;
+    }
+
     return this;
   }
 }

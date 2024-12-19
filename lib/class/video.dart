@@ -21,6 +21,21 @@ class YoutubeVideoHistory {
     required this.watches,
   });
 
+  static YoutubeVideoHistory merge({
+    required YoutubeVideoHistory? current,
+    required YoutubeVideoHistory newRes,
+  }) {
+    if (current == null) return newRes;
+
+    return YoutubeVideoHistory(
+      id: current.id.isNotEmpty ? current.id : newRes.id,
+      title: current.title.isNotEmpty && !current.title.startsWith('https://') ? current.title : newRes.title,
+      channel: current.channel.isNotEmpty ? current.channel : newRes.channel,
+      channelUrl: current.channelUrl.isNotEmpty ? current.channelUrl : newRes.channelUrl,
+      watches: current.watches.isNotEmpty ? current.watches : newRes.watches,
+    );
+  }
+
   factory YoutubeVideoHistory.fromJson(Map<String, dynamic> json) {
     return YoutubeVideoHistory(
       id: json['id'] ?? '',

@@ -726,6 +726,7 @@ class JsonToHistoryParser {
         );
         // -- updating affected ids map, used to update youtube stats
         if (mapOfAffectedIds[id] != null) {
+          mapOfAffectedIds[id] = YoutubeVideoHistory.merge(current: mapOfAffectedIds[id], newRes: yth);
           mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
         } else {
           mapOfAffectedIds[id] = yth;
@@ -1183,6 +1184,7 @@ class JsonToHistoryParser {
         final video = affectedv.value;
         if (videosMapInStorage[id] != null) {
           // -- video exists inside the file, so we add only new watches
+          videosMapInStorage[id] = YoutubeVideoHistory.merge(current: videosMapInStorage[id], newRes: video);
           videosMapInStorage[id]!.watches.addAllNoDuplicates(video.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
         } else {
           // -- video does NOT exist, so the whole video is added with all its watches.
@@ -1235,5 +1237,14 @@ class _MissingListenEntry {
   @override
   int get hashCode {
     return dateMSSE.hashCode ^ source.hashCode ^ youtubeID.hashCode ^ title.hashCode ^ artistOrChannel.hashCode;
+  }
+}
+
+extension _YTWatchListExt on List<YTWatch> {
+  void addAllNoDuplicates(Iterable<YTWatch> items) {
+    for (final item in items) {
+      final alrExists = this.contains(item);
+      if (!alrExists) this.add(item);
+    }
   }
 }

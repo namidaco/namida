@@ -3,14 +3,27 @@ part of '../youtube_info_controller.dart';
 class _MissingInfoController {
   _MissingInfoController();
 
-  Future<MissingVideoInfo?> fetchMissingInfo(String videoId) {
+  final _infoCache = <String, MissingVideoInfo?>{};
+
+  Future<MissingVideoInfo?> fetchMissingInfo(String videoId) async {
+    if (_infoCache[videoId] != null) return _infoCache[videoId]!;
+
     VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-    return YoutiPie.missingInfo.fetchMissingInfo(videoId: videoId);
+    return _infoCache[videoId] ??= await YoutiPie.missingInfo.fetchMissingInfo(videoId: videoId);
   }
 
-  Future<MissingVideoInfo?> fetchMissingInfoCache(String videoId) {
+  Future<MissingVideoInfo?> fetchMissingInfoCache(String videoId) async {
+    if (_infoCache[videoId] != null) return _infoCache[videoId]!;
+
     final cache = YoutiPie.cacheBuilder.forMissingInfo(videoId: videoId);
-    return cache.readAsync();
+    return _infoCache[videoId] ??= await cache.readAsync();
+  }
+
+  MissingVideoInfo? fetchMissingInfoCacheSync(String videoId) {
+    if (_infoCache[videoId] != null) return _infoCache[videoId]!;
+
+    final cache = YoutiPie.cacheBuilder.forMissingInfo(videoId: videoId);
+    return _infoCache[videoId] ??= cache.read();
   }
 
   Future<File?> fetchMissingThumbnail(String videoId, {bool forceRequest = false}) async {
