@@ -587,7 +587,7 @@ extension FileUtils on File {
   }
 }
 
-final _minimumDateMicro = DateTime(1970).microsecondsSinceEpoch + 1;
+final _minimumDateMicro = DateTime(1980).microsecondsSinceEpoch + 1;
 
 extension FileStatsUtils on FileStat {
   DateTime get creationDate {

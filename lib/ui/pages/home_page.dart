@@ -46,7 +46,7 @@ extension _MapUtilsHomePage<K, V> on Map<K, V> {
   }
 }
 
-final int _lowestDateMSSEToDisplay = DateTime(1970).millisecondsSinceEpoch + 1;
+final int _lowestDateMSSEToDisplay = DateTime(1980).millisecondsSinceEpoch + 1;
 
 class HomePage extends StatefulWidget with NamidaRouteWidget {
   @override
