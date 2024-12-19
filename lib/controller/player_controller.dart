@@ -589,7 +589,7 @@ class Player {
     bool shuffle = false,
     bool startPlaying = true,
     bool updateQueue = true,
-    int? maximumItems = 1000,
+    int? maximumItems,
     void Function(Playable currentItem)? onAssigningCurrentItem,
   }) async {
     await _audioHandler.assignNewQueue(
@@ -614,6 +614,14 @@ class Player {
       startPlaying: startPlaying,
       shuffle: shuffle,
       onAssigningCurrentItem: onAssigningCurrentItem,
+      duplicateRemover: source == QueueSource.history
+          ? (item) {
+              return item._execute(
+                selectable: (finalItem) => finalItem.track.path,
+                youtubeID: (finalItem) => finalItem.id,
+              );
+            }
+          : null,
     );
   }
 

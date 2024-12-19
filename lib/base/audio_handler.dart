@@ -311,7 +311,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> assignNewQueue({
+  Future<void> assignNewQueue<Id>({
     required int playAtIndex,
     required Iterable<Q> queue,
     bool shuffle = false,
@@ -322,6 +322,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     void Function(List<Q> finalizedQueue)? onQueueDifferent,
     void Function(Q currentItem)? onAssigningCurrentItem,
     bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
+    Id Function(Q currentItem)? duplicateRemover,
   }) async {
     await beforeQueueAddOrInsert(queue);
     if (startPlaying) setPlayWhenReady(true);
@@ -344,6 +345,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             }
             return false;
           },
+      duplicateRemover: duplicateRemover,
     );
   }
 
