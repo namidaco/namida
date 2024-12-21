@@ -657,6 +657,7 @@ abstract class LanguageKeys {
   String get THEME_MODE => _getKey('THEME_MODE');
   String get THEME_SETTINGS_SUBTITLE => _getKey('THEME_SETTINGS_SUBTITLE');
   String get THEME_SETTINGS => _getKey('THEME_SETTINGS');
+  String get THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE => _getKey('THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE');
   String get THUMBNAILS => _getKey('THUMBNAILS');
   String get TITLE => _getKey('TITLE');
   String get TOP => _getKey('TOP');

@@ -87,8 +87,8 @@ class _YoutubeInfoUtils {
         _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyTitle(onMissingInfo);
 
     if (title == null) {
-      onMissingInfo?.call();
       title = _getMissingInfoSync(videoId)?.title?.nullifyTitle();
+      if (title != null) onMissingInfo?.call();
     }
 
     return title;

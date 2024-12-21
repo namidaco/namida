@@ -97,6 +97,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     super.dispose();
   }
 
+  bool isTitleFetchedFromMissingInfo = false;
   String? videoTitle;
   String? channelTitle;
   String? channelId;
@@ -112,10 +113,15 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     final info = widget.info;
 
     String? title = info?.title;
-    if (title == null || title.isEmpty || title.isYTTitleFaulty()) {
+    if (title == null || title.isEmpty) {
       title = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
+        isTitleFetchedFromMissingInfo = true;
         VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
       });
+    } else if (title.isYTTitleFaulty()) {
+      title = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
+      isTitleFetchedFromMissingInfo = true;
+      VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
     }
     videoTitle = title ?? '?';
 
@@ -129,7 +135,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   }
 
   Future<void> _fillMissingInfoIfRequired() async {
-    if (isDummyVideoId) {
+    if (isDummyVideoId || isTitleFetchedFromMissingInfo) {
       refreshState(() {
         _videoIsMissingOriginalInfo = true;
       });
@@ -141,7 +147,10 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
         dateMS != null) {
       return;
     }
+    _fillMissingInfoForce();
+  }
 
+  Future<void> _fillMissingInfoForce() async {
     final missingInfoCached = await YoutubeInfoController.missingInfo.fetchMissingInfoCache(videoId);
     if (missingInfoCached != null) {
       _refreshMissingInfo(missingInfoCached);
@@ -299,8 +308,8 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                       lang.INFO,
                       style: theme.textTheme.displayLarge,
                     ),
-                    if (loading) const SizedBox(width: 12.0),
-                    if (loading)
+                    if (loading) ...[
+                      const SizedBox(width: 12.0),
                       SizedBox(
                         width: 12.0,
                         height: 12.0,
@@ -309,6 +318,16 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           value: null,
                         ),
                       ),
+                    ],
+                    if (_videoIsMissingOriginalInfo && !loading) ...[
+                      const SizedBox(width: 6.0),
+                      NamidaIconButton(
+                        horizontalPadding: 6.0,
+                        icon: Broken.refresh,
+                        iconSize: 16.0,
+                        onPressed: () => _fillMissingInfoForce().then((_) => _isLoadingInfo.value = false),
+                      )
+                    ],
                   ],
                 ),
               ),
@@ -519,10 +538,10 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      'This video is likely deleted or set to private.',
+                                      lang.THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE,
                                       style: theme.textTheme.displaySmall,
                                     ),
-                                    if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable')
+                                    if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable' && playabilityText != 'This video is unavailable')
                                       Text(
                                         playabilityText.addDQuotation(),
                                         style: theme.textTheme.displaySmall?.copyWith(
