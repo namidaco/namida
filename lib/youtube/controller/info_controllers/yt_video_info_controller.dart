@@ -61,7 +61,6 @@ class _VideoInfoController {
     }
     final res = await YoutiPie.video.fetchVideoStreams(
       id: videoId,
-      onRequestingWithClientRequiringJS: ensureJSPlayerInitialized,
       details: forceRequest ? ExecuteDetails.forceRequest() : null,
       client: _usedClient,
     );
