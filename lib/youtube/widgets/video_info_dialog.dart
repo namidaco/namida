@@ -135,19 +135,20 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   }
 
   Future<void> _fillMissingInfoIfRequired() async {
-    if (isDummyVideoId || isTitleFetchedFromMissingInfo) {
-      refreshState(() {
-        _videoIsMissingOriginalInfo = true;
-      });
+    if (isDummyVideoId) {
+      refreshState(() => _videoIsMissingOriginalInfo = true);
       return;
     }
+
+    if (isTitleFetchedFromMissingInfo) refreshState(() => _videoIsMissingOriginalInfo = true);
+
     final videoId = this.videoId;
     if ((videoTitle != null && !videoTitle!.startsWith(YTUrlUtils.buildVideoUrl(videoId))) && //
         channelTitle != null &&
         dateMS != null) {
       return;
     }
-    _fillMissingInfoForce();
+    return _fillMissingInfoForce();
   }
 
   Future<void> _fillMissingInfoForce() async {
