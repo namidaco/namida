@@ -770,24 +770,24 @@ extension RouteUtils on NamidaRoute {
     );
   }
 
+  Widget _getMoreIcon(void Function()? onPressed) {
+    return NamidaAppBarIcon(
+      icon: Broken.more_2,
+      onPressed: onPressed,
+    );
+  }
+
+  Widget _getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
+    return child.animateEntrance(
+      showWhen: shouldShow,
+      durationMS: 400,
+      sizeCurve: Curves.easeOut,
+      firstCurve: Curves.easeInOutQuart,
+      secondCurve: Curves.easeInOutQuart,
+    );
+  }
+
   List<Widget> toActions() {
-    Widget getMoreIcon(void Function()? onPressed) {
-      return NamidaAppBarIcon(
-        icon: Broken.more_2,
-        onPressed: onPressed,
-      );
-    }
-
-    Widget getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
-      return child.animateEntrance(
-        showWhen: shouldShow,
-        durationMS: 400,
-        sizeCurve: Curves.easeOut,
-        firstCurve: Curves.easeInOutQuart,
-        secondCurve: Curves.easeInOutQuart,
-      );
-    }
-
     final shouldShowInitialActions = route != RouteType.PAGE_stats &&
         route != RouteType.SETTINGS_page &&
         route != RouteType.SETTINGS_subpage &&
@@ -822,7 +822,7 @@ extension RouteUtils on NamidaRoute {
     }
 
     return <Widget>[
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.trush_square,
           onPressed: () => NamidaOnTaps.inst.onQueuesClearIconTap(),
@@ -831,12 +831,12 @@ extension RouteUtils on NamidaRoute {
       ),
 
       // -- Parsing Json Icon
-      getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+      _getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
 
       // -- Indexer Icon
-      getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+      _getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
 
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.activity,
           onPressed: () => JsonToHistoryParser.inst.showMissingEntriesDialog(),
@@ -844,16 +844,7 @@ extension RouteUtils on NamidaRoute {
         shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
       ),
 
-      // -- Settings Icon
-      getAnimatedCrossFade(
-        child: NamidaAppBarIcon(
-          icon: Broken.setting_2,
-          onPressed: const SettingsPage().navigate,
-        ),
-        shouldShow: shouldShowInitialActions,
-      ),
-
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: NamidaRawLikeButton(
           padding: const EdgeInsets.symmetric(horizontal: 3.0),
           isLiked: queue?.isFav,
@@ -861,7 +852,7 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: queue != null,
       ),
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.sort,
           onPressed: () {
@@ -872,8 +863,8 @@ extension RouteUtils on NamidaRoute {
       ),
 
       if (name != null)
-        getAnimatedCrossFade(
-          child: getMoreIcon(() {
+        _getAnimatedCrossFade(
+          child: _getMoreIcon(() {
             switch (route) {
               case RouteType.SUBPAGE_albumTracks:
                 NamidaDialogs.inst.showAlbumDialog(name);
@@ -906,7 +897,7 @@ extension RouteUtils on NamidaRoute {
               route == RouteType.SUBPAGE_queueTracks,
         ),
 
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
           controller: HistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
@@ -917,7 +908,7 @@ extension RouteUtils on NamidaRoute {
         shouldShow: route == RouteType.SUBPAGE_historyTracks,
       ),
 
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
           controller: YoutubeHistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
@@ -929,7 +920,7 @@ extension RouteUtils on NamidaRoute {
       ),
 
       // ---- Playlist Tracks ----
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: ObxO(
           key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
           rx: PlaylistController.inst.canReorderTracks,
@@ -942,14 +933,14 @@ extension RouteUtils on NamidaRoute {
         shouldShow: route == RouteType.SUBPAGE_playlistTracks,
       ),
       if (name != null)
-        getAnimatedCrossFade(
-          child: getMoreIcon(() {
+        _getAnimatedCrossFade(
+          child: _getMoreIcon(() {
             NamidaDialogs.inst.showPlaylistDialog(name);
           }),
           shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
         ),
 
-      getAnimatedCrossFade(
+      _getAnimatedCrossFade(
         child: ObxO(
           rx: ytplc.YoutubePlaylistController.inst.canReorderVideos,
           builder: (context, reorderable) => NamidaAppBarIcon(
@@ -960,6 +951,16 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
       ),
+
+      // -- Settings Icon
+      _getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.setting_2,
+          onPressed: const SettingsPage().navigate,
+        ),
+        shouldShow: shouldShowInitialActions,
+      ),
+
       const SizedBox(width: 8.0),
     ];
   }
