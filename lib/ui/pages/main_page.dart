@@ -93,7 +93,7 @@ class MainPage extends StatelessWidget {
             Positioned.fill(
               child: Obx(
                 (context) => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
+                  duration: const Duration(milliseconds: 300),
                   child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
                 ),
               ),
