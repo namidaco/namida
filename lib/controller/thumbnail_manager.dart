@@ -82,7 +82,7 @@ class ThumbnailManager {
       return File("${AppDirs.YT_THUMBNAILS}$dirPrefix$filename");
     }
     String? finalUrl = url;
-    final imageUrl = finalUrl?.split('i.ytimg.com/vi/');
+    final imageUrl = finalUrl?.split(RegExp(r'i\.ytimg\.com/vi.*?/'));
     if (imageUrl != null && imageUrl.length > 1) {
       finalUrl = imageUrl.last.splitFirst('?').replaceAll('/', '_');
     } else {
