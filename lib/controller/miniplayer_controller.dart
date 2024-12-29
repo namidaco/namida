@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
@@ -306,6 +307,8 @@ class MiniPlayerController {
 
   void snapToExpanded({bool haptic = true}) {
     WakelockController.inst.updateMiniplayerStatus(true);
+    ScrollSearchController.inst.unfocusKeyboard();
+
     _offset = maxOffset;
     if (_prevOffset < maxOffset) bounceUp = true;
     if (_prevOffset > maxOffset) bounceDown = true;
