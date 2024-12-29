@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
-import 'package:namida/controller/video_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/youtipie.dart';
@@ -10,6 +9,8 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -268,7 +269,12 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
           bool willSleepAfterThis = false;
           if (fromPlayerQueue) {
             final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-            willSleepAfterThis = sleepconfig.enableSleepAfterItems && Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
+            if (sleepconfig.enableSleepAfterItems) {
+              final repeatMode = settings.player.repeatMode.valueR;
+              if (repeatMode == RepeatMode.all || repeatMode == RepeatMode.none) {
+                willSleepAfterThis = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
+              }
+            }
           }
 
           final bool isRightIndex = canHaveDuplicates ? index == Player.inst.currentIndex.valueR : true;

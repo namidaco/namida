@@ -82,7 +82,10 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                 if (comingFromQueue) {
                                   final sleepconfig = Player.inst.sleepTimerConfig.valueR;
                                   if (sleepconfig.enableSleepAfterItems) {
-                                    sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                                    final repeatMode = settings.player.repeatMode.valueR;
+                                    if (repeatMode == RepeatMode.all || repeatMode == RepeatMode.none) {
+                                      sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                                    }
                                   }
                                 }
 
