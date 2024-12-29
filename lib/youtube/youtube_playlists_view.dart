@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -54,7 +53,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     return videos.values;
   }
 
-  List<YoutubeID> getFavouriteVideos(GeneralPlaylist<YoutubeID> playlist) {
+  List<YoutubeID> getFavouriteVideos(YoutubePlaylist playlist) {
     final videos = <YoutubeID>[];
     final all = playlist.tracks;
     for (int i = all.length - 1; i >= 0; i--) {

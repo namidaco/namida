@@ -70,10 +70,10 @@ class FocusedMenuOptions {
   });
 }
 
-class MiniplayerInfoData<E> {
+class MiniplayerInfoData<E, S> {
   final String firstLine;
   final String secondLine;
-  final FavouritePlaylist<Playable, E> favouritePlaylist;
+  final FavouritePlaylist<Playable, E, S> favouritePlaylist;
   final E itemToLike;
   final Future<bool> Function(bool isLiked) onLikeTap;
   final void Function() onShowAddToPlaylistDialog;
@@ -100,7 +100,7 @@ class MiniplayerInfoData<E> {
         secondLineGood = secondLine.isNotEmpty;
 }
 
-class NamidaMiniPlayerBase<E> extends StatefulWidget {
+class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
   final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties) itemBuilder;
@@ -113,7 +113,7 @@ class NamidaMiniPlayerBase<E> extends StatefulWidget {
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
   final Widget Function(Playable item, double cp) imageBuilder;
   final Widget Function(Playable item, double bcp) currentImageBuilder;
-  final MiniplayerInfoData<E> Function(Playable item) textBuilder;
+  final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
 
@@ -1328,8 +1328,8 @@ class _RawImageContainer extends StatelessWidget {
   }
 }
 
-class _TrackInfo<E> extends StatelessWidget {
-  final MiniplayerInfoData<E> textData;
+class _TrackInfo<E, S> extends StatelessWidget {
+  final MiniplayerInfoData<E, S> textData;
   final double cp;
   final double qp;
   final double p;

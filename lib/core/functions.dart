@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
@@ -211,18 +212,124 @@ class NamidaOnTaps {
   }
 
   void onSubPageTracksSortIconTap(MediaType media) {
-    final sorters = (settings.mediaItemsTrackSorting.value[media] ?? []).obs;
+    const defaultSorts = <MediaType, List<SortType>>{
+      MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
+      MediaType.artist: [SortType.year, SortType.title],
+      MediaType.genre: [SortType.year, SortType.title],
+      MediaType.folder: [SortType.filename],
+      MediaType.folderVideo: [SortType.filename],
+    };
+    return _onSubPageSortIconTap<SortType>(
+      minimumItems: 1,
+      allSortsList: List<SortType>.from(SortType.values),
+      sortToText: (sort) => sort.toText(),
+      defaultSorts: defaultSorts[media] ?? [SortType.year],
+      currentSorts: settings.mediaItemsTrackSorting.value[media] ?? [],
+      currentReverse: settings.mediaItemsTrackSortingReverse.value[media] ?? false,
+      allowCustom: false,
+      onSortChange: (activeSorters) {
+        settings.updateMediaItemsTrackSorting(media, activeSorters);
+      },
+      onSortReverseChange: (reverse) {
+        settings.updateMediaItemsTrackSortingReverse(media, reverse);
+      },
+      onDone: () {
+        Indexer.inst.sortMediaTracksSubLists([media]);
+      },
+    );
+  }
 
-    final allSorts = List<SortType>.from(SortType.values).obs;
+  void onPlaylistSubPageTracksSortIconTap<T extends PlaylistItemWithDate, E, S>(
+    String playlistName,
+    PlaylistManager<T, E, S> playlistManager,
+    List<S> allSorts,
+    String Function(S sort) sortToText,
+  ) {
+    final initialpl = playlistManager.getPlaylist(playlistName);
+    List<S>? newSorts;
+    bool? newSortReverse;
+
+    void onFinalUpdatePropertySort(List<S> sorts, bool? reverse) {
+      playlistManager.updatePropertyInPlaylist(playlistName, itemsSortType: sorts, itemsSortReverse: reverse);
+      playlistManager.resetCanReorder();
+    }
+
+    return _onSubPageSortIconTap<S>(
+      minimumItems: 0,
+      defaultSorts: [],
+      allSortsList: List<S>.from(allSorts),
+      sortToText: sortToText,
+      currentSorts: initialpl?.sortsType ?? [],
+      currentReverse: initialpl?.sortReverse ?? false,
+      allowCustom: false,
+      onSortChange: (activeSorters) {
+        newSorts = activeSorters;
+      },
+      onSortReverseChange: (reverse) {
+        newSortReverse = reverse;
+        final pl = playlistManager.getPlaylist(playlistName);
+        if (pl != null && pl.sortReverse != reverse) {
+          playlistManager.updatePropertyInPlaylist(playlistName, itemsSortReverse: reverse);
+        }
+      },
+      onDone: () {
+        final pl = playlistManager.getPlaylist(playlistName);
+        if (pl != null && newSorts != null) {
+          if (!listEquals(pl.sortsType, newSorts)) {
+            if ((pl.sortsType?.isEmpty ?? true) && newSorts!.isNotEmpty) {
+              NamidaNavigator.inst.navigateDialog(
+                dialog: CustomBlurryDialog(
+                  isWarning: true,
+                  normalTitleStyle: true,
+                  bodyText: lang.YOUR_CUSTOM_ORDER_WILL_BE_LOST,
+                  actions: [
+                    const CancelButton(),
+                    NamidaButton(
+                      text: lang.CONFIRM,
+                      onPressed: () {
+                        onFinalUpdatePropertySort(newSorts!, newSortReverse);
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    )
+                  ],
+                ),
+              );
+            } else {
+              onFinalUpdatePropertySort(newSorts!, newSortReverse);
+            }
+          }
+        }
+      },
+    );
+  }
+
+  void _onSubPageSortIconTap<S>({
+    required List<S> currentSorts,
+    required List<S> allSortsList,
+    required bool currentReverse,
+    required List<S> defaultSorts,
+    required int minimumItems,
+    required String Function(S sort) sortToText,
+    required bool allowCustom,
+    required void Function(List<S> activeSorters) onSortChange,
+    required void Function(bool reverse) onSortReverseChange,
+    required void Function() onDone,
+  }) {
+    final sorters = List<S>.from(currentSorts).obs;
+    final isReverse = currentReverse.obs;
+
+    final allSorts = allSortsList.obs;
+
     void resortVisualItems() => allSorts.sortByReverse((e) {
           final active = sorters.contains(e);
           return active ? sorters.length - sorters.value.indexOf(e) : sorters.value.indexOf(e);
         });
+
     resortVisualItems();
 
     void resortMedia() {
-      settings.updateMediaItemsTrackSorting(media, sorters.value);
-      Indexer.inst.sortMediaTracksSubLists([media]);
+      onSortChange(sorters.value);
+      onDone();
     }
 
     NamidaNavigator.inst.navigateDialog(
@@ -239,16 +346,8 @@ class NamidaOnTaps {
             icon: const Icon(Broken.refresh),
             tooltip: lang.RESTORE_DEFAULTS,
             onPressed: () {
-              final defaultSorts = <MediaType, List<SortType>>{
-                MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
-                MediaType.artist: [SortType.year, SortType.title],
-                MediaType.genre: [SortType.year, SortType.title],
-                MediaType.folder: [SortType.filename],
-                MediaType.folderVideo: [SortType.filename],
-              };
-              final defaults = defaultSorts[media] ?? [SortType.year];
-              sorters.value = defaults;
-              settings.updateMediaItemsTrackSorting(media, defaults);
+              sorters.value = defaultSorts;
+              onSortChange(defaultSorts);
             },
           ),
           DoneButton(additional: resortMedia),
@@ -258,17 +357,16 @@ class NamidaOnTaps {
           height: namida.height * 0.4,
           child: Column(
             children: [
-              Obx(
-                (context) {
-                  final currentlyReverse = settings.mediaItemsTrackSortingReverse.valueR[media] ?? false;
-                  return ListTileWithCheckMark(
-                    title: lang.REVERSE_ORDER,
-                    active: currentlyReverse,
-                    onTap: () {
-                      settings.updateMediaItemsTrackSortingReverse(media, !currentlyReverse);
-                    },
-                  );
-                },
+              ObxO(
+                rx: isReverse,
+                builder: (context, reverse) => ListTileWithCheckMark(
+                  title: lang.REVERSE_ORDER,
+                  active: reverse,
+                  onTap: () {
+                    onSortReverseChange(!reverse);
+                    isReverse.value = !reverse;
+                  },
+                ),
               ),
               const SizedBox(height: 12.0),
               Expanded(
@@ -284,7 +382,7 @@ class NamidaOnTaps {
 
                       final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
                       sorters.value = activeSorts;
-                      settings.updateMediaItemsTrackSorting(media, activeSorts);
+                      onSortChange(activeSorts);
                     },
                     itemBuilder: (context, i) {
                       final sorting = allSorts[i];
@@ -295,11 +393,11 @@ class NamidaOnTaps {
                           (context) {
                             final isActive = sorters.contains(sorting);
                             return ListTileWithCheckMark(
-                              title: "${i + 1}. ${sorting.toText()}",
+                              title: "${i + 1}. ${sortToText(sorting)}",
                               active: isActive,
                               onTap: () {
-                                if (isActive && sorters.length <= 1) {
-                                  showMinimumItemsSnack();
+                                if (isActive && sorters.length <= minimumItems) {
+                                  showMinimumItemsSnack(minimumItems);
                                   return;
                                 }
                                 if (sorters.contains(sorting)) {

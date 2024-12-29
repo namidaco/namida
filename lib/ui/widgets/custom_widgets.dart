@@ -13,6 +13,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:like_button/like_button.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:wheel_slider/wheel_slider.dart';
@@ -4580,6 +4581,42 @@ class AnimatedThemeOrTheme extends StatelessWidget {
             data: data,
             child: child,
           );
+  }
+}
+
+class EnableDisablePlaylistReordering extends StatelessWidget {
+  final String playlistName;
+  final PlaylistManager playlistManager;
+
+  const EnableDisablePlaylistReordering({
+    super.key,
+    required this.playlistName,
+    required this.playlistManager,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
+      rx: playlistManager.canReorderItems,
+      builder: (context, reorderable) => NamidaAppBarIcon(
+        tooltip: () => playlistManager.canReorderItems.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+        icon: reorderable ? Broken.forward_item : Broken.lock_1,
+        onPressed: () {
+          final playlist = playlistManager.getPlaylist(playlistName);
+          if (playlist == null) return;
+          if (playlist.sortsType?.isNotEmpty ?? false) {
+            snackyy(
+              isError: true,
+              title: lang.WARNING,
+              message: lang.THIS_PLAYLIST_HAS_ACTIVE_SORTERS_DISABLE_THEM_BEFORE_REORDERING,
+            );
+            return;
+          }
+          playlistManager.canReorderItems.value = !playlistManager.canReorderItems.value;
+        },
+      ),
+    );
   }
 }
 

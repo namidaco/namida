@@ -658,6 +658,7 @@ abstract class LanguageKeys {
   String get THEME_MODE => _getKey('THEME_MODE');
   String get THEME_SETTINGS_SUBTITLE => _getKey('THEME_SETTINGS_SUBTITLE');
   String get THEME_SETTINGS => _getKey('THEME_SETTINGS');
+  String get THIS_PLAYLIST_HAS_ACTIVE_SORTERS_DISABLE_THEM_BEFORE_REORDERING => _getKey('THIS_PLAYLIST_HAS_ACTIVE_SORTERS_DISABLE_THEM_BEFORE_REORDERING');
   String get THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE => _getKey('THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE');
   String get THUMBNAILS => _getKey('THUMBNAILS');
   String get TITLE => _getKey('TITLE');
@@ -738,6 +739,7 @@ abstract class LanguageKeys {
   String get YEAR => _getKey('YEAR');
   String get YES => _getKey('YES');
   String get YOUR_CURRENT_MEMBERSHIP_IS => _getKey('YOUR_CURRENT_MEMBERSHIP_IS');
+  String get YOUR_CUSTOM_ORDER_WILL_BE_LOST => _getKey('YOUR_CUSTOM_ORDER_WILL_BE_LOST');
   String get YOUTUBE_MUSIC => _getKey('YOUTUBE_MUSIC');
   String get YOUTUBE => _getKey('YOUTUBE');
   String get YOUTUBE_SETTINGS_SUBTITLE => _getKey('YOUTUBE_SETTINGS_SUBTITLE');

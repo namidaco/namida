@@ -24,18 +24,15 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-typedef LocalPlaylist = GeneralPlaylist<TrackWithDate>;
+typedef LocalPlaylist = GeneralPlaylist<TrackWithDate, SortType>;
 
-class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
+class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType> {
   static PlaylistController get inst => _instance;
   static final PlaylistController _instance = PlaylistController._internal();
   PlaylistController._internal();
 
   @override
   Track identifyBy(TrackWithDate item) => item.track;
-
-  final canReorderTracks = false.obs;
-  void resetCanReorder() => canReorderTracks.value = false;
 
   void addNewPlaylist(String name,
       {List<Track> tracks = const <Track>[],
@@ -510,13 +507,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   Map<String, dynamic> itemToJson(TrackWithDate item) => item.toJson();
 
   @override
-  bool canRemovePlaylist(GeneralPlaylist<TrackWithDate> playlist) {
+  dynamic sortToJson(List<SortType> items) => items.map((e) => e.name).toList();
+
+  @override
+  bool canRemovePlaylist(LocalPlaylist playlist) {
     _popPageIfCurrent(() => playlist.name);
     return true;
   }
 
   @override
-  void onPlaylistRemovedFromMap(GeneralPlaylist<TrackWithDate> playlist) {
+  void onPlaylistRemovedFromMap(LocalPlaylist playlist) {
     final plIndex = SearchSortController.inst.playlistSearchList.value.indexWhere((element) => playlist.name == element);
     if (plIndex > -1) SearchSortController.inst.playlistSearchList.removeAt(plIndex);
   }
@@ -532,19 +532,42 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
   }
 
   @override
-  Future<Map<String, GeneralPlaylist<TrackWithDate>>> prepareAllPlaylistsFunction() async {
+  void onPlaylistItemsSort(List<SortType> sorts, bool reverse, List<TrackWithDate> items) {
+    final comparables = <Comparable<dynamic> Function(TrackWithDate tr)>[];
+    for (final s in sorts) {
+      if (s == SortType.dateAdded) {
+        Comparable<dynamic> comparable(TrackWithDate e) => e.dateAddedMS;
+        comparables.add(comparable);
+      } else {
+        final comparable = SearchSortController.inst.getTracksSortingComparables(s);
+        if (comparable != null) {
+          Comparable<dynamic> comparabletwd(TrackWithDate twd) => comparable(twd.track);
+          comparables.add(comparabletwd);
+        }
+      }
+    }
+
+    if (reverse) {
+      items.sortByReverseAlts(comparables);
+    } else {
+      items.sortByAlts(comparables);
+    }
+  }
+
+  @override
+  Future<Map<String, LocalPlaylist>> prepareAllPlaylistsFunction() async {
     return await _readPlaylistFilesCompute.thready(playlistsDirectory);
   }
 
   @override
-  Future<GeneralPlaylist<TrackWithDate>?> prepareFavouritePlaylistFunction() {
+  Future<LocalPlaylist?> prepareFavouritePlaylistFunction() {
     return _prepareFavouritesFile.thready(favouritePlaylistPath);
   }
 
   static LocalPlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
-      return LocalPlaylist.fromJson(response, TrackWithDate.fromJson);
+      return LocalPlaylist.fromJson(response, TrackWithDate.fromJson, sortFromJson);
     } catch (_) {}
     return null;
   }
@@ -558,11 +581,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track> {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
-          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson);
+          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, sortFromJson);
           map[pl.name] = pl;
         } catch (_) {}
       }
     }
     return map;
+  }
+
+  static List<SortType>? sortFromJson(dynamic value) {
+    try {
+      return (value as List).map((e) => SortType.values.getEnum(e)!).toList();
+    } catch (_) {}
+    return null;
   }
 }

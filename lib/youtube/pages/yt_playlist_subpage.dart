@@ -179,8 +179,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
     final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
     Color? threeCColor;
     late final threeC = ObxO(
-      rx: YoutubePlaylistController.inst.canReorderVideos,
-      builder: (context, canReorderVideos) => ThreeLineSmallContainers(enabled: canReorderVideos, color: threeCColor),
+      rx: YoutubePlaylistController.inst.canReorderItems,
+      builder: (context, canReorderItems) => ThreeLineSmallContainers(enabled: canReorderItems, color: threeCColor),
     );
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return AnimatedThemeOrTheme(
@@ -339,8 +339,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                   ),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
                   ObxO(
-                    rx: YoutubePlaylistController.inst.canReorderVideos,
-                    builder: (context, canReorderVideos) => NamidaSliverReorderableList(
+                    rx: YoutubePlaylistController.inst.canReorderItems,
+                    builder: (context, canReorderItems) => NamidaSliverReorderableList(
                       onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
@@ -348,7 +348,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                         final video = playlist.tracks[index];
                         return FadeDismissible(
                           key: Key("Diss_$index$video"),
-                          draggableRx: YoutubePlaylistController.inst.canReorderVideos,
+                          draggableRx: YoutubePlaylistController.inst.canReorderItems,
                           onDismissed: (direction) => YTUtils.onRemoveVideosFromPlaylist(playlist.name, [video]),
                           child: YTHistoryVideoCard(
                             key: ValueKey(index),
@@ -360,8 +360,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             day: null,
                             playlistID: playlist.playlistID,
                             playlistName: playlistCurrentName,
-                            draggingEnabled: canReorderVideos,
-                            openMenuOnLongPress: !canReorderVideos,
+                            draggingEnabled: canReorderItems,
+                            openMenuOnLongPress: !canReorderItems,
                             draggableThumbnail: true,
                             showMoreIcon: true,
                             draggingBarsBuilder: (color) {
@@ -370,8 +370,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             },
                             draggingThumbnailBuilder: (draggingTrigger) {
                               return ObxO(
-                                rx: YoutubePlaylistController.inst.canReorderVideos,
-                                builder: (context, canReorderVideos) => canReorderVideos ? draggingTrigger : const SizedBox(),
+                                rx: YoutubePlaylistController.inst.canReorderItems,
+                                builder: (context, canReorderItems) => canReorderItems ? draggingTrigger : const SizedBox(),
                               );
                             },
                             canHaveDuplicates: true,

@@ -431,3 +431,15 @@ enum CacheVideoPriority {
   low,
   GETOUT,
 }
+
+enum YTSortType {
+  title,
+  channelTitle,
+  duration,
+  date,
+  dateAdded,
+  shuffle,
+  mostPlayed,
+  latestPlayed,
+  firstListen,
+}

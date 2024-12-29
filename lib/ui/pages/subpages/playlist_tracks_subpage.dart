@@ -408,7 +408,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
   @override
   Widget build(BuildContext context) {
     final threeC = ObxO(
-      rx: PlaylistController.inst.canReorderTracks,
+      rx: PlaylistController.inst.canReorderItems,
       builder: (context, reorderable) => ThreeLineSmallContainers(enabled: reorderable),
     );
 
@@ -427,14 +427,14 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
           final tracks = tracksWithDate.toTracks();
 
           return ObxO(
-            rx: PlaylistController.inst.canReorderTracks,
+            rx: PlaylistController.inst.canReorderItems,
             builder: (context, reorderable) => TrackTilePropertiesProvider(
               configs: TrackTilePropertiesConfigs(
                 queueSource: playlist.toQueueSource(),
                 playlistName: playlist.name,
                 draggableThumbnail: reorderable,
                 horizontalGestures: !reorderable,
-                selectable: () => !PlaylistController.inst.canReorderTracks.value,
+                selectable: () => !PlaylistController.inst.canReorderItems.value,
               ),
               builder: (properties) => NamidaListViewRaw(
                 scrollController: _scrollController,
@@ -463,7 +463,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
 
                   return FadeDismissible(
                     key: Key("Diss_$i$trackWithDate"),
-                    draggableRx: PlaylistController.inst.canReorderTracks,
+                    draggableRx: PlaylistController.inst.canReorderItems,
                     onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
                     onTopWidget: Positioned(
                       left: 0,

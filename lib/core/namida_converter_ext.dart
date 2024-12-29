@@ -142,6 +142,10 @@ extension SortToText on SortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension YTSortToText on YTSortType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension CacheVideoPriorityToText on CacheVideoPriority {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -825,6 +829,15 @@ extension RouteUtils on NamidaRoute {
         null;
     }
 
+    final showMainMenu = route == RouteType.SUBPAGE_albumTracks ||
+        route == RouteType.SUBPAGE_artistTracks ||
+        route == RouteType.SUBPAGE_albumArtistTracks ||
+        route == RouteType.SUBPAGE_composerTracks ||
+        route == RouteType.SUBPAGE_genreTracks ||
+        route == RouteType.SUBPAGE_queueTracks;
+
+    final showPlaylistMenu = route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks;
+
     return <Widget>[
       _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
@@ -865,41 +878,29 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: sortingTracksMediaType != null,
       ),
-
-      if (name != null)
-        _getAnimatedCrossFade(
-          child: _getMoreIcon(() {
-            switch (route) {
-              case RouteType.SUBPAGE_albumTracks:
-                NamidaDialogs.inst.showAlbumDialog(name);
-                break;
-              case RouteType.SUBPAGE_artistTracks:
-                NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
-                break;
-              case RouteType.SUBPAGE_albumArtistTracks:
-                NamidaDialogs.inst.showArtistDialog(name, MediaType.albumArtist);
-                break;
-              case RouteType.SUBPAGE_composerTracks:
-                NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
-                break;
-              case RouteType.SUBPAGE_genreTracks:
-                NamidaDialogs.inst.showGenreDialog(name);
-                break;
-              case RouteType.SUBPAGE_queueTracks:
-                NamidaDialogs.inst.showQueueDialog(int.parse(name));
-                break;
-
-              default:
-                null;
+      _getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.sort,
+          onPressed: () {
+            if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
+              NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+                name ?? '',
+                ytplc.YoutubePlaylistController.inst,
+                YTSortType.values,
+                (sort) => sort.toText(),
+              );
+            } else {
+              NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+                name ?? '',
+                PlaylistController.inst,
+                SortType.values,
+                (sort) => sort.toText(),
+              );
             }
-          }),
-          shouldShow: route == RouteType.SUBPAGE_albumTracks ||
-              route == RouteType.SUBPAGE_artistTracks ||
-              route == RouteType.SUBPAGE_albumArtistTracks ||
-              route == RouteType.SUBPAGE_composerTracks ||
-              route == RouteType.SUBPAGE_genreTracks ||
-              route == RouteType.SUBPAGE_queueTracks,
+          },
         ),
+        shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
+      ),
 
       _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
@@ -925,35 +926,57 @@ extension RouteUtils on NamidaRoute {
 
       // ---- Playlist Tracks ----
       _getAnimatedCrossFade(
-        child: ObxO(
-          key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
-          rx: PlaylistController.inst.canReorderTracks,
-          builder: (context, reorderable) => NamidaAppBarIcon(
-            tooltip: () => PlaylistController.inst.canReorderTracks.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
-            icon: reorderable ? Broken.forward_item : Broken.lock_1,
-            onPressed: () => PlaylistController.inst.canReorderTracks.value = !PlaylistController.inst.canReorderTracks.value,
-          ),
+        child: EnableDisablePlaylistReordering(
+          playlistName: name ?? '',
+          playlistManager: PlaylistController.inst,
         ),
         shouldShow: route == RouteType.SUBPAGE_playlistTracks,
       ),
-      if (name != null)
-        _getAnimatedCrossFade(
-          child: _getMoreIcon(() {
-            NamidaDialogs.inst.showPlaylistDialog(name);
-          }),
-          shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks,
-        ),
 
       _getAnimatedCrossFade(
-        child: ObxO(
-          rx: ytplc.YoutubePlaylistController.inst.canReorderVideos,
-          builder: (context, reorderable) => NamidaAppBarIcon(
-            tooltip: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
-            icon: reorderable ? Broken.forward_item : Broken.lock_1,
-            onPressed: () => ytplc.YoutubePlaylistController.inst.canReorderVideos.value = !ytplc.YoutubePlaylistController.inst.canReorderVideos.value,
-          ),
+        child: EnableDisablePlaylistReordering(
+          playlistName: name ?? '',
+          playlistManager: ytplc.YoutubePlaylistController.inst,
         ),
         shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
+      ),
+
+      _getAnimatedCrossFade(
+        child: _getMoreIcon(() {
+          if (name == null) return;
+          switch (route) {
+            case RouteType.SUBPAGE_albumTracks:
+              NamidaDialogs.inst.showAlbumDialog(name);
+              break;
+            case RouteType.SUBPAGE_artistTracks:
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
+              break;
+            case RouteType.SUBPAGE_albumArtistTracks:
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.albumArtist);
+              break;
+            case RouteType.SUBPAGE_composerTracks:
+              NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
+              break;
+            case RouteType.SUBPAGE_genreTracks:
+              NamidaDialogs.inst.showGenreDialog(name);
+              break;
+            case RouteType.SUBPAGE_queueTracks:
+              NamidaDialogs.inst.showQueueDialog(int.parse(name));
+              break;
+
+            default:
+              null;
+          }
+        }),
+        shouldShow: showMainMenu && name != null,
+      ),
+
+      _getAnimatedCrossFade(
+        child: _getMoreIcon(() {
+          if (name == null) return;
+          NamidaDialogs.inst.showPlaylistDialog(name);
+        }),
+        shouldShow: showPlaylistMenu && name != null,
       ),
 
       // -- Settings Icon
@@ -962,7 +985,7 @@ extension RouteUtils on NamidaRoute {
           icon: Broken.setting_2,
           onPressed: const SettingsPage().navigate,
         ),
-        shouldShow: shouldShowInitialActions,
+        shouldShow: !showMainMenu && !showPlaylistMenu && shouldShowInitialActions,
       ),
 
       const SizedBox(width: 8.0),
@@ -1106,6 +1129,17 @@ class _NamidaConverters {
         SortType.mostPlayed: lang.MOST_PLAYED,
         SortType.latestPlayed: lang.RECENT_LISTENS,
         SortType.firstListen: lang.FIRST_LISTEN,
+      },
+      YTSortType: {
+        YTSortType.title: lang.TITLE,
+        YTSortType.channelTitle: lang.CHANNEL,
+        YTSortType.duration: lang.DURATION,
+        YTSortType.date: lang.DATE,
+        YTSortType.dateAdded: lang.DATE_ADDED,
+        YTSortType.shuffle: lang.SHUFFLE,
+        YTSortType.mostPlayed: lang.MOST_PLAYED,
+        YTSortType.latestPlayed: lang.RECENT_LISTENS,
+        YTSortType.firstListen: lang.FIRST_LISTEN,
       },
       CacheVideoPriority: {
         CacheVideoPriority.VIP: 'VIP',

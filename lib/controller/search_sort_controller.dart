@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:intl/intl.dart';
-import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/folder.dart';
@@ -129,34 +128,38 @@ class SearchSortController {
     }
   }
 
-  late final _mediaTracksSortingComparables = <SortType, Comparable Function(Track e)>{
-    SortType.title: (e) => e.title.toLowerCase(),
-    SortType.album: (e) => e.album.toLowerCase(),
-    SortType.albumArtist: (e) => e.albumArtist.toLowerCase(),
-    SortType.year: (e) => e.yearPreferyyyyMMdd,
-    SortType.artistsList: (e) => e.artistsList.join().toLowerCase(),
-    SortType.genresList: (e) => e.genresList.join().toLowerCase(),
-    SortType.dateAdded: (e) => e.dateAdded,
-    SortType.dateModified: (e) => e.dateModified,
-    SortType.bitrate: (e) => e.bitrate,
-    SortType.composer: (e) => e.composer.toLowerCase(),
-    SortType.trackNo: (e) => e.trackNo,
-    SortType.discNo: (e) => e.discNo,
-    SortType.filename: (e) => e.filename.toLowerCase(),
-    SortType.duration: (e) => e.durationMS,
-    SortType.sampleRate: (e) => e.sampleRate,
-    SortType.size: (e) => e.size,
-    SortType.rating: (e) => e.effectiveRating,
-    SortType.mostPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
-    SortType.latestPlayed: (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
-    SortType.firstListen: (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0,
-  };
+  Comparable Function(Track e)? getTracksSortingComparables(SortType type) {
+    return switch (type) {
+      SortType.title => (e) => e.title.toLowerCase(),
+      SortType.album => (e) => e.album.toLowerCase(),
+      SortType.albumArtist => (e) => e.albumArtist.toLowerCase(),
+      SortType.year => (e) => e.yearPreferyyyyMMdd,
+      SortType.artistsList => (e) => e.artistsList.join().toLowerCase(),
+      SortType.genresList => (e) => e.genresList.join().toLowerCase(),
+      SortType.dateAdded => (e) => e.dateAdded,
+      SortType.dateModified => (e) => e.dateModified,
+      SortType.bitrate => (e) => e.bitrate,
+      SortType.composer => (e) => e.composer.toLowerCase(),
+      SortType.trackNo => (e) => e.trackNo,
+      SortType.discNo => (e) => e.discNo,
+      SortType.filename => (e) => e.filename.toLowerCase(),
+      SortType.duration => (e) => e.durationMS,
+      SortType.sampleRate => (e) => e.sampleRate,
+      SortType.size => (e) => e.size,
+      SortType.rating => (e) => e.effectiveRating,
+      SortType.mostPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
+      SortType.latestPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
+      SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0,
+      SortType.shuffle => null,
+    };
+  }
 
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
     final sorts = settings.mediaItemsTrackSorting.value[media] ?? <SortType>[SortType.title];
     final l = <Comparable Function(Track e)>[];
     sorts.loop((e) {
-      if (_mediaTracksSortingComparables[e] != null) l.add(_mediaTracksSortingComparables[e]!);
+      final sorter = getTracksSortingComparables(e);
+      if (sorter != null) l.add(sorter);
     });
     return l;
   }
@@ -274,7 +277,7 @@ class SearchSortController {
       },
       isolateFunction: (itemsSendPort) async {
         final params = {
-          'playlists': playlistsMap.value.values.map((e) => e.toJson((item) => item.toJson())).toList(),
+          'playlists': playlistsMap.value.values.map((e) => e.toJson((item) => item.toJson(), PlaylistController.inst.sortToJson)).toList(),
           'translations': {
             'k_PLAYLIST_NAME_AUTO_GENERATED': lang.AUTO_GENERATED,
             'k_PLAYLIST_NAME_FAV': lang.FAVOURITES,
@@ -533,14 +536,14 @@ class SearchSortController {
     final formatDate = DateFormat('yyyyMMdd');
 
     final playlists = <({
-      GeneralPlaylist<TrackWithDate> pl,
+      LocalPlaylist pl,
       String name,
       String dateCreatedFormatted,
       String dateModifiedFormatted,
     })>[];
     for (int i = 0; i < playlistsMap.length; i++) {
       var plMap = playlistsMap[i];
-      final pl = GeneralPlaylist<TrackWithDate>.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson));
+      final pl = LocalPlaylist.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson), PlaylistController.sortFromJson);
       final trName = translatePlName(pl.name);
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));
       final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.modifiedDate));

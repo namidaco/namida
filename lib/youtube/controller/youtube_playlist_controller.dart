@@ -17,19 +17,18 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-typedef YoutubePlaylist = GeneralPlaylist<YoutubeID>;
+typedef YoutubePlaylist = GeneralPlaylist<YoutubeID, YTSortType>;
 
-class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
+class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSortType> {
   static YoutubePlaylistController get inst => _instance;
   static final YoutubePlaylistController _instance = YoutubePlaylistController._internal();
   YoutubePlaylistController._internal();
 
   @override
   String identifyBy(YoutubeID item) => item.id;
-
-  final canReorderVideos = false.obs;
-  void resetCanReorder() => canReorderVideos.value = false;
 
   void addNewPlaylist(
     String name, {
@@ -111,8 +110,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
     reverse ??= settings.ytPlaylistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
-    void sortThis(Comparable Function(MapEntry<String, GeneralPlaylist<YoutubeID>> p) comparable) =>
-        reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+    void sortThis(Comparable Function(MapEntry<String, YoutubePlaylist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
 
     switch (sortBy) {
       case GroupSortType.title:
@@ -178,6 +176,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override
+  dynamic sortToJson(List<YTSortType> items) => items.map((e) => e.name).toList();
+
+  @override
   String get favouritePlaylistPath => AppPaths.YT_LIKES_PLAYLIST;
 
   @override
@@ -199,7 +200,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
   static YoutubePlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
-      return YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson));
+      return YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson), _sortFromJson);
     } catch (_) {
       return null;
     }
@@ -214,7 +215,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
       if (f is File) {
         try {
           final response = f.readAsJsonSync();
-          final pl = YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson));
+          final pl = YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson), _sortFromJson);
           map[pl.name] = pl;
         } catch (_) {}
       }
@@ -224,4 +225,40 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String> {
 
   @override
   void sortPlaylists() => sortYTPlaylists();
+
+  static List<YTSortType>? _sortFromJson(dynamic value) {
+    try {
+      return (value as List).map((e) => YTSortType.values.getEnum(e)!).toList();
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  void onPlaylistItemsSort(List<YTSortType> sorts, bool reverse, List<YoutubeID> items) {
+    final comparables = <Comparable<dynamic> Function(YoutubeID vid)>[];
+    for (final s in sorts) {
+      final comparable = _mediaTracksSortingComparables(s);
+      if (comparable != null) comparables.add(comparable);
+    }
+
+    if (reverse) {
+      items.sortByReverseAlts(comparables);
+    } else {
+      items.sortByAlts(comparables);
+    }
+  }
+
+  Comparable Function(YoutubeID e)? _mediaTracksSortingComparables(YTSortType type) {
+    return switch (type) {
+      YTSortType.title => (e) => YoutubeInfoController.utils.getVideoName(e.id) ?? '',
+      YTSortType.channelTitle => (e) => YoutubeInfoController.utils.getVideoChannelName(e.id) ?? '',
+      YTSortType.duration => (e) => YoutubeInfoController.utils.getVideoDurationSeconds(e.id) ?? 0,
+      YTSortType.date => (e) => YoutubeInfoController.utils.getVideoReleaseDate(e.id) ?? DateTime(0),
+      YTSortType.dateAdded => (e) => e.dateAddedMS,
+      YTSortType.shuffle => null,
+      YTSortType.mostPlayed => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0,
+      YTSortType.latestPlayed => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0,
+      YTSortType.firstListen => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? 0,
+    };
+  }
 }

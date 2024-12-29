@@ -169,7 +169,9 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
         return item is Selectable ? trackConfig.currentImageBuilder(item, bcp) : ytConfig.currentImageBuilder(item, bcp);
       },
       textBuilder: (item) {
-        return item is Selectable ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track> : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String>;
+        return item is Selectable
+            ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track, SortType>
+            : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String, YTSortType>;
       },
       canShowBuffering: (item) => item is Selectable ? trackConfig.canShowBuffering(item) : ytConfig.canShowBuffering(item),
     );
@@ -181,7 +183,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
 
   void _openMenu(Track track) => NamidaDialogs.inst.showTrackDialog(track, source: QueueSource.playerQueue);
 
-  MiniplayerInfoData<Track> _textBuilder(Playable playable) {
+  MiniplayerInfoData<Track, SortType> _textBuilder(Playable playable) {
     String firstLine = '';
     String secondLine = '';
 
@@ -215,7 +217,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 
   NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
-    return NamidaMiniPlayerBase<Track>(
+    return NamidaMiniPlayerBase<Track, SortType>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
       trackTileConfigs: const TrackTilePropertiesConfigs(
         displayRightDragHandler: true,
@@ -421,7 +423,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  MiniplayerInfoData<String> _textBuilder(BuildContext context, Playable playbale) {
+  MiniplayerInfoData<String, YTSortType> _textBuilder(BuildContext context, Playable playbale) {
     final video = playbale as YoutubeID;
     String firstLine = '';
     String secondLine = '';
@@ -448,7 +450,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   }
 
   NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
-    return NamidaMiniPlayerBase<String>(
+    return NamidaMiniPlayerBase<String, YTSortType>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
       itemBuilder: (context, i, currentIndex, queue, _) {
         final video = queue[i] as YoutubeID;
