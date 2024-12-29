@@ -166,7 +166,7 @@ class VideoController {
     );
     if (settings.youtube.whiteVideoBGInLightMode && namida.context?.isDarkMode == false) {
       videoControls = ColoredBox(
-        color: Colors.white,
+        color: namida.context?.theme.scaffoldBackgroundColor ?? Colors.white,
         child: videoControls,
       );
     }
