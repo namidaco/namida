@@ -129,7 +129,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     final lookupListStreamInfoMap = <Map<String, dynamic>>[]; // StreamInfoItem
     final lookupListVideoStreamsMap = <Map<String, dynamic>>[]; // VideoStreamInfo
     final lookupListVideoMissingInfo = <Map<String, dynamic>>[]; // MissingVideoInfo
-    final lookupListYTVH = <YoutubeVideoHistory>[];
+    final lookupListYTVH = <Map<String, dynamic>>[];
 
     var lookupListStreamInfoMapCacheDetails = <CacheDetailsBase>[];
     var lookupListVideoStreamsMapCacheDetails = <CacheDetailsBase>[];
@@ -143,6 +143,7 @@ class YTLocalSearchController with PortsProvider<Map> {
         lookupListStreamInfoMapCacheDetails.loop((item) => item.close());
         lookupListVideoStreamsMapCacheDetails.loop((item) => item.close());
         lookupListVideoMissingVideoCacheDetails.loop((item) => item.close());
+        lookupListVideoMissingInfo.clear();
         lookupListYTVH.clear();
         lookupListStreamInfoMap.clear();
         lookupListVideoStreamsMap.clear();
@@ -170,8 +171,12 @@ class YTLocalSearchController with PortsProvider<Map> {
                 searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
                 break;
               case 4:
+                final info = lookupListVideoMissingInfo[res.index];
+                searchResults.add(MissingVideoInfo.fromMap(info).toStreamInfo());
+                break;
+              case 5:
                 final info = lookupListYTVH[res.index];
-                searchResults.add(info.toStreamInfo());
+                searchResults.add(YoutubeVideoHistory.fromJson(info).toStreamInfo());
                 break;
             }
           }
@@ -210,22 +215,22 @@ class YTLocalSearchController with PortsProvider<Map> {
       }
 
       // -----------------------------------
-      final list4 = lookupListYTVH;
+      final list4 = lookupListVideoMissingInfo;
       final l4 = list4.length;
       for (int i = 0; i < l4; i++) {
         final info = list4[i];
-        if (isMatch(info.title, info.channel)) {
-          searchResults.add(info.toStreamInfo());
+        if (isMatch(info['title'], info['channelName'])) {
+          searchResults.add(MissingVideoInfo.fromMap(info).toStreamInfo());
         }
       }
 
       // -----------------------------------
-      final list5 = lookupListVideoMissingInfo;
+      final list5 = lookupListYTVH;
       final l5 = list5.length;
       for (int i = 0; i < l5; i++) {
         final info = list5[i];
-        if (isMatch(info['title'], info['channelName'])) {
-          searchResults.add(MissingVideoInfo.fromMap(info).toStreamInfo());
+        if (isMatch(info['title'], info['channel'])) {
+          searchResults.add(YoutubeVideoHistory.fromJson(info).toStreamInfo());
         }
       }
 
@@ -250,16 +255,31 @@ class YTLocalSearchController with PortsProvider<Map> {
     lookupListVideoStreamsMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.videoStreams, null, () => null));
     lookupListVideoMissingVideoCacheDetails.add(CacheDetailsBase(YoutiPieSection.missingInfo, null, () => null));
 
+    final faultyTitlesBackupList = <String, void Function()>{}; // a list of items with faulty title to add later if no other list added it.
+    bool onAddItem(String? id, String? title, Map<String, dynamic> map, List<Map<String, dynamic>> listToAdd, int listNumber) {
+      if (id == null) return false;
+      if (title == null) return false;
+      if (lookupItemAvailable[id] != null) return false;
+      if (title.isYTTitleFaulty()) {
+        // null aware ??= bcz usually first lists have better details.
+        faultyTitlesBackupList[id] ??= () {
+          listToAdd.add(map);
+          lookupItemAvailable[id] = (list: listNumber, index: listToAdd.length - 1);
+        };
+        return false;
+      }
+      listToAdd.add(map);
+      lookupItemAvailable[id] = (list: listNumber, index: listToAdd.length - 1);
+      return true;
+    }
+
     lookupListStreamInfoMapCacheDetails.loop(
       (db) {
         db.loadEverything((map) {
           try {
             final id = map['id'];
             final title = map['title'] as String?;
-            if (id != null && (lookupItemAvailable[id] == null || (title != null && !title.isYTTitleFaulty()))) {
-              lookupListStreamInfoMap.add(map);
-              lookupItemAvailable[id] = (list: 2, index: lookupListStreamInfoMap.length - 1);
-            }
+            onAddItem(id, title, map, lookupListStreamInfoMap, 2);
           } catch (_) {}
         });
         db.close();
@@ -272,10 +292,20 @@ class YTLocalSearchController with PortsProvider<Map> {
             final info = map['info'] as Map;
             final id = info['id'];
             final title = map['title'] as String?;
-            if (id != null && (lookupItemAvailable[id] == null || (title != null && !title.isYTTitleFaulty()))) {
-              lookupListVideoStreamsMap.add(info.cast());
-              lookupItemAvailable[id] = (list: 3, index: lookupListVideoStreamsMap.length - 1);
-            }
+            onAddItem(id, title, map, lookupListVideoStreamsMap, 3);
+          } catch (_) {}
+        });
+        db.close();
+      },
+    );
+
+    lookupListVideoMissingVideoCacheDetails.loop(
+      (db) {
+        db.loadEverything((map) {
+          try {
+            final id = map['videoId'];
+            final title = map['title'] as String?;
+            onAddItem(id, title, map, lookupListVideoMissingInfo, 4);
           } catch (_) {}
         });
         db.close();
@@ -288,14 +318,10 @@ class YTLocalSearchController with PortsProvider<Map> {
           final response = f.readAsJsonSync();
           if (response is List) {
             response.loop(
-              (r) {
-                final id = r['id'] as String?;
-                final title = r['title'] as String?;
-                if (id != null && (lookupItemAvailable[id] == null || (title != null && !title.isYTTitleFaulty()))) {
-                  final val = YoutubeVideoHistory.fromJson(r);
-                  lookupListYTVH.add(val);
-                  lookupItemAvailable[id] = (list: 4, index: lookupListYTVH.length - 1);
-                }
+              (map) {
+                final id = map['id'] as String?;
+                final title = map['title'] as String?;
+                onAddItem(id, title, map, lookupListYTVH, 5);
               },
             );
           }
@@ -303,28 +329,20 @@ class YTLocalSearchController with PortsProvider<Map> {
       }
     });
 
-    lookupListVideoMissingVideoCacheDetails.loop(
-      (db) {
-        db.loadEverything((map) {
-          try {
-            final id = map['videoId'];
-            final title = map['title'] as String?;
-            if (id != null && (lookupItemAvailable[id] == null || (title != null && !title.isYTTitleFaulty()))) {
-              lookupListVideoMissingInfo.add(map);
-              lookupItemAvailable[id] = (list: 5, index: lookupListVideoMissingInfo.length - 1);
-            }
-          } catch (_) {}
-        });
-        db.close();
-      },
-    );
+    for (final item in faultyTitlesBackupList.entries) {
+      final alreadyAdded = lookupItemAvailable[item.key] != null;
+      if (!alreadyAdded) item.value(); // add function
+    }
 
     sendPort.send(null); // finished filling
 
     final durationTaken = start.difference(DateTime.now());
-    printo('Initialized 3 Lists in $durationTaken');
+
+    printo('Initialized 4 Lists in $durationTaken');
     printo('''Initialized lookupListStreamInfoMap: ${lookupListStreamInfoMap.length} | 
-        lookupListVideoStreamsMap: ${lookupListVideoStreamsMap.length} | lookupListYTVH: ${lookupListYTVH.length}''');
+        lookupListVideoStreamsMap: ${lookupListVideoStreamsMap.length} |
+        lookupListVideoMissingInfo: ${lookupListVideoMissingInfo.length} |
+        lookupListYTVH: ${lookupListYTVH.length}''');
     // -- end filling info
   }
 
