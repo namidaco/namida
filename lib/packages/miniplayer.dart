@@ -31,6 +31,7 @@ import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -252,6 +253,9 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumIdentifier),
       onMenuOpen: (currentItem, _) => _openMenu((currentItem as Selectable).track),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
+        onSearch: (item) {
+          showSetYTLinkCommentDialog([(item as Selectable).track], CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
+        },
         onOpen: (currentItem) {
           if (settings.enableVideoPlayback.value) return true;
 
@@ -488,6 +492,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       },
       onMenuOpen: (currentItem, d) => _openMenu(context, (currentItem as YoutubeID), d),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
+        onSearch: null,
         onOpen: (currentItem) => true,
         onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
         videoIconBuilder: (currentItem, size, color) => Obx(

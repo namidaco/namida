@@ -44,7 +44,7 @@ Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme) as
   }
 }
 
-Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) async {
+Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme, {bool autoOpenSearch = false}) async {
   final singleTrack = tracks.first;
   final formKey = GlobalKey<FormState>();
   final controller = TextEditingController();
@@ -54,6 +54,71 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
   controller.text = ytlink;
 
   final canEditComment = false.obs;
+
+  void openSearchDialog() {
+    final trExt = singleTrack.toTrackExt();
+    final title = trExt.title == UnknownTags.TITLE ? null : trExt.title;
+    final album = trExt.album == UnknownTags.ALBUM ? null : trExt.album;
+    final artist = trExt.originalArtist == UnknownTags.ARTIST ? null : trExt.originalArtist;
+    final searchText = [
+      if (title != null) title,
+      if (album != null) album,
+      if (artist != null) artist,
+    ].join(' ');
+    ytSearchController.text = searchText;
+    NamidaNavigator.inst.navigateDialog(
+      colorScheme: colorScheme,
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        title: lang.SEARCH_YOUTUBE,
+        contentPadding: EdgeInsets.zero,
+        horizontalInset: 24.0,
+        child: SizedBox(
+          width: namida.width,
+          height: namida.height * 0.7,
+          child: Column(
+            children: [
+              const SizedBox(height: 16.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: CustomTagTextField(
+                  controller: ytSearchController,
+                  keyboardType: TextInputType.text,
+                  hintText: searchText,
+                  labelText: lang.SEARCH,
+                  onFieldSubmitted: (value) {
+                    ytSearchPageController.currentState?.fetchSearch(customText: ytSearchController.text);
+                  },
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Expanded(
+                child: YoutubeSearchResultsPage(
+                  key: ytSearchPageController,
+                  searchTextCallback: () => ytSearchController.text,
+                  onVideoTap: (video) {
+                    NamidaNavigator.inst.closeDialog();
+                    final url = video.buildUrl();
+                    controller.text = url;
+                    canEditComment.value = true;
+
+                    snackyy(
+                      message: 'Set to "${video.title}" by "${video.channelName ?? video.channel.title}"',
+                      top: false,
+                      borderRadius: 0,
+                      margin: EdgeInsets.zero,
+                      leftBarIndicatorColor: colorScheme,
+                      animationDurationMS: 500,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -70,70 +135,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
         contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
         leftAction: NamidaButton(
           text: lang.SEARCH,
-          onPressed: () {
-            final trExt = singleTrack.toTrackExt();
-            final title = trExt.title == UnknownTags.TITLE ? null : trExt.title;
-            final album = trExt.album == UnknownTags.ALBUM ? null : trExt.album;
-            final artist = trExt.originalArtist == UnknownTags.ARTIST ? null : trExt.originalArtist;
-            final searchText = [
-              if (title != null) title,
-              if (album != null) album,
-              if (artist != null) artist,
-            ].join(' ');
-            ytSearchController.text = searchText;
-            NamidaNavigator.inst.navigateDialog(
-              colorScheme: colorScheme,
-              dialogBuilder: (theme) => CustomBlurryDialog(
-                theme: theme,
-                title: lang.SEARCH_YOUTUBE,
-                contentPadding: EdgeInsets.zero,
-                horizontalInset: 24.0,
-                child: SizedBox(
-                  width: namida.width,
-                  height: namida.height * 0.7,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8.0),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CustomTagTextField(
-                          controller: ytSearchController,
-                          keyboardType: TextInputType.text,
-                          hintText: searchText,
-                          labelText: lang.SEARCH,
-                          onFieldSubmitted: (value) {
-                            ytSearchPageController.currentState?.fetchSearch(customText: ytSearchController.text);
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Expanded(
-                        child: YoutubeSearchResultsPage(
-                          key: ytSearchPageController,
-                          searchTextCallback: () => ytSearchController.text,
-                          onVideoTap: (video) {
-                            NamidaNavigator.inst.closeDialog();
-                            final url = video.buildUrl();
-                            controller.text = url;
-                            canEditComment.value = true;
-
-                            snackyy(
-                              message: 'Set to "${video.title}" by "${video.channelName ?? video.channel.title}"',
-                              top: false,
-                              borderRadius: 0,
-                              margin: EdgeInsets.zero,
-                              leftBarIndicatorColor: colorScheme,
-                              animationDurationMS: 500,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+          onPressed: openSearchDialog,
         ),
         actions: [
           const CancelButton(),
@@ -191,6 +193,8 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme) a
       ),
     ),
   );
+
+  if (autoOpenSearch) openSearchDialog();
 }
 
 Widget get _getKeepDatesWidget => ObxO(

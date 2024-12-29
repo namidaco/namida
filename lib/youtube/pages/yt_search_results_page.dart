@@ -379,6 +379,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                   SizedBox(
                                                     height: itemsLengthWithoutHiddens * thumbnailItemExtent,
                                                     child: ListView.builder(
+                                                      padding: EdgeInsets.zero,
                                                       primary: false,
                                                       physics: const NeverScrollableScrollPhysics(),
                                                       itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
@@ -394,8 +395,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                       itemCount: items.length,
                                                       itemBuilder: (context, index) {
                                                         final item = items[index];
-                                                        if (!isShortsVisible && item is StreamInfoItemShort) return const SizedBox();
-                                                        if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return const SizedBox();
+                                                        if (!isShortsVisible && item is StreamInfoItemShort) return null;
+                                                        if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return null;
                                                         return switch (item.runtimeType) {
                                                           const (StreamInfoItem) => YoutubeVideoCard(
                                                               thumbnailHeight: thumbnailHeight,

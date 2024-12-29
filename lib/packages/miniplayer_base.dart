@@ -51,6 +51,7 @@ class FocusedMenuOptions {
   final String? Function(Playable item) currentId;
   final Rxn<VideoStreamsResult> streams;
   final Future<void> Function(Playable item)? loadQualities;
+  final void Function(Playable item)? onSearch;
   final Future<void> Function(Playable item, NamidaVideo video) onLocalVideoTap;
   final Future<void> Function(Playable item, String? videoId, VideoStream stream, File? cacheFile, VideoStreamsResult? mainStreams) onStreamVideoTap;
 
@@ -63,6 +64,7 @@ class FocusedMenuOptions {
     required this.localVideos,
     required this.streams,
     required this.loadQualities,
+    required this.onSearch,
     required this.onLocalVideoTap,
     required this.onStreamVideoTap,
   });
@@ -543,13 +545,23 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           ),
                           menuWidget: Obx(
                             (context) {
+                              final currentId = focusedMenuOptions.currentId(currentItem);
                               final availableVideos = focusedMenuOptions.localVideos.valueR;
                               final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams
                                   .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
                               return ListView(
                                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 children: [
-                                  if (focusedMenuOptions.loadQualities != null)
+                                  if (currentId == null || currentId.isEmpty)
+                                    _MPQualityButton(
+                                      title: lang.SEARCH,
+                                      icon: Broken.search_normal,
+                                      bgColor: null,
+                                      onTap: () {
+                                        focusedMenuOptions.onSearch?.call(currentItem);
+                                      },
+                                    )
+                                  else if (focusedMenuOptions.loadQualities != null)
                                     _MPQualityButton(
                                       title: lang.CHECK_FOR_MORE,
                                       icon: Broken.chart,
