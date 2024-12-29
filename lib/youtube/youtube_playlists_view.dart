@@ -21,7 +21,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
@@ -66,17 +65,12 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     return videos;
   }
 
-  List<NamidaPopupItem> getMenuItems(YoutubePlaylist playlist) {
+  List<NamidaPopupItem> getMenuItems(BuildContext context, YoutubePlaylist playlist) {
     return YTUtils.getVideosMenuItems(
+      context: context,
       videos: playlist.tracks,
       playlistName: '',
-      moreItems: [
-        NamidaPopupItem(
-          icon: Broken.trash,
-          title: lang.DELETE_PLAYLIST,
-          onTap: () => playlist.promptDelete(name: playlist.name),
-        ),
-      ],
+      playlistToRemove: playlist,
     );
   }
 
@@ -353,7 +347,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
                   smallBoxIcon: Broken.play_cricle,
                   checkmarkStatus: favouritesPlaylist.isSubItemFavourite(idsToAdd.first),
-                  menuChildrenDefault: displayMenu ? () => getMenuItems(favouritesPlaylist.value) : null,
+                  menuChildrenDefault: displayMenu ? () => getMenuItems(context, favouritesPlaylist.value) : null,
                 ),
               ),
             ),
@@ -378,7 +372,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   }
 
                   return NamidaPopupWrapper(
-                    childrenDefault: displayMenu ? () => getMenuItems(playlist) : null,
+                    childrenDefault: displayMenu ? () => getMenuItems(context, playlist) : null,
                     openOnTap: false,
                     child: YoutubeCard(
                       thumbnailType: ThumbnailType.playlist,
@@ -406,7 +400,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       smallBoxText: playlist.tracks.length.formatDecimal(),
                       smallBoxIcon: Broken.play_cricle,
                       checkmarkStatus: idsExist,
-                      menuChildrenDefault: displayMenu ? () => getMenuItems(playlist) : null,
+                      menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist) : null,
                     ),
                   );
                 },

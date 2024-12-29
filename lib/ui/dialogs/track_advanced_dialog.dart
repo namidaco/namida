@@ -38,14 +38,17 @@ void showTrackAdvancedDialog({
   required List<(String, String)> albumsUniqued,
 }) async {
   final isSingle = tracks.length == 1;
-  final canShowClearDialog = tracks.hasAnythingCached;
 
   final Map<TrackSource, int> sourcesMap = {};
+  final tracksWithYTID = <Track, String>{};
   tracks.loop((e) {
     final twd = e.trackWithDate;
     if (twd != null) {
       sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
     }
+
+    final ytid = e.track.youtubeID;
+    if (ytid.isNotEmpty) tracksWithYTID[e.track] ??= ytid;
   });
   final willUpdateArtwork = false.obs;
 
@@ -98,6 +101,8 @@ void showTrackAdvancedDialog({
   final videosOnlyCount = tracks.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
   final tracksOnlyCount = tracks.length - videosOnlyCount;
 
+  final canShowClearDialogRx = true.obs;
+
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       willUpdateArtwork.close();
@@ -105,6 +110,7 @@ void showTrackAdvancedDialog({
       reIndexedTracksFailed.close();
       shouldShowReIndexProgress.close();
       shouldReIndexEnabled.close();
+      canShowClearDialogRx.close();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
@@ -113,18 +119,28 @@ void showTrackAdvancedDialog({
       title: lang.ADVANCED,
       child: Column(
         children: [
-          NamidaOpacity(
-            opacity: canShowClearDialog ? 1.0 : 0.6,
-            child: IgnorePointer(
-              ignoring: !canShowClearDialog,
-              child: CustomListTile(
-                passedColor: colorScheme,
-                title: lang.CLEAR,
-                subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
-                icon: Broken.broom,
-                onTap: () => showTrackClearDialog(tracks, colorScheme),
-              ),
-            ),
+          ObxO(
+            rx: canShowClearDialogRx,
+            builder: (context, canShowClearDialog) {
+              return NamidaOpacity(
+                opacity: canShowClearDialog ? 1.0 : 0.6,
+                child: CustomListTile(
+                  passedColor: colorScheme,
+                  title: lang.CLEAR,
+                  subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
+                  icon: Broken.broom,
+                  onTap: canShowClearDialog ? () => showTrackClearDialog(tracks, colorScheme) : null,
+                  trailing: SetVideosPriorityChip(
+                    totalCount: tracksWithYTID.length,
+                    videosId: tracksWithYTID.values,
+                    countToText: (count) => count.displayTrackKeyword,
+                    onChanged: (cachePriority) {
+                      canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : tracks.hasAnythingCached;
+                    },
+                  ),
+                ),
+              );
+            },
           ),
           CustomListTile(
             passedColor: colorScheme,

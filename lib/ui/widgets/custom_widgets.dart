@@ -25,6 +25,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -4579,5 +4580,139 @@ class AnimatedThemeOrTheme extends StatelessWidget {
             data: data,
             child: child,
           );
+  }
+}
+
+class SetVideosPriorityChipController {
+  // -- worst of my creations so far
+  SetVideosPriorityChipController();
+
+  NamidaPopupWrapper? Function()? _menuWrapperFn;
+  BuildContext? _currentContext;
+
+  void showMenu() {
+    _menuWrapperFn?.call()?._showPopupMenu(_currentContext!);
+  }
+}
+
+class SetVideosPriorityChip extends StatefulWidget {
+  final SetVideosPriorityChipController? controller;
+  final bool smaller;
+  final int totalCount;
+  final Iterable<String> videosId;
+  final String Function(int count) countToText;
+  final void Function(CacheVideoPriority priority) onChanged;
+  const SetVideosPriorityChip({
+    super.key,
+    this.controller,
+    this.smaller = false,
+    required this.totalCount,
+    required this.videosId,
+    required this.countToText,
+    required this.onChanged,
+  });
+
+  @override
+  State<SetVideosPriorityChip> createState() => _SetVideosPriorityChipState();
+}
+
+class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
+  CacheVideoPriority? cachePriority;
+
+  @override
+  void initState() {
+    if (widget.totalCount == 1) {
+      cachePriority = VideoController.inst.videosPriorityManager.getVideoPriority(widget.videosId.first);
+    }
+    widget.controller?._menuWrapperFn = _getPopupWrapper;
+    super.initState();
+  }
+
+  Future<bool> _confirmSetPriorityForAll(int count) async {
+    bool confirmed = false;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: "${lang.UPDATE}: ${widget.countToText(count)}",
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.CONFIRM.toUpperCase(),
+            onPressed: () async {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+      ),
+    );
+    return confirmed;
+  }
+
+  NamidaPopupWrapper? _getPopupWrapper() {
+    return cachePriority != null || widget.totalCount > 1
+        ? NamidaPopupWrapper(
+            childrenAfterChildrenDefault: false,
+            children: () => [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Broken.info_circle,
+                      size: 14.0,
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      lang.PRIORITY,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.displaySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const NamidaContainerDivider(),
+            ],
+            childrenDefault: () => CacheVideoPriority.values
+                .map(
+                  (e) => NamidaPopupItem(
+                    icon: Broken.cpu,
+                    title: e.toText(),
+                    onTap: () async {
+                      if (widget.totalCount == 1) {
+                        VideoController.inst.videosPriorityManager.setVideoPriority(widget.videosId.first, e);
+                        setState(() => cachePriority = e);
+                        widget.onChanged(e);
+                      } else {
+                        final confirmed = await _confirmSetPriorityForAll(widget.totalCount);
+                        if (confirmed) {
+                          VideoController.inst.videosPriorityManager.setVideosPriority(widget.videosId, e);
+                          if (mounted) setState(() => cachePriority = e);
+                          widget.onChanged(e);
+                        }
+                      }
+                    },
+                  ),
+                )
+                .toList(),
+            child: NamidaInkWell(
+              padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              bgColor: context.theme.cardColor,
+              child: Text(
+                cachePriority?.toText() ?? '?',
+                style: widget.smaller ? context.theme.textTheme.displaySmall : context.theme.textTheme.displayMedium,
+              ),
+            ),
+          )
+        : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    widget.controller?._currentContext = context;
+    return _getPopupWrapper() ?? SizedBox();
   }
 }

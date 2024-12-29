@@ -65,6 +65,10 @@ class _VideosPriorityManager {
     }
   }
 
+  CacheVideoPriority getVideoPriority(String videoId) {
+    return _videosPriorityMap[videoId] ?? _mapToPriority(_cacheVideosPriorityDB.get(videoId)) ?? CacheVideoPriority.normal;
+  }
+
   void setVideoPriority(String videoId, CacheVideoPriority priority) {
     final alreadySet = _videosPriorityMap[videoId] == priority;
     if (!alreadySet) {
@@ -73,9 +77,16 @@ class _VideosPriorityManager {
     }
   }
 
-  void setVideosPriority(List<String> videoIds, CacheVideoPriority priority) {
+  void setVideosPriority(Iterable<String> videoIds, CacheVideoPriority priority) {
     for (final videoId in videoIds) {
       setVideoPriority(videoId, priority);
     }
+  }
+
+  CacheVideoPriority? _mapToPriority(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    final values = CacheVideoPriority.values;
+    final int valueIndex = map[_priorityKey];
+    return values[valueIndex];
   }
 }

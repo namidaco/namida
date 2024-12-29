@@ -82,6 +82,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                       menu: NamidaPopupWrapper(
                         openOnLongPress: false,
                         childrenDefault: () => YTUtils.getVideosMenuItems(
+                          context: context,
                           playlistName: k_PLAYLIST_NAME_HISTORY,
                           videos: videos,
                         ),

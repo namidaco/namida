@@ -508,6 +508,7 @@ abstract class LanguageKeys {
   String get PREVIOUS_BUTTON_REPLAYS => _getKey('PREVIOUS_BUTTON_REPLAYS');
   String get PREVIOUS_BUTTON_REPLAYS_SUBTITLE => _getKey('PREVIOUS_BUTTON_REPLAYS_SUBTITLE');
   String get PRIORITIZE_EMBEDDED_LYRICS => _getKey('PRIORITIZE_EMBEDDED_LYRICS');
+  String get PRIORITY => _getKey('PRIORITY');
   String get PRIVATE => _getKey('PRIVATE');
   String get PROGRESS => _getKey('PROGRESS');
   String get PROMPT_INDEXING_REFRESH => _getKey('PROMPT_INDEXING_REFRESH');

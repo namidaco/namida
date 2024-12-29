@@ -52,6 +52,7 @@ import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
+import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
@@ -175,12 +176,24 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideosMenuItems({
+    required BuildContext context,
     required List<YoutubeID> videos,
-    List<NamidaPopupItem> moreItems = const [],
     required String playlistName,
+    YoutubePlaylist? playlistToRemove,
     bool showPlayAllReverse = true,
   }) {
     final playAfterVid = getPlayerAfterVideo();
+
+    final setPriorityChipController = SetVideosPriorityChipController();
+    final setPriorityChip = SetVideosPriorityChip(
+      controller: setPriorityChipController,
+      smaller: true,
+      totalCount: videos.length,
+      videosId: videos.map((e) => e.id),
+      countToText: (count) => count.displayVideoKeyword,
+      onChanged: (_) {},
+    );
+
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
@@ -231,10 +244,22 @@ class YTUtils {
       if (playlistName != '')
         NamidaPopupItem(
           icon: Broken.trash,
-          title: lang.DELETE,
+          title: lang.REMOVE_FROM_PLAYLIST,
+          subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(k_PLAYLIST_NAME_HISTORY, videos),
         ),
-      ...moreItems,
+      if (playlistToRemove != null)
+        NamidaPopupItem(
+          icon: Broken.trash,
+          title: lang.DELETE_PLAYLIST,
+          onTap: () => playlistToRemove.promptDelete(name: playlistToRemove.name),
+        ),
+      NamidaPopupItem(
+        icon: Broken.bill,
+        title: lang.PRIORITY,
+        trailing: setPriorityChip,
+        onTap: setPriorityChipController.showMenu,
+      ),
     ];
   }
 
@@ -297,6 +322,13 @@ class YTUtils {
     final clearItem = NamidaPopupItem(
       icon: Broken.broom,
       title: lang.CLEAR,
+      trailing: SetVideosPriorityChip(
+        smaller: true,
+        totalCount: 1,
+        videosId: [videoId],
+        countToText: (count) => count.displayTrackKeyword,
+        onChanged: (_) {},
+      ),
       onTap: () {
         const YTUtils().showVideoClearDialog(context, videoId);
       },
@@ -573,6 +605,13 @@ class YTUtils {
         NamidaPopupItem(
           icon: Broken.broom,
           title: lang.CLEAR,
+          trailing: SetVideosPriorityChip(
+            smaller: true,
+            totalCount: 1,
+            videosId: [videoId],
+            countToText: (count) => count.displayTrackKeyword,
+            onChanged: (_) {},
+          ),
           onTap: () {
             final ctx = namida.context;
             if (ctx != null) const YTUtils().showVideoClearDialog(ctx, videoId);

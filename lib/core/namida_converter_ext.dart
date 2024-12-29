@@ -142,6 +142,10 @@ extension SortToText on SortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension CacheVideoPriorityToText on CacheVideoPriority {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension GroupSortToText on GroupSortType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -1102,6 +1106,13 @@ class _NamidaConverters {
         SortType.mostPlayed: lang.MOST_PLAYED,
         SortType.latestPlayed: lang.RECENT_LISTENS,
         SortType.firstListen: lang.FIRST_LISTEN,
+      },
+      CacheVideoPriority: {
+        CacheVideoPriority.VIP: 'VIP',
+        CacheVideoPriority.high: 'High',
+        CacheVideoPriority.normal: 'Normal',
+        CacheVideoPriority.low: 'Low',
+        CacheVideoPriority.GETOUT: 'Disable',
       },
       GroupSortType: {
         GroupSortType.title: lang.TITLE,

@@ -318,10 +318,15 @@ class VideoController {
       return nv;
     }
 
+    final trackYTID = track.youtubeID;
+    if (videosPriorityManager.getVideoPriority(trackYTID) == CacheVideoPriority.GETOUT) {
+      isNoVideosAvailable.value = true;
+      return null;
+    }
+
     final possibleVideos = await _getPossibleVideosFromTrack(track);
     currentPossibleLocalVideos.value = possibleVideos;
 
-    final trackYTID = track.youtubeID;
     if (possibleVideos.isEmpty && trackYTID == '') isNoVideosAvailable.value = true;
 
     final vpsInSettings = settings.videoPlaybackSource.value;
