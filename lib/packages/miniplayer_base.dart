@@ -527,6 +527,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           bottomOffsetHeight: 12.0,
                           leftOffsetHeight: 4.0,
                           onMenuOpen: () {
+                            // ScrollSearchController.inst.unfocusKeyboard(); // the miniplayer should have alr done that.
                             final canOpen = focusedMenuOptions.onOpen(_getcurrentItem);
                             isMenuOpened.value = canOpen;
                             return canOpen;

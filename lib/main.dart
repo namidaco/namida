@@ -475,35 +475,38 @@ class Namida extends StatelessWidget {
   final bool shouldShowOnBoarding;
   const Namida({super.key, required this.shouldShowOnBoarding});
 
-  Widget buildMainApp(Widget widget, Brightness? platformBrightness) => ScrollConfiguration(
-        behavior: const ScrollBehaviorModified(),
-        child: ObxO(
-          rx: settings.selectedLanguage,
-          builder: (context, selectedLanguage) {
-            final codes = selectedLanguage.code.split('_');
-            return Localizations(
-              locale: Locale(codes.first, codes.last),
-              delegates: const [
-                DefaultWidgetsLocalizations.delegate,
-                DefaultMaterialLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-              ],
-              child: Obx(
-                (context) {
-                  final mode = settings.themeMode.valueR;
-                  final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
-                  final isLight = !useDarkTheme;
-                  final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                  NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
-                  return Theme(
-                    data: theme,
-                    child: widget,
-                  );
-                },
-              ),
-            );
-          },
+  Widget buildMainApp(Widget widget, Brightness? platformBrightness) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: ScrollConfiguration(
+          behavior: const ScrollBehaviorModified(),
+          child: ObxO(
+            rx: settings.selectedLanguage,
+            builder: (context, selectedLanguage) {
+              final codes = selectedLanguage.code.split('_');
+              return Localizations(
+                locale: Locale(codes.first, codes.last),
+                delegates: const [
+                  DefaultWidgetsLocalizations.delegate,
+                  DefaultMaterialLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                ],
+                child: Obx(
+                  (context) {
+                    final mode = settings.themeMode.valueR;
+                    final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
+                    final isLight = !useDarkTheme;
+                    final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                    NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
+                    return Theme(
+                      data: theme,
+                      child: widget,
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ),
       );
 

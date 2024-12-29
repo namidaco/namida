@@ -285,10 +285,10 @@ class NamidaNavigator {
 
     Future<bool> onWillPop() async {
       if (tapToDismiss != null && tapToDismiss() == false) return false;
-      if (onDismissing != null) await onDismissing();
 
       if (_currentDialogNumber > 0) {
         closeDialog();
+        if (onDismissing != null) await onDismissing(); // this can open new dialog, so we closeDialog() first.
         return false;
       }
 
