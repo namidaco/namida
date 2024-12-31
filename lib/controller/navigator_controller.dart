@@ -541,58 +541,61 @@ SnackbarController? snackyy({
 
   final snackWidth = view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio;
 
-  final content = Padding(
-    padding: paddingInsets,
-    child: SizedBox(
-      width: snackWidth,
-      child: Row(
-        children: [
-          if (icon != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Icon(icon, color: itemsColor),
-            ),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (title != '')
+  final content = Theme(
+    data: context?.theme ?? material.ThemeData(),
+    child: Padding(
+      padding: paddingInsets,
+      child: SizedBox(
+        width: snackWidth,
+        child: Row(
+          children: [
+            if (icon != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Icon(icon, color: itemsColor),
+              ),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (title != '')
+                    Text(
+                      title,
+                      style: getTextStyle(FontWeight.w700, 16),
+                    ),
                   Text(
-                    title,
-                    style: getTextStyle(FontWeight.w700, 16),
+                    message,
+                    style: title != '' ? getTextStyle(FontWeight.w400, 13.0) : getTextStyle(FontWeight.w600, 14.0),
+                    maxLines: maxLinesMessage,
+                    overflow: maxLinesMessage == null ? null : TextOverflow.ellipsis,
                   ),
-                Text(
-                  message,
-                  style: title != '' ? getTextStyle(FontWeight.w400, 13.0) : getTextStyle(FontWeight.w600, 14.0),
-                  maxLines: maxLinesMessage,
-                  overflow: maxLinesMessage == null ? null : TextOverflow.ellipsis,
+                ],
+              ),
+            ),
+            if (button != null)
+              TextButton(
+                style: ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  maximumSize: snackWidth == null
+                      ? null
+                      : material.WidgetStatePropertyAll(
+                          Size(snackWidth * 0.5, double.infinity),
+                        ),
                 ),
-              ],
-            ),
-          ),
-          if (button != null)
-            TextButton(
-              style: ButtonStyle(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                maximumSize: snackWidth == null
-                    ? null
-                    : material.WidgetStatePropertyAll(
-                        Size(snackWidth * 0.5, double.infinity),
-                      ),
+                onPressed: () {
+                  if (alreadyTappedButton) return;
+                  alreadyTappedButton = true;
+                  button.$2();
+                  snackbarController?.close();
+                },
+                child: NamidaButtonText(
+                  button.$1,
+                  style: getTextStyle(FontWeight.bold, 14.0, action: true),
+                ),
               ),
-              onPressed: () {
-                if (alreadyTappedButton) return;
-                alreadyTappedButton = true;
-                button.$2();
-                snackbarController?.close();
-              },
-              child: NamidaButtonText(
-                button.$1,
-                style: getTextStyle(FontWeight.bold, 14.0, action: true),
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     ),
   );
