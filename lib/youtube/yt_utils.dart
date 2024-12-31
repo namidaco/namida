@@ -20,6 +20,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -51,11 +52,13 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
+import 'package:namida/youtube/functions/video_download_options.dart';
 import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
+import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -975,6 +978,83 @@ class YTUtils {
         ),
       ),
     );
+  }
+
+  static void showFilenameBuilderOutputSheet(
+    BuildContext context, {
+    required String groupName,
+    required bool showEditTags,
+    required void Function(String text) onChanged,
+  }) async {
+    final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
+    await showNamidaBottomSheetWithTextField(
+      context: context,
+      title: lang.OUTPUT,
+      textfieldConfig: BottomSheetTextFieldConfigWC(
+        controller: controller,
+        hintText: '',
+        labelText: lang.FILE_NAME,
+        validator: (value) {
+          if (value == null) return lang.PLEASE_ENTER_A_NAME;
+          final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
+          if (file.existsSync()) {
+            return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
+          }
+          if (!YoutubeController.filenameBuilder.isBuildingDefaultFilenameSafe(value)) {
+            return YoutubeController.filenameBuilder.encodedParamsThatShouldExistInFilename.join(' - ');
+          }
+          return null;
+        },
+      ),
+      buttonText: lang.SAVE,
+      onButtonTap: (text) {
+        onChanged(text);
+        settings.youtube.save(downloadFilenameBuilder: text);
+        return true;
+      },
+      extraPreItemsBuilder: !showEditTags
+          ? null
+          : (formState) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: CustomListTile(
+                  icon: Broken.edit,
+                  title: lang.EDIT_TAGS,
+                  onTap: () async {
+                    await showVideoDownloadOptionsSheet(
+                      context: context,
+                      videoTitle: null,
+                      videoUploader: null,
+                      tagMaps: settings.youtube.initialDefaultMetadataTags,
+                      tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
+                      supportTagging: true,
+                      showSpecificFileOptions: false, onDownloadFilenameChanged: (filename) {}, // not visible
+                      onDownloadGroupNameChanged: (newGroupName) {}, // not visible
+                      preWidget: (controllerFn, onChangedFn) => Padding(
+                        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+                        child: YTDownloadFilenameBuilderRow(
+                          controller: null,
+                          controllerCallback: controllerFn,
+                          onChanged: onChangedFn,
+                        ),
+                      ),
+                      initialGroupName: groupName,
+                    );
+                    settings.youtube.save();
+                  },
+                ),
+              );
+            },
+      extraItemsBuilder: (formState) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+          child: YTDownloadFilenameBuilderRow(
+            controller: controller,
+          ),
+        );
+      },
+    );
+    controller.disposeAfterAnimation();
   }
 
   void copyCurrentVideoUrl(String videoId, {required bool withTimestamp}) {

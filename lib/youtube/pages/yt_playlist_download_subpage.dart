@@ -15,7 +15,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -301,74 +300,13 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       NamidaIconButton(
                         tooltip: () => lang.OUTPUT,
                         icon: Broken.edit_2,
-                        onPressed: () async {
-                          final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
-                          await showNamidaBottomSheetWithTextField(
-                            context: context,
-                            title: lang.OUTPUT,
-                            textfieldConfig: BottomSheetTextFieldConfigWC(
-                              controller: controller,
-                              hintText: '',
-                              labelText: lang.FILE_NAME,
-                              validator: (value) {
-                                if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                                final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, _groupName.value, value);
-                                if (file.existsSync()) {
-                                  return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
-                                }
-                                if (!YoutubeController.filenameBuilder.isBuildingDefaultFilenameSafe(value)) {
-                                  return YoutubeController.filenameBuilder.encodedParamsThatShouldExistInFilename.join(' - ');
-                                }
-                                return null;
-                              },
-                            ),
-                            buttonText: lang.SAVE,
-                            onButtonTap: (text) {
-                              onRenameAllTasks(text);
-                              settings.youtube.save(downloadFilenameBuilder: text);
-                              return true;
-                            },
-                            extraPreItemsBuilder: (formState) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: CustomListTile(
-                                  icon: Broken.edit,
-                                  title: lang.EDIT_TAGS,
-                                  onTap: () async {
-                                    await showVideoDownloadOptionsSheet(
-                                      context: context,
-                                      videoTitle: null,
-                                      videoUploader: null,
-                                      tagMaps: settings.youtube.initialDefaultMetadataTags,
-                                      tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
-                                      supportTagging: true,
-                                      showSpecificFileOptions: false,
-                                      onDownloadGroupNameChanged: (newGroupName) {}, // not visible
-                                      preWidget: (controllerFn, onChangedFn) => Padding(
-                                        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                                        child: YTDownloadFilenameBuilderRow(
-                                          controller: null,
-                                          controllerCallback: controllerFn,
-                                          onChanged: onChangedFn,
-                                        ),
-                                      ),
-                                      initialGroupName: _groupName.value,
-                                    );
-                                    settings.youtube.save();
-                                  },
-                                ),
-                              );
-                            },
-                            extraItemsBuilder: (formState) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                                child: YTDownloadFilenameBuilderRow(
-                                  controller: controller,
-                                ),
-                              );
-                            },
+                        onPressed: () {
+                          YTUtils.showFilenameBuilderOutputSheet(
+                            context,
+                            showEditTags: true,
+                            groupName: _groupName.value,
+                            onChanged: (text) => onRenameAllTasks(text),
                           );
-                          controller.disposeAfterAnimation();
                         },
                       ),
                       NamidaIconButton(
