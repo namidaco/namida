@@ -16,7 +16,6 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -132,23 +131,17 @@ class VideoController {
 
   final videoZoomAdditionalScale = 0.0.obs;
 
-  bool _didUnfocusKeyboard = false;
   void updateShouldShowControls(double animationValue) {
     final ytmini = videoControlsKey.currentState;
     if (ytmini == null) return;
     final isExpanded = animationValue >= 0.95;
     if (isExpanded) {
       // YoutubeMiniplayerUiController.inst.startDimTimer(); // bad experience honestly
-      if (!_didUnfocusKeyboard) {
-        ScrollSearchController.inst.unfocusKeyboard();
-        _didUnfocusKeyboard = true;
-      }
       ytmini.isEndCardsVisible.value = true;
     } else {
       // YoutubeMiniplayerUiController.inst.cancelDimTimer();
       ytmini.setControlsVisibily(false);
       ytmini.isEndCardsVisible.value = false;
-      _didUnfocusKeyboard = false;
     }
   }
 

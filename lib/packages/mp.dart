@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -52,6 +53,8 @@ class NamidaYTMiniplayer extends StatefulWidget {
 
 class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTickerProviderStateMixin {
   late final AnimationController controller;
+
+  bool _didUnfocusKeyboard = false;
 
   @override
   void initState() {
@@ -157,6 +160,15 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _updateHeight(toExpanded ? maxHeight : widget.minHeight, duration: dur ?? widget.duration);
     _wasExpanded = toExpanded;
     WakelockController.inst.updateMiniplayerStatus(toExpanded);
+
+    if (toExpanded) {
+      if (!_didUnfocusKeyboard) {
+        ScrollSearchController.inst.unfocusKeyboard();
+        _didUnfocusKeyboard = true;
+      }
+    } else {
+      _didUnfocusKeyboard = false;
+    }
   }
 
   void onVerticalDragUpdate(double dy) {
