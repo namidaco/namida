@@ -153,6 +153,12 @@ Future<void> showDownloadVideoBottomSheet({
 
   void onVideoSelectionChanged() {
     if (selectedVideoOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
+
+    if (selectedVideoOnlyStream.value == null) {
+      if (!settings.downloadAudioOnly.value) settings.save(downloadAudioOnly: true);
+    } else {
+      if (settings.downloadAudioOnly.value) settings.save(downloadAudioOnly: false);
+    }
   }
 
   void onStreamsObtained(VideoStreamsResult? streams) {
