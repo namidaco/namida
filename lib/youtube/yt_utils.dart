@@ -24,6 +24,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -460,13 +461,16 @@ class YTUtils {
     if (!await requestManageStoragePermission()) {
       return null;
     }
-    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
-    final saveDirPath = saveDir.path;
+
     final imgFile = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
       id: videoId,
       type: ThumbnailType.video,
     );
-    if (imgFile != null) return saveDirPath;
+
+    if (imgFile != null) {
+      final saveDirPath = await EditDeleteController.inst.saveImageToStorage(imgFile);
+      return saveDirPath;
+    }
     return null;
   }
 
