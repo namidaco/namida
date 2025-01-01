@@ -15,7 +15,6 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -261,7 +260,6 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         onOpen: (currentItem) {
           if (settings.enableVideoPlayback.value) return true;
 
-          ScrollSearchController.inst.unfocusKeyboard();
           NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
           return false;
         },

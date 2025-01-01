@@ -54,8 +54,6 @@ class NamidaYTMiniplayer extends StatefulWidget {
 class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTickerProviderStateMixin {
   late final AnimationController controller;
 
-  bool _didUnfocusKeyboard = false;
-
   @override
   void initState() {
     super.initState();
@@ -162,12 +160,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     WakelockController.inst.updateMiniplayerStatus(toExpanded);
 
     if (toExpanded) {
-      if (!_didUnfocusKeyboard) {
-        ScrollSearchController.inst.unfocusKeyboard();
-        _didUnfocusKeyboard = true;
-      }
-    } else {
-      _didUnfocusKeyboard = false;
+      ScrollSearchController.inst.unfocusKeyboard();
     }
   }
 

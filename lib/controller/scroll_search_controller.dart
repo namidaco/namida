@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -146,11 +145,15 @@ class ScrollSearchController {
   }
 
   void unfocusKeyboard() {
-    // this causes issue on emulator when trying to edit textfield and yt miniplayer is shown,
-    // but removing it makes keyboard shows after closing dialog on all devices.
-    FocusManager.instance.primaryFocus?.unfocus();
+    final globalFocusNode = searchBarKey.currentState?.focusNode;
+    final focusNode = FocusManager.instance.primaryFocus;
 
-    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    // // this causes issue on emulator when trying to edit textfield and yt miniplayer is shown,
+    // // but removing it makes keyboard shows after closing dialog on all devices.
+    // ^-- probably outdated
+
+    focusNode?.unfocus();
+    globalFocusNode?.unfocus();
   }
 
   void focusKeyboard() => FocusManager.instance.primaryFocus?.requestFocus(focusNode);
