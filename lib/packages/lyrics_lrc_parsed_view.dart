@@ -207,7 +207,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             final timeToWaitMS = _isCurrentLineEmpty ? 200 : 1200; // execute faster if current one empty (ie: cuz next most likely not empty)
             bool butIsItWorth = true;
             try {
-              final diff = lyrics[newIndex + 1].timestamp - lyrics[newIndex].timestamp;
+              final diff = lyrics[newIndex].timestamp - lyrics[newIndex - 1].timestamp; // (newIndex - 1) is the empty line
               if (diff.abs() < const Duration(milliseconds: _lrcOpacityDurationMS * 2 + 200 + 1200)) butIsItWorth = false;
             } catch (_) {}
             if (butIsItWorth) {
