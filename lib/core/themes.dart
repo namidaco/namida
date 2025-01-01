@@ -87,9 +87,9 @@ class AppThemes {
           ),
           iconSize: const WidgetStatePropertyAll(21.0),
           backgroundColor: WidgetStatePropertyAll(light
-              ? Color.alphaBlend(getMainColorWithAlpha(30), Colors.white)
+              ? Color.alphaBlend(color.withAlpha(30), Colors.white)
               : pitchBlack != null
-                  ? Color.alphaBlend(getMainColorWithAlpha(40), const Color.fromARGB(222, 10, 10, 10))
+                  ? Color.alphaBlend(color.withAlpha(60), pitchBlack)
                   : null),
         ),
       ),

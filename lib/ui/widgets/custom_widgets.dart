@@ -527,7 +527,6 @@ class NamidaButton extends StatelessWidget {
   /// will be used if the icon only is sent.
   final String Function()? tooltip;
   final void Function() onPressed;
-  final bool minimumSize;
   final bool? enabled;
 
   const NamidaButton({
@@ -539,7 +538,6 @@ class NamidaButton extends StatelessWidget {
     this.style,
     this.tooltip,
     required this.onPressed,
-    this.minimumSize = false,
     this.enabled,
   });
 
@@ -559,12 +557,6 @@ class NamidaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onTap = onPressed;
-    final style = minimumSize
-        ? ElevatedButton.styleFrom(
-            minimumSize: const Size(32.0, 38.0),
-            padding: EdgeInsets.zero,
-          )
-        : this.style;
     if (textWidget != null) {
       return _getWidget(
         ElevatedButton(
@@ -1818,7 +1810,6 @@ class SubpagesTopContainer extends StatelessWidget {
                               SizedBox(
                                 width: constraints.maxWidth * 0.3,
                                 child: NamidaButton(
-                                  minimumSize: true,
                                   icon: Broken.shuffle,
                                   onPressed: () => Player.inst.playOrPause(
                                     0,
@@ -1842,10 +1833,6 @@ class SubpagesTopContainer extends StatelessWidget {
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0)),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    fixedSize: const Size(0.0, 0.0),
-                                    padding: EdgeInsets.zero,
                                   ),
                                 ),
                               ),
