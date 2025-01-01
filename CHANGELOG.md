@@ -1,5 +1,89 @@
 # Namida Changelog
 
+## 01/01/2025
+# v4.8.6
+
+### 🎉 New Features:
+   - 719ead3: set artwork for playlists ref #324
+   - 062378b: sort playlist tracks for local & yt playlists
+   - 3f3ffda: fetch square thumbnail for topic channel videos - when downloading or when fixing thumbnails ref #212
+   - db4da91: cache videos priority system - this is mainly for the upcoming missing videos info retrieval, where it make sures cached stuff of deleted/privated videos are not automatically deleted
+   - 9e45bee: retrieve and display info & thumbnails of deleted/privated videos
+   - a0a0586: allow setting cache priority for videos/tracks with yt id - can also be used to disable track video fetching
+  
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - 5ca5793: play all (reverse) button for history days
+   - dc835a0: use dark bg for splash screen when in dark mode
+   - e0658f5: include missing info db for yt offline search
+   - 1eba91b: faster search page fade animation
+   - 0a6c306: prefer using app bg color for video fullscreen light bg when specified
+   - 2edde23: long pressing video button in miniplayer will show search button instead of "check for more"
+   - 4eb4af9: adjust button color in pitch black and tweak minimum size
+   - 8c594ab: update downloadAudioOnly setting when enabling/disabling video stream in download sheet
+   - 31914ea: allow changing download filename builder in single download sheet
+   - de391a9: delete empty downloads-group db on startup
+   - 9dd26ae: spirce for kuru custom display first listen date for me
+   - 032701e: smol right padding for miniplayer info
+   - 95b4588: disable "write upload date as file date" by default for downloads
+   - 7d60760: dont refetch non-personalized related videos if already cached
+   - ac66d2b: rely on `accurateDate` in some places
+   - 6831c81: ui tweak for backup dialog
+   - 1889967: update delete playlist/queue icons
+   - b879eee: dont show "fav" by default in video card menus
+   - 6edf11b: update clear cache icons
+   - 221b653: properly show info of privated videos on cards & auto set priority to vip if the info is missing or title starts with link (privated)
+   - 5c2294f: display js player version in yt flags
+   - 2d4b912: improve info merging while importing history & displaying title on video cards for missing info
+   - 6dcd499: treat 1980 as faulty date instead of 1970, when dealing with file added date etc
+   - 13da4d4: improve missing info related stuff
+   - d4290dd: setting icon in appbar is always on right
+   - 627a810: unfocus keyboard when opening miniplayers
+   - 2018c5f: smol fixes
+   - 19666b8: show sleeping track icon only when repeat mode is all or none
+   - 725dc5b: do the unfocus keyboard in miniplayer states switching
+   - 8d13893: pass theme to snackbar
+   - cc96856: improve unfocus keyboard logic
+- fix:
+   - 90db311: artwork filename when "group by artwork" is enabled
+   - 6a0ea28: parsing channel playlist tab at `packageyoutipie`
+   - 45781b2: in folder tracks, update "index to scroll to" after sorting if was specified
+   - 6c9bf3f: caching and retrieving of video description in `_YoutubeInfoUtils.getVideoDescription()`
+   - a1e9dfe: possible empty first video id character when importing from playlists csv
+   - ea5404b: theme colors of hosted playlists
+   - 3354724: bottom icons padding in track/s popup dialog
+   - bf116a3: not searching yt after entering offline search page and closing whole search
+   - f3d069e: loading default group for download task and remove any leading dots while making new group
+   - f7cf249: stuff caused by faster app load time
+   - a151963: set replay gain for yt after enabling the setting
+   - 95ce065: indices error while removing items from playlist
+   - a3c3b16: displaying albums artwork having / in the name
+   - 1f4d438: infinity loop eating battery
+   - 3b15d89: merging download tasks after loading re 061deb0
+   - 3d10050: not refreshing after toggling pitch black
+   - 9fbb0fe: not refreshing lists after deleting tracks
+   - da80a81: properly delete temp files in video clear dialog
+   - b209c4f: saving/displaying wrong image in cache was noticeable with video playlist endcards
+   - 6fd9394: video info card related stuff
+   - 1ce99d2: duplicated offline search entires
+   - 8c5ad42: empty search boxes
+   - 18dd3c7: lyrics dynamic view timing (was reshowing late)
+   - 55a197a: long pressing yt artwork wasnt actually saving it
+
+- core:
+   - e24898b: allow unlimited queue using any button except when pressing track tile - and remove duplicates when playing history ref #31, #245, #404
+   - 4f69ed3: upgrade to `packageyoutipie` v4.2.0 - fixes playback issues and other stuff
+
+- perf:
+   - 161359a: avoid recolering the player whereas possible like when reordering items or when playing same item
+   - 39d7aef: improve app startup time - by prepare most stuff concurrently on diff isolates - there is still overhead for copying data so the diff is not so huge thanks dart
+   - 061deb0: no longer wait for download tasks to load
+   - fab1f9c: auto close open databases after specific duration
+
+- code:
+   - 0cddbc1: refactor `_saveLatestQueueToStorage()`
+
+
 ## 22/11/2024
 # v4.7.2
 
