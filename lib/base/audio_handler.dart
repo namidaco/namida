@@ -1851,6 +1851,43 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     ].execute();
   }
 
+  Timer? _headsetButtonClickTimer;
+  int _headsetClicksCount = 0;
+
+  Timer _createHeadsetClicksTimer(void Function() callback) {
+    return Timer(Duration(milliseconds: 250), () {
+      callback();
+
+      // -- reset timer
+      _headsetButtonClickTimer?.cancel();
+      _headsetButtonClickTimer = null;
+      _headsetClicksCount = 0;
+    });
+  }
+
+  @override
+  Future<void> click([MediaButton button = MediaButton.media]) async {
+    if (button == MediaButton.next) {
+      skipToNext();
+      return;
+    } else if (button == MediaButton.previous) {
+      skipToPrevious();
+      return;
+    }
+
+    _headsetClicksCount++;
+
+    _headsetButtonClickTimer?.cancel();
+
+    if (_headsetClicksCount == 1) {
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(willPlayWhenReady ? pause : play);
+    } else if (_headsetClicksCount == 2) {
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(skipToNext);
+    } else if (_headsetClicksCount == 3) {
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(skipToPrevious);
+    }
+  }
+
   @override
   Future<void> fastForward() async => await onFastForward();
 
