@@ -157,12 +157,7 @@ class VideoController {
       showControls: true,
       isFullScreen: true,
     );
-    if (settings.youtube.whiteVideoBGInLightMode && namida.context?.isDarkMode == false) {
-      videoControls = ColoredBox(
-        color: namida.context?.theme.scaffoldBackgroundColor ?? Colors.white,
-        child: videoControls,
-      );
-    }
+
     await NamidaNavigator.inst.toggleFullScreen(
       videoControls,
       setOrientations: setOrientations ?? (aspect == null ? true : aspect > 1),

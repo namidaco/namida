@@ -670,7 +670,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         ? YoutubeInfoController.current.currentYTStreams.value?.overlay?.overlays.pick()?.url
         : null;
 
-    return Listener(
+    Widget videoControlsWidget = Listener(
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > context.width / 2;
         _isPointerDown = true;
@@ -1728,6 +1728,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         ),
       ),
     );
+
+    if (settings.youtube.whiteVideoBGInLightMode && context.isDarkMode == false) {
+      videoControlsWidget = ColoredBox(
+        color: context.theme.scaffoldBackgroundColor,
+        child: videoControlsWidget,
+      );
+    }
+
+    return videoControlsWidget;
   }
 }
 
