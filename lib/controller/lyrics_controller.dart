@@ -333,6 +333,34 @@ class _LRCSearchManager with PortsProvider<SendPort> {
           final responseBody = await utf8.decodeStream(response.asBroadcastStream());
           final fetched = <LyricsModel>[];
           final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
+
+          final mainDuration = details?.durationMS ?? 0;
+          if (mainDuration > 0) {
+            // -- prefer lyrics with closer duration (if info the same)
+            jsonLists.sort(
+              (a, b) {
+                final sameInfo = (a['trackName'] is String && a['trackName'] == b['trackName']) && //
+                    (a['artistName'] is String && a['artistName'] == b['artistName']);
+                if (sameInfo) {
+                  try {
+                    final aDurMS = ((a['duration'] as num) * 1000).round(); // ex: 30
+                    final bDurMS = ((b['duration'] as num) * 1000).round(); // ex: 20
+                    final aDiff = (mainDuration - aDurMS).abs(); // ex: 0 (30-30)
+                    final bDiff = (mainDuration - bDurMS).abs(); // ex: 10 (30-20)
+                    if (aDiff < bDiff) {
+                      return -1;
+                    } else if (aDiff > bDiff) {
+                      return 1;
+                    } else if (aDiff == bDiff) {
+                      return 0;
+                    }
+                  } catch (_) {}
+                }
+                return 0;
+              },
+            );
+          }
+
           jsonLists.loop((jsonRes) {
             final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
             final plain = jsonRes?["plainLyrics"] as String? ?? '';
@@ -342,7 +370,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
               final artist = jsonRes['artistName'] ?? details?.artist ?? '';
               final album = jsonRes['albumName'] ?? details?.album ?? '';
               final title = jsonRes['trackName'] ?? details?.title ?? '';
-              final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : details?.durationMS ?? 0;
+              final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : mainDuration;
 
               if (artist != '') lrcBuffer.writeln('[ar:$artist]');
               if (album != '') lrcBuffer.writeln('[al:$album]');
