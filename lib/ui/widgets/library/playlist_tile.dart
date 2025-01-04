@@ -15,12 +15,14 @@ class PlaylistTile extends StatelessWidget {
   final String playlistName;
   final void Function()? onTap;
   final bool enableHero;
+  final bool? checkmarkStatus;
 
   const PlaylistTile({
     super.key,
     required this.playlistName,
     this.onTap,
     this.enableHero = true,
+    required this.checkmarkStatus,
   });
 
   @override
@@ -90,6 +92,13 @@ class PlaylistTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12.0),
+                    if (checkmarkStatus != null) ...[
+                      NamidaCheckMark(
+                        size: 12.0,
+                        active: checkmarkStatus!,
+                      ),
+                      const SizedBox(width: 6.0),
+                    ],
                     Text(
                       tracksRaw.totalDurationFormatted,
                       style: context.textTheme.displaySmall?.copyWith(

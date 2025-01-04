@@ -57,7 +57,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     );
   }
 
-  Future<void> addTracksToPlaylist(YoutubePlaylist playlist, Iterable<String> videoIds) async {
+  Future<void> addTracksToPlaylist(
+    YoutubePlaylist playlist,
+    Iterable<String> videoIds, {
+    List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.valuesForAdd,
+  }) async {
     final originalModifyDate = playlist.modifiedDate;
     final oldVideosList = List<YoutubeID>.from(playlist.tracks); // for undo
 
@@ -65,7 +69,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     final addedVideosLength = await super.addTracksToPlaylistRaw(
       playlist,
       videoIdsList,
-      () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
+      () => NamidaOnTaps.inst.showDuplicatedDialogAction(duplicationActions),
       (id, dateAdded) {
         return YoutubeID(
           id: id,

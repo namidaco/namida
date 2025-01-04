@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -73,8 +74,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     );
   }
 
-  void _onAddToPlaylist({required YoutubePlaylist playlist, required bool? idsExist}) {
-    if (idsExist == true) {
+  void _onAddToPlaylist({required YoutubePlaylist playlist, required bool allIdsExist, required bool allowAddingEverything}) {
+    if (allIdsExist == true) {
       final indexes = <int>[];
       playlist.tracks.loopAdv((e, index) {
         if (idsToAdd.contains(e.id)) {
@@ -100,7 +101,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
         ),
       );
     } else {
-      YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd);
+      final duplicateActions = allowAddingEverything ? PlaylistAddDuplicateAction.valuesForAdd : PlaylistAddDuplicateAction.valuesForAddExcludingAddEverything;
+      YoutubePlaylistController.inst.addTracksToPlaylist(playlist, idsToAdd, duplicationActions: duplicateActions);
     }
   }
 
@@ -320,34 +322,40 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             SliverToBoxAdapter(
               child: ObxOClass(
                 rx: YoutubePlaylistController.inst.favouritesPlaylist,
-                builder: (context, favouritesPlaylist) => YoutubeCard(
-                  thumbnailType: ThumbnailType.playlist,
-                  isImageImportantInCache: true,
-                  extractColor: true,
-                  thumbnailWidthPercentage: 0.75,
-                  videoId: favouritesPlaylist.value.tracks.firstOrNull?.id,
-                  thumbnailUrl: null,
-                  shimmerEnabled: false,
-                  title: favouritesPlaylist.value.name.translatePlaylistName(),
-                  subtitle: favouritesPlaylist.value.creationDate.dateFormattedOriginal,
-                  displaythirdLineText: true,
-                  thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(favouritesPlaylist.value.modifiedDate).fromNow(),
-                  displayChannelThumbnail: false,
-                  channelThumbnailUrl: '',
-                  thumbnailHeight: playlistThumbnailHeight,
-                  thumbnailWidth: playlistThumbnailWidth,
-                  onTap: () {
-                    final idsExists = favouritesPlaylist.isSubItemFavourite(idsToAdd.first);
-                    _onAddToPlaylist(
-                      playlist: favouritesPlaylist.value,
-                      idsExist: idsExists,
-                    );
-                  },
-                  smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
-                  smallBoxIcon: Broken.play_cricle,
-                  checkmarkStatus: favouritesPlaylist.isSubItemFavourite(idsToAdd.first),
-                  menuChildrenDefault: displayMenu ? () => getMenuItems(context, favouritesPlaylist.value) : null,
-                ),
+                builder: (context, favouritesPlaylist) {
+                  bool? allIdsExist;
+                  if (idsToAdd.isNotEmpty) {
+                    allIdsExist = idsToAdd.every(favouritesPlaylist.isSubItemFavourite);
+                  }
+                  return YoutubeCard(
+                    thumbnailType: ThumbnailType.playlist,
+                    isImageImportantInCache: true,
+                    extractColor: true,
+                    thumbnailWidthPercentage: 0.75,
+                    videoId: favouritesPlaylist.value.tracks.firstOrNull?.id,
+                    thumbnailUrl: null,
+                    shimmerEnabled: false,
+                    title: favouritesPlaylist.value.name.translatePlaylistName(),
+                    subtitle: favouritesPlaylist.value.creationDate.dateFormattedOriginal,
+                    displaythirdLineText: true,
+                    thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(favouritesPlaylist.value.modifiedDate).fromNow(),
+                    displayChannelThumbnail: false,
+                    channelThumbnailUrl: '',
+                    thumbnailHeight: playlistThumbnailHeight,
+                    thumbnailWidth: playlistThumbnailWidth,
+                    onTap: () {
+                      _onAddToPlaylist(
+                        playlist: favouritesPlaylist.value,
+                        allIdsExist: allIdsExist == true,
+                        allowAddingEverything: false,
+                      );
+                    },
+                    smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
+                    smallBoxIcon: Broken.play_cricle,
+                    checkmarkStatus: allIdsExist,
+                    menuChildrenDefault: displayMenu ? () => getMenuItems(context, favouritesPlaylist.value) : null,
+                  );
+                },
               ),
             ),
           if (idsToAdd.isNotEmpty)
@@ -364,10 +372,9 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 itemBuilder: (context, index) {
                   final name = playlistsNames[index];
                   final playlist = playlistsMap[name]!;
-                  bool? idsExist;
+                  bool? allIdsExist;
                   if (idsToAdd.isNotEmpty) {
-                    final firstId = idsToAdd.firstOrNull;
-                    if (firstId != null) idsExist = playlist.tracks.firstWhereEff((e) => e.id == firstId) != null;
+                    allIdsExist = idsToAdd.every((idToAdd) => playlist.tracks.firstWhereEff((e) => e.id == idToAdd) != null);
                   }
 
                   return NamidaPopupWrapper(
@@ -391,14 +398,14 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       thumbnailWidth: playlistThumbnailWidth,
                       onTap: () {
                         if (idsToAdd.isNotEmpty) {
-                          _onAddToPlaylist(playlist: playlist, idsExist: idsExist);
+                          _onAddToPlaylist(playlist: playlist, allIdsExist: allIdsExist == true, allowAddingEverything: true);
                         } else {
                           YTNormalPlaylistSubpage(playlistName: playlist.name).navigate();
                         }
                       },
                       smallBoxText: playlist.tracks.length.formatDecimal(),
                       smallBoxIcon: Broken.play_cricle,
-                      checkmarkStatus: idsExist,
+                      checkmarkStatus: allIdsExist,
                       menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist) : null,
                     ),
                   );
