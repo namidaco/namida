@@ -120,6 +120,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 ## Others:
 
+- Lyrics auto fetching & displaying (Synced & Plain).
 - Sleep Timer (Tracks or Minutes)
 - Crossfade, Play/Pause Fade Effect, along with Skip Silence.
 - Replay Gain (Normalize Audio)
