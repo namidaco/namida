@@ -587,9 +587,6 @@ class VideoController {
           matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
         }
         break;
-
-      default:
-        null;
     }
     return possibleLocal;
   }

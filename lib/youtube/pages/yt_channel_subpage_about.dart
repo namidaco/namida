@@ -126,11 +126,11 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                             },
                             margin: const EdgeInsets.symmetric(vertical: 4.0),
                             padding: const EdgeInsets.symmetric(vertical: 10.0),
-                            bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.01),
+                            bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.01),
                             decoration: BoxDecoration(
                               border: Border.all(
                                 width: 1.5,
-                                color: context.theme.colorScheme.secondary.withOpacity(0.2),
+                                color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
                               ),
                             ),
                             borderRadius: 10.0,
@@ -164,8 +164,8 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                                         style: context.textTheme.displayMedium?.copyWith(
                                           fontSize: 15.0,
                                           color: Color.alphaBlend(
-                                            context.theme.colorScheme.onSecondaryContainer.withOpacity(0.5),
-                                            context.theme.colorScheme.onSurface.withOpacity(0.5),
+                                            context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
+                                            context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                           ),
                                         ),
                                       ),
@@ -173,7 +173,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                                         e.linkText,
                                         style: context.textTheme.displaySmall?.copyWith(
                                           fontSize: 11.5,
-                                          // color: context.theme.colorScheme.onSecondaryContainer.withOpacity(0.7),
+                                          // color: context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -187,7 +187,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                       ),
                       dividerContainer,
                       NamidaInkWell(
-                        bgColor: context.theme.cardColor.withOpacity(0.5),
+                        bgColor: context.theme.cardColor.withValues(alpha: 0.5),
                         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
                         child: Column(
                           children: [
@@ -251,7 +251,7 @@ class _SmolInfo extends StatelessWidget {
         Icon(
           icon,
           size: 20.0,
-          color: context.theme.colorScheme.onSurface.withOpacity(0.7),
+          color: context.theme.colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 12.0),
         Expanded(
@@ -260,8 +260,8 @@ class _SmolInfo extends StatelessWidget {
             style: context.textTheme.displayMedium?.copyWith(
               fontSize: 15.0,
               color: Color.alphaBlend(
-                context.theme.colorScheme.onSecondaryContainer.withOpacity(0.3),
-                context.theme.colorScheme.onSurface.withOpacity(0.6),
+                context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.3),
+                context.theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),

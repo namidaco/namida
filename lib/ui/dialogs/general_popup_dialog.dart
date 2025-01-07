@@ -955,7 +955,7 @@ Future<void> showGeneralPopupDialog(
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
+                                    color: Colors.red.withValues(alpha: 0.3),
                                   ),
                                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                 ),

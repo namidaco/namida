@@ -110,7 +110,7 @@ class YTUtils {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                  color: context.theme.scaffoldBackgroundColor.withOpacity(0.5),
+                  color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
@@ -131,8 +131,8 @@ class YTUtils {
           child: Icon(
             Broken.video,
             size: 15.0,
-            color: iconsColor?.withOpacity(
-              VideoController.inst.hasNVCachedFromID(videoId) ? 0.6 : 0.1,
+            color: iconsColor?.withValues(
+              alpha: VideoController.inst.hasNVCachedFromID(videoId) ? 0.6 : 0.1,
             ),
           ),
         ),
@@ -142,8 +142,8 @@ class YTUtils {
           child: Icon(
             Broken.audio_square,
             size: 15.0,
-            color: iconsColor?.withOpacity(
-              Player.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
+            color: iconsColor?.withValues(
+              alpha: Player.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
             ),
           ),
         ),

@@ -360,8 +360,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 child: Obx(
                   (context) => Container(
                     color: Color.alphaBlend(
-                      CurrentColor.inst.miniplayerColor.withOpacity(0.2),
-                      context.isDarkMode ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.5),
+                      CurrentColor.inst.miniplayerColor.withValues(alpha: 0.2),
+                      context.isDarkMode ? Colors.black.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -381,7 +381,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   blur: fullscreen ? 0.0 : 12.0,
                   enabled: !fullscreen,
                   child: Container(
-                    color: context.theme.scaffoldBackgroundColor.withOpacity(fullscreen ? 0.8 : 0.6),
+                    color: context.theme.scaffoldBackgroundColor.withValues(alpha: fullscreen ? 0.8 : 0.6),
                     alignment: Alignment.center,
                     child: Column(
                       children: [
@@ -450,7 +450,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                 final selected = highlightedTimeStamp == lrc.timestamp;
                                                 final selectedAndEmpty = selected && _checkIfTextEmpty(text);
                                                 final bgColor = selected
-                                                    ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(selectedAndEmpty ? 0.1 : 0.5)
+                                                    ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5)
                                                     : null;
                                                 final padding = selected ? 2.0 : 0.0;
 
@@ -488,7 +488,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                             child: Text(
                                                               text,
                                                               style: normalTextStyle.copyWith(
-                                                                color: selected ? Colors.white.withOpacity(0.7) : normalTextStyle.color?.withOpacity(0.5) ?? Colors.transparent,
+                                                                color: selected
+                                                                    ? Colors.white.withValues(alpha: 0.7)
+                                                                    : normalTextStyle.color?.withValues(alpha: 0.5) ?? Colors.transparent,
                                                               ),
                                                               textAlign: TextAlign.center,
                                                             ),
@@ -518,7 +520,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                     boxShadow: [
                                       BoxShadow(
                                         blurRadius: 8.0,
-                                        color: context.theme.scaffoldBackgroundColor.withOpacity(0.7),
+                                        color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
                                       ),
                                     ],
                                   ),

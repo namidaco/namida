@@ -106,7 +106,7 @@ class _AboutPageState extends State<AboutPage> {
       height: 48.0,
       child: Icon(
         Broken.user,
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
       ),
     );
 
@@ -118,7 +118,7 @@ class _AboutPageState extends State<AboutPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 24.0),
             decoration: BoxDecoration(
-              color: context.theme.cardColor.withOpacity(0.6),
+              color: context.theme.cardColor.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(20.0.multipliedRadius),
             ),
             child: Stack(
@@ -462,12 +462,12 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
             NamidaLinkUtils.openLink(url);
           }
         },
-        bgColor: namida.theme.cardTheme.color?.withOpacity(0.8),
+        bgColor: namida.theme.cardTheme.color?.withValues(alpha: 0.8),
         borderRadius: 18.0,
         decoration: BoxDecoration(
           border: Border.all(
             width: 1.5,
-            color: namida.theme.colorScheme.primary.withOpacity(0.5),
+            color: namida.theme.colorScheme.primary.withValues(alpha: 0.5),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

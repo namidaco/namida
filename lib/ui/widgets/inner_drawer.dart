@@ -95,7 +95,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 child: IgnorePointer(
                   ignoring: controller.value == controller.lowerBound,
                   child: ColoredBox(
-                    color: Colors.black.withOpacity(controller.value * 1.2),
+                    color: Colors.black.withValues(alpha: controller.value * 1.2),
                   ),
                 ),
               ),
@@ -150,7 +150,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               Positioned.fill(
                 child: IgnorePointer(
                   child: ColoredBox(
-                    color: Colors.black.withOpacity((controller.upperBound - controller.value) * 1.8),
+                    color: Colors.black.withValues(alpha: (controller.upperBound - controller.value) * 1.8),
                   ),
                 ),
               ),

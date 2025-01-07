@@ -50,7 +50,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
                   rx: sorting,
                   builder: (context, s) {
                     final enabled = s == e;
-                    final itemsColor = enabled ? Colors.white.withOpacity(0.8) : null;
+                    final itemsColor = enabled ? Colors.white.withValues(alpha: 0.8) : null;
                     return NamidaInkWell(
                       animationDurationMS: 200,
                       borderRadius: 6.0,

@@ -288,7 +288,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: context.theme.colorScheme.secondary.withOpacity(0.6),
+                              color: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
                             ),
                           ),
                           child: Padding(
@@ -306,7 +306,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: context.theme.colorScheme.secondary.withOpacity(0.6),
+                              color: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
                             ),
                           ),
                           child: Padding(
@@ -484,7 +484,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
             child: Container(
               padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
               decoration: BoxDecoration(
-                color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacity(0.4), context.theme.cardTheme.color!),
+                color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.4), context.theme.cardTheme.color!),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12.0.multipliedRadius),
                 ),
@@ -498,7 +498,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       NamidaInkWell(
                         borderRadius: 10.0,
                         animationDurationMS: 150,
-                        bgColor: channel == null ? context.theme.colorScheme.secondary.withOpacity(0.15) : null,
+                        bgColor: channel == null ? context.theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
                         width: _thumbSize,
                         margin: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                         padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
@@ -555,7 +555,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             return NamidaInkWell(
                               borderRadius: 10.0,
                               animationDurationMS: 150,
-                              bgColor: channel?.channelID == ch.channelID ? context.theme.colorScheme.secondary.withOpacity(0.1) : null,
+                              bgColor: channel?.channelID == ch.channelID ? context.theme.colorScheme.secondary.withValues(alpha: 0.1) : null,
                               width: _thumbSize,
                               padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
                               margin: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),

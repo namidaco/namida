@@ -260,7 +260,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     final cardColor = context.theme.cardColor;
-    final borderColor = context.theme.colorScheme.secondary.withOpacity(0.6);
+    final borderColor = context.theme.colorScheme.secondary.withValues(alpha: 0.6);
 
     return BackgroundWrapper(
       child: Stack(
@@ -311,7 +311,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     child: Text(
                                       val,
                                       style: context.textTheme.displaySmall?.copyWith(
-                                        color: context.textTheme.displaySmall?.color?.withOpacity(opacity),
+                                        color: context.textTheme.displaySmall?.color?.withValues(alpha: opacity),
                                       ),
                                     ),
                                   );
@@ -351,7 +351,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               (context) {
                                 final suggestion = _missingTracksSuggestions[path];
                                 final isSelected = _selectedTracksToUpdate[path] == true;
-                                final leftColor = context.theme.colorScheme.secondary.withOpacity(0.3);
+                                final leftColor = context.theme.colorScheme.secondary.withValues(alpha: 0.3);
                                 return NamidaInkWell(
                                   animationDurationMS: 300,
                                   borderRadius: 12.0,
@@ -492,10 +492,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           return FloatingActionButton.small(
                             heroTag: 'indexer_missing_tracks_fab_hero_small',
                             tooltip: lang.SELECT_ALL,
-                            backgroundColor: allSelected ? CurrentColor.inst.color.withOpacity(1.0) : context.theme.disabledColor.withOpacity(1.0),
+                            backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : context.theme.disabledColor.withValues(alpha: 1.0),
                             child: Icon(
                               allSelected ? Broken.tick_square : Broken.task_square,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                             onPressed: () {
                               final allSelected = _selectedTracksToUpdate.isNotEmpty &&
@@ -517,7 +517,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           final totalLength = _selectedTracksToUpdate.length;
                           return FloatingActionButton.extended(
                             heroTag: 'indexer_missing_tracks_fab_hero_extended',
-                            backgroundColor: (totalLength <= 0 ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
+                            backgroundColor: (totalLength <= 0 ? context.theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
                             extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                             onPressed: () async {
                               final isUpdating = false.obs;
@@ -556,13 +556,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               Icon(
                                 Broken.pen_add,
                                 size: 20.0,
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                               ),
                               const SizedBox(width: 12.0),
                               Text(
                                 "${lang.UPDATE} ($totalLength)",
                                 style: context.textTheme.displayMedium?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                               ),
                             ]),

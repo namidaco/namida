@@ -26,9 +26,9 @@ class NamidaColor {
 
   Map<String, dynamic> toJson() {
     return {
-      'used': used?.value,
-      'mix': mix.value,
-      'palette': palette.mapped((e) => e.value),
+      'used': used?.intValue,
+      'mix': mix.intValue,
+      'palette': palette.mapped((e) => e.intValue),
     };
   }
 

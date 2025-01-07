@@ -67,7 +67,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     }
     snackyy(
       message: "${lang.FETCHING_OF_ALL_VIDEOS}: $message",
-      borderColor: color.withOpacity(0.5),
+      borderColor: color.withValues(alpha: 0.5),
     );
   }
 
@@ -140,7 +140,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                   NamidaInkWell(
                     borderRadius: 6.0,
                     decoration: BoxDecoration(
-                      border: Border.all(color: context.theme.colorScheme.secondary.withOpacity(0.5)),
+                      border: Border.all(color: context.theme.colorScheme.secondary.withValues(alpha: 0.5)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
                     child: Row(

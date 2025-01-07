@@ -286,7 +286,7 @@ class TrackTile extends StatelessWidget {
     if (bgColor != null) {
       backgroundColor = bgColor!;
     } else {
-      backgroundColor = isTrackCurrentlyPlaying ? properties.backgroundColorPlaying : properties.backgroundColorNotPlaying.withOpacity(cardColorOpacity);
+      backgroundColor = isTrackCurrentlyPlaying ? properties.backgroundColorPlaying : properties.backgroundColorNotPlaying.withValues(alpha: cardColorOpacity);
       if (isTrackSelected && queueSource != QueueSource.selectedTracks) {
         backgroundColor = Color.alphaBlend(
           properties.selectionColorLayer,
@@ -561,7 +561,7 @@ class TrackTile extends StatelessWidget {
           Positioned.fill(
             child: IgnorePointer(
               child: ColoredBox(
-                color: context.theme.scaffoldBackgroundColor.withOpacity(fadeOpacity),
+                color: context.theme.scaffoldBackgroundColor.withValues(alpha: fadeOpacity),
               ),
             ),
           ),

@@ -771,7 +771,7 @@ Future<void> showDownloadVideoBottomSheet({
                                   child: Center(
                                     child: Text(
                                       '${confirmButtonText == '' ? lang.DOWNLOAD : confirmButtonText} $sizeText',
-                                      style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+                                      style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                                     ),
                                   ),
                                 ),

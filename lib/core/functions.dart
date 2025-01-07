@@ -742,8 +742,6 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         canGenerate.value = dates.length == 1;
       case CalendarDatePicker2Type.multi:
         canGenerate.value = true;
-      default:
-        null;
     }
   }
 
@@ -937,7 +935,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
                           child: Center(
                             child: Text(
                               buttonText,
-                              style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withOpacity(0.9)),
+                              style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                             ),
                           ),
                           onTap: () async {

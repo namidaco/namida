@@ -1202,7 +1202,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                           ? Center(
                               key: const Key('loading'),
                               child: ThreeArchedCircle(
-                                color: context.theme.colorScheme.primary.withOpacity(0.5),
+                                color: context.theme.colorScheme.primary.withValues(alpha: 0.5),
                                 size: 56.0,
                               ),
                             )
@@ -1393,7 +1393,7 @@ class _FileSystemChip extends StatelessWidget {
                   style: context.textTheme.displaySmall?.copyWith(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w400,
-                    // color: context.theme.colorScheme.onSurface.withOpacity(0.7),
+                    // color: context.theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],

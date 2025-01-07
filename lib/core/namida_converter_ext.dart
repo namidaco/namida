@@ -592,8 +592,6 @@ extension PerformanceModeUtils on PerformanceMode {
         settings.save(
           performanceMode: PerformanceMode.custom,
         );
-      default:
-        null;
     }
   }
 }

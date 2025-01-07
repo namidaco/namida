@@ -81,8 +81,6 @@ extension _SettSearcherUtils on SettingSubpageEnum {
           icon: Broken.hierarchy_3,
           page: () => AdvancedSettings(initialItem: initialItem),
         );
-      default:
-        return null;
     }
   }
 }

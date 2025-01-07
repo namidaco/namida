@@ -111,7 +111,7 @@ class CustomSwitch extends StatelessWidget {
               offset: const Offset(0, 2),
               blurRadius: active ? 8 : 2,
               spreadRadius: 0,
-              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface)).withOpacity(active ? 0.8 : 0.3),
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface)).withValues(alpha: active ? 0.8 : 0.3),
             ),
           ],
         ),
@@ -2923,7 +2923,7 @@ class NamidaInkWellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsColor = context.theme.colorScheme.onSurface.withOpacity(0.8);
+    final itemsColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.8);
     final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
@@ -2934,7 +2934,7 @@ class NamidaInkWellButton extends StatelessWidget {
           animationDurationMS: animationDurationMS,
           borderRadius: borderRadius * sizeMultiplier,
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier, vertical: 6.0 * sizeMultiplier),
-          bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withOpacity(0.5),
+          bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
           onTap: onTap,
           onLongPress: onLongPress,
           child: Row(
@@ -3372,7 +3372,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       if (childrenDefault != null)
         ...childrenDefault!().map(
           (e) {
-            final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withOpacity(0.4));
+            final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withValues(alpha: 0.4));
             Widget popupItem = Row(
               children: [
                 Icon(e.icon, size: 20.0),
@@ -3785,7 +3785,7 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: verticalPadding),
                   decoration: BoxDecoration(
-                    color: context.theme.scaffoldBackgroundColor.withOpacity(0.8),
+                    color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                   ),
                   child: GestureDetector(

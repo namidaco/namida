@@ -35,7 +35,7 @@ class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.animation});
 
   @override
-  Widget build(BuildContext _) {
+  Widget build(BuildContext context) {
     final main = RepaintBoundary(
       child: WillPopScope(
         onWillPop: () async {
@@ -257,7 +257,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
       return CircularProgressIndicator(
         strokeWidth: 2.0,
         strokeCap: StrokeCap.round,
-        color: context.theme.colorScheme.onSecondaryContainer.withOpacity(0.4),
+        color: context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
       );
     });
     return Builder(
@@ -265,7 +265,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
         child: FloatingActionButton(
           heroTag: 'main_page_fab_hero',
-          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacity(0.6), context.theme.cardColor),
+          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withValues(alpha: 0.6), context.theme.cardColor),
           onPressed: () {
             final fab = settings.floatingActionButton.value;
             final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;

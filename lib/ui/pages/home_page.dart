@@ -591,9 +591,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   artists: _listOrShimmer(keys),
                                   listens: (artist) => _topRecentArtists[artist] ?? 0,
                                 );
-
-                              default:
-                                return const SliverPadding(padding: EdgeInsets.zero);
                             }
                           },
                         ).addSeparators(
@@ -956,7 +953,7 @@ class _MixesCardState extends State<_MixesCard> {
                 borderRadius: 12.0,
                 margin: const EdgeInsets.all(12.0),
                 padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                bgColor: Color.alphaBlend(_cardColor?.withOpacity(0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withOpacity(0.8),
+                bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withValues(alpha: 0.8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -981,7 +978,7 @@ class _MixesCardState extends State<_MixesCard> {
                       },
                       borderRadius: 8.0,
                       padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                      bgColor: context.theme.cardColor.withOpacity(0.4),
+                      bgColor: context.theme.cardColor.withValues(alpha: 0.4),
                       child: Row(
                         children: [
                           const Icon(Broken.play_cricle, size: 20.0),

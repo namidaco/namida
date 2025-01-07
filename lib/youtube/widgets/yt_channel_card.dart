@@ -78,7 +78,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     );
     return NamidaInkWell(
       margin: mininmalCard ? const EdgeInsets.symmetric(horizontal: 4.0) : const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      bgColor: bgColor?.withOpacity(0.12) ?? context.theme.cardColor,
+      bgColor: bgColor?.withValues(alpha: 0.12) ?? context.theme.cardColor,
       animationDurationMS: 300,
       borderRadius: mininmalCard ? 16.0 : 20.0,
       onTap: () {

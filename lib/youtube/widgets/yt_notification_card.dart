@@ -251,7 +251,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                     ? Border(
                         left: BorderSide(
                           width: 2.0,
-                          color: borderColor ?? Colors.red.withOpacity(0.6),
+                          color: borderColor ?? Colors.red.withValues(alpha: 0.6),
                         ),
                       )
                     : null,

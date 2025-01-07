@@ -70,22 +70,16 @@ class YoutubeController {
 
   final isLoadingDownloadTasks = false.obs;
 
-  /// {id: <filename, DownloadProgress>{}}
   final downloadsVideoProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{}.obs;
 
-  /// {id: <filename, DownloadProgress>{}}
   final downloadsAudioProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{}.obs;
 
-  /// {id: <filename, int>{}}
   final currentSpeedsInByte = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, int>>{}.obs;
 
-  /// {id: <filename, bool>{}}
   final isDownloading = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, bool>>{}.obs;
 
-  /// {id: <filename, bool>{}}
   final isFetchingData = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, bool>>{}.obs;
 
-  /// {groupName: <File>{}}
   final _downloadClientsMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File>>{};
 
   /// {groupName: {filename: YoutubeItemDownloadConfig}}

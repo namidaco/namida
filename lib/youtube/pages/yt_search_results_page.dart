@@ -338,7 +338,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                   child: Padding(
                                     padding: const EdgeInsets.all(32.0),
                                     child: ThreeArchedCircle(
-                                      color: CurrentColor.inst.color.withOpacity(0.4),
+                                      color: CurrentColor.inst.color.withValues(alpha: 0.4),
                                       size: context.width * 0.35,
                                     ),
                                   ),

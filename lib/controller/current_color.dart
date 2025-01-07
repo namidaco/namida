@@ -343,7 +343,7 @@ class CurrentColor {
     int blue = 0;
 
     for (int i = 0; i < colors.length; i++) {
-      var colorvalue = colors[i].value;
+      var colorvalue = colors[i].intValue;
       red += (colorvalue >> 16) & 0xFF;
       green += (colorvalue >> 8) & 0xFF;
       blue += colorvalue & 0xFF;
@@ -473,14 +473,13 @@ class CurrentColor {
 
       final encimg = EncodedImage(imageData, width: image.width, height: image.height);
       final colorValues = await _extractPaletteGeneratorCompute.thready(encimg);
-
-      return colorValues.map((e) => Color(e));
+      return colorValues;
     }
   }
 
-  static Future<List<int>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
+  static Future<List<Color>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
     final result = await PaletteGenerator.fromByteData(encimg, filters: [avoidRedBlackWhitePaletteFilter], maximumColorCount: 28);
-    return result.colors.map((e) => e.value).toList();
+    return result.colors.toList();
   }
 
   void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {
@@ -552,6 +551,11 @@ extension ColorUtils on Color {
 
   Color invert() {
     final c = this;
-    return Color.fromARGB((c.opacity * 255).round(), 255 - c.red, 255 - c.green, 255 - c.blue);
+    return Color.from(
+      alpha: c.a,
+      red: 1.0 - c.r,
+      green: 1.0 - c.g,
+      blue: 1.0 - c.b,
+    );
   }
 }

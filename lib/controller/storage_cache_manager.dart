@@ -187,8 +187,6 @@ class StorageCacheManager {
           allFiles.sortBy((e) => accessTimeMap[itemToPath(e)] ?? 0);
         case _CacheSorting.listenCount:
           allFiles.sortBy((e) => listensMap[itemToYtId(e)] ?? 0);
-        default:
-          null;
       }
     }
 

@@ -53,7 +53,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
       }
       snackyy(
         message: '${lang.MEMBERSHIP_ENJOY_NEW}, `${newMS.name}` $trailing',
-        borderColor: Colors.green.withOpacity(0.8),
+        borderColor: Colors.green.withValues(alpha: 0.8),
         top: false,
       );
     }

@@ -405,11 +405,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
                                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * _hmultiplier),
                                 borderRadius: 12.0,
-                                bgColor: context.theme.cardColor.withOpacity(0.3),
+                                bgColor: context.theme.cardColor.withValues(alpha: 0.3),
                                 decoration: isSelected
                                     ? BoxDecoration(
                                         border: Border.all(
-                                        color: context.theme.colorScheme.secondary.withOpacity(0.5),
+                                        color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
                                         width: 2.0,
                                       ))
                                     : const BoxDecoration(),
@@ -536,9 +536,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               child: Row(
                 children: [
                   FloatingActionButton.small(
-                    backgroundColor: context.theme.disabledColor.withOpacity(1.0),
+                    backgroundColor: context.theme.disabledColor.withValues(alpha: 1.0),
                     heroTag: 'config_fab',
-                    child: Icon(Broken.setting_3, color: Colors.white.withOpacity(0.8)),
+                    child: Icon(Broken.setting_3, color: Colors.white.withValues(alpha: 0.8)),
                     onPressed: () {
                       _showAllConfigDialog(context);
                     },
@@ -547,17 +547,17 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   Obx(
                     (context) => FloatingActionButton.extended(
                       heroTag: 'download_fab',
-                      backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withOpacity(1.0),
+                      backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
                       isExtended: true,
                       icon: Icon(
                         Broken.import_2,
                         size: 28.0,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       label: Text(
                         lang.DOWNLOAD,
                         style: context.textTheme.displayMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                       onPressed: () async {

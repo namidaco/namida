@@ -619,7 +619,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                         .addSeparators(
                           separator: NamidaContainerDivider(
                             height: 1.5,
-                            colorForce: theme.colorScheme.onSurface.withOpacity(0.2),
+                            colorForce: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                           ),
                           skipFirst: 4,
                         )
@@ -631,7 +631,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
               if (extraColumnChildren != null)
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: theme.cardColor.withOpacity(0.4),
+                    color: theme.cardColor.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                   ),
                   child: Padding(

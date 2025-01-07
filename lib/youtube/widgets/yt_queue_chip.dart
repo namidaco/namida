@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
@@ -57,7 +59,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   @override
   void initState() {
     _queueScrollController.addListener(_updateScrollControllerThingys);
-    Future.delayed(Duration.zero, () => _screenHeight = context.height);
+    Timer(Duration.zero, () => _screenHeight = context.height);
     super.initState();
   }
 
@@ -185,7 +187,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               padding: const EdgeInsets.all(12.0),
                               child: FloatingActionButton(
                                 heroTag: 'yt_queue_fab_hero',
-                                backgroundColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.9),
+                                backgroundColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
                                 onPressed: () => _animateSmallToBig(),
                                 child: const Icon(Broken.driver),
                               ),
@@ -195,14 +197,14 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               margin: EdgeInsets.symmetric(horizontal: context.width * 0.04, vertical: 6.0),
                               padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                               height: minHeight,
-                              bgColor: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor).withOpacity(0.95),
+                              bgColor: Color.alphaBlend(context.theme.cardColor.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     Broken.airdrop,
                                     size: 24.0,
-                                    color: context.theme.iconTheme.color?.withOpacity(0.65),
+                                    color: context.theme.iconTheme.color?.withValues(alpha: 0.65),
                                   ),
                                   const SizedBox(width: 6.0),
                                   Expanded(
@@ -257,7 +259,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           animation: _bigBoxAnimation,
           child: RepaintBoundary(
             child: ColoredBox(
-              color: Color.alphaBlend(context.theme.cardColor.withOpacity(0.5), context.theme.scaffoldBackgroundColor),
+              color: Color.alphaBlend(context.theme.cardColor.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor),
               child: Listener(
                 onPointerMove: (event) {
                   if (Player.inst.isModifyingQueue) return;
@@ -354,7 +356,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             ),
                             const SizedBox(width: 4.0),
                             NamidaIconButton(
-                              iconColor: context.defaultIconColor().withOpacity(0.95),
+                              iconColor: context.defaultIconColor().withValues(alpha: 0.95),
                               icon: Broken.arrow_down_2,
                               onPressed: () => _animateBigToSmall(),
                             ),
@@ -448,7 +450,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
             final p = _bigBoxAnimation.value;
             if (p == 1) return const SizedBox();
             return ColoredBox(
-              color: Colors.black.withOpacity(1 - p),
+              color: Colors.black.withValues(alpha: 1 - p),
               child: Transform.translate(
                 offset: Offset(0, _bigBoxAnimation.value * maxHeight),
                 child: Container(
@@ -485,7 +487,7 @@ class _ActionItem extends StatelessWidget {
       style: ButtonStyle(
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: const VisualDensity(horizontal: -2.0, vertical: -2.0),
-        backgroundColor: WidgetStatePropertyAll(context.theme.colorScheme.secondary.withOpacity(0.18)),
+        backgroundColor: WidgetStatePropertyAll(context.theme.colorScheme.secondary.withValues(alpha: 0.18)),
       ),
       onPressed: onTap,
       icon: Icon(icon, size: 20.0),

@@ -302,7 +302,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       builder: (context) {
         final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
         return PopScope(
-          onPopInvoked: (didPop) {
+          onPopInvokedWithResult: (didPop, _) {
             if (!didPop) return;
             if (didChangeCurrentGroups) YoutubeSubscriptionsController.inst.saveFile();
           },
@@ -460,7 +460,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: Color.alphaBlend(Colors.grey.withOpacity(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                    foregroundColor: Color.alphaBlend(Colors.grey.withValues(alpha: subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
                   ),
                   child: NamidaButtonText(
                     subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,

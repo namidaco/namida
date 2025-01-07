@@ -484,7 +484,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                       sizeMultiplier: 0.8,
                                       borderRadius: 6.0,
                                       onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
-                                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacity(0.2),
+                                      bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
                                       icon: Broken.document,
                                       text: [
                                         lang.REPLIES,

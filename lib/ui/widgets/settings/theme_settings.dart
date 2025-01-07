@@ -371,14 +371,14 @@ class ThemeSetting extends SettingSubpageProvider {
   }
 
   void _updateColorLight(Color color) {
-    settings.save(staticColor: color.value);
+    settings.save(staticColor: color.intValue);
     if (!namida.isDarkMode) {
       CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }
   }
 
   void _updateColorDark(Color color) {
-    settings.save(staticColorDark: color.value);
+    settings.save(staticColorDark: color.intValue);
     if (namida.isDarkMode) {
       CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }

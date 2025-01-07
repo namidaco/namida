@@ -555,7 +555,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
             final iconsLookup = getIconsLookup();
             NamidaNavigator.inst.navigateDialog(
               dialog: PopScope(
-                onPopInvoked: (didPop) {
+                onPopInvokedWithResult: (didPop, _) {
                   if (!didPop) return;
                   if (didModify) settings.youtube.save();
                 },

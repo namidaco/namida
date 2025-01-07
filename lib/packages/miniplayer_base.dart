@@ -205,7 +205,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         child: Container(
           padding: const EdgeInsets.all(4.0),
           decoration: BoxDecoration(
-            color: context.theme.colorScheme.secondary.withOpacity(.2),
+            color: context.theme.colorScheme.secondary.withValues(alpha: .2),
             shape: BoxShape.circle,
           ),
           child: Icon(Broken.more, color: onSecondary),
@@ -460,7 +460,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                 Text(
                                   "${currentIndex + 1}/${queue.length}",
                                   style: TextStyle(
-                                    color: onSecondary.withOpacity(.8),
+                                    color: onSecondary.withValues(alpha: .8),
                                     fontSize: 12.0,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -471,7 +471,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                   maxLines: 1,
                                   softWrap: false,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0, color: onSecondary.withOpacity(.9)),
+                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0, color: onSecondary.withValues(alpha: .9)),
                                 ),
                               ],
                             ),
@@ -788,7 +788,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       borderRadius: borderRadius,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: context.theme.shadowColor.withOpacity(0.2 + 0.1 * cp),
+                                          color: context.theme.shadowColor.withValues(alpha: 0.2 + 0.1 * cp),
                                           blurRadius: 20.0,
                                         )
                                       ],
@@ -808,9 +808,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                 end: Alignment.bottomCenter,
                                                 colors: [
                                                   Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
-                                                      .withOpacity(velpy(a: .38, b: .28, c: icp)),
+                                                      .withValues(alpha: velpy(a: .38, b: .28, c: icp)),
                                                   Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                                      .withOpacity(velpy(a: .1, b: .22, c: icp)),
+                                                      .withValues(alpha: velpy(a: .1, b: .22, c: icp)),
                                                 ],
                                               ),
                                             ),
@@ -834,7 +834,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                   color: CurrentColor.inst.miniplayerColor,
                                                   borderRadius: BorderRadius.circular(50),
                                                   //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                                  //   .withOpacity(velpy(a: .3, b: .22, c: icp)),
+                                                  //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
                                                 ),
                                               ),
                                             );

@@ -56,7 +56,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
     const dayHeaderHeight = kHistoryDayHeaderHeight;
     final dayHeaderBgColor = Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
-    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withOpacity(0.4);
+    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
 
     final daysLength = historyDays.length;
 

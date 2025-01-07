@@ -328,15 +328,15 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                 bgColor: _activePresetCustom.valueR
-                                    ? Color.alphaBlend(CurrentColor.inst.color.withOpacity(0.9), context.theme.scaffoldBackgroundColor)
-                                    : context.theme.colorScheme.secondary.withOpacity(0.15),
+                                    ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
+                                    : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
                                 onTap: _resetPreset,
                                 child: Text(
                                   lang.CUSTOM,
                                   style: context.textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13.5,
-                                    color: _activePresetCustom.valueR ? Colors.white.withOpacity(0.7) : null,
+                                    color: _activePresetCustom.valueR ? Colors.white.withValues(alpha: 0.7) : null,
                                   ),
                                 ),
                               ),
@@ -349,8 +349,8 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                       bgColor: _activePreset.valueR == e.value
-                                          ? Color.alphaBlend(CurrentColor.inst.color.withOpacity(0.9), context.theme.scaffoldBackgroundColor)
-                                          : context.theme.colorScheme.secondary.withOpacity(0.15),
+                                          ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
+                                          : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
                                       onTap: () async {
                                         _activePreset.value = e.value;
                                         _activePresetCustom.value = false;
@@ -361,7 +361,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       child: Text(
                                         e.value,
                                         style: context.textTheme.displaySmall?.copyWith(
-                                          color: _activePreset.valueR == e.value ? Colors.white.withOpacity(0.7) : null,
+                                          color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
                                           fontWeight: FontWeight.w700,
                                           fontSize: 13.5,
                                         ),
@@ -866,7 +866,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                   width: 6.0,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: context.theme.colorScheme.secondary.withOpacity(0.2),
+                      color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
                       borderRadius: const BorderRadius.all(
                         Radius.circular(12.0),
                       ),
@@ -882,7 +882,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                   width: 8.0,
                   animateWidth: false,
                   decoration: BoxDecoration(
-                    color: context.theme.colorScheme.primary.withOpacity(0.5),
+                    color: context.theme.colorScheme.primary.withValues(alpha: 0.5),
                     borderRadius: const BorderRadius.all(
                       Radius.circular(12.0),
                     ),

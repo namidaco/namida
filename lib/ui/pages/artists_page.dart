@@ -86,7 +86,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     final scrollController = LibraryTab.artists.scrollController;
     final artistDimensions = Dimensions.inst.getArtistCardDimensions(countPerRow);
 
-    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withOpacity(0.8);
+    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
     return BackgroundWrapper(
       child: NamidaScrollbar(
         controller: scrollController,

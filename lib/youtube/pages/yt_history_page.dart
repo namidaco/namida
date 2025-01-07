@@ -41,7 +41,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
     const dayHeaderHeight = kYoutubeHistoryDayHeaderHeight;
     final dayHeaderBgColor = Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
-    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(160), context.theme.scaffoldBackgroundColor).withOpacity(0.4);
+    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(160), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
 
     final daysLength = historyDays.length;
 

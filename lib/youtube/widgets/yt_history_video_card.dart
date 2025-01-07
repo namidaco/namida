@@ -285,9 +285,9 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
             if (videoId == curr?.id && videoIdWatch.$2 == curr?.watchNull) isCurrentlyPlaying = true;
           }
 
-          final itemsColor7 = isCurrentlyPlaying ? Colors.white.withOpacity(0.7) : null;
-          final itemsColor6 = isCurrentlyPlaying ? Colors.white.withOpacity(0.6) : null;
-          final itemsColor5 = isCurrentlyPlaying ? Colors.white.withOpacity(0.5) : null;
+          final itemsColor7 = isCurrentlyPlaying ? Colors.white.withValues(alpha: 0.7) : null;
+          final itemsColor6 = isCurrentlyPlaying ? Colors.white.withValues(alpha: 0.6) : null;
+          final itemsColor5 = isCurrentlyPlaying ? Colors.white.withValues(alpha: 0.5) : null;
           final threeLines = draggableThumbnail ? ThreeLineSmallContainers(enabled: draggingEnabled, color: itemsColor5) : null;
           final children = [
             if (threeLines != null) draggingBarsBuilder?.call(itemsColor5) ?? threeLines,
@@ -398,7 +398,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
             bgColor: bgColor ??
                 (isCurrentlyPlaying
                     ? (fromPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-                    : (context.theme.cardColor.withOpacity(cardColorOpacity))),
+                    : (context.theme.cardColor.withValues(alpha: cardColorOpacity))),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             ),
@@ -462,7 +462,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                   Positioned.fill(
                     child: IgnorePointer(
                       child: ColoredBox(
-                        color: context.theme.cardColor.withOpacity(fadeOpacity),
+                        color: context.theme.cardColor.withValues(alpha: fadeOpacity),
                       ),
                     ),
                   ),

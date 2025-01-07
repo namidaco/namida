@@ -189,7 +189,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   decoration: BoxDecoration(
                                     boxShadow: [
                                       BoxShadow(
-                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withOpacity(0.5) : Colors.transparent,
+                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withValues(alpha: 0.5) : Colors.transparent,
                                         blurRadius: 12.0,
                                         spreadRadius: 2.0,
                                       )
@@ -203,7 +203,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacity(0.7), context.theme.cardColor),
+                          color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7), context.theme.cardColor),
                           borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                         ),
                         child: Row(
@@ -215,9 +215,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   border: Border.all(
                                     width: 1.5,
                                     color: didGrantStoragePermission
-                                        ? Colors.green.withOpacity(0.3)
+                                        ? Colors.green.withValues(alpha: 0.3)
                                         : didDenyStoragePermission
-                                            ? Colors.red.withOpacity(0.3)
+                                            ? Colors.red.withValues(alpha: 0.3)
                                             : Colors.transparent,
                                   ),
                                 ),

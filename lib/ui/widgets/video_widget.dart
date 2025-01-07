@@ -329,7 +329,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           builder: (context, child) {
             return DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity((controller.value / 3).clamp(0, 1)),
+                color: Colors.white.withValues(alpha: (controller.value / 3).clamp(0, 1)),
                 shape: BoxShape.circle,
               ),
               child: child!,
@@ -512,7 +512,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               child: Container(
                 width: 42.0,
                 decoration: BoxDecoration(
-                  color: context.theme.cardColor.withOpacity(0.5),
+                  color: context.theme.cardColor.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 ),
                 child: Column(
@@ -523,7 +523,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                           ),
                           width: 4.0,
@@ -756,7 +756,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               child: ObxO(
                 rx: _currentBrigthnessDim,
                 builder: (context, brightness) => Container(
-                  color: Colors.black.withOpacity(1 - brightness),
+                  color: Colors.black.withValues(alpha: 1 - brightness),
                 ),
               ),
             ),
@@ -780,7 +780,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               Positioned.fill(
                 child: _getBuilder(
                   child: Container(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withValues(alpha: 0.25),
                   ),
                 ),
               ),
@@ -863,7 +863,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       key: const Key('brightnesseto_ok'),
                                       tooltip: () => lang.RESET_BRIGHTNESS,
                                       icon: Broken.sun_1,
-                                      iconColor: itemsColor.withOpacity(0.8),
+                                      iconColor: itemsColor.withValues(alpha: 0.8),
                                       verticalPadding: 4.0,
                                       horizontalPadding: 8.0,
                                       iconSize: 18.0,
@@ -948,7 +948,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     child: Obx(
@@ -1046,7 +1046,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                           decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(0.2),
+                                            color: Colors.black.withValues(alpha: 0.2),
                                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                           ),
                                           child: Obx(
@@ -1232,7 +1232,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     child: Obx(
@@ -1329,7 +1329,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     child: Container(
                                       padding: const EdgeInsets.all(6.0),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha: 0.2),
                                         borderRadius: borr8,
                                       ),
                                       child: TapDetector(
@@ -1387,7 +1387,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           child: Container(
                                             padding: const EdgeInsets.all(6.0),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(0.2),
+                                              color: Colors.black.withValues(alpha: 0.2),
                                               borderRadius: borr8,
                                             ),
                                             child: Obx(
@@ -1412,7 +1412,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     child: Container(
                                       padding: const EdgeInsets.all(6.0),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha: 0.2),
                                         borderRadius: borr8,
                                       ),
                                       child: Row(
@@ -1515,7 +1515,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               child: NamidaBgBlur(
                                 blur: 2,
                                 child: ColoredBox(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   child: NamidaIconButton(
                                     icon: null,
                                     padding: const EdgeInsets.all(10.0),
@@ -1540,7 +1540,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       child: NamidaBgBlur(
                         blur: 2.5,
                         child: ColoredBox(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           child: Obx(
                             (context) {
                               final currentPosition = Player.inst.nowPlayingPositionR;
@@ -1610,7 +1610,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   child: NamidaBgBlur(
                                     blur: 2,
                                     child: ColoredBox(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       child: NamidaIconButton(
                                         icon: null,
                                         padding: const EdgeInsets.all(10.0),

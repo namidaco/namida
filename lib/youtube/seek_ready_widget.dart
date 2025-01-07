@@ -153,7 +153,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const seekTextWidth = SeekReadyDimensions.seekTextWidth;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
-    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withOpacity(0.25), context.theme.scaffoldBackgroundColor);
+    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withValues(alpha: 0.25), context.theme.scaffoldBackgroundColor);
     final bufferColor = miniplayerBGColor.invert();
 
     return LayoutBuilder(
@@ -296,7 +296,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: bufferColor.withOpacity(fullscreen ? 0.3 : 0.1),
+                                color: bufferColor.withValues(alpha: fullscreen ? 0.3 : 0.1),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
@@ -310,7 +310,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: bufferColor.withOpacity(fullscreen ? 0.8 : 0.2),
+                              color: bufferColor.withValues(alpha: fullscreen ? 0.8 : 0.2),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),
@@ -331,7 +331,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: CurrentColor.inst.miniplayerColor.withOpacity(0.8),
+                              color: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8),
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),
@@ -367,7 +367,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                       offset: Offset(-halfCircle / 2 + pos.clamp(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: CurrentColor.inst.miniplayerColor.withOpacity(0.9),
+                          color: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.9),
                           borderRadius: const BorderRadius.all(
                             Radius.circular(6.0),
                           ),
@@ -405,7 +405,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                       height: circleWidth,
                       width: circleWidth,
                       decoration: BoxDecoration(
-                        color: CurrentColor.inst.miniplayerColor.withOpacity(1.0),
+                        color: CurrentColor.inst.miniplayerColor.withValues(alpha: 1.0),
                         borderRadius: const BorderRadius.all(Radius.circular(64.0)),
                       ),
                       child: Container(

@@ -166,7 +166,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     final mainTheme = context.theme;
     final mainTextTheme = context.textTheme;
 
-    final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withOpacity(0.25), mainTheme.scaffoldBackgroundColor);
+    final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withValues(alpha: 0.25), mainTheme.scaffoldBackgroundColor);
 
     final absorbBottomDragWidget = AbsorbPointer(
       child: SizedBox(
@@ -187,7 +187,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                 ? ObxO(
                     rx: settings.youtube.ytMiniplayerDimOpacity,
                     builder: (context, dimOpacity) => Container(
-                      color: Colors.black.withOpacity(dimOpacity),
+                      color: Colors.black.withValues(alpha: dimOpacity),
                     ),
                   )
                 : null,
@@ -387,7 +387,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   if (videoListens.isEmpty) return const SizedBox();
                                                                   return NamidaInkWell(
                                                                     borderRadius: 6.0,
-                                                                    bgColor: CurrentColor.inst.miniplayerColor.withOpacity(0.7),
+                                                                    bgColor: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.7),
                                                                     onTap: () {
                                                                       showVideoListensDialog(currentId);
                                                                     },
@@ -395,7 +395,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     child: Text(
                                                                       videoListens.length.formatDecimal(),
                                                                       style: mainTextTheme.displaySmall?.copyWith(
-                                                                        color: Colors.white.withOpacity(0.6),
+                                                                        color: Colors.white.withValues(alpha: 0.6),
                                                                       ),
                                                                     ),
                                                                   );
@@ -771,7 +771,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                               shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
                                                               child: NamidaInkWell(
                                                                 key: Key("${currentId}_top_comments_highlight"),
-                                                                bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacity(0.4), mainTheme.cardColor),
+                                                                bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withValues(alpha: 0.4), mainTheme.cardColor),
                                                                 margin: const EdgeInsets.symmetric(horizontal: 18.0),
                                                                 padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                                                                 onTap: () {
@@ -1297,7 +1297,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     miniplayerBody,
                                                     IgnorePointer(
                                                       child: ColoredBox(
-                                                        color: miniplayerBGColor.withOpacity(1 - percentageFast),
+                                                        color: miniplayerBGColor.withValues(alpha: 1 - percentageFast),
                                                       ),
                                                     ),
                                                   ],

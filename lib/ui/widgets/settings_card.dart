@@ -27,7 +27,7 @@ class SettingsCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: context.theme.cardColor.withOpacity(0.6),
+        color: context.theme.cardColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20.0.multipliedRadius),
         boxShadow: [
           BoxShadow(
@@ -48,7 +48,7 @@ class SettingsCard extends StatelessWidget {
             // margin: const EdgeInsets.all(12.0),
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             decoration: BoxDecoration(
-              color: context.theme.cardColor.withOpacity(0.6),
+              color: context.theme.cardColor.withValues(alpha: 0.6),
               // borderRadius: BorderRadius.circular(20.0.multipliedRadius),
             ),
             child: Row(

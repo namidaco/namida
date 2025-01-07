@@ -349,11 +349,11 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               ? Border(
                   left: BorderSide(
                     width: 2.0,
-                    color: context.theme.colorScheme.secondary.withOpacity(0.5),
+                    color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
                   ),
                   bottom: BorderSide(
                     width: 2.0,
-                    color: context.theme.colorScheme.secondary.withOpacity(0.5),
+                    color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
                   ),
                 )
               : null,

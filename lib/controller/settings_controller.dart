@@ -39,8 +39,8 @@ class _SettingsController with SettingsFileWriter {
   final pitchBlack = false.obs;
   final autoColor = true.obs;
   final animatedTheme = true.obs;
-  final staticColor = kMainColorLight.value.obs;
-  final staticColorDark = kMainColorDark.value.obs;
+  final staticColor = kMainColorLight.intValue.obs;
+  final staticColorDark = kMainColorDark.intValue.obs;
   final RxList<LibraryTab> libraryTabs = [
     LibraryTab.home,
     LibraryTab.tracks,

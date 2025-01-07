@@ -105,7 +105,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             '_NUM_',
             countText,
           ),
-          borderColor: (hadError ? Colors.orange : Colors.green).withOpacity(0.6),
+          borderColor: (hadError ? Colors.orange : Colors.green).withValues(alpha: 0.6),
         );
       } else {
         snackyy(

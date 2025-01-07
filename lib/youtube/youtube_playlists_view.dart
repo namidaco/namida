@@ -301,7 +301,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                   snackyy(
                                     icon: Broken.copy_success,
                                     message: '$importedSucessText\n$detailsText',
-                                    borderColor: Colors.green.withOpacity(0.8),
+                                    borderColor: Colors.green.withValues(alpha: 0.8),
                                   );
                                 },
                                 text: lang.PICK_FROM_STORAGE,
