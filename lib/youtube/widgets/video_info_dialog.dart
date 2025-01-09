@@ -564,32 +564,32 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                         ),
                       TrackInfoListTile(
                         title: lang.TITLE,
-                        value: videoTitle ?? '?',
+                        value: videoTitle ?? '',
                         icon: Broken.text,
                       ),
                       TrackInfoListTile(
                         title: lang.CHANNEL,
-                        value: channelTitle ?? '?',
+                        value: channelTitle ?? '',
                         icon: Broken.user,
                       ),
                       TrackInfoListTile(
                         title: lang.DATE,
-                        value: dateText == null ? '?' : "$dateText$dateAgo",
+                        value: dateText == null ? '' : "$dateText$dateAgo",
                         icon: Broken.calendar,
                       ),
                       TrackInfoListTile(
                         title: lang.DURATION,
-                        value: durationSeconds?.secondsLabel ?? '?',
+                        value: durationSeconds?.secondsLabel ?? '',
                         icon: Broken.clock,
                       ),
                       TrackInfoListTile(
                         title: 'ID',
-                        value: isDummyVideoId ? '?' : videoId,
+                        value: isDummyVideoId ? '' : videoId,
                         icon: Broken.video_square,
                       ),
                       TrackInfoListTile(
                         title: lang.LINK,
-                        value: isDummyVideoId ? '?' : YTUrlUtils.buildVideoUrl(videoId),
+                        value: isDummyVideoId ? '' : YTUrlUtils.buildVideoUrl(videoId),
                         icon: Broken.link_1,
                       ),
                       TrackInfoListTile(
@@ -605,7 +605,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                         ),
                       TrackInfoListTile(
                         title: lang.DESCRIPTION,
-                        value: description ?? '?',
+                        value: description ?? '',
                         icon: Broken.message_text_1,
                         child: descriptionWidget,
                       ),

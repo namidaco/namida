@@ -484,7 +484,7 @@ class TrackInfoListTile extends StatelessWidget {
   });
 
   void _copyField(BuildContext context) {
-    if (value == '') return;
+    if (value == '' || value == '?') return;
 
     Clipboard.setData(ClipboardData(text: value));
     snackyy(
