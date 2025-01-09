@@ -141,8 +141,7 @@ Future<void> showDownloadVideoBottomSheet({
       title: lang.WARNING,
       message: lang.WEBM_NO_EDIT_TAGS_SUPPORT,
       leftBarIndicatorColor: Colors.red,
-      margin: EdgeInsets.zero,
-      borderRadius: 0,
+      altDesign: true,
       top: false,
     );
   }

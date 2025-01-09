@@ -494,9 +494,8 @@ Future<void> showGeneralPopupDialog(
     snackyy(
       message: "${lang.SAVED_IN}: $savePath",
       leftBarIndicatorColor: colorDelightened.value,
-      margin: EdgeInsets.zero,
+      altDesign: true,
       top: false,
-      borderRadius: 0,
     );
   }
 

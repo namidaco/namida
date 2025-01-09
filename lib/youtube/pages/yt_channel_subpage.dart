@@ -276,9 +276,8 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
             title: title,
             message: subtitle,
             leftBarIndicatorColor: snackColor,
-            margin: EdgeInsets.zero,
+            altDesign: true,
             top: false,
-            borderRadius: 0,
           );
         },
         child: PhotoViewGallery.builder(

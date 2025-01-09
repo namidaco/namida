@@ -451,9 +451,8 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                         title: title,
                                         message: subtitle,
                                         leftBarIndicatorColor: snackColor,
-                                        margin: EdgeInsets.zero,
+                                        altDesign: true,
                                         top: false,
-                                        borderRadius: 0,
                                       );
                                     },
                                     child: PhotoView(

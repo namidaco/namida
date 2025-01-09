@@ -246,9 +246,8 @@ Future<void> showTrackInfoDialog(
                                           title: title,
                                           message: subtitle,
                                           leftBarIndicatorColor: snackColor,
-                                          margin: EdgeInsets.zero,
+                                          altDesign: true,
                                           top: false,
-                                          borderRadius: 0,
                                         );
                                       },
                                       child: PhotoView(
@@ -491,8 +490,7 @@ class TrackInfoListTile extends StatelessWidget {
       title: 'Copied $title',
       message: value,
       leftBarIndicatorColor: context.theme.colorScheme.primary,
-      margin: EdgeInsets.zero,
-      borderRadius: 0,
+      altDesign: true,
       top: false,
     );
   }

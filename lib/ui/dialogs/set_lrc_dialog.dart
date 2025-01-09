@@ -432,9 +432,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                         message: text.replaceAll('\n', ' '),
                                         maxLinesMessage: 2,
                                         leftBarIndicatorColor: CurrentColor.inst.color,
-                                        margin: EdgeInsets.zero,
+                                        altDesign: true,
                                         top: false,
-                                        borderRadius: 0,
                                       );
                                     },
                                   ),

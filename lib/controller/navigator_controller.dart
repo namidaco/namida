@@ -497,6 +497,7 @@ SnackbarController? snackyy({
   bool top = true,
   void Function(SnackbarStatus status)? onStatusChanged,
   EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+  bool altDesign = false,
   int animationDurationMS = 600,
   int displaySeconds = 2,
   double borderRadius = 12.0,
@@ -520,6 +521,12 @@ SnackbarController? snackyy({
         fontFamily: "LexendDeca",
         fontFamilyFallback: const ['sans-serif', 'Roboto'],
       );
+
+  // -- currently has no effects cuz it looks dogshit
+  // if (altDesign) {
+  //   borderRadius = 0;
+  //   margin = EdgeInsets.zero;
+  // }
 
   final borderR = borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius);
   SnackbarController? snackbarController;
