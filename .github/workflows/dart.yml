@@ -18,13 +18,13 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: recursive
 
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: "3.4.0"
-
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.0"
+          flutter-version: "3.27.1"
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.6.0"
 
       - uses: actions/setup-java@v1
         with:
