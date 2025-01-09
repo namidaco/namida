@@ -1926,6 +1926,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  @override
+  MediaItem itemToMediaItem(Q item) {
+    return item._execute(
+      selectable: (finalItem) {
+        int durMS = finalItem.track.durationMS;
+        return finalItem.toMediaItem(currentIndex.value, currentQueue.value.length, durMS > 0 ? durMS.milliseconds : currentItemDuration.value);
+      },
+      youtubeID: (finalItem) =>
+          finalItem.toMediaItem(finalItem.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, currentIndex.value, currentQueue.value.length, currentItemDuration.value),
+    )!;
+  }
+
   // ------- video -------
 
   Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false, bool videoOnly = false}) async {
