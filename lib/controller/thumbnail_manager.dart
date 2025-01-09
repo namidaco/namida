@@ -75,6 +75,7 @@ class ThumbnailManager {
                 return null;
               },
             );
+            filename = filename?.splitLast('?');
           }
         } catch (_) {}
       }
