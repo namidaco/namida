@@ -30,6 +30,9 @@ class _YoutubeSettings with SettingsFileWriter {
   final downloadFilenameBuilder = _defaultFilenameBuilder.obs;
   final initialDefaultMetadataTags = <String, String>{};
 
+  // -- currently used for windows
+  final downloadNotifications = DownloadNotifications.showFailedOnly.obs;
+
   bool markVideoWatched = true;
   InnertubeClients? innertubeClient;
   bool whiteVideoBGInLightMode = false;
@@ -55,6 +58,7 @@ class _YoutubeSettings with SettingsFileWriter {
     YTSeekActionMode? tapToSeek,
     YTSeekActionMode? dragToSeek,
     String? downloadFilenameBuilder,
+    DownloadNotifications? downloadNotifications,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
@@ -81,6 +85,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
     if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
+    if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
 
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
@@ -144,6 +149,7 @@ class _YoutubeSettings with SettingsFileWriter {
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
+      downloadNotifications.value = DownloadNotifications.values.getEnum(json['downloadNotifications']) ?? downloadNotifications.value;
 
       final initialDefaultMetadataTagsInStorage = (json['initialDefaultMetadataTags'] as Map?);
       if (initialDefaultMetadataTagsInStorage != null) {
@@ -184,6 +190,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
         'downloadFilenameBuilder': downloadFilenameBuilder.value,
+        'downloadNotifications': downloadNotifications.value.name,
         'initialDefaultMetadataTags': initialDefaultMetadataTags,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.name,

@@ -3,17 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
-class NotificationService {
-  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+class NotificationManager {
+  static final instance = NotificationManager._platform();
+  const NotificationManager._();
 
-  static Future<void> cancelAll() async {
-    try {
-      return _flutterLocalNotificationsPlugin.cancelAll();
-    } catch (_) {}
+  static NotificationManager _platform() {
+    return NamidaPlatformBuilder.init(
+      android: () => const NotificationManager._(),
+      windows: () => const _NotificationManagerSuppressed._(),
+    );
   }
+
+  static final _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static const _historyImportID = 1;
   static const _historyImportPayload = 'history_import';
@@ -26,13 +34,21 @@ class NotificationService {
   static const _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
 
   static Future<bool?> init() {
-    return _flutterLocalNotificationsPlugin.initialize(
-      const InitializationSettings(
+    final didInit = _flutterLocalNotificationsPlugin.initialize(
+      InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_musicnote'),
+        windows: WindowsInitializationSettings(
+          appName: 'Namida',
+          appUserModelId: 'namidaco.namida.notification',
+          guid: '51435cfe-f7be-4a73-82c1-50d53a8e7ae6',
+          iconPath: AppPaths.NAMIDA_LOGO_MONET,
+        ),
       ),
       onDidReceiveBackgroundNotificationResponse: _onDidReceiveLocalNotification,
       onDidReceiveNotificationResponse: _onDidReceiveLocalNotification,
     );
+    _flutterLocalNotificationsPlugin.cancelAll();
+    return didInit;
   }
 
   static void mediaNotification({
@@ -84,7 +100,7 @@ class NotificationService {
     );
   }
 
-  static void downloadYoutubeNotification({
+  void downloadYoutubeNotification({
     required DownloadTaskFilename filenameWrapper,
     required String title,
     required String Function(String progressText) subtitle,
@@ -111,11 +127,11 @@ class NotificationService {
     );
   }
 
-  static Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename filenameWrapper}) async {
+  Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename filenameWrapper}) async {
     await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: filenameWrapper.key);
   }
 
-  static void doneDownloadingYoutubeNotification({
+  void doneDownloadingYoutubeNotification({
     required DownloadTaskFilename filenameWrapper,
     required String videoTitle,
     required String subtitle,
@@ -139,7 +155,7 @@ class NotificationService {
     );
   }
 
-  static void importHistoryNotification(int parsed, int total, DateTime displayTime) {
+  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
     _createProgressNotification(
       id: _historyImportID,
       progress: parsed,
@@ -154,7 +170,7 @@ class NotificationService {
     );
   }
 
-  static void doneImportingHistoryNotification(int totalParsed, int totalAdded) {
+  void doneImportingHistoryNotification(int totalParsed, int totalAdded) {
     _createNotification(
       id: _historyImportID,
       title: 'Done importing history',
@@ -174,7 +190,7 @@ class NotificationService {
     }
   }
 
-  static void _createNotification({
+  void _createNotification({
     required int id,
     required String title,
     required String body,
@@ -268,5 +284,49 @@ class NotificationService {
       ),
       payload: payload,
     );
+  }
+}
+
+class _NotificationManagerSuppressed extends NotificationManager {
+  const _NotificationManagerSuppressed._() : super._();
+
+  DownloadNotifications get _downloadNotifications => settings.youtube.downloadNotifications.value;
+
+  @override
+  void downloadYoutubeNotification({
+    required DownloadTaskFilename filenameWrapper,
+    required String title,
+    required String Function(String progressText) subtitle,
+    String? imagePath,
+    required int progress,
+    required int total,
+    required DateTime displayTime,
+    required bool isRunning,
+  }) {
+    return;
+  }
+
+  @override
+  void doneDownloadingYoutubeNotification({
+    required DownloadTaskFilename filenameWrapper,
+    required String videoTitle,
+    required String subtitle,
+    required bool failed,
+    String? imagePath,
+  }) async {
+    if (_downloadNotifications == DownloadNotifications.disableAll) return;
+    if (_downloadNotifications == DownloadNotifications.showFailedOnly && !failed) return;
+    super.doneDownloadingYoutubeNotification(
+      filenameWrapper: filenameWrapper,
+      videoTitle: videoTitle,
+      subtitle: subtitle,
+      failed: failed,
+      imagePath: imagePath,
+    );
+  }
+
+  @override
+  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
+    return;
   }
 }

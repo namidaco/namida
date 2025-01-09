@@ -516,6 +516,7 @@ extension PathTypeUtils on String {
 class NamidaFeaturesVisibility {
   static final _platform = defaultTargetPlatform;
   static final _isAndroid = _platform == TargetPlatform.android;
+  static final _isWindows = _platform == TargetPlatform.windows;
 
   static final wallpaperColors = _isAndroid && NamidaDeviceInfo.sdkVersion >= 31;
   static final displayArtworkOnLockscreen = _isAndroid && NamidaDeviceInfo.sdkVersion < 33;
@@ -534,4 +535,6 @@ class NamidaFeaturesVisibility {
 
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
+
+  static final showDownloadNotifications = _isWindows;
 }

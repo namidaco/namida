@@ -154,6 +154,7 @@ abstract class LanguageKeys {
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');
   String get DIRECTORY_DOESNT_EXIST => _getKey('DIRECTORY_DOESNT_EXIST');
+  String get DISABLE_ALL => _getKey('DISABLE_ALL');
   String get DISABLE_REORDERING => _getKey('DISABLE_REORDERING');
   String get DISABLE_SEARCH_CLEANUP => _getKey('DISABLE_SEARCH_CLEANUP');
   String get DISC_NUMBER_TOTAL => _getKey('DISC_NUMBER_TOTAL');
@@ -601,7 +602,9 @@ abstract class LanguageKeys {
   String get SHOULD_DUCK_NOTE => _getKey('SHOULD_DUCK_NOTE');
   String get SHOULD_PAUSE => _getKey('SHOULD_PAUSE');
   String get SHOULD_PAUSE_NOTE => _getKey('SHOULD_PAUSE_NOTE');
+  String get SHOW_ALL => _getKey('SHOW_ALL');
   String get SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN => _getKey('SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN');
+  String get SHOW_FAILED_ONLY => _getKey('SHOW_FAILED_ONLY');
   String get SHOW_HIDE_UNKNOWN_FIELDS => _getKey('SHOW_HIDE_UNKNOWN_FIELDS');
   String get SHOW_MIX_PLAYLISTS_IN => _getKey('SHOW_MIX_PLAYLISTS_IN');
   String get SHOW_MORE => _getKey('SHOW_MORE');

@@ -443,3 +443,9 @@ enum YTSortType {
   latestPlayed,
   firstListen,
 }
+
+enum DownloadNotifications {
+  disableAll,
+  showAll,
+  showFailedOnly,
+}

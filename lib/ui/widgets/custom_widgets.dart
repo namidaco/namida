@@ -302,6 +302,9 @@ class CustomListTile extends StatelessWidget {
                           ? Text(
                               trailingText!,
                               style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             )
                           : trailing,
                     ),

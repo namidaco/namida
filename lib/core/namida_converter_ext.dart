@@ -684,6 +684,10 @@ extension PlaylistPrivacyUtils on PlaylistPrivacy {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension DownloadNotificationsUtils on DownloadNotifications {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension RouteUtils on NamidaRoute {
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
@@ -1396,6 +1400,11 @@ class _NamidaConverters {
         PlaylistPrivacy.public: lang.PUBLIC,
         PlaylistPrivacy.unlisted: lang.UNLISTED,
         PlaylistPrivacy.private: lang.PRIVATE,
+      },
+      DownloadNotifications: {
+        DownloadNotifications.disableAll: lang.DISABLE_ALL,
+        DownloadNotifications.showAll: lang.SHOW_ALL,
+        DownloadNotifications.showFailedOnly: lang.SHOW_FAILED_ONLY,
       },
     };
 

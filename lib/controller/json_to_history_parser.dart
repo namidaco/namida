@@ -420,7 +420,7 @@ class JsonToHistoryParser {
     final startTime = DateTime.now();
     _notificationTimer?.cancel();
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      NotificationService.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value, startTime);
+      NotificationManager.instance.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value, startTime);
     });
 
     final datesAdded = <int>[];
@@ -481,7 +481,7 @@ class JsonToHistoryParser {
     isParsing.value = false;
 
     _notificationTimer?.cancel();
-    NotificationService.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
+    NotificationManager.instance.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
 
     _latestMissingMap.value = allMissingEntries;
     _latestMissingMapAddedStatus.clear();

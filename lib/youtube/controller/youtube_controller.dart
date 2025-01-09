@@ -219,7 +219,7 @@ class YoutubeController {
 
         currentSpeedsInByte.value[videoId]![filename] = speedB;
         var keyword = isRunning ? 'Downloading' : 'Paused';
-        NotificationService.downloadYoutubeNotification(
+        NotificationManager.instance.downloadYoutubeNotification(
           filenameWrapper: entry.key,
           title: "$keyword $downloadingText: $title",
           progress: p,
@@ -247,7 +247,7 @@ class YoutubeController {
   }) {
     if (downloadedFile == null) {
       if (!canceledByUser) {
-        NotificationService.doneDownloadingYoutubeNotification(
+        NotificationManager.instance.doneDownloadingYoutubeNotification(
           filenameWrapper: nameIdentifier,
           videoTitle: videoTitle,
           subtitle: 'Download Failed',
@@ -257,7 +257,7 @@ class YoutubeController {
       }
     } else {
       final size = downloadedFile.fileSizeFormatted();
-      NotificationService.doneDownloadingYoutubeNotification(
+      NotificationManager.instance.doneDownloadingYoutubeNotification(
         filenameWrapper: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
         subtitle: size == null ? '' : 'Downloaded: $size',
@@ -484,7 +484,7 @@ class YoutubeController {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
-        NotificationService.removeDownloadingYoutubeNotification(filenameWrapper: c.filename);
+        NotificationManager.instance.removeDownloadingYoutubeNotification(filenameWrapper: c.filename);
         downloadTasksGroupDB.delete(c.filename.key);
         if (!keepInListIfRemoved) {
           youtubeDownloadTasksMap.value[groupName]?.remove(c.filename);

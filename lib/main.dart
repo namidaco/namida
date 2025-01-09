@@ -202,8 +202,7 @@ void mainInitialization() async {
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
-  NotificationService.init();
-  NotificationService.cancelAll();
+  NotificationManager.init();
   FlutterVolumeController.updateShowSystemUI(false);
 
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));

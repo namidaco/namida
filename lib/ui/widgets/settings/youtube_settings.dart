@@ -9,6 +9,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -38,6 +39,7 @@ enum _YoutubeSettingKeys {
   dimIntensity,
   downloadsMetadataTags,
   downloadLocation,
+  downloadNotifications,
   onOpeningYTLink,
   seekbar,
 }
@@ -66,6 +68,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
         _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
         _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
+        _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS],
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
       };
 
@@ -85,6 +88,18 @@ class YoutubeSettings extends SettingSubpageProvider {
       ),
     );
   }
+
+  List<NamidaPopupItem> get _notificationsChildren => DownloadNotifications.values
+      .map(
+        (e) => NamidaPopupItem(
+          icon: Broken.notification_bing,
+          title: e.toText(),
+          onTap: () {
+            settings.youtube.save(downloadNotifications: e);
+          },
+        ),
+      )
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -472,6 +487,22 @@ class YoutubeSettings extends SettingSubpageProvider {
               ),
             ),
           ),
+          if (NamidaFeaturesVisibility.showDownloadNotifications)
+            getItemWrapper(
+              key: _YoutubeSettingKeys.downloadNotifications,
+              child: NamidaPopupWrapper(
+                childrenDefault: () => _notificationsChildren,
+                child: ObxO(
+                  rx: settings.youtube.downloadNotifications,
+                  builder: (context, downloadNotifications) => CustomListTile(
+                    bgColor: getBgColor(_YoutubeSettingKeys.downloadNotifications),
+                    icon: Broken.notification_bing,
+                    title: lang.NOTIFICATIONS,
+                    trailingText: downloadNotifications.toText(),
+                  ),
+                ),
+              ),
+            ),
           getItemWrapper(
             key: _YoutubeSettingKeys.onOpeningYTLink,
             child: Obx(
@@ -624,6 +655,41 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
     super.initState();
   }
 
+  List<NamidaPopupItem> get _innertubeChildren => [
+        NamidaPopupItem(
+          icon: Broken.video_horizontal,
+          title: lang.DEFAULT,
+          onTap: () {
+            setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
+          },
+        ),
+        ...{
+          InnertubeClients.mweb,
+          InnertubeClients.web,
+          InnertubeClients.ios,
+          InnertubeClients.android,
+          InnertubeClients.android_vr,
+          InnertubeClients.tv,
+          InnertubeClients.tv_embedded,
+          InnertubeClients.web_embedded,
+          InnertubeClients.web_creator,
+          InnertubeClients.web_music,
+          InnertubeClients.web_safari,
+          InnertubeClients.ios_creator,
+          InnertubeClients.ios_music,
+          InnertubeClients.android_creator,
+          InnertubeClients.android_music,
+        }.map(
+          (e) => NamidaPopupItem(
+            icon: Broken.video_octagon,
+            title: e.name,
+            onTap: () {
+              setState(() => settings.youtube.save(innertubeClient: e));
+            },
+          ),
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -654,46 +720,18 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(fallbackExtractInfoDescription: !isTrue)),
               title: 'try_extract_tags_info_from_description'.toUpperCase(),
             ),
-            CustomListTile(
-              icon: Broken.cpu,
-              title: 'innertube_client'.toUpperCase(),
-              trailing: NamidaPopupWrapper(
-                  childrenDefault: () => [
-                        NamidaPopupItem(
-                          icon: Broken.video_horizontal,
-                          title: lang.DEFAULT,
-                          onTap: () {
-                            setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
-                          },
-                        ),
-                        ...{
-                          InnertubeClients.mweb,
-                          InnertubeClients.web,
-                          InnertubeClients.ios,
-                          InnertubeClients.android,
-                          InnertubeClients.android_vr,
-                          InnertubeClients.tv,
-                          InnertubeClients.tv_embedded,
-                          InnertubeClients.web_embedded,
-                          InnertubeClients.web_creator,
-                          InnertubeClients.web_music,
-                          InnertubeClients.web_safari,
-                          InnertubeClients.ios_creator,
-                          InnertubeClients.ios_music,
-                          InnertubeClients.android_creator,
-                          InnertubeClients.android_music,
-                        }.map(
-                          (e) => NamidaPopupItem(
-                            icon: Broken.video_octagon,
-                            title: e.name,
-                            onTap: () {
-                              setState(() => settings.youtube.save(innertubeClient: e));
-                            },
-                          ),
-                        ),
-                      ],
-                  child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT)),
-              onTap: () {},
+            NamidaPopupWrapper(
+              child: NamidaPopupWrapper(
+                childrenDefault: () => _innertubeChildren,
+                child: CustomListTile(
+                  icon: Broken.cpu,
+                  title: 'innertube_client'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => _innertubeChildren,
+                    child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT),
+                  ),
+                ),
+              ),
             ),
             CustomSwitchListTile(
               icon: Broken.sun_1,
