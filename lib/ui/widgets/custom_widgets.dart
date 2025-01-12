@@ -3864,6 +3864,41 @@ class AnimatedEnabled extends StatelessWidget {
   }
 }
 
+class AnimatedShow extends StatelessWidget {
+  final bool show;
+  final bool isHorizontal;
+  final Duration duration;
+  final Curve curve;
+  final Widget child;
+
+  const AnimatedShow({
+    super.key,
+    required this.show,
+    this.isHorizontal = false,
+    this.duration = const Duration(milliseconds: 300),
+    this.curve = Curves.fastEaseInToSlowEaseOut,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final factor = show ? 1.0 : 0.0;
+    return AnimatedAlign(
+      alignment: Alignment.center,
+      heightFactor: isHorizontal ? null : factor,
+      widthFactor: isHorizontal ? factor : null,
+      duration: duration,
+      curve: curve,
+      child: AnimatedOpacity(
+        opacity: factor,
+        duration: duration,
+        curve: curve,
+        child: child,
+      ),
+    );
+  }
+}
+
 class QueueUtilsRow extends StatelessWidget {
   final String Function(int number) itemsKeyword;
   final void Function() onAddItemsTap;

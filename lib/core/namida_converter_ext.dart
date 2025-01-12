@@ -788,12 +788,12 @@ extension RouteUtils on NamidaRoute {
   }
 
   Widget _getAnimatedCrossFade({required Widget child, required bool shouldShow}) {
-    return child.animateEntrance(
-      showWhen: shouldShow,
-      durationMS: 400,
-      sizeCurve: Curves.easeOut,
-      firstCurve: Curves.easeInOutQuart,
-      secondCurve: Curves.easeInOutQuart,
+    return AnimatedShow(
+      show: shouldShow,
+      isHorizontal: true,
+      curve: Curves.fastEaseInToSlowEaseOut,
+      duration: Duration(milliseconds: 400),
+      child: child,
     );
   }
 
