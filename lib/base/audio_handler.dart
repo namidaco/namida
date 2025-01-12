@@ -480,7 +480,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true, handleVideoPlayback: false);
+    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
 
     if (checkInterrupted()) return;
 
@@ -578,7 +578,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (checkInterrupted()) return;
 
-    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false, handleVideoPlayback: false);
+    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
     if (startPlaying()) onPlayRaw(attemptFixVolume: false);

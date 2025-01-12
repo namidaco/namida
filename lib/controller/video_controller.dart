@@ -280,7 +280,7 @@ class VideoController {
       ..claimFreeSpaceAsync();
   }
 
-  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, bool handleVideoPlayback = true}) async {
+  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false}) async {
     currentVideo.value = null;
     currentPossibleLocalVideos.value.clear();
     isNoVideosAvailable.value = false;
@@ -302,7 +302,6 @@ class VideoController {
               bitrate: 0);
       currentVideo.value = nv;
       currentPossibleLocalVideos.value = [nv];
-      if (handleVideoPlayback) await Player.inst.setAudioOnlyPlayback(false);
       return nv;
     }
 
