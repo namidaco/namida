@@ -378,7 +378,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     final file = File(path);
     file.deleteIfExistsSync();
     file.createSync(recursive: true);
-    final sink = file.openWrite(mode: FileMode.append);
+    final sink = file.openWrite(mode: FileMode.writeOnlyAppend);
     sink.write('#EXTM3U\n');
     for (int i = 0; i < tracks.length; i++) {
       var trwd = tracks[i];

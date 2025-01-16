@@ -802,7 +802,7 @@ class Indexer<T extends Track> {
   Future<void> onDeleteTracksFromStoragePermanently(List<Selectable> tracksToDelete) async {
     if (tracksToDelete.isEmpty) return;
     final recentlyDeltedFile = File("${AppDirs.RECENTLY_DELETED}${DateFormat('yyyy_MM_dd HH_mm_ss').format(DateTime.now())} - (${tracksToDelete.length}).txt");
-    final recentlyDeltedFileWrite = recentlyDeltedFile.openWrite(mode: FileMode.append);
+    final recentlyDeltedFileWrite = recentlyDeltedFile.openWrite(mode: FileMode.writeOnlyAppend);
     tracksToDelete.loop(
       (trS) {
         final tr = trS.track;

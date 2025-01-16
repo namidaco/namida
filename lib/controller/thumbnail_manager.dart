@@ -374,7 +374,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         _YTThumbnailDownloadResult? downloadedRes;
         final destinationFileTemp = File("${destinationFile.path}.temp");
         destinationFileTemp.createSync(recursive: true);
-        final fileStream = destinationFileTemp.openWrite(mode: FileMode.write);
+        final fileStream = destinationFileTemp.openWrite(mode: FileMode.writeOnly);
 
         Future<void> diposeIdRequestResources() async {
           if (requesters[id] != null) {
