@@ -448,7 +448,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   ),
                                                                   const SizedBox(height: 4.0),
                                                                   NamidaDummyContainer(
-                                                                    width: maxWidth * 0.7,
+                                                                    width: maxWidth * 0.4,
                                                                     height: 12.0,
                                                                     shimmerEnabled: shimmerEnabledDummyContainer && dateToShow == null,
                                                                     child: Text(
