@@ -153,14 +153,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       }
 
       if (_imagePath == null && widget.track != null && widget.fallbackToFolderCover) {
-        String folderPath = widget.track!.folderPath;
-        String? cover = Indexer.inst.allFolderCovers[folderPath];
-        if (cover == null && folderPath.endsWith(Platform.pathSeparator)) {
-          try {
-            folderPath = folderPath.substring(0, folderPath.length - 1);
-            cover = Indexer.inst.allFolderCovers[folderPath];
-          } catch (_) {}
-        }
+        final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: widget.track!.folderPath);
         if (cover != null && mounted) setState(() => _imagePath = cover);
       }
     }

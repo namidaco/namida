@@ -105,6 +105,17 @@ class Indexer<T extends Track> {
 
   bool imageObtainedBefore(String imagePath) => _artworksMap[imagePath] != null || _artworksMapFullRes[imagePath] != null;
 
+  String? getFallbackFolderArtworkPath({required String folderPath}) {
+    String? cover = this.allFolderCovers[folderPath];
+    if (cover == null && folderPath.endsWith(Platform.pathSeparator)) {
+      try {
+        folderPath = folderPath.substring(0, folderPath.length - 1);
+        cover = this.allFolderCovers[folderPath];
+      } catch (_) {}
+    }
+    return cover;
+  }
+
   /// {imagePath: (TrackExtended, id)};
   final _backupMediaStoreIDS = <String, (Track, int)>{};
   final artworksMap = <String, Uint8List?>{};

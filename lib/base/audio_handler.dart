@@ -2001,7 +2001,9 @@ extension TrackToAudioSourceMediaItem on Selectable {
   MediaItem toMediaItem(int currentIndex, int queueLength, Duration? duration) {
     final tr = track.toTrackExt();
     final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
-    final imagePage = tr.pathToImage;
+    final imagePath = tr.pathToImage;
+    String? imagePathToUse = File(imagePath).existsSync() ? imagePath : null;
+    imagePathToUse ??= Indexer.inst.getFallbackFolderArtworkPath(folderPath: tr.folderPath);
     return MediaItem(
       id: tr.path,
       title: tr.title,
@@ -2012,7 +2014,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       album: tr.hasUnknownAlbum ? '' : tr.album,
       genre: tr.originalGenre,
       duration: duration ?? Duration(milliseconds: tr.durationMS),
-      artUri: Uri.file(File(imagePage).existsSync() ? imagePage : AppPaths.NAMIDA_LOGO_MONET),
+      artUri: Uri.file(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
     );
   }
 }
