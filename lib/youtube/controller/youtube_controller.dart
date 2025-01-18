@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -16,6 +17,7 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -579,6 +581,11 @@ class YoutubeController {
         // -- video
         if (audioOnly == false && config.fetchMissingVideo == true) {
           final videos = streams.videoStreams;
+
+          if (config.videoStream != null) {
+            // -- refresh the current audio stream (vip to avoid outdated links after restarts/etc)
+            config.videoStream = videos.firstWhereEff((e) => e.itag == config.videoStream!.itag);
+          }
           if (config.prefferedVideoQualityID != null) {
             config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
           }
@@ -592,6 +599,11 @@ class YoutubeController {
         if (config.fetchMissingAudio == true) {
           // -- audio
           final audios = streams.audioStreams;
+
+          if (config.audioStream != null) {
+            // -- refresh the current audio stream (vip to avoid outdated links after restarts/etc)
+            config.audioStream = audios.firstWhereEff((e) => e.itag == config.audioStream!.itag);
+          }
           if (config.prefferedAudioQualityID != null) {
             config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
           }
@@ -721,7 +733,7 @@ class YoutubeController {
       final isCanceled = youtubeDownloadTasksMap.value[groupName]?[config.filename] == null;
       final isPaused = youtubeDownloadTasksInQueueMap.value[groupName]?[config.filename] == false;
       if (isCanceled || isPaused) {
-        printy('Download Skipped for "${config.filename.filename}" bcz: canceled? $isCanceled, paused? $isPaused');
+        if (kDebugMode) printy('Download Skipped for "${config.filename.filename}" bcz: ${[if (isCanceled) 'canceled', if (isPaused) 'paused'].join(' & ')}');
         return true;
       }
       return false;
@@ -1056,6 +1068,7 @@ class YoutubeController {
         }
       } catch (e) {
         printy('Error Downloading YT Video: $e', isError: true);
+        snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
       }
     }
 
@@ -1092,13 +1105,13 @@ class YoutubeController {
     } catch (_) {}
     onInitialFileSize(initialFileSizeOnDisk);
     // only download if the download is incomplete, useful sometimes when file 'moving' fails.
+    Object? downloadException;
     if (initialFileSizeOnDisk < targetSize) {
       downloadStartRange = initialFileSizeOnDisk;
-      _downloadClientsMap[groupName] ??= {};
-
       _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[filename]);
+      _downloadClientsMap[groupName] ??= {};
       _downloadClientsMap[groupName]![filename] = file;
-      await _downloadManager.download(
+      downloadException = await _downloadManager.download(
         url: url,
         file: file,
         downloadStartRange: downloadStartRange,
@@ -1107,6 +1120,9 @@ class YoutubeController {
     }
     _downloadManager.stopDownload(file: file);
     _downloadClientsMap[groupName]?.remove(filename);
+    if (downloadException != null) {
+      throw downloadException;
+    }
     return File(destinationFilePath);
   }
 
@@ -1165,7 +1181,7 @@ class YoutubeController {
 
         if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
-        downloaded = await _downloadManager.download(
+        final downloadException = await _downloadManager.download(
           url: erabaretaStream.buildUrl(),
           file: file,
           downloadStartRange: downloadStartRange,
@@ -1173,6 +1189,11 @@ class YoutubeController {
           moveTo: newFilePath,
           moveToRequiredBytes: erabaretaStreamSizeInBytes,
         );
+        downloaded = downloadException == null;
+
+        if (downloadException != null) {
+          throw downloadException;
+        }
       }
 
       if (downloaded) {
@@ -1191,6 +1212,7 @@ class YoutubeController {
       }
     } catch (e) {
       printy('Error Downloading YT Video: $e', isError: true);
+      snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
     }
 
     return dv;
@@ -1212,11 +1234,11 @@ class YoutubeController {
 }
 
 class _YTDownloadManager with PortsProvider<SendPort> {
-  final _downloadCompleters = <String, Completer<bool>?>{}; // file path
+  final _downloadCompleters = <String, Completer<Object?>?>{}; // file path
   final _progressPorts = <String, RawReceivePort?>{}; // file path
 
   /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
-  Future<bool> download({
+  Future<Object?> download({
     required Uri? url,
     required File file,
     String? moveTo,
@@ -1228,8 +1250,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
     final filePath = file.path;
     if (_downloadCompleters[filePath] != null) return _downloadCompleters[filePath]!.future;
-    _downloadCompleters[filePath]?.completeIfWasnt(false);
-    _downloadCompleters[filePath] = Completer<bool>();
+    _downloadCompleters[filePath]?.completeIfWasnt(null);
+    _downloadCompleters[filePath] = Completer<Object?>();
 
     _progressPorts[filePath]?.close();
     final progressPort = _progressPorts[filePath] = RawReceivePort((message) {
@@ -1245,7 +1267,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     };
     if (!isInitialized) await initialize();
     await sendPort(p);
-    final res = await _downloadCompleters[filePath]?.future ?? false;
+    final res = await _downloadCompleters[filePath]?.future;
     _onFileFinish(filePath, null);
     return res;
   }
@@ -1298,55 +1320,62 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           }
         } else {
           final filePath = p['filePath'] as String;
-          final url = p['url'] as Uri;
-          final downloadStartRange = p['downloadStartRange'] as int;
-          final moveTo = p['moveTo'] as String?;
-          final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
-          final progressPort = p['progressPort'] as SendPort;
-
-          requesters[filePath] = HttpClientWrapper();
-          final file = File(filePath);
-          file.createSync(recursive: true);
-          final fileStream = file.openWrite(mode: FileMode.append);
-
-          final requester = requesters[filePath];
-          if (requester == null) return; // always non null tho
           try {
-            final headers = {'range': 'bytes=$downloadStartRange-'};
-            final response = await requester.getUrlWithHeaders(url, headers);
-            final downloadStream = response.asBroadcastStream();
+            final url = p['url'] as Uri;
+            final downloadStartRange = p['downloadStartRange'] as int;
+            final moveTo = p['moveTo'] as String?;
+            final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
+            final progressPort = p['progressPort'] as SendPort;
 
-            await for (final data in downloadStream) {
-              fileStream.add(data);
-              progressPort.send(data.length);
-            }
-            bool movedSuccessfully = false;
-            if (moveTo != null && moveToRequiredBytes != null) {
-              try {
-                final fileSize = file.fileSizeSync() ?? 0;
-                const allowance = 1024; // 1KB allowance
-                if (fileSize >= moveToRequiredBytes - allowance) {
-                  final movedFile = file.moveSync(
-                    moveTo,
-                    goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,
-                  );
-                  movedSuccessfully = movedFile != null;
+            requesters[filePath] = HttpClientWrapper();
+            final file = File(filePath);
+            file.createSync(recursive: true);
+            final fileStream = file.openWrite(mode: FileMode.writeOnlyAppend);
+
+            try {
+              final requester = requesters[filePath]!; // always non null tho
+              final headers = {'range': 'bytes=$downloadStartRange-'};
+              final response = await requester.getUrlWithHeaders(url, headers);
+              final downloadStream = response.asBroadcastStream();
+
+              await for (final data in downloadStream) {
+                fileStream.add(data);
+                progressPort.send(data.length);
+              }
+              Object? movedException;
+              if (moveTo != null && moveToRequiredBytes != null) {
+                try {
+                  final fileSize = file.fileSizeSync() ?? 0;
+                  const allowance = 1024; // 1KB allowance
+                  if (fileSize >= moveToRequiredBytes - allowance) {
+                    final movedFile = file.moveSync(
+                      moveTo,
+                      goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,
+                    );
+                    if (movedFile == null) {
+                      movedException = FileSystemException("Error moving $file to $moveTo");
+                    }
+                  }
+                } catch (e) {
+                  movedException = e;
                 }
+              }
+              return sendPort.send(MapEntry(filePath, movedException));
+            } catch (e) {
+              // client force closed
+              return sendPort.send(MapEntry(filePath, e));
+            } finally {
+              try {
+                final req = requesters.remove(filePath);
+                await req?.close();
+              } catch (_) {}
+              try {
+                await fileStream.flush();
+                await fileStream.close(); // closing file.
               } catch (_) {}
             }
-            return sendPort.send(MapEntry(filePath, movedSuccessfully));
-          } catch (_) {
-            // client force closed
-            return sendPort.send(MapEntry(filePath, false));
-          } finally {
-            try {
-              final req = requesters.remove(filePath);
-              await req?.close();
-            } catch (_) {}
-            try {
-              await fileStream.flush();
-              await fileStream.close(); // closing file.
-            } catch (_) {}
+          } catch (e) {
+            return sendPort.send(MapEntry(filePath, e)); // general error
           }
         }
       }
@@ -1367,8 +1396,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
   }
 
-  void _onFileFinish(String path, bool? value) {
-    if (value != null) _downloadCompleters[path]?.completeIfWasnt(value);
+  void _onFileFinish(String path, Object? exception) {
+    _downloadCompleters[path]?.completeIfWasnt(exception);
     _downloadCompleters[path] = null; // important
     _progressPorts[path]?.close();
     _progressPorts[path] = null;
