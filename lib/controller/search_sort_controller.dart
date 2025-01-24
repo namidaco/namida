@@ -367,20 +367,43 @@ class SearchSortController {
     final syear = tsfMap[TrackSearchFilter.year] ?? false;
 
     final textCleanedForSearch = _functionOfCleanup(cleanup);
+    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
 
-    Iterable<String> splitThis(String? property, bool split) => !split || property == null ? [] : property.split(' ').map((e) => textCleanedForSearch(e));
+    List<String> mapListCleanedAndNonCleaned(List<String> splitted) {
+      final allParts = <String>[];
+      allParts.addAll(splitted.map((e) => textCleanedForSearch(e)));
+      if (textNonCleanedForSearch != null) {
+        for (int i = 0; i < splitted.length; i++) {
+          var s = textNonCleanedForSearch(splitted[i]);
+          if (!allParts.contains(s)) {
+            allParts.add(s);
+          }
+        }
+      }
+      return allParts;
+    }
+
+    List<String> splitTextCleanedAndNonCleaned(String text) {
+      final splitted = text.split(' ');
+      return mapListCleanedAndNonCleaned(splitted);
+    }
+
+    List<String>? splitThis(String? property, bool split) {
+      if (!split || property == null) return null;
+      return splitTextCleanedAndNonCleaned(property);
+    }
 
     final tracksExtended = <({
       String path,
-      Iterable<String> splitTitle,
-      Iterable<String> splitFilename,
-      Iterable<String> splitAlbum,
-      Iterable<String> splitAlbumArtist,
-      List<String> splitArtist,
-      List<String> splitGenre,
-      Iterable<String> splitComposer,
-      Iterable<String> splitComment,
-      String year,
+      List<String>? splitTitle,
+      List<String>? splitFilename,
+      List<String>? splitAlbum,
+      List<String>? splitAlbumArtist,
+      List<String>? splitArtist,
+      List<String>? splitGenre,
+      List<String>? splitComposer,
+      List<String>? splitComment,
+      List<String>? year,
       bool isVideo,
     })>[];
     for (int i = 0; i < tracks.length; i++) {
@@ -394,21 +417,25 @@ class SearchSortController {
           splitAlbum: splitThis(trMap['album'], salbum),
           splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
           splitArtist: sartist
-              ? Indexer.splitArtist(
-                  title: trMap['title'],
-                  originalArtist: trMap['artist'],
-                  config: artistsSplitConfig,
-                ).map((e) => textCleanedForSearch(e)).toList()
+              ? mapListCleanedAndNonCleaned(
+                  Indexer.splitArtist(
+                    title: trMap['title'],
+                    originalArtist: trMap['artist'],
+                    config: artistsSplitConfig,
+                  ),
+                )
               : [],
           splitGenre: sgenre
-              ? Indexer.splitGenre(
-                  trMap['genre'],
-                  config: genresSplitConfig,
-                ).map((e) => textCleanedForSearch(e)).toList()
+              ? mapListCleanedAndNonCleaned(
+                  Indexer.splitGenre(
+                    trMap['genre'],
+                    config: genresSplitConfig,
+                  ),
+                )
               : [],
           splitComposer: splitThis(trMap['composer'], scomposer),
           splitComment: splitThis(trMap['comment'], scomment),
-          year: textCleanedForSearch(trMap['year'].toString()),
+          year: mapListCleanedAndNonCleaned([trMap['year'].toString()]),
           isVideo: trMap['v'] == true,
         ),
       );
@@ -426,14 +453,29 @@ class SearchSortController {
       final temp = p['temp'] as bool;
 
       final lctext = textCleanedForSearch(text);
-      final lctextSplit = text.split(' ').map((e) => textCleanedForSearch(e));
+      final lctextNonCleaned = textNonCleanedForSearch == null ? null : textNonCleanedForSearch(text);
+      final lctextSplit = splitTextCleanedAndNonCleaned(text);
 
-      bool isMatch(Iterable<String> propertySplit) {
+      bool isMatch(List<String>? propertySplit) {
+        if (propertySplit == null) return false;
+
         final match1 = lctextSplit.every((element) => propertySplit.any((p) => p.contains(element)));
         if (match1) return true;
-        if (!cleanup) return false;
-        final match2 = propertySplit.join().contains(lctext);
-        return match2;
+
+        if (cleanup) {
+          // cleanup means symbols and *spaces* are ignored.
+          final propertyJoined = propertySplit.join();
+
+          final match2 = propertyJoined.contains(lctext);
+          if (match2) return true;
+
+          if (lctextNonCleaned != null) {
+            final match3 = propertyJoined.contains(lctextNonCleaned);
+            if (match3) return true;
+          }
+        }
+
+        return false;
       }
 
       final result = <Track>[];
@@ -446,7 +488,7 @@ class SearchSortController {
             (sgenre && isMatch(trExt.splitGenre)) ||
             (scomposer && isMatch(trExt.splitComposer)) ||
             (scomment && isMatch(trExt.splitComment)) ||
-            (syear && trExt.year.contains(lctext))) {
+            (syear && isMatch(trExt.year))) {
           result.add(Track.decide(trExt.path, trExt.isVideo));
         }
       });
@@ -556,6 +598,7 @@ class SearchSortController {
     }
 
     final textCleanedForSearch = _functionOfCleanup(cleanup);
+    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
 
     final psfMap = <String, bool>{};
     psf.loop((f) => psfMap[f] = true);
@@ -578,17 +621,30 @@ class SearchSortController {
       final temp = p['temp'] as bool;
 
       final lctext = textCleanedForSearch(text);
+      final lctextNonCleaned = textNonCleanedForSearch == null ? null : textNonCleanedForSearch(text);
+
+      bool isMatch(String property) {
+        final match1 = property.contains(lctext);
+        if (match1) return true;
+
+        if (lctextNonCleaned != null) {
+          final match2 = property.contains(lctextNonCleaned);
+          if (match2) return true;
+        }
+
+        return false;
+      }
 
       final results = <String>[];
       playlists.loop((itemInfo) {
         final item = itemInfo.pl;
         final playlistName = item.name;
 
-        if ((sTitle && textCleanedForSearch(itemInfo.name).contains(lctext)) ||
-            (sCreationDate && textCleanedForSearch(itemInfo.dateCreatedFormatted).contains(lctext)) ||
-            (sModifiedDate && textCleanedForSearch(itemInfo.dateModifiedFormatted).contains(lctext)) ||
-            (sComment && textCleanedForSearch(item.comment).contains(lctext)) ||
-            (sMoods && item.moods.any((element) => textCleanedForSearch(element).contains(lctext)))) {
+        if ((sTitle && isMatch(itemInfo.name)) ||
+            (sCreationDate && isMatch(itemInfo.dateCreatedFormatted)) ||
+            (sModifiedDate && isMatch(itemInfo.dateModifiedFormatted)) ||
+            (sComment && isMatch(item.comment)) ||
+            (sMoods && item.moods.any((element) => isMatch(element)))) {
           results.add(playlistName);
         }
       });
@@ -994,7 +1050,31 @@ class SearchSortController {
 
     sendPort.send(receivePort.sendPort);
 
-    final cleanupFunction = _functionOfCleanup(cleanup);
+    final textCleanedForSearch = _functionOfCleanup(cleanup);
+    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
+
+    final keysCleaned = <String>[];
+    final keysNonCleaned = textNonCleanedForSearch == null ? null : <String>[];
+    if (keyIsPath) {
+      for (int i = 0; i < keys.length; i++) {
+        var path = keys[i];
+        final folder = Folder.explicit(path);
+        final folderName = folder.folderName;
+        keysCleaned.add(textCleanedForSearch(folderName)); // if adding failed we are cooked
+        if (keysNonCleaned != null) {
+          keysNonCleaned.add(textNonCleanedForSearch!(folderName));
+        }
+      }
+    } else {
+      for (int i = 0; i < keys.length; i++) {
+        var kd = keys[i];
+        keysCleaned.add(textCleanedForSearch(kd));
+        if (keysNonCleaned != null) {
+          keysNonCleaned.add(textNonCleanedForSearch!(kd));
+        }
+      }
+    }
+
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
@@ -1006,21 +1086,26 @@ class SearchSortController {
       final text = p['text'] as String;
       final temp = p['temp'] as bool;
 
+      final lctext = textCleanedForSearch(text);
+      final lctextNonCleaned = textNonCleanedForSearch == null ? null : textNonCleanedForSearch(text);
+
+      bool isMatch(int keyIndex) {
+        final match1 = keysCleaned[keyIndex].contains(lctext);
+        if (match1) return true;
+
+        if (keysNonCleaned != null) {
+          final match2 = keysNonCleaned[keyIndex].contains(lctextNonCleaned!);
+          if (match2) return true;
+        }
+
+        return false;
+      }
+
       final results = <String>[];
-      if (keyIsPath) {
-        keys.loop((folderPath) {
-          final folder = Folder.explicit(folderPath);
-          final folderName = folder.folderName;
-          if (cleanupFunction(folderName).contains(cleanupFunction(text))) {
-            results.add(folderPath);
-          }
-        });
-      } else {
-        keys.loop((name) {
-          if (cleanupFunction(name).contains(cleanupFunction(text))) {
-            results.add(name);
-          }
-        });
+      for (int i = 0; i < keys.length; i++) {
+        if (isMatch(i)) {
+          results.add(keys[i]);
+        }
       }
       sendPort.send((results, temp, text));
     });
