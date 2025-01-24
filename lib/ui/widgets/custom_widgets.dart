@@ -4413,11 +4413,13 @@ class DecorationClipper extends CustomClipper<Path> {
 class BorderRadiusClip extends StatelessWidget {
   final TextDirection textDirection;
   final BorderRadius borderRadius;
+  final Clip clipBehavior;
   final Widget child;
 
   const BorderRadiusClip({
     super.key,
     this.textDirection = TextDirection.ltr,
+    this.clipBehavior = Clip.antiAlias,
     required this.borderRadius,
     required this.child,
   });
@@ -4431,6 +4433,7 @@ class BorderRadiusClip extends StatelessWidget {
           borderRadius: borderRadius,
         ),
       ),
+      clipBehavior: clipBehavior,
       child: child,
     );
   }
