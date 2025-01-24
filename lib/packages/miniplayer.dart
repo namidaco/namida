@@ -672,11 +672,17 @@ class _AnimatingThumnailWidget extends StatelessWidget {
       (context) => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
-            ? LyricsLRCParsedView(
-                key: Lyrics.inst.lrcViewKey,
-                cp: cp,
-                initialLrc: Lyrics.inst.currentLyricsLRC.valueR,
-                videoOrImage: const SizedBox(),
+            ? Opacity(
+                // NamidaOpacity causes rebuilds
+                opacity: cp,
+                child: Transform.scale(
+                  scale: 1.05,
+                  child: LyricsLRCParsedView(
+                    key: Lyrics.inst.lrcViewKey,
+                    initialLrc: Lyrics.inst.currentLyricsLRC.valueR,
+                    videoOrImage: const SizedBox(),
+                  ),
+                ),
               )
             : const IgnorePointer(
                 key: Key('empty_lrc'),
@@ -725,7 +731,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                         return AnimatedScale(
                           duration: const Duration(milliseconds: 100),
                           scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
-                          child: RepaintBoundary(child: animatedScaleChild),
+                          child: animatedScaleChild,
                         );
                       },
                     );
