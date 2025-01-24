@@ -58,8 +58,11 @@ class _NamidaStorageAndroid extends NamidaStorage {
         for (int i = 0; i < filesPaths.length; i++) {
           var fp = filesPaths[i];
           if (fp.isNotEmpty && !allowedExtensions.any((wrapper) => wrapper.isPathValid(fp))) {
-            snackyy(title: lang.ERROR, message: '"$fp"\n${lang.EXTENSION}: ${extensionsList?.join(', ')}', isError: true);
-            return [];
+            if (!fp.contains(':')) {
+              // : means its content provider type file
+              snackyy(title: lang.ERROR, message: '"$fp"\n${lang.EXTENSION}: ${extensionsList?.join(', ')}', isError: true);
+              return [];
+            }
           }
         }
       }
