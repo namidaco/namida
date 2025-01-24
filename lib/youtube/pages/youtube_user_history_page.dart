@@ -7,6 +7,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -49,6 +50,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
       builder: (context, visibleShorts) {
         final isShortsVisible = visibleShorts[YTVisibleShortPlaces.history] ?? true;
         return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
+          operation: YoutiPieOperation.fetchHistory,
           onListUpdated: onListUpdated,
           transparentShimmer: true,
           title: lang.HISTORY,
@@ -171,6 +173,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
     const isShortsVisible = false;
 
     return YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(
+      operation: YoutiPieOperation.fetchHistory,
       key: pageKey,
       isHorizontal: true,
       horizontalHeight: horizontalHeight,

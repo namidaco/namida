@@ -39,6 +39,7 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final horizontalHistory = YoutubeUserHistoryPageHorizontal(pageKey: horizontalHistoryKey);
     return YoutubeMainPageFetcherAccBase<YoutiPieUserPlaylistsResult, PlaylistInfoItemUser>(
+        operation: YoutiPieOperation.fetchUserPlaylists,
         transparentShimmer: true,
         topPadding: 12.0,
         pageHeader: Column(

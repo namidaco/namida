@@ -7,7 +7,6 @@ import 'package:namico_subscription_manager/class/supabase_sub.dart';
 import 'package:namico_subscription_manager/class/support_tier.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
-import 'package:namida/controller/logs_controller.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/managers/acount_manager.dart';
@@ -15,6 +14,7 @@ import 'package:youtipie/youtipie.dart' hide logger;
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -45,6 +45,37 @@ class YoutubeAccountController {
     YoutiPieOperation.createPlaylist: false,
   };
 
+  static const _operationHasErrorPage = <YoutiPieOperation, bool>{
+    YoutiPieOperation.fetchFeed: true,
+    YoutiPieOperation.fetchNotifications: true,
+    YoutiPieOperation.fetchHistory: true,
+    YoutiPieOperation.fetchUserPlaylists: true,
+    YoutiPieOperation.fetchUserChannels: true,
+  };
+
+  static String formatMembershipErrorMessage(YoutiPieOperation? operation, MembershipType? ms) {
+    final currentMSMessage = lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown.name}`");
+    if (operation == null) return currentMSMessage;
+
+    final operationMessage = lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`');
+    return '$operationMessage. $currentMSMessage';
+  }
+
+  static bool operationBlockedByMembership(YoutiPieOperation operation, MembershipType? ms) {
+    final needsMembership = _operationNeedsMembership[operation] ?? true;
+    if (needsMembership) {
+      if (ms == null || ms.index < MembershipType.cutie.index) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _canShowOperationError(YoutiPieOperation operation) {
+    if (_operationHasErrorPage[operation] == true) return false;
+    return true;
+  }
+
   static void initialize() {
     current.canAddMultiAccounts = false;
 
@@ -59,20 +90,21 @@ class YoutubeAccountController {
       if (operation.requiresAccount) {
         if (current.activeAccountChannel.value == null) {
           // -- no account
-          _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+          if (_canShowOperationError(operation)) {
+            _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+          }
           return false;
         } else {
-          final needsMembership = _operationNeedsMembership[operation] ?? true;
-          if (needsMembership) {
-            final ms = membership.userMembershipTypeGlobal.value;
-            if (ms == null || ms.index < MembershipType.cutie.index) {
-              // -- has account but no membership
+          final ms = membership.userMembershipTypeGlobal.value;
+          if (operationBlockedByMembership(operation, ms)) {
+            // -- has account but no membership
+            if (_canShowOperationError(operation)) {
               _showError(
-                '${lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown.name}`")}',
+                formatMembershipErrorMessage(operation, ms),
                 manageSubscriptionButton: true,
               );
-              return false;
             }
+            return false;
           }
         }
       }
@@ -81,7 +113,9 @@ class YoutubeAccountController {
 
     YoutiPie.onOperationFailNoAccount = (operation) {
       if (current.activeAccountChannel.value == null) {
-        _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+        if (_canShowOperationError(operation)) {
+          _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+        }
         return true;
       }
       return false;

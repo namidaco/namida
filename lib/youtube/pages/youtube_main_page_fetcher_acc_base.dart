@@ -8,6 +8,7 @@ import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/map_serializable.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/core/enum.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
@@ -29,6 +30,7 @@ final _resultsFetchTime = <Type, DateTime>{};
 
 class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends StatefulWidget {
   final bool transparentShimmer;
+  final YoutiPieOperation operation;
   final String title;
   final CacheDetails<W> cacheReader;
   final Future<W?> Function(ExecuteDetails details) networkFetcher;
@@ -55,6 +57,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   const YoutubeMainPageFetcherAccBase({
     super.key,
     required this.transparentShimmer,
+    required this.operation,
     required this.title,
     required this.cacheReader,
     required this.networkFetcher,
@@ -372,116 +375,147 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                   widget.onPullToRefresh!(),
                 ]),
         child: ObxO(
-          rx: YoutubeAccountController.current.activeAccountChannel,
-          builder: (context, activeAccountChannel) => activeAccountChannel == null
-              ? Padding(
-                  padding: pagePadding,
-                  child: Column(
-                    children: [
-                      if (widget.pageHeader != null) widget.pageHeader!,
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: header,
-                      ),
-                      const SizedBox(height: 38.0),
-                      Text(
-                        lang.SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE,
-                        style: context.textTheme.displayLarge,
-                      ),
-                      const SizedBox(height: 12.0),
-                      NamidaInkWellButton(
-                        sizeMultiplier: 1.1,
-                        icon: Broken.user_edit,
-                        text: lang.MANAGE_YOUR_ACCOUNTS,
-                        onTap: const YoutubeAccountManagePage().navigate,
-                      ),
-                    ],
-                  ),
-                )
-              : ObxO(
-                  rx: _isLoadingCurrentFeed,
-                  builder: (context, isLoadingCurrentFeed) => ObxO(
-                    rx: _currentFeed,
-                    builder: (context, listItems) {
-                      return LazyLoadListView(
-                        onReachingEnd: _fetchFeedNext,
-                        scrollController: _controller,
-                        listview: (controller) {
-                          final customScrollView = CustomScrollView(
-                            scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
-                            controller: controller,
-                            slivers: [
-                              if (!widget.isHorizontal && widget.pageHeader != null)
-                                SliverToBoxAdapter(
-                                  child: widget.pageHeader,
+          rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
+          builder: (context, membership) => ObxO(
+            rx: YoutubeAccountController.current.activeAccountChannel,
+            builder: (context, activeAccountChannel) {
+              String? errorMessage;
+              Widget? button;
+              if (activeAccountChannel == null) {
+                errorMessage = lang.SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE;
+                button = NamidaInkWellButton(
+                  sizeMultiplier: 1.1,
+                  icon: Broken.user_edit,
+                  text: lang.MANAGE_YOUR_ACCOUNTS,
+                  onTap: const YoutubeAccountManagePage().navigate,
+                );
+              } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
+                errorMessage = YoutubeAccountController.formatMembershipErrorMessage(widget.operation, membership);
+                button = NamidaInkWellButton(
+                  sizeMultiplier: 1.1,
+                  icon: Broken.message_edit,
+                  text: lang.MEMBERSHIP_MANAGE,
+                  onTap: const YoutubeManageSubscriptionPage().navigate,
+                );
+              }
+              return errorMessage != null
+                  ? Padding(
+                      padding: pagePadding,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (widget.pageHeader != null) widget.pageHeader!,
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: header,
+                          ),
+                          const SizedBox(height: 38.0),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  errorMessage,
+                                  style: context.textTheme.displayLarge,
+                                  textAlign: TextAlign.center,
                                 ),
-                              SliverPadding(padding: firstPadding),
-                              if (!widget.isHorizontal)
-                                SliverToBoxAdapter(
-                                  child: header,
-                                ),
-                              isLoadingCurrentFeed
-                                  ? SliverToBoxAdapter(
-                                      child: ShimmerWrapper(
-                                        transparent: widget.transparentShimmer,
-                                        shimmerEnabled: true,
-                                        child: ListView.builder(
-                                          scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
-                                          padding: EdgeInsets.zero,
-                                          physics: const NeverScrollableScrollPhysics(),
-                                          itemCount: 15,
-                                          shrinkWrap: true,
-                                          itemBuilder: (_, __) {
-                                            return widget.dummyCard;
-                                          },
-                                        ),
-                                      ),
-                                    )
-                                  : listItems == null
-                                      ? const SliverToBoxAdapter()
-                                      : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
-                                          SliverFixedExtentList.builder(
-                                            itemCount: listItems.items.length,
-                                            itemExtent: widget.itemExtent,
-                                            itemBuilder: (context, i) {
-                                              final item = listItems.items[i];
-                                              return widget.itemBuilder(item, i, listItems);
-                                            },
-                                          ),
-                              SliverToBoxAdapter(
-                                child: ObxO(
-                                  rx: _isLoadingNext,
-                                  builder: (context, isLoadingNext) => isLoadingNext
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12.0),
-                                          child: Center(
-                                            child: LoadingIndicator(),
+                                if (button != null) ...[
+                                  const SizedBox(height: 12.0),
+                                  button,
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ObxO(
+                      rx: _isLoadingCurrentFeed,
+                      builder: (context, isLoadingCurrentFeed) => ObxO(
+                        rx: _currentFeed,
+                        builder: (context, listItems) {
+                          return LazyLoadListView(
+                            onReachingEnd: _fetchFeedNext,
+                            scrollController: _controller,
+                            listview: (controller) {
+                              final customScrollView = CustomScrollView(
+                                scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
+                                controller: controller,
+                                slivers: [
+                                  if (!widget.isHorizontal && widget.pageHeader != null)
+                                    SliverToBoxAdapter(
+                                      child: widget.pageHeader,
+                                    ),
+                                  SliverPadding(padding: firstPadding),
+                                  if (!widget.isHorizontal)
+                                    SliverToBoxAdapter(
+                                      child: header,
+                                    ),
+                                  isLoadingCurrentFeed
+                                      ? SliverToBoxAdapter(
+                                          child: ShimmerWrapper(
+                                            transparent: widget.transparentShimmer,
+                                            shimmerEnabled: true,
+                                            child: ListView.builder(
+                                              scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
+                                              padding: EdgeInsets.zero,
+                                              physics: const NeverScrollableScrollPhysics(),
+                                              itemCount: 15,
+                                              shrinkWrap: true,
+                                              itemBuilder: (_, __) {
+                                                return widget.dummyCard;
+                                              },
+                                            ),
                                           ),
                                         )
-                                      : const SizedBox(),
-                                ),
-                              ),
-                              SliverPadding(padding: lastPadding),
-                            ],
-                          );
-                          return widget.isHorizontal
-                              ? Column(
-                                  children: [
-                                    if (widget.pageHeader != null) widget.pageHeader!,
-                                    SizedBox(height: widget.topPadding),
-                                    header,
-                                    SizedBox(
-                                      height: widget.horizontalHeight,
-                                      child: customScrollView,
+                                      : listItems == null
+                                          ? const SliverToBoxAdapter()
+                                          : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
+                                              SliverFixedExtentList.builder(
+                                                itemCount: listItems.items.length,
+                                                itemExtent: widget.itemExtent,
+                                                itemBuilder: (context, i) {
+                                                  final item = listItems.items[i];
+                                                  return widget.itemBuilder(item, i, listItems);
+                                                },
+                                              ),
+                                  SliverToBoxAdapter(
+                                    child: ObxO(
+                                      rx: _isLoadingNext,
+                                      builder: (context, isLoadingNext) => isLoadingNext
+                                          ? const Padding(
+                                              padding: EdgeInsets.all(12.0),
+                                              child: Center(
+                                                child: LoadingIndicator(),
+                                              ),
+                                            )
+                                          : const SizedBox(),
                                     ),
-                                  ],
-                                )
-                              : customScrollView;
+                                  ),
+                                  SliverPadding(padding: lastPadding),
+                                ],
+                              );
+                              return widget.isHorizontal
+                                  ? Column(
+                                      children: [
+                                        if (widget.pageHeader != null) widget.pageHeader!,
+                                        SizedBox(height: widget.topPadding),
+                                        header,
+                                        SizedBox(
+                                          height: widget.horizontalHeight,
+                                          child: customScrollView,
+                                        ),
+                                      ],
+                                    )
+                                  : customScrollView;
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    );
+            },
+          ),
         ),
       ),
     );

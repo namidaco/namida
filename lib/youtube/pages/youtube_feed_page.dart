@@ -5,6 +5,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/settings_controller.dart';
@@ -34,6 +35,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
           builder: (context, visibleMixes) {
             final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.homeFeed] ?? true;
             return YoutubeMainPageFetcherAccBase<YoutiPieFeedResult, YoutubeFeed>(
+              operation: YoutiPieOperation.fetchFeed,
               showRefreshInsteadOfRefreshing: true,
               transparentShimmer: false,
               title: lang.HOME,

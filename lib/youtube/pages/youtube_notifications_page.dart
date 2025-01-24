@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/core/dimensions.dart';
@@ -20,6 +21,7 @@ class YoutubeNotificationsPage extends StatelessWidget {
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
     return YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
+        operation: YoutiPieOperation.fetchNotifications,
         transparentShimmer: true,
         title: lang.NOTIFICATIONS,
         cacheReader: YoutiPie.cacheBuilder.forNotificationItems(),
