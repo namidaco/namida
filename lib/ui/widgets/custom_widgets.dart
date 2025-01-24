@@ -4307,16 +4307,53 @@ class ScaleDetector extends StatelessWidget {
   }
 }
 
-class HorizontalDragDetector extends StatelessWidget {
+class HorizontalDragDetector extends _LinearDragDetector<HorizontalDragGestureRecognizer> {
+  @override
+  HorizontalDragGestureRecognizer create() => HorizontalDragGestureRecognizer(debugOwner: this);
+
+  const HorizontalDragDetector({
+    super.key,
+    super.initializer,
+    super.child,
+    super.behavior,
+    super.onStart,
+    super.onDown,
+    super.onUpdate,
+    super.onEnd,
+    super.onCancel,
+  });
+}
+
+class VerticalDragDetector extends _LinearDragDetector<VerticalDragGestureRecognizer> {
+  @override
+  VerticalDragGestureRecognizer create() => VerticalDragGestureRecognizer(debugOwner: this);
+
+  const VerticalDragDetector({
+    super.key,
+    super.initializer,
+    super.child,
+    super.behavior,
+    super.onStart,
+    super.onDown,
+    super.onUpdate,
+    super.onEnd,
+    super.onCancel,
+  });
+}
+
+abstract class _LinearDragDetector<T extends DragGestureRecognizer> extends StatelessWidget {
+  T create();
+
   final GestureDragStartCallback? onStart;
   final GestureDragDownCallback? onDown;
   final GestureDragUpdateCallback? onUpdate;
   final GestureDragEndCallback? onEnd;
-  final void Function(HorizontalDragGestureRecognizer instance)? initializer;
+  final GestureDragCancelCallback? onCancel;
+  final void Function(T instance)? initializer;
   final Widget? child;
   final HitTestBehavior? behavior;
 
-  const HorizontalDragDetector({
+  const _LinearDragDetector({
     super.key,
     this.initializer,
     this.child,
@@ -4325,20 +4362,22 @@ class HorizontalDragDetector extends StatelessWidget {
     this.onDown,
     this.onUpdate,
     this.onEnd,
+    this.onCancel,
   });
 
   @override
   Widget build(BuildContext context) {
     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
-    gestures[HorizontalDragGestureRecognizer] = GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
-      () => HorizontalDragGestureRecognizer(debugOwner: this),
+    gestures[T] = GestureRecognizerFactoryWithHandlers<T>(
+      create,
       initializer ??
-          (HorizontalDragGestureRecognizer instance) {
+          (instance) {
             instance
               ..onStart = onStart
               ..onDown = onDown
               ..onUpdate = onUpdate
               ..onEnd = onEnd
+              ..onCancel = onCancel
               ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
           },
     );

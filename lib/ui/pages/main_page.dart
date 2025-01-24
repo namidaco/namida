@@ -251,6 +251,17 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
     }
   }
 
+  double _dragValue = 0;
+  static const _dragThreshold = 0.2;
+
+  void _onDragUpwards() {
+    ScrollSearchController.inst.showKeyboard();
+  }
+
+  void _onDragDownwards() {
+    ScrollSearchController.inst.hideKeyboard();
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchProgressWidget = Builder(builder: (context) {
@@ -291,20 +302,34 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
           child: ObxO(
             rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
             builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
-                ? ObxO(
-                    rx: SearchSortController.inst.runningSearchesTempCount,
-                    builder: (context, runningSearchesCount) => Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        ObxO(
-                          rx: ScrollSearchController.inst.currentSearchType,
-                          builder: (context, currentSearchType) => Icon(
-                            _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
-                            color: Color.fromRGBO(255, 255, 255, 0.8),
+                ? VerticalDragDetector(
+                    onUpdate: (details) {
+                      _dragValue += details.delta.dy * 0.02;
+                    },
+                    onEnd: (details) {
+                      if (_dragValue < -_dragThreshold) {
+                        _onDragUpwards();
+                      } else if (_dragValue > _dragThreshold) {
+                        _onDragDownwards();
+                      }
+                      _dragValue = 0;
+                    },
+                    onCancel: () => _dragValue = 0,
+                    child: ObxO(
+                      rx: SearchSortController.inst.runningSearchesTempCount,
+                      builder: (context, runningSearchesCount) => Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ObxO(
+                            rx: ScrollSearchController.inst.currentSearchType,
+                            builder: (context, currentSearchType) => Icon(
+                              _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
+                              color: Color.fromRGBO(255, 255, 255, 0.8),
+                            ),
                           ),
-                        ),
-                        if (runningSearchesCount > 0) searchProgressWidget,
-                      ],
+                          if (runningSearchesCount > 0) searchProgressWidget,
+                        ],
+                      ),
                     ),
                   )
                 : ObxO(

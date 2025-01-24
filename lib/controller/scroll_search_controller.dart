@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -157,6 +158,9 @@ class ScrollSearchController {
   }
 
   void focusKeyboard() => FocusManager.instance.primaryFocus?.requestFocus(focusNode);
+
+  void showKeyboard() => SystemChannels.textInput.invokeMethod('TextInput.show');
+  void hideKeyboard() => SystemChannels.textInput.invokeMethod('TextInput.hide');
 
   void switchSearchBoxVisibilty(LibraryTab libraryTab) {
     textSearchControllers[libraryTab] ??= TextEditingController();
