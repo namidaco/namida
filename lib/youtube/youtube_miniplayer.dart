@@ -91,19 +91,25 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   void cancelDimTimer() {
     _dimTimer?.cancel();
     _dimTimer = null;
-    _canDimMiniplayer.value = false;
+    final bool defaultKeepActive = settings.youtube.ytMiniplayerDimAfterSeconds.value == 0;
+    if (!defaultKeepActive) _canDimMiniplayer.value = false;
   }
 
   void startDimTimer() {
     _dimTimer?.cancel();
     if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) return;
-    final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
-    if (defaultMiniplayerDimSeconds <= 0) return;
     final double defaultMiniplayerOpacity = settings.youtube.ytMiniplayerDimOpacity.value;
     if (defaultMiniplayerOpacity <= 0) return;
-    _dimTimer = Timer(Duration(seconds: defaultMiniplayerDimSeconds), () {
+    final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
+    if (defaultMiniplayerDimSeconds <= -1) return; // dont dim
+    final bool defaultKeepActive = defaultMiniplayerDimSeconds == 0;
+    if (defaultKeepActive) {
       _canDimMiniplayer.value = true;
-    });
+    } else {
+      _dimTimer = Timer(Duration(seconds: defaultMiniplayerDimSeconds), () {
+        _canDimMiniplayer.value = true;
+      });
+    }
   }
 
   void _onVideoPageReset() {
@@ -120,6 +126,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   @override
   void initState() {
     super.initState();
+    startDimTimer();
     _scrollController.addListener(() {
       final pixels = _scrollController.positions.lastOrNull?.pixels;
       final hasScrolledEnough = pixels != null && pixels > 40;

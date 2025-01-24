@@ -307,26 +307,37 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.dimMiniplayerAfter,
             child: ObxO(
               rx: settings.youtube.ytMiniplayerDimAfterSeconds,
-              builder: (context, ytMiniplayerDimAfterSeconds) => CustomListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
-                leading: const StackedIcon(
-                  baseIcon: Broken.moon,
-                  secondaryIcon: Broken.clock,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.DIM_MINIPLAYER_AFTER_SECONDS.replaceFirst(
-                  '_SECONDS_',
-                  "$ytMiniplayerDimAfterSeconds",
-                ),
-                trailing: NamidaWheelSlider(
-                  totalCount: 120,
-                  initValue: ytMiniplayerDimAfterSeconds,
-                  text: "${ytMiniplayerDimAfterSeconds}s",
-                  onValueChanged: (val) {
-                    settings.youtube.save(ytMiniplayerDimAfterSeconds: val);
-                  },
-                ),
-              ),
+              builder: (context, valInSet) {
+                const max = 121;
+                return CustomListTile(
+                  bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
+                  leading: const StackedIcon(
+                    baseIcon: Broken.moon,
+                    secondaryIcon: Broken.clock,
+                    secondaryIconSize: 12.0,
+                  ),
+                  title: valInSet == 0
+                      ? lang.ALWAYS_DIM
+                      : valInSet <= -1
+                          ? lang.DONT_DIM
+                          : lang.DIM_MINIPLAYER_AFTER_SECONDS.replaceFirst(
+                              '_SECONDS_',
+                              "$valInSet",
+                            ),
+                  trailing: NamidaWheelSlider(
+                    totalCount: max,
+                    initValue: valInSet <= -1 ? max : valInSet,
+                    text: valInSet <= -1 ? '' : "${valInSet}s",
+                    onValueChanged: (val) {
+                      final finalValue = val >= max ? -1 : val;
+                      settings.youtube.save(ytMiniplayerDimAfterSeconds: finalValue);
+                      if (finalValue == 0) {
+                        YoutubeMiniplayerUiController.inst.startDimTimer(); // to dim instantly
+                      }
+                    },
+                  ),
+                );
+              },
             ),
           ),
           getItemWrapper(

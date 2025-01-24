@@ -42,6 +42,7 @@ abstract class LanguageKeys {
   String get ALL_TIME => _getKey('ALL_TIME');
   String get ALWAYS => _getKey('ALWAYS');
   String get ALWAYS_ASK => _getKey('ALWAYS_ASK');
+  String get ALWAYS_DIM => _getKey('ALWAYS_DIM');
   String get ALWAYS_EXPANDED_SEARCHBAR => _getKey('ALWAYS_EXPANDED_SEARCHBAR');
   String get ALWAYS_RESTORE => _getKey('ALWAYS_RESTORE');
   String get ANIMATING_THUMBNAIL_INTENSITY => _getKey('ANIMATING_THUMBNAIL_INTENSITY');
@@ -176,6 +177,7 @@ abstract class LanguageKeys {
   String get DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE => _getKey('DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE');
   String get DONE => _getKey('DONE');
   String get DONT_ASK_AGAIN => _getKey('DONT_ASK_AGAIN');
+  String get DONT_DIM => _getKey('DONT_DIM');
   String get DONT_RESTORE_POSITION => _getKey('DONT_RESTORE_POSITION');
   String get DONT_RESUME => _getKey('DONT_RESUME');
   String get DOUBLE_TAP_TO_TOGGLE_LYRICS => _getKey('DOUBLE_TAP_TO_TOGGLE_LYRICS');

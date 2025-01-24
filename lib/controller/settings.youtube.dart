@@ -114,8 +114,8 @@ class _YoutubeSettings with SettingsFileWriter {
       YTVisibleShortPlaces.search: false,
     };
     personalizedRelatedVideos.value = false;
-    ytMiniplayerDimAfterSeconds.value = 12;
-    ytMiniplayerDimOpacity.value = 0.7;
+    ytMiniplayerDimAfterSeconds.value = 0;
+    ytMiniplayerDimOpacity.value = 0.6;
     fallbackExtractInfoDescription.value = false;
     rememberAudioOnly.value = true;
     whiteVideoBGInLightMode = true;
