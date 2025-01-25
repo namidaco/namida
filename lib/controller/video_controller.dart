@@ -137,11 +137,9 @@ class VideoController {
     final isExpanded = animationValue >= 0.95;
     if (isExpanded) {
       // YoutubeMiniplayerUiController.inst.startDimTimer(); // bad experience honestly
-      ytmini.isEndCardsVisible.value = true;
     } else {
       // YoutubeMiniplayerUiController.inst.cancelDimTimer();
       ytmini.setControlsVisibily(false);
-      ytmini.isEndCardsVisible.value = false;
     }
   }
 

@@ -102,7 +102,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
   }
 
-  final isEndCardsVisible = true.obs;
+  final _isEndCardsVisible = true.obs;
 
   void showControlsBriefly() {
     setControlsVisibily(true);
@@ -685,6 +685,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         _disableSliders = false;
         _startVolumeSwipeTimer();
         _startBrightnessDimTimer();
+        _isEndCardsVisible.value = true;
+      },
+      onPointerMove: (event) {
+        _isEndCardsVisible.value = false;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -763,7 +767,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
             if (showEndcards)
               ObxO(
-                rx: isEndCardsVisible,
+                rx: _isEndCardsVisible,
                 builder: (context, endcardsvisible) => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: endcardsvisible
