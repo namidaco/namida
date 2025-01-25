@@ -65,6 +65,7 @@ class YoutubeInfoController {
   static const feed = YoutiPie.feed;
   static const channel = _ChannelInfoController();
   static final missingInfo = _MissingInfoController();
+  static final potoken = YoutiPie.potoken;
 
   static final memoryCache = YoutiPie.memoryCache;
 

@@ -2901,6 +2901,7 @@ class NamidaInkWellButton extends StatelessWidget {
   final double borderRadius;
   final int animationDurationMS;
   final IconData? icon;
+  final double iconSize;
   final String text;
   final bool enabled;
   final bool showLoadingWhenDisabled;
@@ -2916,6 +2917,7 @@ class NamidaInkWellButton extends StatelessWidget {
     this.borderRadius = 10.0,
     this.animationDurationMS = 250,
     required this.icon,
+    this.iconSize = 18.0,
     required this.text,
     this.enabled = true,
     this.showLoadingWhenDisabled = true,
@@ -2949,7 +2951,7 @@ class NamidaInkWellButton extends StatelessWidget {
               ] else if (icon != null) ...[
                 Icon(
                   icon,
-                  size: 18.0 * sizeMultiplier,
+                  size: iconSize * sizeMultiplier,
                   color: itemsColor,
                 ),
               ],

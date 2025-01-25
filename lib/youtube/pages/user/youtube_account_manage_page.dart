@@ -22,6 +22,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/user/membership_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -62,6 +63,60 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
         },
       ),
       forceSignIn: forceSignIn,
+    );
+  }
+
+  void _onConfigureTap(BuildContext context) async {
+    final initialVisitorData = YoutubeInfoController.potoken.getVisitorData();
+    final initialPoToken = YoutubeInfoController.potoken.getPoToken();
+    final controllerVisitorData = TextEditingController(text: initialVisitorData);
+    final controllerPoToken = TextEditingController(text: initialPoToken);
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        controllerVisitorData.dispose();
+        controllerPoToken.dispose();
+      },
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: lang.CONFIGURE,
+        actions: [
+          CancelButton(),
+          NamidaButton(
+            text: lang.SAVE,
+            onPressed: () {
+              YoutubeInfoController.potoken.updateInfo(
+                visitorData: controllerVisitorData.text,
+                poToken: controllerPoToken.text,
+              );
+
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: context.height * 0.7,
+            maxWidth: context.width * 0.6,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: controllerVisitorData,
+                labelText: 'Visitor Data',
+                hintText: initialVisitorData ?? '',
+              ),
+              SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: controllerPoToken,
+                labelText: 'PoToken',
+                hintText: initialPoToken ?? '',
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -209,28 +264,41 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                       bottom: Dimensions.inst.globalBottomPaddingTotalR,
                     ),
                     child: Align(
-                      child: ObxO(
-                        rx: YoutubeAccountController.signInProgress,
-                        builder: (context, loginProgress) => Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: loginProgress != null
-                              ? [
-                                  NamidaInkWellButton(
-                                    enabled: false,
-                                    text: loginProgress.name.toUpperCase(),
-                                    icon: null,
-                                    sizeMultiplier: 1.0,
-                                  ),
-                                ]
-                              : [
-                                  NamidaInkWellButton(
-                                    onTap: () => _onSignInTap(context, forceSignIn: true),
-                                    text: lang.ADD_ACCOUNT,
-                                    icon: Broken.user_add,
-                                    sizeMultiplier: 1.2,
-                                  ),
-                                ],
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ObxO(
+                            rx: YoutubeAccountController.signInProgress,
+                            builder: (context, loginProgress) => Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: loginProgress != null
+                                  ? [
+                                      NamidaInkWellButton(
+                                        enabled: false,
+                                        text: loginProgress.name.toUpperCase(),
+                                        icon: null,
+                                        sizeMultiplier: 1.0,
+                                      ),
+                                    ]
+                                  : [
+                                      NamidaInkWellButton(
+                                        onTap: () => _onSignInTap(context, forceSignIn: true),
+                                        text: lang.ADD_ACCOUNT,
+                                        icon: Broken.user_add,
+                                        sizeMultiplier: 1.2,
+                                      ),
+                                    ],
+                            ),
+                          ),
+                          if (currentChannel != null) SizedBox(width: 4.0),
+                          if (currentChannel != null)
+                            NamidaInkWellButton(
+                              text: '',
+                              onTap: () => _onConfigureTap(context),
+                              icon: Broken.setting_3,
+                              iconSize: 22.0,
+                            ),
+                        ],
                       ),
                     ),
                   ),
