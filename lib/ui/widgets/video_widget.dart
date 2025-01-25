@@ -230,14 +230,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (!mounted) return;
     final value = MiniPlayerController.inst.animation.value;
     final hideUnder = widget.disableControlsUnderPercentage!;
-    if (value < hideUnder && _isControlsEnabled) {
-      setState(() {
-        _isControlsEnabled = false;
-      });
-    } else if (value >= hideUnder && !_isControlsEnabled) {
-      setState(() {
-        _isControlsEnabled = true;
-      });
+    final shouldShow = value >= hideUnder;
+    if (shouldShow != _isControlsEnabled) {
+      setState(() => _isControlsEnabled = shouldShow);
     }
   }
 
@@ -284,6 +279,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
 
     if (widget.disableControlsUnderPercentage != null) {
+      _disableControlsListener();
       MiniPlayerController.inst.animation.addListener(_disableControlsListener);
     }
   }
