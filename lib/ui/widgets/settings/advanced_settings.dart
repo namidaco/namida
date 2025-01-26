@@ -68,7 +68,6 @@ class AdvancedSettings extends SettingSubpageProvider {
 
   void _onPerformanceTileTap(BuildContext context) {
     const artworkPartsMultiplier = 100;
-    const artworkMinimum = 0.5;
     bool changedArtworkCacheM = false; // to rebuild wheel slider
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
@@ -182,12 +181,13 @@ class AdvancedSettings extends SettingSubpageProvider {
                   rx: settings.artworkCacheHeightMultiplier,
                   builder: (context, artworkCacheHeightMultiplier) => NamidaWheelSlider(
                     key: ValueKey(changedArtworkCacheM),
+                    min: (0.5 * artworkPartsMultiplier).round(),
+                    max: (1.5 * artworkPartsMultiplier).round(), // from 0.5 to 1.5 * 100 part
+                    initValue: (artworkCacheHeightMultiplier * artworkPartsMultiplier).round(),
                     text: '${artworkCacheHeightMultiplier}x',
-                    totalCount: 1 * artworkPartsMultiplier, // from 0.5 to 1.5 * 100 part
-                    initValue: ((artworkCacheHeightMultiplier - artworkMinimum) * artworkPartsMultiplier).round(),
                     onValueChanged: (val) {
                       settings.save(
-                        artworkCacheHeightMultiplier: (artworkMinimum + (val / artworkPartsMultiplier)).roundDecimals(2),
+                        artworkCacheHeightMultiplier: (val / artworkPartsMultiplier).roundDecimals(2),
                         performanceMode: PerformanceMode.custom,
                       );
                     },
@@ -232,7 +232,6 @@ class AdvancedSettings extends SettingSubpageProvider {
   }) {
     final minimumValue = stepper;
     final maxValue = maxGB * 1024;
-    int getValue(int mb) => (mb - minimumValue) ~/ stepper;
     return getItemWrapper(
       key: key,
       child: CustomListTile(
@@ -246,13 +245,13 @@ class AdvancedSettings extends SettingSubpageProvider {
           rx: rx,
           builder: (context, valInSettings) {
             return NamidaWheelSlider(
-              totalCount: 1 + getValue(maxValue),
-              initValue: valInSettings < 0 ? getValue(maxValue) + 1 : getValue(valInSettings),
+              min: minimumValue,
+              max: maxValue,
+              stepper: stepper,
+              extraValue: true,
+              initValue: valInSettings,
               text: valInSettings < 0 ? lang.UNLIMITED : (valInSettings * 1024 * 1024).fileSizeFormatted,
-              onValueChanged: (val) {
-                final finalValue = minimumValue + (val * stepper);
-                onSave(finalValue < maxValue ? finalValue : -1);
-              },
+              onValueChanged: onSave,
             );
           },
         ),
@@ -1091,12 +1090,10 @@ class _CompressImagesListTile extends StatelessWidget {
               title: lang.COMPRESSION_PERCENTAGE,
               trailing: Obx(
                 (context) => NamidaWheelSlider(
-                  totalCount: 100,
+                  max: 100,
                   initValue: 50,
                   text: "${compPerc.valueR}%",
-                  onValueChanged: (val) {
-                    compPerc.value = val;
-                  },
+                  onValueChanged: (val) => compPerc.value = val,
                 ),
               ),
             ),

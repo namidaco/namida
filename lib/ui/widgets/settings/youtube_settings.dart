@@ -308,7 +308,6 @@ class YoutubeSettings extends SettingSubpageProvider {
             child: ObxO(
               rx: settings.youtube.ytMiniplayerDimAfterSeconds,
               builder: (context, valInSet) {
-                const max = 121;
                 return CustomListTile(
                   bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
                   leading: const StackedIcon(
@@ -325,13 +324,13 @@ class YoutubeSettings extends SettingSubpageProvider {
                               "$valInSet",
                             ),
                   trailing: NamidaWheelSlider(
-                    totalCount: max,
-                    initValue: valInSet <= -1 ? max : valInSet,
+                    max: 120,
+                    initValue: valInSet,
+                    extraValue: true,
                     text: valInSet <= -1 ? '' : "${valInSet}s",
                     onValueChanged: (val) {
-                      final finalValue = val >= max ? -1 : val;
-                      settings.youtube.save(ytMiniplayerDimAfterSeconds: finalValue);
-                      if (finalValue == 0) {
+                      settings.youtube.save(ytMiniplayerDimAfterSeconds: val);
+                      if (val == 0) {
                         YoutubeMiniplayerUiController.inst.startDimTimer(); // to dim instantly
                       }
                     },
@@ -396,7 +395,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 trailing: ObxO(
                   rx: settings.youtube.ytMiniplayerDimOpacity,
                   builder: (context, ytMiniplayerDimOpacity) => NamidaWheelSlider(
-                    totalCount: 100,
+                    max: 100,
                     initValue: (ytMiniplayerDimOpacity * 100).round(),
                     text: "${(ytMiniplayerDimOpacity * 100).round()}%",
                     onValueChanged: (val) {

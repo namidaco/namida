@@ -167,7 +167,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                 (context) {
                   final temp = tempCount.valueR;
                   return NamidaWheelSlider(
-                    totalCount: 10,
+                    max: 10,
                     initValue: temp,
                     onValueChanged: (val) => tempCount.value = val.withMinimum(1),
                     text: temp.toString(),

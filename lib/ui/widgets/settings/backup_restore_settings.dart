@@ -554,11 +554,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                 (context) {
                   final days = settings.autoBackupIntervalDays.valueR;
                   return NamidaWheelSlider(
-                    totalCount: 14,
+                    max: 14,
                     initValue: days,
-                    onValueChanged: (val) {
-                      settings.save(autoBackupIntervalDays: val);
-                    },
+                    onValueChanged: (val) => settings.save(autoBackupIntervalDays: val),
                     text: days == 0 ? lang.NONE : "$days ${days == 1 ? lang.DAY : lang.DAYS}",
                   );
                 },

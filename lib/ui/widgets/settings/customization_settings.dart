@@ -886,11 +886,9 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.flash,
                 title: lang.ANIMATING_THUMBNAIL_INTENSITY,
                 trailing: NamidaWheelSlider(
-                  totalCount: 25,
+                  max: 25,
                   initValue: settings.animatingThumbnailIntensity.valueR,
-                  onValueChanged: (val) {
-                    settings.save(animatingThumbnailIntensity: val);
-                  },
+                  onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
                   text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
                 ),
               ),
@@ -948,12 +946,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                       icon: Broken.maximize,
                       title: lang.SCALE_MULTIPLIER,
                       trailing: NamidaWheelSlider(
-                        totalCount: 100,
-                        initValue: valueHundred - 50,
-                        onValueChanged: (val) {
-                          final v = (val + 50);
-                          settings.save(animatingThumbnailScaleMultiplier: v / 100);
-                        },
+                        min: 50,
+                        max: 150,
+                        initValue: valueHundred,
+                        onValueChanged: (val) => settings.save(animatingThumbnailScaleMultiplier: val / 100),
                         text: "$valueHundred%",
                       ),
                     );
@@ -986,22 +982,20 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.waveformBarsCount),
                 icon: Broken.sound,
                 title: lang.WAVEFORM_BARS_COUNT,
-                trailing: SizedBox(
-                  width: 80,
-                  child: Column(
-                    children: [
-                      NamidaWheelSlider(
-                        totalCount: 360,
-                        initValue: settings.waveformTotalBars.valueR - 40,
-                        onValueChanged: (val) {
-                          final v = (val + 40);
-                          settings.save(waveformTotalBars: v);
-                          WaveformController.inst.calculateUIWaveform();
-                        },
-                        text: settings.waveformTotalBars.valueR.toString(),
-                      ),
-                    ],
-                  ),
+                trailing: Column(
+                  children: [
+                    NamidaWheelSlider(
+                      width: 80,
+                      min: 40,
+                      max: 400,
+                      initValue: settings.waveformTotalBars.valueR,
+                      onValueChanged: (val) {
+                        settings.save(waveformTotalBars: val);
+                        WaveformController.inst.calculateUIWaveform();
+                      },
+                      text: settings.waveformTotalBars.valueR.toString(),
+                    ),
+                  ],
                 ),
               ),
             ),

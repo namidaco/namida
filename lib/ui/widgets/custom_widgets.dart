@@ -1299,8 +1299,12 @@ class ContainerWithBorder extends StatelessWidget {
 class NamidaWheelSlider extends StatelessWidget {
   final double width;
   final double perspective;
-  final int totalCount;
+  final int max;
+  final int min;
+  final int stepper;
+  final int multiplier;
   final int initValue;
+  final bool extraValue;
   final double itemSize;
   final double squeeze;
   final bool isInfinite;
@@ -1314,8 +1318,12 @@ class NamidaWheelSlider extends StatelessWidget {
     super.key,
     this.width = 80,
     this.perspective = 0.01,
-    required this.totalCount,
-    required this.initValue,
+    required int initValue,
+    this.extraValue = false,
+    this.min = 0,
+    required this.max,
+    this.stepper = 1,
+    this.multiplier = 1,
     this.isInfinite = false,
     required this.onValueChanged,
     this.text,
@@ -1323,7 +1331,9 @@ class NamidaWheelSlider extends StatelessWidget {
     this.textPadding = 2.0,
     this.topTextPadding = 12.0,
   })  : itemSize = 8,
-        squeeze = 1.8;
+        squeeze = 1.8,
+        initValue = initValue < min ? max + 1 : initValue - min,
+        assert(min < max, 'min should be less than max');
 
   @override
   Widget build(BuildContext context) {
@@ -1342,8 +1352,8 @@ class NamidaWheelSlider extends StatelessWidget {
           ],
           WheelSlider(
             perspective: perspective,
-            totalCount: totalCount,
-            initValue: initValue,
+            totalCount: ((max - min) / stepper).round() + (extraValue ? 1 : 0),
+            initValue: (initValue / stepper / multiplier).round(),
             itemSize: itemSize,
             squeeze: squeeze,
             isInfinite: isInfinite,
@@ -1351,7 +1361,12 @@ class NamidaWheelSlider extends StatelessWidget {
             pointerColor: context.theme.listTileTheme.textColor!,
             pointerHeight: 38.0,
             horizontalListHeight: 38.0,
-            onValueChanged: (val) => onValueChanged(val as int),
+            onValueChanged: (val) {
+              val as int;
+              int finalValue = (val * stepper * multiplier + min);
+              if ((extraValue && finalValue > max)) finalValue = -1;
+              onValueChanged(finalValue);
+            },
             hapticFeedbackType: HapticFeedbackType.lightImpact,
           ),
           if (text != null) ...[

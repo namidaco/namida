@@ -549,42 +549,39 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
           getItemWrapper(
             key: _IndexerSettingsKeys.minimumFileSize,
-            child: Obx(
-              (context) => CustomListTile(
+            child: ObxO(
+              rx: settings.indexMinFileSizeInB,
+              builder: (context, indexMinFileSizeInB) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.minimumFileSize),
                 icon: Broken.unlimited,
                 title: lang.MIN_FILE_SIZE,
                 subtitle: lang.INDEX_REFRESH_REQUIRED,
                 trailing: NamidaWheelSlider(
                   width: 100.0,
-                  totalCount: 1024,
-                  initValue: settings.indexMinFileSizeInB.valueR.toInt() / 1024 ~/ 10,
-                  onValueChanged: (val) {
-                    final d = val;
-                    settings.save(indexMinFileSizeInB: d * 1024 * 10);
-                  },
-                  text: settings.indexMinFileSizeInB.valueR.fileSizeFormatted,
+                  max: 1024,
+                  multiplier: (1024 * 10),
+                  initValue: indexMinFileSizeInB,
+                  onValueChanged: (val) => settings.save(indexMinFileSizeInB: val),
+                  text: indexMinFileSizeInB.fileSizeFormatted,
                 ),
               ),
             ),
           ),
           getItemWrapper(
             key: _IndexerSettingsKeys.minimumTrackDur,
-            child: Obx(
-              (context) => CustomListTile(
+            child: ObxO(
+              rx: settings.indexMinDurationInSec,
+              builder: (context, indexMinDurationInSec) => CustomListTile(
                 bgColor: getBgColor(_IndexerSettingsKeys.minimumTrackDur),
                 icon: Broken.timer_1,
                 title: lang.MIN_FILE_DURATION,
                 subtitle: lang.INDEX_REFRESH_REQUIRED,
                 trailing: NamidaWheelSlider(
                   width: 100.0,
-                  totalCount: 180,
-                  initValue: settings.indexMinDurationInSec.valueR,
-                  onValueChanged: (val) {
-                    final d = val;
-                    settings.save(indexMinDurationInSec: d);
-                  },
-                  text: "${settings.indexMinDurationInSec.valueR} s",
+                  max: 180,
+                  initValue: indexMinDurationInSec,
+                  onValueChanged: (val) => settings.save(indexMinDurationInSec: val),
+                  text: "$indexMinDurationInSec s",
                 ),
               ),
             ),

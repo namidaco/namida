@@ -436,8 +436,6 @@ class PlaybackSettings extends SettingSubpageProvider {
           children: [
             Obx(
               (context) {
-                const stepper = 100;
-                const minVal = 100;
                 final enableCrossFade = settings.player.enableCrossFade.valueR;
                 final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
                 return CustomListTile(
@@ -445,12 +443,11 @@ class PlaybackSettings extends SettingSubpageProvider {
                   icon: Broken.blend_2,
                   title: lang.CROSSFADE_DURATION,
                   trailing: NamidaWheelSlider(
-                    totalCount: (10000 - minVal) ~/ stepper,
-                    initValue: crossFadeDurationMS ~/ stepper,
-                    onValueChanged: (val) {
-                      final v = (val * stepper + minVal);
-                      settings.player.save(crossFadeDurationMS: v);
-                    },
+                    min: 100,
+                    max: 10000,
+                    stepper: 100,
+                    initValue: crossFadeDurationMS,
+                    onValueChanged: (val) => settings.player.save(crossFadeDurationMS: val),
                     text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
                   ),
                 );
@@ -466,11 +463,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED
                       : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$crossFadeAutoTriggerSeconds"),
                   trailing: NamidaWheelSlider(
-                    totalCount: 30,
+                    max: 30,
                     initValue: crossFadeAutoTriggerSeconds,
-                    onValueChanged: (val) {
-                      settings.player.save(crossFadeAutoTriggerSeconds: val);
-                    },
+                    onValueChanged: (val) => settings.player.save(crossFadeAutoTriggerSeconds: val),
                     text: "${crossFadeAutoTriggerSeconds}s",
                   ),
                 );
@@ -506,12 +501,11 @@ class PlaybackSettings extends SettingSubpageProvider {
                 icon: Broken.play,
                 title: lang.PLAY_FADE_DURATION,
                 trailing: NamidaWheelSlider(
-                  totalCount: 1900 ~/ 50,
-                  initValue: settings.player.playFadeDurInMilli.valueR ~/ 50,
-                  onValueChanged: (val) {
-                    final v = (val * 50 + 100);
-                    settings.player.save(playFadeDurInMilli: v);
-                  },
+                  min: 100,
+                  max: 2000,
+                  stepper: 50,
+                  initValue: settings.player.playFadeDurInMilli.valueR,
+                  onValueChanged: (val) => settings.player.save(playFadeDurInMilli: val),
                   text: "${settings.player.playFadeDurInMilli.valueR}ms",
                 ),
               ),
@@ -522,12 +516,11 @@ class PlaybackSettings extends SettingSubpageProvider {
                 icon: Broken.pause,
                 title: lang.PAUSE_FADE_DURATION,
                 trailing: NamidaWheelSlider(
-                  totalCount: 1900 ~/ 50,
-                  initValue: settings.player.pauseFadeDurInMilli.valueR ~/ 50,
-                  onValueChanged: (val) {
-                    final v = (val * 50 + 100);
-                    settings.player.save(pauseFadeDurInMilli: v);
-                  },
+                  min: 100,
+                  max: 2000,
+                  stepper: 50,
+                  initValue: settings.player.pauseFadeDurInMilli.valueR,
+                  onValueChanged: (val) => settings.player.save(pauseFadeDurInMilli: val),
                   text: "${settings.player.pauseFadeDurInMilli.valueR}ms",
                 ),
               ),
@@ -594,7 +587,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
                           : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.valueR}"),
                   trailing: NamidaWheelSlider(
-                    totalCount: max,
+                    max: max,
                     initValue: valInSet,
                     onValueChanged: (val) {
                       if (val == max) {
@@ -682,7 +675,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           ? lang.RESUME_IF_WAS_INTERRUPTED
                           : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.valueR}"),
                   trailing: NamidaWheelSlider(
-                    totalCount: max,
+                    max: max,
                     initValue: valInSet,
                     onValueChanged: (val) {
                       if (val == max) {
@@ -744,19 +737,15 @@ class PlaybackSettings extends SettingSubpageProvider {
             onTap: () => settings.player.save(isSeekDurationPercentage: !settings.player.isSeekDurationPercentage.value),
             trailing: settings.player.isSeekDurationPercentage.valueR
                 ? NamidaWheelSlider(
-                    totalCount: 50,
+                    max: 50,
                     initValue: settings.player.seekDurationInPercentage.valueR,
-                    onValueChanged: (val) {
-                      settings.player.save(seekDurationInPercentage: val);
-                    },
+                    onValueChanged: (val) => settings.player.save(seekDurationInPercentage: val),
                     text: "${settings.player.seekDurationInPercentage.valueR}%",
                   )
                 : NamidaWheelSlider(
-                    totalCount: 120,
+                    max: 120,
                     initValue: settings.player.seekDurationInSeconds.valueR,
-                    onValueChanged: (val) {
-                      settings.player.save(seekDurationInSeconds: val);
-                    },
+                    onValueChanged: (val) => settings.player.save(seekDurationInSeconds: val),
                     text: "${settings.player.seekDurationInSeconds.valueR}s",
                   ),
           ),
@@ -767,17 +756,14 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) {
             final valInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.valueR;
-            const max = 121;
             return CustomListTile(
               bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
               icon: Broken.refresh_left_square,
               title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
               trailing: NamidaWheelSlider(
-                totalCount: max,
-                initValue: valInSet <= -1 ? max : valInSet,
-                onValueChanged: (val) {
-                  settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val >= max ? -1 : val);
-                },
+                max: 120,
+                initValue: valInSet,
+                onValueChanged: (val) => settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val),
                 text: valInSet == 0
                     ? lang.ALWAYS_RESTORE
                     : valInSet <= -1
@@ -812,12 +798,10 @@ class PlaybackSettings extends SettingSubpageProvider {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           NamidaWheelSlider(
-                            totalCount: 160,
-                            initValue: settings.isTrackPlayedSecondsCount.valueR - 20,
-                            onValueChanged: (val) {
-                              final v = (val + 20);
-                              settings.save(isTrackPlayedSecondsCount: v);
-                            },
+                            min: 20,
+                            max: 180,
+                            initValue: settings.isTrackPlayedSecondsCount.valueR,
+                            onValueChanged: (val) => settings.save(isTrackPlayedSecondsCount: val),
                             text: "${settings.isTrackPlayedSecondsCount.valueR}s",
                             topText: lang.SECONDS.capitalizeFirst(),
                             textPadding: 8.0,
@@ -827,12 +811,10 @@ class PlaybackSettings extends SettingSubpageProvider {
                             style: context.textTheme.displayMedium,
                           ),
                           NamidaWheelSlider(
-                            totalCount: 80,
-                            initValue: settings.isTrackPlayedPercentageCount.valueR - 20,
-                            onValueChanged: (val) {
-                              final v = (val + 20);
-                              settings.save(isTrackPlayedPercentageCount: v);
-                            },
+                            min: 20,
+                            max: 100,
+                            initValue: settings.isTrackPlayedPercentageCount.valueR,
+                            onValueChanged: (val) => settings.save(isTrackPlayedPercentageCount: val),
                             text: "${settings.isTrackPlayedPercentageCount.valueR}%",
                             topText: lang.PERCENTAGE,
                             textPadding: 8.0,
