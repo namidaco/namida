@@ -1275,7 +1275,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
   Future<void> stopDownload({required File? file}) async {
     if (file == null) return;
     final filePath = file.path;
-    _onFileFinish(filePath, false);
+    _onFileFinish(filePath, null);
     final p = {
       'files': [file],
       'stop': true
@@ -1285,7 +1285,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   Future<void> stopDownloads({required List<File> files}) async {
     if (files.isEmpty) return;
-    files.loop((e) => _onFileFinish(e.path, false));
+    files.loop((e) => _onFileFinish(e.path, null));
     final p = {'files': files, 'stop': true};
     await sendPort(p);
   }
