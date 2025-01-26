@@ -335,7 +335,8 @@ class _LRCSearchManager with PortsProvider<SendPort> {
           final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
 
           final mainDuration = details?.durationMS ?? 0;
-          if (mainDuration > 0) {
+          final isDurationModified = details?.isDurationModified ?? false;
+          if (mainDuration > 0 && !isDurationModified) {
             // -- prefer lyrics with closer duration (if info the same)
             jsonLists.sort(
               (a, b) {

@@ -45,14 +45,46 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
     return track.lyrics != '' || super.hasLyrics();
   }
 
+  static final _durationModifiedRegex = RegExp('nightcore|sped up', caseSensitive: false);
+  static bool _checkIsDurationModified(String property) {
+    return _durationModifiedRegex.firstMatch(property) != null;
+  }
+
   @override
   List<LRCSearchDetails> searchDetailsQueries() {
     final durMS = trackExt.durationMS;
+    final isDurationModified = _checkIsDurationModified(trackExt.originalGenre) || _checkIsDurationModified(trackExt.title) || _checkIsDurationModified(trackExt.originalArtist);
     return [
-      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: '', durationMS: durMS),
-      LRCSearchDetails(title: trackExt.title, artist: trackExt.originalArtist, album: trackExt.album, durationMS: durMS),
-      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: '', durationMS: durMS),
-      if (trackExt.artistsList.isNotEmpty) LRCSearchDetails(title: trackExt.title, artist: trackExt.artistsList.first, album: trackExt.album, durationMS: durMS),
+      LRCSearchDetails(
+        title: trackExt.title,
+        artist: trackExt.originalArtist,
+        album: '',
+        durationMS: durMS,
+        isDurationModified: isDurationModified,
+      ),
+      LRCSearchDetails(
+        title: trackExt.title,
+        artist: trackExt.originalArtist,
+        album: trackExt.album,
+        durationMS: durMS,
+        isDurationModified: isDurationModified,
+      ),
+      if (trackExt.artistsList.isNotEmpty)
+        LRCSearchDetails(
+          title: trackExt.title,
+          artist: trackExt.artistsList.first,
+          album: '',
+          durationMS: durMS,
+          isDurationModified: isDurationModified,
+        ),
+      if (trackExt.artistsList.isNotEmpty)
+        LRCSearchDetails(
+          title: trackExt.title,
+          artist: trackExt.artistsList.first,
+          album: trackExt.album,
+          durationMS: durMS,
+          isDurationModified: isDurationModified,
+        ),
     ];
   }
 
