@@ -21,7 +21,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -128,7 +127,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 return _HorizontalSliverList(
                   title: lang.HISTORY,
                   icon: Broken.refresh,
-                  viewAllPage: () => const YoutubeHistoryPage(),
+                  onPageOpen: YTUtils.onYoutubeHistoryPlaylistTap,
+                  onPlusTap: (lastItem) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: lastItem.dateAddedMS),
                   videos: getHistoryVideos(history),
                   playlistName: k_PLAYLIST_NAME_HISTORY,
                   playlistID: k_PLAYLIST_NAME_HISTORY,
@@ -155,7 +155,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                     return _HorizontalSliverList(
                       title: lang.MOST_PLAYED,
                       icon: Broken.crown_1,
-                      viewAllPage: () => const YTMostPlayedVideosPage(),
+                      onPageOpen: YTUtils.onYoutubeMostPlayedPlaylistTap,
                       padding: const EdgeInsets.only(top: 8.0),
                       videos: videos,
                       subHeader: YTMostPlayedVideosPage.getChipRow(context),
@@ -176,7 +176,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 return _HorizontalSliverList(
                   title: lang.FAVOURITES,
                   icon: Broken.heart_circle,
-                  viewAllPage: () => const YTLikedVideosPage(),
+                  onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
                   videos: getFavouriteVideos(favs.value),
                   playlistName: k_PLAYLIST_NAME_FAV,
                   playlistID: k_PLAYLIST_NAME_FAV,
@@ -423,7 +423,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
 class _HorizontalSliverList extends StatelessWidget {
   final String title;
   final IconData icon;
-  final NamidaRouteWidget Function() viewAllPage;
+  final void Function() onPageOpen;
+  final void Function(YoutubeID lastItem)? onPlusTap;
   final Iterable<YoutubeID> videos;
   final String playlistName;
   final String playlistID;
@@ -437,7 +438,8 @@ class _HorizontalSliverList extends StatelessWidget {
   const _HorizontalSliverList({
     required this.title,
     required this.icon,
-    required this.viewAllPage,
+    required this.onPageOpen,
+    this.onPlusTap,
     required this.videos,
     required this.playlistName,
     required this.playlistID,
@@ -448,8 +450,6 @@ class _HorizontalSliverList extends StatelessWidget {
     this.displayShimmer = false,
     this.listensMap,
   });
-
-  void onTap() => viewAllPage().navigate();
 
   @override
   Widget build(BuildContext context) {
@@ -466,7 +466,7 @@ class _HorizontalSliverList extends StatelessWidget {
           NamidaInkWell(
             margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
             padding: padding,
-            onTap: onTap,
+            onTap: onPageOpen,
             child: Column(
               children: [
                 SearchPageTitleRow(
@@ -474,7 +474,7 @@ class _HorizontalSliverList extends StatelessWidget {
                   subtitle: totalVideosCountInMainList.displayVideoKeyword,
                   icon: icon,
                   trailing: const Icon(Broken.arrow_right_3),
-                  onPressed: onTap,
+                  onPressed: onPageOpen,
                 ),
                 if (subHeader != null) subHeader!,
               ],
@@ -508,7 +508,7 @@ class _HorizontalSliverList extends StatelessWidget {
                         return remainingVideosCount <= 0
                             ? const SizedBox()
                             : NamidaInkWell(
-                                onTap: onTap,
+                                onTap: onPlusTap != null ? () => onPlusTap!(finalVideos[finalVideos.length - 1]) : onPageOpen,
                                 margin: const EdgeInsets.all(12.0),
                                 padding: const EdgeInsets.all(12.0),
                                 child: Center(

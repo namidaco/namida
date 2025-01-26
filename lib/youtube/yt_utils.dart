@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:history_manager/history_manager.dart';
 import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
@@ -35,6 +34,7 @@ import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -60,6 +60,7 @@ import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -732,24 +733,25 @@ class YTUtils {
     );
   }
 
-  static Future<void> onYoutubeHistoryPlaylistTap({
-    required HistoryScrollInfo scrollInfo,
-    required double initialScrollOffset,
-  }) async {
-    YoutubeHistoryController.inst.highlightedItem.value = scrollInfo;
-
-    void jump() => YoutubeHistoryController.inst.scrollController.jumpTo(initialScrollOffset);
-
-    NamidaNavigator.inst.hideStuff();
-
-    if (YoutubeHistoryController.inst.scrollController.hasClients) {
-      jump();
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        jump();
-      });
-      await const YoutubeHistoryPage().navigate();
+  static Future<void> onYoutubeHistoryPlaylistTap({int? initialListen}) async {
+    bool shouldNavigate = true;
+    if (initialListen != null) {
+      shouldNavigate = NamidaOnTaps.jumpToListen(
+        YoutubeHistoryController.inst,
+        initialListen,
+        Dimensions.youtubeCardItemExtent,
+        kYoutubeHistoryDayHeaderHeightWithPadding,
+      );
     }
+    if (shouldNavigate) await YoutubeHistoryPage().navigate();
+  }
+
+  static Future<void> onYoutubeLikedPlaylistTap() {
+    return const YTLikedVideosPage().navigate();
+  }
+
+  static Future<void> onYoutubeMostPlayedPlaylistTap() {
+    return const YoutubeHistoryPage().navigate();
   }
 
   static Future<void> onRemoveVideosFromPlaylist(String name, List<YoutubeID> videosToDelete) async {

@@ -22,7 +22,6 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -31,6 +30,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -98,41 +98,56 @@ class NamidaOnTaps {
     String playlistName, {
     bool disableAnimation = false,
   }) async {
-    NormalPlaylistTracksPage(
+    return NormalPlaylistTracksPage(
       playlistName: playlistName,
       disableAnimation: disableAnimation,
     ).navigate();
   }
 
-  Future<void> onHistoryPlaylistTap({
-    HistoryScrollInfo? scrollInfo,
-    double initialScrollOffset = 0,
-  }) async {
-    HistoryController.inst.highlightedItem.value = scrollInfo;
+  Future<void> onHistoryPlaylistTap({int? initialListen}) async {
+    bool shouldNavigate = true;
+    if (initialListen != null) {
+      shouldNavigate = jumpToListen(
+        HistoryController.inst,
+        initialListen,
+        Dimensions.inst.trackTileItemExtent,
+        kHistoryDayHeaderHeightWithPadding,
+      );
+    }
+    if (shouldNavigate) await HistoryTracksPage().navigate();
+  }
+
+  /// returns wether the page is most likely not rendered and thus should be navigated to.
+  static bool jumpToListen(HistoryManager historyManager, int listen, double itemHeight, double headerHeight) {
+    final scrollInfo = historyManager.getListenScrollPosition(
+      listenMS: listen,
+      extraItemsOffset: 2,
+    );
+
+    historyManager.highlightedItem.value = scrollInfo;
 
     void jump() {
-      if (HistoryController.inst.scrollController.hasClients) {
-        final p = HistoryController.inst.scrollController.positions.firstOrNull;
+      if (historyManager.scrollController.hasClients) {
+        final p = historyManager.scrollController.positions.firstOrNull;
         if (p != null && p.hasContentDimensions) {
-          HistoryController.inst.scrollController.jumpTo(initialScrollOffset);
+          historyManager.scrollController.jumpTo(scrollInfo.toScrollOffset(itemHeight, headerHeight));
         }
       }
     }
 
-    if (NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks) {
-      NamidaNavigator.inst.closeAllDialogs();
-      MiniPlayerController.inst.snapToMini();
+    NamidaNavigator.inst.hideStuff();
+
+    if (historyManager.scrollController.hasClients) {
       jump();
+      return false;
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        jump();
-      });
-      await const HistoryTracksPage().navigate();
+      WidgetsBinding.instance.addPostFrameCallback((_) => jump());
+      return true;
     }
   }
 
   Future<void> onMostPlayedPlaylistTap() async {
-    const MostPlayedTracksPage().navigate();
+    return const MostPlayedTracksPage().navigate();
   }
 
   Future<void> onFolderTapNavigate(Folder folder, {Track? trackToScrollTo}) async {

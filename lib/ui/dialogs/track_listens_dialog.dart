@@ -10,7 +10,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -23,17 +22,8 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
   showListensDialog(
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
     colorScheme: colorScheme,
-    colorSchemeFunction: () async => await CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true),
-    onListenTap: (listen) {
-      final scrollInfo = HistoryController.inst.getListenScrollPosition(
-        listenMS: listen,
-        extraItemsOffset: 2,
-      );
-      NamidaOnTaps.inst.onHistoryPlaylistTap(
-        scrollInfo: scrollInfo,
-        initialScrollOffset: (scrollInfo.itemsToScroll * Dimensions.inst.trackTileItemExtent) + (scrollInfo.daysToScroll * kHistoryDayHeaderHeightWithPadding),
-      );
-    },
+    colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true),
+    onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
   );
 }
 
