@@ -64,7 +64,7 @@ class ScrollSearchController {
     if (NamidaNavigator.inst.currentRoute?.isSameRouteAs(w) == true) {
       if (scrollController.hasClients) {
         MiniPlayerController.inst.snapToMini();
-        scrollController.animateToEff(0.0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOutQuart);
+        scrollController.animateToEff(0.0, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
       }
       return;
     }

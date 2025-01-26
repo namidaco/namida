@@ -58,7 +58,7 @@ class NamidaNavigator {
   bool _isInLanscape = false;
   bool get isInLanscape => _isInLanscape;
 
-  static const _defaultRouteAnimationDurMS = 500;
+  static const _defaultRouteAnimationDurMS = 400;
 
   Future<T?> showMenu<T>({
     required BuildContext context,
