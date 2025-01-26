@@ -97,7 +97,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void startDimTimer() {
     _dimTimer?.cancel();
-    if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) return;
+    if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) {
+      _canDimMiniplayer.value = false;
+      return;
+    }
     final double defaultMiniplayerOpacity = settings.youtube.ytMiniplayerDimOpacity.value;
     if (defaultMiniplayerOpacity <= 0) return;
     final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;

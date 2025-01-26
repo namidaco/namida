@@ -346,7 +346,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               rx: settings.youtube.ytMiniplayerDimAfterSeconds,
               builder: (context, ytMiniplayerDimAfterSeconds) => CustomListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.dimIntensity),
-                enabled: ytMiniplayerDimAfterSeconds > 0,
+                enabled: ytMiniplayerDimAfterSeconds >= 0,
                 leading: Stack(
                   alignment: Alignment.center,
                   children: [
