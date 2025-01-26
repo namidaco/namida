@@ -928,7 +928,6 @@ class CustomizationSettings extends SettingSubpageProvider {
                     iconSize: 20.0,
                     onPressed: () {
                       settings.save(
-                        artworkGestureScale: false,
                         artworkGestureDoubleTapLRC: true,
                         animatingThumbnailScaleMultiplier: 1.0,
                       );
@@ -940,17 +939,25 @@ class CustomizationSettings extends SettingSubpageProvider {
                 ],
               ),
               children: [
-                Obx(
-                  (context) => CustomSwitchListTile(
-                    visualDensity: VisualDensity.compact,
-                    icon: Broken.maximize,
-                    title: lang.SCALE_MULTIPLIER,
-                    subtitle: "${(settings.animatingThumbnailScaleMultiplier.valueR * 100).round()}%",
-                    value: settings.artworkGestureScale.valueR,
-                    onChanged: (value) {
-                      settings.save(artworkGestureScale: !value);
-                    },
-                  ),
+                ObxO(
+                  rx: settings.animatingThumbnailScaleMultiplier,
+                  builder: (context, animatingThumbnailScaleMultiplier) {
+                    final valueHundred = (animatingThumbnailScaleMultiplier * 100).round();
+                    return CustomListTile(
+                      visualDensity: VisualDensity.compact,
+                      icon: Broken.maximize,
+                      title: lang.SCALE_MULTIPLIER,
+                      trailing: NamidaWheelSlider(
+                        totalCount: 100,
+                        initValue: valueHundred - 50,
+                        onValueChanged: (val) {
+                          final v = (val + 50);
+                          settings.save(animatingThumbnailScaleMultiplier: v / 100);
+                        },
+                        text: "$valueHundred%",
+                      ),
+                    );
+                  },
                 ),
                 Obx(
                   (context) => CustomSwitchListTile(
