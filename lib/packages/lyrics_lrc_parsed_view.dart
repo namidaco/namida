@@ -140,7 +140,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
     lrc.lyrics.loopAdv(
       (item, index) {
-        final lineTimeStamp = item.timestamp + Duration(milliseconds: lrc.offset ?? 0);
+        final lineTimeStamp = item.timestamp - Duration(milliseconds: lrc.offset ?? 0);
         final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
         final newLrcLine = LrcLine(
           timestamp: calculatedForSpedUpVersions,
@@ -220,7 +220,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     });
   }
 
-  // ignore: unused_field
   Timer? _scrollTimer;
   bool _canAnimateScroll = true;
 
