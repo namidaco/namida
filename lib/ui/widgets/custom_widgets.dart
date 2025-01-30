@@ -3900,17 +3900,20 @@ class AnimatedShow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final factor = show ? 1.0 : 0.0;
-    return AnimatedAlign(
-      alignment: Alignment.center,
-      heightFactor: isHorizontal ? null : factor,
-      widthFactor: isHorizontal ? factor : null,
-      duration: duration,
-      curve: curve,
-      child: AnimatedOpacity(
-        opacity: factor,
+    return IgnorePointer(
+      ignoring: !show,
+      child: AnimatedAlign(
+        alignment: Alignment.center,
+        heightFactor: isHorizontal ? null : factor,
+        widthFactor: isHorizontal ? factor : null,
         duration: duration,
         curve: curve,
-        child: child,
+        child: AnimatedOpacity(
+          opacity: factor,
+          duration: duration,
+          curve: curve,
+          child: child,
+        ),
       ),
     );
   }
