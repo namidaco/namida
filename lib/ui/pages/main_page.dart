@@ -255,11 +255,11 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
   static const _dragThreshold = 0.2;
 
   void _onDragUpwards() {
-    ScrollSearchController.inst.showKeyboard();
+    ScrollSearchController.inst.focusKeyboard();
   }
 
   void _onDragDownwards() {
-    ScrollSearchController.inst.hideKeyboard();
+    ScrollSearchController.inst.unfocusKeyboard();
   }
 
   @override
