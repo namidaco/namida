@@ -36,6 +36,7 @@ class YoutubeAccountController {
 
   /// By default, all account operations need membership, these are exceptions.
   static const _operationNeedsMembership = <YoutiPieOperation, bool>{
+    YoutiPieOperation.changeVideoLikeStatus: false,
     YoutiPieOperation.addVideoToHistory: false,
     YoutiPieOperation.fetchUserPlaylists: false,
     YoutiPieOperation.fetchUserPlaylistsNext: false,
