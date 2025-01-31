@@ -23,7 +23,7 @@ abstract class TagsExtractor {
   Future<FAudioModel> extractMetadata({
     required String trackPath,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? artworkDirectory,
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
@@ -32,7 +32,8 @@ abstract class TagsExtractor {
   FutureOr<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? audioArtworkDirectory,
+    required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   });
 

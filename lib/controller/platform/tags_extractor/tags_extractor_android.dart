@@ -34,7 +34,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
 
   Future<FAudioModel> _readAllData({
     required String path,
-    String? artworkDirectory,
+    required String? artworkDirectory,
     bool extractArtwork = true,
     bool overrideArtwork = false,
   }) async {
@@ -56,15 +56,14 @@ class _TagsExtractorAndroid extends TagsExtractor {
   Future<FAudioModel> extractMetadata({
     required String trackPath,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? artworkDirectory,
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
     bool tagger = true,
+    FAudioModel? trackInfo,
   }) async {
-    FAudioModel? trackInfo;
-
-    if (tagger && !isVideo) {
+    if (trackInfo == null && tagger && !isVideo) {
       trackInfo = await _readAllData(
         path: trackPath,
         artworkDirectory: artworkDirectory,
@@ -124,7 +123,8 @@ class _TagsExtractorAndroid extends TagsExtractor {
   Future<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? audioArtworkDirectory,
+    required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   }) async {
     final streamKey = DateTime.now().microsecondsSinceEpoch;
@@ -135,9 +135,11 @@ class _TagsExtractorAndroid extends TagsExtractor {
     await _channel.invokeMethod("readAllDataAsStream", {
       "streamKey": streamKey,
       "paths": paths,
-      "artworkDirectory": artworkDirectory,
+      "audioArtworkDirectory": audioArtworkDirectory,
+      "videoArtworkDirectory": videoArtworkDirectory,
       "extractArtwork": extractArtwork,
       "overrideArtwork": overrideArtwork,
+      "videoExtensions": NamidaFileExtensionsWrapper.video.extensions.toList(),
       "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
     });
     final usingStream = Completer<void>();
@@ -164,6 +166,24 @@ class _TagsExtractorAndroid extends TagsExtractor {
       }
     }
 
+    void ffmpegExtract({
+      required String path,
+      required int index,
+      required bool isVideo,
+      Map<String, dynamic>? trackInfoMap,
+    }) {
+      extractMetadata(
+        trackPath: path,
+        tagger: false,
+        artworkDirectory: isVideo ? videoArtworkDirectory : audioArtworkDirectory,
+        identifiers: identifiersSet,
+        extractArtwork: extractArtwork,
+        overrideArtwork: overrideArtwork,
+        isVideo: isVideo,
+        trackInfo: trackInfoMap == null ? null : FAudioModel.fromMap(trackInfoMap),
+      ).catchError((_) => _getFallbackFAudioModel(path, trackInfoMap)).then((value) => onExtract(value, index));
+    }
+
     final channelEvent = EventChannel('faudiotagger/stream/$streamKey');
     final channelEventIndices = EventChannel('faudiotagger/stream/$streamKey.index');
     streamSubIndices = channelEventIndices.receiveBroadcastStream().listen(
@@ -176,15 +196,21 @@ class _TagsExtractorAndroid extends TagsExtractor {
       final map = message.cast<String, dynamic>();
       final path = map['path'] as String;
       final index = map['_i_'] as int;
+      final isVideo = path.isVideo();
       if (map["ERROR_FAULTY"] == true) {
-        extractMetadata(
-          trackPath: path,
-          tagger: false,
-          identifiers: identifiersSet,
-          extractArtwork: extractArtwork,
-          overrideArtwork: overrideArtwork,
-          isVideo: path.isVideo(),
-        ).catchError((_) => _getFallbackFAudioModel(path, map)).then((value) => onExtract(value, index));
+        ffmpegExtract(
+          path: path,
+          index: index,
+          isVideo: isVideo,
+        );
+      } else if (isVideo) {
+        // -- ensure artwork is extracted
+        ffmpegExtract(
+          path: path,
+          index: index,
+          isVideo: isVideo,
+          trackInfoMap: map,
+        );
       } else {
         try {
           onExtract(FAudioModel.fromMap(map), index);

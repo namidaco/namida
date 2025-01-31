@@ -10,7 +10,7 @@ class _TagsExtractorWindows extends TagsExtractor {
   Future<FAudioModel> extractMetadata({
     required String trackPath,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? artworkDirectory,
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
@@ -73,17 +73,20 @@ class _TagsExtractorWindows extends TagsExtractor {
   Stream<FAudioModel> extractMetadataAsStream({
     required List<String> paths,
     bool extractArtwork = true,
-    String? artworkDirectory,
+    required String? audioArtworkDirectory,
+    required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   }) async* {
     for (int i = 0; i < paths.length; i++) {
       var path = paths[i];
+      final isVideo = path.isVideo();
+      final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;
       final info = await extractMetadata(
         trackPath: path,
         artworkDirectory: artworkDirectory,
         extractArtwork: extractArtwork,
         overrideArtwork: overrideArtwork,
-        isVideo: path.isVideo(),
+        isVideo: isVideo,
       );
       yield info;
     }

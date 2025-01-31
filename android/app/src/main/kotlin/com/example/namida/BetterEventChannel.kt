@@ -6,20 +6,19 @@ import io.flutter.plugin.common.EventChannel.EventSink
 
 class BetterEventChannel(messenger: BinaryMessenger, id: String) : EventSink {
   private var eventSink: EventSink? = null
-  private var eventChannel: EventChannel? = null
+  private var eventChannel: EventChannel = EventChannel(messenger, id)
 
   init {
-    eventChannel = EventChannel(messenger, id)
-    eventChannel!!.setStreamHandler(
-        object : EventChannel.StreamHandler {
-          override fun onListen(arguments: Any?, es: EventChannel.EventSink) {
-            eventSink = es
-          }
+    eventChannel.setStreamHandler(
+            object : EventChannel.StreamHandler {
+              override fun onListen(arguments: Any?, es: EventChannel.EventSink?) {
+                eventSink = es
+              }
 
-          override fun onCancel(arguments: Any?) {
-            eventSink = null
-          }
-        }
+              override fun onCancel(arguments: Any?) {
+                eventSink = null
+              }
+            }
     )
   }
 
@@ -33,6 +32,8 @@ class BetterEventChannel(messenger: BinaryMessenger, id: String) : EventSink {
 
   override public fun endOfStream() {
     eventSink?.endOfStream()
-    eventChannel?.setStreamHandler(null)
+
+    // DO NOT, ITS ALREADY CANCELLED
+    // eventChannel.setStreamHandler(null)
   }
 }

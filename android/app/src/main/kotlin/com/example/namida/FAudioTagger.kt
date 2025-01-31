@@ -129,9 +129,12 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       "readAllDataAsStream" -> {
         val paths = call.argument<List<String>?>("paths")
         if (paths != null) {
-          val artworkDirectory: String? = call.argument<String?>("artworkDirectory")
+          val audioArtworkDirectory: String? = call.argument<String?>("audioArtworkDirectory")
+          val videoArtworkDirectory: String? = call.argument<String?>("videoArtworkDirectory")
           val artworkIdentifiers =
               getArtworkIdentifier(call.argument<List<Int>?>("artworkIdentifiers"))
+          val videoExtensionsList =  call.argument<List<String>?>("videoExtensions")
+          val videoExtensions = videoExtensionsList?.toSet()
           val extractArtwork = call.argument<Boolean?>("extractArtwork") ?: true
           val overrideArtwork = call.argument<Boolean?>("overrideArtwork") ?: false
           val streamKey = call.argument<Long?>("streamKey") ?: 0
@@ -154,6 +157,9 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
               var map = HashMap<String, Any>()
               index++
               withContext(Dispatchers.Main) { eventChannelIndices.success(index) }
+
+              val isVideo = videoExtensions?.contains(p.substringAfterLast(".")) ?: false
+              val artworkDirectory = if (isVideo) videoArtworkDirectory else audioArtworkDirectory
 
               try {
                 withTimeout(6000) {

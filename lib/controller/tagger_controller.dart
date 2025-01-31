@@ -32,11 +32,11 @@ class NamidaTaggerController {
     bool saveArtworkToCache = true,
     bool overrideArtwork = false,
   }) async {
-    final artworkDirectory = saveArtworkToCache ? AppDirs.ARTWORKS : null;
     return _extractor.extractMetadataAsStream(
       paths: paths,
       extractArtwork: extractArtwork,
-      artworkDirectory: artworkDirectory,
+      audioArtworkDirectory: saveArtworkToCache ? AppDirs.ARTWORKS : null,
+      videoArtworkDirectory: saveArtworkToCache ? AppDirs.THUMBNAILS : null,
       overrideArtwork: overrideArtwork,
     );
   }
