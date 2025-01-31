@@ -323,6 +323,36 @@ class TrackExtended {
     );
   }
 
+  static buildAudioInfoFormatted(int durationMS, int size, int bitrate, int sampleRate, ReplayGainData? gain) {
+    final initial = [
+      durationMS.milliSecondsLabel,
+      size.fileSizeFormatted,
+      "$bitrate kbps",
+      "$sampleRate hz",
+    ].join(' • ');
+    final gainFormatted = gain == null ? null : TrackExtended.buildGainDataFormatted(gain);
+    if (gainFormatted == null) return initial;
+    return '$initial\n$gainFormatted';
+  }
+
+  static String? buildGainDataFormatted(ReplayGainData gain) {
+    return [
+      '${gain.trackGain ?? '?'} dB gain',
+      if (gain.trackPeak != null) '${gain.trackPeak} peak',
+      if (gain.albumGain != null) '${gain.albumGain} dB gain (album)',
+      if (gain.albumPeak != null) '${gain.albumPeak} peak (album)',
+    ].join(' • ');
+  }
+
+  static String buildAudioInfoFormattedCompact(String format, String channels, int bitrate, int sampleRate) {
+    return [
+      format,
+      "$channels ch",
+      "$bitrate kbps",
+      "${sampleRate / 1000} khz",
+    ].joinText(separator: ' • ');
+  }
+
   factory TrackExtended.fromJson(
     String path,
     Map<String, dynamic> json, {
@@ -485,36 +515,29 @@ extension TrackExtUtils on TrackExtended {
 
   String get audioInfoFormatted {
     final trExt = this;
-    final initial = [
-      trExt.durationMS.milliSecondsLabel,
-      trExt.size.fileSizeFormatted,
-      "${trExt.bitrate} kbps",
-      "${trExt.sampleRate} hz",
-    ].join(' • ');
-    final gainFormatted = trExt.gainDataFormatted;
-    if (gainFormatted == null) return initial;
-    return '$initial\n$gainFormatted';
+    return TrackExtended.buildAudioInfoFormatted(
+      trExt.durationMS,
+      trExt.size,
+      trExt.bitrate,
+      trExt.sampleRate,
+      trExt.gainData,
+    );
   }
 
   String? get gainDataFormatted {
     final gain = gainData;
     if (gain == null) return null;
-    return [
-      '${gain.trackGain ?? '?'} dB gain',
-      if (gain.trackPeak != null) '${gain.trackPeak} peak',
-      if (gain.albumGain != null) '${gain.albumGain} dB gain (album)',
-      if (gain.albumPeak != null) '${gain.albumPeak} peak (album)',
-    ].join(' • ');
+    return TrackExtended.buildGainDataFormatted(gain);
   }
 
   String get audioInfoFormattedCompact {
     final trExt = this;
-    return [
+    return TrackExtended.buildAudioInfoFormattedCompact(
       trExt.format,
-      "${trExt.channels} ch",
-      "${trExt.bitrate} kbps",
-      "${trExt.sampleRate / 1000} khz",
-    ].joinText(separator: ' • ');
+      trExt.channels,
+      trExt.bitrate,
+      trExt.sampleRate,
+    );
   }
 
   TrackExtended copyWithTag({

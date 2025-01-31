@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
@@ -239,6 +241,14 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   } else if (infoFull.errorsMap.isNotEmpty) {
     snackyy(title: lang.NOTE, message: "${infoFull.errorsMap}");
   }
+
+  final audioInfoFormatted = TrackExtended.buildAudioInfoFormatted(
+    infoFull.durationMS ?? 0,
+    File(track.path).fileSizeSync() ?? 0,
+    infoFull.bitRate ?? 0,
+    infoFull.sampleRate ?? 0,
+    tags.gainData,
+  );
 
   final trimWhiteSpaces = true.obs;
   final canEditTags = false.obs;
@@ -580,7 +590,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                           height: 4.0,
                         ),
                         Text(
-                          track.audioInfoFormatted,
+                          audioInfoFormatted,
                           style: namida.textTheme.displaySmall,
                         ),
                         const SizedBox(height: 4.0),
