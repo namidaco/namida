@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:vibration/vibration.dart';
-
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -201,7 +200,7 @@ class NamidaDialogs {
     required Folder folder,
     required bool recursiveTracks,
   }) async {
-    if (recursiveTracks) Vibration.vibrate(duration: 20, amplitude: 40);
+    if (recursiveTracks) VibratorController.medium();
     final tracks = recursiveTracks ? folder.tracksRecusive().toList() : folder.tracks();
     await showGeneralPopupDialog(
       tracks,

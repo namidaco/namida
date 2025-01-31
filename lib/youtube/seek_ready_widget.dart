@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:vibration/vibration.dart';
-
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -113,7 +112,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     if (_seekPercentage.value <= 0.05) {
       // left magnet
       _seekPercentage.value = 0;
-      Vibration.vibrate(duration: 20, amplitude: 80);
+      VibratorController.veryhigh();
     }
 
     _isPointerDown = false;
@@ -178,7 +177,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                       _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
                       _dragToSeek = false;
                     });
-                    Vibration.vibrate(duration: 20, amplitude: 80);
+                    VibratorController.veryhigh();
                   } else {
                     _currentSeekStuckWord = '';
                     _dragToSeek = true;

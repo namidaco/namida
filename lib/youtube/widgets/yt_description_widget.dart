@@ -1,11 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'package:vibration/vibration.dart';
 import 'package:youtipie/class/youtipie_description/youtipie_description.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -111,7 +111,7 @@ class YoutubeDescriptionWidgetManager {
       onTap = () {
         if (sw.videoId == videoId && sw.videoStartSeconds != null) {
           Player.inst.seek(Duration(seconds: sw.videoStartSeconds!));
-          Vibration.vibrate(duration: 10, amplitude: 20);
+          VibratorController.light();
         } else {
           Player.inst.playOrPause(0, [YoutubeID(id: sw.videoId!, playlistID: null)], QueueSource.others);
           // TODO: seek after playing?

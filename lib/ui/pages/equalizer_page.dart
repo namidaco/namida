@@ -1,15 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
 import 'package:just_audio/just_audio.dart';
-import 'package:vibration/vibration.dart';
-
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -843,7 +841,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
           if (widget.value.abs() <= 0.05) {
             // -- clamp if near center
             widget.onChanged(0);
-            Vibration.vibrate(duration: 20, amplitude: 50);
+            VibratorController.high();
           }
         },
         onVerticalDragCancel: () => _isPointerDown.value = false,
