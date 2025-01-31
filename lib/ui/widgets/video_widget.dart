@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
+import 'package:screen_brightness/screen_brightness.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
@@ -282,7 +283,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       _disableControlsListener();
       MiniPlayerController.inst.animation.addListener(_disableControlsListener);
     }
+
+    if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
+      ScreenBrightness.instance.system.then((value) => _currentBrigthnessDim.value = 1.0 + value);
+      _systemBrightnessStreamSub = ScreenBrightness.instance.onSystemScreenBrightnessChanged.listen(
+        (event) {
+          if (event > 0) {
+            _currentBrigthnessDim.value = 1.0 + event;
+            _setScreenBrightness(event);
+          }
+        },
+      );
+    }
   }
+
+  void _setScreenBrightness(double value) async {
+    value = value.clamp(0.01, 1.0); // -- below 0.01 treats it as 0 and disables it making it jump to system brightness
+    try {
+      await ScreenBrightness.instance.setApplicationScreenBrightness(value);
+    } catch (_) {}
+  }
+
+  StreamSubscription<double>? _systemBrightnessStreamSub;
 
   final _volumeListenerKey = 'video_widget';
 
@@ -296,6 +318,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _canShowBrightnessSlider.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
     MiniPlayerController.inst.animation.removeListener(_disableControlsListener);
+    _systemBrightnessStreamSub?.cancel();
+    if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
+      ScreenBrightness.instance.resetApplicationScreenBrightness();
+    }
     super.dispose();
   }
 
@@ -496,7 +522,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   Rx<double> get _currentBrigthnessDim => VideoController.inst.currentBrigthnessDim;
 
-  Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view) {
+  final _maxBrightnessValue = NamidaFeaturesVisibility.changeApplicationBrightness ? 2.0 : 1.0;
+
+  Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view, {double max = 1.0}) {
     final totalHeight = view.physicalSize.shortestSide / view.devicePixelRatio * 0.75;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -531,7 +559,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                           ),
                           width: 4.0,
-                          height: totalHeight * 0.4 * perc,
+                          height: totalHeight * 0.4 * (perc / max),
                         ),
                       ],
                     ),
@@ -713,7 +741,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   } else if (_brightnessDimThreshold <= -_brightnessMinDistance) {
                     _brightnessDimThreshold = 0.0;
                     _canShowBrightnessSlider.value = true;
-                    _currentBrigthnessDim.value = (_currentBrigthnessDim.value + 0.01).withMaximum(1.0);
+                    _currentBrigthnessDim.value = (_currentBrigthnessDim.value + 0.01).withMaximum(_maxBrightnessValue);
+                  }
+                  if (NamidaFeaturesVisibility.changeApplicationBrightness) {
+                    if (_currentBrigthnessDim.value > 1.0) {
+                      // -- settings to 0 just disables it, thats why only `> 1.0`
+                      _setScreenBrightness(_currentBrigthnessDim.value - 1.0);
+                    }
                   }
                 }
               },
@@ -755,9 +789,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             Positioned.fill(
               child: ObxO(
                 rx: _currentBrigthnessDim,
-                builder: (context, brightness) => Container(
-                  color: Colors.black.withValues(alpha: 1 - brightness),
-                ),
+                builder: (context, brightness) => brightness < 1.0
+                    ? ColoredBox(
+                        color: Colors.black.withValues(alpha: 1 - brightness),
+                      )
+                    : SizedBox.shrink(),
               ),
             ),
 
@@ -1693,6 +1729,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       return _getVerticalSliderWidget(
                         'brightness',
                         bri,
+                        max: _maxBrightnessValue,
                         Broken.sun_1,
                         view,
                       );
