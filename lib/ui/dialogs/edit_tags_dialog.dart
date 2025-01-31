@@ -230,9 +230,10 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   tags = infoFull.tags;
   artwork = tags.artwork;
   if (infoFull.hasError) {
+    final errorsMapLine = infoFull.errorsMap.isEmpty ? '' : "\n${infoFull.errorsMap}";
     snackyy(
       title: lang.ERROR,
-      message: "${lang.METADATA_READ_FAILED}\n${infoFull.errorsMap}",
+      message: "${lang.METADATA_READ_FAILED}$errorsMapLine",
       isError: true,
     );
   } else if (infoFull.errorsMap.isNotEmpty) {

@@ -248,10 +248,9 @@ extension MediaInfoToFAudioModel on MediaInfo {
   FAudioModel toFAudioModel({required FArtwork? artwork}) {
     final infoFull = this;
     final info = infoFull.format?.tags;
-    if (info == null) return FAudioModel.dummy(path, artwork);
-    final trackNumberTotal = info.track?.split('/');
-    final discNumberTotal = info.disc?.split('/');
-    final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio);
+    final trackNumberTotal = info?.track?.split('/');
+    final discNumberTotal = info?.disc?.split('/');
+    final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? infoFull.streams?.firstOrNull;
     int? parsy(String? v) => v == null ? null : int.tryParse(v);
     final bitrate = parsy(infoFull.format?.bitRate); // 234292
     final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
@@ -261,28 +260,28 @@ extension MediaInfoToFAudioModel on MediaInfo {
       tags: FTags(
         path: infoFull.path,
         artwork: artwork ?? FArtwork(),
-        title: info.title,
-        album: info.album,
-        albumArtist: info.albumArtist,
-        artist: info.artist,
-        composer: info.composer,
-        genre: info.genre,
-        trackNumber: trackNumberTotal?.first ?? info.track,
-        trackTotal: info.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
-        discNumber: discNumberTotal?.first ?? info.disc,
-        discTotal: info.discTotal ?? (discNumberTotal?.length == 2 ? discNumberTotal?.last : null),
-        lyrics: info.lyrics,
-        comment: info.comment,
-        description: info.description,
-        synopsis: info.synopsis,
-        year: info.date,
-        language: info.language,
-        lyricist: info.lyricist,
-        remixer: info.remixer,
-        mood: info.mood,
-        country: info.country,
-        recordLabel: info.label,
-        gainData: info.gainData,
+        title: info?.title,
+        album: info?.album,
+        albumArtist: info?.albumArtist,
+        artist: info?.artist,
+        composer: info?.composer,
+        genre: info?.genre,
+        trackNumber: trackNumberTotal?.first ?? info?.track,
+        trackTotal: info?.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
+        discNumber: discNumberTotal?.first ?? info?.disc,
+        discTotal: info?.discTotal ?? (discNumberTotal?.length == 2 ? discNumberTotal?.last : null),
+        lyrics: info?.lyrics,
+        comment: info?.comment,
+        description: info?.description,
+        synopsis: info?.synopsis,
+        year: info?.date,
+        language: info?.language,
+        lyricist: info?.lyricist,
+        remixer: info?.remixer,
+        mood: info?.mood,
+        country: info?.country,
+        recordLabel: info?.label,
+        gainData: info?.gainData,
       ),
       durationMS: infoFull.format?.duration?.inMilliseconds,
       bitRate: bitrateThousands?.round(),
