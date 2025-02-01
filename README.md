@@ -273,9 +273,11 @@ Animating Thumbnail        |  Recommends & Listens
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U0PF2L5)
 
-> Bitcoin: bc1ql802k98ml3aum4v2cm9am4kg2lm5w8w6w2xlhh
+> Bitcoin (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
 
-> ETH/MATIC: 0x13f1a519228C83BBbDE11BAF804515672f9C6c2A
+> ETH/MATIC (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
+
+> USDT (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
 
 - Don't forget to 🌟 star the repo if you like the project.
 
