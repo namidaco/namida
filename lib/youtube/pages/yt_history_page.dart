@@ -49,81 +49,88 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
     final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
     return BackgroundWrapper(
-      child: CustomScrollView(
-        controller: YoutubeHistoryController.inst.scrollController,
-        slivers: [
-          ObxO(
-            rx: YoutubeHistoryController.inst.historyMap,
-            builder: (context, history) => ObxO(
-              rx: YoutubeHistoryController.inst.highlightedItem,
-              builder: (context, highlightedItem) => SliverVariedExtentList.builder(
-                key: ValueKey(daysLength), // rebuild after adding/removing day
-                itemExtentBuilder: (index, dimensions) {
-                  final day = historyDays[index];
-                  return YoutubeHistoryController.inst.dayToSectionExtent(day, cardExtent, dayHeaderExtent);
-                },
-                itemCount: daysLength,
-                itemBuilder: (context, index) {
-                  final day = historyDays[index];
-                  final dayInMs = super.dayToMillis(day);
-                  final videos = history[day] ?? [];
+      child: VideoTilePropertiesProvider(
+        configs: const VideoTilePropertiesConfigs(
+          queueSource: QueueSourceYoutubeID.history,
+          playlistName: k_PLAYLIST_NAME_HISTORY,
+          playlistID: PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+        ),
+        builder: (properties) => CustomScrollView(
+          controller: YoutubeHistoryController.inst.scrollController,
+          slivers: [
+            ObxO(
+              rx: YoutubeHistoryController.inst.historyMap,
+              builder: (context, history) => ObxO(
+                rx: YoutubeHistoryController.inst.highlightedItem,
+                builder: (context, highlightedItem) => SliverVariedExtentList.builder(
+                  key: ValueKey(daysLength), // rebuild after adding/removing day
+                  itemExtentBuilder: (index, dimensions) {
+                    final day = historyDays[index];
+                    return YoutubeHistoryController.inst.dayToSectionExtent(day, cardExtent, dayHeaderExtent);
+                  },
+                  itemCount: daysLength,
+                  itemBuilder: (context, index) {
+                    final day = historyDays[index];
+                    final dayInMs = super.dayToMillis(day);
+                    final videos = history[day] ?? [];
 
-                  return StickyHeader(
-                    key: ValueKey(index),
-                    header: NamidaHistoryDayHeaderBox(
-                      height: dayHeaderHeight,
-                      title: [
-                        dayInMs.dateFormattedOriginal,
-                        videos.length.displayVideoKeyword,
-                      ].join('  •  '),
-                      sideColor: dayHeaderSideColor,
-                      bgColor: dayHeaderBgColor,
-                      shadowColor: dayHeaderShadowColor,
-                      menu: NamidaPopupWrapper(
-                        openOnLongPress: false,
-                        childrenDefault: () => YTUtils.getVideosMenuItems(
-                          context: context,
-                          playlistName: k_PLAYLIST_NAME_HISTORY,
-                          videos: videos,
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Icon(
-                            Broken.more,
-                            size: 22.0,
+                    return StickyHeader(
+                      key: ValueKey(index),
+                      header: NamidaHistoryDayHeaderBox(
+                        height: dayHeaderHeight,
+                        title: [
+                          dayInMs.dateFormattedOriginal,
+                          videos.length.displayVideoKeyword,
+                        ].join('  •  '),
+                        sideColor: dayHeaderSideColor,
+                        bgColor: dayHeaderBgColor,
+                        shadowColor: dayHeaderShadowColor,
+                        menu: NamidaPopupWrapper(
+                          openOnLongPress: false,
+                          childrenDefault: () => YTUtils.getVideosMenuItems(
+                            queueSource: QueueSourceYoutubeID.history,
+                            context: context,
+                            playlistName: k_PLAYLIST_NAME_HISTORY,
+                            videos: videos,
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Icon(
+                              Broken.more,
+                              size: 22.0,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    content: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
-                      primary: false,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemExtent: Dimensions.youtubeCardItemExtent,
-                      itemCount: videos.length,
-                      itemBuilder: (context, i) {
-                        final watch = videos[i];
-                        final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle);
-                        return YTHistoryVideoCard(
-                          videos: videos,
-                          index: i,
-                          day: day,
-                          bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
-                          playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
-                          playlistName: k_PLAYLIST_NAME_HISTORY,
-                          isImportantInCache: false, // long old history is lowkey useless
-                          canHaveDuplicates: true,
-                          topRightWidget: topRightWidget,
-                        );
-                      },
-                    ),
-                  );
-                },
+                      content: ListView.builder(
+                        padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
+                        primary: false,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemExtent: Dimensions.youtubeCardItemExtent,
+                        itemCount: videos.length,
+                        itemBuilder: (context, i) {
+                          final watch = videos[i];
+                          final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle);
+                          return YTHistoryVideoCard(
+                            properties: properties,
+                            videos: videos,
+                            index: i,
+                            day: day,
+                            bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+
+                            isImportantInCache: false, // long old history is lowkey useless
+                            topRightWidget: topRightWidget,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-          kBottomPaddingWidgetSliver,
-        ],
+            kBottomPaddingWidgetSliver,
+          ],
+        ),
       ),
     );
   }

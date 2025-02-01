@@ -135,25 +135,58 @@ enum TrackSource {
   lastfm,
 }
 
-enum QueueSource {
-  allTracks,
-  album,
-  artist,
-  genre,
-  playlist,
-  folder,
-  folderVideos,
-  search,
-  queuePage,
-  playerQueue,
-  mostPlayed,
-  history,
-  favourites,
-  selectedTracks,
-  externalFile,
-  homePageItem,
-  recentlyAdded,
-  others,
+sealed class QueueSourceBase implements Enum {}
+
+enum QueueSource implements QueueSourceBase {
+  allTracks(false),
+  album(false),
+  artist(false),
+  genre(false),
+  playlist(true),
+  folder(false),
+  folderVideos(false),
+  search(false),
+  queuePage(true),
+  playerQueue(true),
+  mostPlayed(false),
+  history(true),
+  favourites(false),
+  selectedTracks(false),
+  externalFile(false),
+  homePageItem(false),
+  recentlyAdded(false),
+
+  others(true);
+
+  final bool canHaveDuplicates;
+  const QueueSource(this.canHaveDuplicates);
+}
+
+enum QueueSourceYoutubeID implements QueueSourceBase {
+  channel(true),
+  playlist(true),
+  search(false),
+  playerQueue(true),
+  mostPlayed(false),
+  history(true),
+  historyFiltered(false),
+  favourites(false),
+  externalLink(true),
+  homeFeed(false),
+  notificationsHosted(false),
+  relatedVideos(false),
+  historyFilteredHosted(false),
+  searchHosted(false),
+  channelHosted(false),
+  historyHosted(true),
+  playlistHosted(true),
+
+  downloadTask(false),
+  videoEndCard(false),
+  videoDescription(false);
+
+  final bool canHaveDuplicates;
+  const QueueSourceYoutubeID(this.canHaveDuplicates);
 }
 
 enum TagField {

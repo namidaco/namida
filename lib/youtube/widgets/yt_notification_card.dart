@@ -92,7 +92,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     Player.inst.playOrPause(
       startIndex,
       itemsToPlay,
-      QueueSource.others,
+      QueueSourceYoutubeID.notificationsHosted,
     );
     YTUtils.expandMiniplayer();
     await _markAsRead(mainList);
@@ -104,6 +104,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     if (videoId.isEmpty) return [];
     if (widget.notification.isComment) return [];
     return YTUtils.getVideoCardMenuItems(
+      queueSource: QueueSourceYoutubeID.notificationsHosted,
       downloadIndex: null,
       totalLength: null,
       streamInfoItem: null,

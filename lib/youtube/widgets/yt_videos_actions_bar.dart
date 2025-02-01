@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:share_plus/share_plus.dart';
-import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
-
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -16,6 +11,9 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 class YTVideosActionBarOptions {
   final bool shuffle;
@@ -38,6 +36,7 @@ class YTVideosActionBarOptions {
 }
 
 class YTVideosActionBar extends StatelessWidget {
+  final QueueSourceYoutubeID queueSource;
   final String title;
   final String Function()? urlBuilder;
   final List<YoutubeID>? Function() videosCallback;
@@ -48,6 +47,7 @@ class YTVideosActionBar extends StatelessWidget {
 
   const YTVideosActionBar({
     super.key,
+    required this.queueSource,
     required this.title,
     required this.urlBuilder,
     required this.videosCallback,
@@ -79,13 +79,13 @@ class YTVideosActionBar extends StatelessWidget {
   Future<void> _onShuffle() async {
     final videos = videosCallback();
     if (videos == null) return;
-    await Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
+    await Player.inst.playOrPause(0, videos, queueSource, shuffle: true);
   }
 
   Future<void> _onPlay() async {
     final videos = videosCallback();
     if (videos == null) return;
-    await Player.inst.playOrPause(0, videos, QueueSource.others);
+    await Player.inst.playOrPause(0, videos, queueSource);
   }
 
   Future<void> _onPlayNext() async {

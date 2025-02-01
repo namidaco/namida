@@ -28,7 +28,6 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
-import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -68,57 +67,62 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ObxO(
-      rx: YoutubeHistoryController.inst.currentMostPlayedTimeRange,
-      builder: (context, currentMostPlayedTimeRange) => ObxO(
-        rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
-        builder: (context, listensMap) {
-          final videos = <String>[];
-          final ytIds = <YoutubeID>[];
-          for (final e in listensMap.keys) {
-            videos.add(e);
-            ytIds.add(
-              YoutubeID(
-                id: e,
-                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-              ),
+    return VideoTilePropertiesProvider(
+      configs: VideoTilePropertiesConfigs(
+        queueSource: QueueSourceYoutubeID.mostPlayed,
+        playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+        playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
+      ),
+      builder: (properties) => ObxO(
+        rx: YoutubeHistoryController.inst.currentMostPlayedTimeRange,
+        builder: (context, currentMostPlayedTimeRange) => ObxO(
+          rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
+          builder: (context, listensMap) {
+            final videos = <String>[];
+            final ytIds = <YoutubeID>[];
+            for (final e in listensMap.keys) {
+              videos.add(e);
+              ytIds.add(
+                YoutubeID(
+                  id: e,
+                  playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+                ),
+              );
+            }
+
+            return MostPlayedItemsPage(
+              itemExtent: Dimensions.youtubeCardItemExtent,
+              historyController: YoutubeHistoryController.inst,
+              onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
+                settings.save(
+                  ytMostPlayedTimeRange: mptr,
+                  ytMostPlayedCustomDateRange: dateCustom,
+                  ytMostPlayedCustomisStartOfDay: isStartOfDay,
+                );
+              },
+              header: (timeRangeChips, bottomPadding) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: timeRangeChips,
+                );
+              },
+              itemsCount: listensMap.length,
+              itemBuilder: (context, i) {
+                final videoID = videos[i];
+                final listens = listensMap[videoID] ?? [];
+
+                return YTHistoryVideoCard(
+                  properties: properties,
+                  key: Key("${videoID}_$i"),
+                  videos: ytIds,
+                  index: i,
+                  day: null,
+                  overrideListens: listens,
+                );
+              },
             );
-          }
-
-          return MostPlayedItemsPage(
-            itemExtent: Dimensions.youtubeCardItemExtent,
-            historyController: YoutubeHistoryController.inst,
-            onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-              settings.save(
-                ytMostPlayedTimeRange: mptr,
-                ytMostPlayedCustomDateRange: dateCustom,
-                ytMostPlayedCustomisStartOfDay: isStartOfDay,
-              );
-            },
-            header: (timeRangeChips, bottomPadding) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: timeRangeChips,
-              );
-            },
-            itemsCount: listensMap.length,
-            itemBuilder: (context, i) {
-              final videoID = videos[i];
-              final listens = listensMap[videoID] ?? [];
-
-              return YTHistoryVideoCard(
-                key: Key("${videoID}_$i"),
-                videos: ytIds,
-                index: i,
-                day: null,
-                overrideListens: listens,
-                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-                playlistName: '',
-                canHaveDuplicates: false,
-              );
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -136,6 +140,7 @@ class YTLikedVideosPage extends StatelessWidget with NamidaRouteWidget {
       playlistName: k_PLAYLIST_NAME_FAV,
       isEditable: false,
       reversedList: true,
+      queueSource: QueueSourceYoutubeID.favourites,
     );
   }
 }
@@ -150,12 +155,14 @@ class YTNormalPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   final String playlistName;
   final bool isEditable;
   final bool reversedList;
+  final QueueSourceYoutubeID queueSource;
 
   const YTNormalPlaylistSubpage({
     super.key,
     required this.playlistName,
     this.isEditable = true,
     this.reversedList = false,
+    required this.queueSource,
   });
 
   @override
@@ -177,11 +184,6 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
     const horizontalBigThumbPadding = 12.0;
     final maxWidth = context.width;
     final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
-    Color? threeCColor;
-    late final threeC = ObxO(
-      rx: YoutubePlaylistController.inst.canReorderItems,
-      builder: (context, canReorderItems) => ThreeLineSmallContainers(enabled: canReorderItems, color: threeCColor),
-    );
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: 300),
@@ -273,7 +275,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     iconColor: context.defaultIconColor(bgColor),
                                     icon: Broken.shuffle,
                                     tooltip: () => lang.SHUFFLE,
-                                    onPressed: () => Player.inst.playOrPause(0, playlist.tracks, QueueSource.others, shuffle: true),
+                                    onPressed: () => Player.inst.playOrPause(0, playlist.tracks, widget.queueSource, shuffle: true),
                                   ),
                                   NamidaIconButton(
                                     iconColor: context.defaultIconColor(bgColor),
@@ -338,9 +340,16 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     ),
                   ),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 24.0)),
-                  ObxO(
-                    rx: YoutubePlaylistController.inst.canReorderItems,
-                    builder: (context, canReorderItems) => NamidaSliverReorderableList(
+                  VideoTilePropertiesProvider(
+                    configs: VideoTilePropertiesConfigs(
+                      queueSource: widget.queueSource,
+                      playlistName: playlistCurrentName,
+                      draggableThumbnail: true, // shows three lines
+                      draggingEnabled: true, // actual is managed using reorderableRx
+                      showMoreIcon: true,
+                      reorderableRx: YoutubePlaylistController.inst.canReorderItems,
+                    ),
+                    builder: (properties) => NamidaSliverReorderableList(
                       onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
@@ -349,8 +358,9 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                         return FadeDismissible(
                           key: Key("Diss_$index$video"),
                           draggableRx: YoutubePlaylistController.inst.canReorderItems,
-                          onDismissed: (direction) => YTUtils.onRemoveVideosFromPlaylist(playlist.name, [video]),
+                          onDismissed: (direction) => YTUtils.onRemoveVideosFromPlaylist(playlistCurrentName, [video]),
                           child: YTHistoryVideoCard(
+                            properties: properties,
                             key: ValueKey(index),
                             videos: playlist.tracks,
                             index: index,
@@ -358,23 +368,6 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             downloadTotalLength: playlist.tracks.length,
                             reversedList: widget.reversedList,
                             day: null,
-                            playlistID: playlist.playlistID,
-                            playlistName: playlistCurrentName,
-                            draggingEnabled: canReorderItems,
-                            openMenuOnLongPress: !canReorderItems,
-                            draggableThumbnail: true,
-                            showMoreIcon: true,
-                            draggingBarsBuilder: (color) {
-                              threeCColor ??= color;
-                              return threeC;
-                            },
-                            draggingThumbnailBuilder: (draggingTrigger) {
-                              return ObxO(
-                                rx: YoutubePlaylistController.inst.canReorderItems,
-                                builder: (context, canReorderItems) => canReorderItems ? draggingTrigger : const SizedBox(),
-                              );
-                            },
-                            canHaveDuplicates: true,
                           ),
                         );
                       },
@@ -575,242 +568,250 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final firstID = playlist.items.firstOrNull?.id;
     final hasMoreStreamsLeft = playlist.canFetchNext;
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
-    return AnimatedThemeOrTheme(
-      duration: const Duration(milliseconds: 300),
-      data: theme,
-      child: BackgroundWrapper(
-        child: PullToRefreshWidget(
-          state: this,
-          controller: _controller,
-          onRefresh: () => _fetch100Video(forceRequest: true),
-          child: LazyLoadListView(
-            scrollController: _controller,
-            onReachingEnd: _fetch100Video,
-            listview: (controller) => NamidaScrollbar(
-              controller: controller,
-              child: CustomScrollView(
+    return VideoTilePropertiesProvider(
+      configs: VideoTilePropertiesConfigs(
+        queueSource: QueueSourceYoutubeID.playlistHosted,
+        showMoreIcon: true,
+      ),
+      builder: (properties) => AnimatedThemeOrTheme(
+        duration: const Duration(milliseconds: 300),
+        data: theme,
+        child: BackgroundWrapper(
+          child: PullToRefreshWidget(
+            state: this,
+            controller: _controller,
+            onRefresh: () => _fetch100Video(forceRequest: true),
+            child: LazyLoadListView(
+              scrollController: _controller,
+              onReachingEnd: _fetch100Video,
+              listview: (controller) => NamidaScrollbar(
                 controller: controller,
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Stack(
-                      children: [
-                        YoutubeThumbnail(
-                          type: ThumbnailType.playlist,
-                          key: Key("$firstID"),
-                          width: maxWidth,
-                          height: maxWidth * 9 / 16,
-                          compressed: true,
-                          isImportantInCache: false,
-                          preferLowerRes: true,
-                          // customUrl: thumbnailUrl,
-                          videoId: firstID,
-                          blur: 0.0,
-                          borderRadius: 0.0,
-                          extractColor: true,
-                          onColorReady: (color) async {
-                            if (color != null) {
-                              await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                              refreshState(() {
-                                bgColor = color.color;
-                              });
-                            }
-                          },
-                        ),
-                        const Positioned.fill(
-                          child: ClipRect(
-                            child: NamidaBgBlur(
-                              blur: 30.0,
-                              child: ColoredBox(color: Colors.transparent),
+                child: CustomScrollView(
+                  controller: controller,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Stack(
+                        children: [
+                          YoutubeThumbnail(
+                            type: ThumbnailType.playlist,
+                            key: Key("$firstID"),
+                            width: maxWidth,
+                            height: maxWidth * 9 / 16,
+                            compressed: true,
+                            isImportantInCache: false,
+                            preferLowerRes: true,
+                            // customUrl: thumbnailUrl,
+                            videoId: firstID,
+                            blur: 0.0,
+                            borderRadius: 0.0,
+                            extractColor: true,
+                            onColorReady: (color) async {
+                              if (color != null) {
+                                await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
+                                refreshState(() {
+                                  bgColor = color.color;
+                                });
+                              }
+                            },
+                          ),
+                          const Positioned.fill(
+                            child: ClipRect(
+                              child: NamidaBgBlur(
+                                blur: 30.0,
+                                child: ColoredBox(color: Colors.transparent),
+                              ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: horizontalBigThumbPadding, vertical: 12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              YoutubeThumbnail(
-                                type: ThumbnailType.playlist,
-                                key: Key("$firstID"),
-                                width: bigThumbWidth,
-                                height: (bigThumbWidth * 9 / 16),
-                                compressed: false,
-                                isImportantInCache: true,
-                                preferLowerRes: false,
-                                customUrl: thumbnailUrl,
-                                videoId: firstID,
-                                blur: 4.0,
-                              ),
-                              const SizedBox(height: 24.0),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          playlist.basicInfo.title,
-                                          style: theme.textTheme.displayLarge,
-                                        ),
-                                        const SizedBox(height: 6.0),
-                                        Text(
-                                          videosCountTextFinal ?? '',
-                                          style: theme.textTheme.displaySmall,
-                                        ),
-                                        if (uploaderTitleAndViews.isNotEmpty == true) ...[
-                                          const SizedBox(height: 2.0),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: horizontalBigThumbPadding, vertical: 12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                YoutubeThumbnail(
+                                  type: ThumbnailType.playlist,
+                                  key: Key("$firstID"),
+                                  width: bigThumbWidth,
+                                  height: (bigThumbWidth * 9 / 16),
+                                  compressed: false,
+                                  isImportantInCache: true,
+                                  preferLowerRes: false,
+                                  customUrl: thumbnailUrl,
+                                  videoId: firstID,
+                                  blur: 4.0,
+                                ),
+                                const SizedBox(height: 24.0),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
                                           Text(
-                                            uploaderTitleAndViews,
+                                            playlist.basicInfo.title,
+                                            style: theme.textTheme.displayLarge,
+                                          ),
+                                          const SizedBox(height: 6.0),
+                                          Text(
+                                            videosCountTextFinal ?? '',
                                             style: theme.textTheme.displaySmall,
                                           ),
+                                          if (uploaderTitleAndViews.isNotEmpty == true) ...[
+                                            const SizedBox(height: 2.0),
+                                            Text(
+                                              uploaderTitleAndViews,
+                                              style: theme.textTheme.displaySmall,
+                                            ),
+                                          ],
+                                          if (description != null && description.isNotEmpty) ...[
+                                            const SizedBox(height: 2.0),
+                                            Text(
+                                              description,
+                                              style: theme.textTheme.displaySmall,
+                                            ),
+                                          ],
                                         ],
-                                        if (description != null && description.isNotEmpty) ...[
-                                          const SizedBox(height: 2.0),
-                                          Text(
-                                            description,
-                                            style: theme.textTheme.displaySmall,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  NamidaIconButton(
-                                    iconColor: context.defaultIconColor(bgColor),
-                                    icon: Broken.shuffle,
-                                    tooltip: () => lang.SHUFFLE,
-                                    onPressed: () async {
-                                      final videos = await _getAllPlaylistVideos();
-                                      Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
-                                    },
-                                  ),
-                                  NamidaIconButton(
-                                    iconColor: context.defaultIconColor(bgColor),
-                                    icon: Broken.play_cricle,
-                                    tooltip: () => lang.PLAY_LAST,
-                                    onPressed: () async {
-                                      final videos = await _getAllPlaylistVideos();
-                                      Player.inst.addToQueue(videos, insertNext: false);
-                                    },
-                                  ),
-                                  NamidaIconButton(
-                                    iconColor: context.defaultIconColor(bgColor),
-                                    icon: Broken.import,
-                                    onPressed: () async {
-                                      final infoLookup = <String, StreamInfoItem>{};
-                                      playlist.items.loop((e) => infoLookup[e.id] = e);
-
-                                      final videos = await _getAllPlaylistVideos();
-                                      YTPlaylistDownloadPage(
-                                        ids: videos,
-                                        playlistName: playlist.basicInfo.title,
-                                        infoLookup: infoLookup,
-                                        playlistInfo: playlist.basicInfo,
-                                      ).navigate();
-                                    },
-                                  ),
-                                  NamidaPopupWrapper(
-                                    openOnLongPress: false,
-                                    childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
-                                      context: context,
-                                      playlistToFetch: _playlist,
-                                      userPlaylist: widget.userPlaylist,
-                                      showProgressSheet: true,
-                                      displayDownloadItem: false,
-                                      displayShuffle: false,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                      child: Icon(
-                                        Broken.more_2,
-                                        color: context.defaultIconColor(bgColor),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    NamidaIconButton(
+                                      iconColor: context.defaultIconColor(bgColor),
+                                      icon: Broken.shuffle,
+                                      tooltip: () => lang.SHUFFLE,
+                                      onPressed: () async {
+                                        final videos = await _getAllPlaylistVideos();
+                                        Player.inst.playOrPause(0, videos, QueueSourceYoutubeID.playlistHosted, shuffle: true);
+                                      },
+                                    ),
+                                    NamidaIconButton(
+                                      iconColor: context.defaultIconColor(bgColor),
+                                      icon: Broken.play_cricle,
+                                      tooltip: () => lang.PLAY_LAST,
+                                      onPressed: () async {
+                                        final videos = await _getAllPlaylistVideos();
+                                        Player.inst.addToQueue(videos, insertNext: false);
+                                      },
+                                    ),
+                                    NamidaIconButton(
+                                      iconColor: context.defaultIconColor(bgColor),
+                                      icon: Broken.import,
+                                      onPressed: () async {
+                                        final infoLookup = <String, StreamInfoItem>{};
+                                        playlist.items.loop((e) => infoLookup[e.id] = e);
+
+                                        final videos = await _getAllPlaylistVideos();
+                                        YTPlaylistDownloadPage(
+                                          ids: videos,
+                                          playlistName: playlist.basicInfo.title,
+                                          infoLookup: infoLookup,
+                                          playlistInfo: playlist.basicInfo,
+                                        ).navigate();
+                                      },
+                                    ),
+                                    NamidaPopupWrapper(
+                                      openOnLongPress: false,
+                                      childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
+                                        queueSource: QueueSourceYoutubeID.playlistHosted,
+                                        context: context,
+                                        playlistToFetch: _playlist,
+                                        userPlaylist: widget.userPlaylist,
+                                        showProgressSheet: true,
+                                        displayDownloadItem: false,
+                                        displayShuffle: false,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        child: Icon(
+                                          Broken.more_2,
+                                          color: context.defaultIconColor(bgColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
+                    SliverStickyHeader(
+                      header: ColoredBox(
+                        color: theme.scaffoldBackgroundColor,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: sortWidget,
+                              ),
+                              ObxO(
+                                rx: _isLoadingMoreItems,
+                                builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
+                                  animationDurationMS: 100,
+                                  sizeMultiplier: 0.95,
+                                  borderRadius: 8.0,
+                                  icon: Broken.task_square,
+                                  text: lang.LOAD_ALL,
+                                  enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
+                                  disableWhenLoading: false,
+                                  showLoadingWhenDisabled: hasMoreStreamsLeft,
+                                  onTap: () async {
+                                    if (_currentFetchAllRes != null) {
+                                      _currentFetchAllRes?.cancel();
+                                      _currentFetchAllRes = null;
+                                    } else {
+                                      _playlist.basicInfo.fetchAllPlaylistStreams(
+                                        playlist: _playlist,
+                                        showProgressSheet: false,
+                                        onStart: () => _isLoadingMoreItems.value = true,
+                                        onEnd: () => _isLoadingMoreItems.value = false,
+                                        controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             ],
                           ),
-                        )
-                      ],
-                    ),
-                  ),
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
-                  SliverStickyHeader(
-                    header: ColoredBox(
-                      color: theme.scaffoldBackgroundColor,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: sortWidget,
-                            ),
-                            ObxO(
-                              rx: _isLoadingMoreItems,
-                              builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
-                                animationDurationMS: 100,
-                                sizeMultiplier: 0.95,
-                                borderRadius: 8.0,
-                                icon: Broken.task_square,
-                                text: lang.LOAD_ALL,
-                                enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
-                                disableWhenLoading: false,
-                                showLoadingWhenDisabled: hasMoreStreamsLeft,
-                                onTap: () async {
-                                  if (_currentFetchAllRes != null) {
-                                    _currentFetchAllRes?.cancel();
-                                    _currentFetchAllRes = null;
-                                  } else {
-                                    _playlist.basicInfo.fetchAllPlaylistStreams(
-                                      playlist: _playlist,
-                                      showProgressSheet: false,
-                                      onStart: () => _isLoadingMoreItems.value = true,
-                                      onEnd: () => _isLoadingMoreItems.value = false,
-                                      controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
                         ),
                       ),
+                      sliver: SliverFixedExtentList.builder(
+                        itemExtent: itemsThumbnailItemExtent,
+                        itemCount: playlist.items.length,
+                        itemBuilder: (context, index) {
+                          final item = playlist.items[index];
+                          return YoutubeVideoCard(
+                            properties: properties,
+                            thumbnailHeight: itemsThumbnailHeight,
+                            thumbnailWidth: itemsThumbnailWidth,
+                            isImageImportantInCache: false,
+                            video: item,
+                            playlistID: plIdWrapper,
+                            playlist: playlist,
+                            playlistIndexAndCount: (index: index, totalLength: playlist.basicInfo.videosCount ?? playlist.items.length, playlistId: playlist.basicInfo.id),
+                          );
+                        },
+                      ),
                     ),
-                    sliver: SliverFixedExtentList.builder(
-                      itemExtent: itemsThumbnailItemExtent,
-                      itemCount: playlist.items.length,
-                      itemBuilder: (context, index) {
-                        final item = playlist.items[index];
-                        return YoutubeVideoCard(
-                          thumbnailHeight: itemsThumbnailHeight,
-                          thumbnailWidth: itemsThumbnailWidth,
-                          isImageImportantInCache: false,
-                          video: item,
-                          playlistID: plIdWrapper,
-                          playlist: playlist,
-                          playlistIndexAndCount: (index: index, totalLength: playlist.basicInfo.videosCount ?? playlist.items.length, playlistId: playlist.basicInfo.id),
-                        );
-                      },
+                    SliverToBoxAdapter(
+                      child: ObxO(
+                        rx: _isLoadingMoreItems,
+                        builder: (context, isLoadingMoreItems) => isLoadingMoreItems
+                            ? const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    LoadingIndicator(),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
                     ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ObxO(
-                      rx: _isLoadingMoreItems,
-                      builder: (context, isLoadingMoreItems) => isLoadingMoreItems
-                          ? const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  LoadingIndicator(),
-                                ],
-                              ),
-                            )
-                          : const SizedBox(),
-                    ),
-                  ),
-                  kBottomPaddingWidgetSliver,
-                ],
+                    kBottomPaddingWidgetSliver,
+                  ],
+                ),
               ),
             ),
           ),

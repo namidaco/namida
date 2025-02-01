@@ -4,7 +4,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class Queue {
-  final QueueSource source;
+  final QueueSourceBase source;
   final HomePageItems? homePageItem;
   final int date;
   final bool isFav;
@@ -29,7 +29,7 @@ class Queue {
         }).toList() ??
         [];
     return Queue(
-      source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
+      source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSourceYoutubeID.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
       date: json['date'] ?? DateTime(1970),
       isFav: json['isFav'] ?? false,

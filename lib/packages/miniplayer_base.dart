@@ -41,6 +41,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 
 class FocusedMenuOptions {
   final bool Function(Playable currentItem) onOpen;
@@ -103,7 +104,8 @@ class MiniplayerInfoData<E, S> {
 class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties) itemBuilder;
+  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties, VideoTileProperties? videoTileProperties)
+      itemBuilder;
   final int Function(Playable currentItem)? getDurationMS;
   final String Function(int number, Playable item) itemsKeyword;
   final void Function(Playable currentItem) onAddItemsTap;
@@ -116,6 +118,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
+  final VideoTilePropertiesConfigs? videoTileConfigs;
 
   const NamidaMiniPlayerBase({
     super.key,
@@ -134,6 +137,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     required this.textBuilder,
     required this.canShowBuffering,
     this.trackTileConfigs,
+    this.videoTileConfigs,
   });
 
   @override
@@ -164,8 +168,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     }
   }
 
-  Widget _queueItemBuilder(BuildContext context, int i, int currentIndex, List<Playable> queue, {TrackTileProperties? trackTileProperties}) {
-    final childWK = widget.itemBuilder(context, i, currentIndex, queue, trackTileProperties);
+  Widget _queueItemBuilder(BuildContext context, int i, int currentIndex, List<Playable> queue,
+      {TrackTileProperties? trackTileProperties, VideoTileProperties? videoTileProperties}) {
+    final childWK = widget.itemBuilder(context, i, currentIndex, queue, trackTileProperties, videoTileProperties);
     return FadeDismissible(
       key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
       onDismissed: (direction) async {
@@ -354,7 +359,16 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         builder: (properties) => _QueueListChildWrapper(
           queueItemExtent: widget.queueItemExtent,
           queueItemExtentBuilder: widget.queueItemExtentBuilder,
-          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties),
+          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties, videoTileProperties: null),
+        ),
+      );
+    } else if (widget.videoTileConfigs != null) {
+      queueListChild = VideoTilePropertiesProvider(
+        configs: widget.videoTileConfigs!,
+        builder: (properties) => _QueueListChildWrapper(
+          queueItemExtent: widget.queueItemExtent,
+          queueItemExtentBuilder: widget.queueItemExtentBuilder,
+          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: null, videoTileProperties: properties),
         ),
       );
     } else {

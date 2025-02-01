@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 4.9.69-beta+250201132
+version: 4.9.7-beta+250201178
 
 environment:
   sdk: ">=3.6.0 <4.0.0"

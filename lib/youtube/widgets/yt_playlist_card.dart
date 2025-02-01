@@ -26,6 +26,7 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 /// Playlist info is fetched automatically after 3 seconds of being displayed, or after attempting an action.
 class YoutubePlaylistCard extends StatefulWidget {
+  final QueueSourceYoutubeID queueSource;
   final PlaylistBasicInfo playlist;
   final String? subtitle;
   final double? thumbnailWidth;
@@ -37,6 +38,7 @@ class YoutubePlaylistCard extends StatefulWidget {
 
   const YoutubePlaylistCard({
     super.key,
+    required this.queueSource,
     required this.playlist,
     required this.subtitle,
     this.thumbnailWidth,
@@ -117,6 +119,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     final playlistToFetch = this.playlistToFetch;
     if (playlistToFetch == null) return [];
     return widget.playlist.getPopupMenuItems(
+      queueSource: widget.queueSource,
       context: context,
       playlistToFetch: playlistToFetch,
       userPlaylist: _userPlaylist,
@@ -134,7 +137,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
       if (playlistToFetch != null) {
         final videos = await playlist.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlistToFetch);
         if (videos.isEmpty) return;
-        Player.inst.playOrPause(0, videos, QueueSource.others);
+        Player.inst.playOrPause(0, videos, widget.queueSource);
       }
     } else {
       playlistToFetch != null

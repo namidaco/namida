@@ -64,8 +64,9 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     return videos;
   }
 
-  List<NamidaPopupItem> getMenuItems(BuildContext context, YoutubePlaylist playlist) {
+  List<NamidaPopupItem> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) {
     return YTUtils.getVideosMenuItems(
+      queueSource: queueSource,
       context: context,
       videos: playlist.tracks,
       playlistName: '',
@@ -125,6 +126,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 final length = YoutubeHistoryController.inst.totalHistoryItemsCount.valueR;
                 final lengthDummy = length == -1;
                 return _HorizontalSliverList(
+                  queueSource: QueueSourceYoutubeID.historyFiltered,
                   title: lang.HISTORY,
                   icon: Broken.refresh,
                   onPageOpen: YTUtils.onYoutubeHistoryPlaylistTap,
@@ -153,6 +155,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                             ))
                         .toList();
                     return _HorizontalSliverList(
+                      queueSource: QueueSourceYoutubeID.mostPlayed,
                       title: lang.MOST_PLAYED,
                       icon: Broken.crown_1,
                       onPageOpen: YTUtils.onYoutubeMostPlayedPlaylistTap,
@@ -174,6 +177,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
               rx: YoutubePlaylistController.inst.favouritesPlaylist,
               builder: (context, favs) {
                 return _HorizontalSliverList(
+                  queueSource: QueueSourceYoutubeID.favourites,
                   title: lang.FAVOURITES,
                   icon: Broken.heart_circle,
                   onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
@@ -353,7 +357,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                     smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
                     smallBoxIcon: Broken.play_cricle,
                     checkmarkStatus: allIdsExist,
-                    menuChildrenDefault: displayMenu ? () => getMenuItems(context, favouritesPlaylist.value) : null,
+                    menuChildrenDefault: displayMenu ? () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.favourites) : null,
                   );
                 },
               ),
@@ -378,7 +382,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   }
 
                   return NamidaPopupWrapper(
-                    childrenDefault: displayMenu ? () => getMenuItems(context, playlist) : null,
+                    childrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
                     openOnTap: false,
                     child: YoutubeCard(
                       thumbnailType: ThumbnailType.playlist,
@@ -400,13 +404,16 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                         if (idsToAdd.isNotEmpty) {
                           _onAddToPlaylist(playlist: playlist, allIdsExist: allIdsExist == true, allowAddingEverything: true);
                         } else {
-                          YTNormalPlaylistSubpage(playlistName: playlist.name).navigate();
+                          YTNormalPlaylistSubpage(
+                            playlistName: playlist.name,
+                            queueSource: QueueSourceYoutubeID.playlist,
+                          ).navigate();
                         }
                       },
                       smallBoxText: playlist.tracks.length.formatDecimal(),
                       smallBoxIcon: Broken.play_cricle,
                       checkmarkStatus: allIdsExist,
-                      menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist) : null,
+                      menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
                     ),
                   );
                 },
@@ -421,6 +428,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
 }
 
 class _HorizontalSliverList extends StatelessWidget {
+  final QueueSourceYoutubeID queueSource;
   final String title;
   final IconData icon;
   final void Function() onPageOpen;
@@ -436,6 +444,7 @@ class _HorizontalSliverList extends StatelessWidget {
   final Map<String, List<int>>? listensMap;
 
   const _HorizontalSliverList({
+    required this.queueSource,
     required this.title,
     required this.icon,
     required this.onPageOpen,
@@ -459,83 +468,88 @@ class _HorizontalSliverList extends StatelessWidget {
     const thumbHeight = 24.0 * 3.2;
     const thumbWidth = thumbHeight * 16 / 9;
 
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          NamidaInkWell(
-            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-            padding: padding,
-            onTap: onPageOpen,
-            child: Column(
-              children: [
-                SearchPageTitleRow(
-                  title: title,
-                  subtitle: totalVideosCountInMainList.displayVideoKeyword,
-                  icon: icon,
-                  trailing: const Icon(Broken.arrow_right_3),
-                  onPressed: onPageOpen,
-                ),
-                if (subHeader != null) subHeader!,
-              ],
+    return VideoTilePropertiesProvider(
+      configs: VideoTilePropertiesConfigs(
+        queueSource: queueSource,
+        playlistName: playlistName,
+        playlistID: PlaylistID(id: playlistID),
+        displayTimeAgo: displayTimeAgo,
+      ),
+      builder: (properties) => SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            NamidaInkWell(
+              margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              padding: padding,
+              onTap: onPageOpen,
+              child: Column(
+                children: [
+                  SearchPageTitleRow(
+                    title: title,
+                    subtitle: totalVideosCountInMainList.displayVideoKeyword,
+                    icon: icon,
+                    trailing: const Icon(Broken.arrow_right_3),
+                    onPressed: onPageOpen,
+                  ),
+                  if (subHeader != null) subHeader!,
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: displayTimeAgo ? 132.0 : 124.0,
-            child: displayShimmer
-                ? ShimmerWrapper(
-                    shimmerEnabled: true,
-                    child: ListView.builder(
+            SizedBox(
+              height: displayTimeAgo ? 132.0 : 124.0,
+              child: displayShimmer
+                  ? ShimmerWrapper(
+                      shimmerEnabled: true,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 10,
+                        itemBuilder: (context, index) {
+                          return NamidaInkWell(
+                            animationDurationMS: 200,
+                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                            width: thumbWidth,
+                            bgColor: context.theme.cardColor,
+                          );
+                        },
+                      ),
+                    )
+                  : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 6.0),
                       scrollDirection: Axis.horizontal,
-                      itemCount: 10,
+                      itemCount: finalVideos.length + 1,
                       itemBuilder: (context, index) {
-                        return NamidaInkWell(
-                          animationDurationMS: 200,
-                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                          width: thumbWidth,
-                          bgColor: context.theme.cardColor,
+                        if (index == finalVideos.length + 1 - 1) {
+                          return remainingVideosCount <= 0
+                              ? const SizedBox()
+                              : NamidaInkWell(
+                                  onTap: onPlusTap != null ? () => onPlusTap!(finalVideos[finalVideos.length - 1]) : onPageOpen,
+                                  margin: const EdgeInsets.all(12.0),
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Center(
+                                    child: Text(
+                                      "+${remainingVideosCount.formatDecimalShort()}",
+                                      style: context.textTheme.displayMedium,
+                                    ),
+                                  ),
+                                );
+                        }
+                        return YTHistoryVideoCard(
+                          properties: properties,
+                          minimalCard: true,
+                          videos: finalVideos,
+                          index: index,
+                          day: null,
+                          minimalCardWidth: thumbWidth,
+                          thumbnailHeight: thumbHeight,
+                          overrideListens: listensMap?[finalVideos[index].id] ?? [],
                         );
                       },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: finalVideos.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == finalVideos.length + 1 - 1) {
-                        return remainingVideosCount <= 0
-                            ? const SizedBox()
-                            : NamidaInkWell(
-                                onTap: onPlusTap != null ? () => onPlusTap!(finalVideos[finalVideos.length - 1]) : onPageOpen,
-                                margin: const EdgeInsets.all(12.0),
-                                padding: const EdgeInsets.all(12.0),
-                                child: Center(
-                                  child: Text(
-                                    "+${remainingVideosCount.formatDecimalShort()}",
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                ),
-                              );
-                      }
-                      return YTHistoryVideoCard(
-                        minimalCard: true,
-                        videos: finalVideos,
-                        index: index,
-                        day: null,
-                        playlistName: playlistName,
-                        playlistID: PlaylistID(id: playlistID),
-                        displayTimeAgo: displayTimeAgo,
-                        minimalCardWidth: thumbWidth,
-                        thumbnailHeight: thumbHeight,
-                        overrideListens: listensMap?[finalVideos[index].id] ?? [],
-                        canHaveDuplicates: false, // its history but filtered
-                      );
-                    },
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

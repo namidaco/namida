@@ -152,11 +152,11 @@ class YTUtils {
     ];
   }
 
-  static _getPlayAllTile({required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
+  static _getPlayAllTile({required QueueSourceYoutubeID queueSource, required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
     return NamidaPopupItem(
       icon: Broken.play_circle,
       title: lang.PLAY_ALL,
-      onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+      onTap: () => Player.inst.playOrPause(0, videos, queueSource),
       trailing: showPlayAllReverse
           ? IconButton(
               style: ButtonStyle(
@@ -173,7 +173,7 @@ class YTUtils {
               iconSize: 20.0,
               onPressed: () {
                 NamidaNavigator.inst.popMenu();
-                Player.inst.playOrPause(0, videos.toList().reversed, QueueSource.others);
+                Player.inst.playOrPause(0, videos.toList().reversed, queueSource);
               },
             )
           : null,
@@ -181,6 +181,7 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideosMenuItems({
+    required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required List<YoutubeID> videos,
     required String playlistName,
@@ -213,18 +214,18 @@ class YTUtils {
         onTap: videos.shareVideos,
       ),
       if (videos.length > 1)
-        YTUtils._getPlayAllTile(videos: videos, showPlayAllReverse: showPlayAllReverse)
+        YTUtils._getPlayAllTile(queueSource: queueSource, videos: videos, showPlayAllReverse: showPlayAllReverse)
       else
         NamidaPopupItem(
           icon: Broken.play,
           title: lang.PLAY,
-          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others),
+          onTap: () => Player.inst.playOrPause(0, videos, queueSource),
         ),
       if (videos.length > 1)
         NamidaPopupItem(
           icon: Broken.shuffle,
           title: lang.SHUFFLE,
-          onTap: () => Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true),
+          onTap: () => Player.inst.playOrPause(0, videos, queueSource, shuffle: true),
         ),
       NamidaPopupItem(
         icon: Broken.next,
@@ -269,6 +270,7 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideoCardMenuItemsForCurrentlyPlaying({
+    required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required Rx<int> numberOfRepeats,
     required String videoId,
@@ -280,6 +282,7 @@ class YTUtils {
     final currentItem = Player.inst.currentItem.value;
     NamidaPopupItem? repeatForWidget;
     final defaultItems = YTUtils.getVideoCardMenuItems(
+      queueSource: queueSource,
       downloadIndex: null,
       totalLength: null,
       streamInfoItem: null,
@@ -476,6 +479,7 @@ class YTUtils {
   }
 
   static List<NamidaPopupItem> getVideoCardMenuItems({
+    required QueueSourceYoutubeID queueSource,
     required int? downloadIndex,
     required int? totalLength,
     required StreamInfoItem? streamInfoItem,
@@ -561,7 +565,7 @@ class YTUtils {
             YTChannelSubpage(channelID: channelID!).navigate();
           },
         ),
-      if (videosToPlayAll != null && videosToPlayAll.length > 1) YTUtils._getPlayAllTile(videos: videosToPlayAll, showPlayAllReverse: true),
+      if (videosToPlayAll != null && videosToPlayAll.length > 1) YTUtils._getPlayAllTile(queueSource: queueSource, videos: videosToPlayAll, showPlayAllReverse: true),
       isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,

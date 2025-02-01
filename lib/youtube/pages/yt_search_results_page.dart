@@ -231,49 +231,52 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                         }
                         final localSearchDisplayExtraCardWithRemainingCount = searchResultsLocal.length > maxLocalSeachHorizontalCount;
                         return SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: horizontalListHeight,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                              scrollDirection: Axis.horizontal,
-                              itemExtent: thumbnailItemExtentLocal,
-                              itemCount: localSearchDisplayExtraCardWithRemainingCount ? maxLocalSeachHorizontalCount + 1 : searchResultsLocal.length,
-                              itemBuilder: (context, index) {
-                                if (index == maxLocalSeachHorizontalCount && localSearchDisplayExtraCardWithRemainingCount) {
-                                  final remainingVideosCount = searchResultsLocal.length - maxLocalSeachHorizontalCount;
-                                  return remainingVideosCount <= 0
-                                      ? const SizedBox()
-                                      : NamidaInkWell(
-                                          onTap: _onOfflineSearchTap,
-                                          margin: const EdgeInsets.all(12.0),
-                                          padding: const EdgeInsets.all(12.0),
-                                          child: Center(
-                                            child: Text(
-                                              "+${remainingVideosCount.formatDecimalShort()}",
-                                              style: context.textTheme.displayMedium,
+                          child: VideoTilePropertiesProvider(
+                            configs: VideoTilePropertiesConfigs(
+                              queueSource: QueueSourceYoutubeID.search,
+                            ),
+                            builder: (properties) => SizedBox(
+                              height: horizontalListHeight,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                scrollDirection: Axis.horizontal,
+                                itemExtent: thumbnailItemExtentLocal,
+                                itemCount: localSearchDisplayExtraCardWithRemainingCount ? maxLocalSeachHorizontalCount + 1 : searchResultsLocal.length,
+                                itemBuilder: (context, index) {
+                                  if (index == maxLocalSeachHorizontalCount && localSearchDisplayExtraCardWithRemainingCount) {
+                                    final remainingVideosCount = searchResultsLocal.length - maxLocalSeachHorizontalCount;
+                                    return remainingVideosCount <= 0
+                                        ? const SizedBox()
+                                        : NamidaInkWell(
+                                            onTap: _onOfflineSearchTap,
+                                            margin: const EdgeInsets.all(12.0),
+                                            padding: const EdgeInsets.all(12.0),
+                                            child: Center(
+                                              child: Text(
+                                                "+${remainingVideosCount.formatDecimalShort()}",
+                                                style: context.textTheme.displayMedium,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                }
-                                final item = searchResultsLocal[index];
-                                return YTHistoryVideoCardBase(
-                                  mainList: searchResultsLocal,
-                                  itemToYTVideoId: (e) => (e.id, null),
-                                  day: null,
-                                  index: index,
-                                  playlistID: null,
-                                  playlistName: lang.HISTORY,
-                                  canHaveDuplicates: true,
-                                  minimalCard: true,
-                                  info: (item) => item,
-                                  thumbnailHeight: thumbnailHeightLocal,
-                                  minimalCardWidth: thumbnailWidthLocal,
-                                  playSingle: true,
-                                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                  minimalCardFontMultiplier: localMultiplier * 0.95,
-                                  isImportantInCache: false,
-                                );
-                              },
+                                          );
+                                  }
+                                  final item = searchResultsLocal[index];
+                                  return YTHistoryVideoCardBase(
+                                    properties: properties,
+                                    mainList: searchResultsLocal,
+                                    itemToYTVideoId: (e) => (e.id, null),
+                                    day: null,
+                                    index: index,
+                                    minimalCard: true,
+                                    info: (item) => item,
+                                    thumbnailHeight: thumbnailHeightLocal,
+                                    minimalCardWidth: thumbnailWidthLocal,
+                                    playSingle: true,
+                                    onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                                    minimalCardFontMultiplier: localMultiplier * 0.95,
+                                    isImportantInCache: false,
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         );
@@ -346,106 +349,114 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               )
                             : searchResult == null
                                 ? const SliverToBoxAdapter()
-                                : ObxO(
-                                    rx: settings.youtube.ytVisibleShorts,
-                                    builder: (context, visibleShorts) {
-                                      final isShortsVisible = visibleShorts[YTVisibleShortPlaces.search] ?? true;
-                                      return ObxO(
-                                        rx: settings.youtube.ytVisibleMixes,
-                                        builder: (context, visibleMixes) {
-                                          final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
-                                          return SliverList.builder(
-                                            itemCount: searchResult.length,
-                                            itemBuilder: (context, index) {
-                                              final chunk = searchResult.items[index];
-                                              final items = chunk.items;
-                                              int itemsLengthWithoutHiddens = items.length;
-                                              if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
-                                              if (!isMixesVisible) itemsLengthWithoutHiddens -= chunk.mixesPlaylistCount.value;
-                                              if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
+                                : VideoTilePropertiesProvider(
+                                    configs: VideoTilePropertiesConfigs(
+                                      queueSource: QueueSourceYoutubeID.searchHosted,
+                                    ),
+                                    builder: (properties) => ObxO(
+                                      rx: settings.youtube.ytVisibleShorts,
+                                      builder: (context, visibleShorts) {
+                                        final isShortsVisible = visibleShorts[YTVisibleShortPlaces.search] ?? true;
+                                        return ObxO(
+                                          rx: settings.youtube.ytVisibleMixes,
+                                          builder: (context, visibleMixes) {
+                                            final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
+                                            return SliverList.builder(
+                                              itemCount: searchResult.length,
+                                              itemBuilder: (context, index) {
+                                                final chunk = searchResult.items[index];
+                                                final items = chunk.items;
+                                                int itemsLengthWithoutHiddens = items.length;
+                                                if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
+                                                if (!isMixesVisible) itemsLengthWithoutHiddens -= chunk.mixesPlaylistCount.value;
+                                                if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
 
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  if (chunk.title.isNotEmpty)
-                                                    Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                                      child: Text(
-                                                        chunk.title,
-                                                        style: context.textTheme.displayMedium,
+                                                return Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    if (chunk.title.isNotEmpty)
+                                                      Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                        child: Text(
+                                                          chunk.title,
+                                                          style: context.textTheme.displayMedium,
+                                                        ),
+                                                      ),
+                                                    SizedBox(
+                                                      height: itemsLengthWithoutHiddens * thumbnailItemExtent,
+                                                      child: ListView.builder(
+                                                        padding: EdgeInsets.zero,
+                                                        primary: false,
+                                                        physics: const NeverScrollableScrollPhysics(),
+                                                        itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
+                                                        // -- we use extent builder only if shorts/mixes are hidden
+                                                        itemExtentBuilder: isShortsVisible && isMixesVisible
+                                                            ? null
+                                                            : (index, dimensions) {
+                                                                final item = items[index];
+                                                                if (!isShortsVisible && item is StreamInfoItemShort) return 0;
+                                                                if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
+                                                                return thumbnailItemExtent;
+                                                              },
+                                                        itemCount: items.length,
+                                                        itemBuilder: (context, index) {
+                                                          final item = items[index];
+                                                          if (!isShortsVisible && item is StreamInfoItemShort) return const SizedBox();
+                                                          if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return const SizedBox();
+                                                          return switch (item.runtimeType) {
+                                                            const (StreamInfoItem) => YoutubeVideoCard(
+                                                                properties: properties,
+                                                                thumbnailHeight: thumbnailHeight,
+                                                                thumbnailWidth: thumbnailWidth,
+                                                                isImageImportantInCache: false,
+                                                                video: item as StreamInfoItem,
+                                                                playlistID: null,
+                                                                onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                                                              ),
+                                                            const (StreamInfoItemShort) => !isShortsVisible
+                                                                ? const SizedBox.shrink()
+                                                                : YoutubeShortVideoCard(
+                                                                    queueSource: QueueSourceYoutubeID.searchHosted,
+                                                                    thumbnailHeight: thumbnailHeight,
+                                                                    thumbnailWidth: thumbnailWidth,
+                                                                    short: item as StreamInfoItemShort,
+                                                                    playlistID: null,
+                                                                  ),
+                                                            const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
+                                                                ? const SizedBox.shrink()
+                                                                : YoutubePlaylistCard(
+                                                                    queueSource: QueueSourceYoutubeID.searchHosted,
+                                                                    thumbnailHeight: thumbnailHeight,
+                                                                    thumbnailWidth: thumbnailWidth,
+                                                                    playOnTap: false,
+                                                                    playlist: item,
+                                                                    firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                                    subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
+                                                                    isMixPlaylist: item.isMix,
+                                                                  ),
+                                                            const (YoutiPieChannelInfo) => YoutubeChannelCard(
+                                                                channel: item as YoutiPieChannelInfo,
+                                                                thumbnailSize: thumbnailHeight,
+                                                              ),
+                                                            _ => const YoutubeVideoCardDummy(
+                                                                shimmerEnabled: true,
+                                                                thumbnailHeight: thumbnailHeight,
+                                                                thumbnailWidth: thumbnailWidth,
+                                                              ),
+                                                          };
+                                                        },
                                                       ),
                                                     ),
-                                                  SizedBox(
-                                                    height: itemsLengthWithoutHiddens * thumbnailItemExtent,
-                                                    child: ListView.builder(
-                                                      padding: EdgeInsets.zero,
-                                                      primary: false,
-                                                      physics: const NeverScrollableScrollPhysics(),
-                                                      itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
-                                                      // -- we use extent builder only if shorts/mixes are hidden
-                                                      itemExtentBuilder: isShortsVisible && isMixesVisible
-                                                          ? null
-                                                          : (index, dimensions) {
-                                                              final item = items[index];
-                                                              if (!isShortsVisible && item is StreamInfoItemShort) return 0;
-                                                              if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
-                                                              return thumbnailItemExtent;
-                                                            },
-                                                      itemCount: items.length,
-                                                      itemBuilder: (context, index) {
-                                                        final item = items[index];
-                                                        if (!isShortsVisible && item is StreamInfoItemShort) return const SizedBox();
-                                                        if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return const SizedBox();
-                                                        return switch (item.runtimeType) {
-                                                          const (StreamInfoItem) => YoutubeVideoCard(
-                                                              thumbnailHeight: thumbnailHeight,
-                                                              thumbnailWidth: thumbnailWidth,
-                                                              isImageImportantInCache: false,
-                                                              video: item as StreamInfoItem,
-                                                              playlistID: null,
-                                                              onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                                            ),
-                                                          const (StreamInfoItemShort) => !isShortsVisible
-                                                              ? const SizedBox.shrink()
-                                                              : YoutubeShortVideoCard(
-                                                                  thumbnailHeight: thumbnailHeight,
-                                                                  thumbnailWidth: thumbnailWidth,
-                                                                  short: item as StreamInfoItemShort,
-                                                                  playlistID: null,
-                                                                ),
-                                                          const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
-                                                              ? const SizedBox.shrink()
-                                                              : YoutubePlaylistCard(
-                                                                  thumbnailHeight: thumbnailHeight,
-                                                                  thumbnailWidth: thumbnailWidth,
-                                                                  playOnTap: false,
-                                                                  playlist: item,
-                                                                  firstVideoID: item.initialVideos.firstOrNull?.id,
-                                                                  subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
-                                                                  isMixPlaylist: item.isMix,
-                                                                ),
-                                                          const (YoutiPieChannelInfo) => YoutubeChannelCard(
-                                                              channel: item as YoutiPieChannelInfo,
-                                                              thumbnailSize: thumbnailHeight,
-                                                            ),
-                                                          _ => const YoutubeVideoCardDummy(
-                                                              shimmerEnabled: true,
-                                                              thumbnailHeight: thumbnailHeight,
-                                                              thumbnailWidth: thumbnailWidth,
-                                                            ),
-                                                        };
-                                                      },
-                                                    ),
-                                                  ),
-                                                  if (chunk.title.isNotEmpty) const SizedBox(height: 8.0),
-                                                ],
-                                              );
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
+                                                    if (chunk.title.isNotEmpty) const SizedBox(height: 8.0),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
                     SliverToBoxAdapter(
                       child: Obx(

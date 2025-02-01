@@ -132,15 +132,16 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
 
     return NamidaMiniPlayerBase(
       trackTileConfigs: trackConfig.trackTileConfigs,
+      videoTileConfigs: trackConfig.videoTileConfigs,
       queueItemExtent: null,
       queueItemExtentBuilder: (item) {
         return item is Selectable ? trackConfig.queueItemExtent : ytConfig.queueItemExtent;
       },
-      itemBuilder: (context, index, currentIndex, queue, properties) {
+      itemBuilder: (context, index, currentIndex, queue, trackTileProperties, videoTileProperties) {
         final item = queue[index];
         return item is Selectable
-            ? trackConfig.itemBuilder(context, index, currentIndex, queue, properties)
-            : ytConfig.itemBuilder(context, index, currentIndex, queue, properties);
+            ? trackConfig.itemBuilder(context, index, currentIndex, queue, trackTileProperties, videoTileProperties)
+            : ytConfig.itemBuilder(context, index, currentIndex, queue, trackTileProperties, videoTileProperties);
       },
       getDurationMS: (currentItem) {
         return (currentItem is Selectable ? trackConfig.getDurationMS?.call(currentItem) : ytConfig.getDurationMS?.call(currentItem)) ?? 0;
@@ -224,7 +225,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         horizontalGestures: false,
         queueSource: QueueSource.playerQueue,
       ),
-      itemBuilder: (context, i, currentIndex, queue, properties) {
+      itemBuilder: (context, i, currentIndex, queue, properties, _) {
         final track = queue[i] as Selectable;
         final key = Key("${i}_${track.track.path}");
         return (
@@ -416,6 +417,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     final videoChannelId = vidpage?.channelInfo?.id ?? vidstreams?.info?.channelId;
     final popUpItems = NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
+        queueSource: QueueSourceYoutubeID.playerQueue,
         context: context,
         numberOfRepeats: _numberOfRepeats,
         videoId: video.id,
@@ -461,27 +463,28 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
     return NamidaMiniPlayerBase<String, YTSortType>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
-      itemBuilder: (context, i, currentIndex, queue, _) {
+      videoTileConfigs: const VideoTilePropertiesConfigs(
+        openMenuOnLongPress: false,
+        displayTimeAgo: false,
+        draggingEnabled: true,
+        draggableThumbnail: true,
+        horizontalGestures: false,
+        queueSource: QueueSourceYoutubeID.playerQueue,
+        showMoreIcon: true,
+      ),
+      itemBuilder: (context, i, currentIndex, queue, _, properties) {
         final video = queue[i] as YoutubeID;
         final key = Key("${i}_${video.id}");
         return (
           YTHistoryVideoCard(
+            properties: properties!,
             key: key,
             videos: queue,
             index: i,
             day: null,
-            playlistID: null,
-            playlistName: '',
-            openMenuOnLongPress: false,
-            displayTimeAgo: false,
             thumbnailHeight: Dimensions.youtubeThumbnailHeight,
-            fromPlayerQueue: true,
-            draggingEnabled: true,
-            draggableThumbnail: true,
-            showMoreIcon: true,
             cardColorOpacity: 0.5,
             fadeOpacity: i < currentIndex ? 0.3 : 0.0,
-            canHaveDuplicates: true,
           ),
           key,
         );

@@ -29,6 +29,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
       child: TrackTilePropertiesProvider(
         configs: const TrackTilePropertiesConfigs(
           displayRightDragHandler: true,
+          draggableThumbnail: true,
           horizontalGestures: false,
           queueSource: QueueSource.selectedTracks,
         ),

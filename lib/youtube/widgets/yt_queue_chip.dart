@@ -8,6 +8,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -365,53 +366,56 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         ),
                       ),
                       Expanded(
-                        child: Obx(
-                          (context) {
-                            final queue = Player.inst.currentQueue.valueR;
-                            final canScroll = _canScrollQueue.valueR;
-                            return IgnorePointer(
-                              ignoring: !canScroll,
-                              child: NamidaListView(
-                                padding: EdgeInsets.zero,
-                                scrollController: _queueScrollController,
-                                itemCount: queue.length,
-                                itemExtent: Dimensions.youtubeCardItemExtent,
-                                onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                                onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                                onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                                physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
-                                itemBuilder: (context, i) {
-                                  final video = queue[i] as YoutubeID;
-                                  return FadeDismissible(
-                                    key: Key("Diss_${video.id}_$i"),
-                                    onDismissed: (direction) async {
-                                      await Player.inst.removeFromQueueWithUndo(i);
-                                      Player.inst.invokeQueueModifyLockRelease();
-                                    },
-                                    onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
-                                    onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
-                                    child: YTHistoryVideoCard(
-                                      key: Key("${i}_${video.id}"),
-                                      videos: queue,
-                                      index: i,
-                                      day: null,
-                                      playlistID: null,
-                                      playlistName: '',
-                                      openMenuOnLongPress: false,
-                                      displayTimeAgo: false,
-                                      thumbnailHeight: Dimensions.youtubeThumbnailHeight,
-                                      fromPlayerQueue: true,
-                                      draggingEnabled: true,
-                                      draggableThumbnail: true,
-                                      showMoreIcon: true,
-                                      canHaveDuplicates: true,
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                        child: VideoTilePropertiesProvider(
+                          configs: VideoTilePropertiesConfigs(
+                            queueSource: QueueSourceYoutubeID.playerQueue,
+                            playlistName: '',
+                            openMenuOnLongPress: false,
+                            displayTimeAgo: false,
+                            draggingEnabled: true,
+                            draggableThumbnail: true,
+                            showMoreIcon: true,
+                          ),
+                          builder: (properties) => Obx(
+                            (context) {
+                              final queue = Player.inst.currentQueue.valueR;
+                              final canScroll = _canScrollQueue.valueR;
+                              return IgnorePointer(
+                                ignoring: !canScroll,
+                                child: NamidaListView(
+                                  padding: EdgeInsets.zero,
+                                  scrollController: _queueScrollController,
+                                  itemCount: queue.length,
+                                  itemExtent: Dimensions.youtubeCardItemExtent,
+                                  onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                                  onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                                  onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                  onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                  physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
+                                  itemBuilder: (context, i) {
+                                    final video = queue[i] as YoutubeID;
+                                    return FadeDismissible(
+                                      key: Key("Diss_${video.id}_$i"),
+                                      onDismissed: (direction) async {
+                                        await Player.inst.removeFromQueueWithUndo(i);
+                                        Player.inst.invokeQueueModifyLockRelease();
+                                      },
+                                      onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+                                      onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                      child: YTHistoryVideoCard(
+                                        key: Key("${i}_${video.id}"),
+                                        properties: properties,
+                                        videos: queue,
+                                        index: i,
+                                        day: null,
+                                        thumbnailHeight: Dimensions.youtubeThumbnailHeight,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       ColoredBox(

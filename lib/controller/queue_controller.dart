@@ -28,7 +28,7 @@ class QueueController {
 
   /// doesnt save queues with more than 2000 tracks.
   Future<void> addNewQueue({
-    required QueueSource source,
+    required QueueSourceBase source,
     required HomePageItems? homePageItem,
     int? date,
     List<Track> tracks = const <Track>[],

@@ -4,6 +4,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -12,6 +13,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
 class YTLocalSearchResults extends StatefulWidget {
@@ -144,54 +146,61 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
             ),
           ),
           Expanded(
-            child: NamidaScrollbar(
-              controller: YTLocalSearchController.inst.scrollController,
-              child: ObxO(
-                rx: YTLocalSearchController.inst.searchResults,
-                builder: (context, searchResults) => CustomScrollView(
-                  controller: YTLocalSearchController.inst.scrollController,
-                  slivers: [
-                    searchResults == null
-                        ? SliverToBoxAdapter(
-                            child: ShimmerWrapper(
-                              transparent: false,
-                              shimmerEnabled: true,
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: 10,
-                                shrinkWrap: true,
-                                itemBuilder: (context, index) {
-                                  return const YoutubeVideoCardDummy(
-                                    shimmerEnabled: true,
-                                    fontMultiplier: 0.9,
-                                    thumbnailHeight: thumbnailHeight,
-                                    thumbnailWidth: thumbnailWidth,
-                                  );
-                                },
+            child: VideoTilePropertiesProvider(
+              configs: VideoTilePropertiesConfigs(
+                queueSource: QueueSourceYoutubeID.search,
+                showMoreIcon: true,
+              ),
+              builder: (properties) => NamidaScrollbar(
+                controller: YTLocalSearchController.inst.scrollController,
+                child: ObxO(
+                  rx: YTLocalSearchController.inst.searchResults,
+                  builder: (context, searchResults) => CustomScrollView(
+                    controller: YTLocalSearchController.inst.scrollController,
+                    slivers: [
+                      searchResults == null
+                          ? SliverToBoxAdapter(
+                              child: ShimmerWrapper(
+                                transparent: false,
+                                shimmerEnabled: true,
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: 10,
+                                  shrinkWrap: true,
+                                  itemBuilder: (context, index) {
+                                    return const YoutubeVideoCardDummy(
+                                      shimmerEnabled: true,
+                                      fontMultiplier: 0.9,
+                                      thumbnailHeight: thumbnailHeight,
+                                      thumbnailWidth: thumbnailWidth,
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          )
-                        : searchResults.isEmpty
-                            ? const SliverToBoxAdapter()
-                            : SliverFixedExtentList.builder(
-                                itemExtent: thumbnailItemExtent,
-                                itemCount: searchResults.length,
-                                itemBuilder: (context, index) {
-                                  final item = searchResults[index];
-                                  return YoutubeVideoCard(
-                                    fontMultiplier: 0.9,
-                                    thumbnailHeight: thumbnailHeight,
-                                    thumbnailWidth: thumbnailWidth,
-                                    isImageImportantInCache: false,
-                                    video: item,
-                                    playlistID: null,
-                                    onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                  );
-                                },
-                              ),
-                    kBottomPaddingWidgetSliver,
-                  ],
+                            )
+                          : searchResults.isEmpty
+                              ? const SliverToBoxAdapter()
+                              : SliverFixedExtentList.builder(
+                                  itemExtent: thumbnailItemExtent,
+                                  itemCount: searchResults.length,
+                                  itemBuilder: (context, index) {
+                                    final item = searchResults[index];
+                                    return YoutubeVideoCard(
+                                      properties: properties,
+                                      fontMultiplier: 0.9,
+                                      thumbnailHeight: thumbnailHeight,
+                                      thumbnailWidth: thumbnailWidth,
+                                      isImageImportantInCache: false,
+                                      video: item,
+                                      playlistID: null,
+                                      onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                                    );
+                                  },
+                                ),
+                      kBottomPaddingWidgetSliver,
+                    ],
+                  ),
                 ),
               ),
             ),

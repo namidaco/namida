@@ -113,7 +113,6 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
               child: AnimationLimiter(
                 child: TrackTilePropertiesProvider(
                   configs: const TrackTilePropertiesConfigs(
-                    draggableThumbnail: false,
                     queueSource: QueueSource.allTracks,
                   ),
                   builder: (properties) => ObxO(

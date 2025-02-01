@@ -472,7 +472,7 @@ class NamidaOnTaps {
     final values = List<QueueSource>.from(QueueSource.values);
     values.remove(QueueSource.homePageItem);
 
-    final lookup = <QueueSource, List<int>>{};
+    final lookup = <QueueSourceBase, List<int>>{};
     final lookupHomepageItem = <HomePageItems, List<int>>{};
     final lookupNonFavourites = <int, bool>{};
     final map = QueueController.inst.queuesMap.value;

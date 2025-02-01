@@ -26,6 +26,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -2779,7 +2780,6 @@ class NamidaTracksList extends StatelessWidget {
         child: TrackTilePropertiesProvider(
           configs: TrackTilePropertiesConfigs(
             queueSource: queueSource,
-            draggableThumbnail: false,
             selectable: isTrackSelectable,
             displayTrackNumber: displayTrackNumber,
           ),
@@ -4734,7 +4734,9 @@ class SetVideosPriorityChip extends StatefulWidget {
   final int totalCount;
   final Iterable<String> videosId;
   final String Function(int count) countToText;
+  final void Function(CacheVideoPriority? priority)? onInitialPriority;
   final void Function(CacheVideoPriority priority) onChanged;
+
   const SetVideosPriorityChip({
     super.key,
     this.controller,
@@ -4743,6 +4745,7 @@ class SetVideosPriorityChip extends StatefulWidget {
     required this.videosId,
     required this.countToText,
     required this.onChanged,
+    this.onInitialPriority,
   });
 
   @override
@@ -4756,6 +4759,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   void initState() {
     if (widget.totalCount == 1) {
       cachePriority = VideoController.inst.videosPriorityManager.getVideoPriority(widget.videosId.first);
+      widget.onInitialPriority?.call(cachePriority);
     }
     widget.controller?._menuWrapperFn = _getPopupWrapper;
     super.initState();
@@ -4847,5 +4851,59 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   Widget build(BuildContext context) {
     widget.controller?._currentContext = context;
     return _getPopupWrapper() ?? SizedBox();
+  }
+}
+
+class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
+  final Q item;
+  final Object dismissibleKey;
+  final bool allowSwipeLeft;
+  final bool allowSwipeRight;
+  final void Function(Q item) onAddToPlaylist;
+  final Widget child;
+
+  const SwipeQueueAddTile({
+    super.key,
+    required this.item,
+    required this.dismissibleKey,
+    required this.allowSwipeLeft,
+    required this.allowSwipeRight,
+    required this.onAddToPlaylist,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeDismissible(
+      key: ValueKey(dismissibleKey),
+      direction: allowSwipeLeft && allowSwipeRight
+          ? DismissDirection.horizontal
+          : allowSwipeLeft
+              ? DismissDirection.endToStart
+              : allowSwipeRight
+                  ? DismissDirection.startToEnd
+                  : DismissDirection.none,
+      removeOnDismiss: false,
+      dismissThreshold: 0.1,
+      onDismissed: (direction) {
+        final swipedLeft = direction == DismissDirection.endToStart;
+        final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;
+        if (action == OnTrackTileSwapActions.none) return;
+
+        switch (action) {
+          case OnTrackTileSwapActions.playnext:
+            Player.inst.addToQueue([item], insertNext: true);
+          case OnTrackTileSwapActions.playlast:
+            Player.inst.addToQueue([item], insertNext: false);
+          case OnTrackTileSwapActions.playafter:
+            Player.inst.addToQueue([item], insertAfterLatest: true);
+          case OnTrackTileSwapActions.addtoplaylist:
+            onAddToPlaylist(item);
+          case OnTrackTileSwapActions.none:
+        }
+        VibratorController.verylight();
+      },
+      child: child,
+    );
   }
 }

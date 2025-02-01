@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
-import 'package:vibration/vibration.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -39,11 +38,7 @@ class TrackTilePropertiesProvider extends StatelessWidget {
   Widget build(BuildContext context) {
     var queueSource = configs.queueSource;
     final comingFromQueue = queueSource == QueueSource.playerQueue;
-    final canHaveDuplicates = comingFromQueue ||
-        queueSource == QueueSource.playlist ||
-        queueSource == QueueSource.queuePage ||
-        queueSource == QueueSource.playerQueue ||
-        queueSource == QueueSource.history;
+    final canHaveDuplicates = queueSource.canHaveDuplicates;
 
     final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = context.theme.focusColor;
@@ -156,7 +151,7 @@ class TrackTilePropertiesConfigs {
   const TrackTilePropertiesConfigs({
     required this.queueSource,
     this.selectable,
-    this.draggableThumbnail = true,
+    this.draggableThumbnail = false,
     this.displayRightDragHandler = false,
     this.displayTrackNumber = false,
     this.horizontalGestures = true,
@@ -602,35 +597,12 @@ class TrackTile extends StatelessWidget {
     );
 
     if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
-      finalChild = FadeDismissible(
-        key: ValueKey(heroTag),
-        direction: properties.allowSwipeLeft && properties.allowSwipeRight
-            ? DismissDirection.horizontal
-            : properties.allowSwipeLeft
-                ? DismissDirection.endToStart
-                : properties.allowSwipeRight
-                    ? DismissDirection.startToEnd
-                    : DismissDirection.none,
-        removeOnDismiss: false,
-        dismissThreshold: 0.1,
-        onDismissed: (direction) {
-          final swipedLeft = direction == DismissDirection.endToStart;
-          final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;
-          if (action == OnTrackTileSwapActions.none) return;
-
-          switch (action) {
-            case OnTrackTileSwapActions.playnext:
-              Player.inst.addToQueue([trackOrTwd], insertNext: true);
-            case OnTrackTileSwapActions.playlast:
-              Player.inst.addToQueue([trackOrTwd], insertNext: false);
-            case OnTrackTileSwapActions.playafter:
-              Player.inst.addToQueue([trackOrTwd], insertAfterLatest: true);
-            case OnTrackTileSwapActions.addtoplaylist:
-              showAddToPlaylistDialog([trackOrTwd.track]);
-            case OnTrackTileSwapActions.none:
-          }
-          Vibration.vibrate(duration: 10, amplitude: 10);
-        },
+      finalChild = SwipeQueueAddTile(
+        item: trackOrTwd,
+        dismissibleKey: heroTag,
+        allowSwipeLeft: properties.allowSwipeLeft,
+        allowSwipeRight: properties.allowSwipeRight,
+        onAddToPlaylist: (item) => showAddToPlaylistDialog([item.track]),
         child: finalChild,
       );
     }

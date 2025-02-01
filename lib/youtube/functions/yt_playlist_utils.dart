@@ -415,6 +415,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
   }
 
   List<NamidaPopupItem> getPopupMenuItems({
+    required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlistToFetch,
@@ -579,7 +580,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           onTap: () async {
             final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
-            Player.inst.playOrPause(0, videos, QueueSource.others);
+            Player.inst.playOrPause(0, videos, queueSource);
           },
         ),
       if (displayShuffle)
@@ -589,7 +590,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           onTap: () async {
             final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
-            Player.inst.playOrPause(0, videos, QueueSource.others, shuffle: true);
+            Player.inst.playOrPause(0, videos, queueSource, shuffle: true);
           },
         ),
       NamidaPopupItem(

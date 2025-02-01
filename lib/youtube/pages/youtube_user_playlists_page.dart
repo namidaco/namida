@@ -7,6 +7,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -88,6 +89,7 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
         ),
         itemBuilder: (playlist, index, list) {
           return YoutubePlaylistCard(
+            queueSource: QueueSourceYoutubeID.playlistHosted,
             key: Key(playlist.id),
             playlist: playlist,
             subtitle: playlist.infoTexts?.join(' - '), // the second text is mostly like 'updated today' etc

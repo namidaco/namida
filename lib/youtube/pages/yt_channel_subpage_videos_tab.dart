@@ -165,6 +165,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
             ),
             const SizedBox(width: 4.0),
             YTVideosActionBar(
+              queueSource: QueueSourceYoutubeID.channelHosted,
               title: channelInfo?.title ?? widget.localChannel.title,
               urlBuilder: channelInfo?.buildUrl,
               barOptions: const YTVideosActionBarOptions(
@@ -197,79 +198,86 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
         ),
         const SizedBox(height: 8.0),
         Expanded(
-          child: NamidaScrollbar(
-            controller: uploadsScrollController,
-            child: LazyLoadListView(
-              scrollController: uploadsScrollController,
-              onReachingEnd: fetchStreamsNextPage,
-              listview: (controller) => CustomScrollView(
-                controller: controller,
-                slivers: [
-                  isLoadingInitialStreams
-                      ? SliverToBoxAdapter(
-                          child: ShimmerWrapper(
-                            shimmerEnabled: true,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              primary: false,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
-                              itemCount: 10,
-                              itemBuilder: (context, index) {
-                                return const YoutubeVideoCardDummy(
-                                  shimmerEnabled: true,
-                                  thumbnailHeight: thumbnailHeight,
-                                  thumbnailWidth: thumbnailWidth,
-                                  thumbnailWidthPercentage: 0.8,
-                                );
-                              },
+          child: VideoTilePropertiesProvider(
+            configs: VideoTilePropertiesConfigs(
+              queueSource: QueueSourceYoutubeID.channel,
+              showMoreIcon: true,
+            ),
+            builder: (properties) => NamidaScrollbar(
+              controller: uploadsScrollController,
+              child: LazyLoadListView(
+                scrollController: uploadsScrollController,
+                onReachingEnd: fetchStreamsNextPage,
+                listview: (controller) => CustomScrollView(
+                  controller: controller,
+                  slivers: [
+                    isLoadingInitialStreams
+                        ? SliverToBoxAdapter(
+                            child: ShimmerWrapper(
+                              shimmerEnabled: true,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                primary: false,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
+                                itemCount: 10,
+                                itemBuilder: (context, index) {
+                                  return const YoutubeVideoCardDummy(
+                                    shimmerEnabled: true,
+                                    thumbnailHeight: thumbnailHeight,
+                                    thumbnailWidth: thumbnailWidth,
+                                    thumbnailWidthPercentage: 0.8,
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                        )
-                      : streamsList == null
-                          ? SliverToBoxAdapter(
-                              child: Center(
-                                child: Text(
-                                  lang.ERROR,
-                                  style: context.textTheme.displayLarge,
+                          )
+                        : streamsList == null
+                            ? SliverToBoxAdapter(
+                                child: Center(
+                                  child: Text(
+                                    lang.ERROR,
+                                    style: context.textTheme.displayLarge,
+                                  ),
                                 ),
+                              )
+                            : SliverFixedExtentList.builder(
+                                itemExtent: thumbnailItemExtent,
+                                itemCount: streamsList.length,
+                                itemBuilder: (context, index) {
+                                  final item = streamsList[index];
+                                  return YoutubeVideoCard(
+                                    properties: properties,
+                                    key: Key(item.id),
+                                    thumbnailHeight: thumbnailHeight,
+                                    thumbnailWidth: thumbnailWidth,
+                                    isImageImportantInCache: false,
+                                    video: item,
+                                    playlistID: null,
+                                    thumbnailWidthPercentage: 0.8,
+                                    dateInsteadOfChannel: true,
+                                  );
+                                },
                               ),
-                            )
-                          : SliverFixedExtentList.builder(
-                              itemExtent: thumbnailItemExtent,
-                              itemCount: streamsList.length,
-                              itemBuilder: (context, index) {
-                                final item = streamsList[index];
-                                return YoutubeVideoCard(
-                                  key: Key(item.id),
-                                  thumbnailHeight: thumbnailHeight,
-                                  thumbnailWidth: thumbnailWidth,
-                                  isImageImportantInCache: false,
-                                  video: item,
-                                  playlistID: null,
-                                  thumbnailWidthPercentage: 0.8,
-                                  dateInsteadOfChannel: true,
-                                );
-                              },
-                            ),
-                  SliverToBoxAdapter(
-                    child: ObxO(
-                      rx: isLoadingMoreUploads,
-                      builder: (context, loading) => loading
-                          ? const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  LoadingIndicator(),
-                                ],
-                              ),
-                            )
-                          : const SizedBox(),
+                    SliverToBoxAdapter(
+                      child: ObxO(
+                        rx: isLoadingMoreUploads,
+                        builder: (context, loading) => loading
+                            ? const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    LoadingIndicator(),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
                     ),
-                  ),
-                  kBottomPaddingWidgetSliver,
-                ],
+                    kBottomPaddingWidgetSliver,
+                  ],
+                ),
               ),
             ),
           ),

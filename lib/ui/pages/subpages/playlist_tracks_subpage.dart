@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
@@ -67,7 +68,6 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
         configs: const TrackTilePropertiesConfigs(
           queueSource: QueueSource.history,
           playlistName: k_PLAYLIST_NAME_HISTORY,
-          draggableThumbnail: false,
         ),
         builder: (properties) => CustomScrollView(
           controller: HistoryController.inst.scrollController,
@@ -190,7 +190,6 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
       configs: const TrackTilePropertiesConfigs(
         queueSource: QueueSource.mostPlayed,
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
-        draggableThumbnail: false,
       ),
       builder: (properties) {
         return ObxO(

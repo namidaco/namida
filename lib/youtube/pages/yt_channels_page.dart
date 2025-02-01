@@ -1,11 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:youtipie/class/execute_details.dart';
-import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/youtipie.dart';
-
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
@@ -14,6 +9,7 @@ import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -27,8 +23,12 @@ import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 class YoutubeChannelsPage extends StatefulWidget {
   const YoutubeChannelsPage({super.key});
@@ -429,31 +429,38 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   },
                                 ),
                               )
-                            : LazyLoadListView(
-                                scrollController: _uploadsScrollController,
-                                onReachingEnd: fetchStreamsNextPage,
-                                listview: (controller) {
-                                  final streamsList = this.streamsList;
-                                  if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                                  return ListView.builder(
-                                    controller: controller,
-                                    itemExtent: thumbnailItemExtent,
-                                    itemCount: streamsList.length,
-                                    itemBuilder: (context, index) {
-                                      final item = streamsList[index];
-                                      return YoutubeVideoCard(
-                                        key: Key(item.id),
-                                        thumbnailHeight: thumbnailHeight,
-                                        thumbnailWidth: thumbnailWidth,
-                                        isImageImportantInCache: false,
-                                        video: item,
-                                        playlistID: null,
-                                        thumbnailWidthPercentage: 0.8,
-                                        dateInsteadOfChannel: true,
-                                      );
-                                    },
-                                  );
-                                },
+                            : VideoTilePropertiesProvider(
+                                configs: VideoTilePropertiesConfigs(
+                                  queueSource: QueueSourceYoutubeID.channel,
+                                  showMoreIcon: true,
+                                ),
+                                builder: (properties) => LazyLoadListView(
+                                  scrollController: _uploadsScrollController,
+                                  onReachingEnd: fetchStreamsNextPage,
+                                  listview: (controller) {
+                                    final streamsList = this.streamsList;
+                                    if (streamsList == null || streamsList.isEmpty) return const SizedBox();
+                                    return ListView.builder(
+                                      controller: controller,
+                                      itemExtent: thumbnailItemExtent,
+                                      itemCount: streamsList.length,
+                                      itemBuilder: (context, index) {
+                                        final item = streamsList[index];
+                                        return YoutubeVideoCard(
+                                          properties: properties,
+                                          key: Key(item.id),
+                                          thumbnailHeight: thumbnailHeight,
+                                          thumbnailWidth: thumbnailWidth,
+                                          isImageImportantInCache: false,
+                                          video: item,
+                                          playlistID: null,
+                                          thumbnailWidthPercentage: 0.8,
+                                          dateInsteadOfChannel: true,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                       ),
                       pullToRefreshWidget,

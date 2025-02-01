@@ -10,6 +10,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -348,6 +349,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
+        queueSource: QueueSourceYoutubeID.downloadTask,
         downloadIndex: item.originalIndex,
         totalLength: item.totalLength,
         playlistId: item.playlistId,

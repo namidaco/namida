@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
@@ -15,12 +14,16 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_card.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubeVideoCard extends StatelessWidget {
+  final VideoTileProperties properties;
   final StreamInfoItem video;
   final PlaylistID? playlistID;
   final bool isImageImportantInCache;
@@ -36,6 +39,7 @@ class YoutubeVideoCard extends StatelessWidget {
 
   const YoutubeVideoCard({
     super.key,
+    required this.properties,
     required this.video,
     required this.playlistID,
     required this.isImageImportantInCache,
@@ -53,6 +57,7 @@ class YoutubeVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = video.id;
     return YTUtils.getVideoCardMenuItems(
+      queueSource: properties.configs.queueSource,
       downloadIndex: playlistIndexAndCount?.index,
       totalLength: playlistIndexAndCount?.totalLength,
       playlistId: playlistIndexAndCount?.playlistId,
@@ -79,7 +84,7 @@ class YoutubeVideoCard extends StatelessWidget {
 
     final percentageWatched = video.percentageWatched;
 
-    return NamidaPopupWrapper(
+    Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
       child: YoutubeCard(
@@ -113,6 +118,7 @@ class YoutubeVideoCard extends StatelessWidget {
                 index: playlistIndexAndCount?.index,
                 playlist: playlist,
                 playlistID: playlistID,
+                queueSource: properties.configs.queueSource,
               );
             },
         smallBoxText: video.durSeconds?.secondsLabel,
@@ -138,10 +144,23 @@ class YoutubeVideoCard extends StatelessWidget {
                 ],
       ),
     );
+    if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+      final plItem = YoutubeID(id: videoId, playlistID: playlistID);
+      return SwipeQueueAddTile(
+        item: plItem,
+        dismissibleKey: plItem,
+        allowSwipeLeft: properties.allowSwipeLeft,
+        allowSwipeRight: properties.allowSwipeRight,
+        onAddToPlaylist: (item) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: video.title}),
+        child: finalChild,
+      );
+    }
+    return finalChild;
   }
 }
 
 class YoutubeShortVideoCard extends StatelessWidget {
+  final QueueSourceYoutubeID queueSource;
   final StreamInfoItemShort short;
   final PlaylistID? playlistID;
   final void Function()? onTap;
@@ -154,6 +173,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
 
   const YoutubeShortVideoCard({
     super.key,
+    required this.queueSource,
     required this.short,
     this.playlistID,
     this.onTap,
@@ -168,6 +188,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
+      queueSource: queueSource,
       downloadIndex: null,
       totalLength: null,
       streamInfoItem: null,
@@ -211,6 +232,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
                 index: index,
                 playlist: playlist,
                 playlistID: playlistID,
+                queueSource: queueSource,
               );
             },
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: short.id, context: context),
@@ -221,6 +243,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
 }
 
 class YoutubeShortVideoTallCard extends StatelessWidget {
+  final QueueSourceYoutubeID queueSource;
   final int index;
   final StreamInfoItemShort short;
   final double thumbnailWidth;
@@ -228,6 +251,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
 
   const YoutubeShortVideoTallCard({
     super.key,
+    required this.queueSource,
     required this.index,
     required this.short,
     required this.thumbnailWidth,
@@ -237,6 +261,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
   List<NamidaPopupItem> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
+      queueSource: queueSource,
       downloadIndex: null,
       totalLength: null,
       streamInfoItem: null,
@@ -247,7 +272,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
     );
   }
 
-  Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(videoId: short.id);
+  Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(videoId: short.id, queueSource: queueSource);
 
   @override
   Widget build(BuildContext context) {
@@ -377,6 +402,7 @@ class YoutubeVideoCardDummy extends StatelessWidget {
 
 class _VideoCardUtils {
   static Future<void> onVideoTap({
+    required QueueSourceYoutubeID queueSource,
     required String videoId,
     PlaylistID? playlistID,
     int? index,
@@ -386,7 +412,7 @@ class _VideoCardUtils {
     return Player.inst.playOrPause(
       0,
       [YoutubeID(id: videoId, playlistID: playlistID)],
-      QueueSource.others,
+      queueSource,
       onAssigningCurrentItem: (currentItem) async {
         // -- add the remaining playlist videos, only if the same item is still playing
 

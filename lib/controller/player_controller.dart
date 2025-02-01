@@ -589,7 +589,7 @@ class Player {
   Future<void> playOrPause<Q extends Playable>(
     int index,
     Iterable<Q> queue,
-    QueueSource source, {
+    QueueSourceBase source, {
     HomePageItems? homePageItem,
     bool shuffle = false,
     bool startPlaying = true,

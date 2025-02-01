@@ -320,6 +320,10 @@ extension QueueNameGetter on Queue {
   String toText() => homePageItem?.toText() ?? source.toText();
 }
 
+extension QUEUESOURCEExtensions on QueueSourceBase {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension QUEUESOURCEtoTRACKS on QueueSource {
   String toText() => _NamidaConverters.inst.getTitle(this);
 
@@ -459,7 +463,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
         return true;
       case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, getPlayables(), QueueSource.others);
+        await Player.inst.playOrPause(0, getPlayables(), QueueSourceYoutubeID.externalLink);
         return true;
       case OnYoutubeLinkOpenAction.playNext:
         return Player.inst.addToQueue(getPlayables(), insertNext: true);
@@ -1219,6 +1223,26 @@ class _NamidaConverters {
         QueueSource.recentlyAdded: lang.RECENTLY_ADDED,
         QueueSource.homePageItem: '',
         QueueSource.others: lang.OTHERS,
+        // ==========
+        QueueSourceYoutubeID.channel: lang.CHANNEL,
+        QueueSourceYoutubeID.playlist: lang.PLAYLIST,
+        QueueSourceYoutubeID.search: lang.SEARCH,
+        QueueSourceYoutubeID.playerQueue: lang.QUEUE,
+        QueueSourceYoutubeID.mostPlayed: lang.MOST_PLAYED,
+        QueueSourceYoutubeID.history: lang.HISTORY,
+        QueueSourceYoutubeID.historyFiltered: lang.HISTORY,
+        QueueSourceYoutubeID.favourites: lang.FAVOURITES,
+        QueueSourceYoutubeID.externalLink: lang.EXTERNAL_FILES,
+        QueueSourceYoutubeID.homeFeed: lang.HOME,
+        QueueSourceYoutubeID.relatedVideos: lang.RELATED_VIDEOS,
+        QueueSourceYoutubeID.historyFilteredHosted: lang.HISTORY,
+        QueueSourceYoutubeID.searchHosted: lang.SEARCH,
+        QueueSourceYoutubeID.channelHosted: lang.CHANNEL,
+        QueueSourceYoutubeID.historyHosted: lang.HISTORY,
+        QueueSourceYoutubeID.playlistHosted: lang.PLAYLIST,
+        QueueSourceYoutubeID.downloadTask: lang.DOWNLOADS,
+        QueueSourceYoutubeID.videoEndCard: lang.VIDEO,
+        QueueSourceYoutubeID.videoDescription: lang.DESCRIPTION,
       },
       TagField: {
         TagField.title: lang.TITLE,

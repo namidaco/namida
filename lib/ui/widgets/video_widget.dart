@@ -17,6 +17,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -2045,6 +2046,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         final videoId = item.videoId;
         if (videoId == null) return [];
         return YTUtils.getVideoCardMenuItems(
+          queueSource: QueueSourceYoutubeID.videoEndCard,
           downloadIndex: null,
           totalLength: null,
           streamInfoItem: null,
@@ -2105,6 +2107,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           ];
         } else {
           return item.basicInfo.getPopupMenuItems(
+            queueSource: QueueSourceYoutubeID.videoEndCard,
             context: context,
             displayOpenPlaylist: true,
             showProgressSheet: true,
