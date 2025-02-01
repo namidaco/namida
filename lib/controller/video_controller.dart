@@ -179,6 +179,7 @@ class VideoController {
 
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
   final isNoVideosAvailable = false.obs;
+  final videoBlockedByType = Rxn<VideoFetchBlockedBy>();
 
   /// `path`: `NamidaVideo`
   var _videoPathsInfoMap = <String, NamidaVideo>{};
@@ -282,6 +283,7 @@ class VideoController {
     currentVideo.value = null;
     currentPossibleLocalVideos.value.clear();
     isNoVideosAvailable.value = false;
+    videoBlockedByType.value = null;
     currentDownloadedBytes.value = null;
     currentYTStreams.value = null;
     if (track == null || track == kDummyTrack) return null;
@@ -306,6 +308,7 @@ class VideoController {
     final trackYTID = track.youtubeID;
     if (videosPriorityManager.getVideoPriority(trackYTID) == CacheVideoPriority.GETOUT) {
       isNoVideosAvailable.value = true;
+      videoBlockedByType.value = VideoFetchBlockedBy.cachePriority;
       return null;
     }
 
@@ -343,8 +346,14 @@ class VideoController {
 
     if (returnEarly) return erabaretaVideo;
 
-    if (erabaretaVideo == null && vpsInSettings != VideoPlaybackSource.local) {
-      if (ConnectivityController.inst.hasConnection) {
+    if (erabaretaVideo == null) {
+      if ((vpsInSettings == VideoPlaybackSource.local) == false) {
+        videoBlockedByType.value = VideoFetchBlockedBy.playbackSource;
+      } else if (!ConnectivityController.inst.hasConnection) {
+        videoBlockedByType.value = VideoFetchBlockedBy.noNetwork;
+      } else if (!ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStream) {
+        videoBlockedByType.value = VideoFetchBlockedBy.dataSaver;
+      } else {
         final downloadedVideo = await getVideoFromYoutubeAndUpdate(trackYTID);
         erabaretaVideo = downloadedVideo;
       }
@@ -956,4 +965,11 @@ class _VideoControllerIsolateFunctions {
     }
     return newIdsMap;
   }
+}
+
+enum VideoFetchBlockedBy {
+  cachePriority,
+  noNetwork,
+  dataSaver,
+  playbackSource,
 }

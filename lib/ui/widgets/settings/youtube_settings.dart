@@ -700,6 +700,30 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
         ),
       ];
 
+  List<NamidaPopupItem> get _dataSaverChildren => [
+        ...DataSaverMode.values.map(
+          (e) => NamidaPopupItem(
+            icon: Broken.cd,
+            title: e.name,
+            onTap: () {
+              setState(() => settings.youtube.save(dataSaverMode: e));
+            },
+          ),
+        ),
+      ];
+
+  List<NamidaPopupItem> get _dataSaverMobileChildren => [
+        ...DataSaverMode.values.map(
+          (e) => NamidaPopupItem(
+            icon: Broken.cd,
+            title: e.name,
+            onTap: () {
+              setState(() => settings.youtube.save(dataSaverModeMobile: e));
+            },
+          ),
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -769,6 +793,42 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(allowExperimentalCodecs: !isTrue)),
               title: 'allow_experimental_codecs'.toUpperCase(),
               subtitle: 'av1 & vp9',
+            ),
+            NamidaPopupWrapper(
+              child: NamidaPopupWrapper(
+                childrenDefault: () => _dataSaverChildren,
+                child: CustomListTile(
+                  icon: Broken.wifi_square,
+                  title: 'data_saver_mode'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => _dataSaverChildren,
+                    child: ObxO(
+                      rx: settings.youtube.dataSaverMode,
+                      builder: (context, dataSaverMode) => Text(
+                        dataSaverMode.name,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            NamidaPopupWrapper(
+              child: NamidaPopupWrapper(
+                childrenDefault: () => _dataSaverMobileChildren,
+                child: CustomListTile(
+                  icon: Broken.chart_1,
+                  title: 'data_saver_mode_(mobile)'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => _dataSaverMobileChildren,
+                    child: ObxO(
+                      rx: settings.youtube.dataSaverModeMobile,
+                      builder: (context, dataSaverModeMobile) => Text(
+                        dataSaverModeMobile.name,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
             CustomListTile(
               leading: StackedIcon(

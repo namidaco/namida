@@ -274,6 +274,23 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         builder: (currentItem) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
+            if (!settings.enableVideoPlayback.valueR) {
+              return Text.rich(
+                TextSpan(
+                  text: lang.AUDIO,
+                  style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                  children: [
+                    if (settings.displayAudioInfoMiniplayer.valueR)
+                      TextSpan(
+                        text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
+                        style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 11.0),
+                      )
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              );
+            }
             final currentVideo = VideoController.inst.currentVideo.valueR;
             final downloadedBytes = VideoController.inst.currentDownloadedBytes.valueR;
             final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
@@ -283,57 +300,51 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             final fallbackQualityLabel = currentVideo?.nameInCache?.splitLast('_');
             final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
             final framerateText = videoFramerate ?? '';
-            return !settings.enableVideoPlayback.valueR
-                ? Text.rich(
-                    TextSpan(
-                      text: lang.AUDIO,
-                      style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
-                      children: [
-                        if (settings.displayAudioInfoMiniplayer.valueR)
-                          TextSpan(
-                            text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
-                            style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 11.0),
-                          )
-                      ],
+
+            final videoBlockedBy = VideoController.inst.videoBlockedByType.valueR;
+            final videoBlockedByIcon = switch (videoBlockedBy) {
+              VideoFetchBlockedBy.cachePriority => Broken.cpu,
+              VideoFetchBlockedBy.noNetwork => Broken.global_refresh,
+              VideoFetchBlockedBy.dataSaver => Broken.chart_1,
+              VideoFetchBlockedBy.playbackSource => Broken.scroll,
+              null => null,
+            };
+
+            return Text.rich(
+              TextSpan(
+                text: lang.VIDEO,
+                style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                children: [
+                  if (videoBlockedByIcon != null) ...[
+                    TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: 15.0)),
+                    WidgetSpan(
+                      child: Icon(
+                        videoBlockedByIcon,
+                        size: 14.0,
+                        color: onSecondary,
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                : Text.rich(
+                  ] else
                     TextSpan(
-                      text: lang.VIDEO,
-                      style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
-                      children: [
-                        if (qualityText == '?' && !ConnectivityController.inst.hasConnectionR) ...[
-                          TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: 15.0)),
-                          WidgetSpan(
-                            child: Icon(
-                              Broken.global_refresh,
-                              size: 14.0,
-                              color: onSecondary,
-                            ),
-                          ),
-                        ] else
-                          TextSpan(
-                            text: " • $qualityText$framerateText",
-                            style: TextStyle(
-                              color: context.theme.colorScheme.primary,
-                              fontSize: 13.0,
-                            ),
-                          ),
-                        // --
-                        if (videoTotalSize > 0) ...[
-                          TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 14.0)),
-                          TextSpan(
-                            text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
-                            style: TextStyle(color: onSecondary, fontSize: 10.0),
-                          ),
-                        ],
-                      ],
+                      text: " • $qualityText$framerateText",
+                      style: TextStyle(
+                        color: context.theme.colorScheme.primary,
+                        fontSize: 13.0,
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  );
+                  // --
+                  if (videoTotalSize > 0) ...[
+                    TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 14.0)),
+                    TextSpan(
+                      text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
+                      style: TextStyle(color: onSecondary, fontSize: 10.0),
+                    ),
+                  ],
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            );
           });
         },
         currentId: (item) => (item as Selectable).track.youtubeID,

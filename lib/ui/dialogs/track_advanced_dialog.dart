@@ -103,6 +103,10 @@ void showTrackAdvancedDialog({
 
   final canShowClearDialogRx = true.obs;
 
+  void updateCanShowClearDialog(CacheVideoPriority? cachePriority) {
+    canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : tracks.hasAnythingCached;
+  }
+
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       willUpdateArtwork.close();
@@ -134,9 +138,8 @@ void showTrackAdvancedDialog({
                     totalCount: tracksWithYTID.length,
                     videosId: tracksWithYTID.values,
                     countToText: (count) => count.displayTrackKeyword,
-                    onChanged: (cachePriority) {
-                      canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : tracks.hasAnythingCached;
-                    },
+                    onInitialPriority: updateCanShowClearDialog,
+                    onChanged: updateCanShowClearDialog,
                   ),
                 ),
               );

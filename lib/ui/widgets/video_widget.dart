@@ -17,6 +17,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -1298,10 +1299,36 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               ),
                                               const SizedBox(width: 4.0),
                                             ],
-                                            Icon(
-                                              isAudio ? Broken.musicnote : Broken.setting,
-                                              color: itemsColor,
-                                              size: 16.0,
+                                            Obx(
+                                              (context) {
+                                                IconData icon;
+                                                IconData? secondaryIcon;
+                                                if (isAudio) {
+                                                  icon = Broken.musicnote;
+                                                } else {
+                                                  icon = Broken.setting;
+                                                  final dataSaverMode = ConnectivityController.inst.hasHighConnectionR
+                                                      ? settings.youtube.dataSaverMode.valueR
+                                                      : settings.youtube.dataSaverModeMobile.valueR;
+                                                  if (!dataSaverMode.canFetchNetworkVideoStream && Player.inst.currentVideoStream.valueR == null) {
+                                                    secondaryIcon = Broken.magicpen;
+                                                  }
+                                                }
+
+                                                return secondaryIcon == null
+                                                    ? Icon(
+                                                        icon,
+                                                        color: itemsColor,
+                                                        size: 16.0,
+                                                      )
+                                                    : StackedIcon(
+                                                        baseIcon: icon,
+                                                        secondaryIcon: secondaryIcon,
+                                                        iconSize: 16.0,
+                                                        secondaryIconSize: 8.0,
+                                                        disableColor: true,
+                                                      );
+                                              },
                                             ),
                                           ],
                                         );

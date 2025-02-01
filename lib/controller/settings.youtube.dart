@@ -22,6 +22,8 @@ class _YoutubeSettings with SettingsFileWriter {
   final autoExtractVideoTagsFromInfo = true.obs;
   final fallbackExtractInfoDescription = true.obs;
   final isAudioOnlyMode = false.obs;
+  final dataSaverMode = DataSaverMode.off.obs;
+  final dataSaverModeMobile = DataSaverMode.medium.obs;
   final rememberAudioOnly = false.obs;
   final topComments = true.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
@@ -50,6 +52,8 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? youtubeStyleMiniplayer,
     bool? preferNewComments,
     bool? isAudioOnlyMode,
+    DataSaverMode? dataSaverMode,
+    DataSaverMode? dataSaverModeMobile,
     bool? rememberAudioOnly,
     bool? topComments,
     bool? autoExtractVideoTagsFromInfo,
@@ -77,6 +81,8 @@ class _YoutubeSettings with SettingsFileWriter {
     if (youtubeStyleMiniplayer != null) this.youtubeStyleMiniplayer.value = youtubeStyleMiniplayer;
     if (preferNewComments != null) this.preferNewComments.value = preferNewComments;
     if (isAudioOnlyMode != null) this.isAudioOnlyMode.value = isAudioOnlyMode;
+    if (dataSaverMode != null) this.dataSaverMode.value = dataSaverMode;
+    if (dataSaverModeMobile != null) this.dataSaverModeMobile.value = dataSaverModeMobile;
     if (rememberAudioOnly != null) this.rememberAudioOnly.value = rememberAudioOnly;
     if (topComments != null) this.topComments.value = topComments;
     if (autoExtractVideoTagsFromInfo != null) this.autoExtractVideoTagsFromInfo.value = autoExtractVideoTagsFromInfo;
@@ -120,6 +126,7 @@ class _YoutubeSettings with SettingsFileWriter {
     rememberAudioOnly.value = true;
     whiteVideoBGInLightMode = true;
     enableDimInLightMode = false;
+    dataSaverMode.value = DataSaverMode.medium;
   }
 
   void prepareSettingsFile() {
@@ -141,6 +148,8 @@ class _YoutubeSettings with SettingsFileWriter {
       fallbackExtractInfoDescription.value = json['fallbackExtractInfoDescription'] ?? fallbackExtractInfoDescription.value;
       rememberAudioOnly.value = json['rememberAudioOnly'] ?? rememberAudioOnly.value;
       if (rememberAudioOnly.value) isAudioOnlyMode.value = json['isAudioOnlyMode'] ?? isAudioOnlyMode.value;
+      dataSaverMode.value = DataSaverMode.values.getEnum(json['dataSaverMode']) ?? dataSaverMode.value;
+      dataSaverModeMobile.value = DataSaverMode.values.getEnum(json['dataSaverModeMobile']) ?? dataSaverModeMobile.value;
       topComments.value = json['topComments'] ?? topComments.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
@@ -182,6 +191,8 @@ class _YoutubeSettings with SettingsFileWriter {
         'autoExtractVideoTagsFromInfo': autoExtractVideoTagsFromInfo.value,
         'fallbackExtractInfoDescription': fallbackExtractInfoDescription.value,
         'isAudioOnlyMode': isAudioOnlyMode.value,
+        'dataSaverMode': dataSaverMode.value.name,
+        'dataSaverModeMobile': dataSaverModeMobile.value.name,
         'rememberAudioOnly': rememberAudioOnly.value,
         'topComments': topComments.value,
         'onYoutubeLinkOpen': onYoutubeLinkOpen.value.name,

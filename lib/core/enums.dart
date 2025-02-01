@@ -449,3 +449,11 @@ enum DownloadNotifications {
   showAll,
   showFailedOnly,
 }
+
+enum DataSaverMode {
+  off,
+  medium,
+  extreme;
+
+  bool get canFetchNetworkVideoStream => this == DataSaverMode.off;
+}
