@@ -976,10 +976,10 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                             icon: Padding(
                                                               padding: EdgeInsets.all(6.0 * cp * rcp),
                                                               child: ObxO(
-                                                                rx: Player.inst.isPlaying,
-                                                                builder: (context, isPlaying) => AnimatedSwitcher(
+                                                                rx: Player.inst.playWhenReady,
+                                                                builder: (context, playWhenReady) => AnimatedSwitcher(
                                                                   duration: const Duration(milliseconds: 200),
-                                                                  child: isPlaying
+                                                                  child: playWhenReady
                                                                       ? Icon(
                                                                           Broken.pause,
                                                                           size: iconSize,

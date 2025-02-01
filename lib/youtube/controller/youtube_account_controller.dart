@@ -244,7 +244,7 @@ class YoutubeAccountController {
       message: msg,
       title: title,
       isError: true,
-      displaySeconds: 3,
+      displayDuration: SnackDisplayDuration.long,
       button: manageSubscriptionButton
           ? (
               lang.MANAGE,
@@ -260,7 +260,7 @@ class YoutubeAccountController {
   }
 
   static void _showInfo(String msg, {String? title}) {
-    snackyy(message: msg, title: title ?? '', displaySeconds: 3);
+    snackyy(message: msg, title: title ?? '', displayDuration: SnackDisplayDuration.long);
   }
 
   static Future<ChannelInfoItem?> signIn({required LoginPageConfiguration pageConfig, required bool forceSignIn}) async {

@@ -54,7 +54,7 @@ Future<void> showTrackInfoDialog(
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (settings.showUnknownFieldsInTrackInfoDialog.value && isUnknown);
 
   void showPreviewTrackDialog() async {
-    final wasPlaying = Player.inst.isPlaying.value;
+    final wasPlaying = Player.inst.playWhenReady.value;
     if (wasPlaying) {
       Player.inst.pause();
     }

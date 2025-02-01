@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
+import 'package:jiffy/jiffy.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:share_plus/share_plus.dart';
 
@@ -60,14 +61,8 @@ class _AboutPageState extends State<AboutPage> {
   String _getDateDifferenceText() {
     final buildDate = NamidaDeviceInfo.buildDate;
     if (buildDate == null) return '';
-    final diff = DateTime.now().toUtc().difference(buildDate).abs();
-    final diffDays = diff.inDays;
-    if (diffDays > 0) return "(${diffDays.displayDayKeyword})";
-    final diffHours = diff.inHours;
-    if (diffHours > 0) return "($diffHours ${lang.HOURS})";
-    final diffMins = diff.inMinutes;
-    if (diffMins > 0) return "($diffMins ${lang.MINUTES})";
-    return '';
+    final differenceText = Jiffy.parseFromDateTime(buildDate).fromNow(withPrefixAndSuffix: true);
+    return "($differenceText)";
   }
 
   Future<String?> _checkNewVersion(String current) async {

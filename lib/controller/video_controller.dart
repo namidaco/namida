@@ -347,7 +347,7 @@ class VideoController {
     if (returnEarly) return erabaretaVideo;
 
     if (erabaretaVideo == null) {
-      if ((vpsInSettings == VideoPlaybackSource.local) == false) {
+      if (vpsInSettings == VideoPlaybackSource.local) {
         videoBlockedByType.value = VideoFetchBlockedBy.playbackSource;
       } else if (!ConnectivityController.inst.hasConnection) {
         videoBlockedByType.value = VideoFetchBlockedBy.noNetwork;

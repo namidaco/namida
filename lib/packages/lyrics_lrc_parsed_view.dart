@@ -274,10 +274,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   onPressed: Player.inst.previous,
                 ),
                 ObxO(
-                  rx: Player.inst.isPlaying,
-                  builder: (context, isPlaying) => NamidaIconButton(
+                  rx: Player.inst.playWhenReady,
+                  builder: (context, playWhenReady) => NamidaIconButton(
                     horizontalPadding: 18.0,
-                    icon: isPlaying ? Broken.pause : Broken.play,
+                    icon: playWhenReady ? Broken.pause : Broken.play,
                     iconSize: 32.0,
                     onPressed: Player.inst.togglePlayPause,
                   ),
@@ -393,7 +393,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             onPointerUp: (event) {
                               _scrollTimer = Timer(const Duration(seconds: 3), () {
                                 _canAnimateScroll = true;
-                                if (Player.inst.isPlaying.value) {
+                                if (Player.inst.playWhenReady.value) {
                                   _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true);
                                 }
                                 if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {

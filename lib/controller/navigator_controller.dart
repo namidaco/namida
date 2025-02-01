@@ -490,6 +490,20 @@ class NamidaNavigator {
   }
 }
 
+enum SnackDisplayDuration {
+  flash(500),
+  short(1000),
+  mediumLow(1500),
+  medium(2000),
+  mediumHigh(2500),
+  long(3000),
+  veryLong(4000),
+  eternal(5000);
+
+  final int milliseconds;
+  const SnackDisplayDuration(this.milliseconds);
+}
+
 SnackbarController? snackyy({
   IconData? icon,
   String title = '',
@@ -499,7 +513,7 @@ SnackbarController? snackyy({
   EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
   bool altDesign = false,
   int animationDurationMS = 600,
-  int displaySeconds = 2,
+  SnackDisplayDuration displayDuration = SnackDisplayDuration.medium,
   double borderRadius = 12.0,
   Color? leftBarIndicatorColor,
   Color? borderColor,
@@ -608,7 +622,7 @@ SnackbarController? snackyy({
   );
   final snackbar = NamSnackBar(
     margin: margin,
-    duration: Duration(seconds: displaySeconds),
+    duration: Duration(milliseconds: displayDuration.milliseconds),
     animationDuration: Duration(milliseconds: animationDurationMS),
     alignment: Alignment.centerLeft,
     top: top,

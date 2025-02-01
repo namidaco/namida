@@ -213,7 +213,7 @@ class _YTUtilsCommentActions {
   }
 
   void _showError() {
-    snackyy(message: lang.FAILED, isError: true, displaySeconds: 2);
+    snackyy(message: lang.FAILED, isError: true);
   }
 
   String? _getCurrentAutorIfActive() {

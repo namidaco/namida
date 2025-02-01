@@ -260,7 +260,7 @@ void _initErrorInterpreters() {
 void _initLifeCycle() {
   NamidaChannel.inst.addOnDestroy('main', () async {
     final mode = settings.player.killAfterDismissingApp.value;
-    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.isPlaying.value)) {
+    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value)) {
       await Player.inst.pause();
       await Player.inst.dispose();
     }
@@ -424,7 +424,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
 
   snackyy(
     message: lang.IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE,
-    displaySeconds: 5,
+    displayDuration: SnackDisplayDuration.eternal,
     top: false,
     isError: true,
     button: (

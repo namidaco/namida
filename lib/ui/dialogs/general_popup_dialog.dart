@@ -457,7 +457,7 @@ Future<void> showGeneralPopupDialog(
     snackyy(
       title: lang.UNDO_CHANGES,
       message: lang.UNDO_CHANGES_DELETED_PLAYLIST,
-      displaySeconds: 3,
+      displayDuration: SnackDisplayDuration.long,
       button: (
         lang.UNDO,
         () async => await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate, artworkBytes: artworkBytes),

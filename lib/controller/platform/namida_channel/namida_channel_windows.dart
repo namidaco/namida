@@ -16,10 +16,10 @@ class _NamidaChannelWindows extends NamidaChannel {
   @override
   Future<void> showToast({
     required String message,
-    int seconds = 5,
+    required SnackDisplayDuration duration,
   }) async {
     // -- use in-app toast
-    snackyy(message: message, displaySeconds: seconds);
+    snackyy(message: message, displayDuration: duration);
   }
 
   @override

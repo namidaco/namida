@@ -200,7 +200,7 @@ class IndexerSettings extends SettingSubpageProvider {
                           snackyy(
                             title: lang.MINIMUM_ONE_ITEM,
                             message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
-                            displaySeconds: 4,
+                            displayDuration: SnackDisplayDuration.veryLong,
                           );
                         } else {
                           NamidaNavigator.inst.navigateDialog(

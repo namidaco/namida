@@ -60,6 +60,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   late final equalizer = AndroidEqualizer();
   late final loudnessEnhancer = AndroidLoudnessEnhancer();
 
+  bool get _willPlayWhenReady => playWhenReady.value;
+
   RxBaseCore<Duration?> get currentItemDuration => _currentItemDuration;
   final _currentItemDuration = Rxn<Duration>();
 
@@ -429,7 +431,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         );
       },
       onRapidDetected: () {
-        if (isPlaying.value) {
+        if (playWhenReady.value) {
           _pausedTemporarily = true;
           pause();
         }
@@ -542,8 +544,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
         if (checkInterrupted()) return;
         if (hadPermissionBefore) {
-          final wasPlayWhenReady = willPlayWhenReady;
-          onPauseRaw().then((_) => setPlayWhenReady(wasPlayWhenReady));
+          onPauseRaw();
           cancelPlayErrorSkipTimer();
           playErrorRemainingSecondsToSkip.value = 7;
 
@@ -600,7 +601,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetAudioCache = null;
     _nextSeekSetVideoCache = null;
 
-    final wasPlayWhenReady = willPlayWhenReady;
     setAudioOnlyPlayback(false);
 
     currentVideoStream.value = stream;
@@ -612,7 +612,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       currentCachedVideo.value = videoItem;
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
     } else if (stream != null) {
-      if (wasPlayWhenReady) await onPauseRaw();
+      if (!_willPlayWhenReady) await onPauseRaw();
       final positionToRestore = currentPositionMS.value.milliseconds;
 
       final bool expired = mainStreams?.hasExpired() ?? true;
@@ -679,7 +679,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             ? await setSource(
                 activeAudioSource,
                 item: curritem,
-                startPlaying: () => willPlayWhenReady,
+                startPlaying: () => _willPlayWhenReady,
                 initialPosition: positionToRestore,
                 videoOptions: videoOptions,
                 keepOldVideoSource: false,
@@ -717,7 +717,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       }
 
-      if (wasPlayWhenReady) onPlayRaw();
+      if (_willPlayWhenReady) onPlayRaw();
     }
   }
 
@@ -731,8 +731,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetAudioCache = null;
     _nextSeekSetVideoCache = null;
 
-    final wasPlayWhenReady = willPlayWhenReady;
-
     currentAudioStream.value = stream;
     mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
 
@@ -742,13 +740,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       await setSource(
         AudioVideoSource.file(cachedAudio.path),
         item: currentItem.value,
-        startPlaying: () => willPlayWhenReady,
+        startPlaying: () => _willPlayWhenReady,
         keepOldVideoSource: true,
         cachedAudioPath: cachedAudio.path,
       );
       refreshNotification();
     } else if (stream != null) {
-      if (wasPlayWhenReady) await super.onPauseRaw();
+      if (!_willPlayWhenReady) await super.onPauseRaw();
 
       final positionToRestore = currentPositionMS.value.milliseconds;
 
@@ -766,7 +764,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           ),
           initialPosition: positionToRestore,
           item: currentItem.value,
-          startPlaying: () => willPlayWhenReady,
+          startPlaying: () => _willPlayWhenReady,
           keepOldVideoSource: true,
         );
         refreshNotification();
@@ -799,7 +797,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       }
 
-      if (wasPlayWhenReady) onPlayRaw();
+      if (_willPlayWhenReady) onPlayRaw();
     }
   }
 
@@ -1212,7 +1210,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
               final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
               snackyy(title: lang.ERROR, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
-              if (willPlayWhenReady) skipItem();
+              if (_willPlayWhenReady) skipItem();
             }
             return;
           } else {
@@ -1740,7 +1738,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ------------------------------------------------------------
 
   Future<void> togglePlayPause() {
-    if (isPlaying.value) {
+    if (playWhenReady.value) {
       return pause();
     } else {
       return play();
@@ -1754,7 +1752,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await currentItem.value?._execute(
       selectable: (finalItem) => plsSeek(),
       youtubeID: (finalItem) async {
-        final wasPlayWhenReady = willPlayWhenReady;
         File? cachedAudioFile = _nextSeekSetAudioCache?.getFileIfPlaying(finalItem.id);
         File? cachedVideoFile = _nextSeekSetVideoCache?.getFileIfPlaying(finalItem.id);
         if (cachedAudioFile != null || cachedVideoFile != null) {
@@ -1781,7 +1778,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               item: currentItem.value,
               keepOldVideoSource: true,
               cachedAudioPath: cachedAudioFile.path,
-              startPlaying: () => willPlayWhenReady,
+              startPlaying: () => _willPlayWhenReady,
               videoOptions: _isAudioOnlyPlayback
                   ? null
                   : VideoSourceOptions(
@@ -1807,7 +1804,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               item: currentItem.value,
               keepOldVideoSource: true,
               cachedAudioPath: cachedAudioFile.path,
-              startPlaying: () => willPlayWhenReady,
+              startPlaying: () => _willPlayWhenReady,
             );
 
             _isCurrentAudioFromCache = true;
@@ -1815,7 +1812,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           // <=======>
 
           await plsSeek();
-          if (wasPlayWhenReady) onPlayRaw();
+          if (_willPlayWhenReady) onPlayRaw();
         } else {
           await plsSeek();
         }
@@ -1880,7 +1877,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _headsetButtonClickTimer?.cancel();
 
     if (_headsetClicksCount == 1) {
-      _headsetButtonClickTimer = _createHeadsetClicksTimer(willPlayWhenReady ? pause : play);
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(_willPlayWhenReady ? pause : play);
     } else if (_headsetClicksCount == 2) {
       _headsetButtonClickTimer = _createHeadsetClicksTimer(skipToNext);
     } else if (_headsetClicksCount == 3) {

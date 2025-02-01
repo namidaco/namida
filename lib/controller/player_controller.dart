@@ -42,6 +42,8 @@ class Player {
 
   Map<String, List<AudioCacheDetails>> get audioCacheMap => _audioHandler.audioCacheMap;
 
+  RxBaseCore<bool> get playWhenReady => _audioHandler.playWhenReady;
+
   Selectable? get currentTrack {
     final item = _audioHandler.currentItem.value;
     return item is Selectable ? item : null;
@@ -112,7 +114,6 @@ class Player {
   RxBaseCore<double> get currentSpeed => _audioHandler.currentSpeed;
   RxBaseCore<Duration?> get currentItemDuration => _audioHandler.currentItemDuration;
   RxBaseCore<bool> get isPlaying => _audioHandler.isPlaying;
-  bool get isPlayingR => _audioHandler.isPlaying.valueR;
   bool get isBufferingR => _audioHandler.currentState.valueR == ProcessingState.buffering;
   bool get isLoadingR => _audioHandler.currentState.valueR == ProcessingState.loading;
   RxBaseCore<bool> get isFetchingInfo => _audioHandler.isFetchingInfo;
@@ -372,6 +373,8 @@ class Player {
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
                 message: '${addins.capitalizeFirst()} ${finalTracks.displayTrackKeyword}',
                 top: false,
+                displayDuration: SnackDisplayDuration.mediumLow,
+                animationDurationMS: 400,
               );
             }
             return true;
@@ -395,6 +398,8 @@ class Player {
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
                 message: '${addins.capitalizeFirst()} ${finalVideos.length.displayVideoKeyword}',
                 top: false,
+                displayDuration: SnackDisplayDuration.mediumLow,
+                animationDurationMS: 400,
               );
             }
             return true;
@@ -425,8 +430,8 @@ class Player {
   }
 
   Future<void> removeFromQueue(int index) async {
-    // why [isPlaying] ? imagine removing while paused
-    await _audioHandler.removeFromQueue(index, isPlaying.value && _audioHandler.defaultShouldStartPlayingOnNextPrev);
+    // why [playWhenReady] ? imagine removing while paused
+    await _audioHandler.removeFromQueue(index, playWhenReady.value && _audioHandler.defaultShouldStartPlayingOnNextPrev);
   }
 
   Future<void> replaceAllTracksInQueue(Playable oldTrack, Playable newTrack) async {

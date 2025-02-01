@@ -1135,50 +1135,51 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                               ],
                             );
 
-                            final playPauseButtonChild = Obx(
-                              (context) {
-                                final isLoading = Player.inst.shouldShowLoadingIndicatorR;
-                                return Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    if (isLoading)
-                                      IgnorePointer(
-                                        child: NamidaOpacity(
-                                          key: Key("${currentId}_button_loading"),
-                                          enabled: true,
-                                          opacity: 0.3,
-                                          child: ThreeArchedCircle(
-                                            key: Key("${currentId}_button_loading_child"),
-                                            color: defaultIconColor,
-                                            size: 36.0,
+                            final playPauseButtonChild = ObxO(
+                              rx: Player.inst.playWhenReady,
+                              builder: (context, playWhenReady) => Obx(
+                                (context) {
+                                  final isLoading = Player.inst.shouldShowLoadingIndicatorR;
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      if (isLoading)
+                                        IgnorePointer(
+                                          child: NamidaOpacity(
+                                            key: Key("${currentId}_button_loading"),
+                                            enabled: true,
+                                            opacity: 0.3,
+                                            child: ThreeArchedCircle(
+                                              key: Key("${currentId}_button_loading_child"),
+                                              color: defaultIconColor,
+                                              size: 36.0,
+                                            ),
                                           ),
                                         ),
+                                      NamidaIconButton(
+                                        verticalPadding: 4.0,
+                                        horizontalPadding: 4.0,
+                                        onPressed: Player.inst.togglePlayPause,
+                                        icon: null,
+                                        child: AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 200),
+                                          child: playWhenReady
+                                              ? Icon(
+                                                  Broken.pause,
+                                                  color: defaultIconColor,
+                                                  key: const Key('pause'),
+                                                )
+                                              : Icon(
+                                                  Broken.play,
+                                                  color: defaultIconColor,
+                                                  key: const Key('play'),
+                                                ),
+                                        ),
                                       ),
-                                    NamidaIconButton(
-                                      verticalPadding: 4.0,
-                                      horizontalPadding: 4.0,
-                                      onPressed: () {
-                                        Player.inst.togglePlayPause();
-                                      },
-                                      icon: null,
-                                      child: AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 200),
-                                        child: Player.inst.isPlayingR
-                                            ? Icon(
-                                                Broken.pause,
-                                                color: defaultIconColor,
-                                                key: const Key('pause'),
-                                              )
-                                            : Icon(
-                                                Broken.play,
-                                                color: defaultIconColor,
-                                                key: const Key('play'),
-                                              ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                                    ],
+                                  );
+                                },
+                              ),
                             );
                             final nextButton = NamidaIconButton(
                               verticalPadding: 4.0,

@@ -102,7 +102,7 @@ class _YTReportingLog extends Logger {
       message: msg,
       title: title,
       isError: true,
-      displaySeconds: 3,
+      displayDuration: SnackDisplayDuration.long,
       top: false,
     );
   }

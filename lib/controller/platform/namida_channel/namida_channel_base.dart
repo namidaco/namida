@@ -16,7 +16,7 @@ abstract class NamidaChannel {
 
   Future<void> setCanEnterPip(bool canEnter);
 
-  Future<void> showToast({required String message, int seconds = 5});
+  Future<void> showToast({required String message, required SnackDisplayDuration duration});
 
   Future<int> getPlatformSdk();
 

@@ -759,7 +759,7 @@ class YTUtils {
       snackyy(
         title: lang.UNDO_CHANGES,
         message: lang.UNDO_CHANGES_DELETED_TRACK,
-        displaySeconds: 3,
+        displayDuration: SnackDisplayDuration.long,
         button: (lang.UNDO, whatDoYouWant),
       );
     }

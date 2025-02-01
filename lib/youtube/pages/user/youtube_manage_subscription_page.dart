@@ -28,7 +28,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   void _showError(String msg, {Object? exception}) {
-    snackyy(message: exception.toString(), isError: true, displaySeconds: 3);
+    snackyy(message: exception.toString(), isError: true, displayDuration: SnackDisplayDuration.long);
   }
 
   void _showMembershipChangeSnack(MembershipType? oldMS) {

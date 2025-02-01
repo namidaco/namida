@@ -1049,6 +1049,7 @@ class StackedIcon extends StatelessWidget {
   final String? secondaryText;
   final Color? baseIconColor;
   final Color? secondaryIconColor;
+  final Color? shadowColor;
   final double? iconSize;
   final double? secondaryIconSize;
   final double blurRadius;
@@ -1062,6 +1063,7 @@ class StackedIcon extends StatelessWidget {
     this.secondaryIcon,
     this.baseIconColor,
     this.secondaryIconColor,
+    this.shadowColor,
     this.secondaryText,
     this.iconSize,
     this.secondaryIconSize = 14.0,
@@ -1090,16 +1092,23 @@ class StackedIcon extends StatelessWidget {
         Positioned(
           bottom: 0,
           right: 0,
-          child: Container(
+          child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
-                BoxShadow(color: context.theme.scaffoldBackgroundColor, spreadRadius: 0, blurRadius: blurRadius),
+                BoxShadow(
+                  color: shadowColor ?? context.theme.scaffoldBackgroundColor,
+                  spreadRadius: 0,
+                  blurRadius: blurRadius,
+                ),
               ],
             ),
             child: smallChild ??
                 (secondaryText != null
-                    ? Text(secondaryText!, style: context.textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)))
+                    ? Text(
+                        secondaryText!,
+                        style: context.textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)),
+                      )
                     : Icon(
                         secondaryIcon,
                         size: secondaryIconSize,

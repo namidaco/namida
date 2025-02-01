@@ -33,8 +33,9 @@ class _NamidaChannelAndroid extends NamidaChannel {
   @override
   Future<void> showToast({
     required String message,
-    int seconds = 5,
+    required SnackDisplayDuration duration,
   }) async {
+    final seconds = (duration.milliseconds / 1000).ceil();
     _channel.invokeMethod(
       'showToast',
       {

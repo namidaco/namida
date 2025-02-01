@@ -4,16 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
-import 'package:screen_brightness/screen_brightness.dart';
-import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
-import 'package:youtipie/class/streams/audio_stream.dart';
-import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
-import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/youtipie.dart';
-
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -44,6 +35,13 @@ import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
+import 'package:screen_brightness/screen_brightness.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/youtipie.dart';
 
 class NamidaVideoControls extends StatefulWidget {
   final bool showControls;
@@ -1277,7 +1275,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR;
 
                                         String? qt;
-                                        if (!isAudio) {
+                                        IconData icon;
+                                        IconData? secondaryIcon;
+                                        if (isAudio) {
+                                          icon = Broken.musicnote;
+                                        } else {
+                                          icon = Broken.setting;
+
                                           if (widget.isLocal) {
                                             final video = VideoController.inst.currentVideo.valueR;
                                             qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
@@ -1286,6 +1290,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             if (qt == null) {
                                               final cached = Player.inst.currentCachedVideo.valueR;
                                               if (cached != null) qt = "${cached.resolution}p${cached.framerateText()}";
+                                            }
+
+                                            final dataSaverMode = ConnectivityController.inst.hasHighConnectionR
+                                                ? settings.youtube.dataSaverMode.valueR
+                                                : settings.youtube.dataSaverModeMobile.valueR;
+                                            if (Player.inst.currentVideoStream.valueR == null &&
+                                                Player.inst.currentCachedVideo.valueR == null &&
+                                                !dataSaverMode.canFetchNetworkVideoStream) {
+                                              secondaryIcon = Broken.magicpen;
                                             }
                                           }
                                         }
@@ -1299,37 +1312,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               ),
                                               const SizedBox(width: 4.0),
                                             ],
-                                            Obx(
-                                              (context) {
-                                                IconData icon;
-                                                IconData? secondaryIcon;
-                                                if (isAudio) {
-                                                  icon = Broken.musicnote;
-                                                } else {
-                                                  icon = Broken.setting;
-                                                  final dataSaverMode = ConnectivityController.inst.hasHighConnectionR
-                                                      ? settings.youtube.dataSaverMode.valueR
-                                                      : settings.youtube.dataSaverModeMobile.valueR;
-                                                  if (!dataSaverMode.canFetchNetworkVideoStream && Player.inst.currentVideoStream.valueR == null) {
-                                                    secondaryIcon = Broken.magicpen;
-                                                  }
-                                                }
-
-                                                return secondaryIcon == null
-                                                    ? Icon(
-                                                        icon,
-                                                        color: itemsColor,
-                                                        size: 16.0,
-                                                      )
-                                                    : StackedIcon(
-                                                        baseIcon: icon,
-                                                        secondaryIcon: secondaryIcon,
-                                                        iconSize: 16.0,
-                                                        secondaryIconSize: 8.0,
-                                                        disableColor: true,
-                                                      );
-                                              },
-                                            ),
+                                            secondaryIcon == null
+                                                ? Icon(
+                                                    icon,
+                                                    color: itemsColor,
+                                                    size: 16.0,
+                                                  )
+                                                : StackedIcon(
+                                                    baseIcon: icon,
+                                                    secondaryIcon: secondaryIcon,
+                                                    iconSize: 16.0,
+                                                    secondaryIconSize: 8.0,
+                                                    baseIconColor: itemsColor,
+                                                    secondaryIconColor: itemsColor,
+                                                    shadowColor: itemsColor.invert(),
+                                                  ),
                                           ],
                                         );
                                       },
@@ -1604,56 +1601,32 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         blur: 2.5,
                         child: ColoredBox(
                           color: Colors.black.withValues(alpha: 0.3),
-                          child: Obx(
-                            (context) {
-                              final currentPosition = Player.inst.nowPlayingPositionR;
-                              final currentTotalDur = Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
-                              final reachedLastPosition = currentPosition != 0 && (currentPosition - currentTotalDur).abs() < 100; // 100ms allowance
-
-                              return reachedLastPosition
-                                  ? NamidaIconButton(
-                                      icon: null,
-                                      padding: const EdgeInsets.all(14.0),
-                                      onPressed: () async {
-                                        await Player.inst.seek(Duration.zero);
-                                        await Player.inst.play();
-                                        _startTimer();
-                                      },
-                                      child: Icon(
-                                        Broken.refresh,
+                          child: NamidaIconButton(
+                            icon: null,
+                            padding: const EdgeInsets.all(14.0),
+                            onPressed: () {
+                              Player.inst.togglePlayPause();
+                              _startTimer();
+                            },
+                            child: ObxO(
+                              rx: Player.inst.playWhenReady,
+                              builder: (context, playWhenReady) => AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: playWhenReady
+                                    ? Icon(
+                                        Broken.pause,
                                         size: 40.0,
                                         color: itemsColor,
-                                        key: const Key('replay'),
+                                        key: const Key('paused'),
+                                      )
+                                    : Icon(
+                                        Broken.play,
+                                        size: 40.0,
+                                        color: itemsColor,
+                                        key: const Key('playing'),
                                       ),
-                                    )
-                                  : NamidaIconButton(
-                                      icon: null,
-                                      padding: const EdgeInsets.all(14.0),
-                                      onPressed: () {
-                                        Player.inst.togglePlayPause();
-                                        _startTimer();
-                                      },
-                                      child: ObxO(
-                                        rx: Player.inst.isPlaying,
-                                        builder: (context, isPlaying) => AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 200),
-                                          child: isPlaying
-                                              ? Icon(
-                                                  Broken.pause,
-                                                  size: 40.0,
-                                                  color: itemsColor,
-                                                  key: const Key('paused'),
-                                                )
-                                              : Icon(
-                                                  Broken.play,
-                                                  size: 40.0,
-                                                  color: itemsColor,
-                                                  key: const Key('playing'),
-                                                ),
-                                        ),
-                                      ),
-                                    );
-                            },
+                              ),
+                            ),
                           ),
                         ),
                       ),
