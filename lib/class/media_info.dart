@@ -352,20 +352,40 @@ class MIStream {
 class MIStreamTags {
   final String? handlerName;
   final String? language;
+  final String? title;
+  final String? artist;
+  final String? album;
+  final String? albumArtist;
+  final String? track;
 
   const MIStreamTags({
     this.handlerName,
     this.language,
+    this.title,
+    this.artist,
+    this.album,
+    this.albumArtist,
+    this.track,
   });
 
   factory MIStreamTags.fromMap(Map<dynamic, dynamic> map) => MIStreamTags(
         handlerName: map.getOrUpperCase("handler_name"),
         language: map.getOrUpperCase("language"),
+        title: map["Title"] ?? map.getOrUpperCase("title"),
+        artist: map["Artist"] ?? map.getOrUpperCase("artist"),
+        album: map["Album"] ?? map.getOrUpperCase("album"),
+        albumArtist: map["AlbumArtist"] ?? map.getOrUpperCase("albumArtist") ?? map.getOrUpperCase("album_artist"),
+        track: map["Track"] ?? map.getOrUpperCase("track"),
       );
 
   Map<dynamic, dynamic> toMap() => {
         "handler_name": handlerName,
         "language": language,
+        "title": title,
+        "artist": artist,
+        "album": album,
+        "album_artist": albumArtist,
+        "track": track,
       };
 }
 

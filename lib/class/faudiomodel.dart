@@ -42,6 +42,12 @@ class FArtwork {
 }
 
 class FTags {
+  bool get isValid =>
+      title?.isNotEmpty == true || //
+      album?.isNotEmpty == true ||
+      artist?.isNotEmpty == true ||
+      albumArtist?.isNotEmpty == true;
+
   /// Used for bulk extractions.
   final String path;
   final FArtwork artwork;

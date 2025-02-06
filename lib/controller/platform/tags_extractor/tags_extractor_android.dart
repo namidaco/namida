@@ -104,7 +104,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       }
     }
 
-    if (trackInfo == null || trackInfo.hasError) {
+    if (trackInfo == null || trackInfo.hasError || !trackInfo.tags.isValid) {
       final ffmpegInfo = await _ffmpegQueue.add(() => ffmpegController.extractMetadata(trackPath).timeout(const Duration(seconds: 5)).catchError((_) => null));
 
       if (ffmpegInfo != null && isVideo) {
@@ -113,7 +113,8 @@ class _TagsExtractorAndroid extends TagsExtractor {
           videoController.addLocalVideoFileInfoToCacheMap(trackPath, ffmpegInfo, stats);
         } catch (_) {}
       }
-      trackInfo = ffmpegInfo == null ? FAudioModel.dummy(trackPath, artwork) : ffmpegInfo.toFAudioModel(artwork: artwork);
+      final newTrackInfo = ffmpegInfo == null ? FAudioModel.dummy(trackPath, artwork) : ffmpegInfo.toFAudioModel(artwork: artwork);
+      trackInfo = newTrackInfo.merge(trackInfo);
     }
 
     return trackInfo;

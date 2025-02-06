@@ -244,6 +244,56 @@ extension CacheGetterVideo on VideoStream {
   }
 }
 
+extension FAudioModelExtensions on FAudioModel {
+  FAudioModel merge(FAudioModel? original) {
+    if (original == null) return this;
+    return FAudioModel(
+      tags: FTags(
+        path: original.tags.path.isNotEmpty ? original.tags.path : this.tags.path,
+        artwork: original.tags.artwork.hasArtwork ? original.tags.artwork : this.tags.artwork,
+        title: original.tags.title ?? this.tags.title,
+        album: original.tags.album ?? this.tags.album,
+        albumArtist: original.tags.albumArtist ?? this.tags.albumArtist,
+        artist: original.tags.artist ?? this.tags.artist,
+        composer: original.tags.composer ?? this.tags.composer,
+        genre: original.tags.genre ?? this.tags.genre,
+        trackNumber: original.tags.trackNumber ?? this.tags.trackNumber,
+        trackTotal: original.tags.trackTotal ?? this.tags.trackTotal,
+        discNumber: original.tags.discNumber ?? this.tags.discNumber,
+        discTotal: original.tags.discTotal ?? this.tags.discTotal,
+        lyrics: original.tags.lyrics ?? this.tags.lyrics,
+        comment: original.tags.comment ?? this.tags.comment,
+        description: original.tags.description ?? this.tags.description,
+        synopsis: original.tags.synopsis ?? this.tags.synopsis,
+        year: original.tags.year ?? this.tags.year,
+        language: original.tags.language ?? this.tags.language,
+        lyricist: original.tags.lyricist ?? this.tags.lyricist,
+        djmixer: original.tags.djmixer ?? this.tags.djmixer,
+        mixer: original.tags.mixer ?? this.tags.mixer,
+        mood: original.tags.mood ?? this.tags.mood,
+        rating: original.tags.rating ?? this.tags.rating,
+        remixer: original.tags.remixer ?? this.tags.remixer,
+        tags: original.tags.tags ?? this.tags.tags,
+        tempo: original.tags.tempo ?? this.tags.tempo,
+        country: original.tags.country ?? this.tags.country,
+        recordLabel: original.tags.recordLabel ?? this.tags.recordLabel,
+        ratingPercentage: original.tags.ratingPercentage ?? this.tags.ratingPercentage,
+        gainData: original.tags.gainData ?? this.tags.gainData,
+      ),
+      durationMS: original.durationMS ?? this.durationMS,
+      bitRate: original.bitRate ?? this.bitRate,
+      channels: original.channels ?? this.channels,
+      encodingType: original.encodingType ?? this.encodingType,
+      format: original.format ?? this.format,
+      sampleRate: original.sampleRate ?? this.sampleRate,
+      isVariableBitRate: original.isVariableBitRate ?? this.isVariableBitRate,
+      isLoseless: original.isLoseless ?? this.isLoseless,
+      hasError: original.hasError,
+      errorsMap: original.errorsMap,
+    );
+  }
+}
+
 extension MediaInfoToFAudioModel on MediaInfo {
   FAudioModel toFAudioModel({required FArtwork? artwork}) {
     final infoFull = this;
@@ -260,13 +310,13 @@ extension MediaInfoToFAudioModel on MediaInfo {
       tags: FTags(
         path: infoFull.path,
         artwork: artwork ?? FArtwork(),
-        title: info?.title,
-        album: info?.album,
-        albumArtist: info?.albumArtist,
-        artist: info?.artist,
+        title: info?.title ?? audioStream?.tags?.title,
+        album: info?.album ?? audioStream?.tags?.album,
+        albumArtist: info?.albumArtist ?? audioStream?.tags?.albumArtist,
+        artist: info?.artist ?? audioStream?.tags?.artist,
         composer: info?.composer,
         genre: info?.genre,
-        trackNumber: trackNumberTotal?.first ?? info?.track,
+        trackNumber: trackNumberTotal?.first ?? info?.track ?? audioStream?.tags?.track,
         trackTotal: info?.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
         discNumber: discNumberTotal?.first ?? info?.disc,
         discTotal: info?.discTotal ?? (discNumberTotal?.length == 2 ? discNumberTotal?.last : null),
