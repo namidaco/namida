@@ -603,6 +603,7 @@ class TrackTile extends StatelessWidget {
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
         onAddToPlaylist: (item) => showAddToPlaylistDialog([item.track]),
+        onOpenInfo: (_) => _triggerTrackInfoDialog(),
         child: finalChild,
       );
     }

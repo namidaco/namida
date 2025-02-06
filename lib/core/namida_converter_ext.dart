@@ -1352,6 +1352,7 @@ class _NamidaConverters {
         OnTrackTileSwapActions.playlast: lang.PLAY_LAST,
         OnTrackTileSwapActions.playafter: lang.PLAY_AFTER,
         OnTrackTileSwapActions.addtoplaylist: lang.ADD_TO_PLAYLIST,
+        OnTrackTileSwapActions.openinfo: lang.INFO,
       },
       InsertionSortingType: {
         InsertionSortingType.listenCount: lang.TOTAL_LISTENS,

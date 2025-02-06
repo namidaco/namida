@@ -8,6 +8,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -21,6 +22,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -602,7 +604,8 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
         dismissibleKey: plItem,
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
-        onAddToPlaylist: (item) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: videoTitle}),
+        onAddToPlaylist: (_) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: videoTitle}),
+        onOpenInfo: (_) => NamidaNavigator.inst.navigateDialog(dialog: VideoInfoDialog(videoId: videoId)),
         child: finalChild,
       );
     }

@@ -4860,6 +4860,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
   final bool allowSwipeLeft;
   final bool allowSwipeRight;
   final void Function(Q item) onAddToPlaylist;
+  final void Function(Q item) onOpenInfo;
   final Widget child;
 
   const SwipeQueueAddTile({
@@ -4869,6 +4870,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
     required this.onAddToPlaylist,
+    required this.onOpenInfo,
     required this.child,
   });
 
@@ -4899,6 +4901,8 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
             Player.inst.addToQueue([item], insertAfterLatest: true);
           case OnTrackTileSwapActions.addtoplaylist:
             onAddToPlaylist(item);
+          case OnTrackTileSwapActions.openinfo:
+            onOpenInfo(item);
           case OnTrackTileSwapActions.none:
         }
         VibratorController.verylight();

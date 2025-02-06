@@ -455,6 +455,7 @@ enum OnTrackTileSwapActions {
   playlast,
   playafter,
   addtoplaylist,
+  openinfo,
 }
 
 enum CacheVideoPriority {
