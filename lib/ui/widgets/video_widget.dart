@@ -1674,13 +1674,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   ],
                 ),
               ),
-              Obx(
-                (context) => Player.inst.shouldShowLoadingIndicatorR
-                    ? ThreeArchedCircle(
-                        color: itemsColor,
-                        size: 52.0,
-                      )
-                    : const SizedBox(),
+              IgnorePointer(
+                child: Obx(
+                  (context) => Player.inst.shouldShowLoadingIndicatorR
+                      ? ThreeArchedCircle(
+                          color: itemsColor,
+                          size: 52.0,
+                        )
+                      : const SizedBox(),
+                ),
               ),
 
               // ===== Seek Animators ====
