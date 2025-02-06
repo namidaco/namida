@@ -209,8 +209,8 @@ class _SettingsController with SettingsFileWriter {
   final ytMostPlayedCustomisStartOfDay = true.obs;
 
   /// Track Items
-  final onTrackSwipeLeft = OnTrackTileSwapActions.none.obs;
-  final onTrackSwipeRight = OnTrackTileSwapActions.none.obs;
+  final onTrackSwipeLeft = OnTrackTileSwapActions.playafter.obs;
+  final onTrackSwipeRight = OnTrackTileSwapActions.openinfo.obs;
   final displayThirdRow = true.obs;
   final displayThirdItemInEachRow = false.obs;
   final trackTileSeparator = '•'.obs;
