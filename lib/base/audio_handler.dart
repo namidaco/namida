@@ -327,12 +327,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Id Function(Q currentItem)? duplicateRemover,
   }) async {
     await beforeQueueAddOrInsert(queue);
-    if (startPlaying) setPlayWhenReady(true);
+    setPlayWhenReady(startPlaying);
     await super.assignNewQueue(
       playAtIndex: playAtIndex,
       queue: queue,
       maximumItems: maximumItems,
-      startPlaying: startPlaying,
       shuffle: shuffle,
       onIndexAndQueueSame: onIndexAndQueueSame,
       onQueueDifferent: onQueueDifferent,
@@ -416,16 +415,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool? _pausedTemporarily;
 
   @override
-  Future<void> onItemPlay(Q item, int index, bool Function() startPlaying, Function skipItem) async {
+  Future<void> onItemPlay(Q item, int index, Function skipItem) async {
     _currentItemDuration.value = null;
     await _fnLimiter.executeFuture(
       () async {
         return await item._execute(
           selectable: (finalItem) async {
-            await onItemPlaySelectable(item, finalItem, index, startPlaying, skipItem);
+            await onItemPlaySelectable(item, finalItem, index, skipItem);
           },
           youtubeID: (finalItem) async {
-            await onItemPlayYoutubeID(item, finalItem, index, startPlaying, skipItem);
+            await onItemPlayYoutubeID(item, finalItem, index, skipItem);
             _tryAddingMixPlaylist(finalItem.id);
           },
         );
@@ -453,7 +452,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     playErrorRemainingSecondsToSkip.value = 0;
   }
 
-  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, bool Function() startPlaying, Function skipItem) async {
+  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
     if (settings.player.replayGain.value) {
@@ -519,7 +518,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final dur = await setSource(
         tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
         item: pi,
-        startPlaying: startPlaying,
         videoOptions: videoOptions,
         isVideoFile: true,
       );
@@ -582,7 +580,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
-    if (startPlaying()) onPlayRaw(attemptFixVolume: false);
+    if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
 
     startSleepAfterMinCount();
     startCounterToAListen(pi);
@@ -679,7 +677,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             ? await setSource(
                 activeAudioSource,
                 item: curritem,
-                startPlaying: () => _willPlayWhenReady,
                 initialPosition: positionToRestore,
                 videoOptions: videoOptions,
                 keepOldVideoSource: false,
@@ -740,7 +737,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       await setSource(
         AudioVideoSource.file(cachedAudio.path),
         item: currentItem.value,
-        startPlaying: () => _willPlayWhenReady,
         keepOldVideoSource: true,
         cachedAudioPath: cachedAudio.path,
       );
@@ -764,7 +760,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           ),
           initialPosition: positionToRestore,
           item: currentItem.value,
-          startPlaying: () => _willPlayWhenReady,
           keepOldVideoSource: true,
         );
         refreshNotification();
@@ -954,7 +949,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Q pi,
     YoutubeID item,
     int index,
-    bool Function() startPlaying,
     Function skipItem, {
     bool? canPlayAudioOnlyFromCache,
   }) async {
@@ -1046,7 +1040,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     bool heyIhandledPlaying = false;
     Future<void> plsplsplsPlay({required bool wasPlayingFromCache}) async {
-      startPlaying() ? onPlayRaw(attemptFixVolume: false) : onPauseRaw();
+      playWhenReady.value ? onPlayRaw(attemptFixVolume: false) : onPauseRaw();
       heyIhandledPlaying = true;
 
       if (!wasPlayingFromCache) {
@@ -1062,13 +1056,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // -- do nothing
     } else {
       playerStoppingSeikoo = Completer<bool>();
-      if (isPlaying.value) {
+      if (isPlaying.value && currentQueue.value.isNotEmpty) {
         // wait for pausing only if playing.
-        pauseAndStop(fadeMS: 100, stillSameItem: () => item == currentItem.value).then((_) {
-          playerStoppingSeikoo?.complete(true);
-        });
+        pauseWithFadeEffect(
+          enableFade: true,
+          pauseFadeMillis: 100,
+          updatePlayWhenReady: false,
+        ).then(
+          (_) => playerStoppingSeikoo?.complete(true),
+        );
       } else {
-        if (item == currentItem.value) await stop();
         playerStoppingSeikoo.complete(true);
       }
     }
@@ -1107,7 +1104,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       canPlayAudioOnly: canPlayAudioOnlyFromCache,
       disableVideo: _isAudioOnlyPlayback,
       whatToAwait: playerStoppingSeikoo?.future,
-      startPlaying: startPlaying,
       positionToRestore: null,
       possibleAudioFiles: audioCacheMap[item.id] ?? [],
       possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
@@ -1337,7 +1333,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             finalAudioSource,
             item: pi,
             initialPosition: positionToRestore,
-            startPlaying: startPlaying,
             videoOptions: videoSourceOptions,
             keepOldVideoSource: false,
             isVideoFile: false,
@@ -1365,7 +1360,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             canPlayAudioOnly: canPlayAudioOnlyFromCache,
             disableVideo: _isAudioOnlyPlayback,
             whatToAwait: playerStoppingSeikoo?.future,
-            startPlaying: startPlaying,
             positionToRestore: positionToRestore,
             possibleAudioFiles: audioCacheMap[item.id] ?? [],
             possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
@@ -1414,7 +1408,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool canPlayAudioOnly,
     required bool disableVideo,
     required Future<void>? whatToAwait,
-    required bool Function() startPlaying,
     required Duration? positionToRestore,
     required List<AudioCacheDetails> possibleAudioFiles,
     required List<Track> possibleLocalFiles,
@@ -1459,7 +1452,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final dur = await setSource(
           AudioVideoSource.file(cachedAudio.file.path, tag: mediaItemFn()),
           item: item as Q?,
-          startPlaying: startPlaying,
           initialPosition: positionToRestore,
           videoOptions: VideoSourceOptions(
             source: AudioVideoSource.file(cachedVideo.path),
@@ -1490,7 +1482,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final dur = await setSource(
         AudioVideoSource.file(cachedAudio.file.path, tag: mediaItemFn()),
         item: item as Q?,
-        startPlaying: startPlaying,
         initialPosition: positionToRestore,
         cachedAudioPath: cachedAudio.file.path,
       );
@@ -1778,7 +1769,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               item: currentItem.value,
               keepOldVideoSource: true,
               cachedAudioPath: cachedAudioFile.path,
-              startPlaying: () => _willPlayWhenReady,
               videoOptions: _isAudioOnlyPlayback
                   ? null
                   : VideoSourceOptions(
@@ -1804,7 +1794,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               item: currentItem.value,
               keepOldVideoSource: true,
               cachedAudioPath: cachedAudioFile.path,
-              startPlaying: () => _willPlayWhenReady,
             );
 
             _isCurrentAudioFromCache = true;
@@ -1897,7 +1886,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     bool preload = true,
     int? initialIndex,
     Duration? initialPosition,
-    required bool Function() startPlaying,
     VideoSourceOptions? videoOptions,
     bool isVideoFile = false,
     String? cachedAudioPath,
@@ -1917,7 +1905,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       preload: preload,
       initialIndex: initialIndex,
       initialPosition: initialPosition,
-      startPlaying: startPlaying,
       videoOptions: videoOptions,
       keepOldVideoSource: keepOldVideoSource,
     );
