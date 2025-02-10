@@ -1061,7 +1061,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         pauseWithFadeEffect(
           enableFade: true,
           pauseFadeMillis: 100,
-          updatePlayWhenReady: false,
         ).then(
           (_) => playerStoppingSeikoo?.complete(true),
         );
