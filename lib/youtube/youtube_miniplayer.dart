@@ -796,7 +796,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     NamidaNavigator.inst.isInYTCommentsSubpage = true;
                                                                     NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
                                                                       const YTMiniplayerCommentsSubpage(),
-                                                                      maintainState: false,
+                                                                      maintainState: true, // vip to maintain scroll offset
                                                                     );
                                                                   },
                                                                   child: Column(
