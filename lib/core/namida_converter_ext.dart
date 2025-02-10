@@ -288,8 +288,8 @@ extension FAudioModelExtensions on FAudioModel {
       sampleRate: original.sampleRate ?? this.sampleRate,
       isVariableBitRate: original.isVariableBitRate ?? this.isVariableBitRate,
       isLoseless: original.isLoseless ?? this.isLoseless,
-      hasError: original.hasError,
-      errorsMap: original.errorsMap,
+      hasError: this.hasError,
+      errorsMap: this.errorsMap,
     );
   }
 }
