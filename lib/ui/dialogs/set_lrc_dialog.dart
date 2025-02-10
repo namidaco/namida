@@ -236,11 +236,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       ),
                       Obx(
                         (context) {
-                          final ms = newOffset.valueR.remainder(1000).abs().toString();
-                          final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
                           final off = newOffset.valueR;
+                          final ms = off.remainder(1000).abs().toString();
+                          final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
+                          final secondsText = off.abs().milliSecondsLabel;
+                          final prefix = off < 0 ? '-' : '';
                           return Text(
-                            "${off.milliSecondsLabel}.$msText",
+                            "$prefix$secondsText.$msText",
                             style: namida.textTheme.displaySmall,
                           );
                         },
