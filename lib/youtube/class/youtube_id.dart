@@ -2,16 +2,15 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:playlist_manager/playlist_manager.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:youtipie/core/url_utils.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
+import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/core/url_utils.dart';
 
 class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, PlaylistItemWithDate {
   final String id;
@@ -59,8 +58,8 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, Playlis
 }
 
 extension YoutubeIDUtils on YoutubeID {
-  File? getThumbnailSync({required bool temp, required ThumbnailType type}) {
-    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id, isTemp: temp, type: type);
+  File? getThumbnailSync({required bool temp}) {
+    return ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: id, isTemp: temp, type: ThumbnailType.video);
   }
 }
 

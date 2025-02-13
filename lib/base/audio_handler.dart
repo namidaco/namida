@@ -990,7 +990,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
-    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false, type: ThumbnailType.video);
+    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false);
 
     bool checkInterrupted({bool refreshNoti = true}) {
       final curr = currentItem.value;
@@ -1032,8 +1032,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     onInfoOrThumbObtained(info: _ytNotificationVideoInfo, thumbnail: _ytNotificationVideoThumbnail);
 
     if (_ytNotificationVideoThumbnail == null) {
+      // -- assign low res thumbnail temporarily until full res is fetched
+      final tempThumb = item.getThumbnailSync(temp: true);
+      if (tempThumb != null) onInfoOrThumbObtained(thumbnail: tempThumb);
+
       ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id, type: ThumbnailType.video).then((thumbFile) {
-        thumbFile ??= item.getThumbnailSync(temp: true, type: ThumbnailType.video);
+        thumbFile ??= item.getThumbnailSync(temp: true);
         if (thumbFile != null) onInfoOrThumbObtained(thumbnail: thumbFile);
       });
     }
