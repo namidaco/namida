@@ -414,6 +414,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   );
   bool? _pausedTemporarily;
 
+  Future<void> _freePlayerTemporarily() {
+    return super.freePlayer();
+  }
+
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem) async {
     _currentItemDuration.value = null;
@@ -598,6 +602,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }) async {
     _nextSeekSetAudioCache = null;
     _nextSeekSetVideoCache = null;
+    _freePlayerTemporarily();
 
     setAudioOnlyPlayback(false);
 
@@ -727,6 +732,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }) async {
     _nextSeekSetAudioCache = null;
     _nextSeekSetVideoCache = null;
+    _freePlayerTemporarily();
 
     currentAudioStream.value = stream;
     mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
@@ -1066,7 +1072,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           enableFade: true,
           pauseFadeMillis: 100,
         ).then(
-          (_) => playerStoppingSeikoo?.complete(true),
+          (_) async {
+            await _freePlayerTemporarily(); // prevents playing previous item
+            playerStoppingSeikoo?.complete(true);
+          },
         );
       } else {
         playerStoppingSeikoo.complete(true);
