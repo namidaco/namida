@@ -755,7 +755,7 @@ class YTUtils {
   }
 
   static Future<void> onYoutubeMostPlayedPlaylistTap() {
-    return const YoutubeHistoryPage().navigate();
+    return const YTMostPlayedVideosPage().navigate();
   }
 
   static Future<void> onRemoveVideosFromPlaylist(String name, List<YoutubeID> videosToDelete) async {
