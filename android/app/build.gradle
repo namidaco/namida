@@ -60,6 +60,10 @@ android {
             exclude("lib/x86/*.so")
         }
     }
+    
+    dexOptions {
+        javaMaxHeapSize "4G"
+    }
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
