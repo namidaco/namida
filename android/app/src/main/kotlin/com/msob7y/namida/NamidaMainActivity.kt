@@ -174,12 +174,16 @@ class NamidaMainActivity : FlutterActivity() {
   override fun onUserLeaveHint() {
     channel.invokeMethod("onUserLeaveHint", null)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      if (canEnterPip &&
-              com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() &&
-              com.ryanheise.just_audio.MainMethodCallHandler.hasVideo() &&
-              !isInPip()
-      ) {
-        enterPip()
+      try {
+        if (canEnterPip &&
+                        com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() &&
+                        com.ryanheise.just_audio.MainMethodCallHandler.hasVideo() &&
+                        !isInPip()
+        ) {
+          enterPip()
+        }
+      } catch (_: Exception) {
+        // -- non initialized handler
       }
     }
     super.onUserLeaveHint()
