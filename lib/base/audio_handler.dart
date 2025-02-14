@@ -275,11 +275,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // this is what keeps local & youtube separated. this shall be removed if mixed playback ever got supported.
     final current = currentItem.value;
     final newItem = items.firstOrNull;
+
+    final wasPlayWhenReady = playWhenReady.value;
     if (newItem is Selectable && current is! Selectable) {
       await clearQueue();
     } else if (newItem is YoutubeID && current is! YoutubeID) {
       await clearQueue();
     }
+    setPlayWhenReady(wasPlayWhenReady);
   }
 
   @override
