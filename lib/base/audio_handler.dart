@@ -327,6 +327,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     void Function(List<Q> finalizedQueue)? onQueueDifferent,
     void Function(Q currentItem)? onAssigningCurrentItem,
     bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
+    void Function()? onRestructuringQueue,
     Id Function(Q currentItem)? duplicateRemover,
   }) async {
     await beforeQueueAddOrInsert(queue);
@@ -340,6 +341,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
       onAssigningCurrentItem: onAssigningCurrentItem,
+      onRestructuringQueue: () {
+        if (playWhenReady.value) play();
+      },
       canRestructureQueueOnly: canRestructureQueueOnly ??
           (currentItem, itemToPlay) {
             if (itemToPlay is Selectable && currentItem is Selectable) {
