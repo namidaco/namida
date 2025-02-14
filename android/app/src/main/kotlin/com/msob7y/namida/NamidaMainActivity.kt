@@ -11,20 +11,27 @@ import android.media.RingtoneManager
 import android.media.audiofx.AudioEffect
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
 import android.util.Rational
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
 import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
 class NamidaMainActivity : FlutterActivity() {
+  companion object {
+    var currentLifecycle : Lifecycle? = null
+  }
+
   private val CHANNELNAME = "namida"
   private val CHANNELNAME_STORAGE = "namida/storage"
   private val EVENTCHANNELNAME = "namida_events"
@@ -40,6 +47,8 @@ class NamidaMainActivity : FlutterActivity() {
     }
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    currentLifecycle = lifecycle
+
     flutterEngine.plugins.add(FAudioTagger())
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -187,6 +196,13 @@ class NamidaMainActivity : FlutterActivity() {
       }
     }
     super.onUserLeaveHint()
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (intent?.action == NamidaConstants.BABE_WAKE_UP) {
+      moveTaskToBack(true)
+    }
   }
 
   override fun onResume() {

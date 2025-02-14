@@ -21,6 +21,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -81,6 +82,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   NamidaAudioVideoHandler() {
     updateAudioCacheMap();
+    playWhenReady.addListener(() {
+      final ye = playWhenReady.value;
+      CurrentColor.inst.switchColorPalettes(ye);
+      WakelockController.inst.updatePlayPauseStatus(ye);
+      _refreshHomeWidgetIsPlaying(ye);
+    });
   }
 
   Future<void> updateAudioCacheMap() async {
@@ -195,8 +202,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required int itemIndex,
     required Duration? duration,
   }) {
-    mediaItem.add(item.toMediaItem(currentIndex.value, currentQueue.value.length, duration));
+    final media = item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
+    mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
+
+    _refreshHomeWidget(media, playWhenReady.value, isItemFavourite);
   }
 
   void _notificationUpdateItemYoutubeID({
@@ -210,8 +220,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     };
     final index = currentIndex.value;
     final ql = currentQueue.value.length;
-    mediaItem.add(youtubeIdMediaItem(index, ql));
+    final media = youtubeIdMediaItem(index, ql);
+    mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
+    _refreshHomeWidget(media, playWhenReady.value, isItemFavourite);
+  }
+
+  void _refreshHomeWidgetIsPlaying(bool isPlaying) {
+    HomeWidgetController.updateIsPlaying(isPlaying);
+  }
+
+  void _refreshHomeWidget(MediaItem media, bool isPlaying, bool isFavourite) {
+    HomeWidgetController.updateAll(
+      media.displayTitle ?? media.title,
+      media.displaySubtitle ?? media.artist ?? media.album,
+      media.artUri,
+      isPlaying,
+      isFavourite,
+    );
   }
 
   // =================================================================================
@@ -1606,8 +1632,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onPlayingStateChange(bool isPlaying) {
-    CurrentColor.inst.switchColorPalettes(isPlaying);
-    WakelockController.inst.updatePlayPauseStatus(isPlaying);
     if (isPlaying) {
       _resourcesDisposeTimer?.cancel();
       _resourcesDisposeTimer = null;

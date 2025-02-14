@@ -1007,7 +1007,7 @@ class JsonToHistoryParser {
     final portProgressAdded = params['portProgressAdded'] as SendPort;
     final portLoadingProgress = params['portLoadingProgress'] as SendPort;
 
-    final lines = <dynamic>[];
+    final lines = <String>[];
     files.loop(
       (file) {
         try {

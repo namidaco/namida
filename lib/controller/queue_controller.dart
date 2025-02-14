@@ -239,7 +239,7 @@ class QueueController {
       index,
       latestQueue,
       QueueSource.playerQueue,
-      startPlaying: false,
+      startPlaying: Player.inst.playWhenReady.value, // false by default, unless started from home widget/quick settings
       updateQueue: false,
       maximumItems: null,
     );

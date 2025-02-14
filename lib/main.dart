@@ -26,6 +26,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -67,6 +68,8 @@ void main() {
 
 void mainInitialization() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await HomeWidgetController.init();
 
   // -- x this makes some issues with GestureDetector
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
