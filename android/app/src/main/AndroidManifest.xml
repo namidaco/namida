@@ -26,6 +26,7 @@
         android:supportsPictureInPicture="true"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
     >
         <activity
             android:name=".NamidaMainActivity"
