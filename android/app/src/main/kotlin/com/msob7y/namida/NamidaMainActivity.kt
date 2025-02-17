@@ -22,14 +22,13 @@ import androidx.lifecycle.Lifecycle
 import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
 class NamidaMainActivity : FlutterActivity() {
   companion object {
-    var currentLifecycle : Lifecycle? = null
+    var currentLifecycle: Lifecycle? = null
   }
 
   private val CHANNELNAME = "namida"
@@ -74,23 +73,27 @@ class NamidaMainActivity : FlutterActivity() {
             println(e)
           }
         }
+
         "cancelToast" -> {
           cancelToast()
           result.success(true)
         }
+
         "setCanEnterPip" -> {
           val canEnter = call.argument<Boolean?>("canEnter")
           if (canEnter != null) canEnterPip = canEnter
           result.success(null)
         }
+
         "updatePipRatio" -> {
-          if (isInPip()) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPip()) {
             updatePipRatio(call.argument<Int?>("width"), call.argument<Int?>("height"))
             result.success(true)
           } else {
             result.success(false)
           }
         }
+
         "setMusicAs" -> {
           val path = call.argument<String?>("path")
           val types = call.argument<List<Int>?>("types")
@@ -100,9 +103,11 @@ class NamidaMainActivity : FlutterActivity() {
             result.success(false)
           }
         }
+
         "openEqualizer" -> {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
         }
+
         else -> result.notImplemented()
       }
     }
@@ -114,17 +119,21 @@ class NamidaMainActivity : FlutterActivity() {
           storageUtils.fillStoragePaths()
           result.success(storageUtils.storagePaths)
         }
+
         "getStorageDirsData" -> {
           result.success(storageUtils.getStorageDirsData())
         }
+
         "getStorageDirsCache" -> {
           result.success(storageUtils.getStorageDirsCache())
         }
+
         "getRealPath" -> {
           val contentUri = call.argument<String?>("contentUri")
           val realPath = storageUtils.contentUriToPath(Uri.parse(contentUri))
           result.success(realPath)
         }
+
         "pickFile" -> {
           checkStorageReadPermission()
           val note = call.argument("note") as String?
@@ -133,28 +142,30 @@ class NamidaMainActivity : FlutterActivity() {
           val allowedExtensions = call.argument("allowedExtensions") as List<String>?
           val type = call.argument("type") as String?
           val error =
-              FileSysPicker.pickFile(
-                  result,
-                  activity,
-                  NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
-                  multiple,
-                  allowedExtensions,
-                  type
-              )
+            FileSysPicker.pickFile(
+              result,
+              activity,
+              NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
+              multiple,
+              allowedExtensions,
+              type
+            )
           if (error != null) showToast(error, 3)
         }
+
         "pickDirectory" -> {
           checkStorageReadPermission()
           val note = call.argument("note") as String?
           if (note != null && note != "") showToast(note, 3)
           val error =
-              FileSysPicker.pickDirectory(
-                  result,
-                  activity,
-                  NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
-              )
+            FileSysPicker.pickDirectory(
+              result,
+              activity,
+              NamidaRequestCodes.REQUEST_CODE_FILES_PICKER,
+            )
           if (error != null) showToast(error, 3)
         }
+
         else -> result.notImplemented()
       }
     }
@@ -167,6 +178,7 @@ class NamidaMainActivity : FlutterActivity() {
     toast = Toast.makeText(context, text, duration)
     toast?.show()
   }
+
   private fun cancelToast() {
     toast?.cancel()
     toast = null
@@ -176,7 +188,8 @@ class NamidaMainActivity : FlutterActivity() {
     this.context = context
     try {
       storageUtilsCompleter.complete(StorageUtils(context))
-    } catch (_: Exception) {}
+    } catch (_: Exception) {
+    }
     return AudioServicePlugin.getFlutterEngine(context)
   }
 
@@ -185,9 +198,9 @@ class NamidaMainActivity : FlutterActivity() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       try {
         if (canEnterPip &&
-                        com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() &&
-                        com.ryanheise.just_audio.MainMethodCallHandler.hasVideo() &&
-                        !isInPip()
+          com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() &&
+          com.ryanheise.just_audio.MainMethodCallHandler.hasVideo() &&
+          !isInPip()
         ) {
           enterPip()
         }
@@ -248,8 +261,8 @@ class NamidaMainActivity : FlutterActivity() {
   }
 
   override public fun onPictureInPictureModeChanged(
-      isInPictureInPictureMode: Boolean,
-      newConfig: Configuration
+    isInPictureInPictureMode: Boolean,
+    newConfig: Configuration
   ) {
     pipEventChannel?.success(isInPictureInPictureMode)
   }
@@ -257,7 +270,7 @@ class NamidaMainActivity : FlutterActivity() {
   @RequiresApi(api = Build.VERSION_CODES.O)
   private fun enterPip() {
     val rational =
-        com.ryanheise.just_audio.MainMethodCallHandler.getVideoRational() ?: Rational(1, 1)
+      com.ryanheise.just_audio.MainMethodCallHandler.getVideoRational() ?: Rational(1, 1)
     val pipB = pipBuilder
     if (pipB != null) {
       pipB.setAspectRatio(rational)
@@ -291,12 +304,12 @@ class NamidaMainActivity : FlutterActivity() {
       } else {
 
         val typeName =
-            when (type) {
-              RingtoneManager.TYPE_RINGTONE -> "ringtone"
-              RingtoneManager.TYPE_NOTIFICATION -> "notification"
-              RingtoneManager.TYPE_ALARM -> "alarm"
-              else -> ""
-            }
+          when (type) {
+            RingtoneManager.TYPE_RINGTONE -> "ringtone"
+            RingtoneManager.TYPE_NOTIFICATION -> "notification"
+            RingtoneManager.TYPE_ALARM -> "alarm"
+            else -> ""
+          }
         successNames.add(typeName)
       }
     }
@@ -311,9 +324,9 @@ class NamidaMainActivity : FlutterActivity() {
   }
 
   private fun checkSystemWritePermission(
-      path: String,
-      types: List<Int>,
-      requestPermission: Boolean
+    path: String,
+    types: List<Int>,
+    requestPermission: Boolean
   ): Boolean {
     var hasPermission: Boolean = true
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -367,9 +380,9 @@ class NamidaMainActivity : FlutterActivity() {
     intent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
     intent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
     intent.setFlags(
-        Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
-            Intent.FLAG_ACTIVITY_NEW_TASK or
-            Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+      Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
+          Intent.FLAG_ACTIVITY_NEW_TASK or
+          Intent.FLAG_ACTIVITY_MULTIPLE_TASK
     )
 
     try {
@@ -387,13 +400,13 @@ class NamidaMainActivity : FlutterActivity() {
   fun checkStorageReadPermission() {
     if (Build.VERSION.SDK_INT < 33) {
       val granted =
-          ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-              PackageManager.PERMISSION_GRANTED
+        ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+            PackageManager.PERMISSION_GRANTED
       if (!granted) {
         ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-            NamidaRequestCodes.REQUEST_CODE_STORAGE_READ_PERMISSION
+          activity,
+          arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+          NamidaRequestCodes.REQUEST_CODE_STORAGE_READ_PERMISSION
         )
       }
     }
