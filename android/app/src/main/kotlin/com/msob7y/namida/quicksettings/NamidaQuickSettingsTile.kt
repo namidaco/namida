@@ -1,5 +1,6 @@
 package com.msob7y.namida
 
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -35,10 +36,13 @@ class NamidaQuickSettingsTile : TileService() {
   private fun updateTile(isNowPlaying: Boolean? = null) {
     val isPlaying = isNowPlaying ?: getIsPlaying()
     val newState = if (isPlaying) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+    val newIcon =
+      if (isPlaying) com.ryanheise.audioservice.R.drawable.audio_service_pause else com.ryanheise.audioservice.R.drawable.audio_service_play_arrow
     val defaultLabel = "Namida" // its alr in manifest but whatever
     val newAction = if (isPlaying) "Pause" else "Play"
     qsTile?.apply {
       state = newState
+      icon = Icon.createWithResource(applicationContext, newIcon)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         label = defaultLabel
         subtitle = newAction
