@@ -5,6 +5,8 @@ import HomeWidgetGlanceStateDefinition
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.view.KeyEvent
@@ -16,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
@@ -35,6 +38,7 @@ import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -54,8 +58,8 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
   }
 
   private var _latestImagePath: String? = null
-  private var _currentImageProvider: androidx.glance.ImageProvider? = null
-  private var _fallbackImageProvider: androidx.glance.ImageProvider? = null
+  private var _currentImageProvider: Bitmap? = null
+  private var _fallbackImageProvider: Bitmap? = null
 
   @Composable
   private fun GlanceContent(context: Context, currentState: HomeWidgetGlanceState) {
@@ -68,11 +72,14 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val isFav = data.getBoolean("favourite", false)
     val imagePath = data.getString("image", null)
 
-    val boxColor = Color(16, 16, 16)
-    val imageColor = Color(120, 120, 120, 120)
-    val titleColor = Color(220, 220, 220, 220)
-    val subtitleColor = Color(200, 200, 200, 200)
-    val iconsColor = Color(200, 200, 200, 200)
+    val colors =
+      if (isDarkModeEnabled(context)) NamidaWidgetColors.dark else NamidaWidgetColors.light
+
+    val boxColor = colors.boxColor
+    val imageColor = colors.imageColor
+    val titleColor = colors.titleColor
+    val subtitleColor = colors.subtitleColor
+    val iconsColor = colors.iconsColor
 
     val imageSize = 84.dp
     val imageCornerRadiusFloat = 64f
@@ -87,7 +94,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
         try {
           val bitmap = BitmapFactory.decodeFile(imagePath)
           val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
-          _currentImageProvider = androidx.glance.ImageProvider(roundedBitmap)
+          _currentImageProvider = roundedBitmap
         } catch (_: Exception) {
           _currentImageProvider = null
         }
@@ -103,11 +110,12 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             imageCornerRadiusFloat,
             imageColor
           )
-        _fallbackImageProvider = androidx.glance.ImageProvider(bitmap)
+        _fallbackImageProvider = bitmap
       }
     }
 
     _latestImagePath = imagePath
+
 
     Box(
       contentAlignment = Alignment.CenterStart,
@@ -116,15 +124,17 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
         .background(boxColor)
         .fillMaxWidth()
         .padding(12.dp)
-        .clickable({ _startCustomActivity<NamidaMainActivity>(context) })
+        .clickable { _startCustomActivity<NamidaMainActivity>(context) }
     ) {
       Row(
         verticalAlignment = Alignment.Vertical.CenterVertically,
       ) {
+
         Image(
-          _currentImageProvider ?: _fallbackImageProvider!!,
+          androidx.glance.ImageProvider(_currentImageProvider ?: _fallbackImageProvider!!),
           null,
-          modifier = GlanceModifier.fillMaxHeight().width(imageSize).height(imageSize),
+          modifier = GlanceModifier.fillMaxHeight().size(imageSize)
+            .background(ImageProvider(com.msob7y.namida.R.drawable.shadow_bg))
         )
 
         horizontalSpace(12)
@@ -275,7 +285,7 @@ fun MediaControlButton(
   drawableRes: Int,
   contentDescription: String,
   keyEvent: Int,
-  additionalModifier: GlanceModifier
+  additionalModifier: GlanceModifier,
 ) {
   Image(
     provider = androidx.glance.ImageProvider(drawableRes),
@@ -289,7 +299,7 @@ class MediaButtonAction : ActionCallback {
   override suspend fun onAction(
     context: Context,
     glanceId: GlanceId,
-    parameters: ActionParameters
+    parameters: ActionParameters,
   ) {
     val event = parameters[ActionParameters.Key<Int>("t")] ?: return
     sendMediaButtonIntent(context, event)
@@ -299,7 +309,7 @@ class MediaButtonAction : ActionCallback {
 inline fun <reified T : Activity> _startCustomActivity(
   context: Context,
   uri: Uri? = null,
-  isWakeIntent: Boolean = false
+  isWakeIntent: Boolean = false,
 ) {
   val intentAction =
     if (isWakeIntent) NamidaConstants.BABE_WAKE_UP else NamidaConstants.ACTION_CUSTOM_START
@@ -320,4 +330,9 @@ private fun horizontalSpace(width: Int): Unit {
 private fun Dp.toPxInt(context: Context): Int {
   val density = context.resources.displayMetrics.density
   return (this.value * density).toInt()
+}
+
+private fun isDarkModeEnabled(context: Context): Boolean {
+  return context.resources.configuration.uiMode and
+      Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
