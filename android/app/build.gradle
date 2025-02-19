@@ -31,7 +31,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.msob7y.namida"
     compileSdkVersion 34
-    ndkVersion "26.3.11579264"
     splits {
 
         abi {
@@ -154,5 +153,5 @@ dependencies {
     implementation 'androidx.compose.foundation:foundation:1.5.4'
     implementation 'androidx.media:media:1.6.0'
     implementation 'com.android.support:support-v4:28.0.0'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.3'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.4'
 }
