@@ -35,7 +35,7 @@ class _VideosPriorityManager {
     final modifiedValues = Map<String, CacheVideoPriority>.from(_videosPriorityMap);
     _videosPriorityMap = res;
     _videosPriorityMap.addAll(modifiedValues);
-    _loadCompleter.complete();
+    _loadCompleter.completeIfWasnt();
   }
 
   static Map<String, CacheVideoPriority> _loadDbSync(DbWrapperFileInfo fileInfo) {

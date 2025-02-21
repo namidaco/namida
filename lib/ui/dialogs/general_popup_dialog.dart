@@ -1275,6 +1275,7 @@ Future<void> showGeneralPopupDialog(
                                               iconSize: 20.0,
                                               secondaryIconSize: 10.0,
                                               baseIconColor: iconColor,
+                                              secondaryIconColor: iconColor,
                                             )
                                           : Icon(
                                               Broken.document,

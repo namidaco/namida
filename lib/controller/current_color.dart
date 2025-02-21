@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
@@ -405,7 +406,7 @@ class CurrentColor {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
     final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
-    final paletteFile = File("${AppDirs.PALETTES}$filename.palette");
+    final paletteFile = FileParts.join(AppDirs.PALETTES, "$filename.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(filename, newNC);
@@ -413,7 +414,7 @@ class CurrentColor {
       final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true, useIsolate: useIsolate);
       _updateInColorMap(filename, nc);
     }
-    if (Player.inst.currentTrack == track) {
+    if (Player.inst.currentTrack?.track == track) {
       updatePlayerColorFromTrack(Player.inst.currentTrack, null);
     }
   }

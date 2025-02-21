@@ -1106,11 +1106,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           pauseFadeMillis: 100,
         ).then(
           (_) async {
-            await _freePlayerTemporarily(); // prevents playing previous item
+            _freePlayerTemporarily(); // prevents playing previous item
             playerStoppingSeikoo?.complete(true);
           },
         );
       } else {
+        _freePlayerTemporarily();
         playerStoppingSeikoo.complete(true);
       }
     }
