@@ -79,17 +79,25 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
     WakelockController.inst.updateMiniplayerStatus(_wasExpanded);
 
-    Timer(
-      Duration(milliseconds: 1000),
-      () {
-        // -- context access in build makes it awful for yt miniplayer (since it has MaterialPage),
-        // -- the keyboard keeps showing/hiding
-        // -- so yeah we only check once
-        final padding = MediaQuery.paddingOf(context);
+    _ensureCorrectInitializedPadding();
+  }
+
+  void _ensureCorrectInitializedPadding() async {
+    await Future.delayed(Duration.zero);
+
+    for (int i = 0; i < 10; i++) {
+      if (!mounted) break;
+      // -- context access in build makes it awful for yt miniplayer (since it has MaterialPage),
+      // -- the keyboard keeps showing/hiding
+      // -- so yeah we only check once
+      final padding = MediaQuery.paddingOf(context);
+      if (_padding == padding && padding != EdgeInsets.zero) break;
+      if (_padding != padding) {
         _padding = padding;
         animateToState(_wasExpanded);
-      },
-    );
+      }
+      await Future.delayed(Duration(milliseconds: 800));
+    }
   }
 
   void _listenerHeightChange() {
