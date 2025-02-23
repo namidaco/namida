@@ -134,7 +134,6 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           androidx.glance.ImageProvider(_currentImageProvider ?: _fallbackImageProvider!!),
           null,
           modifier = GlanceModifier.fillMaxHeight().size(imageSize)
-            .background(ImageProvider(com.msob7y.namida.R.drawable.shadow_bg))
         )
 
         horizontalSpace(12)
