@@ -4759,7 +4759,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   void initState() {
     if (widget.totalCount == 1) {
       cachePriority = VideoController.inst.videosPriorityManager.getVideoPriority(widget.videosId.first);
-      widget.onInitialPriority?.call(cachePriority);
+      WidgetsBinding.instance.addPostFrameCallback((_) => widget.onInitialPriority?.call(cachePriority));
     }
     widget.controller?._menuWrapperFn = _getPopupWrapper;
     super.initState();
@@ -4850,7 +4850,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   @override
   Widget build(BuildContext context) {
     widget.controller?._currentContext = context;
-    return _getPopupWrapper() ?? SizedBox();
+    return _getPopupWrapper() ?? const SizedBox();
   }
 }
 

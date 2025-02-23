@@ -898,9 +898,14 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     return SliverVariedExtentList.builder(
                                                                       key: Key("${currentId}_feedlist"),
                                                                       itemExtentBuilder: (index, dimensions) {
-                                                                        if (isShortsVisible && currentRelatedVideos.shortsSection.relatedItemsShortsData[index] != null) {
-                                                                          return 64.0 * 3 + 24.0 * 2;
+                                                                        if (isShortsVisible) {
+                                                                          if (currentRelatedVideos.shortsSection.relatedItemsShortsData[index] != null) {
+                                                                            return 64.0 * 3 + 24.0 * 2;
+                                                                          } else if (currentRelatedVideos.shortsSection.shortsIndicesLookup[index] == true) {
+                                                                            return 0;
+                                                                          }
                                                                         }
+
                                                                         final item = currentRelatedVideos.items[index];
                                                                         if (!isShortsVisible && item is StreamInfoItemShort) return 0;
                                                                         if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
@@ -908,7 +913,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                       },
                                                                       itemCount: currentRelatedVideos.items.length,
                                                                       itemBuilder: (context, index) {
-                                                                        final shortSection = currentRelatedVideos.shortsSection.relatedItemsShortsData[index];
+                                                                        final shortsData = currentRelatedVideos.shortsSection;
+
+                                                                        final shortSection = shortsData.relatedItemsShortsData[index];
                                                                         if (shortSection != null) {
                                                                           if (isShortsVisible == false) return const SizedBox();
                                                                           const height = 64.0 * 3;
@@ -937,6 +944,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                               },
                                                                             ),
                                                                           );
+                                                                        }
+                                                                        if (shortsData.shortsIndicesLookup[index] == true) {
+                                                                          return const SizedBox.shrink();
                                                                         }
 
                                                                         final item = currentRelatedVideos.items[index];

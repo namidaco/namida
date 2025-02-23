@@ -1644,8 +1644,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onRepeatForNtimesFinish() {
-    settings.player.save(repeatMode: RepeatMode.none);
+  void onRepeatModeChange(RepeatMode repeatMode) {
+    settings.player.save(repeatMode: repeatMode);
   }
 
   @override
@@ -1981,16 +1981,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   MediaControlsProvider get mediaControls => _mediaControls;
-
-  static const _mediaControls = MediaControlsProvider(
-    skipToPrevious: MediaControl.skipToPrevious,
-    pause: MediaControl.pause,
-    play: MediaControl.play,
-    skipToNext: MediaControl.skipToNext,
-    stop: MediaControl.stop,
-    fastForward: MediaControl.fastForward,
-    rewind: MediaControl.rewind,
-  );
+  static const _mediaControls = MediaControlsProvider.main();
 
   // -- builders
 

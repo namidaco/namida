@@ -56,7 +56,14 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                 sliverListBuilder: (feed, itemBuilder, dummyCard) {
                   return SliverVariedExtentList.builder(
                     itemExtentBuilder: (index, dimensions) {
-                      if (isShortsVisible && feed.shortsSection.relatedItemsShortsData[index] != null) return 64.0 * 3 + 24.0 * 2;
+                      if (isShortsVisible) {
+                        if (feed.shortsSection.relatedItemsShortsData[index] != null) {
+                          return 64.0 * 3 + 24.0 * 2;
+                        } else if (feed.shortsSection.shortsIndicesLookup[index] == true) {
+                          return 0;
+                        }
+                      }
+
                       final item = feed.items[index];
                       if (!isShortsVisible && item is StreamInfoItemShort) return 0;
                       if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
@@ -64,7 +71,9 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                     },
                     itemCount: feed.items.length,
                     itemBuilder: (context, index) {
-                      final shortSection = feed.shortsSection.relatedItemsShortsData[index];
+                      final shortsData = feed.shortsSection;
+
+                      final shortSection = shortsData.relatedItemsShortsData[index];
                       if (shortSection != null) {
                         if (isShortsVisible == false) return const SizedBox();
                         const height = 64.0 * 3;
@@ -93,6 +102,9 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                             },
                           ),
                         );
+                      }
+                      if (shortsData.shortsIndicesLookup[index] == true) {
+                        return const SizedBox.shrink();
                       }
                       return itemBuilder(feed.items[index], index, feed);
                     },
