@@ -538,13 +538,21 @@ class CurrentColor {
 }
 
 extension ColorUtils on Color {
+  bool _isNearWhiteOrBlack() {
+    final luminance = computeLuminance();
+    return luminance <= 0.1 || luminance >= 0.9;
+  }
+
   Color get delightned {
+    if (_isNearWhiteOrBlack()) return this;
+
     final hslColor = HSLColor.fromColor(this);
     final modifiedColor = hslColor.withLightness(0.4).toColor();
     return modifiedColor;
   }
 
   Color get lighter {
+    if (_isNearWhiteOrBlack()) return this;
     final hslColor = HSLColor.fromColor(this);
     final modifiedColor = hslColor.withLightness(0.64).toColor();
     return modifiedColor;

@@ -13,6 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -1321,6 +1322,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                     child: const Icon(
                                       Broken.tick_square,
                                       size: 32.0,
+                                      color: AppThemes.fabForegroundColor,
                                     ),
                                   )
                                 : const SizedBox(),

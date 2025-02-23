@@ -11,6 +11,8 @@ class AppThemes {
   static final AppThemes _instance = AppThemes._internal();
   AppThemes._internal();
 
+  static const fabForegroundColor = Color.fromRGBO(255, 255, 255, 0.8);
+
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
     light ??= namida.theme.brightness == Brightness.light;
@@ -41,10 +43,16 @@ class AppThemes {
 
     const fontFallback = ['sans-serif', 'Roboto'];
 
+    final brightness = light ? Brightness.light : Brightness.dark;
     return ThemeData(
-      brightness: light ? Brightness.light : Brightness.dark,
+      brightness: brightness,
       useMaterial3: true,
-      colorSchemeSeed: color,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: color,
+        brightness: brightness,
+        contrastLevel: 0.1,
+        dynamicSchemeVariant: DynamicSchemeVariant.content, // ensure monochrome colors are not modified
+      ),
       fontFamily: "LexendDeca",
       fontFamilyFallback: fontFallback,
       scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
@@ -93,15 +101,18 @@ class AppThemes {
                   : null),
         ),
       ),
-      dialogBackgroundColor: lighterDialog
-          ? light
-              ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
-              : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
-          : light
-              ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
-              : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
-      dialogTheme: DialogTheme(surfaceTintColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius))),
+      dialogTheme: DialogTheme(
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius)),
+        backgroundColor: lighterDialog
+            ? light
+                ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
+                : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
+            : light
+                ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
+                : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
+      ),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 16.0,
         selectedColor: light

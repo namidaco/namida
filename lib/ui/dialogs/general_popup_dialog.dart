@@ -777,7 +777,7 @@ Future<void> showGeneralPopupDialog(
         return AnimatedThemeOrTheme(
           data: theme,
           child: Dialog(
-            backgroundColor: theme.dialogBackgroundColor,
+            backgroundColor: theme.dialogTheme.backgroundColor,
             insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 24.0),
             clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(

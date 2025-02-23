@@ -13,6 +13,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -190,7 +191,10 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 heroTag: 'yt_queue_fab_hero',
                                 backgroundColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
                                 onPressed: () => _animateSmallToBig(),
-                                child: const Icon(Broken.driver),
+                                child: const Icon(
+                                  Broken.driver,
+                                  color: AppThemes.fabForegroundColor,
+                                ),
                               ),
                             )
                           : NamidaInkWell(

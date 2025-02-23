@@ -18,6 +18,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/searchbar_animation.dart';
@@ -324,7 +325,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
                             rx: ScrollSearchController.inst.currentSearchType,
                             builder: (context, currentSearchType) => Icon(
                               _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
-                              color: Color.fromRGBO(255, 255, 255, 0.8),
+                              color: AppThemes.fabForegroundColor,
                             ),
                           ),
                           if (runningSearchesCount > 0) searchProgressWidget,
@@ -336,7 +337,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
                     rx: settings.floatingActionButton,
                     builder: (context, fabButton) => Icon(
                       fabButton.toIcon(),
-                      color: const Color.fromRGBO(255, 255, 255, 0.8),
+                      color: AppThemes.fabForegroundColor,
                     ),
                   ),
           ),
