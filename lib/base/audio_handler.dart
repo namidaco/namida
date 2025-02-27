@@ -989,10 +989,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeID item,
     int index,
     Function skipItem, {
-    bool? canPlayAudioOnlyFromCache,
+    bool canPlayAudioOnlyFromCache = true, // dont link this to other stuff, if video is needed it will be taken care of.
   }) async {
-    canPlayAudioOnlyFromCache ??= (_isAudioOnlyPlayback || !ConnectivityController.inst.hasConnection);
-
     WaveformController.inst.resetWaveform();
     Lyrics.inst.resetLyrics();
 
@@ -1119,7 +1117,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     videoPlayerInfo.value = null;
 
     ({AudioCacheDetails? audio, NamidaVideo? video, Duration? duration}) playedFromCacheDetails = (audio: null, video: null, duration: null);
-    bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache! || playedFromCacheDetails.video != null);
+    bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache || playedFromCacheDetails.video != null);
 
     bool generatedWaveform = false;
     void generateWaveform() {
