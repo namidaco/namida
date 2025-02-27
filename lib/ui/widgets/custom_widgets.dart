@@ -393,7 +393,7 @@ class CustomBlurryDialog extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         child: Dialog(
-          backgroundColor: ctxth.dialogBackgroundColor,
+          backgroundColor: ctxth.dialogTheme.backgroundColor,
           surfaceTintColor: Colors.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
           clipBehavior: Clip.antiAlias,
