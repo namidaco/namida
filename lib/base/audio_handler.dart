@@ -227,11 +227,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   void _refreshHomeWidgetIsPlaying(bool isPlaying) {
-    HomeWidgetController.updateIsPlaying(isPlaying);
+    HomeWidgetController.instance?.updateIsPlaying(isPlaying);
   }
 
   void _refreshHomeWidget(MediaItem media, bool isPlaying, bool isFavourite) {
-    HomeWidgetController.updateAll(
+    HomeWidgetController.instance?.updateAll(
       media.displayTitle ?? media.title,
       media.displaySubtitle ?? media.artist ?? media.album,
       media.artUri,

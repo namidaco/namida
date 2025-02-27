@@ -69,7 +69,7 @@ void main() {
 void mainInitialization() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await HomeWidgetController.init();
+  await HomeWidgetController.instance?.init();
 
   // -- x this makes some issues with GestureDetector
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.

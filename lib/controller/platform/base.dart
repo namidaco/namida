@@ -5,10 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 class NamidaPlatformBuilder {
-  static T init<T>({required T Function() android, required T Function() windows}) {
+  static T init<T>({
+    required T Function() android,
+    T Function()? ios,
+    required T Function() windows,
+  }) {
     return switch (Platform.operatingSystem) {
       'windows' => windows(),
       'android' => android(),
+      'ios' when ios != null => ios(),
       _ => throw UnimplementedError(),
     };
   }
