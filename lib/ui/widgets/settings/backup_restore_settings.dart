@@ -188,6 +188,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   AppPaths.SETTINGS_PLAYER,
                   AppPaths.SETTINGS_YOUTUBE,
                   AppPaths.SETTINGS_EXTRA,
+                  AppPaths.SETTINGS_TUTORIAL,
                   AppPaths.TRACKS_OLD,
                   AppPaths.TRACKS_DB_INFO.file.path,
                   AppPaths.TRACKS_STATS_OLD,

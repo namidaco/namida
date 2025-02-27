@@ -498,7 +498,8 @@ enum SnackDisplayDuration {
   mediumHigh(2500),
   long(3000),
   veryLong(4000),
-  eternal(5000);
+  eternal(5000),
+  tutorial(8000);
 
   final int milliseconds;
   const SnackDisplayDuration(this.milliseconds);

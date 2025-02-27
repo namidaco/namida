@@ -227,6 +227,7 @@ class AppPaths {
   static final SETTINGS_PLAYER = _join(_USER_DATA, 'namida_settings_player.json');
   static final SETTINGS_YOUTUBE = _join(_USER_DATA, 'namida_settings_youtube.json');
   static final SETTINGS_EXTRA = _join(_USER_DATA, 'namida_settings_extra.json');
+  static final SETTINGS_TUTORIAL = _join(_USER_DATA, 'namida_settings_tutorial.json');
   static final TRACKS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks');
   static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
   static final VIDEOS_LOCAL_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'local_videos');

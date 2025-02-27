@@ -501,34 +501,35 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               ),
                             ),
                           ),
-                          Positioned(
-                            bottom: 8.0,
-                            right: 0.0,
-                            child: Container(
-                              clipBehavior: Clip.antiAlias,
-                              padding: const EdgeInsets.all(4.0),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 8.0,
-                                    color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-                                  ),
-                                ],
-                              ),
-                              child: NamidaIconButton(
-                                icon: Broken.maximize_3,
-                                iconSize: 20.0,
-                                onPressed: () {
-                                  if (fullscreen) {
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    enterFullScreen();
-                                  }
-                                },
+                          if (fullscreen)
+                            Positioned(
+                              bottom: 8.0,
+                              right: 0.0,
+                              child: Container(
+                                clipBehavior: Clip.antiAlias,
+                                padding: const EdgeInsets.all(4.0),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      blurRadius: 8.0,
+                                      color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                                    ),
+                                  ],
+                                ),
+                                child: NamidaIconButton(
+                                  icon: Broken.maximize_3,
+                                  iconSize: 24.0,
+                                  onPressed: () {
+                                    if (fullscreen) {
+                                      Navigator.of(context).pop();
+                                    } else {
+                                      enterFullScreen();
+                                    }
+                                  },
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),

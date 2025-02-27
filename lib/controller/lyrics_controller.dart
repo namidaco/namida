@@ -16,10 +16,13 @@ import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -63,6 +66,24 @@ class Lyrics {
   }
 
   Future<void> updateLyrics(Playable item) async {
+    await _updateLyrics(item);
+    if (settings.tutorial.lyricsLongPressFullScreen) {
+      if (currentLyricsLRC.value != null || currentLyricsText.value.isNotEmpty) {
+        snackyy(
+          message: lang.LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN,
+          top: false,
+          displayDuration: SnackDisplayDuration.tutorial,
+          icon: Broken.book_saved,
+          button: (
+            lang.DONE,
+            () => settings.tutorial.save(lyricsLongPressFullScreen: false),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateLyrics(Playable item) async {
     resetLyrics();
     _currentItem = item;
     bool checkInterrupted() => _currentItem != item;

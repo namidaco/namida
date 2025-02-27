@@ -18,7 +18,7 @@ import 'dart:io';
 void main(List<String> argumentsPre) async {
   final args = List<String>.from(argumentsPre);
   final shouldRemove = args.remove('-r');
-  final argKeyhh = args[0].toUpperCase();
+  final argKeyhh = args[0].toUpperCase().replaceAll(' ', '_');
   final argKeys = argKeyhh.split(',');
 
   // should remove

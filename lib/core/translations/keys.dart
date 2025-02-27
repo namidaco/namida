@@ -346,6 +346,7 @@ abstract class LanguageKeys {
   String get LOAD_ALL => _getKey('LOAD_ALL');
   String get LOCAL => _getKey('LOCAL');
   String get LOCAL_VIDEO_MATCHING => _getKey('LOCAL_VIDEO_MATCHING');
+  String get LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN => _getKey('LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');
   String get LOST_MEMORIES_SUBTITLE => _getKey('LOST_MEMORIES_SUBTITLE');
   String get LOUDNESS_ENHANCER => _getKey('LOUDNESS_ENHANCER');

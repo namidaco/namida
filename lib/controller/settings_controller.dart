@@ -15,6 +15,7 @@ part 'settings.equalizer.dart';
 part 'settings.extra.dart';
 part 'settings.player.dart';
 part 'settings.youtube.dart';
+part 'settings.tutorial.dart';
 
 final settings = _SettingsController._internal();
 
@@ -33,6 +34,7 @@ class _SettingsController with SettingsFileWriter {
   final player = _PlayerSettings._internal();
   final youtube = _YoutubeSettings._internal();
   final extra = _ExtraSettings._internal();
+  final tutorial = _TutorialSettings._internal();
 
   final selectedLanguage = kDefaultLang.obs;
   final themeMode = ThemeMode.system.obs;
