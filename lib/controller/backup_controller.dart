@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_archive/flutter_archive.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -8,6 +7,7 @@ import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -25,6 +25,8 @@ class BackupController {
   static BackupController get inst => _instance;
   static final BackupController _instance = BackupController._internal();
   BackupController._internal();
+
+  final _zipManager = ZipManager.platform();
 
   final isCreatingBackup = false.obso;
   final isRestoringBackup = false.obso;
@@ -60,6 +62,7 @@ class BackupController {
           AppPaths.SETTINGS_PLAYER,
           AppPaths.SETTINGS_YOUTUBE,
           AppPaths.SETTINGS_EXTRA,
+          AppPaths.SETTINGS_TUTORIAL,
           AppPaths.LATEST_QUEUE,
           AppPaths.YT_LIKES_PLAYLIST,
           AppPaths.YT_SUBSCRIPTIONS,
@@ -125,7 +128,7 @@ class BackupController {
         try {
           final prefix = d.path.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? 'YOUTUBE_' : '';
           final dirZipFile = FileParts.join(AppDirs.USER_DATA, "${prefix}TEMPDIR_${d.path.getFilename}.zip");
-          await ZipFile.createFromDirectory(sourceDir: d, zipFile: dirZipFile);
+          await _zipManager.createZipFromDirectory(sourceDir: d, zipFile: dirZipFile);
           compressedDirectories.add(dirZipFile);
         } catch (e) {
           continue;
@@ -134,12 +137,12 @@ class BackupController {
 
       if (localFilesOnly.isNotEmpty) {
         tempAllLocal = await FileParts.join(AppDirs.USER_DATA, "LOCAL_FILES.zip").create();
-        await ZipFile.createFromFiles(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
+        await _zipManager.createZip(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
       }
 
       if (youtubeFilesOnly.isNotEmpty) {
         tempAllYoutube = await FileParts.join(AppDirs.USER_DATA, "YOUTUBE_FILES.zip").create();
-        await ZipFile.createFromFiles(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
+        await _zipManager.createZip(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
       final allFiles = [
@@ -147,7 +150,7 @@ class BackupController {
         if (tempAllYoutube != null) tempAllYoutube,
         ...compressedDirectories,
       ];
-      await ZipFile.createFromFiles(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);
+      await _zipManager.createZip(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);
 
       snackyy(title: lang.CREATED_BACKUP_SUCCESSFULLY, message: lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
     } catch (e) {
@@ -245,20 +248,20 @@ class BackupController {
 
     isRestoringBackup.value = true;
 
-    await ZipFile.extractToDirectory(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
+    await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
 
     // after finishing, extracts zip files inside the main zip
     await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
       if (backupItem is File) {
         final filename = backupItem.path.getFilename;
         if (filename == 'LOCAL_FILES.zip') {
-          await ZipFile.extractToDirectory(
+          await _zipManager.extractZip(
             zipFile: backupItem,
             destinationDir: Directory(AppDirs.USER_DATA),
           );
           await backupItem.tryDeleting();
         } else if (filename == 'YOUTUBE_FILES.zip') {
-          await ZipFile.extractToDirectory(
+          await _zipManager.extractZip(
             zipFile: backupItem,
             destinationDir: Directory(AppDirs.USER_DATA), // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
           );
@@ -270,7 +273,7 @@ class BackupController {
             final dir = isYoutubeTemp ? AppDirs.YOUTUBE_MAIN_DIRECTORY : AppDirs.USER_DATA;
             final prefixToReplace = isYoutubeTemp ? 'YOUTUBE_TEMPDIR_' : 'TEMPDIR_';
 
-            await ZipFile.extractToDirectory(
+            await _zipManager.extractZip(
               zipFile: backupItem,
               destinationDir: Directory(FileParts.joinPath(dir, filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', ''))),
             );

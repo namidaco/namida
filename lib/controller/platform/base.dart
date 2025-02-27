@@ -8,12 +8,14 @@ class NamidaPlatformBuilder {
   static T init<T>({
     required T Function() android,
     T Function()? ios,
+    T Function()? macos,
     required T Function() windows,
   }) {
     return switch (Platform.operatingSystem) {
       'windows' => windows(),
       'android' => android(),
       'ios' when ios != null => ios(),
+      'macos' when macos != null => macos(),
       _ => throw UnimplementedError(),
     };
   }
