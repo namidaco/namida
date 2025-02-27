@@ -50,8 +50,8 @@ class AppThemes {
       colorScheme: ColorScheme.fromSeed(
         seedColor: color,
         brightness: brightness,
-        contrastLevel: 0.1,
-        dynamicSchemeVariant: DynamicSchemeVariant.content, // ensure monochrome colors are not modified
+        contrastLevel: 0.05,
+        dynamicSchemeVariant: DynamicSchemeVariant.fidelity, // ensure monochrome colors are not modified
       ),
       fontFamily: "LexendDeca",
       fontFamilyFallback: fontFallback,
