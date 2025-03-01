@@ -161,79 +161,83 @@ class IndexerSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _IndexerSettingsKeys.foldersToScan,
       child: Obx(
-        (context) => AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: settings.useMediaStore.valueR ? 0.5 : 1.0,
-          child: NamidaExpansionTile(
-            bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
-            bigahh: true,
-            compact: false,
-            initiallyExpanded: initiallyExpanded,
-            icon: Broken.folder,
-            titleText: lang.LIST_OF_FOLDERS,
-            textColor: context.textTheme.displayLarge!.color,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+        (context) {
+          final mediaStoreEnabled = settings.useMediaStore.valueR;
+          return AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: mediaStoreEnabled ? 0.5 : 1.0,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
+              subtitleText: mediaStoreEnabled ? lang.MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT : null,
+              bigahh: true,
+              compact: false,
+              initiallyExpanded: initiallyExpanded,
+              icon: Broken.folder,
+              titleText: lang.LIST_OF_FOLDERS,
+              textColor: context.textTheme.displayLarge!.color,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IgnorePointer(
+                    ignoring: settings.useMediaStore.valueR,
+                    child: addFolderButton((dirsPath) {
+                      settings.save(directoriesToScan: dirsPath);
+                    }),
+                  ),
+                  const SizedBox(width: 8.0),
+                  const Icon(Broken.arrow_down_2),
+                ],
+              ),
               children: [
-                IgnorePointer(
-                  ignoring: settings.useMediaStore.valueR,
-                  child: addFolderButton((dirsPath) {
-                    settings.save(directoriesToScan: dirsPath);
-                  }),
-                ),
-                const SizedBox(width: 8.0),
-                const Icon(Broken.arrow_down_2),
-              ],
-            ),
-            children: [
-              ...settings.directoriesToScan.valueR.map(
-                (e) => IgnorePointer(
-                  ignoring: settings.useMediaStore.value,
-                  child: ListTile(
-                    title: Text(
-                      e,
-                      style: context.textTheme.displayMedium,
-                    ),
-                    trailing: TextButton(
-                      onPressed: () {
-                        if (settings.directoriesToScan.length == 1) {
-                          snackyy(
-                            title: lang.MINIMUM_ONE_ITEM,
-                            message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
-                            displayDuration: SnackDisplayDuration.veryLong,
-                          );
-                        } else {
-                          NamidaNavigator.inst.navigateDialog(
-                            dialog: CustomBlurryDialog(
-                              normalTitleStyle: true,
-                              isWarning: true,
-                              actions: [
-                                const CancelButton(),
-                                NamidaButton(
-                                  text: lang.REMOVE,
-                                  onPressed: () {
-                                    settings.removeFromList(directoriesToScan1: e);
-                                    NamidaNavigator.inst.closeDialog();
-                                    showRefreshPromptDialog(true);
-                                  },
-                                ),
-                              ],
-                              bodyText: "${lang.REMOVE} \"$e\"?",
-                            ),
-                          );
-                        }
-                      },
-                      child: NamidaButtonText(
-                        lang.REMOVE.toUpperCase(),
-                        style: const TextStyle(fontSize: 14.0),
+                ...settings.directoriesToScan.valueR.map(
+                  (e) => IgnorePointer(
+                    ignoring: settings.useMediaStore.value,
+                    child: ListTile(
+                      title: Text(
+                        e,
+                        style: context.textTheme.displayMedium,
+                      ),
+                      trailing: TextButton(
+                        onPressed: () {
+                          if (settings.directoriesToScan.length == 1) {
+                            snackyy(
+                              title: lang.MINIMUM_ONE_ITEM,
+                              message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
+                              displayDuration: SnackDisplayDuration.veryLong,
+                            );
+                          } else {
+                            NamidaNavigator.inst.navigateDialog(
+                              dialog: CustomBlurryDialog(
+                                normalTitleStyle: true,
+                                isWarning: true,
+                                actions: [
+                                  const CancelButton(),
+                                  NamidaButton(
+                                    text: lang.REMOVE,
+                                    onPressed: () {
+                                      settings.removeFromList(directoriesToScan1: e);
+                                      NamidaNavigator.inst.closeDialog();
+                                      showRefreshPromptDialog(true);
+                                    },
+                                  ),
+                                ],
+                                bodyText: "${lang.REMOVE} \"$e\"?",
+                              ),
+                            );
+                          }
+                        },
+                        child: NamidaButtonText(
+                          lang.REMOVE.toUpperCase(),
+                          style: const TextStyle(fontSize: 14.0),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
