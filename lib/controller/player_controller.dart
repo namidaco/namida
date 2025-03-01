@@ -597,7 +597,20 @@ class Player {
     bool updateQueue = true,
     int? maximumItems,
     void Function(Playable currentItem)? onAssigningCurrentItem,
+
+    /// add items next and play them instead of assigning them as a new queue
+    bool gentlePlay = false,
   }) async {
+    if (gentlePlay) {
+      _audioHandler.setPlayWhenReady(startPlaying);
+      await addToQueue(
+        queue,
+        insertNext: true,
+        showSnackBar: false,
+      );
+      await next();
+      return;
+    }
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
       queue: queue,

@@ -513,7 +513,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
         return true;
       case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, getPlayables(), QueueSourceYoutubeID.externalLink);
+        await Player.inst.playOrPause(0, getPlayables(), QueueSourceYoutubeID.externalLink, gentlePlay: true);
         return true;
       case OnYoutubeLinkOpenAction.playNext:
         return Player.inst.addToQueue(getPlayables(), insertNext: true);

@@ -477,6 +477,15 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
   }
 }
 
+extension IterableExtensions<E> on Iterable<E> {
+  bool hasSingleItem() {
+    Iterator it = iterator;
+    if (!it.moveNext()) return false; // empty
+    if (it.moveNext()) return false; // more than 1
+    return true;
+  }
+}
+
 extension DirectoryUtils on Directory {
   List<FileSystemEntity> listSyncSafe({bool recursive = false, bool followLinks = true}) {
     try {

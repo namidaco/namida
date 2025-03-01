@@ -508,12 +508,15 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     0,
                     [itemToYTIDPlay(finalList.elementAt(this.index))],
                     configs.queueSource,
+                    gentlePlay: true,
                   );
                 } else {
+                  final gentlePlay = finalList.hasSingleItem();
                   Player.inst.playOrPause(
                     this.index,
                     finalList.map(itemToYTIDPlay),
                     configs.queueSource,
+                    gentlePlay: gentlePlay,
                   );
                 }
               }

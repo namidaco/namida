@@ -1298,7 +1298,7 @@ Future<void> showGeneralPopupDialog(
                                 icon: Broken.video,
                                 onTap: () {
                                   NamidaNavigator.inst.closeDialog();
-                                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others);
+                                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
                                 },
                                 trailing: isSingle && firstVideoChannelId != null
                                     ? IconButton(

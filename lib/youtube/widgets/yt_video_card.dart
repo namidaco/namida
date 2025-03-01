@@ -422,10 +422,12 @@ class _VideoCardUtils {
     if (openInFullScreen) {
       VideoController.inst.toggleFullScreenVideoView(isLocal: false, setOrientations: false);
     }
+    final gentlePlay = playlist == null ? true : false;
     return Player.inst.playOrPause(
       0,
       [YoutubeID(id: videoId, playlistID: playlistID)],
       queueSource,
+      gentlePlay: gentlePlay,
       onAssigningCurrentItem: (currentItem) async {
         // -- add the remaining playlist videos, only if the same item is still playing
 

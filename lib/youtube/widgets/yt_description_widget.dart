@@ -113,7 +113,7 @@ class YoutubeDescriptionWidgetManager {
           Player.inst.seek(Duration(seconds: sw.videoStartSeconds!));
           VibratorController.light();
         } else {
-          Player.inst.playOrPause(0, [YoutubeID(id: sw.videoId!, playlistID: null)], QueueSourceYoutubeID.videoDescription);
+          Player.inst.playOrPause(0, [YoutubeID(id: sw.videoId!, playlistID: null)], QueueSourceYoutubeID.videoDescription, gentlePlay: true);
           // TODO: seek after playing?
         }
       };
