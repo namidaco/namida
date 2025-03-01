@@ -10,6 +10,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -236,6 +237,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
                 playlist: playlist,
                 playlistID: playlistID,
                 queueSource: queueSource,
+                openInFullScreen: true,
               );
             },
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: short.id, context: context),
@@ -275,7 +277,11 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
     );
   }
 
-  Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(videoId: short.id, queueSource: queueSource);
+  Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(
+        videoId: short.id,
+        queueSource: queueSource,
+        openInFullScreen: true,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -410,8 +416,12 @@ class _VideoCardUtils {
     PlaylistID? playlistID,
     int? index,
     YoutiPiePlaylistResultBase? playlist,
+    bool openInFullScreen = false,
   }) async {
     YTUtils.expandMiniplayer();
+    if (openInFullScreen) {
+      VideoController.inst.toggleFullScreenVideoView(isLocal: false, setOrientations: false);
+    }
     return Player.inst.playOrPause(
       0,
       [YoutubeID(id: videoId, playlistID: playlistID)],
