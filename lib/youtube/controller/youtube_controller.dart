@@ -317,9 +317,6 @@ class YoutubeController {
     }
   }
 
-  static const String cleanupFilenameRegex = r'[*#\$|/\\!^:"\?]';
-  String cleanupFilename(String filename) => filename.replaceAll(RegExp(cleanupFilenameRegex, caseSensitive: false), '_');
-
   // -- things here are not refreshed. should be called in startup only.
   Future<void> loadDownloadTasksInfoFileAsync() async {
     isLoadingDownloadTasks.value = true;
@@ -839,7 +836,7 @@ class YoutubeController {
       requiresRenaming = true;
     }
 
-    final filenameCleanTemp = cleanupFilename(finalFilenameTemp);
+    final filenameCleanTemp = DownloadTaskFilename.cleanupFilename(finalFilenameTemp);
     if (filenameCleanTemp != finalFilenameTemp) {
       finalFilenameTemp = filenameCleanTemp;
       requiresRenaming = true;

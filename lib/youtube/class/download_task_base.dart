@@ -1,4 +1,7 @@
 class DownloadTaskFilename {
+  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?]', caseSensitive: false);
+  static String cleanupFilename(String filename) => filename.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
+
   String filename;
   late String key;
   late int _uniqueKey;
@@ -71,6 +74,7 @@ class DownloadTaskGroupName {
 
   static String _sanitize(String name) {
     int charsToRemove = 0;
+    // -- remove all starting dots ..
     for (int i = 0; i < name.length; i++) {
       var c = name[i];
       if (c == '.') {
@@ -79,14 +83,16 @@ class DownloadTaskGroupName {
         break;
       }
     }
+    String finalName = name;
     if (charsToRemove > 0) {
-      if (charsToRemove >= name.length) {
-        return '';
+      if (charsToRemove >= finalName.length) {
+        finalName = '';
       } else {
-        return name.substring(charsToRemove);
+        finalName = name.substring(charsToRemove);
       }
     }
-    return name;
+    finalName = finalName.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
+    return finalName;
   }
 
   const DownloadTaskGroupName.defaulty() : groupName = '';

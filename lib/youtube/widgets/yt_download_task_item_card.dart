@@ -298,9 +298,9 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
           if (value.startsWith('.')) return "${lang.FILENAME_SHOULDNT_START_WITH} .";
 
-          final filenameClean = YoutubeController.inst.cleanupFilename(value);
+          final filenameClean = DownloadTaskFilename.cleanupFilename(value);
           if (value != filenameClean) {
-            const baddiesAll = YoutubeController.cleanupFilenameRegex; // should remove \ but whatever
+            final baddiesAll = DownloadTaskFilename.cleanupFilenameRegex.pattern;
             final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
             return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
           }
