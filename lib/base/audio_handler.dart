@@ -923,8 +923,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final prevAudioLangName = prevAudioStream?.audioTrack?.displayName ?? currentCachedAudio.value?.langaugeName;
     final prevVideoInfo = YoutubeInfoController.current.currentYTStreams.value;
 
-    // -- Adding recently cached audio to cache map, for being displayed on cards.
-    audioCacheMap.addNoDuplicatesForce(
+    // -- Adding recently cached audio to cache map, to be displayed on cards.
+    audioCacheMap[videoId]?.removeWhere((element) => element.file == audioCacheFile); // removing previous same entries
+    audioCacheMap.addForce(
         videoId,
         AudioCacheDetails(
           youtubeId: videoId,
