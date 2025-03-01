@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/utils.dart';
 
 typedef PullToRefreshCallback = Future<void> Function();
@@ -161,7 +162,10 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
       child: CircleAvatar(
         radius: 24.0,
         backgroundColor: context.theme.colorScheme.secondaryContainer,
-        child: const Icon(Broken.refresh_2),
+        child: const Icon(
+          Broken.refresh_2,
+          color: AppThemes.fabForegroundColor,
+        ),
       ),
     );
     return Positioned(
