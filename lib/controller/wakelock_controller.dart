@@ -68,11 +68,19 @@ class WakelockController {
     }
   }
 
-  void _enable() {
-    WakelockPlus.enable();
+  void _enable() async {
+    try {
+      await WakelockPlus.enable();
+    } catch (_) {
+      // -- no foreground activity yet
+    }
   }
 
-  void _disable() {
-    WakelockPlus.disable();
+  void _disable() async {
+    try {
+      await WakelockPlus.disable();
+    } catch (_) {
+      // -- no foreground activity yet
+    }
   }
 }
