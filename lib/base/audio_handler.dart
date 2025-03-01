@@ -1005,7 +1005,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeInfoController.current.onVideoPageReset?.call();
 
     if (item.id == '' || item.id == 'null') {
-      if (currentQueue.value.length > 1) skipItem();
+      if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
       return;
     }
 
@@ -1158,7 +1158,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (!ConnectivityController.inst.hasConnection && playedFromCacheDetails.audio == null) {
       // -- if no connection and couldnt play from cache, we skip
-      if (currentQueue.value.length > 1) skipItem();
+      if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
       return;
     }
 
@@ -1414,7 +1414,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           generateWaveform();
           if (!okaySetFromCache()) {
             showSnackError('skipping');
-            skipItem();
+            if (_willPlayWhenReady) skipItem();
           }
         }
       }
