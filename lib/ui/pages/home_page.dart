@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   final _mixes = <MapEntry<String, List<Track>>>[];
 
-  final _lostMemoriesYears = <int>[];
+  var _lostMemoriesYears = <int>[];
 
   int currentYearLostMemories = 0;
   DateRange? currentYearLostMemoriesDateRange;
@@ -147,20 +147,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
 
     // -- Lost Memories --
-    final newestDaySinceEpoch = HistoryController.inst.historyMap.value.keys.firstOrNull;
-    final oldestDaySinceEpoch = HistoryController.inst.historyMap.value.keys.lastOrNull;
-    final newestYear = newestDaySinceEpoch == null ? 0 : DateTime.fromMillisecondsSinceEpoch(newestDaySinceEpoch * 24 * 60 * 60 * 1000).year;
-    final oldestYear = oldestDaySinceEpoch == null ? 0 : DateTime.fromMillisecondsSinceEpoch(oldestDaySinceEpoch * 24 * 60 * 60 * 1000).year;
+    _lostMemoriesYears = HistoryController.inst.getHistoryYears()..remove(timeNow.year);
+    final oldestYear = _lostMemoriesYears.lastOrNull ?? 0;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
 
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
-
-    // -- Lost Memories Years
-    final diff = (newestYear - oldestYear).abs();
-    for (int i = 1; i <= diff; i++) {
-      _lostMemoriesYears.add(newestYear - i);
-    }
 
     // -- Recent Albums --
     _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));

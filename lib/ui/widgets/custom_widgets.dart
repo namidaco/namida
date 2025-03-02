@@ -3006,29 +3006,46 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   final ({double itemExtent, double dayHeaderExtent}) Function() itemExtentAndDayHeaderExtent;
   const HistoryJumpToDayIcon({super.key, required this.controller, required this.itemExtentAndDayHeaderExtent});
 
+  double get topPadding => 100.0;
+
+  DateTime? getCurrentDateFromScrollPosition() {
+    final currentScrolledDay = getCurrentDayFromScrollPosition();
+    return currentScrolledDay == null ? null : DateTime(1970).add(Duration(days: currentScrolledDay));
+  }
+
+  int? getCurrentDayFromScrollPosition() {
+    final info = itemExtentAndDayHeaderExtent();
+    final topPadding = this.topPadding;
+    final currentScrolledDay = controller.currentScrollPositionToDay(info.itemExtent, info.dayHeaderExtent, topPadding: topPadding);
+    return currentScrolledDay;
+  }
+
+  void scrollToDate(DateTime dateToScrollTo) {
+    final dayToScrollTo = dateToScrollTo.toDaysSince1970();
+    final days = controller.historyDays.toList();
+    days.removeWhere((element) => element <= dayToScrollTo);
+    double totalScrollOffset = controller.daysToSectionExtent(days);
+    controller.scrollController.jumpTo(totalScrollOffset + topPadding);
+  }
+
   @override
   Widget build(BuildContext context) {
     return NamidaAppBarIcon(
       icon: Broken.calendar,
       tooltip: () => lang.JUMP_TO_DAY,
       onPressed: () {
-        final info = itemExtentAndDayHeaderExtent();
-        const topPadding = 100.0;
-        final currentScrolledDay = controller.currentScrollPositionToDay(info.itemExtent, info.dayHeaderExtent, topPadding: topPadding);
+        final initialDate = getCurrentDateFromScrollPosition();
         showCalendarDialog(
           historyController: controller,
           title: lang.JUMP_TO_DAY,
           buttonText: lang.JUMP,
           calendarType: CalendarDatePicker2Type.single,
           useHistoryDates: true,
-          initialDate: currentScrolledDay == null ? null : DateTime(1970).add(Duration(days: currentScrolledDay)),
+          initialDate: initialDate,
           onGenerate: (dates) {
             NamidaNavigator.inst.closeDialog();
-            final dayToScrollTo = dates.firstOrNull?.toDaysSince1970() ?? 0;
-            final days = controller.historyDays.toList();
-            days.removeWhere((element) => element <= dayToScrollTo);
-            double totalScrollOffset = controller.daysToSectionExtent(days);
-            controller.scrollController.jumpTo(totalScrollOffset + topPadding);
+            final dateToScrollTo = dates.firstOrNull;
+            if (dateToScrollTo != null) scrollToDate(dateToScrollTo);
           },
         );
       },
@@ -3834,33 +3851,6 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
       ],
     );
   }
-}
-
-class VisibilityDetector extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onInit;
-  final VoidCallback? onDispose;
-  const VisibilityDetector({super.key, required this.child, this.onInit, this.onDispose});
-
-  @override
-  State<VisibilityDetector> createState() => _VisibilityDetectorState();
-}
-
-class _VisibilityDetectorState extends State<VisibilityDetector> {
-  @override
-  void initState() {
-    super.initState();
-    widget.onInit?.call();
-  }
-
-  @override
-  void dispose() {
-    widget.onDispose?.call();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class AnimatedEnabled extends StatelessWidget {

@@ -47,7 +47,6 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
-import 'package:namida/youtube/yt_utils.dart';
 
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override

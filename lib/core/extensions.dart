@@ -706,6 +706,21 @@ extension ExecuteDelayedMinUtils<T> on Future<T> {
   }
 }
 
+extension GlobalKeyExtensions on GlobalKey {
+  RenderBox? findRenderBox() {
+    return this.currentContext?.findRenderObject() as RenderBox?;
+  }
+
+  Size? calulateSize() {
+    final renderBox = this.findRenderBox();
+    return renderBox?.size;
+  }
+
+  void calulateSizeAfterBuild(Function(Size? size) onAvailable) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => onAvailable(calulateSize()));
+  }
+}
+
 extension StatefulWUtils<T extends StatefulWidget> on State<T> {
   void refreshState([void Function()? fn]) {
     if (mounted) {

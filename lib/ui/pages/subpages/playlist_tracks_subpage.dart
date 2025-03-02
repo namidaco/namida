@@ -48,6 +48,43 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
   @override
   HistoryManager<TrackWithDate, Track> get historyManager => HistoryController.inst;
 
+  final _headerContainerKey = GlobalKey();
+  double _headerHeight = 0;
+  bool _hasScrolledEnough = false;
+
+  void _onYearTap(int year) => onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding);
+
+  void _onScrollListener() {
+    if (mounted) {
+      try {
+        final pixels = HistoryController.inst.scrollController.position.pixels;
+        final hasScrolledEnough = pixels > (_headerHeight + yearsRowHeight);
+        if (hasScrolledEnough != _hasScrolledEnough) {
+          setState(() => _hasScrolledEnough = hasScrolledEnough);
+        }
+      } catch (_) {}
+    }
+  }
+
+  @override
+  void initState() {
+    HistoryController.inst.scrollController.addListener(_onScrollListener);
+    _headerContainerKey.calulateSizeAfterBuild((size) => _headerHeight = size?.height ?? 0);
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _headerContainerKey.calulateSizeAfterBuild((size) => _headerHeight = size?.height ?? 0);
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    HistoryController.inst.scrollController.removeListener(_onScrollListener);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final trackTileExtent = Dimensions.inst.trackTileItemExtent;
@@ -63,113 +100,150 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
     final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
     final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
+    final yearsRow = getYearsRowWidget(context, _onYearTap);
+
+    const yearsRowBottomPadding = 4.0;
+    const animationDuration = Duration(milliseconds: 200);
+    final hasScrolledEnough = _hasScrolledEnough;
+    final pageTopPadding = hasScrolledEnough ? yearsRowHeight : 0.0;
+
     return BackgroundWrapper(
-      child: TrackTilePropertiesProvider(
-        configs: const TrackTilePropertiesConfigs(
-          queueSource: QueueSource.history,
-          playlistName: k_PLAYLIST_NAME_HISTORY,
-        ),
-        builder: (properties) => CustomScrollView(
-          controller: HistoryController.inst.scrollController,
-          slivers: [
-            ObxO(
-              rx: HistoryController.inst.totalHistoryItemsCount,
-              builder: (context, totalHistoryItemsCount) {
-                final lengthDummy = totalHistoryItemsCount == -1;
-                return SliverToBoxAdapter(
-                  child: SubpagesTopContainer(
-                    source: QueueSource.history,
-                    title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
-                    subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
-                    heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                    tracksFn: () => HistoryController.inst.historyTracks,
-                    imageWidget: ObxO(
-                      rx: HistoryController.inst.historyMap,
-                      builder: (context, historyMap) => MultiArtworkContainer(
-                        heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                        size: context.width * 0.35,
-                        tracks: getHistoryTracks(historyMap).toImageTracks(),
+      child: Stack(
+        children: [
+          AnimatedPadding(
+            duration: animationDuration,
+            padding: EdgeInsets.only(top: pageTopPadding),
+            child: TrackTilePropertiesProvider(
+              configs: const TrackTilePropertiesConfigs(
+                queueSource: QueueSource.history,
+                playlistName: k_PLAYLIST_NAME_HISTORY,
+              ),
+              builder: (properties) => CustomScrollView(
+                controller: HistoryController.inst.scrollController,
+                slivers: [
+                  ObxO(
+                    rx: HistoryController.inst.totalHistoryItemsCount,
+                    builder: (context, totalHistoryItemsCount) {
+                      final lengthDummy = totalHistoryItemsCount == -1;
+                      return SliverToBoxAdapter(
+                        child: SubpagesTopContainer(
+                          key: _headerContainerKey,
+                          source: QueueSource.history,
+                          title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+                          subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
+                          heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                          tracksFn: () => HistoryController.inst.historyTracks,
+                          imageWidget: ObxO(
+                            rx: HistoryController.inst.historyMap,
+                            builder: (context, historyMap) => MultiArtworkContainer(
+                              heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                              size: context.width * 0.35,
+                              tracks: getHistoryTracks(historyMap).toImageTracks(),
+                            ),
+                          ),
+                          bottomPadding: 8.0,
+                        ),
+                      );
+                    },
+                  ),
+                  SliverToBoxAdapter(
+                    child: AnimatedOpacity(
+                      duration: animationDuration,
+                      opacity: hasScrolledEnough ? 0.0 : 1.0,
+                      child: AnimatedSize(
+                        duration: animationDuration,
+                        child: hasScrolledEnough
+                            ? SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: yearsRowBottomPadding),
+                                child: yearsRow,
+                              ),
                       ),
                     ),
-                    bottomPadding: 8.0,
                   ),
-                );
-              },
-            ),
-            ObxO(
-              rx: HistoryController.inst.historyMap,
-              builder: (context, history) {
-                // -- refresh sublist when history change
-                return ObxO(
-                  rx: HistoryController.inst.highlightedItem,
-                  builder: (context, highlightedItem) => SliverVariedExtentList.builder(
-                    key: ValueKey(daysLength), // rebuild after adding/removing day
-                    itemExtentBuilder: (index, dimensions) {
-                      final day = historyDays[index];
-                      return HistoryController.inst.dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
-                    },
-                    itemCount: daysLength,
-                    itemBuilder: (context, index) {
-                      final day = historyDays[index];
-                      final dayInMs = super.dayToMillis(day);
-                      final tracks = history[day] ?? [];
+                  ObxO(
+                    rx: HistoryController.inst.historyMap,
+                    builder: (context, history) {
+                      // -- refresh sublist when history change
+                      return ObxO(
+                        rx: HistoryController.inst.highlightedItem,
+                        builder: (context, highlightedItem) => SliverVariedExtentList.builder(
+                          key: ValueKey(daysLength), // rebuild after adding/removing day
+                          itemExtentBuilder: (index, dimensions) {
+                            final day = historyDays[index];
+                            return HistoryController.inst.dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
+                          },
+                          itemCount: daysLength,
+                          itemBuilder: (context, index) {
+                            final day = historyDays[index];
+                            final dayInMs = super.dayToMillis(day);
+                            final tracks = history[day] ?? [];
 
-                      return StickyHeader(
-                        key: ValueKey(index),
-                        header: NamidaHistoryDayHeaderBox(
-                          height: dayHeaderHeight,
-                          title: [
-                            dayInMs.dateFormattedOriginal,
-                            tracks.length.displayTrackKeyword,
-                          ].join('  •  '),
-                          sideColor: dayHeaderSideColor,
-                          bgColor: dayHeaderBgColor,
-                          shadowColor: dayHeaderShadowColor,
-                          menu: NamidaIconButton(
-                            icon: Broken.more,
-                            horizontalPadding: 8.0,
-                            iconSize: 22.0,
-                            onPressed: () {
-                              showGeneralPopupDialog(
-                                tracks.toTracks(),
-                                dayInMs.dateFormattedOriginal,
-                                tracks.length.displayTrackKeyword,
-                                QueueSource.history,
-                                tracksWithDates: tracks,
-                                playlistName: k_PLAYLIST_NAME_HISTORY,
-                                showPlayAllReverse: true,
-                              );
-                            },
-                          ),
-                        ),
-                        content: ListView.builder(
-                          padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
-                          primary: false,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemExtent: Dimensions.inst.trackTileItemExtent,
-                          itemCount: tracks.length,
-                          itemBuilder: (context, i) {
-                            final tr = tracks[i];
-                            final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle);
-                            return TrackTile(
-                              properties: properties,
-                              trackOrTwd: tr,
-                              index: i,
-                              bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
-                              thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
-                              topRightWidget: topRightWidget,
+                            return StickyHeader(
+                              key: ValueKey(index),
+                              header: NamidaHistoryDayHeaderBox(
+                                height: dayHeaderHeight,
+                                title: [
+                                  dayInMs.dateFormattedOriginal,
+                                  tracks.length.displayTrackKeyword,
+                                ].join('  •  '),
+                                sideColor: dayHeaderSideColor,
+                                bgColor: dayHeaderBgColor,
+                                shadowColor: dayHeaderShadowColor,
+                                menu: NamidaIconButton(
+                                  icon: Broken.more,
+                                  horizontalPadding: 8.0,
+                                  iconSize: 22.0,
+                                  onPressed: () {
+                                    showGeneralPopupDialog(
+                                      tracks.toTracks(),
+                                      dayInMs.dateFormattedOriginal,
+                                      tracks.length.displayTrackKeyword,
+                                      QueueSource.history,
+                                      tracksWithDates: tracks,
+                                      playlistName: k_PLAYLIST_NAME_HISTORY,
+                                      showPlayAllReverse: true,
+                                    );
+                                  },
+                                ),
+                              ),
+                              content: ListView.builder(
+                                padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
+                                primary: false,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemExtent: Dimensions.inst.trackTileItemExtent,
+                                itemCount: tracks.length,
+                                itemBuilder: (context, i) {
+                                  final tr = tracks[i];
+                                  final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle);
+                                  return TrackTile(
+                                    properties: properties,
+                                    trackOrTwd: tr,
+                                    index: i,
+                                    bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                                    thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
+                                    topRightWidget: topRightWidget,
+                                  );
+                                },
+                              ),
                             );
                           },
                         ),
                       );
                     },
                   ),
-                );
-              },
+                  kBottomPaddingWidgetSliver,
+                ],
+              ),
             ),
-            kBottomPaddingWidgetSliver,
-          ],
-        ),
+          ),
+          // -- dont waste ur time with sticky header, this is the only way it worked
+          AnimatedOpacity(
+            opacity: hasScrolledEnough ? 1.0 : 0.0,
+            duration: animationDuration,
+            child: hasScrolledEnough ? yearsRow : SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
