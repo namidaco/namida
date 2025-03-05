@@ -83,6 +83,10 @@ class Lyrics {
     }
   }
 
+  String _cleanPlainLyrics(String lyrics) {
+    return Lrc.cleanPlainLyrics(lyrics);
+  }
+
   Future<void> _updateLyrics(Playable item) async {
     resetLyrics();
     _currentItem = item;
@@ -108,7 +112,7 @@ class Lyrics {
         currentLyricsLRC.value = lrc;
         _updateWidgets(lrc);
       } else {
-        currentLyricsText.value = embedded;
+        currentLyricsText.value = _cleanPlainLyrics(embedded);
         _updateWidgets(null);
       }
       return;
@@ -127,7 +131,7 @@ class Lyrics {
       _updateWidgets(lrcLyrics.$1);
       return;
     } else if (lrcLyrics.$2 != null) {
-      currentLyricsText.value = lrcLyrics.$2 ?? '';
+      currentLyricsText.value = _cleanPlainLyrics(lrcLyrics.$2!);
       _updateWidgets(null);
       return;
     }
@@ -142,7 +146,7 @@ class Lyrics {
     if (checkInterrupted()) return;
 
     if (textLyrics != '') {
-      currentLyricsText.value = textLyrics;
+      currentLyricsText.value = _cleanPlainLyrics(textLyrics);
     } else {
       lyricsCanBeAvailable.value = false;
     }
