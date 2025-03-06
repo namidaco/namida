@@ -115,12 +115,33 @@ class BackupController {
     File? tempAllLocal;
     File? tempAllYoutube;
 
-    for (final f in backupItemsPaths) {
-      if (await FileSystemEntity.type(f) == FileSystemEntityType.file) {
-        f.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? youtubeFilesOnly.add(File(f)) : localFilesOnly.add(File(f));
+    /// ensures auto created db files are included, to prevent locked/corrupted databases.
+    List<File> getPossibleDbJournalFiles(String path) {
+      final possibleFiles = <File>[
+        File('$path-journal'),
+        File('$path-wal'),
+        File('$path-shm'),
+      ];
+
+      return possibleFiles.where((f) => f.existsSync()).toList();
+    }
+
+    for (final p in backupItemsPaths) {
+      if (await FileSystemEntity.type(p) == FileSystemEntityType.file) {
+        if (p.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY)) {
+          youtubeFilesOnly.add(File(p));
+          if (p.endsWith('.db')) {
+            youtubeFilesOnly.addAll(getPossibleDbJournalFiles(p));
+          }
+        } else {
+          localFilesOnly.add(File(p));
+          if (p.endsWith('.db')) {
+            localFilesOnly.addAll(getPossibleDbJournalFiles(p));
+          }
+        }
       }
-      if (await FileSystemEntity.type(f) == FileSystemEntityType.directory) {
-        dirsOnly.add(Directory(f));
+      if (await FileSystemEntity.type(p) == FileSystemEntityType.directory) {
+        dirsOnly.add(Directory(p));
       }
     }
 
