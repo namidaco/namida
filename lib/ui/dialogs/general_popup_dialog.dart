@@ -186,8 +186,8 @@ Future<void> showGeneralPopupDialog(
     final stats = statsWrapper.value;
 
     final initialRating = stats.rating;
-    final initialMoods = stats.moods.join(', ');
-    final initialTags = stats.tags.join(', ');
+    final initialMoods = stats.moods?.join(', ');
+    final initialTags = stats.tags?.join(', ');
 
     final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
     final moodsController = TextEditingController(text: initialMoods);
@@ -302,7 +302,7 @@ Future<void> showGeneralPopupDialog(
               getItemChip(
                 theme: theme,
                 controller: moodsController,
-                hintText: initialMoods,
+                hintText: initialMoods ?? '',
                 labelText: lang.SET_MOODS,
                 icon: Broken.smileys,
                 subtitle: lang.SET_MOODS_SUBTITLE,
@@ -313,7 +313,7 @@ Future<void> showGeneralPopupDialog(
               getItemChip(
                 theme: theme,
                 controller: tagsController,
-                hintText: initialTags,
+                hintText: initialTags ?? '',
                 labelText: lang.SET_TAGS,
                 icon: Broken.ticket_discount,
                 subtitle: lang.SET_MOODS_SUBTITLE,

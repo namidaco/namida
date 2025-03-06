@@ -67,6 +67,7 @@ class BackupController {
           AppPaths.YT_LIKES_PLAYLIST,
           AppPaths.YT_SUBSCRIPTIONS,
           AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
+          AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
           AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
           AppDirs.PLAYLISTS,
           AppDirs.PLAYLISTS_ARTWORKS,

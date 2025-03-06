@@ -134,6 +134,11 @@ class _YoutubeInfoUtils {
         _getMissingInfoSync(videoId)?.date.accurateDate;
   }
 
+  Duration? getVideoDuration(String videoId) {
+    final seconds = getVideoDurationSeconds(videoId);
+    return seconds == null ? null : Duration(seconds: seconds);
+  }
+
   int? getVideoDurationSeconds(String videoId) {
     final cached = tempVideoInfosFromStreams[videoId]?.durSeconds;
     if (cached != null) return cached;

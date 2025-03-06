@@ -33,6 +33,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_progress.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/class/youtube_id_stats.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -40,6 +42,7 @@ import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dar
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
+part 'youtube_id_stats_manager.dart';
 part 'yt_filename_rebuilder.dart';
 
 class _YTNotificationDataHolder {
@@ -69,6 +72,8 @@ class YoutubeController {
   static YoutubeController get inst => _instance;
   static final YoutubeController _instance = YoutubeController._internal();
   YoutubeController._internal();
+
+  final statsManager = _YoutubeIDStatsManager();
 
   final isLoadingDownloadTasks = false.obs;
 

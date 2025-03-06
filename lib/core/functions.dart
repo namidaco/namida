@@ -1193,7 +1193,7 @@ class TracksAddOnTap {
               // -- moods from tracks.
               final allAvailableMoodsTracks = <String, List<Track>>{};
               for (final tr in Indexer.inst.trackStatsMap.value.entries) {
-                tr.value.moods.loop((mood) {
+                tr.value.moods?.loop((mood) {
                   allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr.key);
                 });
               }

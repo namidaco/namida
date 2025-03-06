@@ -746,8 +746,8 @@ class TrackTileManager {
     },
     // -- stats
     TrackTileItem.rating: (track) => "${track.stats?.rating ?? 0}%",
-    TrackTileItem.moods: (track) => track.stats?.moods.join(', ') ?? '',
-    TrackTileItem.tags: (track) => track.stats?.tags.join(', ') ?? '',
+    TrackTileItem.moods: (track) => track.stats?.moods?.join(', ') ?? '',
+    TrackTileItem.tags: (track) => track.stats?.tags?.join(', ') ?? '',
     TrackTileItem.listenCount: (track) => HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.length.formatDecimal() ?? '0',
     TrackTileItem.latestListenDate: (track) {
       final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.lastOrNull;

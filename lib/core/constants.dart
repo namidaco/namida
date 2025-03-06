@@ -264,6 +264,7 @@ class AppPaths {
   static final YT_LIKES_PLAYLIST = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_likes.json');
   static final YT_SUBSCRIPTIONS = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_subs.json');
   static final YT_SUBSCRIPTIONS_GROUPS_ALL = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_sub_groups.json');
+  static final VIDEO_ID_STATS_DB_INFO = DbWrapperFileInfo(directory: AppDirs.YOUTUBE_MAIN_DIRECTORY, dbName: 'ytid_stats');
   static final CACHE_VIDEOS_PRIORITY = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos_priority');
 }
 

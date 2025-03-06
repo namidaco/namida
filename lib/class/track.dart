@@ -75,24 +75,58 @@ extension TWDUtils on List<TrackWithDate> {
   List<Track> toTracks() => mapped((e) => e.track);
 }
 
-class TrackStats {
-  /// Path of the track.
+class TrackStats extends PlayableItemStats {
   final Track track;
 
+  TrackStats({
+    required this.track,
+    required super.rating,
+    required super.tags,
+    required super.moods,
+    required super.lastPositionInMs,
+  });
+
+  factory TrackStats.fromJson(Map<String, dynamic> json) {
+    final track = Track.fromJson(json['track'] ?? '', isVideo: json['v'] == true);
+    return TrackStats.fromJsonWithoutTrack(track, json);
+  }
+  factory TrackStats.fromJsonWithoutTrack(Track track, Map<String, dynamic> json) {
+    final stats = PlayableItemStats.fromJson(json);
+    return TrackStats(
+      track: track,
+      rating: stats.rating,
+      tags: stats.tags,
+      moods: stats.moods,
+      lastPositionInMs: stats.lastPositionInMs,
+    );
+  }
+
+  Map<String, dynamic>? toJsonWithoutTrack() => super.toJson();
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'track': track.path,
+      if (track is Video) 'v': true,
+      ...?super.toJson(),
+    };
+  }
+}
+
+class PlayableItemStats {
   /// Rating of the track out of 100.
   int rating = 0;
 
   /// List of tags for the track.
-  List<String> tags = [];
+  List<String>? tags = [];
 
   /// List of moods for the track.
-  List<String> moods = [];
+  List<String>? moods = [];
 
   /// Last Played Position of the track in Milliseconds.
   int lastPositionInMs = 0;
 
-  TrackStats({
-    required this.track,
+  PlayableItemStats({
     required this.rating,
     required this.tags,
     required this.moods,
@@ -106,19 +140,13 @@ class TrackStats {
     return null;
   }
 
-  static List<String>? _cleanList(List<String> current) {
-    if (current.isEmpty || (current.length == 1 && current[0].isEmpty)) return null;
+  static List<String>? _cleanList(List<String>? current) {
+    if (current == null || current.isEmpty || (current.length == 1 && current[0].isEmpty)) return null;
     return current;
   }
 
-  factory TrackStats.fromJson(Map<String, dynamic> json) {
-    final track = Track.fromJson(json['track'] ?? '', isVideo: json['v'] == true);
-    return TrackStats.fromJsonWithoutTrack(track, json);
-  }
-
-  factory TrackStats.fromJsonWithoutTrack(Track track, Map<String, dynamic> json) {
-    return TrackStats(
-      track: track,
+  factory PlayableItemStats.fromJson(Map<String, dynamic> json) {
+    return PlayableItemStats(
       rating: json['rating'] ?? 0,
       tags: _parseList(json['tags']) ?? [],
       moods: _parseList(json['moods']) ?? [],
@@ -126,14 +154,7 @@ class TrackStats {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'track': track.path,
-      ...?toJsonWithoutTrack(),
-    };
-  }
-
-  Map<String, dynamic>? toJsonWithoutTrack() {
+  Map<String, dynamic>? toJson() {
     final tagsFinal = _cleanList(tags);
     final moodsFinal = _cleanList(moods);
     final map = {
@@ -141,7 +162,6 @@ class TrackStats {
       if (tagsFinal != null) 'tags': tagsFinal,
       if (moodsFinal != null) 'moods': moodsFinal,
       if (lastPositionInMs > 0) 'lastPositionInMs': lastPositionInMs,
-      if (track is Video) 'v': true,
     };
     if (map.isEmpty) return null;
     return map;
@@ -149,7 +169,7 @@ class TrackStats {
 
   @override
   String toString() {
-    return 'TrackStats(track: $track, rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs)';
+    return 'PlayableItemStats(rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs)';
   }
 }
 
