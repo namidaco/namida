@@ -1,5 +1,122 @@
 # Namida Changelog
 
+## 07/03/2025
+# v5.0.4
+
+### 🎉 New Features:
+   - c92a8a3: headset buttons (single/double/triple)
+   - 667e15a: notifications for windows with option to control download notifications ref #14
+   - f1cbec6: show/hide keybaord when dragging upwards/downwards on search floating action button
+   - ddd53e9: setting dim duration to 0 will keep miniplayer always dimmed
+   - bb2b07a: system level brightness in fullscreen video player ref #155
+   - cd432d1: simple data saver mode (wifi & mobile) - with icons to indicate why a video was not fetched (blocked by cache/no connection/data saver)
+   - 934e438: basic home screen widget & quick settings tile ref #168, #243, #438, #468
+   - 515f71d: gentle play, adds item next and play instead of assigning new queue - currently applied for yt section videos, mostly when pressing single video like in search/home/etc
+   - 0fdf533: display years in history page that navigate to the same day in that year
+
+
+### 🛠️ Bug fixes & Improvements:
+- chore:
+   - c5f82d4: video controls reactive bg color for light bg
+   - 15da6b3: prefer lyrics with duration closer to track duration
+   - 2f53fa8: show checkmark in playlist tile when adding tracks - and rework logic (both local & yt) to show active checkmark only when all tracks exist, offering a "remove" action when pressed, otherwise it will add normally and prompt actions if there was duplicates
+   - d53f42a: dont copy info if not available (?)
+   - 384b582: attempt fix filename of specific thumbnail types
+   - 2b7240b: copied to clipboard design tweak (now uses rounded design with margin like others, instead of squared sticky)
+   - ed933cc: attempt broadcast queue info ref #351, #157
+   - 4794247: update app bar icons animation
+   - 47664ce: smol refactor
+   - 4b59e74: improve shimmer in yt miniplayer & download sheet
+   - b6e722c: improve search matching ref #465
+   - 6319418: allow content provider paths in extension filter (while picking files)
+   - b131b1c: supress account/membership errors and display in pages instead if possible
+   - c99232b: refactor lrc view & scale it bigger to avoid thin border effect again
+   - ec5cdb1: hide endcard instantly on drag and reshow on drag finish - old behavior relied on miniplayer height percentage which wasnt too good
+   - 1039ece: sort network lyrics only if track duration was not modified (nightcore/spedup)
+   - f1e3906: faster route animation speed
+   - 05f1ec8: artwork scale setting is now a simple slider
+   - 29035fb: refactor wheel sliders
+   - ad8c7d3: pressing plus icon in horizontal list view will open history page on the last item - and refactor for history listen jump
+   - b627d0c: allow liking/disliking videos without membership
+   - d07e426: refactor vibration methods
+   - 6ef27b8: live format info in edit tags dialog
+   - b0c1d0e: few tweaks - rely on "play when ready" instead of "is playing", results in more stability when skipping next/prev - remove refresh button in video widget -refactor snackbar duration & less duration for "added to queue" snackbar - use package to show time difference in about page
+   - 7249a94: apply on swipe actions for yt cards as well - this took shitload of refactor, but improved perf so yey - ref #333
+   - 58c4568: improve tags extraction and fallback ref #480
+   - 84cf942: add "open info" as track tile swipe action
+   - 9da9709: change default on swipe actions
+   - a4522ca: fully rely on "play when ready" instead of "is playing"
+   - 048895e: move android files
+   - e59b6a3: assign low res thumbnail to notification until full res is fetched
+   - 3e291e5: ensure yt player doesnt play old media while fetching info of new media ref #234
+   - a90aeee: ensure play when ready is not modified after switching queues
+   - cf6d474: ensure resuming after queue is restructured (playing same item in another playlist/etc)
+   - 93b47aa: pause and play icons for qs tile
+   - 46ca092: formatting & cleanup
+   - 675dc79: light theme for home screen widget
+   - 663e295: few fixes - and revert to dart 3.6.0 bcz new formatter getting annoying
+   - 7c3424f: allow monochrome colors
+   - 5d786d2: improve theme colors
+   - 497413b: limit home widget code to android & ios
+   - be09f3e: remove lyrics fullscreen button & add a note on how to enter fullscreen ref #499
+   - 38cc211: add note to indexer folders while media store is enabled
+   - a0ec475: auto skip item only if "play when ready" is enabled
+   - ea972d4: ignore wakelock errors
+   - 06b0c46: open shorts in fullscreen
+   - 2a06f4c: white pull to refresh icon color
+   - 3e487e4: disable writing tags to audio file after getting cached
+   - 2c9fc7d: clean up plain lyrics tags
+   - 65648e3: attempt play video stream for shorts (data saver off & medium)
+   - b06b360: restore last played duration for yt section too
+   - 0a14e1a: final cleanup & tweaks - center plain lyrics text - improve history jumping - fix wrong "play when ready" after removing item from queue - fix yt miniplayer wrong padding - others
+
+- fix:
+   - 6eb266e: downloads failing after app restart
+   - ad92592: notification artwork not falling back to folder cover
+   - 96c0604: lyrics blurred view thin white edge
+   - b19f7be: loading circle showing once yt miniplayer is shown
+   - 26acfe7: yt playback and allow setting custom visitor data & potoken
+   - 59f4c60: dim related stuff
+   - a80bfb4: error message when stopping downloads
+   - 3494baf: keyboard focus/unfocus when swiping up/down search fab
+   - fe20b79: double pressing app bar icons
+   - ac56f8d: allow returning faulty info when extracting instead of dismissing all of it ref #469
+   - 5d737d8: audio/video thumbnails not extracting/showing properly ref #461 #474
+   - 73ca3eb: blocked play/pause touches when buffering in video player screen
+   - 14bfc7e: non-persistent scroll offset for comments page ref #491
+   - a48f1a4: play when ready related stuff
+   - eec799f: not showing minus sign in lrc offset dialog
+   - 8f9ec31: showing old error when reading tags in edit tags dialog
+   - e192699: tapping yt most played opening history..
+   - d0a1bad: crash when leaving app before player start (happened when trying to access "is playing" status for pip entering, all before player is initialized)
+   - 23c63fe: ensure yt miniplayer has correct bottom padding
+   - 42c1e2d: dialog using old color
+   - 1fb4b7f: not playing local audio for yt when there is connection
+   - 5fec286: cleanup group name too from possible illegal path characters
+   - 65939a5: duplicated audio cache entries
+   - 90f5448: properly backup databases to prevent being locked after restored
+
+- code:
+   - f641e02: home widget colors api
+   
+- core:
+   - 78d00cd: upgrade to flutter v3.27.1 & dart v3.6.0
+   - 627115a: disable impeller rendering engine
+   - 1dcdf32: lrc positive offset now means lyrics will appear sooner ref #467
+   - a6739fd: some changes - better support for remote controlling (android auto/etc) - fix duplicate shorts in home page & related videos - fix displaying artwork for albums with  in name in notification
+   - f6861eb: support archiving for windows (for backup & restore)
+
+- perf:
+   - eb8b543: improve file io sink
+
+- build:
+   - 6898ac0: update windows build files
+   - c963608: increase build memory to 4GB
+   - 048214b: set minimum sdk level to 24 (android 7.0)
+   - 7153b03: upgrade to flutter v3.29.0 and dart v3.7.0
+   - a3d8d23: upgrade kotlin & gradle versions
+
+
 ## 01/01/2025
 # v4.8.6
 
