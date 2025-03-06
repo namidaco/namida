@@ -490,4 +490,10 @@ enum DataSaverMode {
   extreme;
 
   bool get canFetchNetworkVideoStream => this == DataSaverMode.off;
+  bool canFetchNetworkVideoStreamShortContent(bool? isShortContent) {
+    if (isShortContent == true) {
+      return this == DataSaverMode.off || this == DataSaverMode.medium;
+    }
+    return this == DataSaverMode.off;
+  }
 }

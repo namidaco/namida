@@ -142,6 +142,12 @@ class _YoutubeInfoUtils {
         _getMissingInfoSync(videoId)?.durSeconds;
   }
 
+  bool? isShortContent(String videoId) {
+    final cached = tempVideoInfosFromStreams[videoId]?.isActuallyShortContent;
+    if (cached != null) return cached;
+    return getStreamInfoSync(videoId)?.isActuallyShortContent;
+  }
+
   // ==== async methods ====
 
   Future<StreamInfoItem?> getStreamInfoAsync(String videoId) {

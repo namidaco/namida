@@ -1315,7 +1315,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             }
           }
 
-          if (!_isAudioOnlyPlayback && ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStream && videoStreams.isNotEmpty) {
+          if (!_isAudioOnlyPlayback &&
+              videoStreams.isNotEmpty &&
+              ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(YoutubeInfoController.utils.isShortContent(item.id))) {
             if (cachedVideoSet != null ? _allowSwitchingVideoStreamIfCachedPlaying : true) {
               final prefferedVideoStream = YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
               bool isVideoStreamRequiredBetterThanCachedSet = cachedVideoSet == null
