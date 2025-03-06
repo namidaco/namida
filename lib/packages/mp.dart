@@ -82,6 +82,12 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _ensureCorrectInitializedPadding();
   }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
   void _ensureCorrectInitializedPadding() async {
     await Future.delayed(Duration.zero);
 
@@ -91,11 +97,17 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       // -- the keyboard keeps showing/hiding
       // -- so yeah we only check once
       final padding = MediaQuery.paddingOf(context);
-      if (_padding == padding && padding != EdgeInsets.zero) break;
       if (_padding != padding) {
-        _padding = padding;
-        animateToState(_wasExpanded);
+        if (padding.bottom > _padding.bottom) {
+          // bottom only bcz.. well..
+          _padding = padding;
+          animateToState(_wasExpanded);
+          break;
+        } else {
+          _padding = padding;
+        }
       }
+
       await Future.delayed(Duration(milliseconds: 800));
     }
   }
@@ -127,12 +139,6 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   }
 
   double? _startedDragAtHeight;
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
 
   bool get isExpanded => _dragheight >= maxHeight - widget.minHeight;
   bool get _dismissible => widget.onDismiss != null;

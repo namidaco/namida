@@ -430,8 +430,7 @@ class Player {
   }
 
   Future<void> removeFromQueue(int index) async {
-    // why [playWhenReady] ? imagine removing while paused
-    _audioHandler.setPlayWhenReady(playWhenReady.value && _audioHandler.defaultShouldStartPlayingOnNextPrev);
+    // do not modify playWhenReady here, its useless
     await _audioHandler.removeFromQueue(index);
   }
 

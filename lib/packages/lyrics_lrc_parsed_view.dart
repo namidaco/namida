@@ -420,6 +420,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                 Text(
                                                   text,
                                                   style: normalTextStyle,
+                                                  textAlign: TextAlign.center,
                                                 ),
                                                 SizedBox(height: _paddingVertical),
                                               ],

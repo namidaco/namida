@@ -33,7 +33,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
   @override
   HistoryManager<YoutubeID, String> get historyManager => YoutubeHistoryController.inst;
 
-  void _onYearTap(int year) => onYearTap(year, Dimensions.youtubeCardItemExtent, kYoutubeHistoryDayHeaderHeightWithPadding);
+  void _onYearTap(int year) => onYearTap(year, Dimensions.youtubeCardItemExtent, kYoutubeHistoryDayHeaderHeightWithPadding, addJumpPadding: false);
 
   @override
   Widget build(BuildContext context) {

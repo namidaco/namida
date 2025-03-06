@@ -280,6 +280,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                               child: child,
                               builder: (context, value, child) {
                                 return Stack(
+                                  textDirection: TextDirection.ltr,
                                   children: [
                                     child!,
                                     Positioned.fill(

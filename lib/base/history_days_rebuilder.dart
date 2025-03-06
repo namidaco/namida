@@ -53,11 +53,12 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     _historyYears = historyManager.getHistoryYears();
   }
 
-  void onYearTap(int year, double itemExtent, double dayHeaderExtent) {
+  void onYearTap(int year, double itemExtent, double dayHeaderExtent, {required bool addJumpPadding}) {
     setState(() => _currentActiveYear = year);
 
     final dayJumper = HistoryJumpToDayIcon(
       controller: historyManager,
+      addPadding: addJumpPadding,
       itemExtentAndDayHeaderExtent: () => (dayHeaderExtent: dayHeaderExtent, itemExtent: itemExtent),
     );
     final currentDate = dayJumper.getCurrentDateFromScrollPosition();

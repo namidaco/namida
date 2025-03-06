@@ -3004,9 +3004,16 @@ class NamidaInkWellButton extends StatelessWidget {
 class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> controller;
   final ({double itemExtent, double dayHeaderExtent}) Function() itemExtentAndDayHeaderExtent;
-  const HistoryJumpToDayIcon({super.key, required this.controller, required this.itemExtentAndDayHeaderExtent});
+  final bool addPadding;
 
-  double get topPadding => 100.0;
+  const HistoryJumpToDayIcon({
+    super.key,
+    required this.controller,
+    required this.itemExtentAndDayHeaderExtent,
+    required this.addPadding,
+  });
+
+  double get topPadding => addPadding ? 64.0 : 0.0;
 
   DateTime? getCurrentDateFromScrollPosition() {
     final currentScrolledDay = getCurrentDayFromScrollPosition();
@@ -3025,7 +3032,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
     final days = controller.historyDays.toList();
     days.removeWhere((element) => element <= dayToScrollTo);
     double totalScrollOffset = controller.daysToSectionExtent(days);
-    controller.scrollController.jumpTo(totalScrollOffset + topPadding);
+    controller.scrollController.jumpTo(totalScrollOffset + topPadding - 48.0);
   }
 
   @override

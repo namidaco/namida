@@ -52,7 +52,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
   double _headerHeight = 0;
   bool _hasScrolledEnough = false;
 
-  void _onYearTap(int year) => onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding);
+  void _onYearTap(int year) => onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding, addJumpPadding: true);
 
   void _onScrollListener() {
     if (mounted) {

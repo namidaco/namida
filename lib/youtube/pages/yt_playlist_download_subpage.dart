@@ -639,6 +639,7 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
                   final controller = this.controller ?? controllerCallback?.call();
                   if (controller == null) return;
                   var cursorPos = controller.selection.base.offset;
+                  if (cursorPos < 0) return; // require cursor to be active, avoid accidents and whatever
                   String textAfterCursor = controller.text.substring(cursorPos);
                   String textBeforeCursor = controller.text.substring(0, cursorPos);
                   final toAdd = YoutubeController.filenameBuilder.buildParamForFilename(e);

@@ -959,6 +959,7 @@ extension RouteUtils on NamidaRoute {
 
       _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
+          addPadding: true,
           controller: HistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
             itemExtent: Dimensions.inst.trackTileItemExtent,
@@ -970,6 +971,7 @@ extension RouteUtils on NamidaRoute {
 
       _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
+          addPadding: false,
           controller: YoutubeHistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
             itemExtent: Dimensions.youtubeCardItemExtent,
