@@ -11,14 +11,15 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.view.KeyEvent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
-import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
@@ -58,7 +59,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
   }
 
   private var _latestImagePath: String? = null
-  private var _currentImageProvider: Bitmap? = null
+  private var _currentImageProviderWrapper: ImageProviderWrapper? = null
   private var _fallbackImageProvider: Bitmap? = null
 
   @Composable
@@ -72,8 +73,31 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val isFav = data.getBoolean("favourite", false)
     val imagePath = data.getString("image", null)
 
-    val colors =
-      if (isDarkModeEnabled(context)) NamidaWidgetColors.dark else NamidaWidgetColors.light
+    val imageSize = 84.dp
+    val imageCornerRadiusFloat = 64f
+
+    if (imagePath == null) {
+      _currentImageProviderWrapper = null
+    } else {
+      if (_currentImageProviderWrapper == null ||
+        _latestImagePath != imagePath ||
+        data.getBoolean("evict", false)
+      ) {
+        _currentImageProviderWrapper?.bitmap?.recycle()
+        try {
+          val bitmap = BitmapFactory.decodeFile(imagePath)
+          val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
+          // TODO: provide good color
+          _currentImageProviderWrapper = ImageProviderWrapper(roundedBitmap, null)
+        } catch (_: Exception) {
+          _currentImageProviderWrapper = null
+        }
+      }
+    }
+
+    val isDark = isDarkModeEnabled(context)
+    val mainColor = _currentImageProviderWrapper?.mainColor;
+    val colors: NamidaWidgetColors = remember(mainColor, isDark) { NamidaWidgetColors.buildColors(mainColor, isDark) }
 
     val boxColor = colors.boxColor
     val imageColor = colors.imageColor
@@ -81,26 +105,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val subtitleColor = colors.subtitleColor
     val iconsColor = colors.iconsColor
 
-    val imageSize = 84.dp
-    val imageCornerRadiusFloat = 64f
-
-    if (imagePath == null) {
-      _currentImageProvider = null
-    } else {
-      if (_currentImageProvider == null ||
-        _latestImagePath != imagePath ||
-        data.getBoolean("evict", false)
-      ) {
-        try {
-          val bitmap = BitmapFactory.decodeFile(imagePath)
-          val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
-          _currentImageProvider = roundedBitmap
-        } catch (_: Exception) {
-          _currentImageProvider = null
-        }
-      }
-    }
-    if (_currentImageProvider == null) {
+    if (_currentImageProviderWrapper == null) {
       if (_fallbackImageProvider == null) {
         val imageSizeInt = imageSize.toPxInt(context)
         val bitmap =
@@ -108,12 +113,13 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             imageSizeInt * 2,
             imageSizeInt * 2,
             imageCornerRadiusFloat,
-            imageColor
+            imageColor.toArgb()
           )
         _fallbackImageProvider = bitmap
       }
     }
 
+    val finalBitmap = _currentImageProviderWrapper?.bitmap ?: _fallbackImageProvider!!
     _latestImagePath = imagePath
 
 
@@ -131,12 +137,14 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
       ) {
 
         Image(
-          androidx.glance.ImageProvider(_currentImageProvider ?: _fallbackImageProvider!!),
+          androidx.glance.ImageProvider(
+            finalBitmap
+          ),
           null,
           modifier = GlanceModifier.fillMaxHeight().size(imageSize)
         )
 
-        horizontalSpace(12)
+        HorizontalSpace(12)
 
         Column(
           verticalAlignment = Alignment.Vertical.CenterVertically,
@@ -195,7 +203,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 additionalModifier = additionalModifier
               )
 
-            horizontalSpace(4)
+            HorizontalSpace(4)
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.ryanheise.audioservice.R.drawable.audio_service_skip_previous,
@@ -203,7 +211,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
               keyEvent = KeyEvent.KEYCODE_MEDIA_PREVIOUS,
               additionalModifier = additionalModifier
             )
-            horizontalSpace(4)
+            HorizontalSpace(4)
             if (isPlaying)
               MediaControlButton(
                 color = iconsColor,
@@ -221,7 +229,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 keyEvent = KeyEvent.KEYCODE_MEDIA_PLAY,
                 additionalModifier = additionalModifier
               )
-            horizontalSpace(4)
+            HorizontalSpace(4)
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.ryanheise.audioservice.R.drawable.audio_service_skip_next,
@@ -235,6 +243,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
         }
       }
     }
+
   }
 }
 
@@ -305,6 +314,8 @@ class MediaButtonAction : ActionCallback {
   }
 }
 
+private class ImageProviderWrapper(val bitmap: Bitmap, val mainColor: Int?) { }
+
 inline fun <reified T : Activity> _startCustomActivity(
   context: Context,
   uri: Uri? = null,
@@ -322,7 +333,7 @@ inline fun <reified T : Activity> _startCustomActivity(
 }
 
 @Composable
-private fun horizontalSpace(width: Int): Unit {
+private fun HorizontalSpace(width: Int): Unit {
   return Spacer(GlanceModifier.width(width.dp))
 }
 

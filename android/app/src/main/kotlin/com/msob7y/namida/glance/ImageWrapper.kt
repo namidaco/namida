@@ -7,19 +7,14 @@ import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.layout.height
-import androidx.glance.layout.width
 
 class ImageWrapper {
   companion object {
-    fun createRoundedBitmap(width: Int, height: Int, radius: Float, color: Color): Bitmap {
+    fun createRoundedBitmap(width: Int, height: Int, radius: Float, color: Int): Bitmap {
       val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
       val canvas = Canvas(bitmap)
       val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-      paint.color = color.toArgb()
+      paint.color = color
 
       val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
       val path = Path().apply { addRoundRect(rect, radius, radius, Path.Direction.CW) }
