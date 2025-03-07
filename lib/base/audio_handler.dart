@@ -350,6 +350,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     YoutubeInfoController.current.resetAll();
 
+    currentPositionMS.value = 0;
+    _currentItemDuration.value = null;
+
     currentVideoStream.value = null;
     currentAudioStream.value = null;
     currentCachedVideo.value = null;

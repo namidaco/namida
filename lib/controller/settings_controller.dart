@@ -28,6 +28,7 @@ class _SettingsController with SettingsFileWriter {
     this.player.prepareSettingsFile();
     this.youtube.prepareSettingsFile();
     this.extra.prepareSettingsFile();
+    this.tutorial.prepareSettingsFile();
   }
 
   final equalizer = EqualizerSettings._internal();
