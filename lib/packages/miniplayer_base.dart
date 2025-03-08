@@ -1598,7 +1598,7 @@ class _MPQualityButton extends StatelessWidget {
   }
 }
 
-class _QueueListChildWrapper extends StatelessWidget {
+class _QueueListChildWrapper extends StatefulWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
   final Widget Function(BuildContext context, int index, int currentIndex, List<Playable> queue) itemBuilder;
@@ -1611,46 +1611,52 @@ class _QueueListChildWrapper extends StatelessWidget {
   });
 
   @override
+  State<_QueueListChildWrapper> createState() => _QueueListChildWrapperState();
+}
+
+class _QueueListChildWrapperState extends State<_QueueListChildWrapper> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {})); // attempt workaround for empty queue view
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final queue = Player.inst.currentQueue.valueR;
-        final queueLength = queue.length;
-        if (queueLength == 0) return const SizedBox();
-        final currentIndex = Player.inst.currentIndex.valueR;
-        final padding = EdgeInsets.only(bottom: 8.0 + SelectedTracksController.inst.bottomPadding.valueR + kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom);
-        return CustomScrollView(
+    final deviceBottomInsets = MediaQuery.paddingOf(context).bottom;
+    return ObxO(
+      rx: SelectedTracksController.inst.bottomPadding,
+      builder: (context, selectedTracksPadding) {
+        final padding = EdgeInsets.only(bottom: 8.0 + selectedTracksPadding + kQueueBottomRowHeight + deviceBottomInsets);
+        return ObxO(
           key: const Key('minikuru'),
-          controller: MiniPlayerController.inst.queueScrollController,
-          slivers: [
-            NamidaSliverReorderableList(
-              itemCount: queueLength,
-              itemExtent: queueItemExtent,
-              itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
-              onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-              onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-              onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-              onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-              itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
-            ),
-            SliverPadding(
-              padding: padding,
-            ),
-          ],
+          rx: Player.inst.currentQueue,
+          builder: (context, queue) {
+            final queueLength = queue.length;
+            if (queueLength == 0) return const SizedBox();
+            return ObxO(
+              rx: Player.inst.currentIndex,
+              builder: (context, currentIndex) => CustomScrollView(
+                controller: MiniPlayerController.inst.queueScrollController,
+                slivers: [
+                  NamidaSliverReorderableList(
+                    itemCount: queueLength,
+                    itemExtent: widget.queueItemExtent,
+                    itemExtentBuilder: widget.queueItemExtentBuilder == null ? null : (index, d) => widget.queueItemExtentBuilder!(queue[index]),
+                    onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                    onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                    onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                    itemBuilder: (context, i) => widget.itemBuilder(context, i, currentIndex, queue),
+                  ),
+                  SliverPadding(
+                    padding: padding,
+                  ),
+                ],
+              ),
+            );
+          },
         );
-        // return NamidaListView(
-        //   key: const Key('minikuru'),
-        //   scrollController: MiniPlayerController.inst.queueScrollController,
-        //   itemCount: queueLength,
-        //   itemExtent: queueItemExtent,
-        //   itemExtentBuilder: queueItemExtentBuilder,
-        //   onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-        //   onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-        //   onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-        //   onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-        //   padding: padding,
-        //   itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
-        // );
       },
     );
   }
