@@ -632,7 +632,7 @@ class Player {
       startPlaying: startPlaying,
       shuffle: shuffle,
       onAssigningCurrentItem: onAssigningCurrentItem,
-      duplicateRemover: source == QueueSource.history
+      duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.history
           ? (item) {
               return item._execute(
                 selectable: (finalItem) => finalItem.track.path,
