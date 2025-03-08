@@ -1168,15 +1168,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     children: [
                                       if (isLoading)
                                         IgnorePointer(
-                                          child: NamidaOpacity(
-                                            key: Key("${currentId}_button_loading"),
-                                            enabled: true,
-                                            opacity: 0.3,
-                                            child: ThreeArchedCircle(
-                                              key: Key("${currentId}_button_loading_child"),
-                                              color: defaultIconColor,
-                                              size: 36.0,
-                                            ),
+                                          child: ThreeArchedCircle(
+                                            key: Key("${currentId}_button_loading_child"),
+                                            color: defaultIconColor.withValues(alpha: 0.3),
+                                            size: 36.0,
                                           ),
                                         ),
                                       NamidaIconButton(
