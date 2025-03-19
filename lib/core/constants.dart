@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -26,7 +27,6 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 class NamidaDeviceInfo {
   static int sdkVersion = 21;
 
-  static String? get deviceId => _deviceId;
   static String? _deviceId;
 
   static final androidInfoCompleter = Completer<AndroidDeviceInfo>();
@@ -54,9 +54,35 @@ class NamidaDeviceInfo {
     }
   }
 
-  static Future<void> fetchDeviceId() async {
-    if (_deviceId != null) return;
-    _deviceId = await FlutterUdid.udid;
+  static Future<String?> fetchDeviceId() async {
+    if (_deviceId != null) return _deviceId!;
+    try {
+      if (Platform.isWindows) {
+        _deviceId = await _getWindowsUDID();
+      } else {
+        _deviceId = await FlutterUdid.udid;
+      }
+    } catch (_) {}
+    return _deviceId;
+  }
+
+  // native call causes debug connection to get lost, this works fine
+  // source: https://github.com/BestBurning/platform_device_id/issues/21#issuecomment-1133934641
+  static Future<String> _getWindowsUDID() async {
+    String biosID = '';
+    final process = await Process.start(
+      'wmic',
+      ['csproduct', 'get', 'uuid'],
+      mode: ProcessStartMode.detachedWithStdio,
+    );
+    final result = await process.stdout.transform(utf8.decoder).toList();
+    for (var element in result) {
+      final item = element.replaceAll(RegExp('\r|\n|\\s|UUID|uuid'), '');
+      if (item.isNotEmpty) {
+        biosID = item;
+      }
+    }
+    return biosID;
   }
 
   static Future<void> fetchPackageInfo() async {

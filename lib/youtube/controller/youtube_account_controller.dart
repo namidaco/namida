@@ -363,7 +363,7 @@ class _CurrentMembership {
   }
 
   Future<void> checkSupabase(String code, String email) async {
-    final deviceId = NamidaDeviceInfo.deviceId;
+    final deviceId = await NamidaDeviceInfo.fetchDeviceId();
     final sub = await NamicoSubscriptionManager.supabase.fetchUserValid(
       uuid: code,
       email: email,
@@ -376,7 +376,7 @@ class _CurrentMembership {
   }
 
   Future<void> claimSupabase(String code, String email) async {
-    final deviceId = NamidaDeviceInfo.deviceId;
+    final deviceId = await NamidaDeviceInfo.fetchDeviceId();
     final sub = await NamicoSubscriptionManager.supabase.claimSubscription(
       uuid: code,
       email: email,
