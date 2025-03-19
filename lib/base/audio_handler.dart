@@ -397,7 +397,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       onQueueEmpty: onQueueEmpty,
       onAssigningCurrentItem: onAssigningCurrentItem,
       onRestructuringQueue: () {
-        if (playWhenReady.value) play();
+        if (playWhenReady.value && !isPlaying.value) play();
       },
       canRestructureQueueOnly: canRestructureQueueOnly ??
           (currentItem, itemToPlay) {
