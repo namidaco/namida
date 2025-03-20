@@ -4557,7 +4557,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
-      initiallyExpanded: true,
+      initiallyExpanded: items.isNotEmpty,
       titleText: title,
       subtitleText: subtitle,
       icon: icon,

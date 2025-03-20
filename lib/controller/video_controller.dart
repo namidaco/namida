@@ -863,7 +863,7 @@ class _VideoControllerIsolateFunctions {
     return localVids;
   }
 
-  static Future<Map> _fetchAndCheckIfVideosInMapValidIsolate(List params) async {
+  static Map _fetchAndCheckIfVideosInMapValidIsolate(List params) {
     final oldJsonFilePath = params[0] as String;
     final dbFileInfo = params[1] as DbWrapperFileInfo;
     final oldJsonFile = File(oldJsonFilePath);

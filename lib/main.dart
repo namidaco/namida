@@ -486,7 +486,7 @@ class Namida extends StatelessWidget {
             builder: (context, selectedLanguage) {
               final codes = selectedLanguage.code.split('_');
               return Localizations(
-                locale: Locale(codes.first, codes.last),
+                locale: Locale(codes.first, codes.length > 1 ? codes.last : null),
                 delegates: const [
                   DefaultWidgetsLocalizations.delegate,
                   DefaultMaterialLocalizations.delegate,
@@ -568,8 +568,8 @@ class Namida extends StatelessWidget {
         SizedBox(
           width: 18.0,
           height: context.height * 0.8,
-          child: GestureDetector(
-            onHorizontalDragUpdate: (details) {},
+          child: HorizontalDragDetector(
+            onUpdate: (_) {},
           ),
         ),
 
@@ -577,10 +577,10 @@ class Namida extends StatelessWidget {
         Positioned(
           right: 0,
           child: SizedBox(
-            width: 8.0,
+            width: 12.0,
             height: context.height,
-            child: GestureDetector(
-              onHorizontalDragUpdate: (details) {},
+            child: HorizontalDragDetector(
+              onUpdate: (_) {},
             ),
           ),
         ),

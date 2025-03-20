@@ -247,6 +247,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final fullscreen = widget.isFullScreenView;
     final initialFontSize = fullscreen ? 25.0 : 15.0;
     final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
+    final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
 
     final bottomControlsChildren = fullscreen
         ? [
@@ -419,7 +420,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                 SizedBox(height: _paddingVertical),
                                                 Text(
                                                   text,
-                                                  style: normalTextStyle,
+                                                  style: plainLyricsTextStyle,
                                                   textAlign: TextAlign.center,
                                                 ),
                                                 SizedBox(height: _paddingVertical),
