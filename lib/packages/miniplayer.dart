@@ -59,7 +59,6 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerPr
   void initState() {
     MiniPlayerController.inst.updateScreenValuesInitial();
     MiniPlayerController.inst.initializeSAnim(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {})); // workaround for empty queue view
     super.initState();
   }
 

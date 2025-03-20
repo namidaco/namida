@@ -48,13 +48,9 @@ class MainPage extends StatelessWidget {
           restorationScopeId: 'namida',
           requestFocus: false,
           observers: [NamidaNavigator.inst.heroController],
-          onGenerateRoute: (settings) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              NamidaNavigator.inst.onFirstLoad();
-            });
-            return MaterialPageRoute(
-              builder: (_) => const SizedBox(),
-            );
+          onGenerateInitialRoutes: (_, __) {
+            NamidaNavigator.inst.onFirstLoad();
+            return [MaterialPageRoute(builder: (_) => const SizedBox())];
           },
         ),
       ),

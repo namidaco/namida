@@ -131,12 +131,16 @@ class NamidaNavigator {
   }
 
   void onFirstLoad() {
+    Dimensions.inst.updateAllTileDimensions();
+
     final initialTab = settings.extra.selectedLibraryTab.value;
     final isSearchTab = initialTab == LibraryTab.search;
     final finalTab = isSearchTab ? settings.libraryTabs.value.first : initialTab;
-    navigateTo(finalTab.toWidget(), durationInMs: 0);
-    Dimensions.inst.updateAllTileDimensions();
-    if (isSearchTab) ScrollSearchController.inst.animatePageController(initialTab);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navigateTo(finalTab.toWidget(), durationInMs: 0);
+      if (isSearchTab) ScrollSearchController.inst.animatePageController(initialTab);
+    });
   }
 
   Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
