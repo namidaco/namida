@@ -573,6 +573,15 @@ class Namida extends StatelessWidget {
           ),
         ),
 
+        // prevent accidental miniplayer/queue swipe up when performing home scween gesture
+        SizedBox(
+          height: 18.0,
+          width: context.height,
+          child: VerticalDragDetector(
+            onUpdate: (_) {},
+          ),
+        ),
+
         // prevent accidental miniplayer swipe when performing back gesture
         Positioned(
           right: 0,

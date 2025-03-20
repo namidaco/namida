@@ -179,13 +179,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
     final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withValues(alpha: 0.25), mainTheme.scaffoldBackgroundColor);
 
-    final absorbBottomDragWidget = AbsorbPointer(
-      child: SizedBox(
-        height: 18.0,
-        width: maxWidth,
-      ),
-    );
-
     final miniplayerDimWidget = Positioned.fill(
       key: const Key('dimmie'),
       child: IgnorePointer(
@@ -1115,7 +1108,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 rightDragAbsorberWidget,
                                 ytMiniplayerQueueChip,
                                 miniplayerDimWidget, // -- dimming
-                                absorbBottomDragWidget, // prevent accidental scroll while performing home gesture
                               ],
                             );
 
