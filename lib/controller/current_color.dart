@@ -64,7 +64,7 @@ class CurrentColor {
 
   YoutubeID? _currentPlayingVideo;
 
-  ColorScheme? deviceWallpaperColorScheme;
+  Color? _deviceWallpaperColorAccent;
 
   final isGeneratingAllColorPalettes = false.obs;
 
@@ -143,20 +143,22 @@ class CurrentColor {
     }
   }
 
-  Future<ColorScheme?> _getDeviceWallpaperColorScheme({bool forceCheck = false}) async {
-    if (deviceWallpaperColorScheme == null || forceCheck) {
-      final accentColors = await DynamicColorPlugin.getCorePalette();
-      final cs = accentColors?.toColorScheme();
-      deviceWallpaperColorScheme = cs;
-      return cs;
+  Future<Color?> _getDeviceWallpaperColorAccent({bool forceCheck = false}) async {
+    if (_deviceWallpaperColorAccent == null || forceCheck) {
+      Color? accentColor = await DynamicColorPlugin.getAccentColor();
+      if (accentColor == null) {
+        final palette = await DynamicColorPlugin.getCorePalette();
+        if (palette != null) accentColor = Color(palette.primary.get(60));
+      }
+      _deviceWallpaperColorAccent = accentColor;
+      return accentColor;
     } else {
-      return deviceWallpaperColorScheme;
+      return _deviceWallpaperColorAccent;
     }
   }
 
   Future<NamidaColor?> getPlayerColorFromDeviceWallpaper({bool forceCheck = false, bool customAlpha = true}) async {
-    final accentColorsScheme = await _getDeviceWallpaperColorScheme(forceCheck: forceCheck);
-    final accentColor = accentColorsScheme?.secondary;
+    final accentColor = await _getDeviceWallpaperColorAccent(forceCheck: forceCheck);
     if (accentColor != null) {
       final colorWithAlpha = customAlpha ? accentColor.withAlpha(colorAlpha) : accentColor;
       return NamidaColor(
