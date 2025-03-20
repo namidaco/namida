@@ -103,7 +103,12 @@ class NamidaNavigator {
     innerDrawerKey.currentState?.toggle();
   }
 
-  void _hideSearchMenuAndUnfocus() => ScrollSearchController.inst.hideSearchMenu();
+  /// hides library search and settings search pages
+  void _hideSearchMenusAndUnfocus() {
+    ScrollSearchController.inst.hideSearchMenu();
+    SettingsSearchController.inst.closeSearch();
+  }
+
   void _minimizeMiniplayer() {
     MiniPlayerController.inst.snapToMini();
     MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
@@ -114,13 +119,13 @@ class NamidaNavigator {
     bool minimizeMiniplayers = true,
     bool closeDialogs = true,
   }) {
-    if (searchMenuAndUnfocus) _hideSearchMenuAndUnfocus();
+    if (searchMenuAndUnfocus) _hideSearchMenusAndUnfocus();
     if (minimizeMiniplayers) _minimizeMiniplayer();
     if (closeDialogs) closeAllDialogs();
   }
 
   void _hideEverything() {
-    _hideSearchMenuAndUnfocus();
+    _hideSearchMenusAndUnfocus();
     _minimizeMiniplayer();
     closeAllDialogs();
   }
@@ -427,12 +432,8 @@ class NamidaNavigator {
       return;
     }
 
-    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      _hideSearchMenuAndUnfocus();
-      return;
-    }
-    if (SettingsSearchController.inst.canShowSearch.value) {
-      SettingsSearchController.inst.closeSearch();
+    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value || SettingsSearchController.inst.canShowSearch.value) {
+      _hideSearchMenusAndUnfocus();
       return;
     }
 
@@ -460,7 +461,7 @@ class NamidaNavigator {
     }
     if (waitForAnimation) await Future.delayed(const Duration(milliseconds: _defaultRouteAnimationDurMS));
     currentRoute?.updateColorScheme();
-    _hideSearchMenuAndUnfocus();
+    _hideSearchMenusAndUnfocus();
   }
 
   DateTime _currentBackPressTime = DateTime(0);
