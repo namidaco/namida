@@ -1,5 +1,5 @@
 class DownloadTaskFilename {
-  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?]', caseSensitive: false);
+  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%]', caseSensitive: false);
   static String cleanupFilename(String filename) => filename.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
 
   String filename;

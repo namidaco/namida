@@ -14,6 +14,7 @@ import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -75,7 +76,7 @@ class ThumbnailManager {
                 return null;
               },
             );
-            filename = filename?.splitLast('?');
+            if (filename != null) filename = DownloadTaskFilename.cleanupFilename(filename);
           }
         } catch (_) {}
       }
@@ -91,6 +92,7 @@ class ThumbnailManager {
     }
 
     if (finalUrl != null) {
+      finalUrl = DownloadTaskFilename.cleanupFilename(finalUrl);
       return File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
     }
 
