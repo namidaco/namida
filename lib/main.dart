@@ -17,6 +17,7 @@ import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:jiffy/jiffy.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -58,6 +59,7 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() {
   runZonedGuarded(
@@ -67,7 +69,14 @@ void main() {
 }
 
 void mainInitialization() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  final configureWindowManager = Platform.isWindows;
+
+  if (configureWindowManager) {
+    await windowManager.ensureInitialized();
+  }
 
   await HomeWidgetController.instance?.init();
 
@@ -150,6 +159,23 @@ void mainInitialization() async {
   ]);
 
   settings.prepareAllSettings();
+
+  if (configureWindowManager) {
+    final windowOptions = WindowOptions(
+      size: Size(428, 812),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+    );
+    windowManager.addListener(_NamidaWindowListener());
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      final bounds = settings.windowBounds;
+      if (bounds != null) await windowManager.setBounds(settings.windowBounds);
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   await Future.wait([
     if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
@@ -629,5 +655,23 @@ class ScrollBehaviorModified extends ScrollBehavior {
       case TargetPlatform.windows:
         return const ClampingScrollPhysicsModified();
     }
+  }
+}
+
+class _NamidaWindowListener with WindowListener {
+  Future<void> _saveBounds() async {
+    settings.save(windowBounds: await windowManager.getBounds());
+  }
+
+  @override
+  void onWindowResized() async {
+    await _saveBounds();
+    super.onWindowResized();
+  }
+
+  @override
+  void onWindowMoved() async {
+    await _saveBounds();
+    super.onWindowMoved();
   }
 }
