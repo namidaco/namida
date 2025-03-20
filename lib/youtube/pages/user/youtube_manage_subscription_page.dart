@@ -13,17 +13,21 @@ class YoutubeManageSubscriptionPage extends StatefulWidget with NamidaRouteWidge
 class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptionPage> {
   late final _codeController = TextEditingController();
   late final _emailController = TextEditingController();
+  late final _patreonResultUrlController = TextEditingController();
   late final _formKey = GlobalKey<FormState>();
 
   late final _isChecking = false.obs;
   late final _isClaiming = false.obs;
+  late final _isSigningInPatreon = false.obs;
 
   @override
   void dispose() {
     _codeController.dispose();
     _emailController.dispose();
+    _patreonResultUrlController.dispose();
     _isChecking.close();
     _isClaiming.close();
+    _isSigningInPatreon.close();
     super.dispose();
   }
 
@@ -79,6 +83,8 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Future<void> _onPatreonLoginTap(BuildContext context, {required SignInDecision signInDecision}) async {
+    _isSigningInPatreon.value = true;
+
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,12 +103,13 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
       },
     );
 
-    return _onPossibleMemebershipChange(
+    await _onPossibleMemebershipChange(
       () => YoutubeAccountController.membership.claimPatreon(
         pageConfig: pageConfig,
         signIn: signInDecision,
       ),
     );
+    _isSigningInPatreon.value = false;
   }
 
   Future<void> _refreshPatreon() async {
@@ -202,18 +209,66 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 rx: YoutubeAccountController.membership.userPatreonTier,
                                 builder: (context, userPatreonTier) {
                                   if (userPatreonTier == null) {
-                                    return CustomListTile(
-                                      icon: Broken.login_1,
-                                      title: lang.SIGN_IN,
-                                      trailing: IconButton(
-                                        tooltip: lang.CLEAR,
-                                        onPressed: _onPatreonSignOut,
-                                        icon: const Icon(
-                                          Broken.broom,
-                                          size: 20.0,
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CustomListTile(
+                                          icon: Broken.login_1,
+                                          title: lang.SIGN_IN,
+                                          trailing: IconButton(
+                                            tooltip: lang.CLEAR,
+                                            onPressed: _onPatreonSignOut,
+                                            icon: const Icon(
+                                              Broken.broom,
+                                              size: 20.0,
+                                            ),
+                                          ),
+                                          onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
                                         ),
-                                      ),
-                                      onTap: () => _onPatreonLoginTap(context, signInDecision: SignInDecision.forceSignIn),
+                                        ObxO(
+                                          rx: _isSigningInPatreon,
+                                          builder: (context, value) => value
+                                              ? Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: CustomTagTextField(
+                                                          controller: _patreonResultUrlController,
+                                                          onChanged: (value) {
+                                                            try {
+                                                              final uri = Uri.parse(value);
+                                                              if (!uri.host.startsWith('patreonauth.msob7y.namida')) {
+                                                                return;
+                                                              }
+                                                            } catch (_) {
+                                                              // not a valid url
+                                                              return;
+                                                            }
+                                                            _isSigningInPatreon.value = false;
+                                                            YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(value);
+                                                          },
+                                                          hintText: 'app://patreonauth.msob7y.namida?code=...',
+                                                          labelText: lang.VALUE,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 6.0),
+                                                      IconButton(
+                                                        onPressed: () async {
+                                                          final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+                                                          final clipboardText = clipboardData?.text;
+                                                          if (clipboardText != null) _patreonResultUrlController.text = clipboardText;
+                                                        },
+                                                        icon: Icon(
+                                                          Broken.copy,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                              : const SizedBox(),
+                                        ),
+                                      ],
                                     );
                                   }
                                   final username = userPatreonTier.userName;
