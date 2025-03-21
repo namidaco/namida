@@ -138,6 +138,7 @@ dependencies:
   paged_vertical_calendar: ^1.1.6
 
   # ---- Windows Packages ----
+  window_manager: ^0.4.3
   filepicker_windows: ^2.1.4
   just_audio_windows: ^0.2.2
 
