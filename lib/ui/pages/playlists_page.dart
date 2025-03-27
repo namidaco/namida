@@ -6,6 +6,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -44,7 +45,7 @@ class PlaylistsPage extends StatefulWidget with NamidaRouteWidget {
   RouteType get route => RouteType.PAGE_playlists;
 
   final List<Track>? tracksToAdd;
-  final int countPerRow;
+  final CountPerRow countPerRow;
   final bool animateTiles;
   final bool enableHero;
 
@@ -251,9 +252,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     final isInsideDialog = tracksToAdd != null;
     final enableHero = !isInsideDialog;
     final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
-    final defaultCardHorizontalPadding = context.width * 0.045;
-    final defaultCardHorizontalPaddingCenter = context.width * 0.035;
-    final cardDimensions = Dimensions.inst.getMultiCardDimensions(widget.countPerRow);
+    final defaultCardHorizontalPadding = Dimensions.inst.availableAppContentWidth * 0.045;
+    final defaultCardHorizontalPaddingCenter = Dimensions.inst.availableAppContentWidth * 0.035;
+    final countPerRowResolved = widget.countPerRow.resolve();
 
     return BackgroundWrapper(
       child: Listener(
@@ -395,7 +396,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         SizedBox(width: defaultCardHorizontalPadding),
                                       ],
                                     ),
-                                    SizedBox(height: defaultCardHorizontalPaddingCenter),
+                                    SizedBox(height: 12.0),
                                     Row(
                                       children: [
                                         SizedBox(width: defaultCardHorizontalPadding),
@@ -473,7 +474,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             rx: PlaylistController.inst.playlistsMap,
                             builder: (context, playlistsMap) => ObxO(
                               rx: SearchSortController.inst.playlistSearchList,
-                              builder: (context, playlistSearchList) => widget.countPerRow == 1
+                              builder: (context, playlistSearchList) => countPerRowResolved == 1
                                   ? SliverFixedExtentList.builder(
                                       itemCount: playlistSearchList.length,
                                       itemExtent: Dimensions.playlistTileItemExtent,
@@ -502,10 +503,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         );
                                       },
                                     )
-                                  : widget.countPerRow > 1
+                                  : countPerRowResolved > 1
                                       ? SliverGrid.builder(
                                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: widget.countPerRow,
+                                            crossAxisCount: countPerRowResolved,
                                             childAspectRatio: 0.8,
                                             mainAxisSpacing: 8.0,
                                           ),
@@ -519,11 +520,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               shouldAnimate: _shouldAnimate,
                                               child: MultiArtworkCard(
                                                 enableHero: enableHero,
-                                                dimensions: cardDimensions,
                                                 heroTag: 'playlist_${playlist.name}',
                                                 tracks: playlist.tracks.toTracks(),
                                                 name: playlist.name.translatePlaylistName(),
-                                                gridCount: widget.countPerRow,
+                                                countPerRow: widget.countPerRow,
                                                 showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
                                                 onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
                                                 artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),

@@ -58,7 +58,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
 
     final dayJumper = HistoryJumpToDayIcon(
       controller: historyManager,
-      addPadding: addJumpPadding,
+      considerInfoBoxPadding: addJumpPadding,
       itemExtentAndDayHeaderExtent: () => (dayHeaderExtent: dayHeaderExtent, itemExtent: itemExtent),
     );
     final currentDate = dayJumper.getCurrentDateFromScrollPosition();

@@ -10,6 +10,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -350,10 +351,12 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
+
       getItemWrapper(
         key: _PlaybackSettingsKeys.dismissibleMiniplayer,
         child: Obx(
           (context) => CustomSwitchListTile(
+            enabled: !Dimensions.inst.miniplayerIsWideScreen,
             bgColor: getBgColor(_PlaybackSettingsKeys.dismissibleMiniplayer),
             icon: Broken.sidebar_bottom,
             title: lang.DISMISSIBLE_MINIPLAYER,

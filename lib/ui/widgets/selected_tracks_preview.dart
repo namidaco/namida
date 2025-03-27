@@ -19,123 +19,156 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
   final AnimationController animation;
-  const SelectedTracksPreviewContainer({super.key, required this.animation});
+  final bool isMiniplayerAlwaysVisible;
+
+  const SelectedTracksPreviewContainer({
+    super.key,
+    required this.animation,
+    required this.isMiniplayerAlwaysVisible,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final boxHeightMinimized = 80.0.withMaximum(0.2 * context.height);
+    final boxHeightMaximized = 425.0.withMaximum(0.8 * context.height);
+    final boxWidth = 375.0.withMaximum(context.width);
+    final stc = SelectedTracksController.inst;
     final sysNavBar = MediaQuery.paddingOf(context).bottom;
-    return AnimatedBuilder(
-      animation: animation,
-      child: TrackTilePropertiesProvider(
-        configs: const TrackTilePropertiesConfigs(
-          displayRightDragHandler: true,
-          draggableThumbnail: true,
-          horizontalGestures: false,
-          queueSource: QueueSource.selectedTracks,
-        ),
-        builder: (properties) => Obx(
-          (context) {
-            final SelectedTracksController stc = SelectedTracksController.inst;
-            final selectedTracks = stc.selectedTracks.valueR;
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: selectedTracks.isNotEmpty
-                  ? Center(
-                      child: Container(
-                        width: context.width,
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
-                              onTapDown: (value) => stc.isExpanded.value = true,
-                              onTapUp: (value) => stc.isExpanded.value = false,
-                              onTapCancel: () => stc.isExpanded.value = !stc.isExpanded.value,
+    final child = TrackTilePropertiesProvider(
+      configs: const TrackTilePropertiesConfigs(
+        displayRightDragHandler: true,
+        draggableThumbnail: true,
+        horizontalGestures: false,
+        queueSource: QueueSource.selectedTracks,
+      ),
+      builder: (properties) => ObxO(
+        rx: SelectedTracksController.inst.selectedTracks,
+        builder: (context, selectedTracks) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: selectedTracks.isNotEmpty
+                ? Center(
+                    child: Container(
+                      width: context.width,
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end, // bottom align
+                        crossAxisAlignment: isMiniplayerAlwaysVisible ? CrossAxisAlignment.end : CrossAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
+                            onTapDown: (value) => stc.isPressed.value = true,
+                            onTapUp: (value) => stc.isPressed.value = false,
+                            onTapCancel: () => stc.isPressed.value = !stc.isPressed.value,
 
-                              // dragging upwards or downwards
-                              onPanEnd: (details) {
-                                if (details.velocity.pixelsPerSecond.dy < 0) {
-                                  stc.isMenuMinimized.value = false;
-                                } else if (details.velocity.pixelsPerSecond.dy > 0) {
-                                  stc.isMenuMinimized.value = true;
-                                }
-                              },
-                              child: AnimatedSizedBox(
-                                duration: const Duration(seconds: 1),
-                                curve: Curves.fastLinearToSlowEaseIn,
-                                height: stc.isMenuMinimized.valueR
-                                    ? stc.isExpanded.valueR
-                                        ? 80
-                                        : 85
-                                    : stc.isExpanded.valueR
-                                        ? 425
-                                        : 430,
-                                width: stc.isExpanded.valueR ? 375 : 380,
-                                decoration: BoxDecoration(
-                                  color: Color.alphaBlend(context.theme.colorScheme.surface.withAlpha(160), context.theme.scaffoldBackgroundColor),
-                                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: context.theme.shadowColor.withAlpha(30),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
+                            // dragging upwards or downwards
+                            onPanEnd: (details) {
+                              if (details.velocity.pixelsPerSecond.dy < 0) {
+                                stc.isMenuMinimized.value = false;
+                              } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                                stc.isMenuMinimized.value = true;
+                              }
+                            },
+                            child: ObxO(
+                              rx: stc.isPressed,
+                              builder: (context, isPressed) => ObxO(
+                                rx: stc.isMenuMinimized,
+                                builder: (context, isMenuMinimized) {
+                                  double extra = isPressed
+                                      ? isMenuMinimized
+                                          ? 5.0
+                                          : -5.0
+                                      : 0.0;
+                                  return AnimatedSizedBox(
+                                    duration: const Duration(seconds: 1),
+                                    curve: Curves.fastLinearToSlowEaseIn,
+                                    height: isMenuMinimized ? boxHeightMinimized + extra : boxHeightMaximized + extra,
+                                    width: boxWidth + extra,
+                                    decoration: BoxDecoration(
+                                      color: Color.alphaBlend(context.theme.colorScheme.surface.withAlpha(160), context.theme.scaffoldBackgroundColor),
+                                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: context.theme.shadowColor.withAlpha(30),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: RepaintBoundary(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: stc.isMenuMinimized.valueR
-                                        ? const FittedBox(child: SelectedTracksRow())
-                                        : Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              const FittedBox(child: SelectedTracksRow()),
-                                              const SizedBox(
-                                                height: 20,
-                                              ),
-                                              Expanded(
-                                                child: Container(
-                                                  clipBehavior: Clip.antiAlias,
-                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                                  child: NamidaListView(
-                                                    itemExtent: Dimensions.inst.trackTileItemExtent,
-                                                    itemCount: selectedTracks.length,
-                                                    onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                                    padding: EdgeInsets.zero,
-                                                    itemBuilder: (context, i) {
-                                                      return FadeDismissible(
-                                                        key: ValueKey(selectedTracks[i]),
-                                                        onDismissed: (direction) => stc.removeTrack(i),
-                                                        child: TrackTile(
-                                                          properties: properties,
-                                                          index: i,
-                                                          trackOrTwd: selectedTracks[i],
-                                                        ),
-                                                      );
-                                                    },
+                                    child: RepaintBoundary(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: isMenuMinimized
+                                            ? const FittedBox(child: SelectedTracksRow())
+                                            : Column(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  const FittedBox(child: SelectedTracksRow()),
+                                                  const SizedBox(
+                                                    height: 20,
                                                   ),
-                                                ),
+                                                  Expanded(
+                                                    child: Container(
+                                                      clipBehavior: Clip.antiAlias,
+                                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                                      child: NamidaListView(
+                                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                                        itemCount: selectedTracks.length,
+                                                        onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
+                                                        padding: EdgeInsets.zero,
+                                                        itemBuilder: (context, i) {
+                                                          return FadeDismissible(
+                                                            key: ValueKey(selectedTracks[i]),
+                                                            onDismissed: (direction) => stc.removeTrack(i),
+                                                            child: TrackTile(
+                                                              properties: properties,
+                                                              index: i,
+                                                              trackOrTwd: selectedTracks[i],
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                  ),
-                                ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    )
-                  : null,
-            );
-          },
-        ),
+                    ),
+                  )
+                : null,
+          );
+        },
       ),
-      builder: (context, child) {
+    );
+    if (isMiniplayerAlwaysVisible) {
+      return Obx(
+        (context) {
+          final boxLeftMargin = !isMiniplayerAlwaysVisible ? 8.0 : 12.0;
+          final boxRightMargin = !isMiniplayerAlwaysVisible ? 8.0 : (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 * 2;
+          return AnimatedPadding(
+            duration: Duration(milliseconds: 200),
+            curve: Curves.fastEaseInToSlowEaseOut,
+            padding: EdgeInsets.only(left: boxLeftMargin, right: boxRightMargin),
+            child: child,
+          );
+        },
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
         if (animation.value == 1.0) return const SizedBox();
 
         final miniHeight = animation.value.clamp(0.0, 1.0);
@@ -152,7 +185,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
           bottom: sysNavBar + initH + (navHeight * (1 - queueHeight)),
           child: NamidaOpacity(
             opacity: (isInQueue ? percentage : 1 - percentage).clamp(0, 1),
-            child: child!,
+            child: child,
           ),
         );
       },

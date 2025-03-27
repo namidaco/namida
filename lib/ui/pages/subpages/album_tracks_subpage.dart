@@ -42,15 +42,15 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
             queueLength: tracks.length,
             queue: tracks,
             displayTrackNumber: displayTrackNumberinAlbumPage,
-            header: SubpagesTopContainer(
+            infoBox: SubpageInfoContainer(
               title: name,
               source: QueueSource.album,
               subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
               thirdLineText: tracks.albumArtist,
               heroTag: 'album_$albumIdentifier',
-              imageWidget: Dimensions.inst.shouldAlbumBeSquared // non reactive
+              imageBuilder: (constraints, size) => Dimensions.inst.shouldAlbumBeSquared // non reactive
                   ? MultiArtworkContainer(
-                      size: namida.width * 0.35,
+                      size: size,
                       heroTag: 'album_$albumIdentifier',
                       tracks: [tracks.trackOfImage ?? kDummyTrack],
                     )
@@ -62,7 +62,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                         child: ArtworkWidget(
                           key: Key(tracks.pathToImage),
                           track: tracks.trackOfImage,
-                          thumbnailSize: namida.width * 0.35,
+                          thumbnailSize: size,
                           forceSquared: false,
                           path: tracks.pathToImage,
                           compressed: false,

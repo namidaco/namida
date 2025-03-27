@@ -66,6 +66,8 @@ class NamidaVideoControls extends StatefulWidget {
 
 class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerProviderStateMixin {
   bool _isVisible = false;
+  double _maxWidth = 0.0;
+  double _maxHeight = 0.0;
   final hideDuration = const Duration(seconds: 3);
   final volumeHideDuration = const Duration(milliseconds: 500);
   final brightnessHideDuration = const Duration(milliseconds: 500);
@@ -154,7 +156,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   bool _lastSeekWasForward = true;
 
   void _onDoubleTap(Offset position) async {
-    final totalWidth = context.width;
+    final totalWidth = _maxWidth;
     final halfScreen = totalWidth / 2;
     final middleAmmountToIgnore = totalWidth / 6;
     final pos = position.dx - halfScreen;
@@ -335,7 +337,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required bool isForward,
     required bool isSecondary,
   }) {
-    final seekContainerSize = context.width;
+    final seekContainerSize = _maxWidth;
     final offsetPercentage = isSecondary ? 0.7 : 0.55;
     final finalOffset = -(seekContainerSize * offsetPercentage);
     return Positioned(
@@ -366,7 +368,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required AnimationController controller,
     required bool isForward,
   }) {
-    final seekContainerSize = context.width;
+    final seekContainerSize = _maxWidth;
     final finalOffset = seekContainerSize * 0.05;
     final forwardIcons = <int, IconData>{
       5: Broken.forward_5_seconds,
@@ -505,10 +507,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   bool _canSlideVolume(BuildContext context, double globalHeight) {
-    final minimumVerticalDistanceToIgnoreSwipes = context.height * 0.1;
+    final minimumVerticalDistanceToIgnoreSwipes = _maxHeight * 0.1;
 
     final isSafeFromDown = globalHeight > minimumVerticalDistanceToIgnoreSwipes;
-    final isSafeFromUp = globalHeight < context.height - minimumVerticalDistanceToIgnoreSwipes;
+    final isSafeFromUp = globalHeight < _maxHeight - minimumVerticalDistanceToIgnoreSwipes;
     return isSafeFromDown && isSafeFromUp;
   }
 
@@ -600,8 +602,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = context.width;
-    final maxHeight = context.height;
+    final maxWidth = _maxWidth = context.width.withMaximum(MiniPlayerController.inst.screenSize.width);
+    final maxHeight = _maxHeight = context.height;
+
     final inLandscape = NamidaNavigator.inst.isInLanscape;
 
     // -- in landscape, the size is calculated based on height, to fit in correctly.
@@ -632,38 +635,42 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             );
           }
           // -- fallback images
-          return ObxO(
-              rx: Player.inst.currentItem,
-              builder: (context, item) {
-                if (item is YoutubeID) {
-                  final vidId = item.id;
-                  return YoutubeThumbnail(
-                    type: ThumbnailType.video,
-                    key: Key(vidId),
-                    isImportantInCache: true,
+          return Align(
+            child: ObxO(
+                rx: Player.inst.currentItem,
+                builder: (context, item) {
+                  if (item is YoutubeID) {
+                    final vidId = item.id;
+                    return YoutubeThumbnail(
+                      type: ThumbnailType.video,
+                      key: Key(vidId),
+                      isImportantInCache: true,
+                      width: fallbackWidth,
+                      height: fallbackHeight,
+                      borderRadius: 0,
+                      blur: 0,
+                      videoId: vidId,
+                      displayFallbackIcon: false,
+                      compressed: false,
+                      preferLowerRes: false,
+                      fit: BoxFit.fitWidth,
+                    );
+                  }
+                  final track = item is Selectable ? item.track : null;
+                  return ArtworkWidget(
+                    key: ValueKey(track?.path),
+                    track: track,
+                    path: track?.pathToImage,
+                    thumbnailSize: fallbackWidth,
                     width: fallbackWidth,
                     height: fallbackHeight,
                     borderRadius: 0,
                     blur: 0,
-                    videoId: vidId,
-                    displayFallbackIcon: false,
                     compressed: false,
-                    preferLowerRes: false,
+                    fit: BoxFit.fitWidth,
                   );
-                }
-                final track = item is Selectable ? item.track : null;
-                return ArtworkWidget(
-                  key: ValueKey(track?.path),
-                  track: track,
-                  path: track?.pathToImage,
-                  thumbnailSize: fallbackWidth,
-                  width: fallbackWidth,
-                  height: fallbackHeight,
-                  borderRadius: 0,
-                  blur: 0,
-                  compressed: false,
-                );
-              });
+                }),
+          );
         });
 
     final newDeviceInsets = MediaQuery.paddingOf(context);
@@ -696,7 +703,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     Widget videoControlsWidget = Listener(
       onPointerDown: (event) {
-        _pointerDownedOnRight = event.position.dx > context.width / 2;
+        _pointerDownedOnRight = event.position.dx > maxWidth / 2;
         _isPointerDown = true;
         if (_shouldSeekOnTap) {
           _onDoubleTap(event.position);
@@ -1358,7 +1365,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           children: [
                             if (shouldShowSeekBar)
                               SizedBox(
-                                width: context.width,
+                                width: maxWidth,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                   child: SeekReadyWidget(
@@ -1725,7 +1732,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               if (shouldShowSliders) ...[
                 // ======= Brightness Slider ========
                 Positioned(
-                  left: context.width * 0.15,
+                  left: maxWidth * 0.15,
                   child: Obx(
                     (context) {
                       final bri = _canShowBrightnessSlider.valueR ? _currentBrigthnessDim.valueR : null;
@@ -1741,7 +1748,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
                 // ======= Volume Slider ========
                 Positioned(
-                  right: context.width * 0.15,
+                  right: maxWidth * 0.15,
                   child: ObxO(
                     rx: _currentDeviceVolume,
                     builder: (context, vol) => _getVerticalSliderWidget(
@@ -2126,9 +2133,9 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     final currentEndcards = _currentEndcards;
     if (currentEndcards == null || currentEndcards.isEmpty) return const SizedBox.shrink();
 
-    final maxWidth = context.width;
-    final maxHeight = context.height;
     return LayoutBuilder(builder: (context, constraints) {
+      final maxWidth = constraints.maxWidth;
+      final maxHeight = constraints.maxHeight;
       double maxWidthFinal = maxWidth;
       double maxHeightFinal = maxHeight;
       final keyContext = widget.videoConstraintsKey.currentContext;

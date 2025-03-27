@@ -832,6 +832,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                     height: namida.height * 0.5,
                                     width: namida.width,
                                     child: NamidaTracksList(
+                                      infoBox: null,
                                       padding: EdgeInsets.zero,
                                       queue: failedEditsTracks.value,
                                       queueLength: failedEditsTracks.length,

@@ -473,7 +473,8 @@ class NamidaFileExtensionsWrapper {
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'LRC', 'txt', 'TXT'});
 }
 
-const kDefaultOrientations = <DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
+const kDefaultOrientations = DeviceOrientation.values;
+
 const kDefaultLang = NamidaLanguage(
   code: "en_US",
   name: "English",

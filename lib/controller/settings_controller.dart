@@ -4,6 +4,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/core/http.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/core/constants.dart';
@@ -69,10 +70,10 @@ class _SettingsController with SettingsFileWriter {
   final forceSquaredAlbumThumbnail = false.obs;
   final useAlbumStaggeredGridView = false.obs;
   final useSettingCollapsedTiles = true.obs;
-  final albumGridCount = 2.obs;
-  final artistGridCount = 3.obs;
-  final genreGridCount = 2.obs;
-  final playlistGridCount = 1.obs;
+  final albumGridCount = CountPerRow(2).obs;
+  final artistGridCount = CountPerRow(3).obs;
+  final genreGridCount = CountPerRow(2).obs;
+  final playlistGridCount = CountPerRow(1).obs;
   final enableBlurEffect = false.obs;
   final enableGlowEffect = false.obs;
   final hourFormat12 = true.obs;
@@ -420,10 +421,10 @@ class _SettingsController with SettingsFileWriter {
       forceSquaredAlbumThumbnail.value = json['forceSquaredAlbumThumbnail'] ?? forceSquaredAlbumThumbnail.value;
       useAlbumStaggeredGridView.value = json['useAlbumStaggeredGridView'] ?? useAlbumStaggeredGridView.value;
       useSettingCollapsedTiles.value = json['useSettingCollapsedTiles'] ?? useSettingCollapsedTiles.value;
-      albumGridCount.value = json['albumGridCount'] ?? albumGridCount.value;
-      artistGridCount.value = json['artistGridCount'] ?? artistGridCount.value;
-      genreGridCount.value = json['genreGridCount'] ?? genreGridCount.value;
-      playlistGridCount.value = json['playlistGridCount'] ?? playlistGridCount.value;
+      albumGridCount.value = CountPerRow.fromJsonValue(json['albumGridCount']) ?? albumGridCount.value;
+      artistGridCount.value = CountPerRow.fromJsonValue(json['artistGridCount']) ?? artistGridCount.value;
+      genreGridCount.value = CountPerRow.fromJsonValue(json['genreGridCount']) ?? genreGridCount.value;
+      playlistGridCount.value = CountPerRow.fromJsonValue(json['playlistGridCount']) ?? playlistGridCount.value;
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
       hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
@@ -624,10 +625,10 @@ class _SettingsController with SettingsFileWriter {
         'forceSquaredAlbumThumbnail': forceSquaredAlbumThumbnail.value,
         'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
         'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
-        'albumGridCount': albumGridCount.value,
-        'artistGridCount': artistGridCount.value,
-        'genreGridCount': genreGridCount.value,
-        'playlistGridCount': playlistGridCount.value,
+        'albumGridCount': albumGridCount.value.rawValue,
+        'artistGridCount': artistGridCount.value.rawValue,
+        'genreGridCount': genreGridCount.value.rawValue,
+        'playlistGridCount': playlistGridCount.value.rawValue,
         'enableBlurEffect': enableBlurEffect.value,
         'enableGlowEffect': enableGlowEffect.value,
         'hourFormat12': hourFormat12.value,
@@ -787,10 +788,10 @@ class _SettingsController with SettingsFileWriter {
     bool? forceSquaredAlbumThumbnail,
     bool? useAlbumStaggeredGridView,
     bool? useSettingCollapsedTiles,
-    int? albumGridCount,
-    int? artistGridCount,
-    int? genreGridCount,
-    int? playlistGridCount,
+    CountPerRow? albumGridCount,
+    CountPerRow? artistGridCount,
+    CountPerRow? genreGridCount,
+    CountPerRow? playlistGridCount,
     bool? enableBlurEffect,
     bool? enableGlowEffect,
     bool? hourFormat12,

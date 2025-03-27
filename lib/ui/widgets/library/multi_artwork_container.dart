@@ -36,50 +36,55 @@ class MultiArtworkContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
-      padding: const EdgeInsets.all(3.0),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: context.theme.cardTheme.color?.withAlpha(180),
-        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-        boxShadow: [
-          BoxShadow(
-            color: context.theme.shadowColor.withAlpha(180),
-            blurRadius: 8,
-            offset: const Offset(0, 2.0),
-          )
-        ],
-      ),
-      child: NamidaHero(
-        enabled: enableHero,
-        tag: heroTag,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = this.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
+        return Container(
+          alignment: Alignment.center,
+          margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
+          padding: const EdgeInsets.all(3.0),
+          width: size,
+          height: size,
           decoration: BoxDecoration(
+            color: context.theme.cardTheme.color?.withAlpha(180),
             borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-          ),
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              if (artworkFile != null || tracks != null)
-                MultiArtworks(
-                  disableHero: true,
-                  heroTag: heroTag,
-                  tracks: tracks!,
-                  thumbnailSize: size - 6.0,
-                  fallbackToFolderCover: fallbackToFolderCover,
-                  reduceQuality: reduceQuality,
-                  artworkFile: artworkFile,
-                ),
-              if (child != null) child!,
-              if (onTopWidget != null) onTopWidget!,
+            boxShadow: [
+              BoxShadow(
+                color: context.theme.shadowColor.withAlpha(180),
+                blurRadius: 8,
+                offset: const Offset(0, 2.0),
+              )
             ],
           ),
-        ),
-      ),
+          child: NamidaHero(
+            enabled: enableHero,
+            tag: heroTag,
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+              ),
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  if (artworkFile != null || tracks != null)
+                    MultiArtworks(
+                      disableHero: true,
+                      heroTag: heroTag,
+                      tracks: tracks!,
+                      thumbnailSize: size - 6.0,
+                      fallbackToFolderCover: fallbackToFolderCover,
+                      reduceQuality: reduceQuality,
+                      artworkFile: artworkFile,
+                    ),
+                  if (child != null) child!,
+                  if (onTopWidget != null) onTopWidget!,
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

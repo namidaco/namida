@@ -55,6 +55,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final List<BoxShadow>? boxShadow;
   final bool forceSquared;
   final bool? fetchMissingIfRequired;
+  final BoxFit fit;
 
   const YoutubeThumbnail({
     required super.key,
@@ -82,6 +83,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.boxShadow,
     this.forceSquared = true,
     this.fetchMissingIfRequired,
+    this.fit = BoxFit.cover,
   });
 
   @override
@@ -239,6 +241,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             ),
         ],
         displayIcon: widget.displayFallbackIcon,
+        fit: widget.fit,
       ),
     );
   }

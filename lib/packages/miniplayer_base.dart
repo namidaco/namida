@@ -462,7 +462,13 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        topLeftButton,
+                        Visibility(
+                          maintainState: true,
+                          maintainAnimation: true,
+                          maintainSize: true,
+                          visible: !Dimensions.inst.miniplayerIsWideScreen,
+                          child: topLeftButton,
+                        ),
                         Expanded(
                           child: NamidaInkWell(
                             borderRadius: 14.0,
@@ -1072,31 +1078,114 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                       ),
 
                       /// Track Info
-                      Material(
-                        type: MaterialType.transparency,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                          child: AnimatedBuilder(
-                            animation: sAnim,
-                            builder: (context, child) {
-                              final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
-                              final rightOpacity = sAnim.value.clamp(0.0, 1.0);
-                              return Stack(
-                                children: [
-                                  if (prevText != null && leftOpacity > 0)
-                                    NamidaOpacity(
-                                      opacity: leftOpacity,
+                      ClipRect(
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                            child: AnimatedBuilder(
+                              animation: sAnim,
+                              builder: (context, child) {
+                                final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                                final rightOpacity = sAnim.value.clamp(0.0, 1.0);
+                                return Stack(
+                                  children: [
+                                    if (prevText != null && leftOpacity > 0)
+                                      NamidaOpacity(
+                                        opacity: leftOpacity,
+                                        child: Transform.translate(
+                                          offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                          child: RepaintBoundary(
+                                            child: _TrackInfo(
+                                              textData: prevText,
+                                              p: bp,
+                                              qp: qp,
+                                              cp: bcp,
+                                              bottomOffset: bottomOffset,
+                                              maxOffset: maxOffset,
+                                              screenSize: screenSize,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    Opacity(
+                                      opacity: 1 - sAnim.value.abs(),
                                       child: Transform.translate(
-                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                        offset: Offset(
+                                            -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
+                                            (-maxOffset + topInset + 102.0) *
+                                                (!bounceUp
+                                                    ? !bounceDown
+                                                        ? qp
+                                                        : (1 - bp)
+                                                    : 0.0)),
                                         child: RepaintBoundary(
                                           child: _TrackInfo(
-                                            textData: prevText,
+                                            textData: currentText,
                                             p: bp,
                                             qp: qp,
                                             cp: bcp,
                                             bottomOffset: bottomOffset,
                                             maxOffset: maxOffset,
                                             screenSize: screenSize,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (nextText != null && rightOpacity > 0)
+                                      NamidaOpacity(
+                                        opacity: rightOpacity,
+                                        child: Transform.translate(
+                                          offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                                          child: RepaintBoundary(
+                                            child: _TrackInfo(
+                                              textData: nextText,
+                                              p: bp,
+                                              qp: qp,
+                                              cp: bcp,
+                                              bottomOffset: bottomOffset,
+                                              maxOffset: maxOffset,
+                                              screenSize: screenSize,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Track Image
+                      ClipRect(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                          child: AnimatedBuilder(
+                            animation: sAnim,
+                            builder: (context, child) {
+                              final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
+                              final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
+                              final width = velpy(a: 82.0, b: 92.0, c: qp);
+                              final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
+                              final rightOpacity = sAnim.value.clamp(0.0, 1.0);
+                              return Stack(
+                                children: [
+                                  if (prevItem != null && leftOpacity > 0)
+                                    NamidaOpacity(
+                                      opacity: leftOpacity,
+                                      child: Transform.translate(
+                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                        child: RepaintBoundary(
+                                          child: _RawImageContainer(
+                                            cp: bcp,
+                                            p: bp,
+                                            width: width,
+                                            screenSize: screenSize,
+                                            bottomOffset: bottomOffset,
+                                            maxOffset: maxOffset,
+                                            child: widget.imageBuilder(prevItem, cp),
                                           ),
                                         ),
                                       ),
@@ -1104,70 +1193,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                   Opacity(
                                     opacity: 1 - sAnim.value.abs(),
                                     child: Transform.translate(
-                                      offset: Offset(
-                                          -sAnim.value * sMaxOffset / stParallax + (12.0 * qp),
-                                          (-maxOffset + topInset + 102.0) *
-                                              (!bounceUp
-                                                  ? !bounceDown
-                                                      ? qp
-                                                      : (1 - bp)
-                                                  : 0.0)),
-                                      child: RepaintBoundary(
-                                        child: _TrackInfo(
-                                          textData: currentText,
-                                          p: bp,
-                                          qp: qp,
-                                          cp: bcp,
-                                          bottomOffset: bottomOffset,
-                                          maxOffset: maxOffset,
-                                          screenSize: screenSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (nextText != null && rightOpacity > 0)
-                                    NamidaOpacity(
-                                      opacity: rightOpacity,
-                                      child: Transform.translate(
-                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                                        child: RepaintBoundary(
-                                          child: _TrackInfo(
-                                            textData: nextText,
-                                            p: bp,
-                                            qp: qp,
-                                            cp: bcp,
-                                            bottomOffset: bottomOffset,
-                                            maxOffset: maxOffset,
-                                            screenSize: screenSize,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-
-                      /// Track Image
-                      Padding(
-                        padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                        child: AnimatedBuilder(
-                          animation: sAnim,
-                          builder: (context, child) {
-                            final verticalOffset = !bounceUp ? (-maxOffset + topInset + 108.0) * (!bounceDown ? qp : (1 - bp)) : 0.0;
-                            final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
-                            final width = velpy(a: 82.0, b: 92.0, c: qp);
-                            final leftOpacity = -sAnim.value.clamp(-1.0, 0.0);
-                            final rightOpacity = sAnim.value.clamp(0.0, 1.0);
-                            return Stack(
-                              children: [
-                                if (prevItem != null && leftOpacity > 0)
-                                  NamidaOpacity(
-                                    opacity: leftOpacity,
-                                    child: Transform.translate(
-                                      offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, 0),
+                                      offset: Offset(horizontalOffset, verticalOffset),
                                       child: RepaintBoundary(
                                         child: _RawImageContainer(
                                           cp: bcp,
@@ -1176,77 +1202,61 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           screenSize: screenSize,
                                           bottomOffset: bottomOffset,
                                           maxOffset: maxOffset,
-                                          child: widget.imageBuilder(prevItem, cp),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                Opacity(
-                                  opacity: 1 - sAnim.value.abs(),
-                                  child: Transform.translate(
-                                    offset: Offset(horizontalOffset, verticalOffset),
-                                    child: RepaintBoundary(
-                                      child: _RawImageContainer(
-                                        cp: bcp,
-                                        p: bp,
-                                        width: width,
-                                        screenSize: screenSize,
-                                        bottomOffset: bottomOffset,
-                                        maxOffset: maxOffset,
-                                        child: Padding(
-                                          padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                          child: LongPressDetector(
-                                            onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
-                                            child: ObxO(
-                                              rx: settings.artworkGestureDoubleTapLRC,
-                                              builder: (context, artworkGestureDoubleTapLRC) {
-                                                if (artworkGestureDoubleTapLRC) {
-                                                  return ObxO(
-                                                    rx: Lyrics.inst.currentLyricsLRC,
-                                                    builder: (context, currentLyricsLRC) {
-                                                      // -- only when lrc view is not visible, to prevent other gestures delaying.
-                                                      return DoubleTapDetector(
-                                                        onDoubleTap: currentLyricsLRC == null
-                                                            ? () {
-                                                                settings.save(enableLyrics: !settings.enableLyrics.value);
-                                                                Lyrics.inst.updateLyrics(currentItem);
-                                                              }
-                                                            : null,
-                                                        child: currentImage,
-                                                      );
-                                                    },
-                                                  );
-                                                }
-                                                return currentImage;
-                                              },
+                                          child: Padding(
+                                            padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                            child: LongPressDetector(
+                                              onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
+                                              child: ObxO(
+                                                rx: settings.artworkGestureDoubleTapLRC,
+                                                builder: (context, artworkGestureDoubleTapLRC) {
+                                                  if (artworkGestureDoubleTapLRC) {
+                                                    return ObxO(
+                                                      rx: Lyrics.inst.currentLyricsLRC,
+                                                      builder: (context, currentLyricsLRC) {
+                                                        // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                                        return DoubleTapDetector(
+                                                          onDoubleTap: currentLyricsLRC == null
+                                                              ? () {
+                                                                  settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                                  Lyrics.inst.updateLyrics(currentItem);
+                                                                }
+                                                              : null,
+                                                          child: currentImage,
+                                                        );
+                                                      },
+                                                    );
+                                                  }
+                                                  return currentImage;
+                                                },
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                if (nextItem != null && rightOpacity > 0)
-                                  NamidaOpacity(
-                                    opacity: rightOpacity,
-                                    child: Transform.translate(
-                                      offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
-                                      child: RepaintBoundary(
-                                        child: _RawImageContainer(
-                                          cp: bcp,
-                                          p: bp,
-                                          width: width,
-                                          screenSize: screenSize,
-                                          bottomOffset: bottomOffset,
-                                          maxOffset: maxOffset,
-                                          child: widget.imageBuilder(nextItem, cp),
+                                  if (nextItem != null && rightOpacity > 0)
+                                    NamidaOpacity(
+                                      opacity: rightOpacity,
+                                      child: Transform.translate(
+                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, 0),
+                                        child: RepaintBoundary(
+                                          child: _RawImageContainer(
+                                            cp: bcp,
+                                            p: bp,
+                                            width: width,
+                                            screenSize: screenSize,
+                                            bottomOffset: bottomOffset,
+                                            maxOffset: maxOffset,
+                                            child: widget.imageBuilder(nextItem, cp),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            );
-                          },
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ),
 

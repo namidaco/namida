@@ -13,8 +13,8 @@ class YoutubeMiniplayerUiController {
 
   late final ytMiniplayerKey = GlobalKey<YoutubeMiniPlayerState>();
 
-  void startDimTimer() {
-    ytMiniplayerKey.currentState?.startDimTimer();
+  void startDimTimer({Brightness? brightness}) {
+    ytMiniplayerKey.currentState?.startDimTimer(brightness: brightness);
   }
 
   void cancelDimTimer() {

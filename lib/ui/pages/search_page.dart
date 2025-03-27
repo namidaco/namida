@@ -62,7 +62,6 @@ class SearchPage extends StatelessWidget {
     required RxList<String> Function() rxList,
     required MediaType type,
     required List<Track> Function(String item) getTracks,
-    required (double, double, double) dimensions,
   }) {
     return [
       SliverToBoxAdapter(
@@ -76,15 +75,14 @@ class SearchPage extends StatelessWidget {
       ),
       _horizontalSliverList(
         height: 100.0,
-        itemExtent: 82.0,
+        itemExtent: 92.0,
         list: list,
         builder: (itemName) {
           final tracks = getTracks(itemName);
           return Container(
-            width: 80.0,
+            width: 90.0,
             margin: const EdgeInsets.only(left: 2.0),
             child: ArtistCard(
-              dimensions: dimensions,
               name: itemName,
               artist: tracks,
               type: type,
@@ -97,10 +95,6 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumSearchGridCount);
-    final artistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.artistSearchGridCount);
-    final genreDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.genreSearchGridCount);
-    final playlistDimensions = Dimensions.inst.getArtistCardDimensions(Dimensions.playlistSearchGridCount);
     return BackgroundWrapper(
       child: NamidaTabView(
         initialIndex: switch (ScrollSearchController.inst.currentSearchType.value) {
@@ -253,7 +247,6 @@ class SearchPage extends StatelessWidget {
                                                 width: 130.0,
                                                 margin: const EdgeInsets.only(left: 2.0),
                                                 child: AlbumCard(
-                                                  dimensions: albumDimensions,
                                                   identifier: albumId,
                                                   album: albumId.getAlbumTracks(),
                                                   staggered: false,
@@ -272,7 +265,6 @@ class SearchPage extends StatelessWidget {
                                             rxList: () => SearchSortController.inst.artistSearchTemp,
                                             type: MediaType.artist,
                                             getTracks: (item) => item.getArtistTracks(),
-                                            dimensions: artistDimensions,
                                           ),
 
                                         // == Album Artists ==
@@ -284,7 +276,6 @@ class SearchPage extends StatelessWidget {
                                             rxList: () => SearchSortController.inst.albumArtistSearchTemp,
                                             type: MediaType.albumArtist,
                                             getTracks: (item) => item.getAlbumArtistTracks(),
-                                            dimensions: artistDimensions,
                                           ),
 
                                         // == Composers ==
@@ -296,7 +287,6 @@ class SearchPage extends StatelessWidget {
                                             rxList: () => SearchSortController.inst.composerSearchTemp,
                                             type: MediaType.composer,
                                             getTracks: (item) => item.getComposerTracks(),
-                                            dimensions: artistDimensions,
                                           ),
 
                                         // == Genres ==
@@ -319,9 +309,8 @@ class SearchPage extends StatelessWidget {
                                                 child: MultiArtworkCard(
                                                   tracks: genreName.getGenresTracks(),
                                                   name: genreName,
-                                                  gridCount: Dimensions.genreSearchGridCount,
+                                                  countPerRow: Dimensions.genreSearchGridCount,
                                                   heroTag: 'genre_$genreName',
-                                                  dimensions: genreDimensions,
                                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genreName),
                                                   onTap: () => NamidaOnTaps.inst.onGenreTap(genreName),
                                                 ),
@@ -352,9 +341,8 @@ class SearchPage extends StatelessWidget {
                                                 child: MultiArtworkCard(
                                                   tracks: playlist?.tracks.toTracks() ?? [],
                                                   name: playlist?.name.translatePlaylistName() ?? playlistName,
-                                                  gridCount: Dimensions.playlistSearchGridCount,
+                                                  countPerRow: Dimensions.playlistSearchGridCount,
                                                   heroTag: 'playlist_$playlistName',
-                                                  dimensions: playlistDimensions,
                                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
                                                   onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(playlistName),
                                                 ),

@@ -12,6 +12,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
@@ -47,6 +48,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool isCircle;
   final VoidCallback? onError;
   final bool fallbackToFolderCover;
+  final BoxFit? fit;
 
   const ArtworkWidget({
     required super.key,
@@ -76,7 +78,11 @@ class ArtworkWidget extends StatefulWidget {
     this.isCircle = false,
     this.onError,
     this.fallbackToFolderCover = true,
+    this.fit,
   });
+
+  /// Prevents re-fade in due to change of cache height caused by window resize.
+  static bool isResizingAppWindow = false;
 
   @override
   State<ArtworkWidget> createState() => _ArtworkWidgetState();
@@ -220,13 +226,18 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     int? finalCache;
     if (widget.compressed || widget.useTrackTileCacheHeight) {
       final pixelRatio = context.pixelRatio;
-      final cacheMultiplier = (pixelRatio * settings.artworkCacheHeightMultiplier.value).round();
-      finalCache = widget.useTrackTileCacheHeight ? 60 * cacheMultiplier : widget.cacheHeight * cacheMultiplier;
+      final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
+      if (widget.useTrackTileCacheHeight) {
+        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier);
+        finalCache = refined.round();
+      } else {
+        final refined = widget.cacheHeight * cacheMultiplier * (Dimensions.inst.availableAppContentWidth / 200).withMinimum(1.0);
+        finalCache = refined.round();
+      }
     }
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
-
     return !canDisplayImage || widget.forceDummyArtwork
         ? _getStockWidget(
             key: key,
@@ -264,15 +275,15 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             (_imagePath != null ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
                           ),
                           gaplessPlayback: true,
-                          fit: BoxFit.cover,
+                          fit: widget.fit ?? (widget.forceSquared ? BoxFit.fitHeight : BoxFit.cover),
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: realWidthAndHeight,
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) return child;
+                            if (wasSynchronouslyLoaded || frame == null) return child;
+                            if (ArtworkWidget.isResizingAppWindow) return child;
                             if (widget.fadeMilliSeconds == 0) return child;
                             if (_imagePath != null && bytes != null && bytes.isNotEmpty) return child;
-                            if (frame == null) return child;
 
                             return TweenAnimationBuilder(
                               tween: Tween<double>(begin: 1.0, end: 0.0),

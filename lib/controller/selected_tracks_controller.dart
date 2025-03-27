@@ -37,7 +37,7 @@ class SelectedTracksController {
   }
 
   final isMenuMinimized = true.obs;
-  final isExpanded = false.obs;
+  final isPressed = false.obs;
 
   final didInsertTracks = false.obs;
 

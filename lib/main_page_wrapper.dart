@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/route.dart';
@@ -7,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -70,7 +73,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
       key: NamidaNavigator.inst.innerDrawerKey,
       borderRadius: 42.0.multipliedRadius,
       drawerChild: const NamidaDrawer(),
-      maxPercentage: 0.465.withMaximum(324.0 / context.width),
+      maxPercentage: 0.465.withMaximum(194.0 / context.width),
       initiallySwipeable: settings.swipeableDrawer.value,
       child: const MainScreenStack(),
     );
@@ -84,24 +87,73 @@ class MainScreenStack extends StatefulWidget {
   State<MainScreenStack> createState() => _MainScreenStackState();
 }
 
-class _MainScreenStackState extends State<MainScreenStack> with SingleTickerProviderStateMixin {
+class _MainScreenStackState extends State<MainScreenStack> with TickerProviderStateMixin {
   late AnimationController animation;
   @override
   void initState() {
     super.initState();
     animation = MiniPlayerController.inst.initialize(this);
+    MiniPlayerController.inst.updateScreenValuesInitial();
+    MiniPlayerController.inst.initializeSAnim(this);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
+    MiniPlayerController.inst.updateScreenValues(context); // for updating after split screen & landscape values.
+
+    final miniplayerMaxWidth = Dimensions.inst.miniplayerMaxWidth;
+    final miniplayerIsWideScreen = Dimensions.inst.miniplayerIsWideScreen;
+
+    final selectedTracksWidget = SelectedTracksPreviewContainer(
+      animation: animation,
+      isMiniplayerAlwaysVisible: miniplayerIsWideScreen,
+    );
+
+    // -- do not create MainPage twice as it will cause duplication issues
+    Widget stackWidget = Row(
       children: [
-        MainPage(animation: animation),
-        MiniPlayerParent(animation: animation),
-        SelectedTracksPreviewContainer(animation: animation),
+        // const _NamidaNavigationRail(),
+        Expanded(
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              Padding(
+                padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(right: miniplayerMaxWidth),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeRight: miniplayerIsWideScreen,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      MainPage(
+                        animation: animation,
+                        isMiniplayerAlwaysVisible: miniplayerIsWideScreen,
+                      ),
+                      if (miniplayerIsWideScreen) selectedTracksWidget,
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableContentWidth(context)),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeLeft: miniplayerIsWideScreen,
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: MiniPlayerParent(animation: animation),
+                  ),
+                ),
+              ),
+              if (!miniplayerIsWideScreen) selectedTracksWidget,
+            ],
+          ),
+        ),
       ],
     );
+
+    return stackWidget;
   }
 }
 
@@ -130,7 +182,6 @@ class NamidaDrawer extends StatelessWidget {
                         icon: e.toIcon(),
                         onTap: () async {
                           ScrollSearchController.inst.animatePageController(e);
-                          await Future.delayed(const Duration(milliseconds: 100));
                           toggleDrawer();
                         },
                       ),

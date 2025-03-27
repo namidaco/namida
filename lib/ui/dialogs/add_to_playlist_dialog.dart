@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -57,7 +58,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
         child: PlaylistsPage(
           enableHero: true,
           tracksToAdd: tracks,
-          countPerRow: 1,
+          countPerRow: CountPerRow(1),
         ),
       ),
     ),

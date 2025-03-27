@@ -4,7 +4,6 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
@@ -25,7 +24,7 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
         queueSource: QueueSource.queuePage,
         queueLength: queue.tracks.length,
         queue: queue.tracks,
-        header: SubpagesTopContainer(
+        infoBox: SubpageInfoContainer(
           source: QueueSource.queuePage,
           title: queue.date.dateFormattedOriginal,
           subtitle: queue.date.clockFormatted,
@@ -34,8 +33,8 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
             queue.tracks.totalDurationFormatted,
           ].join(' - '),
           heroTag: 'queue_${queue.date}',
-          imageWidget: MultiArtworkContainer(
-            size: namida.width * 0.35,
+          imageBuilder: (constraints, size) => MultiArtworkContainer(
+            size: size,
             heroTag: 'queue_${queue.date}',
             tracks: queue.tracks.toImageTracks(),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -24,7 +25,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
   RouteType get route => RouteType.PAGE_artists;
 
   final RxList<String>? artists;
-  final int countPerRow;
+  final CountPerRow countPerRow;
   final bool animateTiles;
   final bool enableHero;
   final MediaType? customType;
@@ -84,8 +85,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.artists.scrollController;
-    final artistDimensions = Dimensions.inst.getArtistCardDimensions(countPerRow);
-
+    final countPerRowResolved = countPerRow.resolve();
     final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -151,7 +151,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeArtistType.value),
                       ),
                     ),
-                    if (countPerRow == 1)
+                    if (countPerRowResolved == 1)
                       Expanded(
                         child: ListView.builder(
                           controller: scrollController,
@@ -174,11 +174,11 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                           },
                         ),
                       ),
-                    if (countPerRow > 1)
+                    if (countPerRowResolved > 1)
                       Expanded(
                         child: GridView.builder(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: countPerRow,
+                            crossAxisCount: countPerRowResolved,
                             childAspectRatio: 0.88,
                             mainAxisSpacing: 8.0,
                           ),
@@ -193,7 +193,6 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                               position: i,
                               shouldAnimate: _shouldAnimate,
                               child: ArtistCard(
-                                dimensions: artistDimensions,
                                 name: artist,
                                 artist: tracks,
                                 type: artistType,

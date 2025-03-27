@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -23,7 +24,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_genres;
 
-  final int countPerRow;
+  final CountPerRow countPerRow;
   final bool animateTiles;
   final bool enableHero;
 
@@ -39,7 +40,6 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.genres.scrollController;
-    final cardDimensions = Dimensions.inst.getMultiCardDimensions(countPerRow);
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -76,7 +76,11 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                 ),
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.8, mainAxisSpacing: 8.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: countPerRow.resolve(),
+                      childAspectRatio: 0.8,
+                      mainAxisSpacing: 8.0,
+                    ),
                     controller: scrollController,
                     itemCount: SearchSortController.inst.genreSearchList.length,
                     padding: kBottomPaddingInsets,
@@ -87,11 +91,10 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                         position: i,
                         shouldAnimate: _shouldAnimate,
                         child: MultiArtworkCard(
-                          dimensions: cardDimensions,
                           heroTag: 'genre_$genre',
                           tracks: genre.getGenresTracks(),
                           name: genre,
-                          gridCount: countPerRow,
+                          countPerRow: countPerRow,
                           showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre),
                           onTap: () => NamidaOnTaps.inst.onGenreTap(genre),
                         ),

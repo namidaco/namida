@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -236,7 +237,7 @@ class SortByMenu extends StatelessWidget {
 
 class ChangeGridCountWidget extends StatelessWidget {
   final void Function()? onTap;
-  final int currentCount;
+  final CountPerRow currentCount;
   final bool forStaggered;
   const ChangeGridCountWidget({super.key, this.onTap, required this.currentCount, this.forStaggered = false});
 
@@ -244,22 +245,21 @@ class ChangeGridCountWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     //  final List<IconData> normal = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_2, Broken.grid_8, Broken.grid_1];
     // final List<IconData> staggered = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_3, Broken.grid_edit, Broken.grid_1];
+    final count = currentCount.resolve();
+    final text = "$count";
+    // final text = count == currentCount.rawValue ? "$count" : "${count}x";
     return NamidaInkWell(
       transparentHighlight: true,
       onTap: onTap,
       child: StackedIcon(
-        baseIcon: currentCount == 1
-            ? Broken.row_vertical
-            : currentCount == 2
-                ? forStaggered
-                    ? Broken.grid_3
-                    : Broken.grid_2
-                : currentCount == 3
-                    ? Broken.grid_8
-                    : currentCount == 4
-                        ? Broken.grid_1
-                        : Broken.grid_8,
-        secondaryText: currentCount.toString(),
+        baseIcon: switch (count) {
+          1 => Broken.row_vertical,
+          2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
+          3 => Broken.grid_8,
+          4 => Broken.grid_1,
+          _ => Broken.grid_1,
+        },
+        secondaryText: text,
         iconSize: 22.0,
       ),
     );

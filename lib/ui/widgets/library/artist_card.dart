@@ -13,7 +13,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 class ArtistCard extends StatelessWidget {
   final String name;
   final List<Track> artist;
-  final (double, double, double) dimensions;
   final bool displayIcon;
   final String? bottomCenterText;
   final String additionalHeroTag;
@@ -24,7 +23,6 @@ class ArtistCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.artist,
-    required this.dimensions,
     this.displayIcon = true,
     this.bottomCenterText,
     this.additionalHeroTag = '',
@@ -34,78 +32,95 @@ class ArtistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thumbnailSize = dimensions.$1;
-    final fontSize = dimensions.$2;
-
     final hero = 'artist_$name$additionalHeroTag';
-    return GridTile(
-      child: NamidaInkWell(
-        onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, artist),
-        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.bottomCenter,
-              children: [
-                NamidaHero(
-                  tag: hero,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
-                    child: ContainerWithBorder(
-                      child: ArtworkWidget(
-                        key: Key(artist.pathToImage),
-                        track: artist.trackOfImage,
-                        thumbnailSize: thumbnailSize,
-                        path: artist.pathToImage,
-                        borderRadius: 10.0,
-                        forceSquared: true,
-                        blur: 0,
-                        iconSize: 32.0,
-                        displayIcon: displayIcon,
-                      ),
-                    ),
-                  ),
-                ),
-                if (bottomCenterText != null)
-                  Positioned(
-                    bottom: -5.0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6.0),
-                      decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        bottomCenterText!,
-                        style: context.textTheme.displaySmall,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              width: double.infinity,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return NamidaInkWell(
+      onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, artist),
+      onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final imageSize = constraints.maxWidth - 12.0;
+          final remainingVerticalSpace = constraints.maxHeight - imageSize;
+          double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(13.0);
+          return Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
                 children: [
-                  if (name != '')
-                    NamidaHero(
-                      tag: 'line1_$hero',
-                      child: Text(
-                        name.overflow,
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: fontSize),
-                        overflow: TextOverflow.ellipsis,
+                  NamidaHero(
+                    tag: hero,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
+                      child: ContainerWithBorder(
+                        child: ArtworkWidget(
+                          key: Key(artist.pathToImage),
+                          track: artist.trackOfImage,
+                          thumbnailSize: imageSize,
+                          path: artist.pathToImage,
+                          borderRadius: 10.0,
+                          forceSquared: true,
+                          blur: 0,
+                          iconSize: 32.0,
+                          displayIcon: displayIcon,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (bottomCenterText != null)
+                    Positioned(
+                      bottom: -5.0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: context.theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Text(
+                            bottomCenterText!,
+                            style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.5)),
+                          ),
+                        ),
                       ),
                     ),
                 ],
               ),
-            ),
-          ],
-        ),
+              if (name.isNotEmpty)
+                Positioned(
+                  left: 0.0,
+                  bottom: 0.0,
+                  right: 0.0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: remainingVerticalSpace * 0.1),
+                        Flexible(
+                          child: NamidaHero(
+                            tag: 'line1_$hero',
+                            child: Text(
+                              name.overflow,
+                              style: context.textTheme.displayMedium?.copyWith(
+                                fontSize: getFontSize(0.5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: remainingVerticalSpace * 0.2),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

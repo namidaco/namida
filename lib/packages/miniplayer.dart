@@ -11,7 +11,6 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -54,17 +53,9 @@ class MiniPlayerParent extends StatefulWidget {
   State<MiniPlayerParent> createState() => _MiniPlayerParentState();
 }
 
-class _MiniPlayerParentState extends State<MiniPlayerParent> with SingleTickerProviderStateMixin {
-  @override
-  void initState() {
-    MiniPlayerController.inst.updateScreenValuesInitial();
-    MiniPlayerController.inst.initializeSAnim(this);
-    super.initState();
-  }
-
+class _MiniPlayerParentState extends State<MiniPlayerParent> {
   @override
   Widget build(BuildContext context) {
-    MiniPlayerController.inst.updateScreenValues(context); // useful for updating after split screen & if landscape ever got supported.
     return Obx(
       (context) => Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
@@ -260,7 +251,14 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         onOpen: (currentItem) {
           if (settings.enableVideoPlayback.value) return true;
 
-          NamidaNavigator.inst.navigateDialog(dialog: const Dialog(child: PlaybackSettings(isInDialog: true)));
+          NamidaNavigator.inst.navigateDialog(
+            dialog: Dialog(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+                child: PlaybackSettings(isInDialog: true),
+              ),
+            ),
+          );
           return false;
         },
         onPressed: (currentItem) => VideoController.inst.toggleVideoPlayback(),

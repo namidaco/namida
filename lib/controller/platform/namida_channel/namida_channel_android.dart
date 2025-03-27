@@ -72,16 +72,16 @@ class _NamidaChannelAndroid extends NamidaChannel {
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onResume':
-          for (final fn in _onResume.values) {
+          for (final fn in _onResume) {
             fn();
           }
 
         case 'onUserLeaveHint':
-          for (final fn in _onSuspending.values) {
+          for (final fn in _onSuspending) {
             fn();
           }
         case 'onDestroy':
-          for (final fn in _onDestroy.values) {
+          for (final fn in _onDestroy) {
             fn();
           }
       }

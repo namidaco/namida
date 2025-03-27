@@ -24,31 +24,31 @@ abstract class NamidaChannel {
 
   Future<bool> openSystemEqualizer(int? sessionId);
 
-  final _onResume = <String, FutureOr<void> Function()>{};
-  final _onSuspending = <String, FutureOr<void> Function()>{};
-  final _onDestroy = <String, FutureOr<void> Function()>{};
+  final _onResume = < FutureOr<void> Function()>[];
+  final _onSuspending = < FutureOr<void> Function()>[];
+  final _onDestroy = <FutureOr<void> Function()>[];
 
-  void addOnDestroy(String key, FutureOr<void> Function() fn) {
-    _onDestroy[key] = fn;
+  void addOnDestroy(FutureOr<void> Function() fn) {
+    _onDestroy.add(fn);
   }
 
-  void addOnResume(String key, FutureOr<void> Function() fn) {
-    _onResume[key] = fn;
+  void addOnResume(FutureOr<void> Function() fn) {
+    _onResume.add(fn);
   }
 
-  void addOnSuspending(String key, FutureOr<void> Function() fn) {
-    _onSuspending[key] = fn;
+  void addOnSuspending( FutureOr<void> Function() fn) {
+    _onSuspending.add(fn); 
+  } 
+
+  void removeOnDestroy(FutureOr<void> Function() fn) {
+    _onDestroy.remove(fn);
   }
 
-  void removeOnDestroy(String key) {
-    _onDestroy.remove(key);
+  void removeOnResume(FutureOr<void> Function() fn) {
+    _onResume.remove(fn);
   }
 
-  void removeOnResume(String key) {
-    _onResume.remove(key);
-  }
-
-  void removeOnSuspending(String key) {
-    _onSuspending.remove(key);
+  void removeOnSuspending(FutureOr<void> Function() fn) {
+    _onSuspending.remove(fn);
   }
 }

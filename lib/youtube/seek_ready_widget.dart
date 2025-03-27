@@ -155,6 +155,34 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withValues(alpha: 0.25), context.theme.scaffoldBackgroundColor);
     final bufferColor = miniplayerBGColor.invert();
 
+    final circleWidget = AnimatedBuilder(
+      animation: _animation,
+      child: Container(
+        alignment: Alignment.center,
+        height: circleWidth,
+        width: circleWidth,
+        decoration: BoxDecoration(
+          color: CurrentColor.inst.miniplayerColor.withValues(alpha: 1.0),
+          borderRadius: const BorderRadius.all(Radius.circular(64.0)),
+        ),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: Color.fromARGB(220, 40, 40, 40),
+            shape: BoxShape.circle,
+          ),
+          width: halfCircle,
+          height: halfCircle,
+        ),
+      ),
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _animation.value,
+          child: child,
+        );
+      },
+    );
+
     return LayoutBuilder(
       builder: (context, c) {
         final maxWidth = c.maxWidth;
@@ -397,33 +425,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 final seekP = _seekPercentage.valueR;
                 return Transform.translate(
                   offset: Offset(-halfCircle + (maxWidth * seekP).clamp(clampedEdge, maxWidth - clampedEdge), barHeight / 4),
-                  child: AnimatedBuilder(
-                    animation: _animation,
-                    child: Container(
-                      alignment: Alignment.center,
-                      height: circleWidth,
-                      width: circleWidth,
-                      decoration: BoxDecoration(
-                        color: CurrentColor.inst.miniplayerColor.withValues(alpha: 1.0),
-                        borderRadius: const BorderRadius.all(Radius.circular(64.0)),
-                      ),
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Color.fromARGB(220, 40, 40, 40),
-                          shape: BoxShape.circle,
-                        ),
-                        width: halfCircle,
-                        height: halfCircle,
-                      ),
-                    ),
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _animation.value,
-                        child: child,
-                      );
-                    },
-                  ),
+                  child: circleWidget,
                 );
               },
             ),

@@ -199,7 +199,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             )
                           : NamidaInkWell(
                               onTap: () => _animateSmallToBig(),
-                              margin: EdgeInsets.symmetric(horizontal: context.width * 0.04, vertical: 6.0),
+                              margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
                               padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                               height: minHeight,
                               bgColor: Color.alphaBlend(context.theme.cardColor.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.95),

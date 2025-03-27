@@ -172,22 +172,29 @@ Future<void> showSettingDialogWithTextField({
                   isDense: true,
                   errorMaxLines: 3,
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
+                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(50), width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
+                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
+                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(50), width: 1.0),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
                     borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
                     borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
                   ),
                   hintText: addNewPlaylist ? lang.NAME : lang.VALUE,
+                  hintStyle: TextStyle(
+                    fontSize: 14.5,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 12.0,
+                  ),
                 ),
                 validator: (value) {
                   if (fontScaleFactor) {

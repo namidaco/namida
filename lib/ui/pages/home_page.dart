@@ -722,7 +722,6 @@ class _AlbumsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(4);
     final itemCount = albums.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
@@ -744,7 +743,6 @@ class _AlbumsList extends StatelessWidget {
             identifier: albumId ?? '',
             album: albumId?.getAlbumTracks() ?? [],
             staggered: false,
-            dimensions: albumDimensions,
             topRightText: listens == null ? null : "${listens!(albumId)}",
             additionalHeroTag: "$title$index",
           );
@@ -774,7 +772,6 @@ class _ArtistsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final artistDimensions = Dimensions.inst.getArtistCardDimensions(5);
     final itemCount = artists.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
@@ -793,7 +790,6 @@ class _ArtistsList extends StatelessWidget {
             displayIcon: !isLoading,
             name: a ?? '',
             artist: a?.getArtistTracks() ?? [],
-            dimensions: artistDimensions,
             bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
             additionalHeroTag: "$title$index",
             type: MediaType.artist,
@@ -1410,6 +1406,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: NamidaTracksList(
+        infoBox: null,
         header: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Row(

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
-import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -59,23 +58,13 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    // -- to refresh after coming resuming app
-    NamidaChannel.inst.addOnResume('waveform', WaveformController.inst.calculateUIWaveform);
-  }
-
-  @override
   void dispose() {
-    NamidaChannel.inst.removeOnResume('waveform');
     _animation.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final view = View.of(context);
     final decorationBoxBehind = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5.0.multipliedRadius),
@@ -88,67 +77,72 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
         color: context.theme.colorScheme.onSurface.withAlpha(110),
       ),
     );
-    return ObxO(
-        rx: WaveformController.inst.isWaveformUIEnabled,
-        builder: (context, enabled) {
-          _updateAnimation(enabled);
-          final downscaled = WaveformController.inst.currentWaveformUI;
-          final barWidth = view.physicalSize.shortestSide / view.devicePixelRatio / downscaled.length * 0.45;
-          return Center(
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, _) {
-                final colors = [
-                  Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
-                  Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
-                  Colors.transparent,
-                  Colors.transparent,
-                ];
-                return Stack(
-                  children: [
-                    NamidaWaveBars(
-                      heightPercentage: _animation.value,
-                      decorationBox: decorationBoxBehind,
-                      waveList: downscaled,
-                      barWidth: barWidth,
-                      barMinHeight: widget.barsMinHeight,
-                      barMaxHeight: widget.barsMaxHeight,
-                    ),
-                    Obx(
-                      (context) {
-                        final seekValue = MiniPlayerController.inst.seekValue.valueR;
-                        final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
-                        final durInMs = _currentDurationInMSR;
-                        final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
-                        return ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (Rect bounds) {
-                            return LinearGradient(
-                              tileMode: TileMode.decal,
-                              stops: [0.0, percentage, percentage + 0.005, 1.0],
-                              colors: colors,
-                            ).createShader(bounds);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        return ObxO(
+            rx: WaveformController.inst.isWaveformUIEnabled,
+            builder: (context, enabled) {
+              _updateAnimation(enabled);
+              final downscaled = WaveformController.inst.currentWaveformUI;
+              final barWidth = maxWidth / downscaled.length * 0.54;
+              return Center(
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, _) {
+                    final colors = [
+                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
+                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
+                      Colors.transparent,
+                      Colors.transparent,
+                    ];
+                    return Stack(
+                      children: [
+                        NamidaWaveBars(
+                          heightPercentage: _animation.value,
+                          decorationBox: decorationBoxBehind,
+                          waveList: downscaled,
+                          barWidth: barWidth,
+                          barMinHeight: widget.barsMinHeight,
+                          barMaxHeight: widget.barsMaxHeight,
+                        ),
+                        Obx(
+                          (context) {
+                            final seekValue = MiniPlayerController.inst.seekValue.valueR;
+                            final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
+                            final durInMs = _currentDurationInMSR;
+                            final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                            return ShaderMask(
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (Rect bounds) {
+                                return LinearGradient(
+                                  tileMode: TileMode.decal,
+                                  stops: [0.0, percentage, percentage + 0.005, 1.0],
+                                  colors: colors,
+                                ).createShader(bounds);
+                              },
+                              child: SizedBox(
+                                width: namida.width - 16.0 / 2,
+                                child: NamidaWaveBars(
+                                  heightPercentage: _animation.value,
+                                  decorationBox: decorationBoxFront,
+                                  waveList: downscaled,
+                                  barWidth: barWidth,
+                                  barMinHeight: widget.barsMinHeight,
+                                  barMaxHeight: widget.barsMaxHeight,
+                                ),
+                              ),
+                            );
                           },
-                          child: SizedBox(
-                            width: namida.width - 16.0 / 2,
-                            child: NamidaWaveBars(
-                              heightPercentage: _animation.value,
-                              decorationBox: decorationBoxFront,
-                              waveList: downscaled,
-                              barWidth: barWidth,
-                              barMinHeight: widget.barsMinHeight,
-                              barMaxHeight: widget.barsMaxHeight,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
-          );
-        });
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            });
+      },
+    );
   }
 }
 

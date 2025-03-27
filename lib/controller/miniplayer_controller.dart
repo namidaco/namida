@@ -43,6 +43,8 @@ class MiniPlayerController {
   /// Icon that represents the direction of the current track
   final arrowIcon = Broken.cd.obso;
 
+  bool get _miniplayerIsWideScreen => Dimensions.inst.miniplayerIsWideScreen;
+
   late final ScrollController queueScrollController = ScrollController()..addListener(_updateIcon);
 
   Future<void> _onMiniplayerDismiss() async => await Player.inst.clearQueue();
@@ -83,9 +85,33 @@ class MiniPlayerController {
     final navBarPadding = MediaQuery.paddingOf(context).bottom;
     topInset = media.padding.top - navBarPadding;
     bottomInset = media.padding.bottom;
-    screenSize = Size(media.size.width, media.size.height - navBarPadding);
+
+    final miniplayerDetails = _getPlayerDetails(
+      context,
+      screenWidth: media.size.width,
+      screenHeight: media.size.height,
+    );
+    final maxWidth = miniplayerDetails.maxWidth;
+    final isWidescreen = miniplayerDetails.isWidescreen;
+
+    screenSize = Size(maxWidth, media.size.height - navBarPadding);
     maxOffset = screenSize.height;
-    sMaxOffset = screenSize.width;
+    sMaxOffset = maxWidth;
+
+    if (isWidescreen && !Dimensions.inst.miniplayerIsWideScreen) {
+      if (animation.value < 1) {
+        // -- make sure its not minimized when its widescreen
+        this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
+        this.snapToExpanded();
+        onImmersiveModeChange(settings.hideStatusBarInExpandedMiniplayer.value, force: true);
+      }
+    } else if (!isWidescreen && Dimensions.inst.miniplayerIsWideScreen) {
+      onImmersiveModeChange(settings.hideStatusBarInExpandedMiniplayer.value);
+    }
+
+    Dimensions.inst.miniplayerMaxWidth = maxWidth;
+    Dimensions.inst.availableAppContentWidth = media.size.width - (isWidescreen ? maxWidth : 0);
+    Dimensions.inst.miniplayerIsWideScreen = miniplayerDetails.isWidescreen;
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {
@@ -98,6 +124,24 @@ class MiniPlayerController {
     }
     animation.reset();
     verticalSnapping();
+  }
+
+  static ({double maxWidth, bool isWidescreen}) _getPlayerDetails(BuildContext context, {double? screenWidth, double? screenHeight}) {
+    screenWidth ??= context.width;
+    screenHeight ??= context.height;
+
+    double maxWidth = screenWidth;
+    bool isWidescreen = false;
+    if (screenWidth / screenHeight > 1) {
+      double fixedW = 400.0;
+      if (screenWidth / screenHeight > 1.5) {
+        fixedW = screenWidth.withMaximum(screenHeight) * 0.68;
+      }
+      fixedW = fixedW.withMaximum(screenWidth * 0.4);
+      maxWidth = maxWidth.withMaximum(fixedW);
+      isWidescreen = true;
+    }
+    return (maxWidth: maxWidth, isWidescreen: isWidescreen);
   }
 
   late AnimationController animation;
@@ -155,7 +199,7 @@ class MiniPlayerController {
       // -- isQueue
       snapToExpanded();
       return false;
-    } else if (_offset == maxOffset) {
+    } else if (_offset == maxOffset && !_miniplayerIsWideScreen) {
       // -- isExpanded
       snapToMini();
       return false;
@@ -178,9 +222,19 @@ class MiniPlayerController {
 
   bool _isInsideQueue() => _offset >= maxOffset * 2 && (queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0);
 
+  bool _canMiniminzeMiniplayer(double dy) {
+    if (_miniplayerIsWideScreen && animation.value <= 1 && dy > 0) {
+      // -- moving down while miniplayer is always shown
+      return false;
+    }
+    return true;
+  }
+
   void onPointerMove(PointerMoveEvent event) {
     if (_isModifyingQueue) return;
     if (event.position.dy >= screenSize.height - _deadSpace) return;
+
+    if (!_canMiniminzeMiniplayer(event.delta.dy)) return;
 
     _velocity.addPosition(event.timeStamp, event.position);
 
@@ -211,6 +265,7 @@ class MiniPlayerController {
     if (_isModifyingQueue) return;
     if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
+    if (!_canMiniminzeMiniplayer(details.delta.dy)) return;
 
     _offset -= details.primaryDelta ?? 0;
     _offset = _offset.clamp(-_headRoom, maxOffset * 2 + _headRoom / 2);
@@ -317,11 +372,21 @@ class MiniPlayerController {
   }
 
   void snapToMini({bool haptic = true}) {
+    if (_miniplayerIsWideScreen) return;
+
     WakelockController.inst.updateMiniplayerStatus(false);
     _offset = 0;
     bounceDown = false;
     _snap(haptic: haptic, curve: _bouncingCurve);
     if (_maintainStatusBarShowing) NamidaNavigator.inst.setDefaultSystemUI();
+  }
+
+  void onImmersiveModeChange(bool enabled, {bool force = false}) {
+    if (enabled && (force || animation.value >= 1)) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      NamidaNavigator.inst.setDefaultSystemUI();
+    }
   }
 
   void _updateIcon() {

@@ -40,6 +40,8 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
+    final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
+
     return BackgroundWrapper(
       child: Stack(
         children: [
@@ -52,6 +54,7 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
           settings.useSettingCollapsedTiles.value
               ? const CollapsedSettingTiles()
               : ListView(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
                   children: [
                     const ThemeSetting(),
                     const IndexerSettings(),
@@ -85,6 +88,7 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
   Widget build(BuildContext context) {
+    final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
     return BackgroundWrapper(
       child: Stack(
         children: [
@@ -95,6 +99,7 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
             ),
           ),
           SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -115,8 +120,9 @@ class CollapsedSettingTiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Localizations.localeOf(context);
+    final double horizontalMargin = 0.5 * Dimensions.inst.getSettingsHorizontalMargin(context);
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: EdgeInsets.symmetric(horizontal: 8.0 + horizontalMargin),
       children: [
         CustomCollapsedListTile(
           title: lang.THEME_SETTINGS,

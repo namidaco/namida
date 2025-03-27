@@ -30,35 +30,39 @@ class SmallYTActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          iconWidget ??
-              NamidaInkWell(
-                borderRadius: 32.0,
-                onTap: onPressed,
-                onLongPress: onLongPress,
-                padding: const EdgeInsets.all(8.0),
-                child: smallIconWidget ?? Icon(icon),
-              ),
-          NamidaDummyContainer(
-            width: 24.0,
-            height: 8.0,
-            borderRadius: 4.0,
-            shimmerEnabled: title == null,
-            child: ShimmerWrapper(
+      child: NamidaInkWell(
+        onTap: onPressed,
+        borderRadius: 12.0,
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            iconWidget ??
+                smallIconWidget ??
+                Icon(
+                  icon,
+                  size: 25.0,
+                ),
+            SizedBox(height: 6.0),
+            NamidaDummyContainer(
+              width: 24.0,
+              height: 8.0,
+              borderRadius: 4.0,
               shimmerEnabled: title == null,
-              fadeDurationMS: titleWidget == null ? 600 : 100,
-              child: titleWidget ??
-                  Text(
-                    title ?? '',
-                    style: context.textTheme.displaySmall,
-                    softWrap: true,
-                    maxLines: 2,
-                  ),
+              child: ShimmerWrapper(
+                shimmerEnabled: title == null,
+                fadeDurationMS: titleWidget == null ? 600 : 100,
+                child: titleWidget ??
+                    Text(
+                      title ?? '',
+                      style: context.textTheme.displaySmall,
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

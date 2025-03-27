@@ -205,7 +205,7 @@ class Player {
         }
       }
     });
-    _initializeEqualizer();
+    if (Platform.isAndroid || Platform.isIOS) _initializeEqualizer();
   }
 
   void _initializeEqualizer() async {

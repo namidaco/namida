@@ -15,11 +15,11 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
-import 'package:jiffy/jiffy.dart';
+import 'package:jiffy/jiffy.dart' hide Locale;
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
@@ -42,6 +42,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -51,6 +52,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -58,8 +61,8 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
-import 'package:window_manager/window_manager.dart';
 
 void main() {
   runZonedGuarded(
@@ -287,7 +290,7 @@ void _initErrorInterpreters() {
 }
 
 void _initLifeCycle() {
-  NamidaChannel.inst.addOnDestroy('main', () async {
+  NamidaChannel.inst.addOnDestroy(() async {
     final mode = settings.player.killAfterDismissingApp.value;
     if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value)) {
       await Player.inst.pause();
@@ -295,9 +298,8 @@ void _initLifeCycle() {
     }
   });
 
-  NamidaChannel.inst.addOnResume('main', () async {
-    CurrentColor.inst.refreshColorsAfterResumeApp();
-  });
+  NamidaChannel.inst.addOnResume(CurrentColor.inst.refreshColorsAfterResumeApp);
+  NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
 }
 
 void _initializeIntenties() {
@@ -540,99 +542,105 @@ class Namida extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // -- no need to listen, widget is rebuilt on applifecycle
-    final showPipOnly = NamidaChannel.inst.isInPip.value;
-    return Stack(
-      alignment: Alignment.bottomLeft,
-      children: [
-        Visibility(
-          maintainState: true,
-          visible: !showPipOnly,
-          child: ObxO(
-            rx: settings.fontScaleFactor,
-            builder: (context, fontScaleFactor) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
-              child: MaterialApp(
-                color: kDefaultIconLightColor,
-                key: const Key('namida_app'),
-                debugShowCheckedModeBanner: false,
-                navigatorKey: namida.rootNavigatorKey,
-                title: 'Namida',
-                // restorationScopeId: 'Namida',
-                builder: (context, widget) {
-                  Brightness? platformBrightness;
-                  // overlay entries get rebuilt on any insertion/removal, so we create app here.
+    final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
+    return ObxO(
+      rx: NamidaChannel.inst.isInPip,
+      builder: (context, showPipOnly) => Container(
+        color: Colors.black,
+        alignment: Alignment.topLeft,
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: [
+            Visibility(
+              maintainState: true,
+              visible: !showPipOnly,
+              child: ObxO(
+                rx: settings.fontScaleFactor,
+                builder: (context, fontScaleFactor) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
+                  child: MaterialApp(
+                    color: kDefaultIconLightColor,
+                    key: const Key('namida_app'),
+                    debugShowCheckedModeBanner: false,
+                    navigatorKey: namida.rootNavigatorKey,
+                    title: 'Namida',
+                    // restorationScopeId: 'Namida',
+                    builder: (context, widget) {
+                      Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
+                      // overlay entries get rebuilt on any insertion/removal, so we create app here.
 
-                  Widget mainApp = buildMainApp(widget!, platformBrightness);
+                      Widget mainApp = buildMainApp(widget!, platformBrightness);
 
-                  return Overlay(
-                    initialEntries: [
-                      OverlayEntry(builder: (context) {
-                        final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                        if (newPlatformBrightness != platformBrightness) {
-                          platformBrightness = newPlatformBrightness;
-                          mainApp = buildMainApp(widget, platformBrightness);
-                        }
-                        return mainApp;
-                      }),
-                    ],
-                  );
-                },
-                home: MainPageWrapper(
-                  shouldShowOnBoarding: shouldShowOnBoarding,
-                  onContextAvailable: (ctx) {
-                    _initialContext = ctx;
-                    _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
-                  },
+                      return Overlay(
+                        initialEntries: [
+                          OverlayEntry(builder: (context) {
+                            final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                            if (newPlatformBrightness != platformBrightness) {
+                              platformBrightness = newPlatformBrightness;
+                              mainApp = buildMainApp(widget, platformBrightness);
+                              YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                            }
+                            return mainApp;
+                          }),
+                        ],
+                      );
+                    },
+                    home: MainPageWrapper(
+                      shouldShowOnBoarding: shouldShowOnBoarding,
+                      onContextAvailable: (ctx) {
+                        _initialContext = ctx;
+                        _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
 
-        // prevent accidental opening for drawer when performing back gesture
-        SizedBox(
-          width: 18.0,
-          height: context.height * 0.8,
-          child: HorizontalDragDetector(
-            onUpdate: (_) {},
-          ),
-        ),
+            // prevent accidental opening for drawer when performing back gesture
+            if (shouldAddEdgeAbsorbers)
+              SizedBox(
+                width: 18.0,
+                height: context.height * 0.8,
+                child: HorizontalDragDetector(
+                  onUpdate: (_) {},
+                ),
+              ),
 
-        // prevent accidental miniplayer/queue swipe up when performing home scween gesture
-        SizedBox(
-          height: 18.0,
-          width: context.height,
-          child: VerticalDragDetector(
-            onUpdate: (_) {},
-          ),
-        ),
+            // prevent accidental miniplayer/queue swipe up when performing home scween gesture
+            if (shouldAddEdgeAbsorbers)
+              SizedBox(
+                height: 18.0,
+                width: context.height,
+                child: VerticalDragDetector(
+                  onUpdate: (_) {},
+                ),
+              ),
 
-        // prevent accidental miniplayer swipe when performing back gesture
-        Positioned(
-          right: 0,
-          child: SizedBox(
-            width: 12.0,
-            height: context.height,
-            child: HorizontalDragDetector(
-              onUpdate: (_) {},
-            ),
-          ),
-        ),
+            // prevent accidental miniplayer swipe when performing back gesture
+            if (shouldAddEdgeAbsorbers)
+              Positioned(
+                right: 0,
+                child: SizedBox(
+                  width: 12.0,
+                  height: context.height,
+                  child: HorizontalDragDetector(
+                    onUpdate: (_) {},
+                  ),
+                ),
+              ),
 
-        if (showPipOnly)
-          Container(
-            color: Colors.black,
-            alignment: Alignment.topLeft,
-            child: const NamidaVideoControls(
-              key: Key('pip_widget_child'),
-              isFullScreen: true,
-              showControls: false,
-              onMinimizeTap: null,
-              isLocal: true,
-            ),
-          )
-      ],
+            if (showPipOnly)
+              const NamidaVideoControls(
+                key: Key('pip_widget_child'),
+                isFullScreen: true,
+                showControls: false,
+                onMinimizeTap: null,
+                isLocal: true,
+              )
+          ],
+        ),
+      ),
     );
   }
 }
@@ -664,14 +672,18 @@ class _NamidaWindowListener with WindowListener {
   }
 
   @override
+  void onWindowResize() async {
+    ArtworkWidget.isResizingAppWindow = true;
+  }
+
+  @override
   void onWindowResized() async {
+    ArtworkWidget.isResizingAppWindow = false;
     await _saveBounds();
-    super.onWindowResized();
   }
 
   @override
   void onWindowMoved() async {
     await _saveBounds();
-    super.onWindowMoved();
   }
 }

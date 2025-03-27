@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -24,7 +25,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   RouteType get route => RouteType.PAGE_albums;
 
   final RxList<String>? albumIdentifiers;
-  final int countPerRow;
+  final CountPerRow countPerRow;
   final bool animateTiles;
   final bool enableHero;
 
@@ -41,7 +42,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.albums.scrollController;
-    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(countPerRow);
+    final countPerRowResolved = countPerRow.resolve();
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -83,7 +84,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                 Obx(
                   (context) {
                     settings.albumListTileHeight.valueR;
-                    return countPerRow == 1
+                    return countPerRowResolved == 1
                         ? Expanded(
                             child: ListView.builder(
                               controller: scrollController,
@@ -110,7 +111,9 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   padding: kBottomPaddingInsets,
                                   itemCount: finalAlbums.length,
                                   mainAxisSpacing: 8.0,
-                                  gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow),
+                                  gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: countPerRow.resolve(),
+                                  ),
                                   itemBuilder: (context, i) {
                                     final albumId = finalAlbums[i];
                                     return AnimatingGrid(
@@ -118,7 +121,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                       position: i,
                                       shouldAnimate: _shouldAnimate,
                                       child: AlbumCard(
-                                        dimensions: albumDimensions,
                                         identifier: albumId,
                                         album: albumId.getAlbumTracks(),
                                         staggered: true,
@@ -129,7 +131,11 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                               )
                             : Expanded(
                                 child: GridView.builder(
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: countPerRow, childAspectRatio: 0.75, mainAxisSpacing: 8.0),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: countPerRow.resolve(),
+                                    childAspectRatio: 0.75,
+                                    mainAxisSpacing: 8.0,
+                                  ),
                                   controller: scrollController,
                                   itemCount: finalAlbums.length,
                                   padding: kBottomPaddingInsets,
@@ -140,7 +146,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                       position: i,
                                       shouldAnimate: _shouldAnimate,
                                       child: AlbumCard(
-                                        dimensions: albumDimensions,
                                         identifier: albumId,
                                         album: albumId.getAlbumTracks(),
                                         staggered: false,

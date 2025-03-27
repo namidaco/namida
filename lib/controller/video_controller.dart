@@ -108,13 +108,7 @@ class NamidaVideoWidget extends StatelessWidget {
                   ? VideoController.inst.videoControlsKeyFullScreen
                   : VideoController.inst.videoControlsKey,
           isLocal: isLocal,
-          onMinimizeTap: () {
-            if (fullscreen) {
-              NamidaNavigator.inst.exitFullScreen();
-            } else {
-              onMinimizeTap?.call();
-            }
-          },
+          onMinimizeTap: onMinimizeTap,
           showControls: showControls,
           disableControlsUnderPercentage: disableControlsUnderPercentage,
           isFullScreen: fullscreen,

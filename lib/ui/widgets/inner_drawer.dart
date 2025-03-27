@@ -43,22 +43,32 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
   }
 
   late final AnimationController controller;
+  final _upperBoundRx = Rx(0.0);
 
   @override
   void initState() {
     controller = AnimationController(
       vsync: this,
       duration: Duration.zero,
-      lowerBound: 0,
-      upperBound: widget.maxPercentage,
     );
+    _upperBoundRx.value = widget.maxPercentage;
     super.initState();
   }
 
   @override
   void dispose() {
     controller.dispose();
+    _upperBoundRx.close();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant NamidaInnerDrawer oldWidget) {
+    if (widget.maxPercentage != oldWidget.maxPercentage) {
+      _upperBoundRx.value = widget.maxPercentage;
+      if (_isOpened) controller.animateTo(_upperBoundRx.value, duration: Duration.zero); // just reanimate
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   late bool _canSwipe = widget.initiallySwipeable;
@@ -71,7 +81,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   void _openDrawer() {
     _isOpened = true;
-    controller.animateTo(controller.upperBound, duration: widget.duration, curve: widget.curve);
+    controller.animateTo(_upperBoundRx.value, duration: widget.duration, curve: widget.curve);
   }
 
   void _closeDrawer() {
@@ -139,18 +149,24 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 ),
               ),
               // -- drawer
-              Padding(
-                padding: EdgeInsets.only(right: context.width * (1 - controller.upperBound)),
-                child: Transform.translate(
-                  offset: Offset(-((controller.upperBound - controller.value) * context.width * 0.5), 0),
-                  child: drawerChild,
+              ObxO(
+                rx: _upperBoundRx,
+                builder: (context, upperBound) => Padding(
+                  padding: EdgeInsets.only(right: context.width * (1 - upperBound)),
+                  child: Transform.translate(
+                    offset: Offset(-((upperBound - controller.value) * context.width * 0.5), 0),
+                    child: drawerChild,
+                  ),
                 ),
               ),
               // -- drawer dim
               Positioned.fill(
                 child: IgnorePointer(
-                  child: ColoredBox(
-                    color: Colors.black.withValues(alpha: (controller.upperBound - controller.value) * 1.8),
+                  child: ObxO(
+                    rx: _upperBoundRx,
+                    builder: (context, upperBound) => ColoredBox(
+                      color: Colors.black.withValues(alpha: (upperBound - controller.value) * 1.8),
+                    ),
                   ),
                 ),
               ),
@@ -190,7 +206,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                     _openDrawer();
                   } else if (velocity < -300) {
                     _closeDrawer();
-                  } else if (controller.value > (controller.upperBound * 0.4)) {
+                  } else if (controller.value > (_upperBoundRx.value * 0.4)) {
                     _openDrawer();
                   } else {
                     _closeDrawer();

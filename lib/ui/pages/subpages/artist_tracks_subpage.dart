@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -41,7 +40,6 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumDimensions = Dimensions.inst.getAlbumCardDimensions(Dimensions.albumInsideArtistGridCount);
     return BackgroundWrapper(
       child: Obx(
         (context) {
@@ -58,68 +56,64 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
             queueLength: tracks.length,
             queue: tracks,
             paddingAfterHeader: const EdgeInsets.only(bottom: 12.0),
-            header: Column(
+            header: NamidaExpansionTile(
+              icon: Broken.music_dashboard,
+              titleText: "${lang.ALBUMS} ${albumIdentifiers.length}",
+              initiallyExpanded: albumIdentifiers.isNotEmpty,
               children: [
-                SubpagesTopContainer(
-                  topPadding: 8.0,
-                  bottomPadding: 8.0,
-                  title: name,
-                  source: QueueSource.artist,
-                  subtitle: [
-                    tracks.displayTrackKeyword,
-                    if (tracks.year != 0) tracks.year.yearFormatted,
-                  ].join(' - '),
-                  heroTag: 'artist_$name',
-                  imageWidget: NamidaHero(
-                    tag: 'artist_$name',
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 2),
-                      child: ContainerWithBorder(
-                        child: ArtworkWidget(
-                          key: Key(tracks.pathToImage),
-                          track: tracks.trackOfImage,
-                          thumbnailSize: context.width * 0.35,
-                          path: tracks.pathToImage,
-                          forceSquared: true,
-                          blur: 0,
-                          iconSize: 32.0,
+                SizedBox(
+                  height: 130.0 + 28.0,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 14.0),
+                    scrollDirection: Axis.horizontal,
+                    itemExtent: 100.0,
+                    itemCount: albumIdentifiers.length,
+                    itemBuilder: (context, i) {
+                      final albumId = albumIdentifiers[i];
+                      return Container(
+                        width: 100.0,
+                        margin: const EdgeInsets.only(left: 2.0),
+                        child: AlbumCard(
+                          identifier: albumId,
+                          album: albumId.getAlbumTracks(),
+                          staggered: false,
+                          compact: true,
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  tracksFn: () => tracks,
-                ),
-                NamidaExpansionTile(
-                  icon: Broken.music_dashboard,
-                  titleText: "${lang.ALBUMS} ${albumIdentifiers.length}",
-                  initiallyExpanded: albumIdentifiers.isNotEmpty,
-                  children: [
-                    SizedBox(
-                      height: 130.0 + 28.0,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 14.0),
-                        scrollDirection: Axis.horizontal,
-                        itemExtent: 100.0,
-                        itemCount: albumIdentifiers.length,
-                        itemBuilder: (context, i) {
-                          final albumId = albumIdentifiers[i];
-                          return Container(
-                            width: 100.0,
-                            margin: const EdgeInsets.only(left: 2.0),
-                            child: AlbumCard(
-                              dimensions: albumDimensions,
-                              identifier: albumId,
-                              album: albumId.getAlbumTracks(),
-                              staggered: false,
-                              compact: true,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
                 ),
               ],
+            ),
+            infoBox: SubpageInfoContainer(
+              topPadding: 8.0,
+              bottomPadding: 8.0,
+              title: name,
+              source: QueueSource.artist,
+              subtitle: [
+                tracks.displayTrackKeyword,
+                if (tracks.year != 0) tracks.year.yearFormatted,
+              ].join(' - '),
+              heroTag: 'artist_$name',
+              imageBuilder: (_, size) => NamidaHero(
+                tag: 'artist_$name',
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: ContainerWithBorder(
+                    child: ArtworkWidget(
+                      key: Key(tracks.pathToImage),
+                      track: tracks.trackOfImage,
+                      thumbnailSize: size,
+                      fit: BoxFit.fitHeight,
+                      path: tracks.pathToImage,
+                      forceSquared: true,
+                      blur: 0,
+                      iconSize: 32.0,
+                    ),
+                  ),
+                ),
+              ),
+              tracksFn: () => tracks,
             ),
           );
         },

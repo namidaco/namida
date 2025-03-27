@@ -23,6 +23,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -773,761 +774,764 @@ Future<void> showGeneralPopupDialog(
       builder: (context, colorDelightened) {
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
-        double horizontalMargin = CustomBlurryDialog.calculateHorizontalMargin(context, 34.0);
+        double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, 34.0);
         return AnimatedThemeOrTheme(
           data: theme,
           child: Dialog(
             backgroundColor: theme.dialogTheme.backgroundColor,
             insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 24.0),
             clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  /// Top Widget
-                  NamidaInkWell(
-                    borderRadius: 0.0,
-                    onTap: () => isSingle
-                        ? showTrackInfoDialog(
-                            tracks.first,
-                            false,
-                            comingFromQueue: comingFromQueue,
-                            index: index,
-                            colorScheme: colorDelightened,
-                            queueSource: source,
-                            additionalHero: additionalHero,
-                          )
-                        : null,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 16.0),
-                          if (forceSingleArtwork! && artworkFile == null)
-                            NamidaHero(
-                              tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
-                              child: ArtworkWidget(
-                                key: Key(tracks.pathToImage),
-                                track: tracks.trackOfImage,
-                                path: tracks.pathToImage,
-                                thumbnailSize: 60,
-                                forceSquared: forceSquared,
-                                borderRadius: isCircle ? 200 : 8.0,
-                                useTrackTileCacheHeight: useTrackTileCacheHeight,
-                              ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    /// Top Widget
+                    NamidaInkWell(
+                      borderRadius: 0.0,
+                      onTap: () => isSingle
+                          ? showTrackInfoDialog(
+                              tracks.first,
+                              false,
+                              comingFromQueue: comingFromQueue,
+                              index: index,
+                              colorScheme: colorDelightened,
+                              queueSource: source,
+                              additionalHero: additionalHero,
                             )
-                          else
-                            MultiArtworkContainer(
-                              heroTag: heroTag ?? 'edittags_artwork',
-                              size: 60,
-                              tracks: tracks.toImageTracks(),
-                              fallbackToFolderCover: false,
-                              margin: EdgeInsets.zero,
-                              artworkFile: artworkFile,
-                            ),
-                          const SizedBox(width: 12.0),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (title.isNotEmpty)
-                                  Text(
-                                    title,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: theme.textTheme.displayLarge?.copyWith(
-                                      fontSize: 17.0,
-                                      height: 1.2,
-                                      color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
-                                    ),
-                                  ),
-                                if (subtitle.isNotEmpty)
-                                  Text(
-                                    subtitle.overflow,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: theme.textTheme.displayMedium?.copyWith(
-                                      fontSize: 14.0,
-                                      height: 1.1,
-                                      color: Color.alphaBlend(colorDelightened.withAlpha(80), theme.textTheme.displayMedium!.color!),
-                                    ),
-                                  ),
-                                if (thirdLineText.isNotEmpty) ...[
-                                  Text(
-                                    thirdLineText.overflow,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: theme.textTheme.displaySmall?.copyWith(
-                                      fontSize: 12.5,
-                                      height: 1.0,
-                                      color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
-                                    ),
-                                  ),
-                                ]
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16.0),
-                          if (shoulShowPlaylistUtils()) ...[
-                            NamidaIconButton(
-                              icon: Broken.gallery_edit,
-                              onPressed: () async {
-                                if (playlistName == null) return;
-                                final alreadySetArtworkPossible = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
-                                final alreadySetArtwork = alreadySetArtworkPossible.existsSync() ? alreadySetArtworkPossible : null;
-
-                                void showSnackInfo(bool success) {
-                                  if (success) {
-                                    snackyy(icon: Broken.gallery_edit, message: lang.SUCCEEDED, borderColor: Colors.green);
-                                  } else {
-                                    snackyy(icon: Broken.gallery_edit, message: lang.FAILED, borderColor: Colors.red);
-                                  }
-                                }
-
-                                Future<void> onEdit() async {
-                                  final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
-                                  if (artworkFile != null) {
-                                    final didSet = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: artworkFile, artworkBytes: null);
-                                    showSnackInfo(didSet);
-                                  }
-                                }
-
-                                Future<void> onDelete() async {
-                                  final didDelete = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: null, artworkBytes: null);
-                                  showSnackInfo(didDelete);
-                                }
-
-                                if (alreadySetArtwork != null) {
-                                  NamidaNavigator.inst.navigateDialog(
-                                    dialog: CustomBlurryDialog(
-                                      title: lang.CONFIGURE,
-                                      bodyText: lang.CHOOSE,
-                                      actions: [
-                                        NamidaButton(
-                                          text: lang.DELETE.toUpperCase(),
-                                          style: ButtonStyle(
-                                            foregroundColor: WidgetStatePropertyAll(Colors.red),
-                                          ),
-                                          onPressed: () async {
-                                            await onDelete();
-                                            NamidaNavigator.inst.closeDialog();
-                                          },
-                                        ),
-                                        NamidaButton(
-                                          text: lang.EDIT.toUpperCase(),
-                                          onPressed: () async {
-                                            await onEdit();
-                                            NamidaNavigator.inst.closeDialog();
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                } else {
-                                  await onEdit();
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 16.0),
-                          ] else ...[
-                            Icon(trailingIcon),
-                            const SizedBox(width: 16.0),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  Divider(
-                    color: theme.dividerColor,
-                    thickness: 0.5,
-                    height: 0,
-                  ),
-
-                  /// if the track doesnt exist
-                  errorPlayingTrack != null || tracksExisting.isEmpty
-                      ? Column(
+                          : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.red.withValues(alpha: 0.3),
-                                  ),
-                                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                            const SizedBox(width: 16.0),
+                            if (forceSingleArtwork! && artworkFile == null)
+                              NamidaHero(
+                                tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
+                                child: ArtworkWidget(
+                                  key: Key(tracks.pathToImage),
+                                  track: tracks.trackOfImage,
+                                  path: tracks.pathToImage,
+                                  thumbnailSize: 60,
+                                  forceSquared: forceSquared,
+                                  borderRadius: isCircle ? 200 : 8.0,
+                                  useTrackTileCacheHeight: useTrackTileCacheHeight,
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    tracksExisting.isEmpty
-                                        ? "${lang.TRACK_NOT_FOUND}.\n${lang.PROMPT_TO_CHANGE_TRACK_PATH}"
-                                        : "${lang.ERROR_PLAYING_TRACK}.\n${errorPlayingTrack.toString()}",
-                                    style: theme.textTheme.displayMedium,
-                                  ),
-                                ),
+                              )
+                            else
+                              MultiArtworkContainer(
+                                heroTag: heroTag ?? 'edittags_artwork',
+                                size: 60,
+                                tracks: tracks.toImageTracks(),
+                                fallbackToFolderCover: false,
+                                margin: EdgeInsets.zero,
+                                artworkFile: artworkFile,
+                              ),
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (title.isNotEmpty)
+                                    Text(
+                                      title,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: theme.textTheme.displayLarge?.copyWith(
+                                        fontSize: 17.0,
+                                        height: 1.2,
+                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
+                                      ),
+                                    ),
+                                  if (subtitle.isNotEmpty)
+                                    Text(
+                                      subtitle.overflow,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: theme.textTheme.displayMedium?.copyWith(
+                                        fontSize: 14.0,
+                                        height: 1.1,
+                                        color: Color.alphaBlend(colorDelightened.withAlpha(80), theme.textTheme.displayMedium!.color!),
+                                      ),
+                                    ),
+                                  if (thirdLineText.isNotEmpty) ...[
+                                    Text(
+                                      thirdLineText.overflow,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: theme.textTheme.displaySmall?.copyWith(
+                                        fontSize: 12.5,
+                                        height: 1.0,
+                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
+                                      ),
+                                    ),
+                                  ]
+                                ],
                               ),
                             ),
-                            if (isSingle) ...[
-                              SmallListTile(
-                                title: lang.UPDATE,
-                                subtitle: tracks.first.path,
-                                color: colorDelightened,
-                                compact: true,
-                                icon: Broken.document_upload,
-                                onTap: () async {
-                                  cancelSkipTimer();
-                                  NamidaNavigator.inst.closeDialog();
-                                  if (Indexer.inst.allAudioFiles.value.isEmpty) {
-                                    await Indexer.inst.getAudioFiles();
+                            const SizedBox(width: 16.0),
+                            if (shoulShowPlaylistUtils()) ...[
+                              NamidaIconButton(
+                                icon: Broken.gallery_edit,
+                                onPressed: () async {
+                                  if (playlistName == null) return;
+                                  final alreadySetArtworkPossible = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
+                                  final alreadySetArtwork = alreadySetArtworkPossible.existsSync() ? alreadySetArtworkPossible : null;
+
+                                  void showSnackInfo(bool success) {
+                                    if (success) {
+                                      snackyy(icon: Broken.gallery_edit, message: lang.SUCCEEDED, borderColor: Colors.green);
+                                    } else {
+                                      snackyy(icon: Broken.gallery_edit, message: lang.FAILED, borderColor: Colors.red);
+                                    }
                                   }
 
-                                  /// firstly checks if a file exists in current library
-                                  final firstHighMatchesFiles =
-                                      NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path.getFilename).toSet();
-                                  if (firstHighMatchesFiles.isNotEmpty) {
-                                    await openDialog(
-                                      (theme) => CustomBlurryDialog(
-                                        title: lang.CHOOSE,
+                                  Future<void> onEdit() async {
+                                    final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
+                                    if (artworkFile != null) {
+                                      final didSet = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: artworkFile, artworkBytes: null);
+                                      showSnackInfo(didSet);
+                                    }
+                                  }
+
+                                  Future<void> onDelete() async {
+                                    final didDelete = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: null, artworkBytes: null);
+                                    showSnackInfo(didDelete);
+                                  }
+
+                                  if (alreadySetArtwork != null) {
+                                    NamidaNavigator.inst.navigateDialog(
+                                      dialog: CustomBlurryDialog(
+                                        title: lang.CONFIGURE,
+                                        bodyText: lang.CHOOSE,
                                         actions: [
-                                          const CancelButton(),
                                           NamidaButton(
-                                            text: lang.PICK_FROM_STORAGE,
-                                            onPressed: () {
+                                            text: lang.DELETE.toUpperCase(),
+                                            style: ButtonStyle(
+                                              foregroundColor: WidgetStatePropertyAll(Colors.red),
+                                            ),
+                                            onPressed: () async {
+                                              await onDelete();
                                               NamidaNavigator.inst.closeDialog();
-                                              pickDirectoryToUpdateTrack();
+                                            },
+                                          ),
+                                          NamidaButton(
+                                            text: lang.EDIT.toUpperCase(),
+                                            onPressed: () async {
+                                              await onEdit();
+                                              NamidaNavigator.inst.closeDialog();
                                             },
                                           ),
                                         ],
-                                        child: highMatchesWidget(firstHighMatchesFiles, showFullPath: true),
                                       ),
                                     );
-                                    return;
+                                  } else {
+                                    await onEdit();
                                   }
-                                  await pickDirectoryToUpdateTrack();
                                 },
                               ),
-                              if (errorPlayingTrack != null)
-                                ObxO(
-                                  rx: Player.inst.playErrorRemainingSecondsToSkip,
-                                  builder: (context, remainingSecondsToSkip) => SmallListTile(
-                                    title: lang.SKIP,
-                                    subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
-                                    color: colorDelightened,
-                                    compact: true,
-                                    icon: Broken.next,
-                                    trailing: remainingSecondsToSkip <= 0
-                                        ? null
-                                        : NamidaIconButton(
-                                            icon: Broken.close_circle,
-                                            iconColor: namida.context?.defaultIconColor(colorDelightened, theme.textTheme.displayMedium?.color),
-                                            onPressed: cancelSkipTimer,
-                                          ),
-                                    onTap: () {
-                                      cancelSkipTimer();
-                                      NamidaNavigator.inst.closeDialog();
-                                      Player.inst.next();
-                                    },
-                                  ),
-                                ),
+                              const SizedBox(width: 16.0),
+                            ] else ...[
+                              Icon(trailingIcon),
+                              const SizedBox(width: 16.0),
                             ],
-                            advancedStuffListTile,
-                            if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
-                            if (playlistUtilsRow != null) playlistUtilsRow,
-                            if (removeQueueTile != null) removeQueueTile,
-                            const SizedBox(height: 8.0),
                           ],
-                        )
-                      :
+                        ),
+                      ),
+                    ),
+                    Divider(
+                      color: theme.dividerColor,
+                      thickness: 0.5,
+                      height: 0,
+                    ),
 
-                      /// List Items
-                      Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (availableAlbums.length == 1 && albumToAddFrom == null)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.GO_TO_ALBUM,
-                                subtitle: availableAlbums.first.$1,
-                                icon: Broken.music_dashboard,
-                                onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first.$2),
-                                trailing: IconButton(
-                                  tooltip: lang.ADD_MORE_FROM_THIS_ALBUM,
-                                  onPressed: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    final tracks = availableAlbums.first.$2.getAlbumTracks();
-                                    Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
-                                  },
-                                  icon: const Icon(Broken.add),
-                                ),
-                              ),
-                            if (availableAlbums.length == 1 && albumToAddFrom != null)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"${albumToAddFrom.$1}"'),
-                                icon: Broken.music_dashboard,
-                                onTap: () {
-                                  final tracks = albumToAddFrom.$2.getAlbumTracks();
-                                  Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
-                                },
-                                trailing: IgnorePointer(
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(Broken.add),
+                    /// if the track doesnt exist
+                    errorPlayingTrack != null || tracksExisting.isEmpty
+                        ? Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.red.withValues(alpha: 0.3),
+                                    ),
+                                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      tracksExisting.isEmpty
+                                          ? "${lang.TRACK_NOT_FOUND}.\n${lang.PROMPT_TO_CHANGE_TRACK_PATH}"
+                                          : "${lang.ERROR_PLAYING_TRACK}.\n${errorPlayingTrack.toString()}",
+                                      style: theme.textTheme.displayMedium,
+                                    ),
                                   ),
                                 ),
                               ),
-
-                            if (availableAlbums.length > 1)
-                              NamidaExpansionTile(
-                                icon: Broken.music_dashboard,
-                                iconColor: iconColor,
-                                titleText: lang.GO_TO_ALBUM,
-                                textColorScheme: colorDelightened,
-                                childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
-                                children: [
-                                  Wrap(
-                                    alignment: WrapAlignment.start,
-                                    children: [
-                                      ...availableAlbums.map(
-                                        (e) => _SmallUnderlinedChip(
-                                          text: e.$1,
-                                          textTheme: theme.textTheme,
-                                          onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            if (artistToAddFrom != null)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$artistToAddFrom"'),
-                                icon: Broken.microphone,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  final tracks = artistToAddFrom.getArtistTracks();
-                                  Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
-                                },
-                                trailing: IgnorePointer(
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(Broken.add),
-                                  ),
-                                ),
-                              ),
-                            if (artistToAddFrom == null && availableArtists.length == 1)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.GO_TO_ARTIST,
-                                subtitle: availableArtists.first,
-                                icon: Broken.microphone,
-                                onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first, MediaType.artist),
-                                trailing: IconButton(
-                                  tooltip: lang.ADD_MORE_FROM_THIS_ARTIST,
-                                  onPressed: () {
-                                    final tracks = availableArtists.first.getArtistTracks();
-                                    Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
-                                  },
-                                  icon: const Icon(Broken.add),
-                                ),
-                              ),
-
-                            if (artistToAddFrom == null && availableArtists.length > 1)
-                              NamidaExpansionTile(
-                                icon: Broken.profile_2user,
-                                iconColor: iconColor,
-                                titleText: lang.GO_TO_ARTIST,
-                                textColorScheme: colorDelightened,
-                                childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
-                                children: [
-                                  Wrap(
-                                    alignment: WrapAlignment.start,
-                                    children: [
-                                      ...availableArtists.map(
-                                        (e) => _SmallUnderlinedChip(
-                                          text: e,
-                                          textTheme: theme.textTheme,
-                                          onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-
-                            /// Folders
-                            if (availableFolders.length == 1)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.GO_TO_FOLDER,
-                                subtitle: availableFolders.first.folderNameAvoidingConflicts(),
-                                icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);
-                                },
-                                trailing: IconButton(
-                                  tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
-                                  onPressed: () {
-                                    final tracks = availableFolders.first.tracks();
-                                    Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
-                                  },
-                                  icon: const Icon(Broken.add),
-                                ),
-                              ),
-
-                            if (!isSingle)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: false,
-                                title: lang.SHARE,
-                                icon: Broken.share,
-                                trailing: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                                  child: ObxO(
-                                    rx: isLoadingFilesToShare,
-                                    builder: (context, loading) => loading ? const LoadingIndicator() : const SizedBox(),
-                                  ),
-                                ),
-                                onTap: () async {
-                                  isLoadingFilesToShare.value = true;
-                                  await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
-                                  isLoadingFilesToShare.value = false;
-                                  NamidaNavigator.inst.closeDialog();
-                                },
-                              ),
-
-                            if (!isSingle)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: false,
-                                title: lang.PLAY_ALL,
-                                icon: Broken.play_circle,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  Player.inst.playOrPause(0, tracks, source);
-                                },
-                                trailing: showPlayAllReverse
-                                    ? IconButton(
-                                        tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
-                                        icon: StackedIcon(
-                                          baseIcon: Broken.play_cricle,
-                                          secondaryIcon: Broken.arrow_swap,
-                                          iconSize: 20.0,
-                                          secondaryIconSize: 10.0,
-                                          baseIconColor: iconColor,
-                                        ),
-                                        iconSize: 20.0,
-                                        onPressed: () {
-                                          NamidaNavigator.inst.closeDialog();
-                                          Player.inst.playOrPause(0, tracks.reversed, source);
-                                        },
-                                      )
-                                    : null,
-                              ),
-
-                            if (!isSingle)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: false,
-                                title: lang.SHUFFLE,
-                                icon: Broken.shuffle,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  Player.inst.playOrPause(0, tracks, source, shuffle: true);
-                                },
-                              ),
-
-                            SmallListTile(
-                              color: colorDelightened,
-                              compact: false,
-                              title: lang.ADD_TO_PLAYLIST,
-                              icon: Broken.music_library_2,
-                              onTap: () {
-                                NamidaNavigator.inst.closeDialog();
-                                showAddToPlaylistDialog(tracks);
-                              },
-                            ),
-                            SmallListTile(
-                              color: colorDelightened,
-                              compact: false,
-                              title: lang.EDIT_TAGS,
-                              icon: Broken.edit,
-                              onTap: () {
-                                NamidaNavigator.inst.closeDialog();
-                                showEditTracksTagsDialog(tracks, colorDelightened);
-                              },
-                              trailing: isSingle
-                                  ? IconButton(
-                                      tooltip: lang.LYRICS,
-                                      icon: LrcSearchUtilsSelectable(tracks.first.toTrackExt(), tracks.first).hasLyrics()
-                                          ? StackedIcon(
-                                              baseIcon: Broken.document,
-                                              secondaryIcon: Broken.tick_circle,
-                                              iconSize: 20.0,
-                                              secondaryIconSize: 10.0,
-                                              baseIconColor: iconColor,
-                                              secondaryIconColor: iconColor,
-                                            )
-                                          : Icon(
-                                              Broken.document,
-                                              size: 20.0,
-                                              color: iconColor,
-                                            ),
-                                      iconSize: 20.0,
-                                      onPressed: () => showLRCSetDialog(tracks.first, colorDelightened),
-                                    )
-                                  : null,
-                            ),
-                            // --- Advanced dialog
-                            advancedStuffListTile,
-
-                            if (availableYoutubeIDs.isNotEmpty)
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: true,
-                                title: lang.OPEN_IN_YOUTUBE_VIEW,
-                                icon: Broken.video,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
-                                },
-                                trailing: isSingle && firstVideoChannelId != null
-                                    ? IconButton(
-                                        tooltip: lang.GO_TO_CHANNEL,
-                                        icon: Icon(
-                                          Broken.user,
-                                          size: 20.0,
-                                          color: iconColor,
-                                        ),
-                                        iconSize: 20.0,
-                                        onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
-                                      )
-                                    : null,
-                              ),
-
-                            if (removeQueueTile != null) removeQueueTile,
-
-                            if (Player.inst.currentItem.value is Selectable && Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
-                              () {
-                                final playAfterTrack = (Player.inst.currentQueue.value[Player.inst.latestInsertedIndex] as Selectable).track;
-                                return SmallListTile(
+                              if (isSingle) ...[
+                                SmallListTile(
+                                  title: lang.UPDATE,
+                                  subtitle: tracks.first.path,
                                   color: colorDelightened,
                                   compact: true,
-                                  title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex.value).displayTrackKeyword}',
-                                  subtitle: [playAfterTrack.artistsList.firstOrNull, playAfterTrack.title].joinText(separator: ' - '),
-                                  icon: Broken.hierarchy_square,
-                                  onTap: () {
+                                  icon: Broken.document_upload,
+                                  onTap: () async {
+                                    cancelSkipTimer();
                                     NamidaNavigator.inst.closeDialog();
-                                    Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
-                                  },
-                                );
-                              }(),
+                                    if (Indexer.inst.allAudioFiles.value.isEmpty) {
+                                      await Indexer.inst.getAudioFiles();
+                                    }
 
-                            if (isSingle && tracks.first == Player.inst.currentTrack?.track)
-                              ObxO(
-                                rx: numberOfRepeats,
-                                builder: (context, repeats) => SmallListTile(
-                                  color: colorDelightened,
-                                  compact: true,
-                                  title: lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', repeats.toString()),
-                                  icon: Broken.cd,
-                                  onTap: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    settings.player.save(repeatMode: RepeatMode.forNtimes);
-                                    Player.inst.updateNumberOfRepeats(repeats);
-                                  },
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      NamidaIconButton(
-                                        icon: Broken.minus_cirlce,
-                                        onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clamp(1, 20),
-                                        iconSize: 20.0,
-                                        iconColor: iconColor,
-                                      ),
-                                      NamidaIconButton(
-                                        icon: Broken.add_circle,
-                                        onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clamp(1, 20),
-                                        iconSize: 20.0,
-                                        iconColor: iconColor,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                            if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
-
-                            if (playlistUtilsRow != null) playlistUtilsRow,
-
-                            /// Track Utils
-                            /// todo: support for multiple tracks editing
-                            if (isSingle)
-                              Row(
-                                children: [
-                                  const SizedBox(width: 24.0),
-                                  Expanded(
-                                    child: bigIcon(
-                                      Broken.share,
-                                      iconWidget: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Broken.share,
-                                            color: iconColor,
-                                          ),
-                                          ObxO(
-                                            rx: isLoadingFilesToShare,
-                                            builder: (context, loading) => Padding(
-                                              padding: const EdgeInsets.only(top: 2.0),
-                                              child: const LoadingIndicator().animateEntrance(
-                                                showWhen: loading,
-                                                allCurves: Curves.fastEaseInToSlowEaseOut,
-                                                durationMS: 200,
-                                              ),
+                                    /// firstly checks if a file exists in current library
+                                    final firstHighMatchesFiles =
+                                        NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path.getFilename).toSet();
+                                    if (firstHighMatchesFiles.isNotEmpty) {
+                                      await openDialog(
+                                        (theme) => CustomBlurryDialog(
+                                          title: lang.CHOOSE,
+                                          actions: [
+                                            const CancelButton(),
+                                            NamidaButton(
+                                              text: lang.PICK_FROM_STORAGE,
+                                              onPressed: () {
+                                                NamidaNavigator.inst.closeDialog();
+                                                pickDirectoryToUpdateTrack();
+                                              },
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      () => lang.SHARE,
-                                      () async {
-                                        isLoadingFilesToShare.value = true;
-                                        await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
-                                        isLoadingFilesToShare.value = false;
+                                          ],
+                                          child: highMatchesWidget(firstHighMatchesFiles, showFullPath: true),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    await pickDirectoryToUpdateTrack();
+                                  },
+                                ),
+                                if (errorPlayingTrack != null)
+                                  ObxO(
+                                    rx: Player.inst.playErrorRemainingSecondsToSkip,
+                                    builder: (context, remainingSecondsToSkip) => SmallListTile(
+                                      title: lang.SKIP,
+                                      subtitle: remainingSecondsToSkip <= 0 ? null : '$remainingSecondsToSkip ${lang.SECONDS}',
+                                      color: colorDelightened,
+                                      compact: true,
+                                      icon: Broken.next,
+                                      trailing: remainingSecondsToSkip <= 0
+                                          ? null
+                                          : NamidaIconButton(
+                                              icon: Broken.close_circle,
+                                              iconColor: namida.context?.defaultIconColor(colorDelightened, theme.textTheme.displayMedium?.color),
+                                              onPressed: cancelSkipTimer,
+                                            ),
+                                      onTap: () {
+                                        cancelSkipTimer();
                                         NamidaNavigator.inst.closeDialog();
+                                        Player.inst.next();
                                       },
                                     ),
                                   ),
-                                  const SizedBox(width: 8.0),
-                                  Expanded(
-                                    child: isSingle && tracks.first == Player.inst.currentTrack?.track
-                                        ? bigIcon(
-                                            Broken.pause_circle,
-                                            iconWidget: NamidaOpacity(
-                                              opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
-                                              child: IgnorePointer(
-                                                ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
-                                                child: Icon(
-                                                  Broken.pause_circle,
-                                                  color: iconColor,
+                              ],
+                              advancedStuffListTile,
+                              if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
+                              if (playlistUtilsRow != null) playlistUtilsRow,
+                              if (removeQueueTile != null) removeQueueTile,
+                              const SizedBox(height: 8.0),
+                            ],
+                          )
+                        :
+
+                        /// List Items
+                        Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (availableAlbums.length == 1 && albumToAddFrom == null)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.GO_TO_ALBUM,
+                                  subtitle: availableAlbums.first.$1,
+                                  icon: Broken.music_dashboard,
+                                  onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first.$2),
+                                  trailing: IconButton(
+                                    tooltip: lang.ADD_MORE_FROM_THIS_ALBUM,
+                                    onPressed: () {
+                                      NamidaNavigator.inst.closeDialog();
+                                      final tracks = availableAlbums.first.$2.getAlbumTracks();
+                                      Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
+                                    },
+                                    icon: const Icon(Broken.add),
+                                  ),
+                                ),
+                              if (availableAlbums.length == 1 && albumToAddFrom != null)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"${albumToAddFrom.$1}"'),
+                                  icon: Broken.music_dashboard,
+                                  onTap: () {
+                                    final tracks = albumToAddFrom.$2.getAlbumTracks();
+                                    Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
+                                  },
+                                  trailing: IgnorePointer(
+                                    child: IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Broken.add),
+                                    ),
+                                  ),
+                                ),
+
+                              if (availableAlbums.length > 1)
+                                NamidaExpansionTile(
+                                  icon: Broken.music_dashboard,
+                                  iconColor: iconColor,
+                                  titleText: lang.GO_TO_ALBUM,
+                                  textColorScheme: colorDelightened,
+                                  childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  children: [
+                                    Wrap(
+                                      alignment: WrapAlignment.start,
+                                      children: [
+                                        ...availableAlbums.map(
+                                          (e) => _SmallUnderlinedChip(
+                                            text: e.$1,
+                                            textTheme: theme.textTheme,
+                                            onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              if (artistToAddFrom != null)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.ADD_MORE_FROM_TO_QUEUE.replaceFirst('_MEDIA_', '"$artistToAddFrom"'),
+                                  icon: Broken.microphone,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    final tracks = artistToAddFrom.getArtistTracks();
+                                    Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
+                                  },
+                                  trailing: IgnorePointer(
+                                    child: IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Broken.add),
+                                    ),
+                                  ),
+                                ),
+                              if (artistToAddFrom == null && availableArtists.length == 1)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.GO_TO_ARTIST,
+                                  subtitle: availableArtists.first,
+                                  icon: Broken.microphone,
+                                  onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first, MediaType.artist),
+                                  trailing: IconButton(
+                                    tooltip: lang.ADD_MORE_FROM_THIS_ARTIST,
+                                    onPressed: () {
+                                      final tracks = availableArtists.first.getArtistTracks();
+                                      Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
+                                    },
+                                    icon: const Icon(Broken.add),
+                                  ),
+                                ),
+
+                              if (artistToAddFrom == null && availableArtists.length > 1)
+                                NamidaExpansionTile(
+                                  icon: Broken.profile_2user,
+                                  iconColor: iconColor,
+                                  titleText: lang.GO_TO_ARTIST,
+                                  textColorScheme: colorDelightened,
+                                  childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  children: [
+                                    Wrap(
+                                      alignment: WrapAlignment.start,
+                                      children: [
+                                        ...availableArtists.map(
+                                          (e) => _SmallUnderlinedChip(
+                                            text: e,
+                                            textTheme: theme.textTheme,
+                                            onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+
+                              /// Folders
+                              if (availableFolders.length == 1)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.GO_TO_FOLDER,
+                                  subtitle: availableFolders.first.folderNameAvoidingConflicts(),
+                                  icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);
+                                  },
+                                  trailing: IconButton(
+                                    tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
+                                    onPressed: () {
+                                      final tracks = availableFolders.first.tracks();
+                                      Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
+                                    },
+                                    icon: const Icon(Broken.add),
+                                  ),
+                                ),
+
+                              if (!isSingle)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: lang.SHARE,
+                                  icon: Broken.share,
+                                  trailing: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                    child: ObxO(
+                                      rx: isLoadingFilesToShare,
+                                      builder: (context, loading) => loading ? const LoadingIndicator() : const SizedBox(),
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    isLoadingFilesToShare.value = true;
+                                    await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                    isLoadingFilesToShare.value = false;
+                                    NamidaNavigator.inst.closeDialog();
+                                  },
+                                ),
+
+                              if (!isSingle)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: lang.PLAY_ALL,
+                                  icon: Broken.play_circle,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    Player.inst.playOrPause(0, tracks, source);
+                                  },
+                                  trailing: showPlayAllReverse
+                                      ? IconButton(
+                                          tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
+                                          icon: StackedIcon(
+                                            baseIcon: Broken.play_cricle,
+                                            secondaryIcon: Broken.arrow_swap,
+                                            iconSize: 20.0,
+                                            secondaryIconSize: 10.0,
+                                            baseIconColor: iconColor,
+                                          ),
+                                          iconSize: 20.0,
+                                          onPressed: () {
+                                            NamidaNavigator.inst.closeDialog();
+                                            Player.inst.playOrPause(0, tracks.reversed, source);
+                                          },
+                                        )
+                                      : null,
+                                ),
+
+                              if (!isSingle)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: lang.SHUFFLE,
+                                  icon: Broken.shuffle,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    Player.inst.playOrPause(0, tracks, source, shuffle: true);
+                                  },
+                                ),
+
+                              SmallListTile(
+                                color: colorDelightened,
+                                compact: false,
+                                title: lang.ADD_TO_PLAYLIST,
+                                icon: Broken.music_library_2,
+                                onTap: () {
+                                  NamidaNavigator.inst.closeDialog();
+                                  showAddToPlaylistDialog(tracks);
+                                },
+                              ),
+                              SmallListTile(
+                                color: colorDelightened,
+                                compact: false,
+                                title: lang.EDIT_TAGS,
+                                icon: Broken.edit,
+                                onTap: () {
+                                  NamidaNavigator.inst.closeDialog();
+                                  showEditTracksTagsDialog(tracks, colorDelightened);
+                                },
+                                trailing: isSingle
+                                    ? IconButton(
+                                        tooltip: lang.LYRICS,
+                                        icon: LrcSearchUtilsSelectable(tracks.first.toTrackExt(), tracks.first).hasLyrics()
+                                            ? StackedIcon(
+                                                baseIcon: Broken.document,
+                                                secondaryIcon: Broken.tick_circle,
+                                                iconSize: 20.0,
+                                                secondaryIconSize: 10.0,
+                                                baseIconColor: iconColor,
+                                                secondaryIconColor: iconColor,
+                                              )
+                                            : Icon(
+                                                Broken.document,
+                                                size: 20.0,
+                                                color: iconColor,
+                                              ),
+                                        iconSize: 20.0,
+                                        onPressed: () => showLRCSetDialog(tracks.first, colorDelightened),
+                                      )
+                                    : null,
+                              ),
+                              // --- Advanced dialog
+                              advancedStuffListTile,
+
+                              if (availableYoutubeIDs.isNotEmpty)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: true,
+                                  title: lang.OPEN_IN_YOUTUBE_VIEW,
+                                  icon: Broken.video,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
+                                  },
+                                  trailing: isSingle && firstVideoChannelId != null
+                                      ? IconButton(
+                                          tooltip: lang.GO_TO_CHANNEL,
+                                          icon: Icon(
+                                            Broken.user,
+                                            size: 20.0,
+                                            color: iconColor,
+                                          ),
+                                          iconSize: 20.0,
+                                          onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
+                                        )
+                                      : null,
+                                ),
+
+                              if (removeQueueTile != null) removeQueueTile,
+
+                              if (Player.inst.currentItem.value is Selectable && Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
+                                () {
+                                  final playAfterTrack = (Player.inst.currentQueue.value[Player.inst.latestInsertedIndex] as Selectable).track;
+                                  return SmallListTile(
+                                    color: colorDelightened,
+                                    compact: true,
+                                    title: '${lang.PLAY_AFTER}: ${(Player.inst.latestInsertedIndex - Player.inst.currentIndex.value).displayTrackKeyword}',
+                                    subtitle: [playAfterTrack.artistsList.firstOrNull, playAfterTrack.title].joinText(separator: ' - '),
+                                    icon: Broken.hierarchy_square,
+                                    onTap: () {
+                                      NamidaNavigator.inst.closeDialog();
+                                      Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
+                                    },
+                                  );
+                                }(),
+
+                              if (isSingle && tracks.first == Player.inst.currentTrack?.track)
+                                ObxO(
+                                  rx: numberOfRepeats,
+                                  builder: (context, repeats) => SmallListTile(
+                                    color: colorDelightened,
+                                    compact: true,
+                                    title: lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', repeats.toString()),
+                                    icon: Broken.cd,
+                                    onTap: () {
+                                      NamidaNavigator.inst.closeDialog();
+                                      settings.player.save(repeatMode: RepeatMode.forNtimes);
+                                      Player.inst.updateNumberOfRepeats(repeats);
+                                    },
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        NamidaIconButton(
+                                          icon: Broken.minus_cirlce,
+                                          onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clamp(1, 20),
+                                          iconSize: 20.0,
+                                          iconColor: iconColor,
+                                        ),
+                                        NamidaIconButton(
+                                          icon: Broken.add_circle,
+                                          onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clamp(1, 20),
+                                          iconSize: 20.0,
+                                          iconColor: iconColor,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                              if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
+
+                              if (playlistUtilsRow != null) playlistUtilsRow,
+
+                              /// Track Utils
+                              /// todo: support for multiple tracks editing
+                              if (isSingle)
+                                Row(
+                                  children: [
+                                    const SizedBox(width: 24.0),
+                                    Expanded(
+                                      child: bigIcon(
+                                        Broken.share,
+                                        iconWidget: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Broken.share,
+                                              color: iconColor,
+                                            ),
+                                            ObxO(
+                                              rx: isLoadingFilesToShare,
+                                              builder: (context, loading) => Padding(
+                                                padding: const EdgeInsets.only(top: 2.0),
+                                                child: const LoadingIndicator().animateEntrance(
+                                                  showWhen: loading,
+                                                  allCurves: Curves.fastEaseInToSlowEaseOut,
+                                                  durationMS: 200,
                                                 ),
                                               ),
                                             ),
-                                            () => lang.STOP_AFTER_THIS_TRACK,
-                                            () {
-                                              if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
-                                              NamidaNavigator.inst.closeDialog();
-                                              Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
-                                            },
-                                          )
-                                        : bigIcon(
-                                            Broken.play_circle,
-                                            () => isSingle ? lang.PLAY : lang.PLAY_ALL,
-                                            () {
-                                              NamidaNavigator.inst.closeDialog();
-                                              Player.inst.playOrPause(0, tracks, source);
-                                            },
-                                          ),
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  Expanded(
-                                    child: statsWrapper == null
-                                        ? bigIcon(
-                                            Broken.grammerly,
-                                            () => lang.SET_RATING,
-                                            setTrackStatsDialog,
-                                          )
-                                        : ObxO(
-                                            rx: statsWrapper,
-                                            builder: (context, stats) => bigIcon(
+                                          ],
+                                        ),
+                                        () => lang.SHARE,
+                                        () async {
+                                          isLoadingFilesToShare.value = true;
+                                          await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                          isLoadingFilesToShare.value = false;
+                                          NamidaNavigator.inst.closeDialog();
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    Expanded(
+                                      child: isSingle && tracks.first == Player.inst.currentTrack?.track
+                                          ? bigIcon(
+                                              Broken.pause_circle,
+                                              iconWidget: NamidaOpacity(
+                                                opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
+                                                child: IgnorePointer(
+                                                  ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
+                                                  child: Icon(
+                                                    Broken.pause_circle,
+                                                    color: iconColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              () => lang.STOP_AFTER_THIS_TRACK,
+                                              () {
+                                                if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
+                                                NamidaNavigator.inst.closeDialog();
+                                                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
+                                              },
+                                            )
+                                          : bigIcon(
+                                              Broken.play_circle,
+                                              () => isSingle ? lang.PLAY : lang.PLAY_ALL,
+                                              () {
+                                                NamidaNavigator.inst.closeDialog();
+                                                Player.inst.playOrPause(0, tracks, source);
+                                              },
+                                            ),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    Expanded(
+                                      child: statsWrapper == null
+                                          ? bigIcon(
                                               Broken.grammerly,
                                               () => lang.SET_RATING,
                                               setTrackStatsDialog,
-                                              subtitle: stats.rating == 0 ? '' : ' ${stats.rating}%',
+                                            )
+                                          : ObxO(
+                                              rx: statsWrapper,
+                                              builder: (context, stats) => bigIcon(
+                                                Broken.grammerly,
+                                                () => lang.SET_RATING,
+                                                setTrackStatsDialog,
+                                                subtitle: stats.rating == 0 ? '' : ' ${stats.rating}%',
+                                              ),
                                             ),
+                                    ),
+                                    if (isSingle) ...[
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: bigIcon(
+                                          Broken.edit_2,
+                                          () => lang.SET_YOUTUBE_LINK,
+                                          () => showSetYTLinkCommentDialog(tracks, colorDelightened),
+                                          iconWidget: StackedIcon(
+                                            baseIcon: Broken.edit_2,
+                                            secondaryIcon: Broken.video_square,
+                                            baseIconColor: iconColor,
+                                            secondaryIconColor: iconColor,
                                           ),
-                                  ),
-                                  if (isSingle) ...[
-                                    const SizedBox(width: 8.0),
-                                    Expanded(
-                                      child: bigIcon(
-                                        Broken.edit_2,
-                                        () => lang.SET_YOUTUBE_LINK,
-                                        () => showSetYTLinkCommentDialog(tracks, colorDelightened),
-                                        iconWidget: StackedIcon(
-                                          baseIcon: Broken.edit_2,
-                                          secondaryIcon: Broken.video_square,
-                                          baseIconColor: iconColor,
-                                          secondaryIconColor: iconColor,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Expanded(
-                                      child: bigIcon(
-                                        Broken.login_1,
-                                        () => lang.OPEN_YOUTUBE_LINK,
-                                        openYoutubeLink,
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: bigIcon(
+                                          Broken.login_1,
+                                          () => lang.OPEN_YOUTUBE_LINK,
+                                          openYoutubeLink,
+                                        ),
                                       ),
-                                    ),
+                                    ],
+                                    const SizedBox(width: 24.0),
                                   ],
-                                  const SizedBox(width: 24.0),
+                                ),
+                              const SizedBox(height: 4.0),
+
+                              Divider(
+                                color: theme.dividerColor,
+                                thickness: 0.5,
+                                height: 0,
+                              ),
+
+                              /// bottom 2 tiles
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: SmallListTile(
+                                      color: colorDelightened,
+                                      compact: false,
+                                      title: lang.PLAY_NEXT,
+                                      icon: Broken.next,
+                                      onTap: () {
+                                        NamidaNavigator.inst.closeDialog();
+                                        Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
+                                      },
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 0.5,
+                                    height: 30,
+                                    color: theme.dividerColor,
+                                  ),
+                                  Expanded(
+                                    child: SmallListTile(
+                                      color: colorDelightened,
+                                      compact: false,
+                                      title: lang.PLAY_LAST,
+                                      icon: Broken.play_cricle,
+                                      onTap: () {
+                                        NamidaNavigator.inst.closeDialog();
+                                        Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
+                                      },
+                                    ),
+                                  ),
                                 ],
                               ),
-                            const SizedBox(height: 4.0),
-
-                            Divider(
-                              color: theme.dividerColor,
-                              thickness: 0.5,
-                              height: 0,
-                            ),
-
-                            /// bottom 2 tiles
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: lang.PLAY_NEXT,
-                                    icon: Broken.next,
-                                    onTap: () {
-                                      NamidaNavigator.inst.closeDialog();
-                                      Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
-                                    },
-                                  ),
-                                ),
-                                Container(
-                                  width: 0.5,
-                                  height: 30,
-                                  color: theme.dividerColor,
-                                ),
-                                Expanded(
-                                  child: SmallListTile(
-                                    color: colorDelightened,
-                                    compact: false,
-                                    title: lang.PLAY_LAST,
-                                    icon: Broken.play_cricle,
-                                    onTap: () {
-                                      NamidaNavigator.inst.closeDialog();
-                                      Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                ],
+                            ],
+                          ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -12,6 +12,7 @@ class AppThemes {
   AppThemes._internal();
 
   static const fabForegroundColor = Color.fromRGBO(255, 255, 255, 0.8);
+  static const selectedNavigationIconColor = Color.fromRGBO(255, 255, 255, 0.75);
 
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;

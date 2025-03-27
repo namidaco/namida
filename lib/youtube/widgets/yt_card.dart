@@ -145,7 +145,7 @@ class YoutubeCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 4.0),
+                      const SizedBox(height: 3.0),
                       const Spacer(),
                       if (displayChannelThumbnail || displaythirdLineText || checkmarkStatus != null)
                         Row(

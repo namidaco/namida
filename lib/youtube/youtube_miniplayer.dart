@@ -96,9 +96,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     if (!defaultKeepActive) _canDimMiniplayer.value = false;
   }
 
-  void startDimTimer() {
+  void startDimTimer({Brightness? brightness}) {
     _dimTimer?.cancel();
-    if (settings.youtube.enableDimInLightMode == false && namida.context?.isDarkMode == false) {
+    if (settings.youtube.enableDimInLightMode == false && (brightness ?? namida.context?.theme.brightness) != Brightness.dark) {
       _canDimMiniplayer.value = false;
       return;
     }
@@ -173,7 +173,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
     const seekReadyWidget = SeekReadyWidget();
 
-    final maxWidth = context.width;
+    final maxWidth = Dimensions.inst.miniplayerMaxWidth;
+
     final mainTheme = context.theme;
     final mainTextTheme = context.textTheme;
 
@@ -375,6 +376,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           shimmerEnabled: shimmerEnabled && videoTitle == null,
                                                           child: ExpansionTile(
                                                             // key: Key(currentId),
+                                                            backgroundColor: Colors.transparent,
+                                                            collapsedShape: const Border(),
+                                                            shape: const Border(),
                                                             initiallyExpanded: false,
                                                             maintainState: false,
                                                             expandedAlignment: Alignment.centerLeft,
@@ -492,26 +496,32 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           shimmerEnabled: shimmerEnabled,
                                                           child: SizedBox(
                                                             width: maxWidth,
-                                                            child: Wrap(
-                                                              alignment: WrapAlignment.spaceEvenly,
+                                                            child: Row(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                               children: [
-                                                                const SizedBox(width: 4.0),
-                                                                ObxO(
-                                                                  rx: _videoLikeManager.currentVideoLikeStatus,
-                                                                  builder: (context, currentLikeStatus) {
-                                                                    final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                                                                    final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
-                                                                    return ObxO(
-                                                                      rx: _isTitleExpanded,
-                                                                      builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                                                        title: shimmerEnabled
-                                                                            ? null
-                                                                            : videoLikeCount < 1
-                                                                                ? lang.LIKE
-                                                                                : videoLikeCount.formatDecimalShort(isTitleExpanded),
-                                                                        icon: Broken.like_1,
-                                                                        smallIconWidget: FittedBox(
-                                                                          child: NamidaLoadingSwitcher(
+                                                                Flexible(
+                                                                  flex: 1,
+                                                                  fit: FlexFit.tight,
+                                                                  child: const SizedBox(),
+                                                                ),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight, // -- imp
+                                                                  child: ObxO(
+                                                                    rx: _videoLikeManager.currentVideoLikeStatus,
+                                                                    builder: (context, currentLikeStatus) {
+                                                                      final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                                                                      final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
+                                                                      return ObxO(
+                                                                        rx: _isTitleExpanded,
+                                                                        builder: (context, isTitleExpanded) => SmallYTActionButton(
+                                                                          title: shimmerEnabled
+                                                                              ? null
+                                                                              : videoLikeCount < 1
+                                                                                  ? lang.LIKE
+                                                                                  : videoLikeCount.formatDecimalShort(isTitleExpanded),
+                                                                          icon: Broken.like_1,
+                                                                          smallIconWidget: NamidaLoadingSwitcher(
                                                                             size: 24.0,
                                                                             builder: (loadingController) => NamidaRawLikeButton(
                                                                               isLiked: isUserLiked,
@@ -532,25 +542,27 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                             ),
                                                                           ),
                                                                         ),
-                                                                      ),
-                                                                    );
-                                                                  },
+                                                                      );
+                                                                    },
+                                                                  ),
                                                                 ),
-                                                                const SizedBox(width: 4.0),
-                                                                ObxO(
-                                                                  rx: _videoLikeManager.currentVideoLikeStatus,
-                                                                  builder: (context, currentLikeStatus) {
-                                                                    final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
-                                                                    const int? videoDislikeCount = null; // should have a value if ReturnYoutubeDislikes implemented.
-                                                                    return ObxO(
-                                                                      rx: _isTitleExpanded,
-                                                                      builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                                                        title: (videoDislikeCount ?? 0) < 1
-                                                                            ? lang.DISLIKE
-                                                                            : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
-                                                                        icon: Broken.dislike,
-                                                                        smallIconWidget: FittedBox(
-                                                                          child: NamidaLoadingSwitcher(
+                                                                const SizedBox(width: 2.0),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight,
+                                                                  child: ObxO(
+                                                                    rx: _videoLikeManager.currentVideoLikeStatus,
+                                                                    builder: (context, currentLikeStatus) {
+                                                                      final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
+                                                                      const int? videoDislikeCount = null; // should have a value if ReturnYoutubeDislikes implemented.
+                                                                      return ObxO(
+                                                                        rx: _isTitleExpanded,
+                                                                        builder: (context, isTitleExpanded) => SmallYTActionButton(
+                                                                          title: (videoDislikeCount ?? 0) < 1
+                                                                              ? lang.DISLIKE
+                                                                              : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
+                                                                          icon: Broken.dislike,
+                                                                          smallIconWidget: NamidaLoadingSwitcher(
                                                                             size: 24.0,
                                                                             builder: (loadingController) => NamidaRawLikeButton(
                                                                               isLiked: isUserDisLiked,
@@ -570,89 +582,109 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                               },
                                                                             ),
                                                                           ),
+                                                                          onPressed: () {},
                                                                         ),
-                                                                        onPressed: () {},
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                ),
-                                                                const SizedBox(width: 4.0),
-                                                                SmallYTActionButton(
-                                                                  title: lang.SHARE,
-                                                                  icon: Broken.share,
-                                                                  onPressed: () {
-                                                                    final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
-                                                                    Share.share(url);
-                                                                  },
-                                                                ),
-                                                                const SizedBox(width: 4.0),
-                                                                SmallYTActionButton(
-                                                                  title: lang.REFRESH,
-                                                                  icon: Broken.refresh,
-                                                                  onPressed: () async => await YoutubeInfoController.current.updateVideoPage(
-                                                                    currentId,
-                                                                    requestPage: true,
-                                                                    requestComments: true,
-                                                                  ),
-                                                                ),
-                                                                const SizedBox(width: 4.0),
-                                                                Obx(
-                                                                  (context) {
-                                                                    final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentIdTask]?.values.firstOrNull;
-                                                                    final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
-                                                                    final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentIdTask]?.values.firstOrNull;
-                                                                    final videoPercText = videoProgress?.percentageText(prefix: lang.VIDEO);
-
-                                                                    final isDownloading =
-                                                                        YoutubeController.inst.isDownloading[currentIdTask]?.values.any((element) => element) == true;
-
-                                                                    final wasDownloading = videoProgress != null || audioProgress != null;
-                                                                    final icon = (wasDownloading && !isDownloading)
-                                                                        ? Broken.play_circle
-                                                                        : wasDownloading
-                                                                            ? Broken.pause_circle
-                                                                            : downloadedFileExists
-                                                                                ? Broken.tick_circle
-                                                                                : Broken.import;
-                                                                    return SmallYTActionButton(
-                                                                      titleWidget:
-                                                                          videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
-                                                                      title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
-                                                                      icon: icon,
-                                                                      onLongPress: () async => await showDownloadVideoBottomSheet(
-                                                                          videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
-                                                                      onPressed: () async {
-                                                                        if (isDownloading) {
-                                                                          YoutubeController.inst.pauseDownloadTask(
-                                                                            itemsConfig: [],
-                                                                            videosIds: [currentIdTask],
-                                                                            groupName: const DownloadTaskGroupName.defaulty(),
-                                                                          );
-                                                                        } else if (wasDownloading) {
-                                                                          YoutubeController.inst.resumeDownloadTaskForIDs(
-                                                                            videosIds: [currentIdTask],
-                                                                            groupName: const DownloadTaskGroupName.defaulty(),
-                                                                          );
-                                                                        } else {
-                                                                          await showDownloadVideoBottomSheet(
-                                                                              videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null);
-                                                                        }
-                                                                      },
-                                                                    );
-                                                                  },
-                                                                ),
-                                                                const SizedBox(width: 4.0),
-                                                                SmallYTActionButton(
-                                                                  title: lang.SAVE,
-                                                                  icon: Broken.music_playlist,
-                                                                  onPressed: () => showAddToPlaylistSheet(
-                                                                    ids: [currentId],
-                                                                    idsNamesLookup: {
-                                                                      currentId: videoTitle ?? '',
+                                                                      );
                                                                     },
                                                                   ),
                                                                 ),
-                                                                const SizedBox(width: 4.0),
+                                                                const SizedBox(width: 2.0),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight,
+                                                                  child: SmallYTActionButton(
+                                                                    title: lang.SHARE,
+                                                                    icon: Broken.share,
+                                                                    onPressed: () {
+                                                                      final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
+                                                                      Share.share(url);
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 2.0),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight,
+                                                                  child: SmallYTActionButton(
+                                                                    title: lang.REFRESH,
+                                                                    icon: Broken.refresh,
+                                                                    onPressed: () async => await YoutubeInfoController.current.updateVideoPage(
+                                                                      currentId,
+                                                                      requestPage: true,
+                                                                      requestComments: true,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 2.0),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight,
+                                                                  child: Obx(
+                                                                    (context) {
+                                                                      final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentIdTask]?.values.firstOrNull;
+                                                                      final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
+                                                                      final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentIdTask]?.values.firstOrNull;
+                                                                      final videoPercText = videoProgress?.percentageText(prefix: lang.VIDEO);
+
+                                                                      final isDownloading =
+                                                                          YoutubeController.inst.isDownloading[currentIdTask]?.values.any((element) => element) == true;
+
+                                                                      final wasDownloading = videoProgress != null || audioProgress != null;
+                                                                      final icon = (wasDownloading && !isDownloading)
+                                                                          ? Broken.play_circle
+                                                                          : wasDownloading
+                                                                              ? Broken.pause_circle
+                                                                              : downloadedFileExists
+                                                                                  ? Broken.tick_circle
+                                                                                  : Broken.import;
+                                                                      return SmallYTActionButton(
+                                                                        titleWidget:
+                                                                            videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
+                                                                        title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
+                                                                        icon: icon,
+                                                                        onLongPress: () async => await showDownloadVideoBottomSheet(
+                                                                            videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
+                                                                        onPressed: () async {
+                                                                          if (isDownloading) {
+                                                                            YoutubeController.inst.pauseDownloadTask(
+                                                                              itemsConfig: [],
+                                                                              videosIds: [currentIdTask],
+                                                                              groupName: const DownloadTaskGroupName.defaulty(),
+                                                                            );
+                                                                          } else if (wasDownloading) {
+                                                                            YoutubeController.inst.resumeDownloadTaskForIDs(
+                                                                              videosIds: [currentIdTask],
+                                                                              groupName: const DownloadTaskGroupName.defaulty(),
+                                                                            );
+                                                                          } else {
+                                                                            await showDownloadVideoBottomSheet(
+                                                                                videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null);
+                                                                          }
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 2.0),
+                                                                Flexible(
+                                                                  flex: 4,
+                                                                  fit: FlexFit.tight,
+                                                                  child: SmallYTActionButton(
+                                                                    title: lang.SAVE,
+                                                                    icon: Broken.music_playlist,
+                                                                    onPressed: () => showAddToPlaylistSheet(
+                                                                      ids: [currentId],
+                                                                      idsNamesLookup: {
+                                                                        currentId: videoTitle ?? '',
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Flexible(
+                                                                  flex: 1,
+                                                                  fit: FlexFit.tight,
+                                                                  child: const SizedBox(),
+                                                                ),
                                                               ],
                                                             ),
                                                           ),
@@ -1207,6 +1239,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 rx: settings.dismissibleMiniplayer,
                                 builder: (context, dismissibleMiniplayer) => NamidaYTMiniplayer(
                                   key: MiniPlayerController.inst.ytMiniplayerKey,
+                                  enforceExpanded: Dimensions.inst.miniplayerIsWideScreen,
                                   duration: const Duration(milliseconds: 1000),
                                   curve: Curves.easeOutExpo,
                                   bottomMargin: 8.0 + (enableBottomNavBar ? kBottomNavigationBarHeight : 0.0) - 1.0, // -1 is just a clip ensurer.
@@ -1262,7 +1295,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   child: NamidaVideoWidget(
                                                     isLocal: false,
                                                     disableControlsUnderPercentage: 0.5,
-                                                    onMinimizeTap: () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
+                                                    onMinimizeTap: Dimensions.inst.miniplayerIsWideScreen
+                                                        ? null
+                                                        : () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
                                                     swipeUpToFullscreen: true,
                                                   ),
                                                 ),

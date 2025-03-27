@@ -18,6 +18,7 @@ bool _wasExpanded = false;
 double _maxHeight = 0;
 
 class NamidaYTMiniplayer extends StatefulWidget {
+  final bool enforceExpanded;
   final double minHeight, maxHeight, bottomMargin;
   final Widget Function(double height, double percentage) builder;
   final Color bgColor;
@@ -32,6 +33,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
 
   const NamidaYTMiniplayer({
     super.key,
+    this.enforceExpanded = false,
     required this.minHeight,
     required this.maxHeight,
     required this.builder,
@@ -69,6 +71,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
         );
 
     if (widget.onHeightChange != null) {
+      _listenerHeightChange();
       controller.addListener(_listenerHeightChange);
     }
     if (widget.onDismissing != null) {
@@ -163,6 +166,11 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   }
 
   void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false}) {
+    if (widget.enforceExpanded) {
+      toExpanded = true;
+      dismiss = false;
+    }
+
     if (dismiss) {
       _updateHeight(0, duration: dur ?? widget.duration);
       WakelockController.inst.updateMiniplayerStatus(false);
@@ -180,6 +188,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   void onVerticalDragUpdate(double dy) {
     _isDraggingDownwards = dy > 0;
+    if (_isDraggingDownwards && widget.enforceExpanded) return;
     _dragheight -= dy * _percentageMultiplier;
     _updateHeight(_dragheight, duration: Duration.zero);
   }

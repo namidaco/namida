@@ -11,6 +11,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/lang.dart';
@@ -95,7 +96,7 @@ extension LibraryTabUtils on LibraryTab {
 
   int toInt() => settings.libraryTabs.value.indexOf(this);
 
-  NamidaRouteWidget toWidget([int? gridCount, bool animateTiles = true, bool enableHero = true]) {
+  NamidaRouteWidget toWidget([CountPerRow? gridCount, bool animateTiles = true, bool enableHero = true]) {
     return switch (this) {
       LibraryTab.tracks => TracksPage(animateTiles: animateTiles),
       LibraryTab.albums => AlbumsPage(
@@ -959,7 +960,7 @@ extension RouteUtils on NamidaRoute {
 
       _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
-          addPadding: true,
+          considerInfoBoxPadding: true,
           controller: HistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
             itemExtent: Dimensions.inst.trackTileItemExtent,
@@ -971,7 +972,7 @@ extension RouteUtils on NamidaRoute {
 
       _getAnimatedCrossFade(
         child: HistoryJumpToDayIcon(
-          addPadding: false,
+          considerInfoBoxPadding: false,
           controller: YoutubeHistoryController.inst,
           itemExtentAndDayHeaderExtent: () => (
             itemExtent: Dimensions.youtubeCardItemExtent,

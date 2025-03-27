@@ -411,7 +411,7 @@ class NamidaNavigator {
       return;
     }
 
-    if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
+    if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true && !Dimensions.inst.miniplayerIsWideScreen) {
       if (isQueueSheetOpen) {
         ytQueueSheetKey.currentState?.dismissSheet();
         isQueueSheetOpen = false;
@@ -566,7 +566,10 @@ SnackbarController? snackyy({
 
   bool alreadyTappedButton = false;
 
-  final snackWidth = view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio;
+  double? snackWidth = view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio;
+  if (snackWidth != null && Dimensions.inst.miniplayerIsWideScreen) {
+    snackWidth = snackWidth.withMaximum(Dimensions.inst.availableAppContentWidth - margin.horizontal * 2 - kFABSize);
+  }
 
   final content = Theme(
     data: context?.theme ?? material.ThemeData(),

@@ -33,7 +33,13 @@ import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 
 class MainPage extends StatelessWidget {
   final AnimationController animation;
-  const MainPage({super.key, required this.animation});
+  final bool isMiniplayerAlwaysVisible;
+
+  const MainPage({
+    super.key,
+    required this.animation,
+    this.isMiniplayerAlwaysVisible = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -61,109 +67,118 @@ class MainPage extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize: const Size(0, kToolbarHeight),
-        child: _CustomAppBar(animation: animation),
-      ),
-      body: DefaultTextStyle(
-        style: const TextStyle(
-          fontFamilyFallback: ['sans-serif', 'Roboto'],
+        child: _CustomAppBar(
+          animation: animation,
+          isMiniplayerAlwaysVisible: isMiniplayerAlwaysVisible,
         ),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            AnimatedBuilder(
-              animation: animation,
-              builder: (context, _) {
-                return Visibility(
-                  maintainState: true,
-                  visible: animation.value < 1,
-                  child: !settings.enableMiniplayerParallaxEffect.value
-                      ? main
-                      : Transform.scale(
-                          scale: 1 - (animation.value * 0.05),
-                          child: main,
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: DefaultTextStyle(
+          style: const TextStyle(
+            fontFamilyFallback: ['sans-serif', 'Roboto'],
+          ),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              isMiniplayerAlwaysVisible
+                  ? main
+                  : AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, _) {
+                        return Visibility(
+                          maintainState: true,
+                          visible: animation.value < 1,
+                          child: !settings.enableMiniplayerParallaxEffect.value
+                              ? main
+                              : Transform.scale(
+                                  scale: 1 - (animation.value * 0.05),
+                                  child: main,
+                                ),
+                        );
+                      },
+                    ),
+
+              /// Search Box
+              Positioned.fill(
+                child: Obx(
+                  (context) => AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
+                  ),
+                ),
+              ),
+
+              // -- Settings Search Box
+              Positioned.fill(
+                child: ObxO(
+                  rx: SettingsSearchController.inst.canShowSearch,
+                  builder: (context, canShowSearch) => AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: canShowSearch ? const SettingsSearchPage() : null,
+                  ),
+                ),
+              ),
+
+              Builder(
+                builder: (context) {
+                  final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
+                  return Obx(
+                    (context) {
+                      final shouldHide = Dimensions.inst.shouldHideFABR;
+                      return AnimatedPositioned(
+                        key: const Key('fab_active'),
+                        right: 12.0,
+                        bottom: fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.fastEaseInToSlowEaseOut,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
                         ),
-                );
-              },
-            ),
-
-            /// Search Box
-            Positioned.fill(
-              child: Obx(
-                (context) => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
-                ),
+                      );
+                    },
+                  );
+                },
               ),
-            ),
 
-            // -- Settings Search Box
-            Positioned.fill(
-              child: ObxO(
-                rx: SettingsSearchController.inst.canShowSearch,
-                builder: (context, canShowSearch) => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: canShowSearch ? const SettingsSearchPage() : null,
-                ),
-              ),
-            ),
-
-            Builder(
-              builder: (context) {
-                final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
-                return Obx(
+              /// Bottom Glow/Shadow
+              if (!isMiniplayerAlwaysVisible)
+                Obx(
                   (context) {
-                    final shouldHide = Dimensions.inst.shouldHideFABR;
-                    return AnimatedPositioned(
-                      key: const Key('fab_active'),
-                      right: 12.0,
-                      bottom: fabBottomOffset.withMinimum(Dimensions.inst.globalBottomPaddingEffectiveR),
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.fastEaseInToSlowEaseOut,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
-                      ),
+                    final currentItem = Player.inst.currentItem.valueR;
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 600),
+                      child: currentItem is Selectable || (currentItem is YoutubeID && !settings.youtube.youtubeStyleMiniplayer.valueR)
+                          ? SizedBox(
+                              key: const Key('actualglow'),
+                              height: 28.0,
+                              width: context.width,
+                              child: Transform(
+                                transform: Matrix4.translationValues(0, 8.0, 0),
+                                child: AnimatedDecoration(
+                                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: context.theme.scaffoldBackgroundColor,
+                                        spreadRadius: 4.0,
+                                        blurRadius: 8.0,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox(key: Key('emptyglow')),
                     );
                   },
-                );
-              },
-            ),
-
-            /// Bottom Glow/Shadow
-            Obx(
-              (context) {
-                final currentItem = Player.inst.currentItem.valueR;
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 600),
-                  child: currentItem is Selectable || (currentItem is YoutubeID && !settings.youtube.youtubeStyleMiniplayer.valueR)
-                      ? SizedBox(
-                          key: const Key('actualglow'),
-                          height: 28.0,
-                          width: context.width,
-                          child: Transform(
-                            transform: Matrix4.translationValues(0, 8.0, 0),
-                            child: AnimatedDecoration(
-                              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: context.theme.scaffoldBackgroundColor,
-                                    spreadRadius: 4.0,
-                                    blurRadius: 8.0,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox(key: Key('emptyglow')),
-                );
-              },
-            )
-          ],
+                )
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: _CustomNavBar(animation: animation),
+      bottomNavigationBar: isMiniplayerAlwaysVisible ? null : _CustomNavBar(animation: animation),
     );
 
     return ObxO(
@@ -190,6 +205,8 @@ class MainPage extends StatelessWidget {
         );
         final animatedThemeState = _animatedThemeGlobalKey.currentState;
         animatedThemeState?.setAnimated(animation.value < 1);
+
+        if (isMiniplayerAlwaysVisible) return animatedThemeWidget;
 
         return AnimatedBuilder(
           animation: animation,
@@ -500,7 +517,12 @@ class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
 
 class _CustomAppBar extends StatelessWidget {
   final AnimationController animation;
-  const _CustomAppBar({required this.animation});
+  final bool isMiniplayerAlwaysVisible;
+
+  const _CustomAppBar({
+    required this.animation,
+    required this.isMiniplayerAlwaysVisible,
+  });
 
   SystemUiOverlayStyle _systemOverlayStyleForBrightness(Brightness brightness, [Color? backgroundColor]) {
     final SystemUiOverlayStyle style = brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
@@ -560,25 +582,30 @@ class _CustomAppBar extends StatelessWidget {
         surfaceTintColor: surfaceTintColor,
         child: SafeArea(
           bottom: false,
-          child: Obx(
-            (context) {
-              return !settings.enableMiniplayerParallaxEffect.valueR
-                  ? SizedBox(
-                      height: kToolbarHeight,
-                      child: appbar,
-                    )
-                  : AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, _) {
-                        if (animation.value > 1) return const SizedBox(); // expanded/queue
-                        return SizedBox(
-                          height: kToolbarHeight * (1 - animation.value * 0.3),
-                          child: appbar,
-                        );
-                      },
-                    );
-            },
-          ),
+          child: isMiniplayerAlwaysVisible
+              ? SizedBox(
+                  height: kToolbarHeight,
+                  child: appbar,
+                )
+              : Obx(
+                  (context) {
+                    return !settings.enableMiniplayerParallaxEffect.valueR
+                        ? SizedBox(
+                            height: kToolbarHeight,
+                            child: appbar,
+                          )
+                        : AnimatedBuilder(
+                            animation: animation,
+                            builder: (context, _) {
+                              if (animation.value > 1) return const SizedBox(); // expanded/queue
+                              return SizedBox(
+                                height: kToolbarHeight * (1 - animation.value * 0.3),
+                                child: appbar,
+                              );
+                            },
+                          );
+                  },
+                ),
         ),
       ),
     );
@@ -602,25 +629,36 @@ class _CustomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Obx(
-        (context) => NavigationBar(
-          animationDuration: const Duration(seconds: 1),
-          elevation: 22,
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-          height: 64.0,
-          onDestinationSelected: (destinationIndex) {
-            final tab = settings.libraryTabs.value[destinationIndex];
-            ScrollSearchController.inst.animatePageController(tab);
+      // TODO
+      child: ObxO(
+        rx: settings.libraryTabs,
+        builder: (context, libraryTabs) => ObxO(
+          rx: settings.extra.selectedLibraryTab,
+          builder: (context, selectedLibraryTab) {
+            final selectedIndex = selectedLibraryTab.toInt().toIf(0, -1);
+            return NavigationBar(
+              animationDuration: const Duration(seconds: 1),
+              elevation: 22,
+              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+              height: 64.0,
+              onDestinationSelected: (destinationIndex) {
+                final tab = libraryTabs[destinationIndex];
+                ScrollSearchController.inst.animatePageController(tab);
+              },
+              selectedIndex: selectedIndex,
+              destinations: [
+                ...libraryTabs.mapIndexed(
+                  (e, i) => NavigationDestination(
+                    icon: Icon(
+                      e.toIcon(),
+                      color: selectedIndex == i ? AppThemes.selectedNavigationIconColor : null,
+                    ),
+                    label: libraryTabs.length >= 7 ? '' : e.toText(),
+                  ),
+                ),
+              ],
+            );
           },
-          selectedIndex: settings.extra.selectedLibraryTab.valueR.toInt().toIf(0, -1),
-          destinations: [
-            ...settings.libraryTabs.valueR.map(
-              (e) => NavigationDestination(
-                icon: Icon(e.toIcon()),
-                label: settings.libraryTabs.length >= 7 ? '' : e.toText(),
-              ),
-            ),
-          ],
         ),
       ),
     );

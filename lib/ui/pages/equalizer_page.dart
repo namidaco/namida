@@ -826,6 +826,22 @@ class _VerticalSliderState extends State<VerticalSlider> {
     const circleHeight = 32.0;
     final circleWidth = widget.circleWidth;
     final total = widget.min.abs() + widget.max;
+
+    final topButton = Positioned(
+      bottom: 0,
+      top: 0,
+      child: SizedBox(
+        width: 6.0,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(12.0),
+            ),
+          ),
+        ),
+      ),
+    );
     return LayoutBuilder(builder: (context, constraints) {
       final finalVal = (widget.value - widget.min) / (widget.max - widget.min);
       final height = constraints.maxHeight * finalVal;
@@ -857,21 +873,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              Positioned(
-                bottom: 0,
-                top: 0,
-                child: SizedBox(
-                  width: 6.0,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(12.0),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              topButton,
               Positioned(
                 bottom: 0,
                 child: AnimatedSizedBox(

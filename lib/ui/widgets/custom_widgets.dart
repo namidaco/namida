@@ -377,19 +377,11 @@ class CustomBlurryDialog extends StatelessWidget {
     this.theme,
   });
 
-  static double calculateHorizontalMargin(BuildContext context, double minimum) {
-    final screenWidth = context.width;
-    final val = (screenWidth / 1000).clamp(0.0, 1.0);
-    double percentage = 0.25 * val * val;
-    percentage = percentage.clamp(0.0, 0.25);
-    return (screenWidth * percentage).withMinimum(minimum);
-  }
-
   @override
   Widget build(BuildContext context) {
     final ctxth = theme ?? context.theme;
     final vInsets = verticalInset;
-    double horizontalMargin = calculateHorizontalMargin(context, horizontalInset);
+    final double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, horizontalInset);
     return Center(
       child: SingleChildScrollView(
         child: Dialog(
@@ -397,111 +389,114 @@ class CustomBlurryDialog extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
           clipBehavior: Clip.antiAlias,
-          child: TapDetector(
-            onTap: () {},
-            child: Container(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  /// Title.
-                  if (titleWidget != null) titleWidget!,
-                  if (titleWidgetInPadding != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: titleWidgetInPadding,
-                      ),
-                    ),
-                  if (titleWidget == null && titleWidgetInPadding == null)
-                    normalTitleStyle
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                            child: Row(
-                              children: [
-                                if (icon != null || isWarning) ...[
-                                  Icon(
-                                    isWarning ? Broken.warning_2 : icon,
-                                  ),
-                                  const SizedBox(
-                                    width: 10.0,
-                                  ),
-                                ],
-                                Expanded(
-                                  child: Text(
-                                    isWarning ? lang.WARNING : title ?? '',
-                                    style: ctxth.textTheme.displayLarge,
-                                  ),
-                                ),
-                                if (trailingWidgets != null) ...trailingWidgets!
-                              ],
-                            ),
-                          )
-                        : Container(
-                            color: ctxth.cardTheme.color,
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (icon != null) ...[
-                                  Icon(
-                                    icon,
-                                  ),
-                                  const SizedBox(
-                                    width: 10.0,
-                                  ),
-                                ],
-                                Expanded(
-                                  child: Text(
-                                    title ?? '',
-                                    style: ctxth.textTheme.displayMedium,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                  /// Body.
-                  Padding(
-                    padding: contentPadding,
-                    child: SizedBox(
-                      width: context.width,
-                      child: bodyText != null
-                          ? Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Text(
-                                bodyText!,
-                                style: ctxth.textTheme.displayMedium,
-                              ),
-                            )
-                          : child,
-                    ),
-                  ),
-
-                  /// Actions.
-                  if (actions != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                      child: SizedBox(
-                        width: context.width - horizontalInset,
-                        child: Wrap(
-                          alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (leftAction != null) ...[
-                              const SizedBox(width: 6.0),
-                              leftAction!,
-                              const SizedBox(width: 6.0),
-                            ],
-                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
-                          ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+            child: TapDetector(
+              onTap: () {},
+              child: Container(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    /// Title.
+                    if (titleWidget != null) titleWidget!,
+                    if (titleWidgetInPadding != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: titleWidgetInPadding,
                         ),
                       ),
+                    if (titleWidget == null && titleWidgetInPadding == null)
+                      normalTitleStyle
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                              child: Row(
+                                children: [
+                                  if (icon != null || isWarning) ...[
+                                    Icon(
+                                      isWarning ? Broken.warning_2 : icon,
+                                    ),
+                                    const SizedBox(
+                                      width: 10.0,
+                                    ),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      isWarning ? lang.WARNING : title ?? '',
+                                      style: ctxth.textTheme.displayLarge,
+                                    ),
+                                  ),
+                                  if (trailingWidgets != null) ...trailingWidgets!
+                                ],
+                              ),
+                            )
+                          : Container(
+                              color: ctxth.cardTheme.color,
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (icon != null) ...[
+                                    Icon(
+                                      icon,
+                                    ),
+                                    const SizedBox(
+                                      width: 10.0,
+                                    ),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      title ?? '',
+                                      style: ctxth.textTheme.displayMedium,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                    /// Body.
+                    Padding(
+                      padding: contentPadding,
+                      child: SizedBox(
+                        width: context.width,
+                        child: bodyText != null
+                            ? Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Text(
+                                  bodyText!,
+                                  style: ctxth.textTheme.displayMedium,
+                                ),
+                              )
+                            : child,
+                      ),
                     ),
-                ],
+
+                    /// Actions.
+                    if (actions != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        child: SizedBox(
+                          width: context.width - horizontalInset,
+                          child: Wrap(
+                            alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (leftAction != null) ...[
+                                const SizedBox(width: 6.0),
+                                leftAction!,
+                                const SizedBox(width: 6.0),
+                              ],
+                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1486,31 +1481,34 @@ class NamidaRawLikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LikeButton(
-      size: size,
-      padding: padding,
-      likeCountPadding: EdgeInsets.zero,
-      bubblesColor: BubblesColor(
-        dotPrimaryColor: context.theme.colorScheme.primary,
-        dotSecondaryColor: context.theme.colorScheme.primaryContainer,
+    return MouseRegion(
+      cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+      child: LikeButton(
+        size: size,
+        padding: padding,
+        likeCountPadding: EdgeInsets.zero,
+        bubblesColor: BubblesColor(
+          dotPrimaryColor: context.theme.colorScheme.primary,
+          dotSecondaryColor: context.theme.colorScheme.primaryContainer,
+        ),
+        circleColor: CircleColor(
+          start: context.theme.colorScheme.tertiary,
+          end: context.theme.colorScheme.tertiary,
+        ),
+        isLiked: isLiked,
+        onTap: onTap,
+        likeBuilder: (value) => value
+            ? Icon(
+                likedIcon,
+                color: enabledColor ?? context.theme.colorScheme.primary,
+                size: size,
+              )
+            : Icon(
+                normalIcon,
+                color: disabledColor ?? context.theme.colorScheme.secondary,
+                size: size,
+              ),
       ),
-      circleColor: CircleColor(
-        start: context.theme.colorScheme.tertiary,
-        end: context.theme.colorScheme.tertiary,
-      ),
-      isLiked: isLiked,
-      onTap: onTap,
-      likeBuilder: (value) => value
-          ? Icon(
-              likedIcon,
-              color: enabledColor ?? context.theme.colorScheme.primary,
-              size: size,
-            )
-          : Icon(
-              normalIcon,
-              color: disabledColor ?? context.theme.colorScheme.secondary,
-              size: size,
-            ),
     );
   }
 }
@@ -1585,28 +1583,31 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
   Widget build(BuildContext context) {
     return NamidaTooltip(
       message: widget.tooltip,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapDown: (value) => setState(() => isPressed = true),
-        onTapUp: (value) => setState(() => isPressed = false),
-        onTapCancel: () => setState(() => isPressed = false),
-        onTap: widget.onPressed,
-        onLongPressStart: widget.onLongPressStart,
-        onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish!(),
-        onLongPressCancel: widget.onLongPressFinish,
-        onLongPress: widget.onLongPress,
-        onLongPressUp: widget.onLongPressFinish,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: isPressed ? 0.5 : 1.0,
-          child: Padding(
-            padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
-            child: widget.child ??
-                Icon(
-                  widget.icon,
-                  size: widget.iconSize,
-                  color: widget.disableColor ? null : (widget.iconColor ?? context.theme.colorScheme.secondary),
-                ),
+      child: MouseRegion(
+        cursor: widget.onPressed == null && widget.onLongPress == null ? MouseCursor.defer : SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (value) => setState(() => isPressed = true),
+          onTapUp: (value) => setState(() => isPressed = false),
+          onTapCancel: () => setState(() => isPressed = false),
+          onTap: widget.onPressed,
+          onLongPressStart: widget.onLongPressStart,
+          onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish!(),
+          onLongPressCancel: widget.onLongPressFinish,
+          onLongPress: widget.onLongPress,
+          onLongPressUp: widget.onLongPressFinish,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: isPressed ? 0.5 : 1.0,
+            child: Padding(
+              padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
+              child: widget.child ??
+                  Icon(
+                    widget.icon,
+                    size: widget.iconSize,
+                    color: widget.disableColor ? null : (widget.iconColor ?? context.theme.colorScheme.secondary),
+                  ),
+            ),
           ),
         ),
       ),
@@ -1686,7 +1687,7 @@ class NamidaPartyContainer extends StatelessWidget {
                         (e) => AnimatedSizedBox(
                           duration: const Duration(milliseconds: 400),
                           height: height,
-                          width: width ?? context.width / firstHalf.length,
+                          width: width ?? Dimensions.inst.miniplayerMaxWidth / firstHalf.length,
                           decoration: BoxDecoration(
                             boxShadow: [
                               BoxShadow(
@@ -1730,154 +1731,170 @@ class NamidaPartyContainer extends StatelessWidget {
   }
 }
 
-class SubpagesTopContainer extends StatelessWidget {
+class SubpageInfoContainer extends StatelessWidget {
   final String title;
   final String subtitle;
   final String thirdLineText;
   final double? height;
   final double topPadding;
   final double bottomPadding;
-  final Widget imageWidget;
+  final Widget Function(BoxConstraints constraints, double size) imageBuilder;
   final Iterable<Selectable> Function() tracksFn;
   final QueueSource source;
   final String heroTag;
-  final Widget? bottomWidget;
-  const SubpagesTopContainer({
+
+  const SubpageInfoContainer({
     super.key,
     required this.title,
     required this.subtitle,
     this.thirdLineText = '',
     this.height,
-    required this.imageWidget,
+    required this.imageBuilder,
     required this.tracksFn,
     this.topPadding = 16.0,
     this.bottomPadding = 16.0,
     required this.source,
     required this.heroTag,
-    this.bottomWidget,
   });
 
   @override
   Widget build(BuildContext context) {
     const pauseHero = 'kururing';
-    return Column(
-      children: [
-        Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(12.0),
-          margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-          height: height,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              imageWidget,
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Transform.scale(
-                      scale: (constraints.maxWidth * 0.005).withMaximum(1.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(
-                            height: 18.0,
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(left: 14.0),
-                            child: NamidaHero(
-                              tag: '${pauseHero}line1_$heroTag',
-                              child: Text(
-                                title,
-                                style: context.textTheme.displayLarge,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 2.0,
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(left: 14.0),
-                            child: NamidaHero(
-                              tag: '${pauseHero}line2_$heroTag',
-                              child: Text(
-                                subtitle,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                              ),
-                            ),
-                          ),
-                          if (thirdLineText != '') ...[
-                            const SizedBox(
-                              height: 2.0,
-                            ),
-                            Container(
-                              padding: const EdgeInsets.only(left: 14.0),
-                              child: NamidaHero(
-                                tag: '${pauseHero}line3_$heroTag',
-                                child: Text(
-                                  thirdLineText,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
-                                ),
-                              ),
-                            ),
-                          ],
-                          const SizedBox(
-                            height: 18.0,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              const SizedBox(width: 6.0),
-                              SizedBox(
-                                width: constraints.maxWidth * 0.3,
-                                child: NamidaButton(
-                                  icon: Broken.shuffle,
-                                  onPressed: () => Player.inst.playOrPause(
-                                    0,
-                                    tracksFn(),
-                                    source,
-                                    shuffle: true,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6.0),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () => Player.inst.addToQueue(tracksFn()),
-                                  icon: const StackedIcon(
-                                    disableColor: true,
-                                    baseIcon: Broken.play,
-                                    secondaryIcon: Broken.add_circle,
-                                  ),
-                                  label: Text(
-                                    lang.PLAY_LAST,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: (constraints.maxWidth * 0.1).clamp(10.0, 14.0)),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6.0),
-                            ],
-                          )
-                        ],
-                      ),
-                    );
-                  },
+    final isWideScreen = Dimensions.inst.miniplayerIsWideScreen;
+    final imageWidget = LayoutBuilder(
+      builder: (context, constraints) {
+        double maxWidth = constraints.maxWidth;
+        if (!isWideScreen && (maxWidth.isInfinite || maxWidth.isNaN)) {
+          maxWidth = maxWidth.withMaximum(context.width * 0.3);
+        }
+        return imageBuilder(constraints, maxWidth);
+      },
+    );
+
+    final textAndButtonsWidget = LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              height: 18.0,
+            ),
+            Container(
+              padding: const EdgeInsets.only(left: 14.0),
+              child: NamidaHero(
+                tag: '${pauseHero}line1_$heroTag',
+                child: Text(
+                  title,
+                  style: context.textTheme.displayLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 2.0,
+            ),
+            Container(
+              padding: const EdgeInsets.only(left: 14.0),
+              child: NamidaHero(
+                tag: '${pauseHero}line2_$heroTag',
+                child: Text(
+                  subtitle,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                ),
+              ),
+            ),
+            if (thirdLineText != '') ...[
+              const SizedBox(
+                height: 2.0,
+              ),
+              Container(
+                padding: const EdgeInsets.only(left: 14.0),
+                child: NamidaHero(
+                  tag: '${pauseHero}line3_$heroTag',
+                  child: Text(
+                    thirdLineText,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
+                  ),
                 ),
               ),
             ],
-          ),
-        ),
-        if (bottomWidget != null) bottomWidget!,
-      ],
+            const SizedBox(
+              height: 18.0,
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const SizedBox(width: 6.0),
+                NamidaButton(
+                  icon: Broken.shuffle,
+                  onPressed: () => Player.inst.playOrPause(
+                    0,
+                    tracksFn(),
+                    source,
+                    shuffle: true,
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+                Flexible(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Player.inst.addToQueue(tracksFn()),
+                    icon: const StackedIcon(
+                      disableColor: true,
+                      baseIcon: Broken.play,
+                      secondaryIcon: Broken.add_circle,
+                      secondaryIconSize: 13.0,
+                    ),
+                    label: Text(
+                      lang.PLAY_LAST,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: (maxWidth * 0.1).clamp(10.0, 14.0),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+              ],
+            )
+          ],
+        );
+      },
+    );
+    return Container(
+      alignment: Alignment.topCenter,
+      padding: const EdgeInsets.all(12.0),
+      margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+      height: height,
+      child: isWideScreen
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                imageWidget,
+                FittedBox(
+                  alignment: Alignment.topCenter,
+                  fit: BoxFit.fitHeight,
+                  child: textAndButtonsWidget,
+                ),
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                imageWidget,
+                Expanded(child: textAndButtonsWidget),
+              ],
+            ),
     );
   }
 }
@@ -1958,6 +1975,7 @@ class NamidaDrawerListTile extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final bool isCentered;
   final double iconSize;
+
   const NamidaDrawerListTile({
     super.key,
     this.onTap,
@@ -2014,8 +2032,8 @@ class NamidaDrawerListTile extends StatelessWidget {
                       color: enabled ? Colors.white.withAlpha(200) : null,
                       fontSize: 15.0,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
                   ),
                 ),
             ],
@@ -2130,11 +2148,15 @@ class NamidaLogoContainer extends StatelessWidget {
                 cacheWidth: 240,
               ),
               const SizedBox(width: 8.0),
-              Text(
-                'Namida',
-                style: context.textTheme.displayLarge?.copyWith(
-                  color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
-                  fontSize: 17.5,
+              Expanded(
+                child: Text(
+                  'Namida',
+                  style: context.textTheme.displayLarge?.copyWith(
+                    color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
+                    fontSize: 17.5,
+                  ),
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
                 ),
               ),
             ],
@@ -2347,7 +2369,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = context.width;
+    final maxWidth = Dimensions.inst.availableAppContentWidth;
     final child = RepaintBoundary(
       child: widget.onTopWidget != null
           ? Stack(
@@ -2510,6 +2532,7 @@ class NamidaListView extends StatelessWidget {
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
+  final Widget? infoBox;
   final List<Widget>? widgetsInColumn;
   final EdgeInsets? padding;
   final double? itemExtent;
@@ -2521,6 +2544,7 @@ class NamidaListView extends StatelessWidget {
   const NamidaListView({
     super.key,
     this.header,
+    this.infoBox,
     this.widgetsInColumn,
     this.padding,
     this.onReorder,
@@ -2541,6 +2565,7 @@ class NamidaListView extends StatelessWidget {
       scrollController: scrollController,
       scrollConfig: scrollConfig,
       header: header,
+      infoBox: infoBox,
       listBuilder: (list) => widgetsInColumn != null
           ? Column(
               children: [
@@ -2569,6 +2594,7 @@ class NamidaListViewRaw extends StatelessWidget {
   final VoidCallback? onReorderCancel;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
+  final Widget? infoBox;
   final Widget? header;
   final Widget? footer;
   final EdgeInsets? padding;
@@ -2589,6 +2615,7 @@ class NamidaListViewRaw extends StatelessWidget {
     this.onReorderCancel,
     this.onReorderStart,
     this.onReorderEnd,
+    this.infoBox,
     this.header,
     this.footer,
     this.padding,
@@ -2619,47 +2646,73 @@ class NamidaListViewRaw extends StatelessWidget {
     };
     final (EdgeInsets headerPadding, EdgeInsets footerPadding) = reverse ? (startPadding, endPadding) : (endPadding, startPadding);
 
-    final listW = CustomScrollView(
-      scrollDirection: scrollDirection,
-      controller: scrollController,
-      physics: physics,
-      reverse: reverse,
-      slivers: <Widget>[
-        if (header != null)
+    final displayHeaderAtTop = header != null;
+    final displayInfoBoxAtTop = infoBox != null && !Dimensions.inst.miniplayerIsWideScreen;
+    final displayInfoBoxAtSide = infoBox != null && Dimensions.inst.miniplayerIsWideScreen;
+    Widget listW = ClipRect(
+      child: CustomScrollView(
+        scrollDirection: scrollDirection,
+        controller: scrollController,
+        physics: physics,
+        reverse: reverse,
+        slivers: <Widget>[
+          if (displayInfoBoxAtTop)
+            SliverPadding(
+              padding: headerPadding,
+              sliver: SliverToBoxAdapter(
+                child: infoBox,
+              ),
+            ),
+          if (displayHeaderAtTop)
+            SliverPadding(
+              padding: displayInfoBoxAtTop ? EdgeInsets.zero : headerPadding,
+              sliver: SliverToBoxAdapter(
+                child: header,
+              ),
+            ),
           SliverPadding(
-            padding: headerPadding,
-            sliver: SliverToBoxAdapter(child: header),
+            padding: listPadding,
+            sliver: onReorder != null
+                ? NamidaSliverReorderableList(
+                    itemExtent: itemExtent,
+                    itemBuilder: itemBuilder,
+                    itemCount: itemCount,
+                    onReorder: onReorder!,
+                    onReorderCancel: onReorderCancel,
+                    onReorderStart: onReorderStart,
+                    onReorderEnd: onReorderEnd,
+                  )
+                : itemExtent != null
+                    ? SliverFixedExtentList.builder(
+                        itemExtent: itemExtent!,
+                        itemBuilder: itemBuilder,
+                        itemCount: itemCount,
+                      )
+                    : SliverList.builder(
+                        itemBuilder: itemBuilder,
+                        itemCount: itemCount,
+                      ),
           ),
-        SliverPadding(
-          padding: listPadding,
-          sliver: onReorder != null
-              ? NamidaSliverReorderableList(
-                  itemExtent: itemExtent,
-                  itemBuilder: itemBuilder,
-                  itemCount: itemCount,
-                  onReorder: onReorder!,
-                  onReorderCancel: onReorderCancel,
-                  onReorderStart: onReorderStart,
-                  onReorderEnd: onReorderEnd,
-                )
-              : itemExtent != null
-                  ? SliverFixedExtentList.builder(
-                      itemExtent: itemExtent!,
-                      itemBuilder: itemBuilder,
-                      itemCount: itemCount,
-                    )
-                  : SliverList.builder(
-                      itemBuilder: itemBuilder,
-                      itemCount: itemCount,
-                    ),
-        ),
-        if (footer != null)
-          SliverPadding(
-            padding: footerPadding,
-            sliver: SliverToBoxAdapter(child: footer),
-          ),
-      ],
+          if (footer != null)
+            SliverPadding(
+              padding: footerPadding,
+              sliver: SliverToBoxAdapter(child: footer),
+            ),
+        ],
+      ),
     );
+    if (displayInfoBoxAtSide) {
+      listW = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: context.width * 0.175), // TODO;
+            child: infoBox,
+          ),
+          Expanded(child: listW),
+        ],
+      );
+    }
     return NamidaScrollbar(
       controller: scrollController,
       scrollStep: scrollStep,
@@ -2722,6 +2775,7 @@ class NamidaTracksList extends StatelessWidget {
   final int queueLength;
   final Widget Function(BuildContext context, int i)? itemBuilder;
   final Widget? header;
+  final Widget? infoBox;
   final Widget? footer;
   final List<Widget>? widgetsInColumn;
   final EdgeInsetsGeometry? paddingAfterHeader;
@@ -2741,6 +2795,7 @@ class NamidaTracksList extends StatelessWidget {
     this.queue,
     this.itemBuilder,
     this.header,
+    required this.infoBox,
     this.footer,
     this.widgetsInColumn,
     this.paddingAfterHeader,
@@ -2762,6 +2817,7 @@ class NamidaTracksList extends StatelessWidget {
     if (itemBuilder != null) {
       return AnimationLimiter(
         child: NamidaListView(
+          infoBox: infoBox,
           header: header,
           widgetsInColumn: widgetsInColumn,
           scrollController: scrollController,
@@ -2785,6 +2841,7 @@ class NamidaTracksList extends StatelessWidget {
           ),
           builder: (properties) {
             return NamidaListView(
+              infoBox: infoBox,
               header: header,
               widgetsInColumn: widgetsInColumn,
               scrollController: scrollController,
@@ -3004,16 +3061,16 @@ class NamidaInkWellButton extends StatelessWidget {
 class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> controller;
   final ({double itemExtent, double dayHeaderExtent}) Function() itemExtentAndDayHeaderExtent;
-  final bool addPadding;
+  final bool considerInfoBoxPadding;
 
   const HistoryJumpToDayIcon({
     super.key,
     required this.controller,
     required this.itemExtentAndDayHeaderExtent,
-    required this.addPadding,
+    required this.considerInfoBoxPadding,
   });
 
-  double get topPadding => addPadding ? 64.0 : 0.0;
+  double get topPadding => considerInfoBoxPadding && Dimensions.inst.miniplayerIsWideScreen ? 64.0 : 0.0;
 
   DateTime? getCurrentDateFromScrollPosition() {
     final currentScrolledDay = getCurrentDayFromScrollPosition();
@@ -3271,7 +3328,7 @@ class ShimmerWrapper extends StatelessWidget {
     return AnimatedSwitcher(
       duration: fadeDurationMS.ms,
       child: shimmerEnabled
-          ? child.animate(
+          ? Animate(
               onPlay: (controller) => controller.repeat(),
               effects: [
                 ShimmerEffect(
@@ -3284,6 +3341,7 @@ class ShimmerWrapper extends StatelessWidget {
                   ],
                 ),
               ],
+              child: child,
             )
           : child,
     );

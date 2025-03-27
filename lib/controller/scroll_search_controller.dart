@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:namida/class/count_per_row.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -46,7 +47,7 @@ class ScrollSearchController {
       MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
       ScrollSearchController.inst.toggleSearchMenu();
       await Future.delayed(const Duration(milliseconds: 100));
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
         ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
       });
       return;
@@ -71,9 +72,10 @@ class ScrollSearchController {
     NamidaNavigator.inst.navigateOffAll(w, transition: transition);
   }
 
-  int animateChangingGridSize(LibraryTab tab, int currentGridCount, {int minimum = 1, int maximum = 4, bool animateTiles = true}) {
-    final n = currentGridCount;
-    final nToSave = n < maximum ? n + 1 : minimum;
+  CountPerRow animateChangingGridSize(LibraryTab tab, CountPerRow currentGridCount, {int minimum = 1, bool animateTiles = true}) {
+    final maximum = currentGridCount.getRecommendedMaximum(minimum: minimum);
+    final n = currentGridCount.resolve();
+    final nToSave = CountPerRow(n < maximum ? n + 1 : minimum);
     _updateScrollPositions(tab, tab);
     NamidaNavigator.inst.navigateOff(tab.toWidget(nToSave, false, true), durationInMs: 500);
     return nToSave;

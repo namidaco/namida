@@ -126,18 +126,18 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                     builder: (context, totalHistoryItemsCount) {
                       final lengthDummy = totalHistoryItemsCount == -1;
                       return SliverToBoxAdapter(
-                        child: SubpagesTopContainer(
+                        child: SubpageInfoContainer(
                           key: _headerContainerKey,
                           source: QueueSource.history,
                           title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
                           subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
                           heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
                           tracksFn: () => HistoryController.inst.historyTracks,
-                          imageWidget: ObxO(
+                          imageBuilder: (constraints, size) => ObxO(
                             rx: HistoryController.inst.historyMap,
                             builder: (context, historyMap) => MultiArtworkContainer(
                               heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-                              size: context.width * 0.35,
+                              size: size,
                               tracks: getHistoryTracks(historyMap).toImageTracks(),
                             ),
                           ),
@@ -283,19 +283,24 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                   );
                 },
                 header: (timeRangeChips, bottomPadding) {
-                  return SubpagesTopContainer(
-                    source: QueueSource.mostPlayed,
-                    title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
-                    subtitle: tracks.displayTrackKeyword,
-                    heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                    imageWidget: MultiArtworkContainer(
-                      heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                      size: context.width * 0.35,
-                      tracks: tracks.toImageTracks(),
-                    ),
-                    tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
-                    bottomPadding: bottomPadding,
-                    bottomWidget: timeRangeChips,
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SubpageInfoContainer(
+                        source: QueueSource.mostPlayed,
+                        title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
+                        subtitle: tracks.displayTrackKeyword,
+                        heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+                        imageBuilder: (constraints, size) => MultiArtworkContainer(
+                          heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
+                          size: size,
+                          tracks: tracks.toImageTracks(),
+                        ),
+                        tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
+                        bottomPadding: bottomPadding,
+                      ),
+                      timeRangeChips
+                    ],
                   );
                 },
                 itemsCount: listensMap.length,
@@ -512,15 +517,15 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                 scrollController: _scrollController,
                 itemCount: tracks.length,
                 itemExtent: Dimensions.inst.trackTileItemExtent,
-                header: SubpagesTopContainer(
+                header: SubpageInfoContainer(
                   source: playlist.toQueueSource(),
                   title: playlist.name.translatePlaylistName(),
                   subtitle: [tracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
                   heroTag: 'playlist_${playlist.name}',
-                  imageWidget: MultiArtworkContainer(
+                  imageBuilder: (constraints, size) => MultiArtworkContainer(
                     heroTag: 'playlist_${playlist.name}',
-                    size: context.width * 0.35,
+                    size: size,
                     tracks: tracks.toImageTracks(),
                     artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
                   ),
