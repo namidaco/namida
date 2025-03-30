@@ -110,6 +110,7 @@ class MiniPlayerController {
     }
 
     Dimensions.inst.miniplayerMaxWidth = maxWidth;
+    Dimensions.inst.sideInfoMaxWidth = (media.size.width * 0.2).withMaximum(324.0);
     Dimensions.inst.availableAppContentWidth = media.size.width - (isWidescreen ? maxWidth : 0);
     Dimensions.inst.miniplayerIsWideScreen = miniplayerDetails.isWidescreen;
   }

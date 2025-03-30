@@ -20,6 +20,7 @@ class Dimensions {
   Dimensions._internal();
 
   double miniplayerMaxWidth = 0.0;
+  double sideInfoMaxWidth = 0.0;
   double availableAppContentWidth = 0.0;
   bool miniplayerIsWideScreen = false;
 

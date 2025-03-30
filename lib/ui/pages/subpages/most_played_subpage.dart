@@ -17,7 +17,8 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final HistoryManager<T, E> historyController;
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
   final double itemExtent;
-  final Widget Function(Widget timeRangeChips, double bottomPadding) header;
+  final Widget? Function(Widget timeRangeChips, double bottomPadding)? header;
+  final Widget? Function(Widget timeRangeChips, double bottomPadding)? infoBox;
   final Widget Function(BuildContext context, int i) itemBuilder;
   final int itemsCount;
 
@@ -27,6 +28,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     required this.onSavingTimeRange,
     required this.itemExtent,
     required this.header,
+    required this.infoBox,
     required this.itemBuilder,
     required this.itemsCount,
   });
@@ -189,11 +191,13 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomWidget = getChipsRow(context);
     const bottomPadding = 0.0;
-    final headerWidget = header(bottomWidget, bottomPadding);
+    final headerWidget = header?.call(bottomWidget, bottomPadding);
+    final infoBoxWidget = infoBox?.call(bottomWidget, bottomPadding);
     return BackgroundWrapper(
       child: NamidaListView(
         itemExtent: itemExtent,
         header: headerWidget,
+        infoBox: infoBoxWidget,
         padding: kBottomPaddingInsets,
         itemCount: itemsCount,
         itemBuilder: (context, i) => itemBuilder(context, i),

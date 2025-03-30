@@ -58,7 +58,8 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
           ytMostPlayedCustomisStartOfDay: isStartOfDay,
         );
       },
-      header: (timeRangeChips, bottomPadding) => const SizedBox(),
+      infoBox: null,
+      header: null,
       itemsCount: 0,
       itemBuilder: (context, i) => const SizedBox(),
     );
@@ -100,6 +101,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
                   ytMostPlayedCustomisStartOfDay: isStartOfDay,
                 );
               },
+              infoBox: null,
               header: (timeRangeChips, bottomPadding) {
                 return Padding(
                   padding: const EdgeInsets.only(top: 4.0),

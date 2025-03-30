@@ -1782,7 +1782,7 @@ class SubpageInfoContainer extends StatelessWidget {
             const SizedBox(
               height: 18.0,
             ),
-            Container(
+            Padding(
               padding: const EdgeInsets.only(left: 14.0),
               child: NamidaHero(
                 tag: '${pauseHero}line1_$heroTag',
@@ -1797,7 +1797,7 @@ class SubpageInfoContainer extends StatelessWidget {
             const SizedBox(
               height: 2.0,
             ),
-            Container(
+            Padding(
               padding: const EdgeInsets.only(left: 14.0),
               child: NamidaHero(
                 tag: '${pauseHero}line2_$heroTag',
@@ -1813,7 +1813,7 @@ class SubpageInfoContainer extends StatelessWidget {
               const SizedBox(
                 height: 2.0,
               ),
-              Container(
+              Padding(
                 padding: const EdgeInsets.only(left: 14.0),
                 child: NamidaHero(
                   tag: '${pauseHero}line3_$heroTag',
@@ -1878,13 +1878,17 @@ class SubpageInfoContainer extends StatelessWidget {
       child: isWideScreen
           ? Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 imageWidget,
                 FittedBox(
                   alignment: Alignment.topCenter,
                   fit: BoxFit.fitHeight,
-                  child: textAndButtonsWidget,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4.0),
+                    child: textAndButtonsWidget,
+                  ),
                 ),
               ],
             )
@@ -2706,7 +2710,7 @@ class NamidaListViewRaw extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: context.width * 0.175), // TODO;
+            constraints: BoxConstraints(maxWidth: Dimensions.inst.sideInfoMaxWidth),
             child: infoBox,
           ),
           Expanded(child: listW),
@@ -3070,7 +3074,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
     required this.considerInfoBoxPadding,
   });
 
-  double get topPadding => considerInfoBoxPadding && Dimensions.inst.miniplayerIsWideScreen ? 64.0 : 0.0;
+  double get topPadding => considerInfoBoxPadding && !Dimensions.inst.miniplayerIsWideScreen ? 64.0 : 0.0;
 
   DateTime? getCurrentDateFromScrollPosition() {
     final currentScrolledDay = getCurrentDayFromScrollPosition();
