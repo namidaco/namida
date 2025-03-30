@@ -27,7 +27,8 @@ import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 
 class YTMiniplayerQueueChip extends StatefulWidget {
-  const YTMiniplayerQueueChip({super.key});
+  final void Function(bool isFullyExpanded)? onExpandedStateChange;
+  const YTMiniplayerQueueChip({super.key, required this.onExpandedStateChange});
 
   @override
   State<YTMiniplayerQueueChip> createState() => YTMiniplayerQueueChipState();
@@ -61,7 +62,11 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   @override
   void initState() {
     _queueScrollController.addListener(_updateScrollControllerThingys);
-    Timer(Duration.zero, () => _screenHeight = context.height);
+    if (widget.onExpandedStateChange != null) _bigBoxAnimation.addListener(_updateIsFullyOpened);
+    Timer(Duration.zero, () {
+      _screenHeight = context.height;
+      _updateIsFullyOpened();
+    });
     super.initState();
   }
 
@@ -74,6 +79,15 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     _arrowIcon.close();
     _queueScrollController.removeListener(_updateScrollControllerThingys);
     super.dispose();
+  }
+
+  bool _isFullyCovering = false;
+  void _updateIsFullyOpened() {
+    final isNowCovering = isOpened;
+    if (isNowCovering != _isFullyCovering) {
+      _isFullyCovering = isNowCovering;
+      widget.onExpandedStateChange!(isNowCovering);
+    }
   }
 
   void _updateCanScrollQueue(bool can) {
