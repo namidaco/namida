@@ -19,6 +19,7 @@ import 'package:jiffy/jiffy.dart' hide Locale;
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:rhttp/rhttp.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
@@ -187,6 +188,7 @@ void mainInitialization() async {
     PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
+    Rhttp.init().ignoreError(),
   ]);
 
   ConnectivityController.inst.initialize();

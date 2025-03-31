@@ -6,11 +6,11 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
+import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/thumbnail.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_manager.dart';
-import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -321,11 +321,13 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   }
 
   static Future<void> _prepareDownloadResources(SendPort sendPort) async {
+    await Rhttp.init();
+    final httpManager = HttpMultiRequestManager.createSync();
+
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final httpManager = HttpMultiRequestManager();
-    final requesters = <String, Map<String, HttpClientWrapper>?>{}; // itemId: {urlPath: HttpClientWrapper}
+    final cancelTokensMap = <String, Map<String, CancelToken>?>{}; // itemId: {urlPath: CancelToken}
 
     const bool deleteOldExtracted = true;
     final sep = Platform.pathSeparator;
@@ -341,12 +343,12 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       final id = p['id'] as String;
 
       if (stop == true) {
-        final requestersForId = requesters[id]?.values;
-        if (requestersForId != null) {
-          for (final requester in requestersForId) {
-            requester.close();
+        final cancelTokensForId = cancelTokensMap[id]?.values;
+        if (cancelTokensForId != null) {
+          for (final cancelToken in cancelTokensForId) {
+            cancelToken.cancel();
           }
-          requesters[id] = null;
+          cancelTokensMap[id] = null;
         }
       } else {
         final urls = p['urls'] as List<String>;
@@ -371,7 +373,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
           return sendPort.send(res);
         }
 
-        requesters[id] ??= {};
+        cancelTokensMap[id] ??= {};
         bool? notfound;
         _YTThumbnailDownloadResult? downloadedRes;
         final destinationFileTemp = File("${destinationFile.path}.temp");
@@ -379,11 +381,11 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
         final fileStream = destinationFileTemp.openWrite(mode: FileMode.writeOnly);
 
         Future<void> diposeIdRequestResources() async {
-          if (requesters[id] != null) {
-            for (final r in requesters[id]!.values) {
-              r.close();
+          if (cancelTokensMap[id] != null) {
+            for (final r in cancelTokensMap[id]!.values) {
+              r.cancel();
             }
-            requesters[id] = null;
+            cancelTokensMap[id] = null;
           }
           try {
             await fileStream.flush();
@@ -394,12 +396,12 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
         for (final url in urls) {
           final urlPath = url.substring(url.lastIndexOf('/') + 1);
-          requesters[id]?[urlPath] = HttpClientWrapper();
+          cancelTokensMap[id]?[urlPath] = CancelToken();
 
-          downloadedRes = await httpManager.executeQueued(() async {
-            final requester = requesters[id]?[urlPath];
+          downloadedRes = await httpManager.executeQueued((requester) async {
+            final cancelToken = cancelTokensMap[id]?[urlPath];
 
-            if (requester == null || requester.isClosed) {
+            if (cancelToken == null || cancelToken.isCancelled) {
               // -- client closed, return true to break the loop
               final res = _YTThumbnailDownloadResult(
                 url: url,
@@ -415,13 +417,13 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
             }
 
             try {
-              final response = await requester.getUrl(Uri.parse(url));
+              final response = await requester.getStream(url);
               notfound = response.statusCode == 404;
               if (notfound == true) throw Exception('not found'); // as if request failed.
 
               File? newFile;
 
-              final downloadStream = response.asBroadcastStream();
+              final downloadStream = response.body;
               await fileStream.addStream(downloadStream); // this should throw if connection closed unexpectedly
               await fileStream.flush();
               await fileStream.close(); // this is already done by diposeIdRequestResources() but we do here bcz renaming can require that no processes are using the file
@@ -473,15 +475,15 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
-        for (final requestersMap in requesters.values) {
-          final requestersToClose = requestersMap?.values;
-          if (requestersToClose != null) {
-            for (final requester in requestersToClose) {
-              requester.close();
+        for (final tokensMap in cancelTokensMap.values) {
+          final tokensToCancel = tokensMap?.values;
+          if (tokensToCancel != null) {
+            for (final requester in tokensToCancel) {
+              requester.cancel();
             }
           }
         }
-        requesters.clear();
+        cancelTokensMap.clear();
         httpManager.closeClients();
         recievePort.close();
         streamSub?.cancel();

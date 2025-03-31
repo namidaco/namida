@@ -1,14 +1,29 @@
-import 'dart:io';
-
 import 'package:queue/queue.dart';
+import 'package:rhttp/rhttp.dart';
 
 class HttpMultiRequestManager {
-  HttpMultiRequestManager({this.listsMaxItems = 2});
-  final int listsMaxItems;
+  HttpMultiRequestManager._(this._mainClients, {required this.listsMaxItems});
 
-  late final _thumbQueues = List.filled(listsMaxItems, Queue(parallel: 12)); // queue not only handle performance, but also help preventing RST packets
-  late final _mainClients = List.filled(listsMaxItems, HttpClient());
-  late final _runningRequestsCount = List.filled(listsMaxItems, 0);
+  Future<HttpMultiRequestManager> create() async {
+    return HttpMultiRequestManager._(
+      List<RhttpClient>.filled(listsMaxItems, await RhttpClient.create()),
+      listsMaxItems: listsMaxItems,
+    );
+  }
+
+  factory HttpMultiRequestManager.createSync({int listsMaxItems = 2}) {
+    return HttpMultiRequestManager._(
+      List<RhttpClient>.filled(listsMaxItems, RhttpClient.createSync()),
+      listsMaxItems: listsMaxItems,
+    );
+  }
+
+  final int listsMaxItems;
+  final List<RhttpClient> _mainClients;
+
+  late final _thumbQueues = List<Queue>.filled(listsMaxItems, Queue(parallel: 12)); // queue not only handle performance, but also help preventing RST packets
+
+  late final _runningRequestsCount = List<int>.filled(listsMaxItems, 0);
 
   int _getEffectiveIndex() {
     int minimum = _runningRequestsCount[0];
@@ -21,25 +36,27 @@ class HttpMultiRequestManager {
     return minimum;
   }
 
-  Future<T> execute<T>(Future<T> Function() closure) async {
+  Future<T> execute<T>(Future<T> Function(RhttpClient requester) closure) async {
     final int listsIndex = _getEffectiveIndex();
     _runningRequestsCount[listsIndex]++;
-    final res = await closure();
+    final client = _mainClients[listsIndex];
+    final res = await closure(client);
     _runningRequestsCount[listsIndex]--;
     return res;
   }
 
-  Future<T> executeQueued<T>(Future<T> Function() closure) async {
+  Future<T> executeQueued<T>(Future<T> Function(RhttpClient requester) closure) async {
     final int listsIndex = _getEffectiveIndex();
     _runningRequestsCount[listsIndex]++;
-    final res = await _thumbQueues[listsIndex].add(closure);
+    final client = _mainClients[listsIndex];
+    final res = await _thumbQueues[listsIndex].add(() => closure(client));
     _runningRequestsCount[listsIndex]--;
     return res;
   }
 
   void closeClients() {
     for (final client in _mainClients) {
-      client.close(force: true);
+      client.dispose(cancelRunningRequests: true);
     }
   }
 }

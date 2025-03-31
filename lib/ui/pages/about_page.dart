@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:http/http.dart' as http;
 import 'package:jiffy/jiffy.dart';
 import 'package:markdown/src/ast.dart' as md;
+import 'package:rhttp/rhttp.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/route.dart';
@@ -69,7 +69,8 @@ class _AboutPageState extends State<AboutPage> {
     try {
       final isBeta = current.endsWith('beta');
       final repoName = isBeta ? 'namida-snapshots' : 'namida';
-      final response = await http.get(Uri(scheme: 'https', host: 'api.github.com', path: '/repos/namidaco/$repoName/releases/latest'));
+      final url = 'https://api.github.com/repos/namidaco/$repoName/releases/latest';
+      final response = await Rhttp.get(url);
       final resMap = jsonDecode(response.body) as Map;
       String? latestRelease = resMap['name'] as String?;
       if (latestRelease == null) return null;
@@ -266,7 +267,7 @@ class _AboutPageState extends State<AboutPage> {
                     trailing: isLoading ? const LoadingIndicator() : null,
                     onTap: () async {
                       _loadingChangelog.value = true;
-                      final stringy = await http.get(Uri.parse('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md'));
+                      final stringy = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
                       _loadingChangelog.value = false;
                       await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
                       showModalBottomSheet(

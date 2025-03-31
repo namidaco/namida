@@ -1,50 +1,79 @@
-import 'dart:io';
+import 'package:rhttp/rhttp.dart';
 
 class HttpClientWrapper {
-  HttpClientWrapper() : _client = HttpClient();
+  HttpClientWrapper._(this._client);
+
+  static Future<HttpClientWrapper> create() async {
+    return HttpClientWrapper._(await RhttpClient.create());
+  }
+
+  static HttpClientWrapper createSync() {
+    return HttpClientWrapper._(RhttpClient.createSync());
+  }
 
   bool get isClosed => _closed;
 
   bool _closed = false;
 
-  final HttpClient _client;
+  final RhttpClient _client;
 
-  Future<HttpClientResponse?> getUrlNullable(Uri url, {Map<String, String>? headers}) async {
+  Future<HttpTextResponse?> getUrlNullable(
+    String url, {
+    Map<String, String>? headers,
+    required CancelToken? cancelToken,
+  }) async {
     try {
-      return await getUrl(url);
+      return await getUrl(
+        url,
+        headers: headers,
+        cancelToken: cancelToken,
+      );
     } catch (_) {
       return null;
     }
   }
 
-  Future<HttpClientResponse?> getUrlWithHeadersNullable(Uri url, {Map<String, String>? headers}) async {
-    try {
-      return await getUrlWithHeaders(url, headers);
-    } catch (_) {
-      return null;
-    }
+  Future<HttpTextResponse> getUrl(
+    String url, {
+    Map<String, String>? headers,
+    required CancelToken? cancelToken,
+  }) async {
+    return await _client.get(
+      url,
+      headers: headers == null ? null : HttpHeaders.rawMap(headers),
+      cancelToken: cancelToken,
+    );
   }
 
-  Future<HttpClientResponse> getUrl(Uri url) async {
+  Future<HttpBytesResponse> getBytes(
+    String url, {
+    Map<String, String>? headers,
+    required CancelToken? cancelToken,
+  }) async {
     if (_closed) throw Exception('client is closed');
-    final request = await _client.getUrl(url);
-    return await request.close();
+    return await _client.getBytes(
+      url,
+      headers: headers == null ? null : HttpHeaders.rawMap(headers),
+      cancelToken: cancelToken,
+    );
   }
 
-  Future<HttpClientResponse> getUrlWithHeaders(Uri url, Map<String, String>? headers) async {
+  Future<HttpStreamResponse> getStream(
+    String url, {
+    Map<String, String>? headers,
+    required CancelToken? cancelToken,
+  }) async {
     if (_closed) throw Exception('client is closed');
-    final request = await _client.getUrl(url);
-    if (headers != null) {
-      for (final h in headers.entries) {
-        request.headers.set(h.key, h.value);
-      }
-    }
-    return await request.close();
+    return await _client.getStream(
+      url,
+      headers: headers == null ? null : HttpHeaders.rawMap(headers),
+      cancelToken: cancelToken,
+    );
   }
 
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
-    _client.close(force: true);
+    _client.dispose(cancelRunningRequests: true);
   }
 }

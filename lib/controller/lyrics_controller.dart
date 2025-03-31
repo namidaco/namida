@@ -7,7 +7,6 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
-import 'package:http/http.dart' as http;
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/base/ports_provider.dart';
@@ -26,6 +25,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:rhttp/rhttp.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
@@ -247,7 +247,7 @@ class Lyrics {
 
     Future<String> requestQuery(String searchText) async {
       try {
-        final res = await http.get(Uri.parse(Uri.encodeFull("$url$searchText"))).timeout(const Duration(seconds: 10));
+        final res = await Rhttp.get(Uri.encodeFull("$url$searchText")).timeout(const Duration(seconds: 10));
         final body = res.body;
         final lyricsRes = body.substring(body.indexOf(delimiter1) + delimiter1.length, body.lastIndexOf(delimiter2));
         if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
@@ -309,10 +309,11 @@ class _LRCSearchManager with PortsProvider<SendPort> {
   }
 
   static void _prepareResourcesAndSearch(SendPort sendPort) async {
+    await Rhttp.init();
+    final mainRequester = HttpClientWrapper.createSync();
+
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
-
-    HttpClientWrapper? mainRequester;
 
     String substringArtist(String artist) {
       int maxIndex = -1;
@@ -321,11 +322,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       return maxIndex <= 0 ? artist : artist.substring(0, maxIndex);
     }
 
-    Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({
-      LRCSearchDetails? details,
-      String customQuery = '',
-      required HttpClientWrapper requester,
-    }) async {
+    Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({LRCSearchDetails? details, String customQuery = ''}) async {
       if (customQuery == '' && details == null) return [];
       String formatTime(int milliseconds) {
         final duration = Duration(milliseconds: milliseconds);
@@ -351,13 +348,12 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
       if (tail != '') {
         final urlPre = "https://lrclib.net/api/search?$tail";
-        final url = Uri.parse(Uri.encodeFull(urlPre));
+        final url = Uri.encodeFull(urlPre);
 
         try {
-          final response = await requester.getUrl(url);
-          final responseBody = await utf8.decodeStream(response.asBroadcastStream());
+          final response = await mainRequester.getUrl(url, cancelToken: null);
+          final jsonLists = (jsonDecode(response.body) as List<dynamic>?) ?? [];
           final fetched = <LyricsModel>[];
-          final jsonLists = (jsonDecode(responseBody) as List<dynamic>?) ?? [];
 
           final mainDuration = details?.durationMS ?? 0;
           final isDurationModified = details?.isDurationModified ?? false;
@@ -441,25 +437,15 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         streamSub?.cancel();
         return;
       }
-      mainRequester?.close();
-      mainRequester = HttpClientWrapper();
-      final c = mainRequester!; // instance so it can be closed
 
       var lyrics = <LyricsModel>[];
       if (p is List<LRCSearchDetails>) {
         for (final details in p) {
-          lyrics = await fetchLRCBasedLyricsFromInternet(
-            details: details,
-            requester: c,
-          );
+          lyrics = await fetchLRCBasedLyricsFromInternet(details: details);
           if (lyrics.isNotEmpty) break;
         }
       } else if (p is String) {
-        lyrics = await fetchLRCBasedLyricsFromInternet(
-          details: null,
-          customQuery: p,
-          requester: c,
-        );
+        lyrics = await fetchLRCBasedLyricsFromInternet(details: null, customQuery: p);
       }
       sendPort.send(lyrics);
     });

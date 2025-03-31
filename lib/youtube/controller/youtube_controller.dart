@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -1292,19 +1293,22 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     await sendPort(p);
   }
 
-  static void _prepareDownloadResources(SendPort sendPort) {
+  static void _prepareDownloadResources(SendPort sendPort) async {
+    await Rhttp.init();
+    final requester = HttpClientWrapper.createSync();
+
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final requesters = <String, HttpClientWrapper?>{}; // filePath
+    final cancelTokensMap = <String, CancelToken?>{}; // filePath
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
-        for (final requester in requesters.values) {
-          requester?.close();
+        for (final canceltoken in cancelTokensMap.values) {
+          canceltoken?.cancel();
         }
-        requesters.clear();
+        cancelTokensMap.clear();
         recievePort.close();
         streamSub?.cancel();
         return;
@@ -1316,8 +1320,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
           if (files != null) {
             for (int i = 0; i < files.length; i++) {
               var path = files[i].path;
-              requesters[path]?.close();
-              requesters[path] = null;
+              cancelTokensMap[path]?.cancel();
+              cancelTokensMap[path] = null;
             }
           }
         } else {
@@ -1329,16 +1333,16 @@ class _YTDownloadManager with PortsProvider<SendPort> {
             final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
             final progressPort = p['progressPort'] as SendPort;
 
-            requesters[filePath] = HttpClientWrapper();
+            cancelTokensMap[filePath] = CancelToken();
             final file = File(filePath);
             file.createSync(recursive: true);
             final fileStream = file.openWrite(mode: FileMode.writeOnlyAppend);
 
             try {
-              final requester = requesters[filePath]!; // always non null tho
+              final cancelToken = cancelTokensMap[filePath]!; // always non null tho
               final headers = {'range': 'bytes=$downloadStartRange-'};
-              final response = await requester.getUrlWithHeaders(url, headers);
-              final downloadStream = response.asBroadcastStream();
+              final response = await requester.getStream(url.toString(), headers: headers, cancelToken: cancelToken);
+              final downloadStream = response.body;
 
               await for (final data in downloadStream) {
                 fileStream.add(data);
@@ -1368,8 +1372,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
               return sendPort.send(MapEntry(filePath, e));
             } finally {
               try {
-                final req = requesters.remove(filePath);
-                await req?.close();
+                final req = cancelTokensMap.remove(filePath);
+                await req?.cancel();
               } catch (_) {}
               try {
                 await fileStream.flush();
