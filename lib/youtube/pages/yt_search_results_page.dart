@@ -342,7 +342,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                     padding: const EdgeInsets.all(32.0),
                                     child: ThreeArchedCircle(
                                       color: CurrentColor.inst.color.withValues(alpha: 0.4),
-                                      size: context.width * 0.35,
+                                      size: Dimensions.inst.availableAppContentWidth * 0.35,
                                     ),
                                   ),
                                 ),

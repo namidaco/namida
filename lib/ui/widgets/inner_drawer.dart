@@ -49,6 +49,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
   void initState() {
     controller = AnimationController(
       vsync: this,
+      upperBound: 2.0,
       duration: Duration.zero,
     );
     _upperBoundRx.value = widget.maxPercentage;
@@ -96,16 +97,17 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
+        double animationValue = controller.value;
         final child = Stack(
           children: [
             scaffoldBody,
             Positioned.fill(
               child: TapDetector(
-                onTap: controller.value == controller.lowerBound ? null : _closeDrawer,
+                onTap: animationValue == controller.lowerBound ? null : _closeDrawer,
                 child: IgnorePointer(
-                  ignoring: controller.value == controller.lowerBound,
+                  ignoring: animationValue == controller.lowerBound,
                   child: ColoredBox(
-                    color: Colors.black.withValues(alpha: controller.value * 1.2),
+                    color: Colors.black.withValues(alpha: (animationValue * 1.2).clamp(0.0, 1.0)),
                   ),
                 ),
               ),
@@ -124,7 +126,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
         final finalBuilder = Stack(
           children: [
             // -- bg
-            if (controller.value > 0) ...[
+            if (animationValue > 0) ...[
               Positioned.fill(
                 child: AnimatedColor(
                   duration: const Duration(milliseconds: kThemeAnimationDurationMS),
@@ -133,7 +135,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               ),
               Positioned.fill(
                 child: Transform.translate(
-                  offset: Offset(context.width * controller.value * 0.6, 0),
+                  offset: Offset(context.width * animationValue * 0.6, 0),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -154,7 +156,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 builder: (context, upperBound) => Padding(
                   padding: EdgeInsets.only(right: context.width * (1 - upperBound)),
                   child: Transform.translate(
-                    offset: Offset(-((upperBound - controller.value) * context.width * 0.5), 0),
+                    offset: Offset(-((upperBound - animationValue) * context.width * 0.5), 0),
                     child: drawerChild,
                   ),
                 ),
@@ -165,7 +167,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                   child: ObxO(
                     rx: _upperBoundRx,
                     builder: (context, upperBound) => ColoredBox(
-                      color: Colors.black.withValues(alpha: (upperBound - controller.value) * 1.8),
+                      color: Colors.black.withValues(alpha: ((upperBound - animationValue) * 1.8).clamp(0.0, 1.0)),
                     ),
                   ),
                 ),
@@ -174,12 +176,12 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
             // -- child
             Transform.translate(
-              offset: Offset(context.width * controller.value, 0),
+              offset: Offset(context.width * animationValue, 0),
               child: widget.borderRadius > 0
                   ? ClipPath(
                       clipper: DecorationClipper(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(widget.borderRadius * controller.value),
+                          borderRadius: BorderRadius.circular(widget.borderRadius * animationValue),
                         ),
                       ),
                       child: child,
@@ -197,7 +199,13 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                   _recalculateDistanceTraveled();
                 },
                 onUpdate: (details) {
-                  _distanceTraveled = (_distanceTraveled + details.delta.dx).withMinimum(0);
+                  double toAdd = details.delta.dx;
+                  if (controller.value > widget.maxPercentage) {
+                    double toSubtract = (toAdd * (0.15 + controller.value));
+                    toAdd -= toSubtract;
+                  }
+
+                  _distanceTraveled = (_distanceTraveled + toAdd).withMinimum(0);
                   controller.animateTo(_distanceTraveled / context.width);
                 },
                 onEnd: (details) {
@@ -206,7 +214,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                     _openDrawer();
                   } else if (velocity < -300) {
                     _closeDrawer();
-                  } else if (controller.value > (_upperBoundRx.value * 0.4)) {
+                  } else if (animationValue > (_upperBoundRx.value * 0.4)) {
                     _openDrawer();
                   } else {
                     _closeDrawer();

@@ -5,6 +5,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -248,7 +249,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                               duration: const Duration(milliseconds: 400),
                               opacity: didGrantStoragePermission ? 1.0 : 0.5,
                               child: NamidaInkWell(
-                                width: context.width * 0.2,
+                                width: Dimensions.inst.availableAppContentWidth * 0.2,
                                 onTap: () async {
                                   await _requestPermission();
                                   if (BackupController.inst.isRestoringBackup.value) {

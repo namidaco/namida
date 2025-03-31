@@ -12,7 +12,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
@@ -225,13 +224,14 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     int? finalCache;
     if (widget.compressed || widget.useTrackTileCacheHeight) {
-      final pixelRatio = context.pixelRatio;
-      final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
+      final cacheMultiplier = context.pixelRatio * settings.artworkCacheHeightMultiplier.value;
       if (widget.useTrackTileCacheHeight) {
-        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier);
+        // -- consistent cache height for tracks, for hero effect across pages/dialogs.
+        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier) * 1.4;
         finalCache = refined.round();
       } else {
-        final refined = widget.cacheHeight * cacheMultiplier * (Dimensions.inst.availableAppContentWidth / 200).withMinimum(1.0);
+        final usedHeight = widget.height ?? widget.thumbnailSize;
+        final refined = usedHeight * cacheMultiplier * 1.2;
         finalCache = refined.round();
       }
     }

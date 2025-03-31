@@ -17,6 +17,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -602,7 +603,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = _maxWidth = context.width.withMaximum(MiniPlayerController.inst.screenSize.width);
+    final maxWidth = _maxWidth = widget.isFullScreen ? context.width : context.width.withMaximum(Dimensions.inst.miniplayerMaxWidth);
     final maxHeight = _maxHeight = context.height;
 
     final inLandscape = NamidaNavigator.inst.isInLanscape;

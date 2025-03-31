@@ -88,7 +88,7 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final imageSize = context.width * 0.25;
+    final imageSize = Dimensions.inst.availableAppContentWidth * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
     final version = _prettyVersion(NamidaDeviceInfo.version) ?? '';

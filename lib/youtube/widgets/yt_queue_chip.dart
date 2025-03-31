@@ -26,6 +26,9 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 
+/// save state after resuming app from pip
+bool _wasOpened = false;
+
 class YTMiniplayerQueueChip extends StatefulWidget {
   final void Function(bool isFullyExpanded)? onExpandedStateChange;
   const YTMiniplayerQueueChip({super.key, required this.onExpandedStateChange});
@@ -37,17 +40,9 @@ class YTMiniplayerQueueChip extends StatefulWidget {
 class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with TickerProviderStateMixin {
   // -- note: animation values are inversed, as they represent offset percentage.
 
-  late final _smallBoxAnimation = AnimationController(
-    vsync: this,
-    value: 0.0,
-    duration: const Duration(milliseconds: 500),
-  );
+  late final AnimationController _smallBoxAnimation;
 
-  late final _bigBoxAnimation = AnimationController(
-    vsync: this,
-    value: 1.0,
-    duration: const Duration(milliseconds: 500),
-  );
+  late final AnimationController _bigBoxAnimation;
 
   late final _queueScrollController = ScrollController();
   late final _canScrollQueue = true.obs;
@@ -61,6 +56,18 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   @override
   void initState() {
+    _smallBoxAnimation = AnimationController(
+      vsync: this,
+      value: _wasOpened ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _bigBoxAnimation = AnimationController(
+      vsync: this,
+      value: _wasOpened ? 0.0 : 1.0,
+      duration: const Duration(milliseconds: 500),
+    );
+
     _queueScrollController.addListener(_updateScrollControllerThingys);
     if (widget.onExpandedStateChange != null) _bigBoxAnimation.addListener(_updateIsFullyOpened);
     Timer(Duration.zero, () {
@@ -72,6 +79,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   @override
   void dispose() {
+    _wasOpened = isOpened;
     _smallBoxAnimation.dispose();
     _bigBoxAnimation.dispose();
     _queueScrollController.dispose();

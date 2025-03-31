@@ -558,7 +558,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           blurSize: 2.0,
                           duration: animationDuration,
                           animateMenuItems: false,
-                          menuWidth: context.width * 0.5,
+                          menuWidth: Dimensions.inst.miniplayerMaxWidth * 0.5,
                           menuBoxDecoration: BoxDecoration(
                             color: context.theme.scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
@@ -846,7 +846,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                             final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
                                             return Container(
                                               height: 2 * (1 - cp),
-                                              width: w > 0 ? ((context.width * w) * 0.9) : 0,
+                                              width: w > 0 ? ((Dimensions.inst.miniplayerMaxWidth * w) * 0.9) : 0,
                                               margin: const EdgeInsets.symmetric(horizontal: 16.0),
                                               child: AnimatedDecoration(
                                                 duration: const Duration(milliseconds: kThemeAnimationDurationMS),

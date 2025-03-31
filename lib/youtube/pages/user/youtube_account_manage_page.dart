@@ -96,8 +96,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
         ],
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: context.height * 0.7,
-            maxWidth: context.width * 0.6,
+            maxHeight: Dimensions.inst.availableAppContentWidth * 0.7,
+            maxWidth: Dimensions.inst.availableAppContentWidth * 0.6,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

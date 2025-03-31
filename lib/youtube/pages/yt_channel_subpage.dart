@@ -391,7 +391,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                         child: YoutubeThumbnail(
                           type: ThumbnailType.channel,
                           key: Key('${channelID}_$pfp'),
-                          width: context.width * 0.14,
+                          width: Dimensions.inst.availableAppContentWidth * 0.14,
                           isImportantInCache: true,
                           customUrl: pfp,
                           isCircle: true,

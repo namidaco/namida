@@ -387,7 +387,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             ),
           ),
           SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: context.width * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
+            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
             sliver: SliverToBoxAdapter(
               child: Theme(
                 data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
@@ -400,7 +400,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             ),
           ),
           SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: context.width * 0.1),
+            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.1),
             sliver: SliverToBoxAdapter(
               child: NamidaExpansionTile(
                 initiallyExpanded: isExpanded,
@@ -443,7 +443,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
           ),
           const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
           SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: context.width * 0.2),
+            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.2),
             sliver: SliverToBoxAdapter(
               child: SizedBox(
                 height: 42.0,

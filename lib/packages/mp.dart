@@ -26,7 +26,6 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final void Function(double dismissPercentage)? onDismissing;
   final Duration duration;
   final Curve curve;
-  final AnimationController? animationController;
   final void Function()? onDismiss;
   final bool displayBottomBGLayer;
   final void Function()? onAlternativePercentageExecute;
@@ -43,7 +42,6 @@ class NamidaYTMiniplayer extends StatefulWidget {
     this.bottomMargin = 0.0,
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.decelerate,
-    this.animationController,
     this.onDismiss,
     this.displayBottomBGLayer = false,
     this.onAlternativePercentageExecute,
@@ -59,16 +57,16 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   @override
   void initState() {
     super.initState();
+    final startExpanded = widget.enforceExpanded || _wasExpanded;
     if (_maxHeight < maxHeight) _maxHeight = maxHeight;
 
-    controller = widget.animationController ??
-        AnimationController(
-          vsync: this,
-          duration: Duration.zero,
-          lowerBound: 0,
-          upperBound: 1,
-          value: _wasExpanded ? 1.0 : widget.minHeight / _maxHeight,
-        );
+    controller = AnimationController(
+      vsync: this,
+      duration: Duration.zero,
+      lowerBound: 0,
+      upperBound: 1,
+      value: startExpanded ? 1.0 : widget.minHeight / _maxHeight,
+    );
 
     if (widget.onHeightChange != null) {
       _listenerHeightChange();
@@ -78,9 +76,9 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       controller.addListener(_listenerDismissing);
     }
 
-    _dragheight = _wasExpanded ? _maxHeight : widget.minHeight;
+    _dragheight = startExpanded ? _maxHeight : widget.minHeight;
 
-    WakelockController.inst.updateMiniplayerStatus(_wasExpanded);
+    WakelockController.inst.updateMiniplayerStatus(startExpanded);
 
     _ensureCorrectInitializedPadding();
   }
