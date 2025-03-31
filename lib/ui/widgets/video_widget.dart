@@ -106,6 +106,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
   }
 
+  Timer? _isEndCardsVisibleTimer;
   final _isEndCardsVisible = true.obs;
 
   void showControlsBriefly() {
@@ -711,16 +712,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           _startTimer();
         }
         _disableSliders = !_canSlideVolume(context, event.position.dy);
+        _isEndCardsVisibleTimer = Timer(Duration(milliseconds: 200), () {
+          _isEndCardsVisible.value = false;
+        });
       },
       onPointerUp: (event) {
         _isPointerDown = false;
         _disableSliders = false;
         _startVolumeSwipeTimer();
         _startBrightnessDimTimer();
+        _isEndCardsVisibleTimer?.cancel();
         _isEndCardsVisible.value = true;
-      },
-      onPointerMove: (event) {
-        _isEndCardsVisible.value = false;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
