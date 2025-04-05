@@ -18,6 +18,7 @@
 -dontwarn android.arch.util.paging.CountedDataSource
 -dontwarn android.arch.persistence.room.paging.LimitOffsetDataSource
 
+-keep class com.arthenica.smartexception.java.Exceptions
 
 -keep class com.namidaco.** { *; }
 -keep class org.jaudiotagger.** { *; }

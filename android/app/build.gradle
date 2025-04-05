@@ -154,5 +154,13 @@ dependencies {
     implementation 'androidx.compose.foundation:foundation:1.5.4'
     implementation 'androidx.media:media:1.6.0'
     implementation 'com.android.support:support-v4:28.0.0'
+
+    configurations.implementation {
+        exclude group: "com.arthenica", module: "ffmpeg-kit-https"
+    }
+    implementation "com.local.ffmpeg-kit:full_binary:6.0-2"
+    implementation files('./repo/smart-exception-java-0.2.1.jar')
+    implementation files('./repo/smart-exception-common-0.2.1.jar')
+
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.4'
 }

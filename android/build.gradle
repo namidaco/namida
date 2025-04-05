@@ -4,6 +4,9 @@ allprojects {
         jcenter()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        maven {
+          url = project(':app').file('repo')
+        }
     }
     
     subprojects {

@@ -235,3 +235,10 @@ app.*.symbols
 *.g.dart
 
 .cxx/
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+android/app/repo/com/local/ffmpeg-kit/min_binary
