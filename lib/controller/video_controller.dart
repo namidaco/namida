@@ -938,6 +938,7 @@ class _VideoControllerIsolateFunctions {
         final filename = df.path.getFilename;
         if (filename.endsWith('.part')) continue; // first thing first
         if (filename.endsWith('.mime')) continue; // second thing second
+        if (filename.endsWith('.metadata')) continue; // second thing second
 
         try {
           final id = filename.substring(0, 11);

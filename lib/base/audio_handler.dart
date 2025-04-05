@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -696,7 +697,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final cachedAudioPath = currentCachedAudio.value?.file.path;
         final curritem = currentItem.value;
 
-        AudioVideoSource? activeAudioSource;
+        UriSource? activeAudioSource;
         if (cachedAudioPath != null) {
           activeAudioSource = AudioVideoSource.file(
             cachedAudioPath,
@@ -1295,11 +1296,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
 
         // -----------------------
-        AudioVideoSource? finalAudioSource;
+        UriSource? finalAudioSource;
         VideoSourceOptions? videoSourceOptions;
 
         if (useMixedStream) {
-          AudioVideoSource? finalMixedSource;
+          UriSource? finalMixedSource;
           final prefferedMixedStream = YoutubeController.inst.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
 
           currentVideoStream.value = prefferedMixedStream;
@@ -1599,7 +1600,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final fe = allFiles[i];
       final filename = fe.path.getFilename;
       final goodID = filename.startsWith(id);
-      final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime');
+      final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
 
       if (isGood) {
         try {
@@ -1620,7 +1621,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     for (int i = 0; i < filesL; i++) {
       var fe = files[i];
       final filename = fe.path.getFilename;
-      final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime');
+      final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
 
       if (isGood) {
         try {
@@ -1965,7 +1966,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> rewind() async => await onRewind();
 
   Future<Duration?> setSource(
-    AudioVideoSource source, {
+    UriSource source, {
     required Q? item,
     bool preload = true,
     int? initialIndex,
@@ -2031,26 +2032,48 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   // -- builders
 
-  AudioVideoSource _buildLockCachingAudioSource(Uri uri, {required AudioStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
+  UriSource _buildAVSource(
+    Uri uriDDL, {
+    required File cacheFile,
+    required String videoId,
+    required VideoStreamsResult? streamsResult,
+    required void Function(File cachedFile) onCacheDone,
+  }) {
     final isLive = streamsResult != null && streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty;
-    return isLive
-        ? HlsSource(uri)
-        : LockCachingAudioSource(
-            uri,
-            cacheFile: File(stream.cachePath(videoId)),
-            onCacheDone: (cacheFile) async => await _onAudioCacheDone(videoId, cacheFile),
-          );
+    final cacheConfig = HttpCacheManager.instance.createStreamConfig();
+
+    cacheConfig.onCacheDone = onCacheDone;
+    final cacheStream = HttpCacheManager.instance.createStream(
+      uriDDL,
+      cacheFile: cacheFile,
+      config: cacheConfig,
+    );
+    cacheStream.download();
+    final cacheUrl = cacheStream.cacheUrl;
+    void disposeStream() => cacheStream.dispose(force: true);
+    return isLive ? HlsSource(cacheUrl, onDispose: disposeStream) : AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
   }
 
-  AudioVideoSource _buildLockCachingVideoSource(Uri uri, {required VideoStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
-    final isLive = streamsResult != null && streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty;
-    return isLive
-        ? HlsSource(uri)
-        : LockCachingVideoSource(
-            uri,
-            cacheFile: File(stream.cachePath(videoId)),
-            onCacheDone: (cacheFile) async => await _onVideoCacheDone(videoId, cacheFile),
-          );
+  UriSource _buildLockCachingAudioSource(Uri uriDDL, {required AudioStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
+    return _buildAVSource(
+      uriDDL,
+      cacheFile: File(stream.cachePath(videoId)),
+      videoId: videoId,
+      streamsResult: streamsResult,
+      onCacheDone: (cachedFile) => _onAudioCacheDone(videoId, cachedFile),
+    );
+  }
+
+  UriSource _buildLockCachingVideoSource(Uri uriDDL, {required VideoStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
+    return _buildAVSource(
+      uriDDL,
+      cacheFile: File(stream.cachePath(videoId)),
+      videoId: videoId,
+      streamsResult: streamsResult,
+      onCacheDone: (cachedFile) => _onVideoCacheDone(videoId, cachedFile),
+    );
+  }
+
   }
 }
 

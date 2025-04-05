@@ -24,9 +24,9 @@
         android:appCategory="audio"
         android:requestLegacyExternalStorage="true"
         android:supportsPictureInPicture="true"
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:extractNativeLibs="true"
+        android:networkSecurityConfig="@xml/network_security_config"
     >
         <activity
             android:name=".NamidaMainActivity"
