@@ -250,6 +250,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     );
 
     return SafeArea(
+      top: false,
       child: DefaultTextStyle(
         style: mainTextTheme.displayMedium!,
         child: ObxO(

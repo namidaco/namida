@@ -29,7 +29,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool staggered;
   final bool compressed;
   final int fadeMilliSeconds;
-  final int cacheHeight;
+  final int? cacheHeight;
   final double? width;
   final double? height;
   final double? iconSize;
@@ -63,7 +63,7 @@ class ArtworkWidget extends StatefulWidget {
     this.blur = 1.5,
     this.width,
     this.height,
-    this.cacheHeight = 100,
+    this.cacheHeight,
     this.useTrackTileCacheHeight = false,
     this.forceDummyArtwork = false,
     this.bgcolor,
@@ -224,14 +224,16 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     int? finalCache;
     if (widget.compressed || widget.useTrackTileCacheHeight) {
-      final cacheMultiplier = context.pixelRatio * settings.artworkCacheHeightMultiplier.value;
+      final pixelRatio = context.pixelRatio;
+      final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
+      final extraMultiplier = (1 + (0.05 / pixelRatio * 15)); // higher for lower pixel ratio, for example 1=>1.75, 3=>1.25
       if (widget.useTrackTileCacheHeight) {
         // -- consistent cache height for tracks, for hero effect across pages/dialogs.
-        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier) * 1.4;
+        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier) * extraMultiplier * 0.8;
         finalCache = refined.round();
       } else {
-        final usedHeight = widget.height ?? widget.thumbnailSize;
-        final refined = usedHeight * cacheMultiplier * 1.2;
+        final usedHeight = widget.cacheHeight ?? widget.height ?? widget.thumbnailSize;
+        final refined = usedHeight * cacheMultiplier * extraMultiplier;
         finalCache = refined.round();
       }
     }
@@ -378,6 +380,7 @@ class MultiArtworks extends StatelessWidget {
   final bool fallbackToFolderCover;
   final bool reduceQuality;
   final File? artworkFile;
+  final bool useTrackTileCacheHeightIfSingle;
 
   const MultiArtworks({
     super.key,
@@ -391,6 +394,7 @@ class MultiArtworks extends StatelessWidget {
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
     required this.artworkFile,
+    this.useTrackTileCacheHeightIfSingle = false,
   });
 
   @override
@@ -419,6 +423,7 @@ class MultiArtworks extends StatelessWidget {
                   width: thumbnailSize,
                   height: thumbnailSize,
                   fallbackToFolderCover: fallbackToFolderCover,
+                  useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                 )
               : tracks.isEmpty
                   ? ArtworkWidget(
@@ -435,6 +440,7 @@ class MultiArtworks extends StatelessWidget {
                       width: thumbnailSize,
                       height: thumbnailSize,
                       fallbackToFolderCover: fallbackToFolderCover,
+                      useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                     )
                   : LayoutBuilder(
                       builder: (context, c) {
@@ -451,6 +457,7 @@ class MultiArtworks extends StatelessWidget {
                                 width: c.maxWidth,
                                 height: c.maxHeight,
                                 fallbackToFolderCover: fallbackToFolderCover,
+                                useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                               )
                             : tracks.length == 2
                                 ? Row(

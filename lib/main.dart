@@ -554,97 +554,98 @@ class Namida extends StatelessWidget {
       builder: (context, showPipOnly) => Container(
         color: Colors.black,
         alignment: Alignment.topLeft,
-        child: showPipOnly
-            ? const NamidaVideoControls(
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: [
+            Visibility(
+              maintainState: true,
+              visible: !showPipOnly,
+              child: ObxO(
+                rx: settings.fontScaleFactor,
+                builder: (context, fontScaleFactor) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
+                  child: MaterialApp(
+                    color: kDefaultIconLightColor,
+                    key: const Key('namida_app'),
+                    debugShowCheckedModeBanner: false,
+                    navigatorKey: namida.rootNavigatorKey,
+                    title: 'Namida',
+                    // restorationScopeId: 'Namida',
+                    builder: (context, widget) {
+                      Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
+                      // overlay entries get rebuilt on any insertion/removal, so we create app here.
+
+                      Widget mainApp = buildMainApp(widget!, platformBrightness);
+
+                      return Overlay(
+                        initialEntries: [
+                          OverlayEntry(builder: (context) {
+                            final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                            if (newPlatformBrightness != platformBrightness) {
+                              platformBrightness = newPlatformBrightness;
+                              mainApp = buildMainApp(widget, platformBrightness);
+                              YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                            }
+                            return mainApp;
+                          }),
+                        ],
+                      );
+                    },
+                    home: MainPageWrapper(
+                      shouldShowOnBoarding: shouldShowOnBoarding,
+                      onContextAvailable: (ctx) {
+                        _initialContext = ctx;
+                        _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // prevent accidental opening for drawer when performing back gesture
+            if (shouldAddEdgeAbsorbers)
+              SizedBox(
+                width: 18.0,
+                height: context.height * 0.8,
+                child: HorizontalDragDetector(
+                  onUpdate: (_) {},
+                ),
+              ),
+
+            // prevent accidental miniplayer/queue swipe up when performing home scween gesture
+            if (shouldAddEdgeAbsorbers)
+              SizedBox(
+                height: 18.0,
+                width: context.height,
+                child: VerticalDragDetector(
+                  onUpdate: (_) {},
+                ),
+              ),
+
+            // prevent accidental miniplayer swipe when performing back gesture
+            if (shouldAddEdgeAbsorbers)
+              Positioned(
+                right: 0,
+                child: SizedBox(
+                  width: 12.0,
+                  height: context.height,
+                  child: HorizontalDragDetector(
+                    onUpdate: (_) {},
+                  ),
+                ),
+              ),
+
+            if (showPipOnly)
+              const NamidaVideoControls(
                 key: Key('pip_widget_child'),
                 isFullScreen: true,
                 showControls: false,
                 onMinimizeTap: null,
                 isLocal: true,
-              )
-            : Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  Visibility(
-                    maintainState: true,
-                    visible: !showPipOnly,
-                    child: ObxO(
-                      rx: settings.fontScaleFactor,
-                      builder: (context, fontScaleFactor) => MediaQuery(
-                        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
-                        child: MaterialApp(
-                          color: kDefaultIconLightColor,
-                          key: const Key('namida_app'),
-                          debugShowCheckedModeBanner: false,
-                          navigatorKey: namida.rootNavigatorKey,
-                          title: 'Namida',
-                          // restorationScopeId: 'Namida',
-                          builder: (context, widget) {
-                            Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
-                            // overlay entries get rebuilt on any insertion/removal, so we create app here.
-
-                            Widget mainApp = buildMainApp(widget!, platformBrightness);
-
-                            return Overlay(
-                              initialEntries: [
-                                OverlayEntry(builder: (context) {
-                                  final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                                  if (newPlatformBrightness != platformBrightness) {
-                                    platformBrightness = newPlatformBrightness;
-                                    mainApp = buildMainApp(widget, platformBrightness);
-                                    YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
-                                  }
-                                  return mainApp;
-                                }),
-                              ],
-                            );
-                          },
-                          home: MainPageWrapper(
-                            shouldShowOnBoarding: shouldShowOnBoarding,
-                            onContextAvailable: (ctx) {
-                              _initialContext = ctx;
-                              _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // prevent accidental opening for drawer when performing back gesture
-                  if (shouldAddEdgeAbsorbers)
-                    SizedBox(
-                      width: 18.0,
-                      height: context.height * 0.8,
-                      child: HorizontalDragDetector(
-                        onUpdate: (_) {},
-                      ),
-                    ),
-
-                  // prevent accidental miniplayer/queue swipe up when performing home scween gesture
-                  if (shouldAddEdgeAbsorbers)
-                    SizedBox(
-                      height: 18.0,
-                      width: context.height,
-                      child: VerticalDragDetector(
-                        onUpdate: (_) {},
-                      ),
-                    ),
-
-                  // prevent accidental miniplayer swipe when performing back gesture
-                  if (shouldAddEdgeAbsorbers)
-                    Positioned(
-                      right: 0,
-                      child: SizedBox(
-                        width: 12.0,
-                        height: context.height,
-                        child: HorizontalDragDetector(
-                          onUpdate: (_) {},
-                        ),
-                      ),
-                    ),
-                ],
               ),
+          ],
+        ),
       ),
     );
   }

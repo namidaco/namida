@@ -81,6 +81,7 @@ class NamidaVideoWidget extends StatelessWidget {
           ? null
           : (details) {
               final drag = details.delta.dy;
+              if (drag > 0) return; // downwards
               if (VideoController.inst.videoZoomAdditionalScale.value >= 0) {
                 VideoController.inst.videoZoomAdditionalScale.value -= drag * 0.02;
               }

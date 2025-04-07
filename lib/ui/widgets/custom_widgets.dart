@@ -2591,7 +2591,7 @@ class NamidaListView extends StatelessWidget {
   }
 }
 
-class NamidaListViewRaw extends StatelessWidget {
+class NamidaListViewRaw extends StatefulWidget {
   final Widget Function(Widget list) listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;
   final ReorderCallback? onReorder;
@@ -2634,73 +2634,92 @@ class NamidaListViewRaw extends StatelessWidget {
   });
 
   @override
+  State<NamidaListViewRaw> createState() => _NamidaListViewRawState();
+}
+
+class _NamidaListViewRawState extends State<NamidaListViewRaw> {
+  ScrollController? _scrollController;
+
+  @override
+  void initState() {
+    _scrollController = widget.scrollController ?? ScrollController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (widget.scrollController == null) _scrollController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    double? start = header == null ? null : 0.0;
-    double? end = footer == null ? null : 0.0;
-    if (reverse) {
+    double? start = widget.header == null ? null : 0.0;
+    double? end = widget.footer == null ? null : 0.0;
+    if (widget.reverse) {
       (start, end) = (end, start);
     }
 
-    final padding = this.padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
+    final padding = this.widget.padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
     final EdgeInsets startPadding, endPadding, listPadding;
-    (startPadding, endPadding, listPadding) = switch (scrollDirection) {
+    (startPadding, endPadding, listPadding) = switch (widget.scrollDirection) {
       Axis.horizontal || Axis.vertical when (start ?? end) == null => (EdgeInsets.zero, EdgeInsets.zero, padding),
       Axis.horizontal => (padding.copyWith(left: 0), padding.copyWith(right: 0), padding.copyWith(left: start, right: end)),
       Axis.vertical => (padding.copyWith(top: 0), padding.copyWith(bottom: 0), padding.copyWith(top: start, bottom: end)),
     };
-    final (EdgeInsets headerPadding, EdgeInsets footerPadding) = reverse ? (startPadding, endPadding) : (endPadding, startPadding);
+    final (EdgeInsets headerPadding, EdgeInsets footerPadding) = widget.reverse ? (startPadding, endPadding) : (endPadding, startPadding);
 
-    final displayHeaderAtTop = header != null;
-    final displayInfoBoxAtTop = infoBox != null && !Dimensions.inst.miniplayerIsWideScreen;
-    final displayInfoBoxAtSide = infoBox != null && Dimensions.inst.miniplayerIsWideScreen;
+    final displayHeaderAtTop = widget.header != null;
+    final displayInfoBoxAtTop = widget.infoBox != null && !Dimensions.inst.miniplayerIsWideScreen;
+    final displayInfoBoxAtSide = widget.infoBox != null && Dimensions.inst.miniplayerIsWideScreen;
     Widget listW = ClipRect(
       child: CustomScrollView(
-        scrollDirection: scrollDirection,
-        controller: scrollController,
-        physics: physics,
-        reverse: reverse,
+        scrollDirection: widget.scrollDirection,
+        controller: _scrollController,
+        physics: widget.physics,
+        reverse: widget.reverse,
         slivers: <Widget>[
           if (displayInfoBoxAtTop)
             SliverPadding(
               padding: headerPadding,
               sliver: SliverToBoxAdapter(
-                child: infoBox,
+                child: widget.infoBox,
               ),
             ),
           if (displayHeaderAtTop)
             SliverPadding(
               padding: displayInfoBoxAtTop ? EdgeInsets.zero : headerPadding,
               sliver: SliverToBoxAdapter(
-                child: header,
+                child: widget.header,
               ),
             ),
           SliverPadding(
             padding: listPadding,
-            sliver: onReorder != null
+            sliver: widget.onReorder != null
                 ? NamidaSliverReorderableList(
-                    itemExtent: itemExtent,
-                    itemBuilder: itemBuilder,
-                    itemCount: itemCount,
-                    onReorder: onReorder!,
-                    onReorderCancel: onReorderCancel,
-                    onReorderStart: onReorderStart,
-                    onReorderEnd: onReorderEnd,
+                    itemExtent: widget.itemExtent,
+                    itemBuilder: widget.itemBuilder,
+                    itemCount: widget.itemCount,
+                    onReorder: widget.onReorder!,
+                    onReorderCancel: widget.onReorderCancel,
+                    onReorderStart: widget.onReorderStart,
+                    onReorderEnd: widget.onReorderEnd,
                   )
-                : itemExtent != null
+                : widget.itemExtent != null
                     ? SliverFixedExtentList.builder(
-                        itemExtent: itemExtent!,
-                        itemBuilder: itemBuilder,
-                        itemCount: itemCount,
+                        itemExtent: widget.itemExtent!,
+                        itemBuilder: widget.itemBuilder,
+                        itemCount: widget.itemCount,
                       )
                     : SliverList.builder(
-                        itemBuilder: itemBuilder,
-                        itemCount: itemCount,
+                        itemBuilder: widget.itemBuilder,
+                        itemCount: widget.itemCount,
                       ),
           ),
-          if (footer != null)
+          if (widget.footer != null)
             SliverPadding(
               padding: footerPadding,
-              sliver: SliverToBoxAdapter(child: footer),
+              sliver: SliverToBoxAdapter(child: widget.footer),
             ),
         ],
       ),
@@ -2711,16 +2730,16 @@ class NamidaListViewRaw extends StatelessWidget {
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: Dimensions.inst.sideInfoMaxWidth),
-            child: infoBox,
+            child: widget.infoBox,
           ),
           Expanded(child: listW),
         ],
       );
     }
     return NamidaScrollbar(
-      controller: scrollController,
-      scrollStep: scrollStep,
-      child: listBuilder(listW),
+      controller: _scrollController,
+      scrollStep: widget.scrollStep,
+      child: widget.listBuilder(listW),
     );
   }
 }

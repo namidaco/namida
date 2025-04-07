@@ -15,8 +15,8 @@ import 'package:namida/core/utils.dart';
 part 'settings.equalizer.dart';
 part 'settings.extra.dart';
 part 'settings.player.dart';
-part 'settings.youtube.dart';
 part 'settings.tutorial.dart';
+part 'settings.youtube.dart';
 
 final settings = _SettingsController._internal();
 

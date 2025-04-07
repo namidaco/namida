@@ -4,7 +4,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
+import 'package:screen_brightness/screen_brightness.dart';
+import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
+import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/youtipie.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -37,13 +46,6 @@ import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
-import 'package:screen_brightness/screen_brightness.dart';
-import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
-import 'package:youtipie/class/streams/audio_stream.dart';
-import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
-import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/youtipie.dart';
 
 class NamidaVideoControls extends StatefulWidget {
   final bool showControls;
@@ -697,6 +699,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final shouldShowSliders = _canShowControls && widget.isFullScreen;
     final shouldShowSeekBar = widget.isFullScreen;
     final view = View.of(context);
+
+    final mainButtonSize = 40.0.withMaximum(maxWidth * 0.1);
+    final mainButtonPadding = EdgeInsets.all(14.0.withMaximum(maxWidth * 0.035));
+
+    final secondaryButtonSize = 30.0.withMaximum(maxWidth * 0.06);
+    final secondaryButtonPadding = EdgeInsets.all(10.0.withMaximum(maxWidth * 0.025));
 
     bool showEndcards = settings.youtube.showVideoEndcards.value && _canShowControls;
     String? channelOverlayUrl = widget.isFullScreen && settings.youtube.showChannelWatermarkFullscreen.value && _canShowControls //
@@ -1589,14 +1597,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   color: Colors.black.withValues(alpha: 0.2),
                                   child: NamidaIconButton(
                                     icon: null,
-                                    padding: const EdgeInsets.all(10.0),
+                                    padding: secondaryButtonPadding,
                                     onPressed: () {
                                       Player.inst.previous();
                                       _startTimer();
                                     },
                                     child: Icon(
                                       Broken.previous,
-                                      size: 30.0,
+                                      size: secondaryButtonSize,
                                       color: itemsColor,
                                     ),
                                   ),
@@ -1614,7 +1622,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           color: Colors.black.withValues(alpha: 0.3),
                           child: NamidaIconButton(
                             icon: null,
-                            padding: const EdgeInsets.all(14.0),
+                            padding: mainButtonPadding,
                             onPressed: () {
                               Player.inst.togglePlayPause();
                               _startTimer();
@@ -1626,13 +1634,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 child: playWhenReady
                                     ? Icon(
                                         Broken.pause,
-                                        size: 40.0,
+                                        size: mainButtonSize,
                                         color: itemsColor,
                                         key: const Key('paused'),
                                       )
                                     : Icon(
                                         Broken.play,
-                                        size: 40.0,
+                                        size: mainButtonSize,
                                         color: itemsColor,
                                         key: const Key('playing'),
                                       ),
@@ -1660,14 +1668,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       color: Colors.black.withValues(alpha: 0.2),
                                       child: NamidaIconButton(
                                         icon: null,
-                                        padding: const EdgeInsets.all(10.0),
+                                        padding: secondaryButtonPadding,
                                         onPressed: () {
                                           Player.inst.next();
                                           _startTimer();
                                         },
                                         child: Icon(
                                           Broken.next,
-                                          size: 30.0,
+                                          size: secondaryButtonSize,
                                           color: itemsColor,
                                         ),
                                       ),

@@ -69,7 +69,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     );
 
     if (widget.onHeightChange != null) {
-      _listenerHeightChange();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _listenerHeightChange());
       controller.addListener(_listenerHeightChange);
     }
     if (widget.onDismissing != null) {
