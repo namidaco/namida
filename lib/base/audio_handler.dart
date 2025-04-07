@@ -15,6 +15,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/extensions.dart' show StreamFilterUtils;
 
 import 'package:namida/class/audio_cache_detail.dart';
+import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
@@ -1918,7 +1919,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onDispose() async {
     await [
       super.onDispose(),
-      AudioService.forceStop(),
+      if (Platform.isAndroid) AudioService.forceStop(),
     ].execute();
   }
 
@@ -1969,7 +1970,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     UriSource source, {
     required Q? item,
     bool preload = true,
-    int? initialIndex,
     Duration? initialPosition,
     Duration? Function(Duration duration)? initialPositionFallback,
     VideoSourceOptions? videoOptions,
@@ -1989,7 +1989,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       source,
       item: item,
       preload: preload,
-      initialIndex: initialIndex,
       initialPosition: initialPosition,
       videoOptions: videoOptions,
       keepOldVideoSource: keepOldVideoSource,
@@ -2074,6 +2073,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  @override
+  AVPlayer createPlayerInstance() {
+    return switch (InternalPlayerType.platformDefault) {
+      InternalPlayerType.exoplayer => CustomAudioPlayer(
+          AudioPlayer(
+            androidApplyAudioAttributes: false,
+            handleInterruptions: false,
+            handleAudioSessionActivation: true,
+            audioLoadConfiguration: defaultAndroidLoadConfig,
+            audioPipeline: audioPipeline,
+          ),
+        ),
+      InternalPlayerType.mpv => CustomMPVPlayer(),
+    };
   }
 }
 

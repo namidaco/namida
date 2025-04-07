@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
-// exporting playback enums
+import 'package:namida/controller/platform/base.dart';
+
 export 'package:basic_audio_handler/basic_audio_handler.dart' show RepeatMode, InterruptionType, InterruptionAction;
 
 enum SortType {
@@ -495,5 +496,23 @@ enum DataSaverMode {
       return this == DataSaverMode.off || this == DataSaverMode.medium;
     }
     return this == DataSaverMode.off;
+  }
+}
+
+enum InternalPlayerType {
+  exoplayer,
+  mpv;
+
+  bool get shouldInitializeMPV => this == InternalPlayerType.mpv;
+
+  static final InternalPlayerType platformDefault = InternalPlayerType._getForPlatform();
+
+  factory InternalPlayerType._getForPlatform() {
+    return NamidaPlatformBuilder.init(
+      android: () => InternalPlayerType.exoplayer,
+      ios: () => InternalPlayerType.exoplayer,
+      windows: () => InternalPlayerType.mpv,
+      macos: () => InternalPlayerType.mpv,
+    );
   }
 }
