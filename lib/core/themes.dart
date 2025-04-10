@@ -79,6 +79,12 @@ class AppThemes {
               surfaceTintColor: pitchBlack,
               indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
             ),
+      navigationRailTheme: pitchBlack == null
+          ? null
+          : NavigationRailThemeData(
+              backgroundColor: pitchBlack,
+              indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
+            ),
       iconTheme: IconThemeData(
         color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
       ),

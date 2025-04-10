@@ -19,12 +19,17 @@ class Dimensions {
   static final Dimensions _instance = Dimensions._internal();
   Dimensions._internal();
 
+  bool get showNavigationAtSide => miniplayerIsWideScreen;
+  bool get showSubpageInfoAtSide => availableAppContentWidth > 524.0;
+  bool showSubpageInfoAtSideContext(BuildContext context) {
+    context.width; // vip to rebuild
+    return showSubpageInfoAtSide;
+  }
+
   double miniplayerMaxWidth = 0.0;
   double sideInfoMaxWidth = 0.0;
   double availableAppContentWidth = 0.0;
   bool miniplayerIsWideScreen = false;
-
-  double availableContentWidth(BuildContext context) => context.width - Dimensions.inst.miniplayerMaxWidth;
 
   double getSettingsHorizontalMargin(BuildContext context) {
     if (!Dimensions.inst.miniplayerIsWideScreen) return 0.0;

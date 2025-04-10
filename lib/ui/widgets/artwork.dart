@@ -83,6 +83,9 @@ class ArtworkWidget extends StatefulWidget {
   /// Prevents re-fade in due to change of cache height caused by window resize.
   static bool isResizingAppWindow = false;
 
+  /// Prevents re-fade in due to change of cache height caused by side nav bar resize.
+  static bool isMovingDrawer = false;
+
   @override
   State<ArtworkWidget> createState() => _ArtworkWidgetState();
 }
@@ -222,7 +225,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       );
     }
 
-    final realWidthAndHeight = widget.forceSquared ? boxWidth : null;
+    final realWidthAndHeight = widget.forceSquared ? double.infinity : null;
 
     int? finalCache;
     if (widget.compressed) {
@@ -279,7 +282,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           height: realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded || frame == null) return child;
-                            if (ArtworkWidget.isResizingAppWindow) return child;
+                            if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
                             if (widget.fadeMilliSeconds == 0) return child;
                             if (_imagePath != null && bytes != null && bytes.isNotEmpty) return child;
 

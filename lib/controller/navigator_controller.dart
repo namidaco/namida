@@ -241,8 +241,9 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationInMs = _defaultRouteAnimationDurMS,
   }) async {
-    currentWidgetStack.add(page);
     _hideEverything();
+    if (currentRoute != null && page.isSameRouteAs(currentRoute!)) return;
+    currentWidgetStack.add(page);
 
     page.updateColorScheme();
 
@@ -389,6 +390,7 @@ class NamidaNavigator {
   Future<void> navigateOffAll<W extends NamidaRouteWidget>(
     W page, {
     Transition transition = Transition.cupertino,
+    int durationMs = 500,
   }) async {
     currentWidgetStack.value = [page];
     _hideEverything();
@@ -399,7 +401,7 @@ class NamidaNavigator {
 
     await navKey.currentState?.pushPageReplacement(
       page,
-      durationInMs: 500,
+      durationInMs: durationMs,
       transition: transition,
       maintainState: true,
     );

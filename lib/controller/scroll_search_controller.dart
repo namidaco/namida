@@ -7,6 +7,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -64,12 +65,19 @@ class ScrollSearchController {
       return;
     }
 
-    final isPageToTheRight = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
-    final transition = isPageToTheRight ? Transition.rightToLeft : Transition.leftToRight;
+    final isVertical = Dimensions.inst.showNavigationAtSide;
+    final isPageNext = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
+    final transition = isVertical
+        ? isPageNext
+            ? Transition.downToUp
+            : Transition.upToDown
+        : isPageNext
+            ? Transition.rightToLeft
+            : Transition.leftToRight;
 
     _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab);
     settings.extra.save(selectedLibraryTab: tab);
-    NamidaNavigator.inst.navigateOffAll(w, transition: transition);
+    NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: isVertical ? 300 : 400);
   }
 
   CountPerRow animateChangingGridSize(LibraryTab tab, CountPerRow nextGridCount, {int minimum = 1, bool animateTiles = true}) {

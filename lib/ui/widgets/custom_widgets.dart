@@ -298,7 +298,7 @@ class CustomListTile extends StatelessWidget {
                 ? null
                 : FittedBox(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.3),
+                      constraints: BoxConstraints(minWidth: 0, maxWidth: Dimensions.inst.availableAppContentWidth * 0.3),
                       child: trailingText != null
                           ? Text(
                               trailingText!,
@@ -1762,11 +1762,12 @@ class SubpageInfoContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const pauseHero = 'kururing';
-    final isWideScreen = Dimensions.inst.miniplayerIsWideScreen;
+    final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
+
     final imageWidget = LayoutBuilder(
       builder: (context, constraints) {
         double maxWidth = constraints.maxWidth;
-        if (!isWideScreen && (maxWidth.isInfinite || maxWidth.isNaN)) {
+        if (!showSubpageInfoAtSide && (maxWidth.isInfinite || maxWidth.isNaN)) {
           maxWidth = maxWidth.withMaximum(context.width * 0.3);
         }
         return imageBuilder(constraints, maxWidth);
@@ -1877,7 +1878,7 @@ class SubpageInfoContainer extends StatelessWidget {
       padding: const EdgeInsets.all(12.0),
       margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       height: height,
-      child: isWideScreen
+      child: showSubpageInfoAtSide
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1976,7 +1977,8 @@ class NamidaDrawerListTile extends StatelessWidget {
   final bool enabled;
   final String title;
   final IconData? icon;
-  final double width;
+  final double? width;
+  final double? height;
   final EdgeInsetsGeometry margin;
   final EdgeInsetsGeometry padding;
   final bool isCentered;
@@ -1988,7 +1990,8 @@ class NamidaDrawerListTile extends StatelessWidget {
     required this.enabled,
     required this.title,
     required this.icon,
-    this.width = double.infinity,
+    this.width,
+    this.height,
     this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.5),
     this.padding = const EdgeInsets.symmetric(vertical: 11.0, horizontal: 10.0),
     this.isCentered = false,
@@ -1997,54 +2000,51 @@ class NamidaDrawerListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: margin,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        alignment: Alignment.center,
-        width: width,
-        decoration: BoxDecoration(
-          color: enabled ? CurrentColor.inst.color : context.theme.cardColor,
-          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: CurrentColor.inst.color.withAlpha(100),
-                    spreadRadius: 0.2,
-                    blurRadius: 8.0,
-                    offset: const Offset(0.0, 4.0),
-                  ),
-                ]
-              : null,
-        ),
-        child: NamidaInkWell(
-          padding: padding,
-          onTap: onTap,
-          borderRadius: 8.0,
-          child: Row(
-            mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                color: enabled ? Colors.white.withAlpha(200) : null,
-                size: iconSize,
-              ),
-              if (title != '') const SizedBox(width: 12.0),
-              if (title != '')
-                Expanded(
-                  child: Text(
-                    title,
-                    style: context.textTheme.displayMedium?.copyWith(
-                      color: enabled ? Colors.white.withAlpha(200) : null,
-                      fontSize: 15.0,
-                    ),
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
-                  ),
+    return NamidaInkWell(
+      animationDurationMS: 200,
+      alignment: Alignment.center,
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: enabled ? CurrentColor.inst.color : context.theme.cardColor,
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: CurrentColor.inst.color.withAlpha(100),
+                  spreadRadius: 0.2,
+                  blurRadius: 8.0,
+                  offset: const Offset(0.0, 4.0),
                 ),
-            ],
+              ]
+            : null,
+      ),
+      margin: margin,
+      padding: padding,
+      onTap: onTap,
+      borderRadius: 8.0,
+      child: Row(
+        mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: enabled ? Colors.white.withAlpha(200) : null,
+            size: iconSize,
           ),
-        ),
+          if (title != '') const SizedBox(width: 12.0),
+          if (title != '')
+            Expanded(
+              child: Text(
+                title,
+                style: context.textTheme.displayMedium?.copyWith(
+                  color: enabled ? Colors.white.withAlpha(200) : null,
+                  fontSize: 15.0,
+                ),
+                overflow: TextOverflow.fade,
+                softWrap: false,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -2112,62 +2112,89 @@ class SearchPageTitleRow extends StatelessWidget {
 }
 
 class NamidaLogoContainer extends StatelessWidget {
-  const NamidaLogoContainer({super.key});
+  final double? width, height;
+  final double iconSize;
+  final bool displayText;
+  final bool lighterShadow;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? afterTap;
+
+  const NamidaLogoContainer({
+    super.key,
+    this.height = 54.0,
+    this.width,
+    this.iconSize = 40.0,
+    this.displayText = true,
+    this.lighterShadow = false,
+    this.padding,
+    this.margin,
+    this.afterTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final bgColor = context.isDarkMode ? const Color(0xd2262729) : const Color(0xd83c3f46);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
-      child: NamidaInkWell(
-        onTap: () {
-          NamidaNavigator.inst.toggleDrawer();
-          if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
-            const AboutPage().navigate();
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          alignment: Alignment.center,
-          width: double.infinity,
-          height: 54.0,
-          padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            boxShadow: [
-              BoxShadow(
-                color: bgColor.withAlpha(context.isDarkMode ? 40 : 100),
-                spreadRadius: 0.2,
-                blurRadius: 8.0,
-                offset: const Offset(0.0, 4.0),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Image.asset(
-                'assets/namida_icon_monet.png',
-                width: 40.0,
-                height: 40.0,
-                cacheHeight: 240,
-                cacheWidth: 240,
-              ),
-              const SizedBox(width: 8.0),
-              Expanded(
-                child: Text(
-                  'Namida',
-                  style: context.textTheme.displayLarge?.copyWith(
-                    color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
-                    fontSize: 17.5,
-                  ),
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
+    return NamidaInkWell(
+      onTap: () {
+        if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
+          const AboutPage().navigate();
+        }
+        afterTap?.call();
+      },
+      animationDurationMS: 300,
+      alignment: Alignment.center,
+      height: height,
+      width: width,
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
+      padding: padding ?? const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
+      bgColor: bgColor,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+        boxShadow: [
+          lighterShadow
+              ? BoxShadow(
+                  color: bgColor.withAlpha(context.isDarkMode ? 30 : 80),
+                  spreadRadius: 0.1,
+                  blurRadius: 6.0,
+                  offset: const Offset(0.0, 2.0),
+                )
+              : BoxShadow(
+                  color: bgColor.withAlpha(context.isDarkMode ? 40 : 100),
+                  spreadRadius: 0.2,
+                  blurRadius: 8.0,
+                  offset: const Offset(0.0, 4.0),
                 ),
-              ),
-            ],
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/namida_icon_monet.png',
+            width: iconSize,
+            height: iconSize,
+            cacheHeight: 240,
+            cacheWidth: 240,
+            alignment: Alignment.center,
           ),
-        ),
+          if (displayText) ...[
+            const SizedBox(width: 8.0),
+            Expanded(
+              child: Text(
+                'Namida',
+                style: context.textTheme.displayLarge?.copyWith(
+                  color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
+                  fontSize: 17.5,
+                ),
+                overflow: TextOverflow.fade,
+                softWrap: false,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -2671,9 +2698,10 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
     };
     final (EdgeInsets headerPadding, EdgeInsets footerPadding) = widget.reverse ? (startPadding, endPadding) : (endPadding, startPadding);
 
+    final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
     final displayHeaderAtTop = widget.header != null;
-    final displayInfoBoxAtTop = widget.infoBox != null && !Dimensions.inst.miniplayerIsWideScreen;
-    final displayInfoBoxAtSide = widget.infoBox != null && Dimensions.inst.miniplayerIsWideScreen;
+    final displayInfoBoxAtTop = widget.infoBox != null && !showSubpageInfoAtSide;
+    final displayInfoBoxAtSide = widget.infoBox != null && showSubpageInfoAtSide;
     Widget listW = ClipRect(
       child: CustomScrollView(
         scrollDirection: widget.scrollDirection,
@@ -2968,34 +2996,42 @@ class NamidaInkWell extends StatelessWidget {
   Widget build(BuildContext context) {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
     final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
-    final childFinal = Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        highlightColor: transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
-      ),
-    );
+    final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
     return AnimatedContainer(
       alignment: alignment,
-      height: height,
-      width: width,
       margin: margin,
       duration: Duration(milliseconds: animationDurationMS),
       decoration: BoxDecoration(
-        color: bgColor ?? Colors.transparent,
+        color: bgColor ?? decoration.color ?? Colors.transparent,
         borderRadius: borderR,
+        backgroundBlendMode: decoration.backgroundBlendMode,
+        boxShadow: decoration.boxShadow,
+        gradient: decoration.gradient,
+        shape: decoration.shape,
+        image: decoration.image,
       ),
       foregroundDecoration: BoxDecoration(
         border: decoration.border,
         borderRadius: borderR,
       ),
       clipBehavior: Clip.antiAlias,
-      child: childFinal,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          hoverColor: highlightColor,
+          highlightColor: highlightColor,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: SizedBox(
+            height: height,
+            width: width,
+            child: Padding(
+              padding: padding,
+              child: child,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -3095,7 +3131,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
     required this.considerInfoBoxPadding,
   });
 
-  double get topPadding => considerInfoBoxPadding && !Dimensions.inst.miniplayerIsWideScreen ? 64.0 : 0.0;
+  double get topPadding => considerInfoBoxPadding && !Dimensions.inst.showSubpageInfoAtSide ? 64.0 : 0.0;
 
   DateTime? getCurrentDateFromScrollPosition() {
     final currentScrolledDay = getCurrentDayFromScrollPosition();

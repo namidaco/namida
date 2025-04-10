@@ -4,6 +4,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaInnerDrawer extends StatefulWidget {
@@ -33,6 +34,8 @@ class NamidaInnerDrawer extends StatefulWidget {
 }
 
 class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerProviderStateMixin {
+  Animation<double> get animationView => controller.view;
+  double get drawerPercentage => (controller.value / _upperBoundRx.value).clamp(0.0, 1.0);
   bool get isOpened => _isOpened;
   void toggle() => isOpened ? _closeDrawer() : _openDrawer();
   void open() => _openDrawer();
@@ -52,6 +55,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
       upperBound: 2.0,
       duration: Duration.zero,
     );
+    controller.addStatusListener(_statusListener);
     _upperBoundRx.value = widget.maxPercentage;
     super.initState();
   }
@@ -78,6 +82,14 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   void _recalculateDistanceTraveled() {
     _distanceTraveled = controller.value * context.width;
+  }
+
+  void _statusListener(AnimationStatus status) {
+    final isMoving = switch (status) {
+      AnimationStatus.forward || AnimationStatus.reverse => true,
+      AnimationStatus.completed || AnimationStatus.dismissed => true,
+    };
+    ArtworkWidget.isMovingDrawer = isMoving;
   }
 
   void _openDrawer() {
@@ -197,6 +209,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 onDown: (details) {
                   controller.stop();
                   _recalculateDistanceTraveled();
+                  ArtworkWidget.isMovingDrawer = true;
                 },
                 onUpdate: (details) {
                   double toAdd = details.delta.dx;

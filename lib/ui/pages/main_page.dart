@@ -21,13 +21,17 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
+import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/settings_search_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/customization_settings.dart';
+import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 
@@ -43,6 +47,7 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
     final main = RepaintBoundary(
       child: WillPopScope(
         onWillPop: () async {
@@ -63,7 +68,7 @@ class MainPage extends StatelessWidget {
     );
 
     final fabChild = _MainPageFABButton();
-    final mainChild = Scaffold(
+    Widget mainChild = Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize: const Size(0, kToolbarHeight),
@@ -73,6 +78,7 @@ class MainPage extends StatelessWidget {
         ),
       ),
       body: SafeArea(
+        left: !showNavigationAtSide,
         bottom: false,
         child: DefaultTextStyle(
           style: const TextStyle(
@@ -178,7 +184,16 @@ class MainPage extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: isMiniplayerAlwaysVisible ? null : _CustomNavBar(animation: animation),
+      bottomNavigationBar: showNavigationAtSide ? null : _CustomNavBar(animation: animation),
+    );
+
+    mainChild = Row(
+      children: [
+        if (showNavigationAtSide) const _CustomRailBar(),
+        Expanded(
+          child: mainChild,
+        ),
+      ],
     );
 
     return ObxO(
@@ -573,6 +588,7 @@ class _CustomAppBar extends StatelessWidget {
         );
       },
     );
+    final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
       child: Material(
@@ -581,6 +597,7 @@ class _CustomAppBar extends StatelessWidget {
         color: backgroundColor,
         surfaceTintColor: surfaceTintColor,
         child: SafeArea(
+          left: !showNavigationAtSide,
           bottom: false,
           child: isMiniplayerAlwaysVisible
               ? SizedBox(
@@ -675,6 +692,225 @@ class _CustomNavBar extends StatelessWidget {
                   child: bottomNavBar,
                 );
               }),
+    );
+  }
+}
+
+class _CustomRailBar extends StatefulWidget {
+  const _CustomRailBar();
+
+  @override
+  State<_CustomRailBar> createState() => __CustomRailBarState();
+}
+
+class __CustomRailBarState extends State<_CustomRailBar> {
+  @override
+  Widget build(BuildContext context) {
+    final maxHeight = context.height;
+
+    const hMargin = 4.0;
+    const itemWidth = 42.0;
+    const iconSize = itemWidth * 0.6;
+    const iconPadding = itemWidth * 0.2;
+    const maxWidth = itemWidth + hMargin * 2;
+
+    const bottomActionSizeMultiplier = 0.75;
+    const itemWidthBottomAction = itemWidth * bottomActionSizeMultiplier;
+    const iconSizeBottomAction = iconSize * bottomActionSizeMultiplier;
+    const iconPaddingBottomAction = iconPadding * bottomActionSizeMultiplier;
+
+    final bgColor = Color.alphaBlend(
+      (context.theme.navigationRailTheme.backgroundColor ?? context.theme.colorScheme.surface).withValues(alpha: .5),
+      context.theme.colorScheme.surfaceContainer,
+    );
+    Widget child = Material(
+      color: bgColor,
+      child: SafeArea(
+        child: SizedBox(
+          width: maxWidth,
+          height: maxHeight,
+          child: ObxO(
+            rx: settings.libraryTabs,
+            builder: (context, libraryTabs) => ObxO(
+              rx: settings.extra.selectedLibraryTab,
+              builder: (context, selectedLibraryTab) => Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      alignment: Alignment.topCenter,
+                      fit: BoxFit.fitWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: hMargin),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 6.0),
+                            const NamidaLogoContainer(
+                              displayText: false,
+                              lighterShadow: true,
+                              width: maxWidth - iconPadding,
+                              height: maxWidth - iconPadding,
+                              iconSize: iconSize * 1.5,
+                              margin: EdgeInsets.zero,
+                              padding: EdgeInsets.zero,
+                            ),
+                            const NamidaContainerDivider(
+                              margin: EdgeInsets.only(top: 6.0),
+                              width: itemWidth - 4.0,
+                            ),
+                            ...libraryTabs.map(
+                              (e) {
+                                final isSelected = selectedLibraryTab == e;
+                                return AnimatedDecoration(
+                                  duration: Duration(milliseconds: 400),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
+                                    color: isSelected ? context.theme.colorScheme.secondaryContainer : null,
+                                  ),
+                                  child: NamidaIconButton(
+                                    horizontalPadding: 0,
+                                    verticalPadding: 0,
+                                    padding: EdgeInsets.all(iconPadding),
+                                    icon: e.toIcon(),
+                                    iconSize: iconSize,
+                                    onPressed: () {
+                                      ScrollSearchController.inst.animatePageController(e);
+                                    },
+                                  ),
+                                );
+                              },
+                            ).addSeparators(separator: SizedBox(height: 6.0)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxHeight * 0.4),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: FittedBox(
+                        alignment: Alignment.bottomCenter,
+                        fit: BoxFit.fitWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: hMargin),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(height: 6.0),
+                              ObxO(
+                                rx: settings.themeMode,
+                                builder: (context, themeMode) => IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                  padding: EdgeInsets.all(iconPaddingBottomAction),
+                                  iconSize: iconSizeBottomAction,
+                                  icon: Icon(
+                                    themeMode.toIcon(),
+                                    size: iconSizeBottomAction,
+                                  ),
+                                  onPressed: () {
+                                    final nextMode = themeMode.nextElement(ThemeMode.values);
+                                    ToggleThemeModeContainer.onThemeChangeTap(nextMode);
+                                  },
+                                ),
+                              ),
+                              const NamidaContainerDivider(
+                                margin: EdgeInsets.symmetric(vertical: 4.0),
+                                width: itemWidth - 4.0,
+                              ),
+                              NamidaTooltip(
+                                message: () => lang.SLEEP_TIMER,
+                                child: NamidaDrawerListTile(
+                                  margin: EdgeInsets.zero,
+                                  padding: EdgeInsets.all(iconPaddingBottomAction),
+                                  enabled: false,
+                                  isCentered: true,
+                                  iconSize: iconSizeBottomAction,
+                                  title: '',
+                                  width: itemWidthBottomAction,
+                                  icon: Broken.timer_1,
+                                  onTap: () {
+                                    NamidaDrawer.openSleepTimerDialog(context);
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 6.0),
+                              NamidaTooltip(
+                                message: () => lang.CUSTOMIZATIONS,
+                                child: NamidaDrawerListTile(
+                                  margin: EdgeInsets.zero,
+                                  padding: EdgeInsets.all(iconPaddingBottomAction),
+                                  enabled: false,
+                                  isCentered: true,
+                                  iconSize: iconSizeBottomAction,
+                                  title: '',
+                                  width: itemWidthBottomAction,
+                                  icon: Broken.brush_1,
+                                  onTap: () {
+                                    SettingsSubPage(
+                                      title: lang.CUSTOMIZATIONS,
+                                      child: const CustomizationSettings(),
+                                    ).navigate();
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 6.0),
+                              NamidaTooltip(
+                                message: () => lang.SETTINGS,
+                                child: NamidaDrawerListTile(
+                                  margin: EdgeInsets.zero,
+                                  padding: EdgeInsets.all(iconPaddingBottomAction),
+                                  enabled: false,
+                                  isCentered: true,
+                                  iconSize: iconSizeBottomAction,
+                                  title: '',
+                                  width: itemWidthBottomAction,
+                                  icon: Broken.setting,
+                                  onTap: () {
+                                    const SettingsPage().navigate();
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 6.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final drawerState = NamidaNavigator.inst.innerDrawerKey.currentState;
+    if (drawerState == null) return child;
+
+    double getDrawerPercentage() {
+      final fastValue = ((1 - drawerState.drawerPercentage) * 1.5 - 0.5).clamp(0.0, 1.0);
+      return fastValue;
+    }
+
+    return FadeTransition(
+      opacity: Animation.fromValueListenable(
+        drawerState.animationView,
+        transformer: (_) => getDrawerPercentage(),
+      ),
+      child: AnimatedBuilder(
+        animation: drawerState.animationView,
+        builder: (context, _) {
+          return Align(
+            widthFactor: getDrawerPercentage(),
+            child: child,
+          );
+        },
+      ),
     );
   }
 }

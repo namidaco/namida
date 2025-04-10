@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/route.dart';
@@ -110,50 +108,41 @@ class _MainScreenStackState extends State<MainScreenStack> with TickerProviderSt
     );
 
     // -- do not create MainPage twice as it will cause duplication issues
-    Widget stackWidget = Row(
+    return Stack(
+      alignment: Alignment.bottomCenter,
       children: [
-        // const _NamidaNavigationRail(),
-        Expanded(
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Padding(
-                padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(right: miniplayerMaxWidth),
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeRight: miniplayerIsWideScreen,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      MainPage(
-                        animation: animation,
-                        isMiniplayerAlwaysVisible: miniplayerIsWideScreen,
-                      ),
-                      if (miniplayerIsWideScreen) selectedTracksWidget,
-                    ],
-                  ),
+        Padding(
+          padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(right: miniplayerMaxWidth),
+          child: MediaQuery.removePadding(
+            context: context,
+            removeRight: miniplayerIsWideScreen,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                MainPage(
+                  animation: animation,
+                  isMiniplayerAlwaysVisible: miniplayerIsWideScreen,
                 ),
-              ),
-              Padding(
-                padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableContentWidth(context)),
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeLeft: miniplayerIsWideScreen,
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: MiniPlayerParent(animation: animation),
-                  ),
-                ),
-              ),
-              if (!miniplayerIsWideScreen) selectedTracksWidget,
-            ],
+                if (miniplayerIsWideScreen) selectedTracksWidget,
+              ],
+            ),
           ),
         ),
+        Padding(
+          padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableAppContentWidth),
+          child: MediaQuery.removePadding(
+            context: context,
+            removeLeft: miniplayerIsWideScreen,
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: MiniPlayerParent(animation: animation),
+            ),
+          ),
+        ),
+        if (!miniplayerIsWideScreen) selectedTracksWidget,
       ],
     );
-
-    return stackWidget;
   }
 }
 
@@ -161,6 +150,94 @@ class NamidaDrawer extends StatelessWidget {
   const NamidaDrawer({super.key});
 
   void toggleDrawer() => NamidaNavigator.inst.toggleDrawer();
+
+  static void openSleepTimerDialog(BuildContext context) {
+    final sleepConfig = Player.inst.sleepTimerConfig.value;
+    final minutes = sleepConfig.sleepAfterMin.obs;
+    final tracks = sleepConfig.sleepAfterItems.obs;
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        minutes.close();
+        tracks.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: lang.SLEEP_AFTER,
+        icon: Broken.timer_1,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          ObxO(
+            rx: Player.inst.sleepTimerConfig,
+            builder: (context, currentConfig) {
+              return currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems
+                  ? NamidaButton(
+                      icon: Broken.timer_pause,
+                      text: lang.STOP,
+                      onPressed: () {
+                        Player.inst.resetSleepAfterTimer();
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    )
+                  : NamidaButton(
+                      icon: Broken.timer_start,
+                      text: lang.START,
+                      onPressed: () {
+                        if (minutes.value > 0 || tracks.value > 0) {
+                          Player.inst.updateSleepTimerValues(
+                            enableSleepAfterMins: minutes.value > 0,
+                            enableSleepAfterItems: tracks.value > 0,
+                            sleepAfterMin: minutes.value,
+                            sleepAfterItems: tracks.value,
+                          );
+                        }
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    );
+            },
+          ),
+        ],
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 32.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // minutes
+                Obx(
+                  (context) => NamidaWheelSlider(
+                    max: 180,
+                    initValue: minutes.valueR,
+                    onValueChanged: (val) => minutes.value = val,
+                    text: "${minutes.valueR}m",
+                    topText: lang.MINUTES.capitalizeFirst(),
+                    textPadding: 8.0,
+                  ),
+                ),
+                Text(
+                  lang.OR,
+                  style: context.textTheme.displayMedium,
+                ),
+                // tracks
+                ObxO(
+                  rx: tracks,
+                  builder: (context, trs) => NamidaWheelSlider(
+                    max: kMaximumSleepTimerTracks,
+                    initValue: trs,
+                    onValueChanged: (val) => tracks.value = val,
+                    text: "$trs ${lang.TRACK}",
+                    topText: lang.TRACKS,
+                    textPadding: 8.0,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +248,9 @@ class NamidaDrawer extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  const NamidaLogoContainer(),
+                  NamidaLogoContainer(
+                    afterTap: NamidaNavigator.inst.toggleDrawer,
+                  ),
                   const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                   ...LibraryTab.values.map(
                     (e) => ObxO(
@@ -205,7 +284,7 @@ class NamidaDrawer extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return ToggleThemeModeContainer(
-                    width: constraints.maxWidth - 12.0,
+                    maxWidth: constraints.maxWidth - 12.0,
                     blurRadius: 3.0,
                   );
                 },
@@ -219,91 +298,7 @@ class NamidaDrawer extends StatelessWidget {
               icon: Broken.timer_1,
               onTap: () {
                 toggleDrawer();
-                final sleepConfig = Player.inst.sleepTimerConfig.value;
-                final minutes = sleepConfig.sleepAfterMin.obs;
-                final tracks = sleepConfig.sleepAfterItems.obs;
-                NamidaNavigator.inst.navigateDialog(
-                  onDisposing: () {
-                    minutes.close();
-                    tracks.close();
-                  },
-                  dialog: CustomBlurryDialog(
-                    title: lang.SLEEP_AFTER,
-                    icon: Broken.timer_1,
-                    normalTitleStyle: true,
-                    actions: [
-                      const CancelButton(),
-                      ObxO(
-                        rx: Player.inst.sleepTimerConfig,
-                        builder: (context, currentConfig) {
-                          return currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems
-                              ? NamidaButton(
-                                  icon: Broken.timer_pause,
-                                  text: lang.STOP,
-                                  onPressed: () {
-                                    Player.inst.resetSleepAfterTimer();
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                )
-                              : NamidaButton(
-                                  icon: Broken.timer_start,
-                                  text: lang.START,
-                                  onPressed: () {
-                                    if (minutes.value > 0 || tracks.value > 0) {
-                                      Player.inst.updateSleepTimerValues(
-                                        enableSleepAfterMins: minutes.value > 0,
-                                        enableSleepAfterItems: tracks.value > 0,
-                                        sleepAfterMin: minutes.value,
-                                        sleepAfterItems: tracks.value,
-                                      );
-                                    }
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                );
-                        },
-                      ),
-                    ],
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          height: 32.0,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // minutes
-                            Obx(
-                              (context) => NamidaWheelSlider(
-                                max: 180,
-                                initValue: minutes.valueR,
-                                onValueChanged: (val) => minutes.value = val,
-                                text: "${minutes.valueR}m",
-                                topText: lang.MINUTES.capitalizeFirst(),
-                                textPadding: 8.0,
-                              ),
-                            ),
-                            Text(
-                              lang.OR,
-                              style: context.textTheme.displayMedium,
-                            ),
-                            // tracks
-                            ObxO(
-                              rx: tracks,
-                              builder: (context, trs) => NamidaWheelSlider(
-                                max: kMaximumSleepTimerTracks,
-                                initValue: trs,
-                                onValueChanged: (val) => tracks.value = val,
-                                text: "$trs ${lang.TRACK}",
-                                topText: lang.TRACKS,
-                                textPadding: 8.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                openSleepTimerDialog(context);
               },
             ),
             Row(
