@@ -45,10 +45,10 @@ class ScrollSearchController {
     if (tab == LibraryTab.search) {
       MiniPlayerController.inst.snapToMini();
       MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
-      ScrollSearchController.inst.toggleSearchMenu();
+      final shouldShow = this.toggleSearchMenu();
       await Future.delayed(const Duration(milliseconds: 100));
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: shouldShow);
       });
       return;
     }
@@ -128,11 +128,14 @@ class ScrollSearchController {
     isGlobalSearchMenuShown.value = show;
   }
 
-  void toggleSearchMenu() {
+  // returns wether search menu is now shown or not.
+  bool toggleSearchMenu() {
     if (isGlobalSearchMenuShown.value) {
       hideSearchMenu();
+      return false;
     } else {
       showSearchMenu();
+      return true;
     }
   }
 
