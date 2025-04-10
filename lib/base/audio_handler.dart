@@ -121,6 +121,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else {
       if (_latestVideoOptions != null) await super.setVideo(_latestVideoOptions);
     }
+    if (_willPlayWhenReady) onPlayRaw();
   }
 
   @override
@@ -784,9 +785,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           } catch (_) {}
         }
       }
-
-      if (_willPlayWhenReady) onPlayRaw();
     }
+
+    if (_willPlayWhenReady) onPlayRaw();
   }
 
   Future<void> onItemPlayYoutubeIDSetAudio({
@@ -864,9 +865,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           } catch (_) {}
         }
       }
-
-      if (_willPlayWhenReady) onPlayRaw();
     }
+
+    if (_willPlayWhenReady) onPlayRaw();
   }
 
   _NextSeekCachedFileData? _nextSeekSetAudioCache;
