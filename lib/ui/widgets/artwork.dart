@@ -222,7 +222,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       );
     }
 
-    final realWidthAndHeight = widget.forceSquared ? context.width : null;
+    final realWidthAndHeight = widget.forceSquared ? boxWidth : null;
 
     int? finalCache;
     if (widget.compressed) {

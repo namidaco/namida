@@ -16,7 +16,7 @@ import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:http_cache_stream/http_cache_stream.dart';
-import 'package:jiffy/jiffy.dart' hide Locale;
+import 'package:jiffy/jiffy.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;

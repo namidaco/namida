@@ -659,7 +659,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       displayFallbackIcon: false,
                       compressed: widget.isMinimized,
                       preferLowerRes: false,
-                      fit: BoxFit.fitWidth,
+                      fit: BoxFit.contain, // never change this lil bro
                     );
                   }
                   final track = item is Selectable ? item.track : null;
@@ -673,7 +673,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     borderRadius: 0,
                     blur: 0,
                     compressed: widget.isMinimized,
-                    fit: BoxFit.fitWidth,
+                    fit: BoxFit.contain, // never change this my friend
                   );
                 }),
           );
@@ -704,6 +704,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     final mainButtonSize = 40.0.withMaximum(maxWidth * 0.1);
     final mainButtonPadding = EdgeInsets.all(14.0.withMaximum(maxWidth * 0.035));
+
+    final mainBufferIconSize = mainButtonSize * 1.3; // 40 => 52
 
     final secondaryButtonSize = 30.0.withMaximum(maxWidth * 0.06);
     final secondaryButtonPadding = EdgeInsets.all(10.0.withMaximum(maxWidth * 0.025));
@@ -1699,7 +1701,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   (context) => Player.inst.shouldShowLoadingIndicatorR
                       ? ThreeArchedCircle(
                           color: itemsColor,
-                          size: 52.0,
+                          size: mainBufferIconSize,
                         )
                       : const SizedBox(),
                 ),

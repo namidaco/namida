@@ -1482,6 +1482,7 @@ class NamidaRawLikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      hitTestBehavior: HitTestBehavior.translucent,
       cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
       child: LikeButton(
         size: size,
@@ -1584,6 +1585,7 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
     return NamidaTooltip(
       message: widget.tooltip,
       child: MouseRegion(
+        hitTestBehavior: HitTestBehavior.translucent,
         cursor: widget.onPressed == null && widget.onLongPress == null ? MouseCursor.defer : SystemMouseCursors.click,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
@@ -2458,8 +2460,8 @@ class DefaultPlaylistCard extends StatelessWidget {
             child: Text(
               title.overflow,
               style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              overflow: TextOverflow.fade,
             ),
           ),
           const SizedBox(width: 6.0),
@@ -4617,7 +4619,7 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
         ],
       ),
       child: SizedBox(
-        width: context.width,
+        width: Dimensions.inst.availableAppContentWidth,
         height: height,
         child: Row(
           children: [

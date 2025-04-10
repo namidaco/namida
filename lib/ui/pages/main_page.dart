@@ -622,14 +622,7 @@ class _CustomNavBar extends StatelessWidget {
       data: NavigationBarThemeData(
         backgroundColor: context.theme.navigationBarTheme.backgroundColor,
         indicatorColor: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(20), context.theme.colorScheme.secondaryContainer),
-        labelTextStyle: const WidgetStatePropertyAll(
-          TextStyle(
-            overflow: TextOverflow.ellipsis,
-            fontSize: 13.0,
-          ),
-        ),
       ),
-      // TODO
       child: ObxO(
         rx: settings.libraryTabs,
         builder: (context, libraryTabs) => ObxO(
@@ -641,19 +634,26 @@ class _CustomNavBar extends StatelessWidget {
               elevation: 22,
               labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
               height: 64.0,
+              selectedIndex: selectedIndex,
               onDestinationSelected: (destinationIndex) {
                 final tab = libraryTabs[destinationIndex];
                 ScrollSearchController.inst.animatePageController(tab);
               },
-              selectedIndex: selectedIndex,
               destinations: [
                 ...libraryTabs.mapIndexed(
-                  (e, i) => NavigationDestination(
-                    icon: Icon(
-                      e.toIcon(),
-                      color: selectedIndex == i ? AppThemes.selectedNavigationIconColor : null,
+                  (e, i) => DefaultTextStyle(
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
+                    style: const TextStyle(
+                      fontSize: 13.0,
                     ),
-                    label: libraryTabs.length >= 7 ? '' : e.toText(),
+                    child: NavigationDestination(
+                      icon: Icon(
+                        e.toIcon(),
+                        color: selectedIndex == i ? AppThemes.selectedNavigationIconColor : null,
+                      ),
+                      label: libraryTabs.length >= 7 ? '' : e.toText(),
+                    ),
                   ),
                 ),
               ],

@@ -358,28 +358,37 @@ class AdvancedSettings extends SettingSubpageProvider {
                 DateTime? oldestDate;
                 DateTime? newestDate;
 
+                final isRemovingRx = false.obs;
+
                 NamidaNavigator.inst.navigateDialog(
                   onDisposing: () {
                     sourcesToDelete.close();
                     sourcesMap.close();
                     totalTracksToBeRemoved.close();
                     totalTracksBetweenDates.close();
+                    isRemovingRx.close();
                   },
                   dialog: CustomBlurryDialog(
                     title: lang.CHOOSE,
                     actions: [
                       const CancelButton(),
-                      NamidaButton(
-                        text: lang.REMOVE,
-                        onPressed: () async {
-                          final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
-                            sourcesToDelete.value,
-                            oldestDate: oldestDate,
-                            newestDate: newestDate,
-                          );
-                          NamidaNavigator.inst.closeDialog();
-                          snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
-                        },
+                      ObxO(
+                        rx: isRemovingRx,
+                        builder: (context, isRemoving) => NamidaButton(
+                          enabled: !isRemoving,
+                          text: lang.REMOVE,
+                          onPressed: () async {
+                            isRemovingRx.value = true;
+                            final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
+                              sourcesToDelete.value,
+                              oldestDate: oldestDate,
+                              newestDate: newestDate,
+                            );
+                            isRemovingRx.value = false;
+                            NamidaNavigator.inst.closeDialog();
+                            snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
+                          },
+                        ),
                       )
                     ],
                     child: Obx(

@@ -14,6 +14,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -70,7 +71,9 @@ class ThemeSetting extends SettingSubpageProvider {
         bgColor: getBgColor(_ThemeSettingsKeys.themeMode),
         icon: Broken.brush_4,
         title: lang.THEME_MODE,
-        trailingRaw: const ToggleThemeModeContainer(),
+        trailingRaw: ToggleThemeModeContainer(
+          maxWidth: Dimensions.inst.availableAppContentWidth / 3.3,
+        ),
       ),
     );
   }
@@ -386,11 +389,11 @@ class ThemeSetting extends SettingSubpageProvider {
 }
 
 class ToggleThemeModeContainer extends StatelessWidget {
-  final double? width;
+  final double maxWidth;
   final double blurRadius;
-  const ToggleThemeModeContainer({super.key, this.width, this.blurRadius = 6.0});
+  const ToggleThemeModeContainer({super.key, required this.maxWidth, this.blurRadius = 6.0});
 
-  void onThemeChangeTap(ThemeMode themeMode) async {
+  static void onThemeChangeTap(ThemeMode themeMode) async {
     settings.save(themeMode: themeMode);
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
     CurrentColor.inst.updateColorAfterThemeModeChange();
@@ -398,7 +401,6 @@ class ToggleThemeModeContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double containerWidth = width ?? context.width / 2.8;
     return Obx(
       (context) {
         final currentTheme = settings.themeMode.valueR;
@@ -410,7 +412,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
               BoxShadow(color: context.theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
             ],
           ),
-          width: containerWidth,
+          width: maxWidth,
           padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
           child: Stack(
             children: [
@@ -423,7 +425,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                   child: Container(
-                    width: containerWidth / 3.3,
+                    width: maxWidth / 3.3,
                     decoration: BoxDecoration(
                       color: context.theme.colorScheme.surface.withAlpha(180),
                       borderRadius: BorderRadius.circular(8.0.multipliedRadius),

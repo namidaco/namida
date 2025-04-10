@@ -45,6 +45,11 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   void _videoControllerListener({int? width, int? height}) {
+    if (_videoOptions == null) {
+      _videoInfoStreamController.add(VideoInfoData.dummy());
+      return;
+    }
+
     final data = _videoController.notifier.value;
 
     int? textureId = _videoController.id.value ?? data?.id.value;
@@ -52,8 +57,9 @@ class CustomMPVPlayer implements AVPlayer {
     width ??= _dimensionResolver(_videoController.rect.value?.width, data?.rect.value?.width);
     height ??= _dimensionResolver(_videoController.rect.value?.height, data?.rect.value?.height);
 
-    if (width == null && height != null || // both should be there, otherwise the player will start tweaking
-        width != null && height == null) {
+    if (!(width != null && width > 0 && height != null && height > 0)) {
+      // both should be there, otherwise the player will start tweaking
+
       height = null;
       width = null;
       textureId = null; // we aint ready fr
