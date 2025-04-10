@@ -276,8 +276,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                         ? null
                         : ChangeGridCountWidget(
                             currentCount: settings.playlistGridCount.valueR,
-                            onTap: () {
-                              final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, widget.countPerRow);
+                            onTap: (count) {
+                              final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, count);
                               settings.save(playlistGridCount: newCount);
                             },
                           ),

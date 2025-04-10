@@ -52,8 +52,8 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                   enableHero: enableHero,
                   gridWidget: ChangeGridCountWidget(
                     currentCount: settings.genreGridCount.valueR,
-                    onTap: () {
-                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, countPerRow, minimum: 2);
+                    onTap: (count) {
+                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, count, minimum: 2);
                       settings.save(genreGridCount: newCount);
                     },
                   ),

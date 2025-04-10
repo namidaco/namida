@@ -58,8 +58,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     gridWidget: ChangeGridCountWidget(
                       currentCount: countPerRow,
                       forStaggered: settings.useAlbumStaggeredGridView.valueR,
-                      onTap: () {
-                        final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, countPerRow, animateTiles: false);
+                      onTap: (count) {
+                        final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, count, animateTiles: false);
                         settings.save(albumGridCount: newCount);
                       },
                     ),

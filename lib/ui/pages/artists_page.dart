@@ -105,8 +105,8 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       enableHero: enableHero,
                       gridWidget: ChangeGridCountWidget(
                         currentCount: settings.artistGridCount.valueR,
-                        onTap: () {
-                          final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, countPerRow);
+                        onTap: (count) {
+                          final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, count);
                           settings.save(artistGridCount: newCount);
                         },
                       ),

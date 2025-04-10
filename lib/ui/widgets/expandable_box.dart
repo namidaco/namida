@@ -236,10 +236,23 @@ class SortByMenu extends StatelessWidget {
 }
 
 class ChangeGridCountWidget extends StatelessWidget {
-  final void Function()? onTap;
+  final void Function(CountPerRow countPerRow) onTap;
   final CountPerRow currentCount;
   final bool forStaggered;
-  const ChangeGridCountWidget({super.key, this.onTap, required this.currentCount, this.forStaggered = false});
+  const ChangeGridCountWidget({
+    super.key,
+    required this.onTap,
+    required this.currentCount,
+    this.forStaggered = false,
+  });
+
+  IconData _resolveIcon(int count) => switch (count) {
+        1 => Broken.row_vertical,
+        2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
+        3 => Broken.grid_8,
+        4 => Broken.grid_1,
+        _ => Broken.grid_1,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -248,19 +261,24 @@ class ChangeGridCountWidget extends StatelessWidget {
     final count = currentCount.resolve();
     final text = "$count";
     // final text = count == currentCount.rawValue ? "$count" : "${count}x";
-    return NamidaInkWell(
-      transparentHighlight: true,
-      onTap: onTap,
-      child: StackedIcon(
-        baseIcon: switch (count) {
-          1 => Broken.row_vertical,
-          2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
-          3 => Broken.grid_8,
-          4 => Broken.grid_1,
-          _ => Broken.grid_1,
-        },
-        secondaryText: text,
-        iconSize: 22.0,
+    return NamidaPopupWrapper(
+      childrenDefault: () => CountPerRow.getAvailableOptions()
+          .map(
+            (e) => NamidaPopupItem(
+              icon: _resolveIcon(e.rawValue),
+              title: '${e.rawValue}',
+              onTap: () => onTap(e),
+            ),
+          )
+          .toList(),
+      child: NamidaInkWell(
+        transparentHighlight: true,
+        onTap: () => onTap(currentCount.getNext()),
+        child: StackedIcon(
+          baseIcon: _resolveIcon(count),
+          secondaryText: text,
+          iconSize: 22.0,
+        ),
       ),
     );
   }
