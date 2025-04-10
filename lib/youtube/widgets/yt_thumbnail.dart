@@ -56,6 +56,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool forceSquared;
   final bool? fetchMissingIfRequired;
   final BoxFit fit;
+  final int fadeMilliSeconds;
 
   const YoutubeThumbnail({
     required super.key,
@@ -84,6 +85,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.forceSquared = true,
     this.fetchMissingIfRequired,
     this.fit = BoxFit.cover,
+    this.fadeMilliSeconds = 200,
   });
 
   @override
@@ -218,7 +220,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         compressed: widget.compressed,
         blur: widget.isCircle ? 0.0 : widget.blur,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
-        fadeMilliSeconds: 200,
+        fadeMilliSeconds: widget.fadeMilliSeconds,
         path: imagePath,
         height: widget.height,
         width: widget.width,

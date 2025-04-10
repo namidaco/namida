@@ -46,7 +46,6 @@ class NamidaDialogs {
       playlistName: playlistName,
       index: index,
       comingFromQueue: comingFromQueue,
-      useTrackTileCacheHeight: true,
       isFromPlayerQueue: isFromPlayerQueue,
       errorPlayingTrack: errorPlayingTrack,
       additionalHero: additionalHero,

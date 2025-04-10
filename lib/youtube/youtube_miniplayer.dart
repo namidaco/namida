@@ -1325,6 +1325,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           ? null
                                                           : () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
                                                       swipeUpToFullscreen: true,
+                                                      isMinimized: percentage == 0,
                                                     ),
                                                   ),
                                                   if (reverseOpacity > 0) ...[

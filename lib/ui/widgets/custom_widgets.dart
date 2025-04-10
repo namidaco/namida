@@ -3233,13 +3233,46 @@ class NamidaHero extends StatelessWidget {
   final Object tag;
   final Widget child;
   final bool enabled;
-  const NamidaHero({super.key, required this.tag, required this.child, this.enabled = true});
+
+  const NamidaHero({
+    super.key,
+    required this.tag,
+    required this.child,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return enabled
         ? Hero(
             tag: tag,
+            flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
+              return AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  final fromHeroWidget = fromHeroContext.widget as Hero;
+                  final toHeroWidget = toHeroContext.widget as Hero;
+                  final (Hero hero1, Hero hero2) = switch (flightDirection) {
+                    HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
+                    HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
+                  };
+                  // fade is necessary since childs are not always exactly the same
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      FadeTransition(
+                        opacity: ReverseAnimation(animation),
+                        child: hero1.child,
+                      ),
+                      FadeTransition(
+                        opacity: animation,
+                        child: hero2.child,
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
             child: child,
           )
         : child;

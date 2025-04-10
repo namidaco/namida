@@ -53,6 +53,7 @@ class NamidaVideoControls extends StatefulWidget {
   final VoidCallback? onMinimizeTap;
   final bool isFullScreen;
   final bool isLocal;
+  final bool isMinimized;
 
   const NamidaVideoControls({
     super.key,
@@ -61,6 +62,7 @@ class NamidaVideoControls extends StatefulWidget {
     required this.onMinimizeTap,
     required this.isFullScreen,
     required this.isLocal,
+    required this.isMinimized,
   });
 
   @override
@@ -655,7 +657,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       blur: 0,
                       videoId: vidId,
                       displayFallbackIcon: false,
-                      compressed: false,
+                      compressed: widget.isMinimized,
                       preferLowerRes: false,
                       fit: BoxFit.fitWidth,
                     );
@@ -670,7 +672,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     height: fallbackHeight,
                     borderRadius: 0,
                     blur: 0,
-                    compressed: false,
+                    compressed: widget.isMinimized,
                     fit: BoxFit.fitWidth,
                   );
                 }),

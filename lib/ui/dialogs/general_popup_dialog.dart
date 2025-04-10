@@ -61,7 +61,6 @@ Future<void> showGeneralPopupDialog(
   bool? forceSingleArtwork,
   bool extractColor = true,
   bool comingFromQueue = false,
-  bool useTrackTileCacheHeight = false,
   bool isCircle = false,
   bool isFromPlayerQueue = false,
   Exception? errorPlayingTrack,
@@ -811,17 +810,18 @@ Future<void> showGeneralPopupDialog(
                                 tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
                                 child: ArtworkWidget(
                                   key: Key(tracks.pathToImage),
+                                  fadeMilliSeconds: 0,
                                   track: tracks.trackOfImage,
                                   path: tracks.pathToImage,
                                   thumbnailSize: 60,
                                   forceSquared: forceSquared,
                                   borderRadius: isCircle ? 200 : 8.0,
-                                  useTrackTileCacheHeight: useTrackTileCacheHeight,
                                 ),
                               )
                             else
                               MultiArtworkContainer(
                                 heroTag: heroTag ?? 'edittags_artwork',
+                                fadeMilliSeconds: 0,
                                 size: 60,
                                 tracks: tracks.toImageTracks(),
                                 fallbackToFolderCover: false,

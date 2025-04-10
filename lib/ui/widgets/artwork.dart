@@ -35,7 +35,6 @@ class ArtworkWidget extends StatefulWidget {
   final double? iconSize;
   final double borderRadius;
   final double blur;
-  final bool useTrackTileCacheHeight;
   final bool forceDummyArtwork;
   final Color? bgcolor;
   final Widget? child;
@@ -55,7 +54,7 @@ class ArtworkWidget extends StatefulWidget {
     this.bytes,
     this.track,
     this.compressed = true,
-    this.fadeMilliSeconds = 300,
+    this.fadeMilliSeconds = kDefaultFadeMilliSeconds,
     required this.thumbnailSize,
     this.forceSquared = false,
     this.child,
@@ -64,7 +63,6 @@ class ArtworkWidget extends StatefulWidget {
     this.width,
     this.height,
     this.cacheHeight,
-    this.useTrackTileCacheHeight = false,
     this.forceDummyArtwork = false,
     this.bgcolor,
     this.iconSize,
@@ -80,6 +78,8 @@ class ArtworkWidget extends StatefulWidget {
     this.fit,
   });
 
+  static const kDefaultFadeMilliSeconds = 300;
+
   /// Prevents re-fade in due to change of cache height caused by window resize.
   static bool isResizingAppWindow = false;
 
@@ -93,6 +93,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   late bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
   bool _triedDeleting = false;
+
+  num get _getThumbnailEffectiveCacheHeight => widget.cacheHeight ?? widget.height ?? widget.width ?? widget.thumbnailSize;
 
   @override
   void initState() {
@@ -126,7 +128,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               trackPath: widget.track?.path,
               compressed: false,
               checkFileFirst: false,
-              size: widget.useTrackTileCacheHeight ? 240 : null,
+              size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
             )
             .then((value) => value.$1?.path);
         if (mounted) {
@@ -144,7 +146,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               trackPath: widget.track?.path,
               compressed: widget.compressed,
               checkFileFirst: false,
-              size: widget.useTrackTileCacheHeight ? 240 : null,
+              size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
             )
             .then((value) => value.$2);
         if (mounted) {
@@ -223,19 +225,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final realWidthAndHeight = widget.forceSquared ? context.width : null;
 
     int? finalCache;
-    if (widget.compressed || widget.useTrackTileCacheHeight) {
+    if (widget.compressed) {
       final pixelRatio = context.pixelRatio;
       final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
       final extraMultiplier = (1 + (0.05 / pixelRatio * 15)); // higher for lower pixel ratio, for example 1=>1.75, 3=>1.25
-      if (widget.useTrackTileCacheHeight) {
-        // -- consistent cache height for tracks, for hero effect across pages/dialogs.
-        final refined = (settings.trackThumbnailSizeinList.value * cacheMultiplier) * extraMultiplier * 0.8;
-        finalCache = refined.round();
-      } else {
-        final usedHeight = widget.cacheHeight ?? widget.height ?? widget.thumbnailSize;
-        final refined = usedHeight * cacheMultiplier * extraMultiplier;
-        finalCache = refined.round();
-      }
+      final usedHeight = _getThumbnailEffectiveCacheHeight;
+      final refined = usedHeight * cacheMultiplier * extraMultiplier;
+      finalCache = refined.round();
     }
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
@@ -380,7 +376,7 @@ class MultiArtworks extends StatelessWidget {
   final bool fallbackToFolderCover;
   final bool reduceQuality;
   final File? artworkFile;
-  final bool useTrackTileCacheHeightIfSingle;
+  final int fadeMilliSeconds;
 
   const MultiArtworks({
     super.key,
@@ -394,7 +390,7 @@ class MultiArtworks extends StatelessWidget {
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
     required this.artworkFile,
-    this.useTrackTileCacheHeightIfSingle = false,
+    this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
   });
 
   @override
@@ -413,6 +409,7 @@ class MultiArtworks extends StatelessWidget {
           child: artworkFile != null && artworkFile.existsSync()
               ? ArtworkWidget(
                   key: ValueKey(artworkFile.path),
+                  fadeMilliSeconds: fadeMilliSeconds,
                   thumbnailSize: thumbnailSize,
                   path: artworkFile.path,
                   forceSquared: true,
@@ -423,11 +420,11 @@ class MultiArtworks extends StatelessWidget {
                   width: thumbnailSize,
                   height: thumbnailSize,
                   fallbackToFolderCover: fallbackToFolderCover,
-                  useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                 )
               : tracks.isEmpty
                   ? ArtworkWidget(
                       key: const Key(''),
+                      fadeMilliSeconds: fadeMilliSeconds,
                       track: null,
                       thumbnailSize: thumbnailSize,
                       path: null,
@@ -440,13 +437,13 @@ class MultiArtworks extends StatelessWidget {
                       width: thumbnailSize,
                       height: thumbnailSize,
                       fallbackToFolderCover: fallbackToFolderCover,
-                      useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                     )
                   : LayoutBuilder(
                       builder: (context, c) {
                         return tracks.length == 1
                             ? ArtworkWidget(
                                 key: Key(tracks[0].pathToImage),
+                                fadeMilliSeconds: fadeMilliSeconds,
                                 thumbnailSize: thumbnailSize,
                                 track: tracks[0],
                                 path: tracks[0].pathToImage,
@@ -457,13 +454,13 @@ class MultiArtworks extends StatelessWidget {
                                 width: c.maxWidth,
                                 height: c.maxHeight,
                                 fallbackToFolderCover: fallbackToFolderCover,
-                                useTrackTileCacheHeight: useTrackTileCacheHeightIfSingle,
                               )
                             : tracks.length == 2
                                 ? Row(
                                     children: [
                                       ArtworkWidget(
                                         key: Key("0_${tracks[0].pathToImage}"),
+                                        fadeMilliSeconds: fadeMilliSeconds,
                                         thumbnailSize: thumbnailSize / 2,
                                         track: tracks[0],
                                         path: tracks[0].pathToImage,
@@ -478,6 +475,7 @@ class MultiArtworks extends StatelessWidget {
                                       ),
                                       ArtworkWidget(
                                         key: Key("1_${tracks[1].pathToImage}"),
+                                        fadeMilliSeconds: fadeMilliSeconds,
                                         thumbnailSize: thumbnailSize / 2,
                                         track: tracks[1],
                                         path: tracks[1].pathToImage,
@@ -499,6 +497,7 @@ class MultiArtworks extends StatelessWidget {
                                             children: [
                                               ArtworkWidget(
                                                 key: Key("0_${tracks[0].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[0],
                                                 path: tracks[0].pathToImage,
@@ -513,6 +512,7 @@ class MultiArtworks extends StatelessWidget {
                                               ),
                                               ArtworkWidget(
                                                 key: Key("1_${tracks[1].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[1],
                                                 path: tracks[1].pathToImage,
@@ -529,6 +529,7 @@ class MultiArtworks extends StatelessWidget {
                                           ),
                                           ArtworkWidget(
                                             key: Key("2_${tracks[2].pathToImage}"),
+                                            fadeMilliSeconds: fadeMilliSeconds,
                                             thumbnailSize: thumbnailSize / 2,
                                             track: tracks[2],
                                             path: tracks[2].pathToImage,
@@ -549,6 +550,7 @@ class MultiArtworks extends StatelessWidget {
                                             children: [
                                               ArtworkWidget(
                                                 key: Key("0_${tracks[0].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[0],
                                                 path: tracks[0].pathToImage,
@@ -563,6 +565,7 @@ class MultiArtworks extends StatelessWidget {
                                               ),
                                               ArtworkWidget(
                                                 key: Key("1_${tracks[1].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[1],
                                                 path: tracks[1].pathToImage,
@@ -581,6 +584,7 @@ class MultiArtworks extends StatelessWidget {
                                             children: [
                                               ArtworkWidget(
                                                 key: Key("2_${tracks[2].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[2],
                                                 path: tracks[2].pathToImage,
@@ -595,6 +599,7 @@ class MultiArtworks extends StatelessWidget {
                                               ),
                                               ArtworkWidget(
                                                 key: Key("3_${tracks[3].pathToImage}"),
+                                                fadeMilliSeconds: fadeMilliSeconds,
                                                 thumbnailSize: thumbnailSize / 2,
                                                 track: tracks[3],
                                                 path: tracks[3].pathToImage,

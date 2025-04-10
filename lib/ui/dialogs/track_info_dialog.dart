@@ -132,11 +132,11 @@ Future<void> showTrackInfoDialog(
     tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero',
     child: ArtworkWidget(
       key: Key(track.pathToImage),
+      fadeMilliSeconds: 0,
       track: track,
       path: track.pathToImage,
       thumbnailSize: 120,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
-      useTrackTileCacheHeight: true,
       compressed: false,
     ),
   );

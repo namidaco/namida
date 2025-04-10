@@ -40,6 +40,7 @@ class NamidaVideoWidget extends StatelessWidget {
   final bool zoomInToFullscreen;
   final bool swipeUpToFullscreen;
   final bool isLocal;
+  final bool isMinimized;
 
   const NamidaVideoWidget({
     super.key,
@@ -51,6 +52,7 @@ class NamidaVideoWidget extends StatelessWidget {
     this.zoomInToFullscreen = true,
     this.swipeUpToFullscreen = false,
     required this.isLocal,
+    required this.isMinimized,
   });
 
   Future<void> _verifyAndEnterFullScreen() async {
@@ -113,6 +115,7 @@ class NamidaVideoWidget extends StatelessWidget {
           showControls: showControls,
           disableControlsUnderPercentage: disableControlsUnderPercentage,
           isFullScreen: fullscreen,
+          isMinimized: isMinimized,
         ),
       ),
     );
@@ -149,6 +152,7 @@ class VideoController {
       onMinimizeTap: NamidaNavigator.inst.exitFullScreen,
       showControls: true,
       isFullScreen: true,
+      isMinimized: false,
     );
 
     await NamidaNavigator.inst.toggleFullScreen(

@@ -433,7 +433,6 @@ class TrackTile extends StatelessWidget {
                                     thumbnailSize: properties.thumbnailSize,
                                     path: track.pathToImage,
                                     forceSquared: properties.forceSquaredThumbnails,
-                                    useTrackTileCacheHeight: true,
                                     icon: track is Video ? Broken.video : Broken.musicnote,
                                     iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
                                     onTopWidgets: [

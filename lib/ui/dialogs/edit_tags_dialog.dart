@@ -522,6 +522,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                       Obx(
                                         (context) => ArtworkWidget(
                                           key: Key(currentImagePath.valueR),
+                                          fadeMilliSeconds: 0,
                                           icon: track is Video ? Broken.video : Broken.musicnote,
                                           thumbnailSize: namida.width / 3,
                                           bytes: currentImagePath.valueR != '' ? null : artwork?.bytes,
@@ -1026,11 +1027,13 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                     (context) => currentImagePath.valueR != ''
                                         ? ArtworkWidget(
                                             key: Key(currentImagePath.valueR),
+                                            fadeMilliSeconds: 0,
                                             thumbnailSize: namida.width / 3,
                                             path: currentImagePath.valueR,
                                           )
                                         : MultiArtworkContainer(
                                             heroTag: 'edittags_artwork',
+                                            fadeMilliSeconds: 0,
                                             size: namida.width / 3,
                                             tracks: tracks.valueR.toImageTracks(),
                                             fallbackToFolderCover: false,

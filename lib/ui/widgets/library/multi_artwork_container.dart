@@ -19,7 +19,7 @@ class MultiArtworkContainer extends StatelessWidget {
   final bool reduceQuality;
   final bool enableHero;
   final File? artworkFile;
-  final bool useTrackTileCacheHeightIfSingle;
+  final int fadeMilliSeconds;
 
   const MultiArtworkContainer({
     super.key,
@@ -33,7 +33,7 @@ class MultiArtworkContainer extends StatelessWidget {
     this.reduceQuality = false,
     this.enableHero = true,
     this.artworkFile,
-    this.useTrackTileCacheHeightIfSingle = false,
+    this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
   });
 
   @override
@@ -78,7 +78,7 @@ class MultiArtworkContainer extends StatelessWidget {
                       fallbackToFolderCover: fallbackToFolderCover,
                       reduceQuality: reduceQuality,
                       artworkFile: artworkFile,
-                      useTrackTileCacheHeightIfSingle: useTrackTileCacheHeightIfSingle,
+                      fadeMilliSeconds: fadeMilliSeconds,
                     ),
                   if (child != null) child!,
                   if (onTopWidget != null) onTopWidget!,
