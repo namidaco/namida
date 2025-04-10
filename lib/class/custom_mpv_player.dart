@@ -36,7 +36,8 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerHeightStreamSub;
   StreamSubscription? _playerWidthStreamSub;
 
-  final _videoInfoStreamController = StreamController<VideoInfoData>();
+  final _videoInfoStreamController = StreamController<_VideoDetails>();
+  _VideoDetails? _videoInfo;
 
   int? _dimensionResolver(num? v1, num? v2) {
     if (v1 != null && v1 > 0) return v1.toInt();
@@ -44,9 +45,15 @@ class CustomMPVPlayer implements AVPlayer {
     return null;
   }
 
+  void _updateVideoInfo(_VideoDetails newInfo) {
+    if (_videoInfo == newInfo) return;
+    _videoInfo = newInfo;
+    _videoInfoStreamController.add(newInfo);
+  }
+
   void _videoControllerListener({int? width, int? height}) {
     if (_videoOptions == null) {
-      _videoInfoStreamController.add(VideoInfoData.dummy());
+      _updateVideoInfo(const _VideoDetails.dummy());
       return;
     }
 
@@ -54,8 +61,8 @@ class CustomMPVPlayer implements AVPlayer {
 
     int? textureId = _videoController.id.value ?? data?.id.value;
 
-    width ??= _dimensionResolver(_videoController.rect.value?.width, data?.rect.value?.width);
-    height ??= _dimensionResolver(_videoController.rect.value?.height, data?.rect.value?.height);
+    width ??= _player.state.width ?? _dimensionResolver(_videoController.rect.value?.width, data?.rect.value?.width);
+    height ??= _player.state.height ?? _dimensionResolver(_videoController.rect.value?.height, data?.rect.value?.height);
 
     if (!(width != null && width > 0 && height != null && height > 0)) {
       // both should be there, otherwise the player will start tweaking
@@ -65,27 +72,35 @@ class CustomMPVPlayer implements AVPlayer {
       textureId = null; // we aint ready fr
     }
 
-    _videoInfoStreamController.add(VideoInfoData(
-      id: '',
+    final newInfo = _VideoDetails(
       textureId: textureId ?? -1,
       width: width ?? -1,
       height: height ?? -1,
-      frameRate: -1,
-      bitrate: -1,
-      sampleRate: -1,
-      encoderDelay: -1,
-      rotationDegrees: -1,
-      containerMimeType: '',
-      label: '',
-      language: '',
-    ));
+    );
+
+    _updateVideoInfo(newInfo);
   }
 
   @override
   Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
 
   @override
-  Stream<VideoInfoData> get videoInfoStream => _videoInfoStreamController.stream;
+  Stream<VideoInfoData> get videoInfoStream => _videoInfoStreamController.stream.map(
+        (event) => VideoInfoData(
+          id: '',
+          textureId: event.textureId,
+          width: event.width,
+          height: event.height,
+          frameRate: -1,
+          bitrate: -1,
+          sampleRate: -1,
+          encoderDelay: -1,
+          rotationDegrees: -1,
+          containerMimeType: '',
+          label: '',
+          language: '',
+        ),
+      );
 
   @override
   Stream<Duration> get bufferedPositionStream => _player.stream.buffer;
@@ -176,6 +191,7 @@ class CustomMPVPlayer implements AVPlayer {
     } else {
       _videoOptions = video;
     }
+    _videoControllerListener();
   }
 
   @override
@@ -239,5 +255,29 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Future<void> setSpeed(double speed) {
     return _player.setRate(speed);
+  }
+}
+
+class _VideoDetails {
+  final int width, height;
+  final int textureId;
+
+  const _VideoDetails({
+    required this.width,
+    required this.height,
+    required this.textureId,
+  });
+
+  const _VideoDetails.dummy()
+      : width = -1,
+        height = -1,
+        textureId = -1;
+
+  @override
+  int get hashCode => width ^ height ^ textureId;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _VideoDetails && height == other.height && width == other.width && textureId == other.textureId;
   }
 }
