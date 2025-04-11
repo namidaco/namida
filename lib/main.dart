@@ -23,6 +23,7 @@ import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
@@ -79,9 +80,24 @@ void mainInitialization() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   final configureWindowManager = Platform.isWindows;
+  final configureHotkeys = Platform.isWindows;
 
   if (configureWindowManager) {
     await windowManager.ensureInitialized();
+  }
+
+  if (configureHotkeys) {
+    if (kDebugMode) await hotKeyManager.unregisterAll();
+    final hotKey = HotKey(
+      key: PhysicalKeyboardKey.escape,
+      scope: HotKeyScope.inapp,
+    );
+    await hotKeyManager.register(
+      hotKey,
+      keyDownHandler: (hotKey) {
+        NamidaNavigator.inst.exitFullScreen();
+      },
+    );
   }
 
   await HomeWidgetController.instance?.init();
