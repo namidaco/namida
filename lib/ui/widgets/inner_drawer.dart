@@ -87,7 +87,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
   void _statusListener(AnimationStatus status) {
     final isMoving = switch (status) {
       AnimationStatus.forward || AnimationStatus.reverse => true,
-      AnimationStatus.completed || AnimationStatus.dismissed => true,
+      AnimationStatus.completed || AnimationStatus.dismissed => false,
     };
     ArtworkWidget.isMovingDrawer = isMoving;
   }
@@ -209,7 +209,6 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 onDown: (details) {
                   controller.stop();
                   _recalculateDistanceTraveled();
-                  ArtworkWidget.isMovingDrawer = true;
                 },
                 onUpdate: (details) {
                   double toAdd = details.delta.dx;

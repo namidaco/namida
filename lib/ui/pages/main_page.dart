@@ -773,6 +773,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                     verticalPadding: 0,
                                     padding: EdgeInsets.all(iconPadding),
                                     icon: e.toIcon(),
+                                    iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
                                     iconSize: iconSize,
                                     onPressed: () {
                                       ScrollSearchController.inst.animatePageController(e);
@@ -788,7 +789,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                   ),
                   const SizedBox(height: 12.0),
                   ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: maxHeight * 0.4),
+                    constraints: BoxConstraints(maxHeight: maxHeight * 0.25),
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: FittedBox(

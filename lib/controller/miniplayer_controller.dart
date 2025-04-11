@@ -124,7 +124,7 @@ class MiniPlayerController {
       _deadSpace = 12.0;
     }
     animation.reset();
-    verticalSnapping();
+    if (this.ytMiniplayerKey.currentState == null) verticalSnapping();
   }
 
   static ({double maxWidth, bool isWidescreen}) _getPlayerDetails(BuildContext context, {double? screenWidth, double? screenHeight}) {

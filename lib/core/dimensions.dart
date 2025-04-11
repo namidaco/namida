@@ -173,4 +173,4 @@ const kYoutubeHistoryDayHeaderHeightWithPadding = kYoutubeHistoryDayHeaderHeight
 
 const kYTQueueSheetMinHeight = 60.0;
 
-const kDialogMaxWidth = 528.0;
+const kDialogMaxWidth = 428.0;

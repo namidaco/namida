@@ -25,6 +25,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
 enum _ThemeSettingsKeys {
   themeMode,
@@ -397,6 +398,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
     settings.save(themeMode: themeMode);
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
     CurrentColor.inst.updateColorAfterThemeModeChange();
+    YoutubeMiniplayerUiController.inst.startDimTimer();
   }
 
   @override

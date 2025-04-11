@@ -10,6 +10,7 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -82,6 +83,7 @@ class ExtrasSettings extends SettingSubpageProvider {
             key: _ExtraSettingsKeys.bottomNavBar,
             child: Obx(
               (context) => CustomSwitchListTile(
+                enabled: !Dimensions.inst.showNavigationAtSide,
                 bgColor: getBgColor(_ExtraSettingsKeys.bottomNavBar),
                 icon: Broken.direct,
                 title: lang.ENABLE_BOTTOM_NAV_BAR,
