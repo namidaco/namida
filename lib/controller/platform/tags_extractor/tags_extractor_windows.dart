@@ -77,8 +77,10 @@ class _TagsExtractorWindows extends TagsExtractor {
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   }) async* {
+    final key = DateTime.now().microsecondsSinceEpoch;
     for (int i = 0; i < paths.length; i++) {
       var path = paths[i];
+      currentPathsBeingExtracted[key] = path;
       final isVideo = path.isVideo();
       final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;
       final info = await extractMetadata(
