@@ -28,12 +28,14 @@ class NamidaTaggerController {
 
   Future<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
+    required ExtractingPathKey keyWrapper,
     bool extractArtwork = true,
     bool saveArtworkToCache = true,
     bool overrideArtwork = false,
   }) async {
     return _extractor.extractMetadataAsStream(
       paths: paths,
+      keyWrapper: keyWrapper,
       extractArtwork: extractArtwork,
       audioArtworkDirectory: saveArtworkToCache ? AppDirs.ARTWORKS : null,
       videoArtworkDirectory: saveArtworkToCache ? AppDirs.THUMBNAILS : null,

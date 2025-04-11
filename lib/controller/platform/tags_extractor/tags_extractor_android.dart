@@ -123,12 +123,13 @@ class _TagsExtractorAndroid extends TagsExtractor {
   @override
   Future<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
+    required ExtractingPathKey keyWrapper,
     bool extractArtwork = true,
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   }) async {
-    final streamKey = DateTime.now().microsecondsSinceEpoch;
+    final streamKey = keyWrapper.next();
     StreamSubscription<dynamic>? streamSub;
     StreamSubscription<dynamic>? streamSubIndices;
     final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();

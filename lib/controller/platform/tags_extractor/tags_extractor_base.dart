@@ -31,6 +31,7 @@ abstract class TagsExtractor {
 
   FutureOr<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
+    required ExtractingPathKey keyWrapper,
     bool extractArtwork = true,
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
@@ -107,4 +108,11 @@ abstract class TagsExtractor {
       identifiers: identifiers,
     );
   }
+}
+
+class ExtractingPathKey {
+  int _initial = 0;
+  ExtractingPathKey.create();
+
+  int next() => _initial++;
 }

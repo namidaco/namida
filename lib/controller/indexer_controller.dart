@@ -875,8 +875,10 @@ class Indexer<T extends Track> {
 
     tracksMissing.loop((e) => onProgress(false));
 
+    final keyWrapper = ExtractingPathKey.create();
     final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
       paths: tracksRealPaths,
+      keyWrapper: keyWrapper,
       overrideArtwork: updateArtwork,
     );
     final splitConfigs = _createSplitConfig();
@@ -983,7 +985,11 @@ class Indexer<T extends Track> {
             splittersConfigs: splitConfig,
           );
 
-      final stream = await NamidaTaggerController.inst.extractMetadataAsStream(paths: tracksToExtract);
+      final keyWrapper = ExtractingPathKey.create();
+      final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
+        paths: tracksToExtract,
+        keyWrapper: keyWrapper,
+      );
       await for (final item in stream) {
         final p = item.tags.path;
         final obj = Track.orVideo(p);
@@ -1087,6 +1093,7 @@ class Indexer<T extends Track> {
       final listParts = (Platform.numberOfProcessors ~/ 2.5).withMinimum(1);
       final audioFilesParts = finalAudios.split(listParts);
       final audioFilesCompleters = List.generate(audioFilesParts.length, (_) => Completer<void>());
+      final keyWrapper = ExtractingPathKey.create();
 
       Future<void> extractAll(List<String> chunkList) async {
         if (chunkList.isEmpty) return;
@@ -1112,6 +1119,7 @@ class Indexer<T extends Track> {
 
         final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
           paths: chunkList,
+          keyWrapper: keyWrapper,
           overrideArtwork: false,
         );
 

@@ -72,12 +72,13 @@ class _TagsExtractorWindows extends TagsExtractor {
   @override
   Stream<FAudioModel> extractMetadataAsStream({
     required List<String> paths,
+    required ExtractingPathKey keyWrapper,
     bool extractArtwork = true,
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
   }) async* {
-    final key = DateTime.now().microsecondsSinceEpoch;
+    final key = keyWrapper.next();
     for (int i = 0; i < paths.length; i++) {
       var path = paths[i];
       currentPathsBeingExtracted[key] = path;
@@ -92,6 +93,7 @@ class _TagsExtractorWindows extends TagsExtractor {
       );
       yield info;
     }
+    currentPathsBeingExtracted.remove(key);
   }
 
   @override
