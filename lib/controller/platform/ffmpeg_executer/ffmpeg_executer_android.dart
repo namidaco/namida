@@ -47,12 +47,13 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
 //   _FFmpegAndroidIsolateManager();
 
 //   final _completers = <int, Completer<dynamic>?>{};
+//   final _messageTokenWrapper = IsolateMessageTokenWrapper.create();
 
 //   void dispose() => disposePort();
 
 //   Future<dynamic> executeIsolate(List<String> args, {required bool ffprobe, bool? mediaInfo}) async {
 //     if (!isInitialized) await initialize();
-//     final token = _IsolateMessageToken.create().key;
+//     final token = _messageTokenWrapper.getToken();
 //     _completers[token]?.complete(null); // useless but anyways
 //     final completer = _completers[token] = Completer<dynamic>();
 //     sendPort([token, args, ffprobe, mediaInfo]);

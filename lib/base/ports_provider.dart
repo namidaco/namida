@@ -9,6 +9,13 @@ typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
 
 abstract class _PortsProviderDisposeMessage {}
 
+class IsolateMessageTokenWrapper {
+  int _initial = 0;
+  IsolateMessageTokenWrapper.create();
+
+  int getToken() => _initial++;
+}
+
 class IsolateFunctionReturnBuild<T> {
   final void Function(T message) entryPoint;
   final T message;

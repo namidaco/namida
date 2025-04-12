@@ -46,12 +46,13 @@ class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
   _FFmpegWindowsIsolateManager();
 
   final _completers = <int, Completer<dynamic>?>{};
+  final _messageTokenWrapper = IsolateMessageTokenWrapper.create();
 
   void dispose() => disposePort();
 
   Future<dynamic> executeIsolate(List<String> args, {required bool ffprobe}) async {
     if (!isInitialized) await initialize();
-    final token = _IsolateMessageToken.create().key;
+    final token = _messageTokenWrapper.getToken();
     _completers[token]?.complete(null); // useless but anyways
     final completer = _completers[token] = Completer<dynamic>();
     sendPort([args, ffprobe, token]);

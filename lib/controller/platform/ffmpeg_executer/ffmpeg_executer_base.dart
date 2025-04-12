@@ -13,9 +13,3 @@ abstract class FFMPEGExecuter {
   Future<String?> ffprobeExecute(List<String> args);
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path);
 }
-
-class _IsolateMessageToken {
-  _IsolateMessageToken.create();
-
-  int get key => hashCode;
-}
