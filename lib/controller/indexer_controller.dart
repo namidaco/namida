@@ -387,6 +387,12 @@ class Indexer<T extends Track> {
       }
 
       switch (e) {
+        case MediaType.track:
+          sortPls([tracksInfoList.value], MediaType.track);
+          tracksInfoList.refresh();
+          SearchSortController.inst.searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
+          break;
+
         case MediaType.album:
           sortPls(mainMapAlbums.value.values, MediaType.album);
           mainMapAlbums.refresh();
@@ -426,11 +432,6 @@ class Indexer<T extends Track> {
   /// re-sorts media subtracks that depend on history.
   void sortMediaTracksAndSubListsAfterHistoryPrepared() {
     bool dependsOnHistory(SortType type) => type == SortType.mostPlayed || type == SortType.latestPlayed || type == SortType.firstListen;
-
-    final tracksSort = settings.tracksSort.value;
-    if (dependsOnHistory(tracksSort)) {
-      SearchSortController.inst.sortMedia(MediaType.track);
-    }
 
     final requiredToSort = <MediaType>[];
     for (final e in settings.mediaItemsTrackSorting.entries) {

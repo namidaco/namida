@@ -82,8 +82,6 @@ class _SettingsController with SettingsFileWriter {
   final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//', ' x '].obs;
   final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
-  final tracksSort = SortType.title.obs;
-  final tracksSortReversed = false.obs;
   final tracksSortSearch = SortType.title.obs;
   final tracksSortSearchReversed = false.obs;
   final tracksSortSearchIsAuto = true.obs;
@@ -282,6 +280,7 @@ class _SettingsController with SettingsFileWriter {
   ].obs;
 
   final mediaItemsTrackSorting = <MediaType, List<SortType>>{
+    MediaType.track: [SortType.title, SortType.year, SortType.album],
     MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
     MediaType.artist: [SortType.year, SortType.title],
     MediaType.genre: [SortType.year, SortType.title],
@@ -290,6 +289,7 @@ class _SettingsController with SettingsFileWriter {
   }.obs;
 
   final mediaItemsTrackSortingReverse = <MediaType, bool>{
+    MediaType.track: false,
     MediaType.album: false,
     MediaType.artist: false,
     MediaType.genre: false,
@@ -316,7 +316,6 @@ class _SettingsController with SettingsFileWriter {
     forceSquaredTrackThumbnail.value = false;
     dateTimeFormat.value = '[dd.MM.yyyy]';
     trackArtistsSeparatorsBlacklist.value = <String>['T & Sugah', 'Miles & Miles'];
-    tracksSort.value = SortType.firstListen;
     tracksSortSearch.value = SortType.mostPlayed;
     tracksSortSearchReversed.value = true;
     tracksSortSearchIsAuto.value = false;
@@ -353,6 +352,7 @@ class _SettingsController with SettingsFileWriter {
       TagField.description,
       TagField.lyrics,
     ];
+    mediaItemsTrackSorting.value[MediaType.track] = [SortType.firstListen, SortType.title];
     trackPlayMode.value = TrackPlayMode.selectedTrack;
     onTrackSwipeLeft.value = OnTrackTileSwapActions.playafter;
     downloadFilesKeepCachedVersions.value = false;
@@ -434,8 +434,6 @@ class _SettingsController with SettingsFileWriter {
       if (json['trackGenresSeparators'] is List) trackGenresSeparators.value = (json['trackGenresSeparators'] as List).cast<String>();
       if (json['trackArtistsSeparatorsBlacklist'] is List) trackArtistsSeparatorsBlacklist.value = (json['trackArtistsSeparatorsBlacklist'] as List).cast<String>();
       if (json['trackGenresSeparatorsBlacklist'] is List) trackGenresSeparatorsBlacklist.value = (json['trackGenresSeparatorsBlacklist'] as List).cast<String>();
-      tracksSort.value = SortType.values.getEnum(json['tracksSort']) ?? tracksSort.value;
-      tracksSortReversed.value = json['tracksSortReversed'] ?? tracksSortReversed.value;
       tracksSortSearch.value = SortType.values.getEnum(json['tracksSortSearch']) ?? tracksSortSearch.value;
       tracksSortSearchReversed.value = json['tracksSortSearchReversed'] ?? tracksSortSearchReversed.value;
       tracksSortSearchIsAuto.value = json['tracksSortSearchIsAuto'] ?? tracksSortSearchIsAuto.value;
@@ -576,6 +574,17 @@ class _SettingsController with SettingsFileWriter {
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
 
+      // -- backward compatability
+      if (json['tracksSort'] != null) {
+        final value = SortType.values.getEnum(json['tracksSort']);
+        if (value != null) mediaItemsTrackSorting.value.insertForce(0, MediaType.track, value);
+      }
+      if (json['tracksSortReversed'] != null) {
+        final value = json['tracksSortReversed'] as bool;
+        mediaItemsTrackSortingReverse.value[MediaType.track] = value;
+      }
+      // ------------------
+
       fontScaleLRC = json['fontScaleLRC'] ?? fontScaleLRC;
       fontScaleLRCFull = json['fontScaleLRCFull'] ?? fontScaleLRC; // fallback to normal
 
@@ -637,8 +646,6 @@ class _SettingsController with SettingsFileWriter {
         'trackGenresSeparators': trackGenresSeparators.value,
         'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.value,
         'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.value,
-        'tracksSort': tracksSort.value.name,
-        'tracksSortReversed': tracksSortReversed.value,
         'tracksSortSearch': tracksSortSearch.value.name,
         'tracksSortSearchReversed': tracksSortSearchReversed.value,
         'tracksSortSearchIsAuto': tracksSortSearchIsAuto.value,
@@ -800,8 +807,6 @@ class _SettingsController with SettingsFileWriter {
     List<String>? trackGenresSeparators,
     List<String>? trackArtistsSeparatorsBlacklist,
     List<String>? trackGenresSeparatorsBlacklist,
-    SortType? tracksSort,
-    bool? tracksSortReversed,
     SortType? tracksSortSearch,
     bool? tracksSortSearchReversed,
     bool? tracksSortSearchIsAuto,
@@ -977,8 +982,6 @@ class _SettingsController with SettingsFileWriter {
     if (trackGenresSeparatorsBlacklist != null && !this.trackGenresSeparatorsBlacklist.contains(trackGenresSeparatorsBlacklist[0])) {
       this.trackGenresSeparatorsBlacklist.addAll(trackGenresSeparatorsBlacklist);
     }
-    if (tracksSort != null) this.tracksSort.value = tracksSort;
-    if (tracksSortReversed != null) this.tracksSortReversed.value = tracksSortReversed;
     if (tracksSortSearch != null) this.tracksSortSearch.value = tracksSortSearch;
     if (tracksSortSearchReversed != null) this.tracksSortSearchReversed.value = tracksSortSearchReversed;
     if (tracksSortSearchIsAuto != null) this.tracksSortSearchIsAuto.value = tracksSortSearchIsAuto;
@@ -1212,6 +1215,13 @@ class _SettingsController with SettingsFileWriter {
 
   void updateQueueInsertion(QueueInsertionType type, QueueInsertion qi) {
     queueInsertion[type] = qi;
+    _writeToStorage();
+  }
+
+  void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {
+    if (allsorts == null && isReverse == null) return;
+    if (allsorts != null) mediaItemsTrackSorting[media] = allsorts;
+    if (isReverse != null) mediaItemsTrackSortingReverse[media] = isReverse;
     _writeToStorage();
   }
 

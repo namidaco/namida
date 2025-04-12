@@ -414,9 +414,10 @@ class SearchPage extends StatelessWidget {
                                                         child: Obx(
                                                           (context) {
                                                             final isAuto = settings.tracksSortSearchIsAuto.valueR;
-                                                            final activeType = isAuto ? settings.tracksSort.valueR : settings.tracksSortSearch.valueR;
+                                                            final activeType =
+                                                                isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull : settings.tracksSortSearch.valueR;
                                                             return Text(
-                                                              activeType.toText() + (isAuto ? ' (${lang.AUTO})' : ''),
+                                                              (activeType?.toText() ?? '') + (isAuto ? ' (${lang.AUTO})' : ''),
                                                               style: context.textTheme.displaySmall?.copyWith(
                                                                 color: isAuto ? null : context.theme.colorScheme.secondary,
                                                               ),
@@ -434,7 +435,9 @@ class SearchPage extends StatelessWidget {
                                                       child: Obx(
                                                         (context) {
                                                           final isAuto = settings.tracksSortSearchIsAuto.valueR;
-                                                          final activeReverse = isAuto ? settings.tracksSortReversed.valueR : settings.tracksSortSearchReversed.valueR;
+                                                          final activeReverse = isAuto
+                                                              ? settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true
+                                                              : settings.tracksSortSearchReversed.valueR;
                                                           return Icon(
                                                             activeReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                                             size: 16.0,

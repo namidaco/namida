@@ -228,6 +228,7 @@ class NamidaOnTaps {
 
   void onSubPageTracksSortIconTap(MediaType media) {
     const defaultSorts = <MediaType, List<SortType>>{
+      MediaType.track: [SortType.title, SortType.year, SortType.album],
       MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
       MediaType.artist: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],

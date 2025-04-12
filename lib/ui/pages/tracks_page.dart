@@ -95,11 +95,11 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
                 },
                 sortByMenuWidget: SortByMenu(
-                  title: settings.tracksSort.valueR.toText(),
+                  title: settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '',
                   popupMenuChild: () => const SortByMenuTracks(),
-                  isCurrentlyReversed: settings.tracksSortReversed.valueR,
+                  isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
                   onReverseIconTap: () {
-                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value);
+                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
                   },
                 ),
                 textField: () => CustomTextFiled(

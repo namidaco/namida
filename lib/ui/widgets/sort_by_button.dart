@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -16,9 +17,47 @@ class SortByMenuTracks extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTileWithCheckMark(
-          activeRx: settings.tracksSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !settings.tracksSortReversed.value),
+        NamidaInkWell(
+          borderRadius: 10.0,
+          margin: EdgeInsets.symmetric(horizontal: 6.0),
+          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+          onTap: () {
+            Navigator.of(context).pop();
+            NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: Text(
+                  lang.ADVANCED,
+                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                ),
+              ),
+              Icon(
+                Broken.sort,
+                size: 20.0,
+              ),
+            ],
+          ),
+        ),
+        NamidaContainerDivider(
+          margin: EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          child: ObxO(
+            rx: settings.mediaItemsTrackSortingReverse,
+            builder: (context, mediaItemsTrackSortingReverse) => ListTileWithCheckMark(
+              active: mediaItemsTrackSortingReverse[MediaType.track] == true,
+              onTap: () {
+                SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+              },
+            ),
+          ),
         ),
         ...[
           SortType.title,
@@ -44,11 +83,11 @@ class SortByMenuTracks extends StatelessWidget {
           SortType.shuffle,
         ].map(
           (e) => ObxO(
-            rx: settings.tracksSort,
-            builder: (context, tracksSort) => SmallListTile(
+            rx: settings.mediaItemsTrackSorting,
+            builder: (context, mediaItemsTrackSorting) => SmallListTile(
               title: e.toText(),
-              active: tracksSort == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e),
+              active: mediaItemsTrackSorting[MediaType.track]?.firstOrNull == e,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
             ),
           ),
         ),
@@ -99,7 +138,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4.0),
                               child: ListTileWithCheckMark(
-                                active: isAuto ? settings.tracksSortReversed.valueR : reversed,
+                                active: isAuto ? settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true : reversed,
                                 onTap: () {
                                   SearchSortController.inst.sortTracksSearch(reverse: !reversed);
                                 },
@@ -130,7 +169,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                             ].map(
                               (e) => SmallListTile(
                                 title: e.toText(),
-                                active: (isAuto ? settings.tracksSort.value : tracksSortSearch) == e,
+                                active: (isAuto ? settings.mediaItemsTrackSorting[MediaType.track]?.firstOrNull : tracksSortSearch) == e,
                                 onTap: () {
                                   SearchSortController.inst.sortTracksSearch(sortBy: e);
                                 },
@@ -158,9 +197,12 @@ class SortByMenuAlbums extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTileWithCheckMark(
-          activeRx: settings.albumSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          child: ListTileWithCheckMark(
+            activeRx: settings.albumSortReversed,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
+          ),
         ),
         ...[
           GroupSortType.album,
@@ -196,9 +238,12 @@ class SortByMenuArtists extends StatelessWidget {
     final artistType = settings.activeArtistType.value;
     return Column(
       children: [
-        ListTileWithCheckMark(
-          activeRx: settings.artistSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          child: ListTileWithCheckMark(
+            activeRx: settings.artistSortReversed,
+            onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
+          ),
         ),
         ...[
           artistType == MediaType.albumArtist
@@ -236,9 +281,12 @@ class SortByMenuGenres extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTileWithCheckMark(
-          activeRx: settings.genreSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          child: ListTileWithCheckMark(
+            activeRx: settings.genreSortReversed,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
+          ),
         ),
         ...[
           GroupSortType.genresList,
@@ -273,9 +321,12 @@ class SortByMenuPlaylist extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTileWithCheckMark(
-          activeRx: settings.playlistSortReversed,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          child: ListTileWithCheckMark(
+            activeRx: settings.playlistSortReversed,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
+          ),
         ),
         ...[
           GroupSortType.title,

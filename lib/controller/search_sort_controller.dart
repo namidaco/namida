@@ -89,7 +89,7 @@ class SearchSortController {
     final enabledSearches = settings.activeSearchMediaTypes;
     if (text.isNotEmpty) runningSearchesTempCount.value = runningSearchesTempCount.value + enabledSearches.value.length;
 
-    _searchTracks(text, temp: true);
+    searchTracks(text, temp: true);
 
     final int length = enabledSearches.length;
     for (int i = 0; i < length; i++) {
@@ -107,7 +107,7 @@ class SearchSortController {
   void searchMedia(String text, MediaType? media) {
     switch (media) {
       case MediaType.track:
-        _searchTracks(text);
+        searchTracks(text);
         break;
       case MediaType.album:
         _searchMediaType(type: MediaType.album, text: text);
@@ -324,7 +324,7 @@ class SearchSortController {
     );
   }
 
-  void _searchTracks(String text, {bool temp = false}) async {
+  void searchTracks(String text, {bool temp = false}) async {
     if (text == '') {
       if (temp) {
         trackSearchTemp.clear();
@@ -662,10 +662,10 @@ class SearchSortController {
     _sortPlaylists();
   }
 
-  void sortMedia(MediaType media, {SortType? sortBy, GroupSortType? groupSortBy, bool? reverse}) {
+  void sortMedia(MediaType media, {SortType? sortBy, GroupSortType? groupSortBy, bool? reverse, bool forceSingleSorting = false}) {
     switch (media) {
       case MediaType.track:
-        _sortTracks(sortBy: sortBy, reverse: reverse);
+        _sortTracks(sortBy: sortBy, reverse: reverse, forceSingleSorting: forceSingleSorting);
         break;
       case MediaType.album:
         _sortAlbums(sortBy: groupSortBy, reverse: reverse);
@@ -688,26 +688,49 @@ class SearchSortController {
   }
 
   /// Sorts Tracks and Saves automatically to settings
-  void _sortTracks({SortType? sortBy, bool? reverse}) {
-    _sortTracksRaw(
-      sortBy: sortBy ?? settings.tracksSort.value,
-      reverse: reverse ?? settings.tracksSortReversed.value,
-      list: tracksInfoList.value,
-      onDone: (sortType, isReverse) {
-        settings.save(tracksSort: sortType, tracksSortReversed: isReverse);
-        _searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
-      },
-    );
+  void _sortTracks({SortType? sortBy, bool? reverse, bool forceSingleSorting = false}) {
+    final trackSortsSettings = settings.mediaItemsTrackSorting.value[MediaType.track];
+
+    sortBy ??= trackSortsSettings?.firstOrNull;
+    reverse ??= settings.mediaItemsTrackSortingReverse.value[MediaType.track];
+
+    if (forceSingleSorting) {
+      settings.updateMediaItemsTrackSortingAll(MediaType.track, sortBy == null ? null : [sortBy], reverse);
+
+      _sortTracksRaw(
+        sortBy: sortBy,
+        reverse: reverse ?? false,
+        list: tracksInfoList.value,
+        onDone: (sortType, isReverse) {
+          searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
+        },
+      );
+    } else {
+      settings.updateMediaItemsTrackSortingAll(
+        MediaType.track,
+        sortBy == null
+            ? null
+            : trackSortsSettings == null || trackSortsSettings.isEmpty
+                ? [sortBy]
+                : [
+                    if (!trackSortsSettings.contains(sortBy)) sortBy,
+                    ...trackSortsSettings,
+                  ],
+        reverse,
+      );
+      Indexer.inst.sortMediaTracksSubLists([MediaType.track]);
+    }
   }
 
   void sortTracksSearch({SortType? sortBy, bool? reverse, bool canSkipSorting = false}) {
     final isAuto = settings.tracksSortSearchIsAuto.value;
 
-    sortBy ??= isAuto ? settings.tracksSort.value : settings.tracksSortSearch.value;
-    reverse ??= isAuto ? settings.tracksSortReversed.value : settings.tracksSortSearchReversed.value;
+    sortBy ??= isAuto ? settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull ?? settings.tracksSortSearch.value : settings.tracksSortSearch.value;
+    reverse ??= isAuto ? settings.mediaItemsTrackSortingReverse.value[MediaType.track] ?? settings.tracksSortSearchReversed.value : settings.tracksSortSearchReversed.value;
 
     if (canSkipSorting) {
-      final identicalToMainOne = isAuto ? true : sortBy == settings.tracksSort.value && reverse == settings.tracksSortReversed.value;
+      final identicalToMainOne =
+          isAuto ? true : sortBy == settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull && reverse == settings.mediaItemsTrackSortingReverse.value[MediaType.track];
       if (identicalToMainOne) return; // since the looped list already has the same order
     }
 
@@ -731,13 +754,11 @@ class SearchSortController {
     void sortThis(Comparable Function(Track e) comparable) => reverse ? list.sortByReverse(comparable) : list.sortBy(comparable);
     void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => reverse ? list.sortByReverseAlts(alternatives) : list.sortByAlts(alternatives);
 
-    final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
-    final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
-    final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
     switch (sortBy) {
       case SortType.title:
         sortThis((e) => e.title.toLowerCase());
       case SortType.album:
+        final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
         sortThisAlts(
           [
             (tr) => tr.album.toLowerCase(),
@@ -746,6 +767,7 @@ class SearchSortController {
         );
         break;
       case SortType.albumArtist:
+        final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
         sortThisAlts(
           [
             (tr) => tr.albumArtist.toLowerCase(),
@@ -757,6 +779,7 @@ class SearchSortController {
         sortThis((e) => e.yearPreferyyyyMMdd);
         break;
       case SortType.artistsList:
+        final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
         sortThisAlts(
           [
             (tr) => tr.artistsList.join().toLowerCase(),
@@ -765,6 +788,7 @@ class SearchSortController {
         );
         break;
       case SortType.genresList:
+        final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
         sortThisAlts(
           [
             (tr) => tr.genresList.join().toLowerCase(),
