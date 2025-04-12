@@ -769,6 +769,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                     color: isSelected ? context.theme.colorScheme.secondaryContainer : null,
                                   ),
                                   child: NamidaIconButton(
+                                    tooltip: () => e.toText(),
                                     horizontalPadding: 0,
                                     verticalPadding: 0,
                                     padding: EdgeInsets.all(iconPadding),
