@@ -139,6 +139,8 @@ class CustomMPVPlayer implements AVPlayer {
   double get speed => _player.state.rate;
   @override
   double get pitch => _player.state.pitch;
+  @override
+  bool get playing => _player.state.playing;
 
   @override
   AudioVideoSource? get audioSource => _audioSource;
