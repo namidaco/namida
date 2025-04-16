@@ -39,8 +39,8 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
 
   lateinit var channel: MethodChannel
   lateinit var binaryMessenger: BinaryMessenger
-  val eventChannels = HashMap<Long, BetterEventChannel>()
-  val streamCompleters = HashMap<Long, CompletableFuture<Number>>()
+  val eventChannels = HashMap<Number, BetterEventChannel>()
+  val streamCompleters = HashMap<Number, CompletableFuture<Number>>()
   lateinit var context: Context
 
   companion object {
@@ -116,7 +116,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
         }
       }
       "streamReady" -> {
-        val streamKey = call.argument<Long?>("streamKey") ?: 0
+        val streamKey = call.argument<Number?>("streamKey") ?: 0
         val count = call.argument<Number?>("count") ?: 0
         val completer = streamCompleters.get(streamKey)
         if (completer != null) {
@@ -137,7 +137,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val videoExtensions = videoExtensionsList?.toSet()
           val extractArtwork = call.argument<Boolean?>("extractArtwork") ?: true
           val overrideArtwork = call.argument<Boolean?>("overrideArtwork") ?: false
-          val streamKey = call.argument<Long?>("streamKey") ?: 0
+          val streamKey = call.argument<Number?>("streamKey") ?: 0
           eventChannels.set(
               streamKey,
               BetterEventChannel(binaryMessenger, "faudiotagger/stream/" + streamKey)
