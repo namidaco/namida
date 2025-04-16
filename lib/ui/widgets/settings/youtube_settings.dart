@@ -685,10 +685,6 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
           InnertubeClients.web_creator,
           InnertubeClients.web_music,
           InnertubeClients.web_safari,
-          InnertubeClients.ios_creator,
-          InnertubeClients.ios_music,
-          InnertubeClients.android_creator,
-          InnertubeClients.android_music,
         }.map(
           (e) => NamidaPopupItem(
             icon: Broken.video_octagon,
