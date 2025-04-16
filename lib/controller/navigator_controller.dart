@@ -413,20 +413,23 @@ class NamidaNavigator {
       return;
     }
 
-    if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true && !Dimensions.inst.miniplayerIsWideScreen) {
+    if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
       if (isQueueSheetOpen) {
         ytQueueSheetKey.currentState?.dismissSheet();
         isQueueSheetOpen = false;
+        return;
       } else if (isInYTCommentRepliesSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentRepliesSubpage = false;
+        return;
       } else if (isInYTCommentsSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentsSubpage = false;
-      } else {
+        return;
+      } else if (!Dimensions.inst.miniplayerIsWideScreen) {
         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+        return;
       }
-      return;
     }
 
     final miniplayerAllowPop = MiniPlayerController.inst.onWillPop();
