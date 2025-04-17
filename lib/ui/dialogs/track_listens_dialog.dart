@@ -173,7 +173,7 @@ void showListensDialog({
                           ));
                     } else {
                       return NamidaListView(
-                        padding: EdgeInsets.zero,
+                        listBottomPadding: 0,
                         itemBuilder: (context, indexPre) {
                           final i = datesOfListen.length - indexPre - 1;
                           final t = datesOfListen[i];

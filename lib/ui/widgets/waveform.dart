@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class WaveformComponent extends StatefulWidget {
   final int durationInMilliseconds;
@@ -77,9 +78,8 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
         color: context.theme.colorScheme.onSurface.withAlpha(110),
       ),
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) {
         return ObxO(
             rx: WaveformController.inst.isWaveformUIEnabled,
             builder: (context, enabled) {

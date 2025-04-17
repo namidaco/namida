@@ -79,8 +79,6 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _dragheight = startExpanded ? _maxHeight : widget.minHeight;
 
     WakelockController.inst.updateMiniplayerStatus(startExpanded);
-
-    _ensureCorrectInitializedPadding();
   }
 
   @override
@@ -89,29 +87,30 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     super.dispose();
   }
 
-  void _ensureCorrectInitializedPadding() async {
-    await Future.delayed(Duration.zero);
+  // -- we using context directly. hopefully this doesn't cause war crimes
+  // void _ensureCorrectInitializedPadding() async {
+  //   await Future.delayed(Duration.zero);
 
-    for (int i = 0; i < 10; i++) {
-      if (!mounted) break;
-      // -- context access in build makes it awful for yt miniplayer (since it has MaterialPage),
-      // -- the keyboard keeps showing/hiding
-      // -- so yeah we only check once
-      final padding = MediaQuery.paddingOf(context);
-      if (_padding != padding) {
-        if (padding.bottom > _padding.bottom) {
-          // bottom only bcz.. well..
-          _padding = padding;
-          animateToState(_wasExpanded);
-          break;
-        } else {
-          _padding = padding;
-        }
-      }
+  //   for (int i = 0; i < 10; i++) {
+  //     if (!mounted) break;
+  //     // -- context access in build makes it awful for yt miniplayer (since it has MaterialPage),
+  //     // -- the keyboard keeps showing/hiding
+  //     // -- so yeah we only check once
+  //     final padding = MediaQuery.paddingOf(context);
+  //     if (_padding != padding) {
+  //       if (padding.bottom > _padding.bottom) {
+  //         // bottom only bcz.. well..
+  //         _padding = padding;
+  //         animateToState(_wasExpanded);
+  //         break;
+  //       } else {
+  //         _padding = padding;
+  //       }
+  //     }
 
-      await Future.delayed(Duration(milliseconds: 800));
-    }
-  }
+  //     await Future.delayed(Duration(milliseconds: 800));
+  //   }
+  // }
 
   void _listenerHeightChange() {
     widget.onHeightChange!(percentage);
@@ -235,6 +234,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
+    _padding = MediaQuery.paddingOf(context);
     final maxWidth = context.width;
     return AnimatedBuilder(
         animation: controller,

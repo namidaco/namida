@@ -14,6 +14,7 @@ import 'package:rhttp/rhttp.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -269,36 +270,27 @@ class _AboutPageState extends State<AboutPage> {
                       _loadingChangelog.value = true;
                       final stringy = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
                       _loadingChangelog.value = false;
-                      await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-                      showModalBottomSheet(
+                      NamidaNavigator.inst.showSheet(
                         showDragHandle: true,
-                        useRootNavigator: true,
                         isScrollControlled: true,
-                        // ignore: use_build_context_synchronously
-                        context: context,
-                        builder: (context) {
-                          return SizedBox(
-                            height: context.height * 0.6,
-                            width: context.width,
-                            child: Markdown(
-                              data: stringy.body,
-                              selectable: true,
-                              styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
-                              builders: <String, MarkdownElementBuilder>{
-                                'li': _NamidaMarkdownElementBuilderCommitLink(),
-                                'h1': _NamidaMarkdownElementBuilderHeader(),
-                              },
-                              styleSheet: MarkdownStyleSheet(
-                                a: context.textTheme.displayLarge,
-                                h1: context.textTheme.displayLarge,
-                                h2: context.textTheme.displayMedium,
-                                h3: context.textTheme.displayMedium,
-                                p: context.textTheme.displaySmall,
-                                listBullet: context.textTheme.displayMedium,
-                              ),
-                            ),
-                          );
-                        },
+                        heightPercentage: 0.6,
+                        builder: (context, bottomPadding, maxWidth, maxHeight) => Markdown(
+                          data: stringy.body,
+                          selectable: true,
+                          styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
+                          builders: <String, MarkdownElementBuilder>{
+                            'li': _NamidaMarkdownElementBuilderCommitLink(),
+                            'h1': _NamidaMarkdownElementBuilderHeader(),
+                          },
+                          styleSheet: MarkdownStyleSheet(
+                            a: context.textTheme.displayLarge,
+                            h1: context.textTheme.displayLarge,
+                            h2: context.textTheme.displayMedium,
+                            h3: context.textTheme.displayMedium,
+                            p: context.textTheme.displaySmall,
+                            listBullet: context.textTheme.displayMedium,
+                          ),
+                        ),
                       );
                     },
                   ),

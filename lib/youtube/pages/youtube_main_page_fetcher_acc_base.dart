@@ -401,8 +401,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
               return errorMessage != null
                   ? Padding(
                       padding: pagePadding,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: ListView(
+                        shrinkWrap: true,
                         children: [
                           if (widget.pageHeader != null) widget.pageHeader!,
                           Align(

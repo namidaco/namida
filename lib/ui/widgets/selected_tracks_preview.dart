@@ -118,7 +118,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                         itemExtent: Dimensions.inst.trackTileItemExtent,
                                                         itemCount: selectedTracks.length,
                                                         onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                                        padding: EdgeInsets.zero,
+                                                        listBottomPadding: 0,
                                                         itemBuilder: (context, i) {
                                                           return FadeDismissible(
                                                             key: ValueKey(selectedTracks[i]),

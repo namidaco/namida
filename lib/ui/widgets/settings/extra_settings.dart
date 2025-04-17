@@ -536,7 +536,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           flex: 6,
                           child: NamidaListView(
                             itemExtent: null,
-                            padding: EdgeInsets.zero,
+                            listBottomPadding: 0,
                             itemCount: settings.libraryTabs.length,
                             itemBuilder: (context, i) {
                               final tab = settings.libraryTabs[i];

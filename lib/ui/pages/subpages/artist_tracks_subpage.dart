@@ -85,7 +85,8 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                 ),
               ],
             ),
-            infoBox: SubpageInfoContainer(
+            infoBox: (maxWidth) => SubpageInfoContainer(
+              maxWidth: maxWidth,
               topPadding: 8.0,
               bottomPadding: 8.0,
               title: name,
@@ -95,7 +96,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                 if (tracks.year != 0) tracks.year.yearFormatted,
               ].join(' - '),
               heroTag: 'artist_$name',
-              imageBuilder: (_, size) => NamidaHero(
+              imageBuilder: (size) => NamidaHero(
                 tag: 'artist_$name',
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2.0),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -268,7 +270,13 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
                 final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";
                 return Transform.translate(
-                  offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clamp(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
+                  offset: Offset(
+                      clampDouble(
+                        maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5,
+                        seekTextExtraMargin,
+                        maxWidth - seekTextWidth - seekTextExtraMargin,
+                      ),
+                      -12.0),
                   child: AnimatedBuilder(
                     animation: _animation,
                     child: Container(

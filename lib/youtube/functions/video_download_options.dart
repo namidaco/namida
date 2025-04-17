@@ -64,200 +64,192 @@ Future<void> showVideoDownloadOptionsSheet({
     );
   }
 
-  await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-  await showModalBottomSheet(
-    useRootNavigator: true,
+  await NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
-    // ignore: use_build_context_synchronously
     context: context,
-    builder: (context) {
-      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
-      return SizedBox(
-        height: context.height * 0.65 + bottomPadding,
-        width: context.width,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0).add(EdgeInsets.only(bottom: bottomPadding)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    heightPercentage: 0.65,
+    builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20.0),
+          Row(
             children: [
-              const SizedBox(height: 20.0),
-              Row(
-                children: [
-                  const SizedBox(width: 12.0),
-                  const Icon(Broken.edit),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: Text(
-                      lang.EDIT_TAGS,
-                      style: context.textTheme.displayLarge,
+              const SizedBox(width: 12.0),
+              const Icon(Broken.edit),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  lang.EDIT_TAGS,
+                  style: context.textTheme.displayLarge,
+                ),
+              ),
+              NamidaIconButton(
+                tooltip: () => lang.OUTPUT,
+                icon: Broken.edit_2,
+                onPressed: () {
+                  YTUtils.showFilenameBuilderOutputSheet(
+                    context,
+                    showEditTags: false,
+                    groupName: initialGroupName ?? '',
+                    onChanged: onDownloadFilenameChanged,
+                  );
+                },
+              ),
+              const SizedBox(width: 12.0),
+            ],
+          ),
+          const SizedBox(height: 12.0),
+          if (preWidget != null)
+            preWidget(
+              () => controllersMap[currentActiveField],
+              (text) {
+                if (currentActiveField != null) tagMaps[currentActiveField!] = text;
+              },
+            ),
+          Expanded(
+            child: ListView(
+              children: [
+                if (showSpecificFileOptions) ...[
+                  Obx(
+                    (context) => CustomSwitchListTile(
+                      icon: Broken.tick_circle,
+                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                      title: lang.KEEP_CACHED_VERSIONS,
+                      value: settings.downloadFilesKeepCachedVersions.valueR,
+                      onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
                     ),
                   ),
-                  NamidaIconButton(
-                    tooltip: () => lang.OUTPUT,
-                    icon: Broken.edit_2,
-                    onPressed: () {
-                      YTUtils.showFilenameBuilderOutputSheet(
-                        context,
-                        showEditTags: false,
-                        groupName: initialGroupName ?? '',
-                        onChanged: onDownloadFilenameChanged,
-                      );
-                    },
+                  Obx(
+                    (context) => CustomSwitchListTile(
+                      icon: Broken.document_code,
+                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                      title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                      value: settings.downloadFilesWriteUploadDate.valueR,
+                      onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                    ),
                   ),
-                  const SizedBox(width: 12.0),
+                  Obx(
+                    (context) => CustomSwitchListTile(
+                      icon: Broken.music_library_2,
+                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                      title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                      value: settings.downloadAddAudioToLocalLibrary.valueR,
+                      onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
+                    ),
+                  ),
+                  YTDownloadOptionFolderListTile(
+                    initialFolder: initialGroupName ?? '',
+                    playlistName: initialGroupName ?? '',
+                    onDownloadGroupNameChanged: onDownloadGroupNameChanged,
+                    visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 12.0),
-              if (preWidget != null)
-                preWidget(
-                  () => controllersMap[currentActiveField],
-                  (text) {
-                    if (currentActiveField != null) tagMaps[currentActiveField!] = text;
-                  },
-                ),
-              Expanded(
-                child: ListView(
+                const SizedBox(height: 6.0),
+                if (!supportTagging) ...[
+                  const SizedBox(height: 12.0),
+                  Row(
+                    children: [
+                      const SizedBox(width: 12.0),
+                      Icon(
+                        Broken.danger,
+                        color: Colors.red.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 8.0),
+                      Text(
+                        lang.WEBM_NO_EDIT_TAGS_SUPPORT,
+                        style: context.textTheme.displayLarge,
+                      ),
+                      const SizedBox(width: 12.0),
+                    ],
+                  ),
+                  const SizedBox(height: 12.0),
+                ],
+                getTextChip(FFMPEGTagField.title),
+                getRow([
+                  FFMPEGTagField.artist,
+                  FFMPEGTagField.album,
+                ]),
+                getRow([
+                  FFMPEGTagField.genre,
+                  FFMPEGTagField.year,
+                ]),
+                getRow([
+                  FFMPEGTagField.trackNumber,
+                  FFMPEGTagField.discNumber,
+                ]),
+                getTextChip(FFMPEGTagField.comment),
+                getTextChip(FFMPEGTagField.description),
+                getTextChip(FFMPEGTagField.synopsis),
+                getTextChip(FFMPEGTagField.lyrics),
+                NamidaExpansionTile(
+                  icon: Broken.more_square,
+                  titleText: lang.SHOW_MORE,
                   children: [
-                    if (showSpecificFileOptions) ...[
-                      Obx(
-                        (context) => CustomSwitchListTile(
-                          icon: Broken.tick_circle,
-                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                          title: lang.KEEP_CACHED_VERSIONS,
-                          value: settings.downloadFilesKeepCachedVersions.valueR,
-                          onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
-                        ),
-                      ),
-                      Obx(
-                        (context) => CustomSwitchListTile(
-                          icon: Broken.document_code,
-                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                          title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
-                          value: settings.downloadFilesWriteUploadDate.valueR,
-                          onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
-                        ),
-                      ),
-                      Obx(
-                        (context) => CustomSwitchListTile(
-                          icon: Broken.music_library_2,
-                          visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                          title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
-                          value: settings.downloadAddAudioToLocalLibrary.valueR,
-                          onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
-                        ),
-                      ),
-                      YTDownloadOptionFolderListTile(
-                        initialFolder: initialGroupName ?? '',
-                        playlistName: initialGroupName ?? '',
-                        onDownloadGroupNameChanged: onDownloadGroupNameChanged,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                      ),
-                    ],
-                    const SizedBox(height: 6.0),
-                    if (!supportTagging) ...[
-                      const SizedBox(height: 12.0),
-                      Row(
-                        children: [
-                          const SizedBox(width: 12.0),
-                          Icon(
-                            Broken.danger,
-                            color: Colors.red.withValues(alpha: 0.7),
-                          ),
-                          const SizedBox(width: 8.0),
-                          Text(
-                            lang.WEBM_NO_EDIT_TAGS_SUPPORT,
-                            style: context.textTheme.displayLarge,
-                          ),
-                          const SizedBox(width: 12.0),
-                        ],
-                      ),
-                      const SizedBox(height: 12.0),
-                    ],
-                    getTextChip(FFMPEGTagField.title),
-                    getRow([
-                      FFMPEGTagField.artist,
-                      FFMPEGTagField.album,
-                    ]),
-                    getRow([
-                      FFMPEGTagField.genre,
-                      FFMPEGTagField.year,
-                    ]),
-                    getRow([
-                      FFMPEGTagField.trackNumber,
-                      FFMPEGTagField.discNumber,
-                    ]),
-                    getTextChip(FFMPEGTagField.comment),
-                    getTextChip(FFMPEGTagField.description),
-                    getTextChip(FFMPEGTagField.synopsis),
-                    getTextChip(FFMPEGTagField.lyrics),
-                    NamidaExpansionTile(
-                      icon: Broken.more_square,
-                      titleText: lang.SHOW_MORE,
-                      children: [
-                        ...[
-                          FFMPEGTagField.albumArtist,
-                          FFMPEGTagField.composer,
-                          FFMPEGTagField.remixer,
-                          FFMPEGTagField.lyricist,
-                          FFMPEGTagField.language,
-                          FFMPEGTagField.recordLabel,
-                          FFMPEGTagField.country,
-                        ].map((e) => getTextChip(e)),
-                      ]
-                          .addSeparators(
-                            separator: const SizedBox(height: 12.0),
-                          )
-                          .toList(),
-                    )
+                    ...[
+                      FFMPEGTagField.albumArtist,
+                      FFMPEGTagField.composer,
+                      FFMPEGTagField.remixer,
+                      FFMPEGTagField.lyricist,
+                      FFMPEGTagField.language,
+                      FFMPEGTagField.recordLabel,
+                      FFMPEGTagField.country,
+                    ].map((e) => getTextChip(e)),
                   ]
                       .addSeparators(
                         separator: const SizedBox(height: 12.0),
                       )
                       .toList(),
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  if (videoTitle != null)
-                    Expanded(
-                      flex: 4,
-                      child: InkWell(
-                        onTap: () {
-                          (String?, String?) artistAndTitle = (null, null);
-                          if (tagMaps.isNotEmpty) {
-                            artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
-                          }
-                          if (artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
-                            artistAndTitle = videoTitle.splitArtistAndTitle();
-                          }
-                          if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
-                          if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
-                          controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
-                        },
-                        child: Text(
-                          lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
-                          style: namida.textTheme.displaySmall?.copyWith(
-                            decoration: TextDecoration.underline,
-                            decorationStyle: TextDecorationStyle.dashed,
-                          ),
-                        ),
+                )
+              ]
+                  .addSeparators(
+                    separator: const SizedBox(height: 12.0),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Row(
+            children: [
+              if (videoTitle != null)
+                Expanded(
+                  flex: 4,
+                  child: InkWell(
+                    onTap: () {
+                      (String?, String?) artistAndTitle = (null, null);
+                      if (tagMaps.isNotEmpty) {
+                        artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
+                      }
+                      if (artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
+                        artistAndTitle = videoTitle.splitArtistAndTitle();
+                      }
+                      if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
+                      if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
+                      controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
+                    },
+                    child: Text(
+                      lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
+                      style: namida.textTheme.displaySmall?.copyWith(
+                        decoration: TextDecoration.underline,
+                        decorationStyle: TextDecorationStyle.dashed,
                       ),
                     ),
-                  Expanded(
-                    flex: 5,
-                    child: NamidaButton(
-                      text: lang.DONE,
-                      onPressed: Navigator.of(context).pop,
-                    ),
                   ),
-                ],
-              )
+                ),
+              Expanded(
+                flex: 5,
+                child: NamidaButton(
+                  text: lang.DONE,
+                  onPressed: Navigator.of(context).pop,
+                ),
+              ),
             ],
           ),
-        ),
-      );
-    },
+          SizedBox(height: bottomPadding + 12.0),
+        ],
+      ),
+    ),
   );
   for (final c in controllersMap.values) {
     c.dispose();
@@ -377,74 +369,76 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
 
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      leading: NamidaIconButton(
-        icon: Broken.add_circle,
-        iconColor: context.defaultIconColor(),
-        horizontalPadding: 0.0,
-        onPressed: _onFolderAddTap,
-      ),
-      visualDensity: widget.visualDensity,
-      title: lang.FOLDER,
-      subtitle: widget.subtitle?.call(groupName.value),
-      trailingRaw: NamidaPopupWrapper(
-        childrenDefault: () => [
-          NamidaPopupItem(
-            icon: Broken.add,
-            title: lang.ADD,
-            onTap: _onFolderAddTap,
-          ),
-          ...availableDirectoriesNames.keys.map(
-            (name) {
-              final title = name == '' ? lang.DEFAULT : name;
-              final icon = name == widget.playlistName
-                  ? Broken.music_playlist
-                  : name == ''
-                      ? Broken.folder_2
-                      : Broken.folder;
-              final count = availableDirectoriesNames[name];
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) => CustomListTile(
+        leading: NamidaIconButton(
+          icon: Broken.add_circle,
+          iconColor: context.defaultIconColor(),
+          horizontalPadding: 0.0,
+          onPressed: _onFolderAddTap,
+        ),
+        visualDensity: widget.visualDensity,
+        title: lang.FOLDER,
+        subtitle: widget.subtitle?.call(groupName.value),
+        trailingRaw: NamidaPopupWrapper(
+          childrenDefault: () => [
+            NamidaPopupItem(
+              icon: Broken.add,
+              title: lang.ADD,
+              onTap: _onFolderAddTap,
+            ),
+            ...availableDirectoriesNames.keys.map(
+              (name) {
+                final title = name == '' ? lang.DEFAULT : name;
+                final icon = name == widget.playlistName
+                    ? Broken.music_playlist
+                    : name == ''
+                        ? Broken.folder_2
+                        : Broken.folder;
+                final count = availableDirectoriesNames[name];
+                final countText = count == null || count == 0 ? '' : " ($count)";
+                return NamidaPopupItem(
+                  icon: icon,
+                  title: "$title$countText",
+                  onTap: () => onGroupNameChanged(name),
+                );
+              },
+            ),
+          ],
+          child: Obx(
+            (context) {
+              final groupName = this.groupName.valueR;
+              final title = groupName == '' ? lang.DEFAULT : groupName;
+              final count = availableDirectoriesNames[groupName];
               final countText = count == null || count == 0 ? '' : " ($count)";
-              return NamidaPopupItem(
-                icon: icon,
-                title: "$title$countText",
-                onTap: () => onGroupNameChanged(name),
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                      groupName == widget.playlistName
+                          ? Broken.music_playlist
+                          : groupName == ''
+                              ? Broken.folder_2
+                              : Broken.folder,
+                      size: 18.0),
+                  const SizedBox(width: 6.0),
+                  Flexible(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: 0, maxWidth: maxWidth * 0.34),
+                      child: Text(
+                        "$title$countText",
+                        style: context.textTheme.displayMedium,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: widget.trailingPadding),
+                ],
               );
             },
           ),
-        ],
-        child: Obx(
-          (context) {
-            final groupName = this.groupName.valueR;
-            final title = groupName == '' ? lang.DEFAULT : groupName;
-            final count = availableDirectoriesNames[groupName];
-            final countText = count == null || count == 0 ? '' : " ($count)";
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                    groupName == widget.playlistName
-                        ? Broken.music_playlist
-                        : groupName == ''
-                            ? Broken.folder_2
-                            : Broken.folder,
-                    size: 18.0),
-                const SizedBox(width: 6.0),
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
-                    child: Text(
-                      "$title$countText",
-                      style: context.textTheme.displayMedium,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                SizedBox(width: widget.trailingPadding),
-              ],
-            );
-          },
         ),
       ),
     );

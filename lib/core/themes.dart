@@ -96,7 +96,7 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          visualDensity: VisualDensity.compact,
+          visualDensity: Platform.isWindows ? VisualDensity.comfortable : VisualDensity.compact,
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           ),
@@ -138,9 +138,9 @@ class AppThemes {
         style: Platform.isWindows
             ? const ButtonStyle(
                 padding: WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                 ),
-                visualDensity: VisualDensity.compact,
+                visualDensity: VisualDensity.comfortable,
               )
             : const ButtonStyle(
                 padding: WidgetStatePropertyAll(

@@ -111,27 +111,30 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
       rx: HistoryController.inst.totalHistoryItemsCount,
       builder: (context, totalHistoryItemsCount) {
         final lengthDummy = totalHistoryItemsCount == -1;
-        return SubpageInfoContainer(
-          key: _headerContainerKey,
-          source: QueueSource.history,
-          title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
-          subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
-          heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-          tracksFn: () => HistoryController.inst.historyTracks,
-          imageBuilder: (constraints, size) => ObxO(
-            rx: HistoryController.inst.historyMap,
-            builder: (context, historyMap) => MultiArtworkContainer(
-              heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
-              size: size,
-              tracks: getHistoryTracks(historyMap).toImageTracks(),
+        return LayoutWidthProvider(
+          builder: (context, maxWidth) => SubpageInfoContainer(
+            maxWidth: maxWidth,
+            key: _headerContainerKey,
+            source: QueueSource.history,
+            title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
+            subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
+            heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+            tracksFn: () => HistoryController.inst.historyTracks,
+            imageBuilder: (size) => ObxO(
+              rx: HistoryController.inst.historyMap,
+              builder: (context, historyMap) => MultiArtworkContainer(
+                heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
+                size: size,
+                tracks: getHistoryTracks(historyMap).toImageTracks(),
+              ),
             ),
+            bottomPadding: 8.0,
           ),
-          bottomPadding: 8.0,
         );
       },
     );
 
-    final isWideScreen = Dimensions.inst.miniplayerIsWideScreen;
+    final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
 
     Widget finalChild = Stack(
       children: [
@@ -146,7 +149,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
             builder: (properties) => CustomScrollView(
               controller: HistoryController.inst.scrollController,
               slivers: [
-                if (!isWideScreen)
+                if (!showSubpageInfoAtSide)
                   SliverToBoxAdapter(
                     child: infoBox,
                   ),
@@ -249,7 +252,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
         ),
       ],
     );
-    if (isWideScreen) {
+    if (showSubpageInfoAtSide) {
       finalChild = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -300,12 +303,13 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                     mostPlayedCustomisStartOfDay: isStartOfDay,
                   );
                 },
-                infoBox: (timeRangeChips, bottomPadding) => SubpageInfoContainer(
+                infoBox: (timeRangeChips, bottomPadding, maxWidth) => SubpageInfoContainer(
+                  maxWidth: maxWidth,
                   source: QueueSource.mostPlayed,
                   title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
                   subtitle: tracks.displayTrackKeyword,
                   heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
-                  imageBuilder: (constraints, size) => MultiArtworkContainer(
+                  imageBuilder: (size) => MultiArtworkContainer(
                     heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
                     size: size,
                     tracks: tracks.toImageTracks(),
@@ -524,17 +528,18 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                 horizontalGestures: !reorderable,
                 selectable: () => !PlaylistController.inst.canReorderItems.value,
               ),
-              builder: (properties) => NamidaListViewRaw(
+              builder: (properties) => NamidaListView(
                 scrollController: _scrollController,
                 itemCount: tracks.length,
                 itemExtent: Dimensions.inst.trackTileItemExtent,
-                infoBox: SubpageInfoContainer(
+                infoBox: (maxWidth) => SubpageInfoContainer(
+                  maxWidth: maxWidth,
                   source: playlist.toQueueSource(),
                   title: playlist.name.translatePlaylistName(),
                   subtitle: [tracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
                   heroTag: 'playlist_${playlist.name}',
-                  imageBuilder: (constraints, size) => MultiArtworkContainer(
+                  imageBuilder: (size) => MultiArtworkContainer(
                     heroTag: 'playlist_${playlist.name}',
                     size: size,
                     tracks: tracks.toImageTracks(),
@@ -542,7 +547,6 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                   ),
                   tracksFn: () => tracks,
                 ),
-                padding: kBottomPaddingInsets,
                 onReorderStart: (index) => super.enablePullToRefresh = false,
                 onReorderEnd: (index) => super.enablePullToRefresh = true,
                 onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),

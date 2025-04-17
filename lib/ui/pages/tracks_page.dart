@@ -117,7 +117,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   ),
                   builder: (properties) => ObxO(
                     rx: SearchSortController.inst.trackSearchList,
-                    builder: (context, trackSearchList) => NamidaListViewRaw(
+                    builder: (context, trackSearchList) => NamidaListView(
                       itemExtent: Dimensions.inst.trackTileItemExtent,
                       itemCount: trackSearchList.length,
                       scrollController: LibraryTab.tracks.scrollController,

@@ -4,7 +4,6 @@ import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -18,7 +17,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
   final double itemExtent;
   final Widget? Function(Widget timeRangeChips, double bottomPadding)? header;
-  final Widget? Function(Widget timeRangeChips, double bottomPadding)? infoBox;
+  final Widget Function(Widget timeRangeChips, double bottomPadding, double maxWidth)? infoBox;
   final Widget Function(BuildContext context, int i) itemBuilder;
   final int itemsCount;
 
@@ -192,13 +191,11 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     final bottomWidget = getChipsRow(context);
     const bottomPadding = 0.0;
     final headerWidget = header?.call(bottomWidget, bottomPadding);
-    final infoBoxWidget = infoBox?.call(bottomWidget, bottomPadding);
     return BackgroundWrapper(
       child: NamidaListView(
         itemExtent: itemExtent,
         header: headerWidget,
-        infoBox: infoBoxWidget,
-        padding: kBottomPaddingInsets,
+        infoBox: infoBox == null ? null : (maxWidth) => infoBox!(bottomWidget, bottomPadding, maxWidth),
         itemCount: itemsCount,
         itemBuilder: (context, i) => itemBuilder(context, i),
       ),

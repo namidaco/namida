@@ -32,12 +32,13 @@ class GenreTracksPage extends StatelessWidget with NamidaRouteWidget {
             queueSource: QueueSource.genre,
             queueLength: tracks.length,
             queue: tracks,
-            infoBox: SubpageInfoContainer(
+            infoBox: (maxWidth) => SubpageInfoContainer(
+              maxWidth: maxWidth,
               title: name,
               source: QueueSource.genre,
               subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
               heroTag: 'genre_$name',
-              imageBuilder: (constraints, size) => MultiArtworkContainer(
+              imageBuilder: (size) => MultiArtworkContainer(
                 size: size,
                 heroTag: 'genre_$name',
                 tracks: tracks.toImageTracks(),

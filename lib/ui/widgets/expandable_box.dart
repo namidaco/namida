@@ -74,86 +74,129 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
     return NamidaHero(
       enabled: widget.enableHero,
       tag: 'ExpandableBox',
-      child: Column(
-        children: [
-          AnimatedOpacity(
-            opacity: widget.isBarVisible ? 1 : 0,
-            duration: const Duration(milliseconds: 400),
-            child: AnimatedSizedBox(
-              duration: const Duration(milliseconds: 400),
-              height: widget.isBarVisible ? kExpandableBoxHeight : 0.0,
-              animateWidth: false,
-              child: RepaintBoundary(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 18.0),
-                    Expanded(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (widget.leftWidgets != null) ...widget.leftWidgets!,
-                          Expanded(
-                            child: Text(
-                              widget.leftText,
-                              style: context.textTheme.displayMedium,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+      child: LayoutWidthProvider(
+        builder: (context, maxWidth) {
+          final displayLeftWidgets = widget.leftWidgets != null;
+          final partWidth1 = displayLeftWidgets ? maxWidth * 0.2 : 0.0;
+          final partWidth2 = maxWidth * 0.4 - (partWidth1 / 2);
+          final partWidth3 = maxWidth * 0.6 - (partWidth1 / 2);
+          return Column(
+            children: [
+              AnimatedOpacity(
+                opacity: widget.isBarVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 400),
+                child: AnimatedShow(
+                  duration: const Duration(milliseconds: 400),
+                  show: widget.isBarVisible,
+                  child: SizedBox(
+                    width: maxWidth,
+                    height: kExpandableBoxHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(width: 18.0),
+                        if (displayLeftWidgets)
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: partWidth1),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: widget.leftWidgets!,
+                              ),
                             ),
                           ),
-                          if (widget.displayloadingIndicator) ...[const SizedBox(width: 8.0), const LoadingIndicator()]
-                        ],
-                      ),
+                        Expanded(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: partWidth2),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.leftText,
+                                    style: context.textTheme.displayMedium,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (widget.displayloadingIndicator) ...[
+                                    const SizedBox(width: 8.0),
+                                    const LoadingIndicator(),
+                                  ]
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: partWidth3),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (widget.gridWidget != null) widget.gridWidget!,
+                                const SizedBox(width: 4.0),
+                                widget.sortByMenuWidget,
+                                const SizedBox(width: 6.0),
+                                NamidaIconButton(
+                                  horizontalPadding: 6.0,
+                                  icon: Broken.filter_search,
+                                  onPressed: widget.onFilterIconTap,
+                                  iconSize: 20.0,
+                                ),
+                                const SizedBox(width: 6.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    if (widget.gridWidget != null) widget.gridWidget!,
-                    const SizedBox(width: 4.0),
-                    widget.sortByMenuWidget,
-                    const SizedBox(width: 6.0),
-                    NamidaIconButton(
-                      horizontalPadding: 6.0,
-                      icon: Broken.filter_search,
-                      onPressed: widget.onFilterIconTap,
-                      iconSize: 20.0,
-                    ),
-                    const SizedBox(width: 6.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AnimatedBuilder(
-            animation: _controller,
-            child: RepaintBoundary(
-              child: Row(
-                children: [
-                  const SizedBox(width: 12.0),
-                  Expanded(child: textfieldWidget),
-                  const SizedBox(width: 12.0),
-                  NamidaIconButton(
-                    onPressed: () {
-                      widget.onCloseButtonPressed();
-                      ScrollSearchController.inst.unfocusKeyboard();
-                    },
-                    icon: Broken.close_circle,
                   ),
-                  const SizedBox(width: 8.0),
-                ],
-              ),
-            ),
-            builder: (context, child) {
-              return Opacity(
-                opacity: _controller.value,
-                child: SizedBox(
-                  height: _controller.value * 58.0,
-                  child: child!,
                 ),
-              );
-            },
-          ),
-          if (widget.showSearchBox) const SizedBox(height: 8.0)
-        ],
+              ),
+              AnimatedBuilder(
+                animation: _controller,
+                child: RepaintBoundary(
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12.0),
+                      Expanded(child: textfieldWidget),
+                      const SizedBox(width: 12.0),
+                      NamidaIconButton(
+                        onPressed: () {
+                          widget.onCloseButtonPressed();
+                          ScrollSearchController.inst.unfocusKeyboard();
+                        },
+                        icon: Broken.close_circle,
+                      ),
+                      const SizedBox(width: 8.0),
+                    ],
+                  ),
+                ),
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: _controller.value,
+                    child: SizedBox(
+                      height: _controller.value * 58.0,
+                      child: child!,
+                    ),
+                  );
+                },
+              ),
+              if (widget.showSearchBox) const SizedBox(height: 8.0)
+            ],
+          );
+        },
       ),
     );
   }

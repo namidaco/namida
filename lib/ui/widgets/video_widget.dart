@@ -641,42 +641,40 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             );
           }
           // -- fallback images
-          return Align(
-            child: ObxO(
-                rx: Player.inst.currentItem,
-                builder: (context, item) {
-                  if (item is YoutubeID) {
-                    final vidId = item.id;
-                    return YoutubeThumbnail(
-                      type: ThumbnailType.video,
-                      key: Key(vidId),
-                      isImportantInCache: true,
-                      width: fallbackWidth,
-                      height: fallbackHeight,
-                      borderRadius: 0,
-                      blur: 0,
-                      videoId: vidId,
-                      displayFallbackIcon: false,
-                      compressed: widget.isMinimized,
-                      preferLowerRes: false,
-                      fit: BoxFit.contain, // never change this lil bro
-                    );
-                  }
-                  final track = item is Selectable ? item.track : null;
-                  return ArtworkWidget(
-                    key: ValueKey(track?.path),
-                    track: track,
-                    path: track?.pathToImage,
-                    thumbnailSize: fallbackWidth,
+          return ObxO(
+              rx: Player.inst.currentItem,
+              builder: (context, item) {
+                if (item is YoutubeID) {
+                  final vidId = item.id;
+                  return YoutubeThumbnail(
+                    type: ThumbnailType.video,
+                    key: Key(vidId),
+                    isImportantInCache: true,
                     width: fallbackWidth,
                     height: fallbackHeight,
                     borderRadius: 0,
                     blur: 0,
+                    videoId: vidId,
+                    displayFallbackIcon: false,
                     compressed: widget.isMinimized,
-                    fit: BoxFit.contain, // never change this my friend
+                    preferLowerRes: false,
+                    fit: BoxFit.contain, // never change this lil bro
                   );
-                }),
-          );
+                }
+                final track = item is Selectable ? item.track : null;
+                return ArtworkWidget(
+                  key: ValueKey(track?.path),
+                  track: track,
+                  path: track?.pathToImage,
+                  thumbnailSize: fallbackWidth,
+                  width: fallbackWidth,
+                  height: fallbackHeight,
+                  borderRadius: 0,
+                  blur: 0,
+                  compressed: widget.isMinimized,
+                  fit: BoxFit.contain, // never change this my friend
+                );
+              });
         });
 
     final newDeviceInsets = MediaQuery.paddingOf(context);
@@ -2187,9 +2185,9 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: playerPosition < e.startMs || playerPosition > e.endMs
-                        ? const SizedBox.shrink(key: ValueKey(0))
+                        ? const SizedBox.shrink(key: ValueKey(false))
                         : NamidaPopupWrapper(
-                            key: const ValueKey(1),
+                            key: const ValueKey(true),
                             openOnTap: true,
                             openOnLongPress: true,
                             children: e is EndScreenItemVideo ? () => _getCustomChildrenVideo(e) : null,

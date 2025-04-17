@@ -501,7 +501,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           height: namida.height * 0.5,
           width: namida.width,
           child: NamidaListView(
-            padding: EdgeInsets.zero,
+            listBottomPadding: 0,
             itemBuilder: (context, i) {
               final trItem = TrackTileItem.values[i];
               return SmallListTile(

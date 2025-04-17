@@ -1734,19 +1734,21 @@ class NamidaPartyContainer extends StatelessWidget {
 }
 
 class SubpageInfoContainer extends StatelessWidget {
+  final double maxWidth;
   final String title;
   final String subtitle;
   final String thirdLineText;
   final double? height;
   final double topPadding;
   final double bottomPadding;
-  final Widget Function(BoxConstraints constraints, double size) imageBuilder;
+  final Widget Function(double size) imageBuilder;
   final Iterable<Selectable> Function() tracksFn;
   final QueueSource source;
   final String heroTag;
 
   const SubpageInfoContainer({
     super.key,
+    required this.maxWidth,
     required this.title,
     required this.subtitle,
     this.thirdLineText = '',
@@ -1770,13 +1772,14 @@ class SubpageInfoContainer extends StatelessWidget {
         if (!showSubpageInfoAtSide && (maxWidth.isInfinite || maxWidth.isNaN)) {
           maxWidth = maxWidth.withMaximum(context.width * 0.3);
         }
-        return imageBuilder(constraints, maxWidth);
+        maxWidth = maxWidth.withMaximum(this.maxWidth);
+        return imageBuilder(maxWidth);
       },
     );
 
-    final textAndButtonsWidget = LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
+    final textAndButtonsWidget = LayoutWidthProvider(
+      maxWidth: maxWidth,
+      builder: (context, maxWidth) {
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1884,7 +1887,13 @@ class SubpageInfoContainer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                imageWidget,
+                Flexible(
+                  child: FittedBox(
+                    alignment: Alignment.topLeft,
+                    fit: BoxFit.scaleDown,
+                    child: imageWidget,
+                  ),
+                ),
                 FittedBox(
                   alignment: Alignment.topCenter,
                   fit: BoxFit.fitHeight,
@@ -1896,10 +1905,24 @@ class SubpageInfoContainer extends StatelessWidget {
               ],
             )
           : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                imageWidget,
-                Expanded(child: textAndButtonsWidget),
+                Flexible(
+                  flex: 2,
+                  child: FittedBox(
+                    alignment: Alignment.topLeft,
+                    fit: BoxFit.scaleDown,
+                    child: imageWidget,
+                  ),
+                ),
+                Flexible(
+                  flex: 2,
+                  child: FittedBox(
+                    alignment: Alignment.topLeft,
+                    fit: BoxFit.scaleDown,
+                    child: textAndButtonsWidget,
+                  ),
+                ),
               ],
             ),
     );
@@ -2559,27 +2582,30 @@ class NamidaCircularPercentage extends StatelessWidget {
 }
 
 class NamidaListView extends StatelessWidget {
+  final Widget Function(Widget list)? listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;
   final ReorderCallback? onReorder;
   final VoidCallback? onReorderCancel;
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
-  final Widget? infoBox;
+  final Widget Function(double maxWidth)? infoBox;
   final List<Widget>? widgetsInColumn;
-  final EdgeInsets? padding;
+  final double? listBottomPadding;
   final double? itemExtent;
   final ScrollController? scrollController;
   final int itemCount;
   final ScrollPhysics? physics;
+  final double scrollStep;
   final Map<String, int> scrollConfig;
 
   const NamidaListView({
     super.key,
+    this.listBuilder,
     this.header,
     this.infoBox,
     this.widgetsInColumn,
-    this.padding,
+    this.listBottomPadding,
     this.onReorder,
     this.onReorderCancel,
     required this.itemBuilder,
@@ -2589,51 +2615,64 @@ class NamidaListView extends StatelessWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.physics,
+    this.scrollStep = 0,
     this.scrollConfig = const {},
   });
 
   @override
   Widget build(BuildContext context) {
+    final list = onReorder != null
+        ? NamidaSliverReorderableList(
+            itemExtent: itemExtent,
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+            onReorder: onReorder!,
+            onReorderCancel: onReorderCancel,
+            onReorderStart: onReorderStart,
+            onReorderEnd: onReorderEnd,
+          )
+        : itemExtent != null
+            ? SliverFixedExtentList.builder(
+                itemExtent: itemExtent!,
+                itemBuilder: itemBuilder,
+                itemCount: itemCount,
+              )
+            : SliverList.builder(
+                itemBuilder: itemBuilder,
+                itemCount: itemCount,
+              );
     return NamidaListViewRaw(
       scrollController: scrollController,
       scrollConfig: scrollConfig,
+      scrollStep: scrollStep,
       header: header,
       infoBox: infoBox,
-      listBuilder: (list) => widgetsInColumn != null
-          ? Column(
-              children: [
-                ...widgetsInColumn!,
-                Expanded(child: list),
-              ],
-            )
-          : list,
-      itemBuilder: itemBuilder,
-      itemCount: itemCount,
-      itemExtent: itemExtent,
-      onReorder: onReorder,
-      onReorderCancel: onReorderCancel,
-      onReorderStart: onReorderStart,
-      onReorderEnd: onReorderEnd,
-      padding: padding,
+      slivers: [list],
+      builder: listBuilder ??
+          (list) => widgetsInColumn != null
+              ? Column(
+                  children: [
+                    ...widgetsInColumn!,
+                    Expanded(child: list),
+                  ],
+                )
+              : list,
+      listBottomPadding: listBottomPadding,
       physics: physics,
     );
   }
 }
 
 class NamidaListViewRaw extends StatefulWidget {
-  final Widget Function(Widget list) listBuilder;
-  final Widget Function(BuildContext context, int i) itemBuilder;
-  final ReorderCallback? onReorder;
-  final VoidCallback? onReorderCancel;
-  final void Function(int index)? onReorderStart;
-  final void Function(int index)? onReorderEnd;
-  final Widget? infoBox;
+  final List<Widget> slivers;
+  final Widget Function(Widget list)? builder;
+  final Widget Function(double maxWidth)? infoBox;
   final Widget? header;
   final Widget? footer;
-  final EdgeInsets? padding;
-  final double? itemExtent;
+
+  /// defaults to [Dimensions.globalBottomPaddingTotalR]
+  final double? listBottomPadding;
   final ScrollController? scrollController;
-  final int itemCount;
   final ScrollPhysics? physics;
   final Map<String, int> scrollConfig;
   final double scrollStep;
@@ -2642,19 +2681,13 @@ class NamidaListViewRaw extends StatefulWidget {
 
   const NamidaListViewRaw({
     super.key,
-    required this.listBuilder,
-    required this.itemBuilder,
-    this.onReorder,
-    this.onReorderCancel,
-    this.onReorderStart,
-    this.onReorderEnd,
+    required this.slivers,
+    this.builder,
     this.infoBox,
     this.header,
     this.footer,
-    this.padding,
-    this.itemExtent,
+    this.listBottomPadding,
     this.scrollController,
-    required this.itemCount,
     this.physics,
     this.scrollConfig = const {},
     this.scrollStep = 0,
@@ -2689,7 +2722,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
       (start, end) = (end, start);
     }
 
-    final padding = this.widget.padding ?? EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
+    final padding = EdgeInsets.only(bottom: this.widget.listBottomPadding ?? Dimensions.inst.globalBottomPaddingTotalR);
     final EdgeInsets startPadding, endPadding, listPadding;
     (startPadding, endPadding, listPadding) = switch (widget.scrollDirection) {
       Axis.horizontal || Axis.vertical when (start ?? end) == null => (EdgeInsets.zero, EdgeInsets.zero, padding),
@@ -2713,7 +2746,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
             SliverPadding(
               padding: headerPadding,
               sliver: SliverToBoxAdapter(
-                child: widget.infoBox,
+                child: widget.infoBox?.call(Dimensions.inst.availableAppContentWidth),
               ),
             ),
           if (displayHeaderAtTop)
@@ -2724,27 +2757,11 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
               ),
             ),
           SliverPadding(
-            padding: listPadding,
-            sliver: widget.onReorder != null
-                ? NamidaSliverReorderableList(
-                    itemExtent: widget.itemExtent,
-                    itemBuilder: widget.itemBuilder,
-                    itemCount: widget.itemCount,
-                    onReorder: widget.onReorder!,
-                    onReorderCancel: widget.onReorderCancel,
-                    onReorderStart: widget.onReorderStart,
-                    onReorderEnd: widget.onReorderEnd,
-                  )
-                : widget.itemExtent != null
-                    ? SliverFixedExtentList.builder(
-                        itemExtent: widget.itemExtent!,
-                        itemBuilder: widget.itemBuilder,
-                        itemCount: widget.itemCount,
-                      )
-                    : SliverList.builder(
-                        itemBuilder: widget.itemBuilder,
-                        itemCount: widget.itemCount,
-                      ),
+            padding: EdgeInsets.only(top: listPadding.top),
+          ),
+          ...widget.slivers,
+          SliverPadding(
+            padding: EdgeInsets.only(bottom: listPadding.bottom),
           ),
           if (widget.footer != null)
             SliverPadding(
@@ -2760,16 +2777,23 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: Dimensions.inst.sideInfoMaxWidth),
-            child: widget.infoBox,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SingleChildScrollView(
+                child: widget.infoBox?.call(Dimensions.inst.sideInfoMaxWidth),
+              ),
+            ),
           ),
-          Expanded(child: listW),
+          Expanded(
+            child: listW,
+          ),
         ],
       );
     }
     return NamidaScrollbar(
       controller: _scrollController,
       scrollStep: widget.scrollStep,
-      child: widget.listBuilder(listW),
+      child: widget.builder?.call(listW) ?? listW,
     );
   }
 }
@@ -2828,12 +2852,12 @@ class NamidaTracksList extends StatelessWidget {
   final int queueLength;
   final Widget Function(BuildContext context, int i)? itemBuilder;
   final Widget? header;
-  final Widget? infoBox;
+  final Widget Function(double maxWidth)? infoBox;
   final Widget? footer;
   final List<Widget>? widgetsInColumn;
   final EdgeInsetsGeometry? paddingAfterHeader;
   final ScrollController? scrollController;
-  final EdgeInsets? padding;
+  final double? listBottomPadding;
   final bool Function()? isTrackSelectable;
   final void Function()? onTap;
   final ScrollPhysics? physics;
@@ -2853,7 +2877,7 @@ class NamidaTracksList extends StatelessWidget {
     this.widgetsInColumn,
     this.paddingAfterHeader,
     this.scrollController,
-    this.padding,
+    this.listBottomPadding,
     required this.queueLength,
     this.isTrackSelectable,
     this.onTap,
@@ -2876,7 +2900,7 @@ class NamidaTracksList extends StatelessWidget {
           scrollController: scrollController,
           itemCount: queueLength,
           itemExtent: Dimensions.inst.trackTileItemExtent,
-          padding: padding,
+          listBottomPadding: listBottomPadding,
           physics: physics,
           scrollConfig: scrollConfig,
           itemBuilder: itemBuilder!,
@@ -2900,7 +2924,7 @@ class NamidaTracksList extends StatelessWidget {
               scrollController: scrollController,
               itemCount: queueLength,
               itemExtent: Dimensions.inst.trackTileItemExtent,
-              padding: padding,
+              listBottomPadding: listBottomPadding,
               physics: physics,
               scrollConfig: scrollConfig,
               itemBuilder: (context, i) {
@@ -3656,7 +3680,10 @@ class NamidaPopupWrapper extends StatelessWidget {
         onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
         child: ColoredBox(
           color: Colors.transparent,
-          child: child,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: child,
+          ),
         ),
       ),
     );
@@ -5057,6 +5084,25 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
         VibratorController.verylight();
       },
       child: child,
+    );
+  }
+}
+
+class LayoutWidthProvider extends StatelessWidget {
+  final double? maxWidth;
+  final Widget Function(BuildContext context, double maxWidth) builder;
+  const LayoutWidthProvider({super.key, this.maxWidth, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    if (maxWidth != null) {
+      return builder(context, maxWidth!);
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) => builder(
+        context,
+        constraints.maxWidth.withMaximum(context.width),
+      ),
     );
   }
 }

@@ -177,107 +177,134 @@ class YoutubeCommentsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final commentsIconColor = context.theme.iconTheme.color;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        if (displayBackButton)
-          NamidaIconButton(
-            verticalPadding: 8.0,
-            horizontalPadding: 12.0,
-            icon: Broken.arrow_left_2,
-            onPressed: NamidaNavigator.inst.popPage,
-          )
-        else
-          const SizedBox(width: 12.0),
-        ObxO(
-          rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
-          builder: (context, isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)
-              ? StackedIcon(
-                  baseIcon: Broken.document,
-                  secondaryIcon: Broken.global,
-                  iconSize: 22.0,
-                  secondaryIconSize: 12.0,
-                  baseIconColor: commentsIconColor,
-                  secondaryIconColor: commentsIconColor,
-                )
-              : const Icon(
-                  Broken.document,
-                  size: 22.0,
-                ),
-        ),
-        const SizedBox(width: 8.0),
-        Expanded(
-          child: ObxO(
-            rx: YoutubeInfoController.current.currentComments,
-            builder: (context, comments) {
-              final count = comments?.commentsCount;
-              return Text(
-                [
-                  lang.COMMENTS,
-                  if (count != null) count.formatDecimalShort(),
-                ].join(' • '),
-                style: context.textTheme.displayMedium,
-                textAlign: TextAlign.start,
-              );
-            },
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            const SizedBox(width: 8.0),
-            ...CommentsSortType.values.map(
-              (s) => ObxO(
-                rx: YoutubeMiniplayerUiController.inst.currentCommentSort,
-                builder: (context, currentCommentSort) => NamidaInkWell(
-                  borderRadius: 8.0,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                  bgColor: currentCommentSort == s ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor,
-                  onTap: () async {
-                    final activeSort = YoutubeMiniplayerUiController.inst.currentCommentSort.value;
-                    if (activeSort == s) return;
-
-                    final currentItem = Player.inst.currentItem.value;
-                    if (currentItem is! YoutubeID) return;
-                    final currentId = currentItem.id;
-
-                    YoutubeMiniplayerUiController.inst.currentCommentSort.value = s;
-                    final done = await YoutubeInfoController.current.updateCurrentComments(
-                      currentId,
-                      newSortType: s,
-                      initial: true,
-                    );
-                    // -- reverting if failed.
-                    if (!done) YoutubeMiniplayerUiController.inst.currentCommentSort.value = activeSort;
-                  },
-                  child: Text(
-                    s.toText(),
-                    style: context.textTheme.displayMedium,
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) => Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth * 0.2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (displayBackButton)
+                    NamidaIconButton(
+                      verticalPadding: 8.0,
+                      horizontalPadding: 12.0,
+                      icon: Broken.arrow_left_2,
+                      onPressed: NamidaNavigator.inst.popPage,
+                    )
+                  else
+                    const SizedBox(width: 12.0),
+                  ObxO(
+                    rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
+                    builder: (context, isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)
+                        ? StackedIcon(
+                            baseIcon: Broken.document,
+                            secondaryIcon: Broken.global,
+                            iconSize: 22.0,
+                            secondaryIconSize: 12.0,
+                            baseIconColor: commentsIconColor,
+                            secondaryIconColor: commentsIconColor,
+                          )
+                        : const Icon(
+                            Broken.document,
+                            size: 22.0,
+                          ),
                   ),
+                  const SizedBox(width: 8.0),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth * 0.3),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: ObxO(
+                  rx: YoutubeInfoController.current.currentComments,
+                  builder: (context, comments) {
+                    final count = comments?.commentsCount;
+                    return Text(
+                      [
+                        lang.COMMENTS,
+                        if (count != null) count.formatDecimalShort(),
+                      ].join(' • '),
+                      style: context.textTheme.displayMedium,
+                      textAlign: TextAlign.start,
+                    );
+                  },
                 ),
               ),
             ),
-            const SizedBox(width: 4.0),
-            NamidaInkWellButton(
-              icon: Broken.add_square,
-              text: '',
-              onTap: () {
-                final videoId = Player.inst.currentVideo?.id;
-                if (videoId == null) return;
-                YTUtils.comments.createComment(
-                  context: context,
-                  videoId: videoId,
-                  mainList: YoutubeInfoController.current.currentComments,
-                  videoPage: YoutubeInfoController.current.currentVideoPage.value,
-                );
-              },
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth * 0.5),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const SizedBox(width: 8.0),
+                  ...CommentsSortType.values.map(
+                    (s) => ObxO(
+                      rx: YoutubeMiniplayerUiController.inst.currentCommentSort,
+                      builder: (context, currentCommentSort) => NamidaInkWell(
+                        borderRadius: 8.0,
+                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                        bgColor: currentCommentSort == s ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor,
+                        onTap: () async {
+                          final activeSort = YoutubeMiniplayerUiController.inst.currentCommentSort.value;
+                          if (activeSort == s) return;
+
+                          final currentItem = Player.inst.currentItem.value;
+                          if (currentItem is! YoutubeID) return;
+                          final currentId = currentItem.id;
+
+                          YoutubeMiniplayerUiController.inst.currentCommentSort.value = s;
+                          final done = await YoutubeInfoController.current.updateCurrentComments(
+                            currentId,
+                            newSortType: s,
+                            initial: true,
+                          );
+                          // -- reverting if failed.
+                          if (!done) YoutubeMiniplayerUiController.inst.currentCommentSort.value = activeSort;
+                        },
+                        child: Text(
+                          s.toText(),
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+                  NamidaInkWellButton(
+                    icon: Broken.add_square,
+                    text: '',
+                    onTap: () {
+                      final videoId = Player.inst.currentVideo?.id;
+                      if (videoId == null) return;
+                      YTUtils.comments.createComment(
+                        context: context,
+                        videoId: videoId,
+                        mainList: YoutubeInfoController.current.currentComments,
+                        videoPage: YoutubeInfoController.current.currentVideoPage.value,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8.0),
+                ],
+              ),
             ),
-            const SizedBox(width: 8.0),
-          ],
-        ),
-        const SizedBox(width: 8.0),
-      ],
+          ),
+          const SizedBox(width: 8.0),
+        ],
+      ),
     );
   }
 }

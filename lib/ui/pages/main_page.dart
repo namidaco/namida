@@ -649,7 +649,7 @@ class _CustomNavBar extends StatelessWidget {
             return NavigationBar(
               animationDuration: const Duration(seconds: 1),
               elevation: 22,
-              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+              labelBehavior: libraryTabs.length >= 8 ? NavigationDestinationLabelBehavior.alwaysHide : NavigationDestinationLabelBehavior.onlyShowSelected,
               height: 64.0,
               selectedIndex: selectedIndex,
               onDestinationSelected: (destinationIndex) {
@@ -669,7 +669,7 @@ class _CustomNavBar extends StatelessWidget {
                         e.toIcon(),
                         color: selectedIndex == i ? AppThemes.selectedNavigationIconColor : null,
                       ),
-                      label: libraryTabs.length >= 7 ? '' : e.toText(),
+                      label: e.toText(),
                     ),
                   ),
                 ),
@@ -718,6 +718,8 @@ class __CustomRailBarState extends State<_CustomRailBar> {
     const itemWidthBottomAction = itemWidth * bottomActionSizeMultiplier;
     const iconSizeBottomAction = iconSize * bottomActionSizeMultiplier;
     const iconPaddingBottomAction = iconPadding * bottomActionSizeMultiplier;
+
+    final showCustomizationIcon = maxHeight > 550;
 
     final bgColor = Color.alphaBlend(
       (context.theme.navigationRailTheme.backgroundColor ?? context.theme.colorScheme.surface).withValues(alpha: .5),
@@ -841,26 +843,28 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                 ),
                               ),
                               SizedBox(height: 6.0),
-                              NamidaTooltip(
-                                message: () => lang.CUSTOMIZATIONS,
-                                child: NamidaDrawerListTile(
-                                  margin: EdgeInsets.zero,
-                                  padding: EdgeInsets.all(iconPaddingBottomAction),
-                                  enabled: false,
-                                  isCentered: true,
-                                  iconSize: iconSizeBottomAction,
-                                  title: '',
-                                  width: itemWidthBottomAction,
-                                  icon: Broken.brush_1,
-                                  onTap: () {
-                                    SettingsSubPage(
-                                      title: lang.CUSTOMIZATIONS,
-                                      child: const CustomizationSettings(),
-                                    ).navigate();
-                                  },
+                              if (showCustomizationIcon) ...[
+                                NamidaTooltip(
+                                  message: () => lang.CUSTOMIZATIONS,
+                                  child: NamidaDrawerListTile(
+                                    margin: EdgeInsets.zero,
+                                    padding: EdgeInsets.all(iconPaddingBottomAction),
+                                    enabled: false,
+                                    isCentered: true,
+                                    iconSize: iconSizeBottomAction,
+                                    title: '',
+                                    width: itemWidthBottomAction,
+                                    icon: Broken.brush_1,
+                                    onTap: () {
+                                      SettingsSubPage(
+                                        title: lang.CUSTOMIZATIONS,
+                                        child: const CustomizationSettings(),
+                                      ).navigate();
+                                    },
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 6.0),
+                                SizedBox(height: 6.0),
+                              ],
                               NamidaTooltip(
                                 message: () => lang.SETTINGS,
                                 child: NamidaDrawerListTile(

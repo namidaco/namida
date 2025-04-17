@@ -388,7 +388,7 @@ class NamidaOnTaps {
               Expanded(
                 child: Obx(
                   (context) => NamidaListView(
-                    padding: const EdgeInsets.only(bottom: 12.0),
+                    listBottomPadding: 12.0,
                     itemCount: allSorts.length,
                     itemExtent: null,
                     onReorder: (oldIndex, newIndex) {
@@ -840,7 +840,6 @@ class BottomSheetTextFieldConfigWC extends BottomSheetTextFieldConfig {
 Future<String?> showNamidaBottomSheetWithTextField({
   required BuildContext context,
   bool isScrollControlled = true,
-  bool useRootNavigator = true,
   bool showDragHandle = true,
   required String title,
   String? subtitle,
@@ -863,17 +862,13 @@ Future<String?> showNamidaBottomSheetWithTextField({
 
   String? finalText;
 
-  await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-  await showModalBottomSheet(
-    // ignore: use_build_context_synchronously
+  await NamidaNavigator.inst.showSheet(
     context: context,
-    useRootNavigator: useRootNavigator,
     showDragHandle: showDragHandle,
     isScrollControlled: isScrollControlled,
-    builder: (context) {
-      final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
+    builder: (context, bottomPadding, maxWidth, maxHeight) {
       final child = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28.0).add(EdgeInsets.only(bottom: 18.0 + bottomPadding)),
+        padding: const EdgeInsets.symmetric(horizontal: 28.0).add(const EdgeInsets.only(bottom: 18.0)),
         child: Form(
           key: formKey,
           child: NamidaLoadingSwitcher(
@@ -938,9 +933,9 @@ Future<String?> showNamidaBottomSheetWithTextField({
                   const SizedBox(height: 18.0),
                   Row(
                     children: [
-                      SizedBox(width: context.width * 0.1),
+                      SizedBox(width: maxWidth * 0.1),
                       CancelButton(onPressed: context.safePop),
-                      SizedBox(width: context.width * 0.1),
+                      SizedBox(width: maxWidth * 0.1),
                       Expanded(
                         child: NamidaInkWell(
                           borderRadius: 12.0,

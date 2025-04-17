@@ -46,7 +46,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool isCircle;
   final VoidCallback? onError;
   final bool fallbackToFolderCover;
-  final BoxFit? fit;
+  final BoxFit fit;
 
   const ArtworkWidget({
     required super.key,
@@ -75,7 +75,7 @@ class ArtworkWidget extends StatefulWidget {
     this.isCircle = false,
     this.onError,
     this.fallbackToFolderCover = true,
-    this.fit,
+    this.fit = BoxFit.cover,
   });
 
   static const kDefaultFadeMilliSeconds = 300;
@@ -276,7 +276,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             (_imagePath != null ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
                           ),
                           gaplessPlayback: true,
-                          fit: widget.fit ?? (widget.forceSquared ? BoxFit.fitHeight : BoxFit.cover),
+                          fit: widget.fit,
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: realWidthAndHeight,
                           height: realWidthAndHeight,

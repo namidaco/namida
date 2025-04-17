@@ -361,7 +361,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                       final tagFields = settings.tagFieldsToEdit;
                                       return NamidaListView(
                                         itemExtent: null,
-                                        padding: const EdgeInsets.only(bottom: 24.0),
+                                        listBottomPadding: 24.0,
                                         itemCount: settings.tagFieldsToEdit.length,
                                         onReorder: (oldIndex, newIndex) {
                                           if (newIndex > oldIndex) {
@@ -834,7 +834,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                     width: namida.width,
                                     child: NamidaTracksList(
                                       infoBox: null,
-                                      padding: EdgeInsets.zero,
+                                      listBottomPadding: 0,
                                       queue: failedEditsTracks.value,
                                       queueLength: failedEditsTracks.length,
                                       queueSource: QueueSource.others,

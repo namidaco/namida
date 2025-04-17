@@ -42,13 +42,14 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
             queueLength: tracks.length,
             queue: tracks,
             displayTrackNumber: displayTrackNumberinAlbumPage,
-            infoBox: SubpageInfoContainer(
+            infoBox: (maxWidth) => SubpageInfoContainer(
+              maxWidth: maxWidth,
               title: name,
               source: QueueSource.album,
               subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
               thirdLineText: tracks.albumArtist,
               heroTag: 'album_$albumIdentifier',
-              imageBuilder: (constraints, size) => Dimensions.inst.shouldAlbumBeSquared // non reactive
+              imageBuilder: (size) => Dimensions.inst.shouldAlbumBeSquared // non reactive
                   ? MultiArtworkContainer(
                       size: size,
                       heroTag: 'album_$albumIdentifier',

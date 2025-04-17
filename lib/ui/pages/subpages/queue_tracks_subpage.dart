@@ -24,7 +24,8 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
         queueSource: QueueSource.queuePage,
         queueLength: queue.tracks.length,
         queue: queue.tracks,
-        infoBox: SubpageInfoContainer(
+        infoBox: (maxWidth) => SubpageInfoContainer(
+          maxWidth: maxWidth,
           source: QueueSource.queuePage,
           title: queue.date.dateFormattedOriginal,
           subtitle: queue.date.clockFormatted,
@@ -33,7 +34,7 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
             queue.tracks.totalDurationFormatted,
           ].join(' - '),
           heroTag: 'queue_${queue.date}',
-          imageBuilder: (constraints, size) => MultiArtworkContainer(
+          imageBuilder: (size) => MultiArtworkContainer(
             size: size,
             heroTag: 'queue_${queue.date}',
             tracks: queue.tracks.toImageTracks(),

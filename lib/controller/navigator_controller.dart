@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 
 import 'package:flutter/material.dart' as material;
@@ -358,6 +360,54 @@ class NamidaNavigator {
     if (_currentDialogNumber == 0) return;
     closeDialog(_currentDialogNumber);
     _printDialogs();
+  }
+
+  Future<T?> showSheet<T>({
+    required Widget Function(BuildContext context, double bottomPadding, double maxWidth, double maxHeight) builder,
+    BoxDecoration Function(BuildContext context)? decoration,
+    BuildContext? context,
+    double? heightPercentage,
+    bool isScrollControlled = false,
+    bool isDismissible = true,
+    bool? showDragHandle,
+    Color? backgroundColor,
+  }) async {
+    await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
+
+    context ??= _rootNav.currentContext!;
+
+    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
+
+    return await showModalBottomSheet(
+      isScrollControlled: isScrollControlled,
+      showDragHandle: showDragHandle,
+      context: context,
+      isDismissible: isDismissible,
+      backgroundColor: backgroundColor,
+      useRootNavigator: true,
+      builder: (context) => DecoratedBox(
+        decoration: decoration?.call(context) ?? const BoxDecoration(),
+        child: SizedBox(
+          height: heightPercentage == null ? null : (context.height * heightPercentage) + bottomPadding,
+          width: context.width,
+          child: material.Padding(
+            padding: EdgeInsets.only(bottom: bottomPadding),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth.withMaximum(context.width);
+                final maxHeight = constraints.maxHeight.withMaximum(context.height);
+                return builder(
+                  context,
+                  bottomPadding,
+                  maxWidth,
+                  maxHeight,
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _printDialogs() => printy("Current Dialogs: $_currentDialogNumber");

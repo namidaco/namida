@@ -294,20 +294,16 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
     bool didChangeCurrentGroups = false;
 
-    await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
-    await showModalBottomSheet(
-      useRootNavigator: true,
-      // ignore: use_build_context_synchronously
+    await NamidaNavigator.inst.showSheet(
       context: context,
-      builder: (context) {
-        final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
+      builder: (context, bottomPadding, maxWidth, maxHeight) {
         return PopScope(
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) return;
             if (didChangeCurrentGroups) YoutubeSubscriptionsController.inst.saveFile();
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0).add(EdgeInsets.only(bottom: 8.0 + bottomPadding)),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 8.0)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

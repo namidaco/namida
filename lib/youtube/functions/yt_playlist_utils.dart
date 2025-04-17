@@ -291,61 +291,55 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           final rootContext = nampack.rootNavigatorKey.currentContext;
           if (rootContext != null) {
             popSheet = Navigator.of(rootContext, rootNavigator: true).maybePop;
-            await Future.delayed(Duration.zero);
-            showModalBottomSheet(
-              // ignore: use_build_context_synchronously
-              context: rootContext,
-              useRootNavigator: true,
+
+            NamidaNavigator.inst.showSheet(
               isDismissible: false,
-              builder: (context) {
-                final iconSize = context.width * 0.5;
+              builder: (context, bottomPadding, maxWidth, maxHeight) {
+                final iconSize = maxWidth * 0.5;
                 final iconColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.6);
                 return _DisposableWidget(
                   onDispose: fetchAllRes.cancel,
-                  child: SizedBox(
-                    width: context.width,
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Obx(
-                            (context) {
-                              final totalC = totalCount.valueR;
-                              return AnimatedSwitcher(
-                                key: const Key('circle_switch'),
-                                duration: switchAnimationDurHalf,
-                                child: totalC == null || currentCount.valueR < totalC
-                                    ? ThreeArchedCircle(
-                                        size: iconSize,
-                                        color: iconColor,
-                                      )
-                                    : Icon(
-                                        key: const Key('tick_switch'),
-                                        Broken.tick_circle,
-                                        size: iconSize,
-                                        color: iconColor,
-                                      ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 12.0),
-                          Text(
-                            '${lang.FETCHING}...',
-                            style: context.textTheme.displayLarge,
-                          ),
-                          const SizedBox(height: 8.0),
-                          Obx(
-                            (context) {
-                              final totalC = totalCount.valueR;
-                              return Text(
-                                '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
-                                style: context.textTheme.displayLarge,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Obx(
+                          (context) {
+                            final totalC = totalCount.valueR;
+                            return AnimatedSwitcher(
+                              key: const Key('circle_switch'),
+                              duration: switchAnimationDurHalf,
+                              child: totalC == null || currentCount.valueR < totalC
+                                  ? ThreeArchedCircle(
+                                      size: iconSize,
+                                      color: iconColor,
+                                    )
+                                  : Icon(
+                                      key: const Key('tick_switch'),
+                                      Broken.tick_circle,
+                                      size: iconSize,
+                                      color: iconColor,
+                                    ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12.0),
+                        Text(
+                          '${lang.FETCHING}...',
+                          style: context.textTheme.displayLarge,
+                        ),
+                        const SizedBox(height: 8.0),
+                        Obx(
+                          (context) {
+                            final totalC = totalCount.valueR;
+                            return Text(
+                              '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
+                              style: context.textTheme.displayLarge,
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 );
