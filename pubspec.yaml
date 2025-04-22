@@ -166,6 +166,7 @@ dev_dependencies:
       url: https://github.com/MSOB7YY/nampack
       path: packages/obx_lints
   msix: ^3.16.8
+  inno_bundle: ^0.9.0
 
 flutter_native_splash:
   image: assets/namida_icon.png
@@ -218,3 +219,7 @@ msix_config:
   # certificate_path: .certificates\CERTIFICATE.pfx
   install_certificate: true
   file_extension: .audio, .music, .video
+
+inno_bundle:
+  id: 94dba250-1e0f-11f0-846e-a101934a6b13
+  publisher: MSOB7Y
