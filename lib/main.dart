@@ -88,16 +88,26 @@ void mainInitialization() async {
 
   if (configureHotkeys) {
     if (kDebugMode) await hotKeyManager.unregisterAll();
-    final hotKey = HotKey(
-      key: PhysicalKeyboardKey.escape,
-      scope: HotKeyScope.inapp,
-    );
-    await hotKeyManager.register(
-      hotKey,
-      keyDownHandler: (hotKey) {
-        NamidaNavigator.inst.exitFullScreen();
-      },
-    );
+
+    await [
+      hotKeyManager.register(
+        HotKey(key: PhysicalKeyboardKey.escape, scope: HotKeyScope.inapp),
+        keyDownHandler: (hotKey) {
+          if (NamidaNavigator.inst.isInFullScreen) {
+            NamidaNavigator.inst.exitFullScreen();
+          } else {
+            NamidaNavigator.inst.popPage();
+          }
+        },
+      ),
+      hotKeyManager.register(
+        HotKey(key: PhysicalKeyboardKey.f11, scope: HotKeyScope.inapp),
+        keyDownHandler: (hotKey) async {
+          final isFullscreen = await windowManager.isFullScreen();
+          windowManager.setFullScreen(!isFullscreen);
+        },
+      )
+    ].wait;
   }
 
   await HomeWidgetController.instance?.init();

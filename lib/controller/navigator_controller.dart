@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
@@ -525,6 +526,8 @@ class NamidaNavigator {
 
   DateTime _currentBackPressTime = DateTime(0);
   Future<bool> _doubleTapToExit() async {
+    if (Platform.isWindows) return false;
+
     final now = DateTime.now();
     if (now.difference(_currentBackPressTime) > const Duration(seconds: 2)) {
       _currentBackPressTime = now;
