@@ -16,8 +16,10 @@ mixin SettingsFileWriter {
   @protected
   dynamic prepareSettingsFile_() {
     final file = File(filePath);
+
+    if (isKuru) applyKuruSettings();
+
     if (!file.existsSync()) {
-      if (isKuru) applyKuruSettings();
       return null;
     }
     try {
