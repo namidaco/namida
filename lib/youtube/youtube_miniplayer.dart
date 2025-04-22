@@ -733,90 +733,111 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                       if (chid == null || chid.isEmpty) chid = YoutubeInfoController.utils.getVideoChannelID(currentId);
                                                                       if (chid != null) YTChannelSubpage(channelID: chid, channel: channelInfo).navigate();
                                                                     },
-                                                                    child: Row(
-                                                                      children: [
-                                                                        const SizedBox(width: 16.0),
-                                                                        NamidaDummyContainer(
-                                                                          width: 42.0,
-                                                                          height: 42.0,
-                                                                          borderRadius: 100.0,
-                                                                          shimmerEnabled: channelThumbnail == null && (channelID == null || channelID.isEmpty),
-                                                                          child: YoutubeThumbnail(
-                                                                            type: ThumbnailType.channel,
-                                                                            key: Key("${channelThumbnail}_$channelID"),
-                                                                            isImportantInCache: true,
-                                                                            customUrl: channelThumbnail,
-                                                                            width: 42.0,
-                                                                            height: 42.0,
-                                                                            isCircle: true,
-                                                                          ),
-                                                                        ),
-                                                                        const SizedBox(width: 8.0),
-                                                                        Expanded(
-                                                                          child: Column(
-                                                                            mainAxisSize: MainAxisSize.min,
-                                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                                            children: [
-                                                                              FittedBox(
-                                                                                child: Row(
-                                                                                  mainAxisSize: MainAxisSize.min,
-                                                                                  children: [
-                                                                                    NamidaDummyContainer(
-                                                                                      width: 114.0,
-                                                                                      height: 12.0,
-                                                                                      borderRadius: 4.0,
-                                                                                      shimmerEnabled: channelName == null,
-                                                                                      child: Text(
-                                                                                        channelName ?? '',
-                                                                                        style: mainTextTheme.displayMedium?.copyWith(
-                                                                                          fontSize: 13.5,
-                                                                                        ),
-                                                                                        maxLines: 1,
-                                                                                        overflow: TextOverflow.ellipsis,
-                                                                                        textAlign: TextAlign.start,
-                                                                                      ),
-                                                                                    ),
-                                                                                    if (channelIsVerified) ...[
-                                                                                      const SizedBox(width: 4.0),
-                                                                                      const Icon(
-                                                                                        Broken.shield_tick,
-                                                                                        size: 12.0,
-                                                                                      ),
-                                                                                    ]
-                                                                                  ],
-                                                                                ),
+                                                                    child: LayoutWidthProvider(
+                                                                      builder: (context, maxWidth) {
+                                                                        final partThumbMaxWidth = maxWidth * 0.15;
+                                                                        final partTextMaxWidth = maxWidth * 0.65 - (partThumbMaxWidth / 2);
+                                                                        final partButtonMaxWidth = maxWidth * 0.35 - (partThumbMaxWidth / 2);
+
+                                                                        final channelThumbSize = 42.0.withMaximum(partThumbMaxWidth);
+                                                                        return Row(
+                                                                          children: [
+                                                                            const SizedBox(width: 16.0),
+                                                                            NamidaDummyContainer(
+                                                                              width: channelThumbSize,
+                                                                              height: channelThumbSize,
+                                                                              borderRadius: 100.0,
+                                                                              shimmerEnabled: channelThumbnail == null && (channelID == null || channelID.isEmpty),
+                                                                              child: YoutubeThumbnail(
+                                                                                type: ThumbnailType.channel,
+                                                                                key: Key("${channelThumbnail}_$channelID"),
+                                                                                isImportantInCache: true,
+                                                                                customUrl: channelThumbnail,
+                                                                                width: channelThumbSize,
+                                                                                height: channelThumbSize,
+                                                                                isCircle: true,
                                                                               ),
-                                                                              const SizedBox(height: 2.0),
-                                                                              FittedBox(
-                                                                                child: NamidaDummyContainer(
-                                                                                  width: 92.0,
-                                                                                  height: 10.0,
-                                                                                  borderRadius: 4.0,
-                                                                                  shimmerEnabled: channelSubs == null,
-                                                                                  child: ObxO(
-                                                                                    rx: _isTitleExpanded,
-                                                                                    builder: (context, isTitleExpanded) => Text(
-                                                                                      channelSubs == null ? '? ${lang.SUBSCRIBERS}' : channelSubs.displaySubscribersKeywordShort,
-                                                                                      style: mainTextTheme.displaySmall?.copyWith(
-                                                                                        fontSize: 12.0,
+                                                                            ),
+                                                                            const SizedBox(width: 8.0),
+                                                                            Expanded(
+                                                                              child: ConstrainedBox(
+                                                                                constraints: BoxConstraints(maxWidth: partTextMaxWidth),
+                                                                                child: FittedBox(
+                                                                                  alignment: Alignment.centerLeft,
+                                                                                  fit: BoxFit.scaleDown,
+                                                                                  child: Column(
+                                                                                    mainAxisSize: MainAxisSize.min,
+                                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                    children: [
+                                                                                      Row(
+                                                                                        mainAxisSize: MainAxisSize.min,
+                                                                                        children: [
+                                                                                          NamidaDummyContainer(
+                                                                                            width: 114.0,
+                                                                                            height: 12.0,
+                                                                                            borderRadius: 4.0,
+                                                                                            shimmerEnabled: channelName == null,
+                                                                                            child: Text(
+                                                                                              channelName ?? '',
+                                                                                              style: mainTextTheme.displayMedium?.copyWith(
+                                                                                                fontSize: 13.5,
+                                                                                              ),
+                                                                                              maxLines: 1,
+                                                                                              overflow: TextOverflow.ellipsis,
+                                                                                              textAlign: TextAlign.start,
+                                                                                            ),
+                                                                                          ),
+                                                                                          if (channelIsVerified) ...[
+                                                                                            const SizedBox(width: 4.0),
+                                                                                            const Icon(
+                                                                                              Broken.shield_tick,
+                                                                                              size: 12.0,
+                                                                                            ),
+                                                                                          ]
+                                                                                        ],
                                                                                       ),
-                                                                                      maxLines: 1,
-                                                                                      overflow: TextOverflow.ellipsis,
-                                                                                    ),
+                                                                                      const SizedBox(height: 2.0),
+                                                                                      NamidaDummyContainer(
+                                                                                        width: 92.0,
+                                                                                        height: 10.0,
+                                                                                        borderRadius: 4.0,
+                                                                                        shimmerEnabled: channelSubs == null,
+                                                                                        child: ObxO(
+                                                                                          rx: _isTitleExpanded,
+                                                                                          builder: (context, isTitleExpanded) => Text(
+                                                                                            channelSubs == null
+                                                                                                ? '? ${lang.SUBSCRIBERS}'
+                                                                                                : channelSubs.displaySubscribersKeywordShort,
+                                                                                            style: mainTextTheme.displaySmall?.copyWith(
+                                                                                              fontSize: 12.0,
+                                                                                            ),
+                                                                                            maxLines: 1,
+                                                                                            overflow: TextOverflow.ellipsis,
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ],
                                                                                   ),
                                                                                 ),
                                                                               ),
-                                                                            ],
-                                                                          ),
-                                                                        ),
-                                                                        const SizedBox(width: 12.0),
-                                                                        YTSubscribeButton(
-                                                                          channelID: channelID,
-                                                                          mainChannelInfo: YoutubeInfoController.current.currentChannelPage,
-                                                                        ),
-                                                                        const SizedBox(width: 12.0),
-                                                                      ],
+                                                                            ),
+                                                                            const SizedBox(width: 12.0),
+                                                                            ConstrainedBox(
+                                                                              constraints: BoxConstraints(maxWidth: partButtonMaxWidth),
+                                                                              child: FittedBox(
+                                                                                alignment: Alignment.centerRight,
+                                                                                fit: BoxFit.scaleDown,
+                                                                                child: YTSubscribeButton(
+                                                                                  channelID: channelID,
+                                                                                  mainChannelInfo: YoutubeInfoController.current.currentChannelPage,
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                            const SizedBox(width: 12.0),
+                                                                          ],
+                                                                        );
+                                                                      },
                                                                     ),
                                                                   ),
                                                                 ),

@@ -364,437 +364,478 @@ Future<void> showDownloadVideoBottomSheet({
   Widget getDivider() => const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 8.0));
 
   Widget getPopupItem<T>({required List<T> items, required Widget Function(T item) itemBuilder}) {
-    return Wrap(children: items.map((element) => itemBuilder(element)).toList());
+    return Wrap(
+      alignment: WrapAlignment.start,
+      runAlignment: WrapAlignment.start,
+      crossAxisAlignment: WrapCrossAlignment.start,
+      children: items.map((element) => itemBuilder(element)).toList(),
+    );
   }
+
+  // --- i tried every single possibility, this is the only way logical.
+  const verticalPadding = 18.0;
+  final headerKey = GlobalKey();
+  final footerKey = GlobalKey();
+  final bodyHeightRx = Rxn<double>();
+  void updateBodyHeight(double maxHeight) {
+    final headerHeight = headerKey.calulateSize()?.height ?? 0;
+    final footerHeight = footerKey.calulateSize()?.height ?? 0;
+    bodyHeightRx.value = (maxHeight - headerHeight - footerHeight - verticalPadding * 2).withMinimum(128.0);
+  }
+  // ---------------------------
 
   await NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
     context: context,
     heightPercentage: 0.7,
-    builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0),
-      child: ObxO(
-        rx: streamResultRx,
-        builder: (context, streamResult) {
-          final hasAudioWebm = streamResult?.audioStreams.firstWhereEff((e) => e.isWebm) != null;
-          final hasVideoWebm = streamResult?.videoStreams.firstWhereEff((e) => e.isWebm) != null;
+    builder: (context, bottomPadding, maxWidth, maxHeight) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => updateBodyHeight(maxHeight - bottomPadding)); // has to be always updated
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18.0),
+        child: ObxO(
+          rx: streamResultRx,
+          builder: (context, streamResult) {
+            final hasAudioWebm = streamResult?.audioStreams.firstWhereEff((e) => e.isWebm) != null;
+            final hasVideoWebm = streamResult?.videoStreams.firstWhereEff((e) => e.isWebm) != null;
 
-          return ObxO(
-            rx: videoInfo,
-            builder: (context, videoInfo) {
-              final infoShimmerEnabled = streamResult == null && videoInfo == null;
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SizedBox(height: 18.0),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
+            return ObxO(
+              rx: videoInfo,
+              builder: (context, videoInfo) {
+                final infoShimmerEnabled = streamResult == null && videoInfo == null;
+                return SizedBox(
+                  height: maxHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: verticalPadding),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          YoutubeThumbnail(
-                            type: ThumbnailType.video,
-                            key: Key(videoId),
-                            isImportantInCache: true,
-                            borderRadius: 10.0,
-                            videoId: videoId,
-                            customUrl: videoInfo?.thumbnails.pick()?.url,
-                            width: maxWidth * 0.2,
-                            height: maxWidth * 0.2 * 9 / 16,
-                            onImageReady: (imageFile) {
-                              if (imageFile != null) videoThumbnail.value = imageFile;
-                            },
-                          ),
-                          const SizedBox(width: 12.0),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          Padding(
+                            key: headerKey,
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
                               children: [
-                                ShimmerWrapper(
-                                  shimmerEnabled: infoShimmerEnabled,
-                                  child: NamidaDummyContainer(
-                                    borderRadius: 6.0,
-                                    width: maxWidth,
-                                    height: 18.0,
-                                    shimmerEnabled: infoShimmerEnabled,
-                                    child: Text(
-                                      videoInfo?.title ?? videoId,
-                                      style: context.textTheme.displayMedium,
-                                    ),
-                                  ),
+                                YoutubeThumbnail(
+                                  type: ThumbnailType.video,
+                                  key: Key(videoId),
+                                  isImportantInCache: true,
+                                  borderRadius: 10.0,
+                                  videoId: videoId,
+                                  customUrl: videoInfo?.thumbnails.pick()?.url,
+                                  width: maxWidth * 0.2,
+                                  height: maxWidth * 0.2 * 9 / 16,
+                                  onImageReady: (imageFile) {
+                                    if (imageFile != null) videoThumbnail.value = imageFile;
+                                  },
                                 ),
-                                const SizedBox(height: 2.0),
-                                ShimmerWrapper(
-                                  shimmerEnabled: infoShimmerEnabled,
-                                  child: NamidaDummyContainer(
-                                    borderRadius: 4.0,
-                                    width: maxWidth - 24.0,
-                                    height: 12.0,
-                                    shimmerEnabled: infoShimmerEnabled,
-                                    child: () {
-                                      final date = streamResultRx.value?.info?.uploadDate.date ?? streamResultRx.value?.info?.publishDate.date ?? videoInfo?.publishedAt.date;
-                                      final dateFormatted = date?.millisecondsSinceEpoch.dateFormattedOriginal;
-                                      return Text(
-                                        [
-                                          videoInfo?.durSeconds?.secondsLabel ?? "00:00",
-                                          if (dateFormatted != null) dateFormatted,
-                                        ].join(' - '),
-                                        style: context.textTheme.displaySmall,
-                                      );
-                                    }(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          ObxO(
-                            rx: selectedVideoOnlyStream,
-                            builder: (context, selectedVideo) => ObxO(
-                              rx: selectedAudioOnlyStream,
-                              builder: (context, selectedAudio) {
-                                // -- we allow cuz now we using parameter builders
-                                // if (selectedAudio == null && selectedVideo == null) return const SizedBox();
-                                final isWEBM = (selectedAudio?.isWebm == true || selectedVideo?.isWebm == true);
-                                return Stack(
-                                  alignment: Alignment.bottomRight,
-                                  children: [
-                                    NamidaIconButton(
-                                      verticalPadding: 4.0,
-                                      horizontalPadding: 8.0,
-                                      icon: Broken.edit,
-                                      onPressed: () {
-                                        if (videoInfo == null && tagsMap.isEmpty) return;
-
-                                        showVideoDownloadOptionsSheet(
-                                          context: context,
-                                          videoTitle: videoInfo?.title,
-                                          videoUploader: videoInfo?.channelName,
-                                          tagMaps: tagsMap,
-                                          supportTagging: !isWEBM,
-                                          showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
-                                          onDownloadFilenameChanged: (filename) {
-                                            updatefilenameOutput(customName: filename);
-                                            formKey.currentState?.validate();
-                                          },
-                                          onDownloadGroupNameChanged: (newGroupName) {
-                                            groupName = newGroupName;
-                                            formKey.currentState?.validate();
-                                          },
-                                          initialGroupName: initialGroupName,
-                                        );
-                                      },
-                                    ),
-                                    if (isWEBM)
-                                      IgnorePointer(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(6),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: context.theme.scaffoldBackgroundColor,
-                                                spreadRadius: 0,
-                                                blurRadius: 3.0,
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Icon(
-                                            Broken.info_circle,
-                                            color: Colors.red,
-                                            size: 16.0,
-                                          ),
-                                        ),
-                                      )
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: 128.0, maxHeight: (maxHeight * 0.5).withMinimum(128.0)),
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          Obx(
-                            (context) {
-                              final e = selectedAudioOnlyStream.valueR;
-                              final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
-                              return getTextWidget(
-                                hasWebm: hasAudioWebm,
-                                title: lang.AUDIO,
-                                subtitle: subtitle,
-                                icon: Broken.audio_square,
-                                onCloseIconTap: () {
-                                  selectedAudioOnlyStream.value = null;
-                                  onAudioSelectionChanged();
-                                },
-                                onSussyIconTap: () {
-                                  showAudioWebm.toggle();
-                                  if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.isWebm == true) {
-                                    selectedAudioOnlyStream.value = streamResult?.audioStreams.firstOrNull;
-                                    onAudioSelectionChanged();
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                          streamResult?.audioStreams == null
-                              ? Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ShimmerWrapper(
-                                    shimmerEnabled: true,
-                                    child: getPopupItem(
-                                      items: List.filled(2, null),
-                                      itemBuilder: (item) => getDummyQualityChip(width: 164.0),
-                                    ),
-                                  ),
-                                )
-                              : ObxO(
-                                  rx: showAudioWebm,
-                                  builder: (context, showAudioWebm) => getPopupItem(
-                                    items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm).toList(),
-                                    itemBuilder: (element) {
-                                      return Obx(
-                                        (context) {
-                                          final cacheFile = element.getCachedFile(videoId);
-                                          return getQualityButton(
-                                            selected: selectedAudioOnlyStream.valueR == element,
-                                            cacheExists: cacheFile != null,
-                                            title: "${element.codecInfo.codec} • ${element.sizeInBytes.fileSizeFormatted}",
-                                            subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
-                                            onTap: () {
-                                              selectedAudioOnlyStream.value = element;
-                                              onAudioSelectionChanged();
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                          getDivider(),
-                          ObxO(
-                            rx: selectedVideoOnlyStream,
-                            builder: (context, vostream) {
-                              final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
-                              return getTextWidget(
-                                hasWebm: hasVideoWebm,
-                                title: lang.VIDEO,
-                                subtitle: subtitle,
-                                icon: Broken.video_square,
-                                onCloseIconTap: () {
-                                  selectedVideoOnlyStream.value = null;
-                                  onVideoSelectionChanged();
-                                },
-                                onSussyIconTap: () {
-                                  showVideoWebm.toggle();
-                                  if (showVideoWebm.value == false && selectedVideoOnlyStream.value?.isWebm == true) {
-                                    selectedVideoOnlyStream.value = streamResult?.videoStreams.firstOrNull;
-                                    onVideoSelectionChanged();
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                          streamResult?.videoStreams == null
-                              ? Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ShimmerWrapper(
-                                    shimmerEnabled: true,
-                                    child: getPopupItem(
-                                      items: List.filled(8, null),
-                                      itemBuilder: (item) => getDummyQualityChip(),
-                                    ),
-                                  ),
-                                )
-                              : ObxO(
-                                  rx: showVideoWebm,
-                                  builder: (context, showVideoWebm) => getPopupItem(
-                                    items: showVideoWebm ? streamResult!.videoStreams : streamResult!.videoStreams.where((element) => !element.isWebm).toList(),
-                                    itemBuilder: (element) {
-                                      return Obx(
-                                        (context) {
-                                          final cacheFile = element.getCachedFile(videoId);
-
-                                          var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
-                                          var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
-
-                                          return getQualityButton(
-                                            selected: selectedVideoOnlyStream.valueR == element,
-                                            cacheExists: cacheFile != null,
-                                            title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
-                                            subtitle: "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText",
-                                            onTap: () {
-                                              selectedVideoOnlyStream.value = element;
-                                              onVideoSelectionChanged();
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Obx((context) {
-                          final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.VIDEO_ONLY : null;
-                          final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.AUDIO_ONLY : null;
-                          final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
-
-                          return Text.rich(
-                            TextSpan(
-                              text: "${lang.OUTPUT}: ",
-                              style: context.textTheme.displaySmall,
-                              children: [
-                                TextSpan(
-                                  text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.NONE,
-                                  style: context.textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 18.0),
-                        Form(
-                          key: formKey,
-                          child: CustomTagTextField(
-                            controller: videoOutputFilenameController,
-                            hintText: videoOutputFilenameController.text,
-                            labelText: lang.FILE_NAME,
-                            onChanged: (_) => videoOutputFilenameWasUserEdited = true,
-                            validatorMode: AutovalidateMode.always,
-                            validator: (value) {
-                              if (value == null) return lang.PLEASE_ENTER_A_NAME;
-                              final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
-                              void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                    filenameExists.value = exist;
-                                  });
-                              if (file.existsSync()) {
-                                updateVal(true);
-                                return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
-                              } else {
-                                updateVal(false);
-                              }
-
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 6.0),
-                        YTDownloadFilenameBuilderRow(
-                          controller: videoOutputFilenameController,
-                        ),
-                        const SizedBox(height: 12.0),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: TextButton(
-                                child: NamidaButtonText(lang.CANCEL),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            ),
-                            const SizedBox(width: 12.0),
-                            Expanded(
-                              flex: 2,
-                              child: Obx(
-                                (context) {
-                                  final sizeSum = (selectedVideoOnlyStream.valueR?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.valueR?.sizeInBytes ?? 0);
-                                  final enabled = sizeSum > 0;
-                                  final sizeText = enabled ? "(${sizeSum.fileSizeFormatted})" : '';
-                                  return IgnorePointer(
-                                    ignoring: !enabled,
-                                    child: AnimatedOpacity(
-                                      duration: const Duration(milliseconds: 200),
-                                      opacity: enabled ? 1.0 : 0.6,
-                                      child: NamidaInkWell(
-                                        borderRadius: 12.0,
-                                        padding: const EdgeInsets.all(12.0),
-                                        height: 48.0,
-                                        bgColor: colorScheme,
-                                        decoration: filenameExists.valueR
-                                            ? BoxDecoration(
-                                                border: Border.all(
-                                                  width: 3.0,
-                                                  color: Colors.red.withAlpha(80),
-                                                ),
-                                              )
-                                            : const BoxDecoration(),
-                                        onTap: () async {
-                                          final group = DownloadTaskGroupName(groupName: groupName);
-                                          final itemConfig = YoutubeItemDownloadConfig(
-                                            originalIndex: originalIndex,
-                                            totalLength: totalLength,
-                                            playlistId: playlistId,
-                                            id: DownloadTaskVideoId(videoId: videoId),
-                                            groupName: group,
-                                            filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
-                                            ffmpegTags: tagsMap,
-                                            fileDate: videoDateTime,
-                                            videoStream: selectedVideoOnlyStream.value,
-                                            audioStream: selectedAudioOnlyStream.value,
-                                            streamInfoItem: streamInfoItem,
-                                            prefferedVideoQualityID: selectedVideoOnlyStream.value?.itag.toString(),
-                                            prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
-                                            fetchMissingAudio: selectedAudioOnlyStream.value != null,
-                                            fetchMissingVideo: selectedVideoOnlyStream.value != null,
-                                          );
-                                          if (onConfirmButtonTap != null) {
-                                            final accept = onConfirmButtonTap(groupName, itemConfig);
-                                            if (accept) context.safePop();
-                                          } else {
-                                            if (!await requestManageStoragePermission()) return;
-                                            requestIgnoreBatteryOptimizations();
-                                            if (context.mounted) context.safePop();
-                                            YoutubeController.inst.downloadYoutubeVideos(
-                                              useCachedVersionsIfAvailable: true,
-                                              autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-                                              keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                                              downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                                              addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-                                              groupName: group,
-                                              itemsConfig: [itemConfig],
-                                            );
-                                          }
-                                        },
-                                        child: Center(
+                                const SizedBox(width: 12.0),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ShimmerWrapper(
+                                        shimmerEnabled: infoShimmerEnabled,
+                                        child: NamidaDummyContainer(
+                                          borderRadius: 6.0,
+                                          width: maxWidth,
+                                          height: 18.0,
+                                          shimmerEnabled: infoShimmerEnabled,
                                           child: Text(
-                                            '${confirmButtonText == '' ? lang.DOWNLOAD : confirmButtonText} $sizeText',
-                                            style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                                            videoInfo?.title ?? videoId,
+                                            style: context.textTheme.displayMedium,
                                           ),
                                         ),
                                       ),
+                                      const SizedBox(height: 2.0),
+                                      ShimmerWrapper(
+                                        shimmerEnabled: infoShimmerEnabled,
+                                        child: NamidaDummyContainer(
+                                          borderRadius: 4.0,
+                                          width: maxWidth - 24.0,
+                                          height: 12.0,
+                                          shimmerEnabled: infoShimmerEnabled,
+                                          child: () {
+                                            final date = streamResultRx.value?.info?.uploadDate.date ?? streamResultRx.value?.info?.publishDate.date ?? videoInfo?.publishedAt.date;
+                                            final dateFormatted = date?.millisecondsSinceEpoch.dateFormattedOriginal;
+                                            return Text(
+                                              [
+                                                videoInfo?.durSeconds?.secondsLabel ?? "00:00",
+                                                if (dateFormatted != null) dateFormatted,
+                                              ].join(' - '),
+                                              style: context.textTheme.displaySmall,
+                                            );
+                                          }(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6.0),
+                                ObxO(
+                                  rx: selectedVideoOnlyStream,
+                                  builder: (context, selectedVideo) => ObxO(
+                                    rx: selectedAudioOnlyStream,
+                                    builder: (context, selectedAudio) {
+                                      // -- we allow cuz now we using parameter builders
+                                      // if (selectedAudio == null && selectedVideo == null) return const SizedBox();
+                                      final isWEBM = (selectedAudio?.isWebm == true || selectedVideo?.isWebm == true);
+                                      return Stack(
+                                        alignment: Alignment.bottomRight,
+                                        children: [
+                                          NamidaIconButton(
+                                            verticalPadding: 4.0,
+                                            horizontalPadding: 8.0,
+                                            icon: Broken.edit,
+                                            onPressed: () {
+                                              if (videoInfo == null && tagsMap.isEmpty) return;
+
+                                              showVideoDownloadOptionsSheet(
+                                                context: context,
+                                                videoTitle: videoInfo?.title,
+                                                videoUploader: videoInfo?.channelName,
+                                                tagMaps: tagsMap,
+                                                supportTagging: !isWEBM,
+                                                showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
+                                                onDownloadFilenameChanged: (filename) {
+                                                  updatefilenameOutput(customName: filename);
+                                                  formKey.currentState?.validate();
+                                                },
+                                                onDownloadGroupNameChanged: (newGroupName) {
+                                                  groupName = newGroupName;
+                                                  formKey.currentState?.validate();
+                                                },
+                                                initialGroupName: initialGroupName,
+                                              );
+                                            },
+                                          ),
+                                          if (isWEBM)
+                                            IgnorePointer(
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: context.theme.scaffoldBackgroundColor,
+                                                      spreadRadius: 0,
+                                                      blurRadius: 3.0,
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: const Icon(
+                                                  Broken.info_circle,
+                                                  color: Colors.red,
+                                                  size: 16.0,
+                                                ),
+                                              ),
+                                            )
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ObxO(
+                            rx: bodyHeightRx,
+                            builder: (context, bodyHeight) => SizedBox(
+                              height: bodyHeight,
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Obx(
+                                      (context) {
+                                        final e = selectedAudioOnlyStream.valueR;
+                                        final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
+                                        return getTextWidget(
+                                          hasWebm: hasAudioWebm,
+                                          title: lang.AUDIO,
+                                          subtitle: subtitle,
+                                          icon: Broken.audio_square,
+                                          onCloseIconTap: () {
+                                            selectedAudioOnlyStream.value = null;
+                                            onAudioSelectionChanged();
+                                          },
+                                          onSussyIconTap: () {
+                                            showAudioWebm.toggle();
+                                            if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.isWebm == true) {
+                                              selectedAudioOnlyStream.value = streamResult?.audioStreams.firstOrNull;
+                                              onAudioSelectionChanged();
+                                            }
+                                          },
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
+                                    SizedBox(
+                                      width: maxWidth,
+                                      child: streamResult?.audioStreams == null
+                                          ? Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: ShimmerWrapper(
+                                                shimmerEnabled: true,
+                                                child: getPopupItem(
+                                                  items: List.filled(2, null),
+                                                  itemBuilder: (item) => getDummyQualityChip(width: 164.0),
+                                                ),
+                                              ),
+                                            )
+                                          : ObxO(
+                                              rx: showAudioWebm,
+                                              builder: (context, showAudioWebm) => getPopupItem(
+                                                items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm).toList(),
+                                                itemBuilder: (element) {
+                                                  return Obx(
+                                                    (context) {
+                                                      final cacheFile = element.getCachedFile(videoId);
+                                                      return getQualityButton(
+                                                        selected: selectedAudioOnlyStream.valueR == element,
+                                                        cacheExists: cacheFile != null,
+                                                        title: "${element.codecInfo.codec} • ${element.sizeInBytes.fileSizeFormatted}",
+                                                        subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                                        onTap: () {
+                                                          selectedAudioOnlyStream.value = element;
+                                                          onAudioSelectionChanged();
+                                                        },
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                    ),
+                                    getDivider(),
+                                    ObxO(
+                                      rx: selectedVideoOnlyStream,
+                                      builder: (context, vostream) {
+                                        final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
+                                        return getTextWidget(
+                                          hasWebm: hasVideoWebm,
+                                          title: lang.VIDEO,
+                                          subtitle: subtitle,
+                                          icon: Broken.video_square,
+                                          onCloseIconTap: () {
+                                            selectedVideoOnlyStream.value = null;
+                                            onVideoSelectionChanged();
+                                          },
+                                          onSussyIconTap: () {
+                                            showVideoWebm.toggle();
+                                            if (showVideoWebm.value == false && selectedVideoOnlyStream.value?.isWebm == true) {
+                                              selectedVideoOnlyStream.value = streamResult?.videoStreams.firstOrNull;
+                                              onVideoSelectionChanged();
+                                            }
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: maxWidth,
+                                      child: streamResult?.videoStreams == null
+                                          ? Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: ShimmerWrapper(
+                                                shimmerEnabled: true,
+                                                child: getPopupItem(
+                                                  items: List.filled(8, null),
+                                                  itemBuilder: (item) => getDummyQualityChip(),
+                                                ),
+                                              ),
+                                            )
+                                          : ObxO(
+                                              rx: showVideoWebm,
+                                              builder: (context, showVideoWebm) => getPopupItem(
+                                                items: showVideoWebm ? streamResult!.videoStreams : streamResult!.videoStreams.where((element) => !element.isWebm).toList(),
+                                                itemBuilder: (element) {
+                                                  return Obx(
+                                                    (context) {
+                                                      final cacheFile = element.getCachedFile(videoId);
+
+                                                      var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                                      var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+
+                                                      return getQualityButton(
+                                                        selected: selectedVideoOnlyStream.valueR == element,
+                                                        cacheExists: cacheFile != null,
+                                                        title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
+                                                        subtitle: "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText",
+                                                        onTap: () {
+                                                          selectedVideoOnlyStream.value = element;
+                                                          onVideoSelectionChanged();
+                                                        },
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Padding(
+                            key: footerKey,
+                            padding: EdgeInsets.only(top: 8.0, bottom: bottomPadding + verticalPadding),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Obx((context) {
+                                  final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.VIDEO_ONLY : null;
+                                  final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.AUDIO_ONLY : null;
+                                  final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
+
+                                  return Text.rich(
+                                    TextSpan(
+                                      text: "${lang.OUTPUT}: ",
+                                      style: context.textTheme.displaySmall,
+                                      children: [
+                                        TextSpan(
+                                          text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.NONE,
+                                          style: context.textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 18.0),
+                                Form(
+                                  key: formKey,
+                                  child: CustomTagTextField(
+                                    controller: videoOutputFilenameController,
+                                    hintText: videoOutputFilenameController.text,
+                                    labelText: lang.FILE_NAME,
+                                    onChanged: (_) => videoOutputFilenameWasUserEdited = true,
+                                    validatorMode: AutovalidateMode.always,
+                                    validator: (value) {
+                                      if (value == null) return lang.PLEASE_ENTER_A_NAME;
+                                      final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
+                                      void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                            filenameExists.value = exist;
+                                          });
+                                      if (file.existsSync()) {
+                                        updateVal(true);
+                                        return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
+                                      } else {
+                                        updateVal(false);
+                                      }
+
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 6.0),
+                                YTDownloadFilenameBuilderRow(
+                                  controller: videoOutputFilenameController,
+                                ),
+                                const SizedBox(height: 12.0),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: TextButton(
+                                        child: NamidaButtonText(lang.CANCEL),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Obx(
+                                        (context) {
+                                          final sizeSum = (selectedVideoOnlyStream.valueR?.sizeInBytes ?? 0) + (selectedAudioOnlyStream.valueR?.sizeInBytes ?? 0);
+                                          final enabled = sizeSum > 0;
+                                          final sizeText = enabled ? "(${sizeSum.fileSizeFormatted})" : '';
+                                          return IgnorePointer(
+                                            ignoring: !enabled,
+                                            child: AnimatedOpacity(
+                                              duration: const Duration(milliseconds: 200),
+                                              opacity: enabled ? 1.0 : 0.6,
+                                              child: NamidaInkWell(
+                                                borderRadius: 12.0,
+                                                padding: const EdgeInsets.all(12.0),
+                                                height: 48.0,
+                                                bgColor: colorScheme,
+                                                decoration: filenameExists.valueR
+                                                    ? BoxDecoration(
+                                                        border: Border.all(
+                                                          width: 3.0,
+                                                          color: Colors.red.withAlpha(80),
+                                                        ),
+                                                      )
+                                                    : const BoxDecoration(),
+                                                onTap: () async {
+                                                  final group = DownloadTaskGroupName(groupName: groupName);
+                                                  final itemConfig = YoutubeItemDownloadConfig(
+                                                    originalIndex: originalIndex,
+                                                    totalLength: totalLength,
+                                                    playlistId: playlistId,
+                                                    id: DownloadTaskVideoId(videoId: videoId),
+                                                    groupName: group,
+                                                    filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
+                                                    ffmpegTags: tagsMap,
+                                                    fileDate: videoDateTime,
+                                                    videoStream: selectedVideoOnlyStream.value,
+                                                    audioStream: selectedAudioOnlyStream.value,
+                                                    streamInfoItem: streamInfoItem,
+                                                    prefferedVideoQualityID: selectedVideoOnlyStream.value?.itag.toString(),
+                                                    prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
+                                                    fetchMissingAudio: selectedAudioOnlyStream.value != null,
+                                                    fetchMissingVideo: selectedVideoOnlyStream.value != null,
+                                                  );
+                                                  if (onConfirmButtonTap != null) {
+                                                    final accept = onConfirmButtonTap(groupName, itemConfig);
+                                                    if (accept) context.safePop();
+                                                  } else {
+                                                    if (!await requestManageStoragePermission()) return;
+                                                    requestIgnoreBatteryOptimizations();
+                                                    if (context.mounted) context.safePop();
+                                                    YoutubeController.inst.downloadYoutubeVideos(
+                                                      useCachedVersionsIfAvailable: true,
+                                                      autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                                                      keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                                                      downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                                      addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                                                      groupName: group,
+                                                      itemsConfig: [itemConfig],
+                                                    );
+                                                  }
+                                                },
+                                                child: Center(
+                                                  child: Text(
+                                                    '${confirmButtonText == '' ? lang.DOWNLOAD : confirmButtonText} $sizeText',
+                                                    style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: bottomPadding + 18.0),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      );
+    },
   );
 
   void closeStreams() {
@@ -807,6 +848,7 @@ Future<void> showDownloadVideoBottomSheet({
     videoOutputFilenameController.dispose();
     videoThumbnail.close();
     filenameExists.close();
+    bodyHeightRx.close();
   }
 
   closeStreams.executeAfterDelay();

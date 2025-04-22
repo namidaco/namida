@@ -1792,12 +1792,19 @@ class SubpageInfoContainer extends StatelessWidget {
               padding: const EdgeInsets.only(left: 14.0),
               child: NamidaHero(
                 tag: '${pauseHero}line1_$heroTag',
-                child: Text(
-                  title,
-                  style: context.textTheme.displayLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: showSubpageInfoAtSide
+                    ? Text(
+                        title,
+                        style: context.textTheme.displayLarge?.copyWith(fontSize: 14.0),
+                        softWrap: true,
+                      )
+                    : Text(
+                        title,
+                        style: context.textTheme.displayLarge?.copyWith(fontSize: 14.0),
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
               ),
             ),
             const SizedBox(
@@ -1811,7 +1818,7 @@ class SubpageInfoContainer extends StatelessWidget {
                   subtitle,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
-                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
                 ),
               ),
             ),
@@ -1827,7 +1834,7 @@ class SubpageInfoContainer extends StatelessWidget {
                     thirdLineText,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
+                    style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
                   ),
                 ),
               ),
@@ -1835,23 +1842,25 @@ class SubpageInfoContainer extends StatelessWidget {
             const SizedBox(
               height: 18.0,
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const SizedBox(width: 6.0),
-                NamidaButton(
-                  icon: Broken.shuffle,
-                  onPressed: () => Player.inst.playOrPause(
-                    0,
-                    tracksFn(),
-                    source,
-                    shuffle: true,
+            FittedBox(
+              alignment: Alignment.topLeft,
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  const SizedBox(width: 6.0),
+                  NamidaButton(
+                    icon: Broken.shuffle,
+                    onPressed: () => Player.inst.playOrPause(
+                      0,
+                      tracksFn(),
+                      source,
+                      shuffle: true,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6.0),
-                Flexible(
-                  child: ElevatedButton.icon(
+                  const SizedBox(width: 6.0),
+                  ElevatedButton.icon(
                     onPressed: () => Player.inst.addToQueue(tracksFn()),
                     icon: const StackedIcon(
                       disableColor: true,
@@ -1868,9 +1877,9 @@ class SubpageInfoContainer extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 6.0),
-              ],
+                  const SizedBox(width: 6.0),
+                ],
+              ),
             )
           ],
         );
@@ -1894,13 +1903,9 @@ class SubpageInfoContainer extends StatelessWidget {
                     child: imageWidget,
                   ),
                 ),
-                FittedBox(
-                  alignment: Alignment.topCenter,
-                  fit: BoxFit.fitHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4.0),
-                    child: textAndButtonsWidget,
-                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: textAndButtonsWidget,
                 ),
               ],
             )
@@ -1917,11 +1922,8 @@ class SubpageInfoContainer extends StatelessWidget {
                 ),
                 Flexible(
                   flex: 2,
-                  child: FittedBox(
-                    alignment: Alignment.topLeft,
-                    fit: BoxFit.scaleDown,
-                    child: textAndButtonsWidget,
-                  ),
+                  fit: FlexFit.tight,
+                  child: textAndButtonsWidget,
                 ),
               ],
             ),

@@ -261,7 +261,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
                   child: SizedBox(
-                    width: context.width,
+                    width: maxWidth,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -304,7 +304,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                 const SizedBox(height: 2.0),
                               ],
                               NamidaDummyContainer(
-                                width: context.width * 0.5,
+                                width: maxWidth * 0.5,
                                 height: 12.0,
                                 borderRadius: 6.0,
                                 shimmerEnabled: author == null,
@@ -579,7 +579,7 @@ class YTCommentCardCompact extends StatelessWidget {
                 children: [
                   const SizedBox(height: 2.0),
                   NamidaDummyContainer(
-                    width: context.width * 0.35,
+                    width: maxWidth * 0.35,
                     height: 8.0,
                     borderRadius: 4.0,
                     shimmerEnabled: author == null,
@@ -666,47 +666,51 @@ class YTCommentCardCompact extends StatelessWidget {
                           ),
                   ),
                   const SizedBox(height: 4.0),
-                  Row(
-                    children: [
-                      const SizedBox(width: 4.0),
-                      if (comment != null)
-                        Icon(
-                          comment!.likeStatus == LikeStatus.liked ? Broken.like_filled : Broken.like_1,
-                          size: 12.0,
-                        ),
-                      if (likeCount == null || likeCount > 0) ...[
+                  FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: [
                         const SizedBox(width: 4.0),
-                        NamidaDummyContainer(
-                          width: 18.0,
-                          height: 6.0,
-                          borderRadius: 4.0,
-                          shimmerEnabled: likeCount == null,
-                          child: Text(
-                            likeCount?.formatDecimalShort() ?? '?',
+                        if (comment != null)
+                          Icon(
+                            comment!.likeStatus == LikeStatus.liked ? Broken.like_filled : Broken.like_1,
+                            size: 12.0,
+                          ),
+                        if (likeCount == null || likeCount > 0) ...[
+                          const SizedBox(width: 4.0),
+                          NamidaDummyContainer(
+                            width: 18.0,
+                            height: 6.0,
+                            borderRadius: 4.0,
+                            shimmerEnabled: likeCount == null,
+                            child: Text(
+                              likeCount?.formatDecimalShort() ?? '?',
+                              style: context.textTheme.displaySmall?.copyWith(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (repliesCount != null && repliesCount > 0) ...[
+                          Text(
+                            ' | ',
+                            style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
+                          ),
+                          Text(
+                            [
+                              lang.REPLIES,
+                              repliesCount,
+                            ].join(' • '),
                             style: context.textTheme.displaySmall?.copyWith(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                      if (repliesCount != null && repliesCount > 0) ...[
-                        Text(
-                          ' | ',
-                          style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
-                        ),
-                        Text(
-                          [
-                            lang.REPLIES,
-                            repliesCount,
-                          ].join(' • '),
-                          style: context.textTheme.displaySmall?.copyWith(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ],
               ),

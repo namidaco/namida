@@ -38,12 +38,15 @@ class SmallYTActionButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            iconWidget ??
-                smallIconWidget ??
-                Icon(
-                  icon,
-                  size: 25.0,
-                ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: iconWidget ??
+                  smallIconWidget ??
+                  Icon(
+                    icon,
+                    size: 25.0,
+                  ),
+            ),
             SizedBox(height: 6.0),
             NamidaDummyContainer(
               width: 24.0,

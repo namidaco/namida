@@ -96,7 +96,7 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          visualDensity: Platform.isWindows ? VisualDensity.comfortable : VisualDensity.compact,
+          visualDensity: Platform.isWindows ? const VisualDensity(horizontal: -1.5, vertical: -1.5) : const VisualDensity(horizontal: -2.0, vertical: -2.0),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           ),

@@ -331,64 +331,93 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 12.0),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    lang.QUEUE,
-                                    style: context.textTheme.displayMedium,
-                                  ),
-                                  Obx(
-                                    (context) => Text(
-                                      "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
-                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                        child: LayoutWidthProvider(
+                          builder: (context, maxWidth) {
+                            final textMaxWidth = maxWidth * 0.4;
+                            final iconsMaxWidth = (maxWidth - textMaxWidth);
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(maxWidth: textMaxWidth),
+                                    child: FittedBox(
+                                      alignment: Alignment.centerLeft,
+                                      fit: BoxFit.scaleDown,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 12.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              lang.QUEUE,
+                                              style: context.textTheme.displayMedium,
+                                            ),
+                                            Obx(
+                                              (context) => Text(
+                                                "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
+                                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 6.0),
-                            _ActionItem(
-                              icon: Broken.music_playlist,
-                              tooltip: lang.ADD_TO_PLAYLIST,
-                              onTap: () {
-                                showAddToPlaylistSheet(
-                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
-                                  idsNamesLookup: const {},
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 6.0),
-                            _ActionItem(
-                              icon: Broken.import,
-                              tooltip: lang.DOWNLOAD,
-                              onTap: () {
-                                YTPlaylistDownloadPage(
-                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
-                                  playlistName: lang.QUEUE,
-                                  infoLookup: const {},
-                                  playlistInfo: PlaylistBasicInfo(
-                                    id: '',
-                                    title: lang.QUEUE,
-                                    videosCountText: Player.inst.currentQueue.value.length.toString(),
-                                    videosCount: Player.inst.currentQueue.value.length,
-                                    thumbnails: [],
+                                ),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: iconsMaxWidth),
+                                  child: FittedBox(
+                                    alignment: Alignment.centerRight,
+                                    fit: BoxFit.scaleDown,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 12.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          const SizedBox(width: 6.0),
+                                          _ActionItem(
+                                            icon: Broken.music_playlist,
+                                            tooltip: lang.ADD_TO_PLAYLIST,
+                                            onTap: () {
+                                              showAddToPlaylistSheet(
+                                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
+                                                idsNamesLookup: const {},
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 6.0),
+                                          _ActionItem(
+                                            icon: Broken.import,
+                                            tooltip: lang.DOWNLOAD,
+                                            onTap: () {
+                                              YTPlaylistDownloadPage(
+                                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
+                                                playlistName: lang.QUEUE,
+                                                infoLookup: const {},
+                                                playlistInfo: PlaylistBasicInfo(
+                                                  id: '',
+                                                  title: lang.QUEUE,
+                                                  videosCountText: Player.inst.currentQueue.value.length.toString(),
+                                                  videosCount: Player.inst.currentQueue.value.length,
+                                                  thumbnails: [],
+                                                ),
+                                              ).navigate();
+                                            },
+                                          ),
+                                          const SizedBox(width: 4.0),
+                                          NamidaIconButton(
+                                            iconColor: context.defaultIconColor().withValues(alpha: 0.95),
+                                            icon: Broken.arrow_down_2,
+                                            onPressed: () => _animateBigToSmall(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ).navigate();
-                              },
-                            ),
-                            const SizedBox(width: 4.0),
-                            NamidaIconButton(
-                              iconColor: context.defaultIconColor().withValues(alpha: 0.95),
-                              icon: Broken.arrow_down_2,
-                              onPressed: () => _animateBigToSmall(),
-                            ),
-                            const SizedBox(width: 12.0),
-                          ],
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       Expanded(

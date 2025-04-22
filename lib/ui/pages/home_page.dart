@@ -926,108 +926,114 @@ class _MixesCardState extends State<_MixesCard> {
     NamidaNavigator.inst.navigateDialog(
       colorScheme: _cardColor,
       durationInMs: 250,
-      dialogBuilder: (theme) => SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            const SliverPadding(padding: EdgeInsets.only(top: kToolbarHeight)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              sliver: SliverToBoxAdapter(
-                child: thumbnailWidget,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: NamidaInkWell(
-                borderRadius: 12.0,
-                margin: const EdgeInsets.all(12.0),
-                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withValues(alpha: 0.8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Broken.audio_square, size: 26.0),
-                    const SizedBox(width: 6.0),
-                    Expanded(
-                      child: Text(
-                        widget.title,
-                        style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    NamidaInkWell(
-                      onTap: () {
-                        Player.inst.playOrPause(
-                          0,
-                          widget.tracks,
-                          QueueSource.homePageItem,
-                          homePageItem: HomePageItems.mixes,
-                        );
-                      },
-                      borderRadius: 8.0,
-                      padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                      bgColor: context.theme.cardColor.withValues(alpha: 0.4),
-                      child: Row(
-                        children: [
-                          const Icon(Broken.play_cricle, size: 20.0),
-                          const SizedBox(width: 4.0),
-                          Text(
-                            "${widget.tracks.length}",
+      dialogBuilder: (theme) => Align(
+        alignment: Alignment.centerLeft,
+        child: SizedBox(
+          width: Dimensions.inst.availableAppContentWidth,
+          child: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                const SliverPadding(padding: EdgeInsets.only(top: kToolbarHeight)),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  sliver: SliverToBoxAdapter(
+                    child: thumbnailWidget,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: NamidaInkWell(
+                    borderRadius: 12.0,
+                    margin: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+                    bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withValues(alpha: 0.8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Broken.audio_square, size: 26.0),
+                        const SizedBox(width: 6.0),
+                        Expanded(
+                          child: Text(
+                            widget.title,
                             style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
+                        ),
+                        NamidaInkWell(
+                          onTap: () {
+                            Player.inst.playOrPause(
+                              0,
+                              widget.tracks,
+                              QueueSource.homePageItem,
+                              homePageItem: HomePageItems.mixes,
+                            );
+                          },
+                          borderRadius: 8.0,
+                          padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                          bgColor: context.theme.cardColor.withValues(alpha: 0.4),
+                          child: Row(
+                            children: [
+                              const Icon(Broken.play_cricle, size: 20.0),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                "${widget.tracks.length}",
+                                style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  sliver: SliverFillRemaining(
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: context.theme.cardColor,
+                        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                      ),
+                      child: TrackTilePropertiesProvider(
+                        configs: const TrackTilePropertiesConfigs(
+                          queueSource: QueueSource.homePageItem,
+                        ),
+                        builder: (properties) => ListView.builder(
+                          itemExtent: Dimensions.inst.trackTileItemExtent,
+                          itemCount: widget.tracks.length,
+                          itemBuilder: (context, index) {
+                            final tr = widget.tracks[index];
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: context.theme.scaffoldBackgroundColor,
+                                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                              ),
+                              child: TrackTile(
+                                properties: properties,
+                                onTap: () {
+                                  Player.inst.playOrPause(
+                                    index,
+                                    widget.tracks,
+                                    QueueSource.homePageItem,
+                                    homePageItem: HomePageItems.mixes,
+                                  );
+                                },
+                                trackOrTwd: tr,
+                                index: index,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              sliver: SliverFillRemaining(
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: context.theme.cardColor,
-                    borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                  ),
-                  child: TrackTilePropertiesProvider(
-                    configs: const TrackTilePropertiesConfigs(
-                      queueSource: QueueSource.homePageItem,
-                    ),
-                    builder: (properties) => ListView.builder(
-                      itemExtent: Dimensions.inst.trackTileItemExtent,
-                      itemCount: widget.tracks.length,
-                      itemBuilder: (context, index) {
-                        final tr = widget.tracks[index];
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            color: context.theme.scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                          ),
-                          child: TrackTile(
-                            properties: properties,
-                            onTap: () {
-                              Player.inst.playOrPause(
-                                index,
-                                widget.tracks,
-                                QueueSource.homePageItem,
-                                homePageItem: HomePageItems.mixes,
-                              );
-                            },
-                            trackOrTwd: tr,
-                            index: index,
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
