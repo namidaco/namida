@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field
 
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/extensions.dart';
 
 class CountPerRow {
   int get rawValue => _recommended;
@@ -49,7 +50,7 @@ class CountPerRow {
   static int getRecommendedMaximum({int minimum = 1}) {
     final availableWidth = Dimensions.inst.availableAppContentWidth;
     final maxy = (availableWidth * 0.015).round();
-    return maxy.clamp(4, 11);
+    return maxy.clampInt(4, 11);
   }
 
   // doesnt count margin or padding

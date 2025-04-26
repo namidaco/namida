@@ -768,3 +768,25 @@ extension ColorExtensions on Color {
 int _floatToInt8(double x) {
   return (x * 255.0).round() & 0xff;
 }
+
+extension ClamperExtInt on int {
+  int clampInt(int min, int max) {
+    assert(min <= max && !max.isNaN && !min.isNaN);
+    var x = this;
+    if (x < min) return min;
+    if (x > max) return max;
+    if (x.isNaN) return max;
+    return x;
+  }
+}
+
+extension ClamperExtDouble on double {
+  double clampDouble(double min, double max) {
+    assert(min <= max && !max.isNaN && !min.isNaN);
+    var x = this;
+    if (x < min) return min;
+    if (x > max) return max;
+    if (x.isNaN) return max;
+    return x;
+  }
+}

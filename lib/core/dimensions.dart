@@ -38,9 +38,9 @@ class Dimensions {
 
   static double calculateDialogHorizontalMargin(BuildContext context, double minimum) {
     final screenWidth = context.width;
-    final val = (screenWidth / 1000).clamp(0.0, 1.0);
+    final val = (screenWidth / 1000).clampDouble(0.0, 1.0);
     double percentage = 0.25 * val * val;
-    percentage = percentage.clamp(0.0, 0.25);
+    percentage = percentage.clampDouble(0.0, 0.25);
     return (screenWidth * percentage).withMinimum(minimum);
   }
 

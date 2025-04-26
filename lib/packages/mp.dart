@@ -149,7 +149,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   double get maxHeight => widget.maxHeight - _padding.bottom - _padding.top;
   double get controllerHeight => controller.value * maxHeight;
   double get percentage => (controllerHeight - widget.minHeight) / (maxHeight - widget.minHeight);
-  double get dismissPercentage => (controllerHeight / widget.minHeight).clamp(0.0, 1.0);
+  double get dismissPercentage => (controllerHeight / widget.minHeight).clampDouble(0.0, 1.0);
 
   void _updateHeight(double heightPre, {Duration? duration}) {
     final height = _dismissible ? heightPre : heightPre.withMinimum(widget.minHeight);
@@ -238,7 +238,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
         animation: controller,
         builder: (context, _) {
           final percentage = this.percentage;
-          final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clamp(0, widget.bottomMargin);
+          final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clampDouble(0, widget.bottomMargin);
           return RepaintBoundary(
             child: Stack(
               alignment: Alignment.bottomCenter,

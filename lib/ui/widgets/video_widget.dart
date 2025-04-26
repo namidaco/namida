@@ -306,7 +306,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   void _setScreenBrightness(double value) async {
-    value = value.clamp(0.01, 1.0); // -- below 0.01 treats it as 0 and disables it making it jump to system brightness
+    value = value.clampDouble(0.01, 1.0); // -- below 0.01 treats it as 0 and disables it making it jump to system brightness
     try {
       await ScreenBrightness.instance.setApplicationScreenBrightness(value);
     } catch (_) {}
@@ -359,7 +359,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           builder: (context, child) {
             return DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: (controller.value / 3).clamp(0, 1)),
+                color: Colors.white.withValues(alpha: (controller.value / 3).clampDouble(0, 1)),
                 shape: BoxShape.circle,
               ),
               child: child!,

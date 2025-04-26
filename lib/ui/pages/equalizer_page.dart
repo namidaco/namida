@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import 'package:just_audio/just_audio.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -680,7 +682,7 @@ class EqualizerControls extends StatelessWidget {
   });
 
   void _onGainSet(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
-    final newVal = newValue.clamp(parameters.minDecibels, parameters.maxDecibels).roundDecimals(4);
+    final newVal = newValue.clampDouble(parameters.minDecibels, parameters.maxDecibels).roundDecimals(4);
     settings.equalizer.save(equalizerValue: MapEntry(band.centerFrequency, newVal));
     band.setGain(newVal);
     onGainSetCallback();
@@ -733,7 +735,7 @@ class EqualizerControls extends StatelessWidget {
                                         max: parameters.maxDecibels,
                                         value: band.gain,
                                         onChanged: (value) => _onGainSetNoClamp(band, parameters, value),
-                                        circleWidth: (context.width / allBands.length * 0.7).clamp(8.0, 24.0),
+                                        circleWidth: (context.width / allBands.length * 0.7).clampDouble(8.0, 24.0),
                                         tapToUpdate: tapToUpdate,
                                       ),
                                     ),
@@ -817,7 +819,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
   void _updateValue(BoxConstraints constraints, double total, double dy) {
     final inversePosition = constraints.maxHeight - dy;
     final heightPerc = inversePosition / constraints.maxHeight;
-    final finalValue = (heightPerc * total + widget.min).clamp(widget.min, widget.max);
+    final finalValue = (heightPerc * total + widget.min).clampDouble(widget.min, widget.max);
     widget.onChanged(finalValue);
   }
 

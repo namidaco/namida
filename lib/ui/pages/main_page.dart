@@ -899,7 +899,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
     if (drawerState == null) return child;
 
     double getDrawerPercentage() {
-      final fastValue = ((1 - drawerState.drawerPercentage) * 1.5 - 0.5).clamp(0.0, 1.0);
+      final fastValue = ((1 - drawerState.drawerPercentage) * 1.5 - 0.5).clampDouble(0.0, 1.0);
       return fastValue;
     }
 

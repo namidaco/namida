@@ -70,7 +70,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> {
                   builder: (context, child) {
                     if (widget.animation.value > 0.01) {
                       return Opacity(
-                        opacity: widget.animation.value.clamp(0.0, 1.0),
+                        opacity: widget.animation.value.clampDouble(0.0, 1.0),
                         child: child!,
                       );
                     } else {

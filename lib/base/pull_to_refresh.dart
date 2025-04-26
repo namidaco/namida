@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/utils.dart';
@@ -87,7 +88,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   AnimationController get _animation2 => refreshAnimation ?? _animation2Backup!;
 
   final _minTrigger = 20;
-  num get pullNormalizer => 100;
+  double get pullNormalizer => 100.0;
 
   final double maxDistance = _defaultMaxDistance;
 
@@ -96,7 +97,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   bool _onVerticalDragUpdate(double dy) {
     _distanceDragged -= dy;
     if (_distanceDragged < -_minTrigger) {
-      animation.animateTo(((_distanceDragged + _minTrigger).abs() / pullNormalizer).clamp(0, 1));
+      animation.animateTo(((_distanceDragged + _minTrigger).abs() / pullNormalizer).clampDouble(0, 1));
     } else if (animation.value > 0) {
       animation.animateTo(0);
     }

@@ -1296,7 +1296,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     displayBottomBGLayer: !enableBottomNavBar,
                                     onDismiss: dismissibleMiniplayer ? Player.inst.clearQueue : null,
                                     onDismissing: (dismissPercentage) {
-                                      Player.inst.setPlayerVolume(dismissPercentage.clamp(0.0, settings.player.volume.value));
+                                      Player.inst.setPlayerVolume(dismissPercentage.clampDouble(0.0, settings.player.volume.value));
                                     },
                                     onHeightChange: (percentage) {
                                       MiniPlayerController.inst.animateMiniplayer(percentage);
@@ -1308,10 +1308,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                       );
                                     },
                                     builder: (double height, double p) {
-                                      final percentage = (p * 2.8).clamp(0.0, 1.0);
-                                      final percentageFast = (p * 1.5 - 0.5).clamp(0.0, 1.0);
+                                      final percentage = (p * 2.8).clampDouble(0.0, 1.0);
+                                      final percentageFast = (p * 1.5 - 0.5).clampDouble(0.0, 1.0);
                                       final inversePerc = 1 - percentage;
-                                      final reverseOpacity = (inversePerc * 2.8 - 1.8).clamp(0.0, 1.0);
+                                      final reverseOpacity = (inversePerc * 2.8 - 1.8).clampDouble(0.0, 1.0);
                                       final finalspace1sb = space1sb * inversePerc;
                                       final finalspace3sb = space3sb * inversePerc;
                                       final finalspace4buttons = space4 * inversePerc;
@@ -1319,7 +1319,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                       final finalpadding = 4.0 * inversePerc;
                                       final finalbr = (8.0 * inversePerc).multipliedRadius;
                                       final double finalthumbnailWidth =
-                                          (space2ForThumbnail + maxWidth * percentage).clamp(space2ForThumbnail, (maxWidth - finalspace1sb - finalspace3sb).toDouble());
+                                          (space2ForThumbnail + maxWidth * percentage).clampDouble(space2ForThumbnail, (maxWidth - finalspace1sb - finalspace3sb).toDouble());
                                       final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
                                       return Stack(
@@ -1352,8 +1352,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   if (reverseOpacity > 0) ...[
                                                     SizedBox(width: finalspace3sb),
                                                     SizedBox(
-                                                      width:
-                                                          (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clamp(0, maxWidth),
+                                                      width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb)
+                                                          .clampDouble(0, maxWidth),
                                                       child: NamidaOpacity(
                                                         key: Key("${currentId}_title_button1"),
                                                         enabled: true,

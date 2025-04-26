@@ -545,7 +545,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         Positioned.fill(
           child: ScaleDetector(
             onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,
-            onScaleUpdate: (details) => refreshState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clamp(0.5, 2.0)),
+            onScaleUpdate: (details) => refreshState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clampDouble(0.5, 2.0)),
             onScaleEnd: (details) => widget.isFullScreenView ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier),
           ),
         ),

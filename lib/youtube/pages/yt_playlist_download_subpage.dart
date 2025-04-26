@@ -608,7 +608,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
           Positioned.fill(
             child: ScaleDetector(
               onScaleStart: (details) => _previousScale = _hmultiplier,
-              onScaleUpdate: (details) => setState(() => _hmultiplier = (details.scale * _previousScale).clamp(0.5, 2.0)),
+              onScaleUpdate: (details) => setState(() => _hmultiplier = (details.scale * _previousScale).clampDouble(0.5, 2.0)),
             ),
           ),
         ],

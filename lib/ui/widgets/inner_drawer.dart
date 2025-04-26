@@ -35,7 +35,7 @@ class NamidaInnerDrawer extends StatefulWidget {
 
 class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerProviderStateMixin {
   Animation<double> get animationView => controller.view;
-  double get drawerPercentage => (controller.value / _upperBoundRx.value).clamp(0.0, 1.0);
+  double get drawerPercentage => (controller.value / _upperBoundRx.value).clampDouble(0.0, 1.0);
   bool get isOpened => _isOpened;
   void toggle() => isOpened ? _closeDrawer() : _openDrawer();
   void open() => _openDrawer();
@@ -119,7 +119,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 child: IgnorePointer(
                   ignoring: animationValue == controller.lowerBound,
                   child: ColoredBox(
-                    color: Colors.black.withValues(alpha: (animationValue * 1.2).clamp(0.0, 1.0)),
+                    color: Colors.black.withValues(alpha: (animationValue * 1.2).clampDouble(0.0, 1.0)),
                   ),
                 ),
               ),
@@ -179,7 +179,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                   child: ObxO(
                     rx: _upperBoundRx,
                     builder: (context, upperBound) => ColoredBox(
-                      color: Colors.black.withValues(alpha: ((upperBound - animationValue) * 1.8).clamp(0.0, 1.0)),
+                      color: Colors.black.withValues(alpha: ((upperBound - animationValue) * 1.8).clampDouble(0.0, 1.0)),
                     ),
                   ),
                 ),

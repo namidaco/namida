@@ -155,7 +155,7 @@ void showListensDialog({
                               return NamidaInkWell(
                                 decoration: BoxDecoration(border: isToday ? Border.all(color: dialogColor) : null),
                                 margin: const EdgeInsets.all(2.0),
-                                bgColor: dialogColor.withAlpha((listens * 5).clamp(0, 255)), // *5 since 50 listens a days is already a lot
+                                bgColor: dialogColor.withAlpha((listens * 5).clampInt(0, 255)), // *5 since 50 listens a days is already a lot
                                 borderRadius: 6.0,
                                 onTap: datesMapByDay[date] == null ? null : () => onListenTap(date.millisecondsSinceEpoch),
                                 child: Column(

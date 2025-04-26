@@ -33,7 +33,7 @@ class _YoutubeIDStatsManager {
     lastPositionInMs ??= stats?.lastPositionInMs ?? 0;
     final newStats = YoutubeIDStats(
       videoId: item.id,
-      rating: rating?.clamp(0, 100) ?? 0,
+      rating: rating?.clampInt(0, 100) ?? 0,
       tags: tags,
       moods: moods,
       lastPositionInMs: lastPositionInMs,

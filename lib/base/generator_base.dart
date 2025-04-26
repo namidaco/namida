@@ -59,7 +59,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     const length = 10;
     final max = historytracks.length;
-    int clamped(int range) => range.clamp(0, max);
+    int clamped(int range) => range.clampInt(0, max);
 
     final Map<E2, int> numberOfListensMap = {};
 

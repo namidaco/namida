@@ -704,7 +704,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                 return Slider.adaptive(
                                                   min: min,
                                                   max: max,
-                                                  value: value.clamp(min, max),
+                                                  value: value.clampDouble(min, max),
                                                   onChanged: onChanged,
                                                   divisions: (max * 100).round(),
                                                   label: "${(value * 100).toStringAsFixed(0)}%",

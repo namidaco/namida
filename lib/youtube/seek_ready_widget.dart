@@ -78,7 +78,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
   }
 
   void _onSeekDragUpdate(double deltax, double maxWidth) {
-    final percentageSwiped = (deltax / maxWidth).clamp(0.0, 1.0);
+    final percentageSwiped = (deltax / maxWidth).clampDouble(0.0, 1.0);
     _seekPercentage.value = percentageSwiped;
   }
 
@@ -270,13 +270,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
                 final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";
                 return Transform.translate(
-                  offset: Offset(
-                      clampDouble(
-                        maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5,
-                        seekTextExtraMargin,
-                        maxWidth - seekTextWidth - seekTextExtraMargin,
-                      ),
-                      -12.0),
+                  offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(
                     animation: _animation,
                     child: Container(
@@ -396,10 +390,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   (context) {
                     final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
                     final currentPositionMS = Player.inst.nowPlayingPositionR;
-                    final pos = durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS));
-                    final clampedEdge = clampCircleEdges ? halfCircle / 2 : 0;
+                    final pos = durMS == 0 ? 0.0 : (maxWidth * (currentPositionMS / durMS));
+                    final clampedEdge = clampCircleEdges ? halfCircle / 2 : 0.0;
                     return Transform.translate(
-                      offset: Offset(-halfCircle / 2 + pos.clamp(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),
+                      offset: Offset(-halfCircle / 2 + pos.clampDouble(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.9),
@@ -429,10 +423,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- circle
             Obx(
               (context) {
-                final clampedEdge = clampCircleEdges ? circleWidth / 2 : 0;
+                final clampedEdge = clampCircleEdges ? circleWidth / 2 : 0.0;
                 final seekP = _seekPercentage.valueR;
                 return Transform.translate(
-                  offset: Offset(-halfCircle + (maxWidth * seekP).clamp(clampedEdge, maxWidth - clampedEdge), barHeight / 4),
+                  offset: Offset(-halfCircle + (maxWidth * seekP).clampDouble(clampedEdge, maxWidth - clampedEdge), barHeight / 4),
                   child: circleWidget,
                 );
               },

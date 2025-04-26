@@ -111,7 +111,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                             final seekValue = MiniPlayerController.inst.seekValue.valueR;
                             final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
                             final durInMs = _currentDurationInMSR;
-                            final percentage = (position / durInMs).clamp(0.0, durInMs.toDouble());
+                            final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
                             return ShaderMask(
                               blendMode: BlendMode.srcIn,
                               shaderCallback: (Rect bounds) {
@@ -172,7 +172,7 @@ class NamidaWaveBars extends StatelessWidget {
       children: waveList
           .map(
             (e) => SizedBox(
-              height: (heightPercentage * e).clamp(barMinHeight, barMaxHeight),
+              height: (heightPercentage * e).clampDouble(barMinHeight, barMaxHeight),
               width: barWidth,
               child: decorationBox,
             ),

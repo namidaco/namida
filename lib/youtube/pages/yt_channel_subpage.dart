@@ -141,7 +141,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       position += _scrollControllersOffsets[_tabIndex] ?? 0; // this also important to prevent jumping
 
       final p = (position - _scrollThreshold) / 100;
-      final pc = (1 - p).clamp(0.0, 1.0);
+      final pc = (1 - p).clampDouble(0.0, 1.0);
       if (isDownwards && pc > 0 && pc > _latestAnimation) return; // prevent jumping from hidden to visible (after switching to new tab)
 
       if (!_animatedFully) {

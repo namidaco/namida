@@ -1873,7 +1873,7 @@ class SubpageInfoContainer extends StatelessWidget {
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: (maxWidth * 0.1).clamp(10.0, 14.0),
+                        fontSize: (maxWidth * 0.1).clampDouble(10.0, 14.0),
                       ),
                     ),
                   ),
@@ -2575,7 +2575,7 @@ class NamidaCircularPercentage extends StatelessWidget {
         ),
         if (percentage.isFinite)
           Text(
-            "${((percentage).clamp(0.01, 1) * 100).toStringAsFixed(0)}%",
+            "${((percentage).clampDouble(0.01, 1.0) * 100).toStringAsFixed(0)}%",
             style: context.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
           )
       ],
@@ -3973,13 +3973,13 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
     final controller = this.controller!;
     final columnHeight = columnKey.currentContext?.size?.height ?? 1;
     final p = (dy) / (columnHeight - verticalPadding * 2);
-    final index = ((p * items.length).clamp(0, items.length - 1)).floor();
+    final index = ((p * items.length).clampDouble(0, items.length - 1)).floor();
     final character = characters[index];
     _selectedChar.value = (p, character);
     if (controller.positions.isNotEmpty) {
       final p = controller.positions.last;
       final toOffset = (widget.scrollConfig[character] ?? 1) * (widget.itemExtent ?? 0);
-      controller.jumpTo(toOffset.toDouble().clamp(0.0, p.maxScrollExtent));
+      controller.jumpTo(toOffset.toDouble().clampDouble(0.0, p.maxScrollExtent));
     }
   }
 

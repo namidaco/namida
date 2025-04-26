@@ -191,7 +191,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                 child: RepaintBoundary(
                   child: GestureDetector(
                     onVerticalDragUpdate: (event) {
-                      _smallBoxDrag = (_smallBoxDrag + event.delta.dy * 0.002).clamp(0, 1);
+                      _smallBoxDrag = (_smallBoxDrag + event.delta.dy * 0.002).clampDouble(0, 1);
                       if (_smallBoxDrag > 0.0 && _smallBoxDrag < 1.0) {
                         _jump(1 - _smallBoxDrag, _smallBoxDrag);
                       }
@@ -313,7 +313,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                   onVerticalDragUpdate: (event) {
                     if (Player.inst.isModifyingQueue) return;
                     _updateCanScrollQueue(false);
-                    _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clamp(0, 1);
+                    _bigBoxDrag = (_bigBoxDrag + event.delta.dy * 0.001).clampDouble(0, 1);
                     if (_bigBoxDrag > 0.0 && _bigBoxDrag < 1.0) {
                       _jump(1 - _bigBoxDrag, _bigBoxDrag);
                     }

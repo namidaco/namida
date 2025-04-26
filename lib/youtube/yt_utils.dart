@@ -315,12 +315,12 @@ class YTUtils {
           children: [
             NamidaIconButton(
               icon: Broken.minus_cirlce,
-              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clamp(1, 20),
+              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clampInt(1, 20),
               iconSize: 20.0,
             ),
             NamidaIconButton(
               icon: Broken.add_circle,
-              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clamp(1, 20),
+              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clampInt(1, 20),
               iconSize: 20.0,
             ),
           ],

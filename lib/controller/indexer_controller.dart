@@ -172,7 +172,7 @@ class Indexer<T extends Track> {
             ArtworkType.AUDIO,
             format: ArtworkFormat.JPEG,
             quality: null,
-            size: size?.clamp(48, 360) ?? 360,
+            size: size?.clampInt(48, 360) ?? 360,
           );
           artworksMap[imagePath] = artwork;
           _artworksMap[imagePath]!.completeIfWasnt();
@@ -1218,7 +1218,7 @@ class Indexer<T extends Track> {
     lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
     final newStats = TrackStats(
       track: track,
-      rating: rating.clamp(0, 100),
+      rating: rating.clampInt(0, 100),
       tags: tags,
       moods: moods,
       lastPositionInMs: lastPositionInMs,

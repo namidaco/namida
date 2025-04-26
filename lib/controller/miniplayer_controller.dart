@@ -244,7 +244,7 @@ class MiniPlayerController {
     if (_isInsideQueue() && event.position.dy > screenSize.height * 0.15) return;
 
     _offset -= event.delta.dy;
-    _offset = _offset.clamp(-_headRoom, maxOffset * 2);
+    _offset = _offset.clampDouble(-_headRoom, maxOffset * 2);
 
     animateMiniplayer(_offset / maxOffset);
   }
@@ -269,7 +269,7 @@ class MiniPlayerController {
     if (!_canMiniminzeMiniplayer(details.delta.dy)) return;
 
     _offset -= details.primaryDelta ?? 0;
-    _offset = _offset.clamp(-_headRoom, maxOffset * 2 + _headRoom / 2);
+    _offset = _offset.clampDouble(-_headRoom, maxOffset * 2 + _headRoom / 2);
 
     animateMiniplayer(_offset / maxOffset);
   }
@@ -284,7 +284,7 @@ class MiniPlayerController {
     if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
 
     _sOffset -= details.primaryDelta ?? 0.0;
-    _sOffset = _sOffset.clamp(-sMaxOffset, sMaxOffset);
+    _sOffset = _sOffset.clampDouble(-sMaxOffset, sMaxOffset);
 
     sAnim.animateTo(_sOffset / sMaxOffset * 1.25, duration: Duration.zero);
   }

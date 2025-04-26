@@ -41,8 +41,8 @@ class FolderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final dirInside = folder.getDirectoriesInside();
     final tracks = dummyTracks ?? folder.tracks();
-    final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clamp(0, settings.trackListTileHeight.value);
-    final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clamp(0, settings.trackListTileHeight.value * 0.5);
+    final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
+    final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
     final extraInfo = _infoMap[folder] ??= _getFolderExtraInfo(folder);
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),

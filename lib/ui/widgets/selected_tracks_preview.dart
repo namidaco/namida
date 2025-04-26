@@ -171,8 +171,8 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
       builder: (context, _) {
         if (animation.value == 1.0) return const SizedBox();
 
-        final miniHeight = animation.value.clamp(0.0, 1.0);
-        final queueHeight = animation.value > 1.0 ? animation.value.clamp(1.0, 2.0) : 0.0;
+        final miniHeight = animation.value.clampDouble(0.0, 1.0);
+        final queueHeight = animation.value > 1.0 ? animation.value.clampDouble(1.0, 2.0) : 0.0;
         final isMini = animation.value <= 1.0;
         final isInQueue = !isMini;
         final percentage = isMini ? animation.value : animation.value - 1;
@@ -184,7 +184,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
           duration: const Duration(milliseconds: 100),
           bottom: sysNavBar + initH + (navHeight * (1 - queueHeight)),
           child: NamidaOpacity(
-            opacity: (isInQueue ? percentage : 1 - percentage).clamp(0, 1),
+            opacity: (isInQueue ? percentage : 1 - percentage).clampDouble(0, 1),
             child: child,
           ),
         );
@@ -279,7 +279,7 @@ class SelectedTracksRow extends StatelessWidget {
                   ? tracks.first.title
                   : tracks.map((e) {
                       final title = e.toTrackExt().title;
-                      final maxLet = 20 - tracks.length.clamp(0, 17);
+                      final maxLet = 20 - tracks.length.clampInt(0, 17);
                       return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
                     }).join(', '),
               tracksWithDates: SelectedTracksController.inst.selectedTracks.value.tracksWithDates.toList(),
