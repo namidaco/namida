@@ -15,6 +15,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:media_kit/media_kit.dart' as mk;
@@ -23,8 +24,8 @@ import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -145,19 +146,18 @@ void mainInitialization() async {
 
   Future<void> fetchRootDir() async {
     Directory? dir;
-    try {
-      dir = await pp.getApplicationSupportDirectory();
-    } catch (_) {
+    for (final fn in [pp.getApplicationSupportDirectory, pp.getApplicationDocumentsDirectory]) {
       try {
-        dir = await pp.getApplicationDocumentsDirectory();
+        dir = await fn();
       } catch (_) {}
     }
+
     String? path = dir?.path;
     if (path == null) {
       final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
-      path = appDatas.firstOrNull ?? '';
+      path = appDatas.firstOrNull;
     }
-    AppDirs.ROOT_DIR = path;
+    AppDirs.ROOT_DIR = path ?? '';
   }
 
   await Future.wait([
@@ -179,13 +179,11 @@ void mainInitialization() async {
 
   kStoragePaths.addAll(paths);
 
-  final pSep = Platform.pathSeparator;
-
-  AppDirs.INTERNAL_STORAGE = "${paths[0]}${pSep}Namida";
-  final downloadsFolder = "${paths[0]}${pSep}Download$pSep";
+  AppDirs.INTERNAL_STORAGE = FileParts.joinPath(paths[0], 'Namida');
+  final downloadsFolder = FileParts.joinPath(paths[0], 'Download');
 
   kInitialDirectoriesToScan.addAll([
-    ...paths.mappedUniqued((path) => "$path${pSep}Music"),
+    ...paths.mappedUniqued((path) => FileParts.joinPath(path, 'Music')),
     downloadsFolder,
     AppDirs.INTERNAL_STORAGE,
   ]);

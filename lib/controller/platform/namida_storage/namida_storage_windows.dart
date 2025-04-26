@@ -1,7 +1,7 @@
 part of 'namida_storage.dart';
 
 class _NamidaStorageWindows extends NamidaStorage {
-  const _NamidaStorageWindows() : super(null);
+  const _NamidaStorageWindows() : super(r'C:\');
 
   @override
   Future<String?> getRealPath(String? contentUri) async {
@@ -10,13 +10,42 @@ class _NamidaStorageWindows extends NamidaStorage {
 
   @override
   Future<List<String>> getStorageDirectories() async {
-    final paths = <String>[];
-    try {
-      final res = await Process.run('wmic', ['logicaldisk', 'get', 'caption']);
-      final volumesFiltered = LineSplitter.split(res.stdout as String).map((e) => e.trim()).where((element) => element.isNotEmpty).skip(1); // skip C volume
-      return volumesFiltered.toList();
-    } catch (_) {}
-    return paths;
+    for (final fn in [
+      _getStorageDirectoriesPowershell,
+      _getStorageDirectoriesWMIC,
+    ]) {
+      try {
+        final res = await fn();
+        if (res.isNotEmpty) return res;
+      } catch (_) {}
+    }
+    return [];
+  }
+
+  Future<List<String>> _getStorageDirectoriesWMIC() async {
+    final res = await Process.run(
+      'wmic',
+      ['logicaldisk', 'get', 'caption'],
+    );
+    return _refinedCMDStorageDirectoriesResult(res);
+  }
+
+  Future<List<String>> _getStorageDirectoriesPowershell() async {
+    final res = await Process.run(
+      'powershell',
+      ['-Command', "Get-PSDrive -PSProvider 'FileSystem' | Select-Object -ExpandProperty Root"],
+    );
+    return _refinedCMDStorageDirectoriesResult(res);
+  }
+
+  List<String> _refinedCMDStorageDirectoriesResult(ProcessResult res) {
+    return LineSplitter.split(res.stdout as String)
+        .map((line) => line.trim())
+        .where(
+          (line) => line.isNotEmpty,
+        )
+        // .skip(1) // skip C volume
+        .toList();
   }
 
   @override
