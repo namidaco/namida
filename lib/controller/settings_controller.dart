@@ -56,7 +56,7 @@ class _SettingsController with SettingsFileWriter {
 
   final borderRadiusMultiplier = 1.0.obs;
   final fontScaleFactor = 0.9.obs;
-  final artworkCacheHeightMultiplier = 0.8.obs;
+  final artworkCacheHeightMultiplier = 0.9.obs;
   final trackThumbnailSizeinList = 70.0.obs;
   final trackListTileHeight = 70.0.obs;
   final albumThumbnailSizeinList = 90.0.obs;
@@ -310,7 +310,7 @@ class _SettingsController with SettingsFileWriter {
     floatingActionButton.value = FABType.search;
     borderRadiusMultiplier.value = 0.9;
     fontScaleFactor.value = 0.85;
-    artworkCacheHeightMultiplier.value = 1.2;
+    artworkCacheHeightMultiplier.value = 1.0;
     trackThumbnailSizeinList.value = 90.0;
     trackListTileHeight.value = 60.0;
     forceSquaredTrackThumbnail.value = false;

@@ -8,6 +8,7 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 
 import 'package:lrc/lrc.dart';
+import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_response_wrapper.dart';
@@ -25,7 +26,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:rhttp/rhttp.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
