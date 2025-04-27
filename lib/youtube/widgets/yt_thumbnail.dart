@@ -93,6 +93,7 @@ class YoutubeThumbnail extends StatefulWidget {
 }
 
 class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDelayMixin {
+  bool _canDisplayFallbackIcon = false;
   String? imagePath;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
@@ -146,7 +147,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       }
 
       if (res == null) {
-        _dontTouchMeImFetchingThumbnail = null;
+        _dontTouchMeImFetchingThumbnail?.cancel();
         _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems()) return;
@@ -199,6 +200,10 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       widget.onColorReady?.call(c);
       if (mounted) setState(() => smallBoxDynamicColor = c?.color);
     }
+
+    if (imagePath == null && widget.displayFallbackIcon && _canDisplayFallbackIcon == false) {
+      if (mounted) setState(() => _canDisplayFallbackIcon = true);
+    }
   }
 
   Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.customUrl}${widget.urlSymLinkId}$imagePath${widget.smallBoxText}");
@@ -242,7 +247,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
               ),
             ),
         ],
-        displayIcon: widget.displayFallbackIcon,
+        displayIcon: _canDisplayFallbackIcon,
         fit: widget.fit,
       ),
     );
