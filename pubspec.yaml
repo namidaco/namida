@@ -160,11 +160,11 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_native_splash: ^2.4.1
 
-  custom_lint:
-  obx_lints:
-    git:
-      url: https://github.com/MSOB7YY/nampack
-      path: packages/obx_lints
+  # custom_lint:
+  # obx_lints:
+  #   git:
+  #     url: https://github.com/MSOB7YY/nampack
+  #     path: packages/obx_lints
   msix: ^3.16.8
   inno_bundle: ^0.9.0
 

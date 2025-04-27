@@ -242,3 +242,5 @@ app.*.symbols
 build
 
 android/app/repo/com/local/ffmpeg-kit/min_binary
+
+pubspec_overrides.yaml

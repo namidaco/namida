@@ -93,21 +93,7 @@ jobs:
       - name: Generate Changelog
         continue-on-error: true
         run: |
-          REPO_URL="https://github.com/namidaco/namida/commit/"
-          COMMITS=$(git log --pretty=format:"%H %s" --decorate --no-abbrev-commit --after="$PREVIOUS_RELEASE_DATE")
-          CHANGELOG=""
-          while IFS= read -r line; do
-            HASH=$(echo "$line" | awk '{print $1}')
-            MESSAGE=$(echo "$line" | cut -d' ' -f2-)
-            MESSAGE="${MESSAGE//' - '/'%0A   - '}"
-            CHANGELOG="${CHANGELOG} - ${REPO_URL}${HASH} ${MESSAGE}"$'%0A'
-          done <<< "$COMMITS"
-
-          # Encode special characters
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "CHANGELOG=$CHANGELOG" >> $GITHUB_ENV
+          bash gen_beta_changelog.sh
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
@@ -116,8 +102,7 @@ jobs:
           make_latest: true
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
-          body: |
-            ${{ env.CHANGELOG }}
+          body_path: ./beta_changelog.md
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
