@@ -65,8 +65,8 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                       }
 
                       final item = feed.items[index];
-                      if (!isShortsVisible && item is StreamInfoItemShort) return 0;
-                      if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
+                      if (!isShortsVisible && item.isShortContent) return 0;
+                      if (!isMixesVisible && item.isMixPlaylist) return 0;
                       return thumbnailItemExtent;
                     },
                     itemCount: feed.items.length,
@@ -111,6 +111,9 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                   );
                 },
                 itemBuilder: (item, i, _) {
+                  if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
+                  if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();
+
                   return switch (item.runtimeType) {
                     const (StreamInfoItem) => YoutubeVideoCard(
                         properties: properties,
@@ -121,29 +124,25 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                         video: item,
                         playlistID: null,
                       ),
-                    const (StreamInfoItemShort) => !isShortsVisible
-                        ? const SizedBox.shrink()
-                        : YoutubeShortVideoCard(
-                            queueSource: QueueSourceYoutubeID.homeFeed,
-                            key: Key("${(item as StreamInfoItemShort?)?.id}"),
-                            thumbnailWidth: thumbnailWidth,
-                            thumbnailHeight: thumbnailHeight,
-                            short: item as StreamInfoItemShort,
-                            playlistID: null,
-                          ),
-                    const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
-                        ? const SizedBox.shrink()
-                        : YoutubePlaylistCard(
-                            queueSource: QueueSourceYoutubeID.homeFeed,
-                            key: Key(item.id),
-                            playlist: item,
-                            firstVideoID: item.initialVideos.firstOrNull?.id,
-                            thumbnailWidth: thumbnailWidth,
-                            thumbnailHeight: thumbnailHeight,
-                            subtitle: item.subtitle,
-                            playOnTap: true,
-                            isMixPlaylist: item.isMix,
-                          ),
+                    const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                        queueSource: QueueSourceYoutubeID.homeFeed,
+                        key: Key("${(item as StreamInfoItemShort?)?.id}"),
+                        thumbnailWidth: thumbnailWidth,
+                        thumbnailHeight: thumbnailHeight,
+                        short: item as StreamInfoItemShort,
+                        playlistID: null,
+                      ),
+                    const (PlaylistInfoItem) => YoutubePlaylistCard(
+                        queueSource: QueueSourceYoutubeID.homeFeed,
+                        key: Key((item as PlaylistInfoItem).id),
+                        playlist: item,
+                        firstVideoID: item.initialVideos.firstOrNull?.id,
+                        thumbnailWidth: thumbnailWidth,
+                        thumbnailHeight: thumbnailHeight,
+                        subtitle: item.subtitle,
+                        playOnTap: true,
+                        isMixPlaylist: item.isMix,
+                      ),
                     _ => const YoutubeVideoCardDummy(
                         shimmerEnabled: true,
                         thumbnailWidth: thumbnailWidth,

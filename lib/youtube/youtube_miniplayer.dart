@@ -977,8 +977,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                               }
 
                                                                               final item = currentRelatedVideos.items[index];
-                                                                              if (!isShortsVisible && item is StreamInfoItemShort) return 0;
-                                                                              if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
+                                                                              if (!isShortsVisible && item.isShortContent) return 0;
+                                                                              if (!isMixesVisible && item.isMixPlaylist) return 0;
                                                                               return relatedThumbnailItemExtent;
                                                                             },
                                                                             itemCount: currentRelatedVideos.items.length,
@@ -1020,6 +1020,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                               }
 
                                                                               final item = currentRelatedVideos.items[index];
+                                                                              if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
+                                                                              if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();
+
                                                                               return switch (item.runtimeType) {
                                                                                 const (StreamInfoItem) => YoutubeVideoCard(
                                                                                     properties: properties,
@@ -1030,29 +1033,25 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                                     video: item,
                                                                                     playlistID: null,
                                                                                   ),
-                                                                                const (StreamInfoItemShort) => !isShortsVisible
-                                                                                    ? const SizedBox.shrink()
-                                                                                    : YoutubeShortVideoCard(
-                                                                                        queueSource: QueueSourceYoutubeID.relatedVideos,
-                                                                                        key: Key("${(item as StreamInfoItemShort?)?.id}"),
-                                                                                        thumbnailHeight: relatedThumbnailHeight,
-                                                                                        thumbnailWidth: relatedThumbnailWidth,
-                                                                                        short: item as StreamInfoItemShort,
-                                                                                        playlistID: null,
-                                                                                      ),
-                                                                                const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
-                                                                                    ? const SizedBox.shrink()
-                                                                                    : YoutubePlaylistCard(
-                                                                                        queueSource: QueueSourceYoutubeID.relatedVideos,
-                                                                                        key: Key(item.id),
-                                                                                        thumbnailHeight: relatedThumbnailHeight,
-                                                                                        thumbnailWidth: relatedThumbnailWidth,
-                                                                                        playlist: item,
-                                                                                        subtitle: item.subtitle,
-                                                                                        playOnTap: true,
-                                                                                        firstVideoID: item.initialVideos.firstOrNull?.id,
-                                                                                        isMixPlaylist: item.isMix,
-                                                                                      ),
+                                                                                const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                                                                                    queueSource: QueueSourceYoutubeID.relatedVideos,
+                                                                                    key: Key("${(item as StreamInfoItemShort?)?.id}"),
+                                                                                    thumbnailHeight: relatedThumbnailHeight,
+                                                                                    thumbnailWidth: relatedThumbnailWidth,
+                                                                                    short: item as StreamInfoItemShort,
+                                                                                    playlistID: null,
+                                                                                  ),
+                                                                                const (PlaylistInfoItem) => YoutubePlaylistCard(
+                                                                                    queueSource: QueueSourceYoutubeID.relatedVideos,
+                                                                                    key: Key((item as PlaylistInfoItem).id),
+                                                                                    thumbnailHeight: relatedThumbnailHeight,
+                                                                                    thumbnailWidth: relatedThumbnailWidth,
+                                                                                    playlist: item,
+                                                                                    subtitle: item.subtitle,
+                                                                                    playOnTap: true,
+                                                                                    firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                                                    isMixPlaylist: item.isMix,
+                                                                                  ),
                                                                                 _ => dummyVideoCard,
                                                                               };
                                                                             },

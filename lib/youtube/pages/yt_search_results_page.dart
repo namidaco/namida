@@ -8,6 +8,7 @@ import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -395,15 +396,15 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                             ? null
                                                             : (index, dimensions) {
                                                                 final item = items[index];
-                                                                if (!isShortsVisible && item is StreamInfoItemShort) return 0;
-                                                                if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return 0;
+                                                                if (!isShortsVisible && item.isShortContent) return 0;
+                                                                if (!isMixesVisible && item.isMixPlaylist) return 0;
                                                                 return thumbnailItemExtent;
                                                               },
                                                         itemCount: items.length,
                                                         itemBuilder: (context, index) {
                                                           final item = items[index];
-                                                          if (!isShortsVisible && item is StreamInfoItemShort) return const SizedBox();
-                                                          if (!isMixesVisible && item is PlaylistInfoItem && item.isMix) return const SizedBox();
+                                                          if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
+                                                          if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();
                                                           return switch (item.runtimeType) {
                                                             const (StreamInfoItem) => YoutubeVideoCard(
                                                                 properties: properties,
@@ -414,27 +415,23 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                                 playlistID: null,
                                                                 onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
                                                               ),
-                                                            const (StreamInfoItemShort) => !isShortsVisible
-                                                                ? const SizedBox.shrink()
-                                                                : YoutubeShortVideoCard(
-                                                                    queueSource: QueueSourceYoutubeID.searchHosted,
-                                                                    thumbnailHeight: thumbnailHeight,
-                                                                    thumbnailWidth: thumbnailWidth,
-                                                                    short: item as StreamInfoItemShort,
-                                                                    playlistID: null,
-                                                                  ),
-                                                            const (PlaylistInfoItem) => (item as PlaylistInfoItem).isMix && !isMixesVisible
-                                                                ? const SizedBox.shrink()
-                                                                : YoutubePlaylistCard(
-                                                                    queueSource: QueueSourceYoutubeID.searchHosted,
-                                                                    thumbnailHeight: thumbnailHeight,
-                                                                    thumbnailWidth: thumbnailWidth,
-                                                                    playOnTap: false,
-                                                                    playlist: item,
-                                                                    firstVideoID: item.initialVideos.firstOrNull?.id,
-                                                                    subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
-                                                                    isMixPlaylist: item.isMix,
-                                                                  ),
+                                                            const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                                                                queueSource: QueueSourceYoutubeID.searchHosted,
+                                                                thumbnailHeight: thumbnailHeight,
+                                                                thumbnailWidth: thumbnailWidth,
+                                                                short: item as StreamInfoItemShort,
+                                                                playlistID: null,
+                                                              ),
+                                                            const (PlaylistInfoItem) => YoutubePlaylistCard(
+                                                                queueSource: QueueSourceYoutubeID.searchHosted,
+                                                                thumbnailHeight: thumbnailHeight,
+                                                                thumbnailWidth: thumbnailWidth,
+                                                                playOnTap: false,
+                                                                playlist: item as PlaylistInfoItem,
+                                                                firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                                subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
+                                                                isMixPlaylist: item.isMix,
+                                                              ),
                                                             const (YoutiPieChannelInfo) => YoutubeChannelCard(
                                                                 channel: item as YoutiPieChannelInfo,
                                                                 thumbnailSize: thumbnailHeight,

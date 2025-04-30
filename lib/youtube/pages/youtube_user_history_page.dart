@@ -100,12 +100,13 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
                           ? null
                           : (index, dimensions) {
                               final item = items[index];
-                              if (item is StreamInfoItemShort) return 0;
+                              if (item.isShortContent) return 0;
                               return thumbnailItemExtent;
                             },
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
+                        if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
                         return switch (item.runtimeType) {
                           const (StreamInfoItem) => YoutubeVideoCard(
                               properties: properties,
@@ -221,7 +222,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemExtentBuilder: (index, dimensions) {
                 final item = items[index];
-                if (item is StreamInfoItemShort) return 0;
+                if (item.isShortContent) return 0;
                 return thumbnailItemExtent;
               },
               itemCount: items.length,
