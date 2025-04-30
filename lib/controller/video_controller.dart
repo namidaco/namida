@@ -23,7 +23,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -31,7 +30,7 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 part 'video_controller.priority.dart';
 
-class NamidaVideoWidget extends StatelessWidget {
+class NamidaVideoWidget extends StatefulWidget {
   final bool enableControls;
   final double? disableControlsUnderPercentage;
   final VoidCallback? onMinimizeTap;
@@ -55,9 +54,19 @@ class NamidaVideoWidget extends StatelessWidget {
     required this.isMinimized,
   });
 
-  Future<void> _verifyAndEnterFullScreen() async {
+  @override
+  State<NamidaVideoWidget> createState() => _NamidaVideoWidgetState();
+}
+
+class _NamidaVideoWidgetState extends State<NamidaVideoWidget> {
+  void _verifyAndEnterFullScreen() {
+    if (NamidaNavigator.inst.isInFullScreen) {
+      _cancelZoom();
+      return;
+    }
+
     if (VideoController.inst.videoZoomAdditionalScale.value > 1.1) {
-      await VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal);
+      VideoController.inst.toggleFullScreenVideoView(isLocal: widget.isLocal);
     }
     // else if (videoZoomAdditionalScale.value < 0.7) {
     //   NamidaNavigator.inst.exitFullScreen();
@@ -68,55 +77,58 @@ class NamidaVideoWidget extends StatelessWidget {
 
   void _cancelZoom() {
     VideoController.inst.videoZoomAdditionalScale.value = 0.0;
+    _startedZoomSession = null;
+    _zoomStartSuccessCount = 0;
   }
+
+  bool? _startedZoomSession;
+  int _zoomStartSuccessCount = 0;
 
   @override
   Widget build(BuildContext context) {
-    final showControls = isPip
+    final showControls = widget.isPip
         ? false
-        : fullscreen
+        : widget.fullscreen
             ? true
-            : enableControls;
+            : widget.enableControls;
     return Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerMove: !swipeUpToFullscreen
+      onPointerMove: !widget.swipeUpToFullscreen
           ? null
           : (details) {
               final drag = details.delta.dy;
-              if (drag > 0) return; // downwards
+
+              if (_startedZoomSession == false) return;
+              if (_startedZoomSession == null) {
+                if (_zoomStartSuccessCount < 0) {
+                  _startedZoomSession = false;
+                } else if (_zoomStartSuccessCount < 3) {
+                  final success = details.delta.dy <= 1.0 && details.delta.dx.abs() <= 1.0;
+                  _zoomStartSuccessCount += (success ? 1 : -1);
+                } else {
+                  _startedZoomSession = true;
+                }
+                return;
+              }
+
               if (VideoController.inst.videoZoomAdditionalScale.value >= 0) {
                 VideoController.inst.videoZoomAdditionalScale.value -= drag * 0.02;
               }
             },
-      onPointerUp: !swipeUpToFullscreen
-          ? null
-          : (details) async {
-              if (NamidaNavigator.inst.isInFullScreen) return;
-              await _verifyAndEnterFullScreen();
-            },
-      onPointerCancel: !swipeUpToFullscreen ? null : (event) => _cancelZoom(),
-      child: ScaleDetector(
-        behavior: HitTestBehavior.translucent,
-        onScaleUpdate: !zoomInToFullscreen ? null : (details) => VideoController.inst.videoZoomAdditionalScale.value = details.scale,
-        onScaleEnd: !zoomInToFullscreen
+      onPointerUp: !widget.swipeUpToFullscreen ? null : (details) => _verifyAndEnterFullScreen(),
+      onPointerCancel: !widget.swipeUpToFullscreen ? null : (event) => _cancelZoom(),
+      child: NamidaVideoControls(
+        key: !showControls
             ? null
-            : (details) async {
-                if (NamidaNavigator.inst.isInFullScreen) return;
-                await _verifyAndEnterFullScreen();
-              },
-        child: NamidaVideoControls(
-          key: !showControls
-              ? null
-              : fullscreen
-                  ? VideoController.inst.videoControlsKeyFullScreen
-                  : VideoController.inst.videoControlsKey,
-          isLocal: isLocal,
-          onMinimizeTap: onMinimizeTap,
-          showControls: showControls,
-          disableControlsUnderPercentage: disableControlsUnderPercentage,
-          isFullScreen: fullscreen,
-          isMinimized: isMinimized,
-        ),
+            : widget.fullscreen
+                ? VideoController.inst.videoControlsKeyFullScreen
+                : VideoController.inst.videoControlsKey,
+        isLocal: widget.isLocal,
+        onMinimizeTap: widget.onMinimizeTap,
+        showControls: showControls,
+        disableControlsUnderPercentage: widget.disableControlsUnderPercentage,
+        isFullScreen: widget.fullscreen,
+        isMinimized: widget.isMinimized,
       ),
     );
   }

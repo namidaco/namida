@@ -138,7 +138,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
 
   double? _startedDragAtHeight;
 
-  bool get isExpanded => percentage >= 1.0;
+  bool get isExpanded => percentage >= 0.5;
 
   bool get _dismissible => widget.onDismiss != null;
 
