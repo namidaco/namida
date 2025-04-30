@@ -124,10 +124,10 @@ class YTLocalSearchController with PortsProvider<Map> {
 
     final lookupItemAvailable = <String, ({int list, int index})>{};
 
-    final lookupListStreamInfoMap = <Map<String, dynamic>>[]; // StreamInfoItem
-    final lookupListVideoStreamsMap = <Map<String, dynamic>>[]; // VideoStreamInfo
-    final lookupListVideoMissingInfo = <Map<String, dynamic>>[]; // MissingVideoInfo
-    final lookupListYTVH = <Map<String, dynamic>>[];
+    final lookupListStreamInfoMap = <_StreamResultInfoWrapper>[]; // StreamInfoItem
+    final lookupListVideoStreamsMap = <_StreamResultInfoWrapper>[]; // VideoStreamInfo
+    final lookupListVideoMissingInfo = <_StreamResultInfoWrapper>[]; // MissingVideoInfo
+    final lookupListYTVH = <_StreamResultInfoWrapper>[];
 
     var lookupListStreamInfoMapCacheDetails = <CacheDetailsBase>[];
     var lookupListVideoStreamsMapCacheDetails = <CacheDetailsBase>[];
@@ -161,20 +161,20 @@ class YTLocalSearchController with PortsProvider<Map> {
           if (res != null) {
             switch (res.list) {
               case 2:
-                final info = lookupListStreamInfoMap[res.index];
-                searchResults.add(StreamInfoItem.fromMap(info));
+                final wrapper = lookupListStreamInfoMap[res.index];
+                searchResults.add(wrapper.info);
                 break;
               case 3:
-                final info = lookupListVideoStreamsMap[res.index];
-                searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
+                final wrapper = lookupListVideoStreamsMap[res.index];
+                searchResults.add(wrapper.info);
                 break;
               case 4:
-                final info = lookupListVideoMissingInfo[res.index];
-                searchResults.add(MissingVideoInfo.fromMap(info).toStreamInfo());
+                final wrapper = lookupListVideoMissingInfo[res.index];
+                searchResults.add(wrapper.info);
                 break;
               case 5:
-                final info = lookupListYTVH[res.index];
-                searchResults.add(YoutubeVideoHistory.fromJson(info).toStreamInfo());
+                final wrapper = lookupListYTVH[res.index];
+                searchResults.add(wrapper.info);
                 break;
             }
           }
@@ -188,48 +188,42 @@ class YTLocalSearchController with PortsProvider<Map> {
 
       final textCleaned = textPre.cleanUpForComparison;
 
-      bool isMatch(String? title, String? channel) {
-        return enableFuzzySearch ? _isMatchFuzzy(textPre.split(' ').map((e) => e.cleanUpForComparison), title, channel) : _isMatchStrict(textCleaned, title, channel);
+      bool isMatch(_StreamResultInfoWrapper wrapper) {
+        return enableFuzzySearch ? _isMatchFuzzy(textPre.split(' ').map((e) => e.cleanUpForComparison), wrapper) : _isMatchStrict(textCleaned, wrapper);
+      }
+
+      void addToResultsIfMatch(_StreamResultInfoWrapper wrapper) {
+        if (isMatch(wrapper)) {
+          searchResults.add(wrapper.info);
+        }
       }
 
       // -----------------------------------
       final list2 = lookupListStreamInfoMap;
       final l2 = list2.length;
       for (int i = 0; i < l2; i++) {
-        final info = list2[i];
-        if (isMatch(info['title'], info['channel']?['title'] as String?)) {
-          searchResults.add(StreamInfoItem.fromMap(info));
-        }
+        addToResultsIfMatch(list2[i]);
       }
 
       // -----------------------------------
       final list3 = lookupListVideoStreamsMap;
       final l3 = list3.length;
       for (int i = 0; i < l3; i++) {
-        final info = list3[i];
-        if (isMatch(info['title'], info['channelName'])) {
-          searchResults.add(VideoStreamInfo.fromMap(info).toStreamInfo());
-        }
+        addToResultsIfMatch(list3[i]);
       }
 
       // -----------------------------------
       final list4 = lookupListVideoMissingInfo;
       final l4 = list4.length;
       for (int i = 0; i < l4; i++) {
-        final info = list4[i];
-        if (isMatch(info['title'], info['channelName'])) {
-          searchResults.add(MissingVideoInfo.fromMap(info).toStreamInfo());
-        }
+        addToResultsIfMatch(list4[i]);
       }
 
       // -----------------------------------
       final list5 = lookupListYTVH;
       final l5 = list5.length;
       for (int i = 0; i < l5; i++) {
-        final info = list5[i];
-        if (isMatch(info['title'], info['channel'])) {
-          searchResults.add(YoutubeVideoHistory.fromJson(info).toStreamInfo());
-        }
+        addToResultsIfMatch(list5[i]);
       }
 
       sendPort.send(searchResults);
@@ -254,19 +248,21 @@ class YTLocalSearchController with PortsProvider<Map> {
     lookupListVideoMissingVideoCacheDetails.add(CacheDetailsBase(YoutiPieSection.missingInfo, null, () => null));
 
     final faultyTitlesBackupList = <String, void Function()>{}; // a list of items with faulty title to add later if no other list added it.
-    bool onAddItem(String? id, String? title, Map<String, dynamic> map, List<Map<String, dynamic>> listToAdd, int listNumber) {
-      if (id == null) return false;
-      if (title == null) return false;
+    bool onAddItem(_StreamResultInfoWrapper info, List<_StreamResultInfoWrapper> listToAdd, int listNumber) {
+      final id = info.id;
+      final title = info.titleCleaned;
+      if (id.isEmpty) return false;
+      if (title.isEmpty) return false;
       if (lookupItemAvailable[id] != null) return false;
       if (title.isYTTitleFaulty()) {
         // null aware ??= bcz usually first lists have better details.
         faultyTitlesBackupList[id] ??= () {
-          listToAdd.add(map);
+          listToAdd.add(info);
           lookupItemAvailable[id] = (list: listNumber, index: listToAdd.length - 1);
         };
         return false;
       }
-      listToAdd.add(map);
+      listToAdd.add(info);
       lookupItemAvailable[id] = (list: listNumber, index: listToAdd.length - 1);
       return true;
     }
@@ -275,9 +271,9 @@ class YTLocalSearchController with PortsProvider<Map> {
       (db) {
         db.loadEverything((map) {
           try {
-            final id = map['id'];
-            final title = map['title'] as String?;
-            onAddItem(id, title, map, lookupListStreamInfoMap, 2);
+            final info = StreamInfoItem.fromMap(map);
+            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+            onAddItem(wrapper, lookupListStreamInfoMap, 2);
           } catch (_) {}
         });
         db.close();
@@ -285,12 +281,12 @@ class YTLocalSearchController with PortsProvider<Map> {
     );
     lookupListVideoStreamsMapCacheDetails.loop(
       (db) {
-        db.loadEverything((map) {
+        db.loadEverything((wholeStreamsResultMap) {
           try {
-            final info = map['info'] as Map;
-            final id = info['id'];
-            final title = map['title'] as String?;
-            onAddItem(id, title, map, lookupListVideoStreamsMap, 3);
+            final map = wholeStreamsResultMap['info'] as Map; // VideoStreamInfo
+            final info = VideoStreamInfo.fromMap(map).toStreamInfo();
+            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+            onAddItem(wrapper, lookupListVideoStreamsMap, 3);
           } catch (_) {}
         });
         db.close();
@@ -301,9 +297,9 @@ class YTLocalSearchController with PortsProvider<Map> {
       (db) {
         db.loadEverything((map) {
           try {
-            final id = map['videoId'];
-            final title = map['title'] as String?;
-            onAddItem(id, title, map, lookupListVideoMissingInfo, 4);
+            final info = MissingVideoInfo.fromMap(map).toStreamInfo();
+            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+            onAddItem(wrapper, lookupListVideoMissingInfo, 4);
           } catch (_) {}
         });
         db.close();
@@ -317,9 +313,9 @@ class YTLocalSearchController with PortsProvider<Map> {
           if (response is List) {
             response.loop(
               (map) {
-                final id = map['id'] as String?;
-                final title = map['title'] as String?;
-                onAddItem(id, title, map, lookupListYTVH, 5);
+                final info = YoutubeVideoHistory.fromJson(map).toStreamInfo();
+                final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+                onAddItem(wrapper, lookupListYTVH, 5);
               },
             );
           }
@@ -358,16 +354,15 @@ class YTLocalSearchController with PortsProvider<Map> {
   //   return finalListens;
   // }
 
-  static bool _isMatchStrict(String textCleaned, String? title, String? channel) {
-    return (title?.cleanUpForComparison.contains(textCleaned) ?? false) || (channel?.cleanUpForComparison.contains(textCleaned) ?? false);
+  static bool _isMatchStrict(String textCleaned, _StreamResultInfoWrapper wrapper) {
+    return wrapper.titleCleaned.contains(textCleaned) || (wrapper.channelCleaned?.contains(textCleaned) ?? false);
   }
 
-  static bool _isMatchFuzzy(Iterable<String> splittedText, String? title, String? channel) {
-    final titleAndChannel = [
-      if (title != null) title.cleanUpForComparison,
-      if (channel != null) channel.cleanUpForComparison,
-    ];
-    return splittedText.every((element) => titleAndChannel.any((p) => p.contains(element)));
+  static bool _isMatchFuzzy(Iterable<String> splittedText, _StreamResultInfoWrapper wrapper) {
+    return splittedText.every((element) =>
+            wrapper.titleCleaned.contains(element) || //
+            (wrapper.channelCleaned?.contains(element) ?? false) //
+        );
   }
 
   Timer? _disposingTimer;
@@ -475,6 +470,31 @@ extension _MissingVideoInfoExt on MissingVideoInfo {
       isUploaderVerified: videoPage?.channelInfo?.isVerified,
       badges: [],
       isActuallyShortContent: null,
+    );
+  }
+}
+
+class _StreamResultInfoWrapper {
+  final String titleCleaned;
+  final String? channelCleaned;
+  final StreamInfoItem info;
+
+  String get id => info.id;
+
+  const _StreamResultInfoWrapper({
+    required this.titleCleaned,
+    required this.channelCleaned,
+    required this.info,
+  });
+
+  factory _StreamResultInfoWrapper.fromInfo(StreamInfoItem info) {
+    String? channelTitle = info.channel.title;
+    if (channelTitle.isEmpty) channelTitle = null;
+
+    return _StreamResultInfoWrapper(
+      titleCleaned: info.title.cleanUpForComparison,
+      channelCleaned: channelTitle?.cleanUpForComparison,
+      info: info,
     );
   }
 }
