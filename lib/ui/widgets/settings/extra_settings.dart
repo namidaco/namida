@@ -122,7 +122,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableFoldersHierarchy.valueR,
                 onChanged: (p0) {
                   settings.save(enableFoldersHierarchy: !p0);
-                  Folders.tracks.onFoldersHierarchyChanged(!p0);
+                  FoldersController.tracks.onFoldersHierarchyChanged(!p0);
                 },
               ),
             ),
@@ -136,7 +136,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           //     value: settings.enableFoldersHierarchyVideos.valueR,
           //     onChanged: (p0) {
           //       settings.save(enableFoldersHierarchyVideos: !p0);
-          //       Folders.videos.onFoldersHierarchyChanged(!p0);
+          //       FoldersController.videos.onFoldersHierarchyChanged(!p0);
           //     },
           //   ),
           // ),

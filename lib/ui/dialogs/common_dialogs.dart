@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -197,10 +198,11 @@ class NamidaDialogs {
 
   Future<void> showFolderDialog({
     required Folder folder,
-    required bool recursiveTracks,
+    required FoldersController controller,
+    required bool isTracksRecursive,
+    required List<Track> tracks,
   }) async {
-    if (recursiveTracks) VibratorController.medium();
-    final tracks = recursiveTracks ? folder.tracksRecusive().toList() : folder.tracks();
+    if (isTracksRecursive) VibratorController.medium();
     await showGeneralPopupDialog(
       tracks,
       folder.folderName,
@@ -210,7 +212,7 @@ class NamidaDialogs {
       ].join(' • '),
       folder is VideoFolder ? QueueSource.folderVideos : QueueSource.folder,
       thirdLineText: tracks.totalSizeFormatted,
-      trailingIcon: recursiveTracks ? Broken.cards : Broken.card,
+      trailingIcon: isTracksRecursive ? Broken.cards : Broken.card,
     );
   }
 }

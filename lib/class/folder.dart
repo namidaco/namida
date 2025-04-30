@@ -21,6 +21,8 @@ class Folder {
   final String folderName;
   final String _key;
 
+  late final parts = splitParts();
+
   Folder.explicit(this.path)
       : folderName = path.pathReverseSplitter(_pathSeparator),
         _key = _computeKey(path);
@@ -39,27 +41,32 @@ class Folder {
     return "${addAtFirst ? _pathSeparator : ''}$path${addAtLast ? _pathSeparator : ''}";
   }
 
-  bool isParentOf(Folder child) {
-    if (child._key.startsWith(this._key)) {
-      return true;
-    }
-    return false;
-  }
+  // bool isParentOf(Folder child) {
+  //   if (child._key.startsWith(this._key)) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
 
-  /// [parentSplitsCount] can be obtained by [splitParts].
-  bool isDirectParentOf(Folder child, int parentSplitsCount) {
-    if (isParentOf(child)) {
-      final folderSplitsCount = child.splitParts().length;
-      if (folderSplitsCount == parentSplitsCount + 1) {
-        return true;
-      }
-    }
-    return false;
-  }
+  // /// [parentSplitsCount] can be obtained by [splitParts].
+  // bool isDirectParentOf(Folder child, int parentSplitsCount) {
+  //   if (isParentOf(child)) {
+  //     final folderSplitsCount = child.splitParts().length;
+  //     if (folderSplitsCount == parentSplitsCount + 1) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   List<String> splitParts() => _key.split(_pathSeparator);
 
-  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? path.formatPath() : folderName;
+  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? formattedPath() : folderName;
+
+  String formattedPath() {
+    // -- aint no formatting hehe
+    return path;
+  }
 
   @override
   bool operator ==(other) {
@@ -70,16 +77,16 @@ class Folder {
   int get hashCode => _key.hashCode;
 
   @override
-  String toString() => "Folder(path: $path, tracks: ${tracks().length})";
+  String toString() => "Folder(path: $path)";
 }
 
-extension FolderUtils<T extends Folder, E extends Track> on Folder {
+extension FolderUtils<T extends Folder, E extends Track> on T {
   Map<T, List<E>> get _mainFoldersMap {
     return this is VideoFolder ? Indexer.inst.mainMapFoldersVideos.value as Map<T, List<E>> : Indexer.inst.mainMapFolders.value as Map<T, List<E>>;
   }
 
-  Folders get _controller {
-    return this is VideoFolder ? Folders.videos : Folders.tracks;
+  FoldersController get _controller {
+    return this is VideoFolder ? FoldersController.videos : FoldersController.tracks;
   }
 
   void navigate() {
@@ -106,40 +113,18 @@ extension FolderUtils<T extends Folder, E extends Track> on Folder {
     return false;
   }
 
-  List<E> tracks() => _mainFoldersMap[this] ?? [];
-
-  Iterable<E> tracksRecusive() sync* {
-    for (final e in _mainFoldersMap.entries) {
-      if (this.isParentOf(e.key)) {
-        yield* e.value;
-      }
+  R? performInbetweenFoldersBuild<R>(R? Function(T folder) callback) {
+    final bufferPathSoFar = StringBuffer();
+    for (final part in parts) {
+      if (part.isEmpty) continue;
+      bufferPathSoFar.write(part);
+      bufferPathSoFar.write(Platform.pathSeparator);
+      final f = Folder.fromType<T>(bufferPathSoFar.toString());
+      final res = callback(f);
+      if (res != null) return res;
     }
-  }
-
-  /// checks for the first parent folder that exists in [Indexer.mainMapFolders].
-  T? getParentFolder() {
-    final parts = path.split(_pathSeparator);
-    parts.removeLast();
-
-    while (parts.isNotEmpty) {
-      final f = Folder.fromTypeParameter(this.runtimeType, parts.join(_pathSeparator));
-      if (_mainFoldersMap[f] != null) return f as T;
-      parts.removeLast();
-    }
-
     return null;
   }
 
-  /// Gets directories inside [this] folder, automatically handles nested folders.
-  List<F> getDirectoriesInside<F extends Folder>() {
-    final allInside = <F>[];
-
-    final splitsCount = this.splitParts().length;
-
-    for (final folder in _mainFoldersMap.keys) {
-      if (this.isDirectParentOf(folder, splitsCount)) allInside.add(folder as F);
-    }
-
-    return allInside;
-  }
+  List<E> tracks() => _mainFoldersMap[this] ?? [];
 }

@@ -275,8 +275,8 @@ void mainInitialization() async {
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
 
   // CurrentColor.inst.generateAllColorPalettes();
-  Folders.tracks.onFirstLoad();
-  Folders.videos.onFirstLoad();
+  FoldersController.tracks.onFirstLoad();
+  FoldersController.videos.onFirstLoad();
 
   _initLifeCycle();
 }

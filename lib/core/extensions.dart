@@ -743,11 +743,11 @@ extension StringPathUtils on String {
     int latestIndex = path.length - 1;
 
     // -- skipping separator at the end.
-    while (latestIndex > 0 && path[latestIndex] == until) {
+    while (latestIndex >= 0 && path[latestIndex] == until) {
       latestIndex--;
     }
 
-    while (latestIndex > 0) {
+    while (latestIndex >= 0) {
       final char = path[latestIndex];
       if (char == until) break;
       extension = char + extension;

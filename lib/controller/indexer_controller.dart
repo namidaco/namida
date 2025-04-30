@@ -364,8 +364,8 @@ class Indexer<T extends Track> {
     this.mainMapFolders.refresh();
     this.mainMapFoldersVideos.refresh();
 
-    Folders.tracks.onMapChanged(mainMapFolders);
-    Folders.videos.onMapChanged(mainMapFoldersVideos);
+    FoldersController.tracks.onMapChanged(mainMapFolders);
+    FoldersController.videos.onMapChanged(mainMapFoldersVideos);
     _sortAll();
     sortMediaTracksSubLists(MediaType.values);
   }
@@ -416,12 +416,12 @@ class Indexer<T extends Track> {
         case MediaType.folder:
           sortPls(mainMapFolders.values, MediaType.folder);
           mainMapFolders.refresh();
-          Folders.tracks.refreshAfterSorting();
+          FoldersController.tracks.refreshAfterSorting();
           break;
         case MediaType.folderVideo:
           sortPls(mainMapFoldersVideos.values, MediaType.folderVideo);
           mainMapFoldersVideos.refresh();
-          Folders.videos.refreshAfterSorting();
+          FoldersController.videos.refreshAfterSorting();
           break;
         default:
           null;
@@ -584,8 +584,8 @@ class Indexer<T extends Track> {
       }
     }
 
-    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) Folders.tracks.onMapChanged(mainMapFolders);
-    if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) Folders.videos.onMapChanged(mainMapFoldersVideos);
+    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) FoldersController.tracks.onMapChanged(mainMapFolders);
+    if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) FoldersController.videos.onMapChanged(mainMapFoldersVideos);
   }
 
   TrackExtended? _convertTagToTrack({
@@ -840,8 +840,8 @@ class Indexer<T extends Track> {
     this.mainMapFoldersVideos.refresh();
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
-    Folders.tracks.currentFolder.refresh();
-    Folders.videos.currentFolder.refresh();
+    FoldersController.tracks.currentFolder.refresh();
+    FoldersController.videos.currentFolder.refresh();
     recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
   }
 

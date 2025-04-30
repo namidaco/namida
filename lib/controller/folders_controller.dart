@@ -1,18 +1,15 @@
-import 'dart:io';
-
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
-class Folders<T extends Folder> {
-  static final Folders<Folder> tracks = Folders._(LibraryTab.folders, FoldersPageConfig.tracks());
-  static final Folders<VideoFolder> videos = Folders._(LibraryTab.foldersVideos, FoldersPageConfig.videos());
-  Folders._(this._tab, this._config);
+class FoldersController<T extends Folder> {
+  static final FoldersController<Folder> tracks = FoldersController<Folder>._(LibraryTab.folders, FoldersPageConfig.tracks());
+  static final FoldersController<VideoFolder> videos = FoldersController<VideoFolder>._(LibraryTab.foldersVideos, FoldersPageConfig.videos());
+  FoldersController._(this._tab, this._config);
 
   final LibraryTab _tab;
   final FoldersPageConfig _config;
@@ -20,6 +17,23 @@ class Folders<T extends Folder> {
   final Rxn<T> currentFolder = Rxn<T>();
 
   final RxList<T> currentFolderslist = <T>[].obs;
+
+  int? currentNodeFoldersCount(T folder, {bool recursive = false, bool preferRecursiveForRootFolders = false}) {
+    if (preferRecursiveForRootFolders) {
+      final isRoot = isHome.value; // yeah whatever for now
+      if (isRoot) recursive = true;
+    }
+    return _pathsTreeMapCurrent?.getFoldersCountInsideFolder(folder, recursive: recursive) ?? //
+        _pathsTreeMapRoot.getFoldersCountInsideFolder(folder, recursive: recursive);
+  }
+
+  List<Track> getNodeTracks(T folder, {bool recursive = false}) {
+    return _pathsTreeMapCurrent?.getTracksCountInsideFolder(folder, recursive: recursive) ?? //
+        _pathsTreeMapRoot.getTracksCountInsideFolder(folder, recursive: recursive);
+  }
+
+  var _pathsTreeMapRoot = _FolderNode<T>(null, null);
+  _FolderNode<T>? _pathsTreeMapCurrent;
 
   /// Even with this logic, root paths are invincible.
   final isHome = true.obs;
@@ -44,48 +58,84 @@ class Folders<T extends Folder> {
   /// Indicates wether the navigator can go back at this point.
   /// Returns true only if at home, otherwise will call [stepOut] and return false.
   bool onBackButton() {
-    if (!isHome.value) {
-      stepOut();
-      return false;
-    }
-    return true;
+    return !stepOut();
   }
 
-  void stepIn(T? folder, {Track? trackToScrollTo, double jumpTo = 0}) {
+  void stepIn(T? folder, {Track? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
-      isInside.value = false;
-      currentFolder.value = null;
-      _scrollJump(jumpTo);
-      return;
+      _pathsTreeMapCurrent = null;
     }
 
-    if (isHome.value != false) isHome.value = false;
-    if (isInside.value != true) isInside.value = true;
+    final treeMap = _pathsTreeMapCurrent ??= _pathsTreeMapRoot;
+
+    _FolderNode<T>? nextNode;
+    if (folder != null) {
+      nextNode = treeMap.children[folder] ?? _pathsTreeMapRoot.lookup(folder);
+    }
+
+    if (nextNode == null) {
+      nextNode = _pathsTreeMapRoot;
+      if (nextNode.children.keys.length == 1) {
+        nextNode = nextNode.children.values.first;
+      }
+    }
+
+    _pathsTreeMapCurrent = nextNode;
+
+    if (!isFromStepOut) {
+      isInside.value = true;
+      isHome.value = false;
+
+      final upcomingFolders = nextNode.foldersList;
+      if (upcomingFolders.length == 1 && folder?.tracks().isEmpty == true) {
+        stepIn(upcomingFolders.first);
+        return;
+      }
+    }
 
     _saveScrollOffset(currentFolder.value);
 
-    final List<T> dirInside = folder.getDirectoriesInside();
-    currentFolderslist.value = dirInside;
+    currentFolderslist.value = nextNode.foldersList;
     currentFolder.value = folder;
 
     if (trackToScrollTo != null) {
-      indexToScrollTo.value = folder.tracks().indexOf(trackToScrollTo);
+      indexToScrollTo.value = folder?.tracks().indexOf(trackToScrollTo);
       _trackToScrollTo = trackToScrollTo;
     } else {
       indexToScrollTo.value = null;
       _trackToScrollTo = null;
     }
+
     _scrollJump(jumpTo);
   }
 
-  void stepOut() {
-    T? folder;
-    if (_config.enableFoldersHierarchy.value) {
-      folder = currentFolder.value?.getParentFolder() as T?;
+  bool stepOut() {
+    isInside.value = false;
+    if (currentFolder.value == null) {
+      return false;
     }
+
+    T? folderToStepIn;
+    if (_config.enableFoldersHierarchy.value) {
+      do {
+        folderToStepIn = _pathsTreeMapCurrent?.parent;
+        _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
+      } while (_pathsTreeMapCurrent != null && _pathsTreeMapCurrent?.children.keys.length == 1 && (folderToStepIn?.parent.tracks().isEmpty != false));
+    }
+
+    folderToStepIn = _pathsTreeMapCurrent?.parent;
+    _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
+
+    if (folderToStepIn == currentFolder.value || _pathsTreeMapCurrent == _pathsTreeMapRoot) {
+      folderToStepIn = null;
+      _pathsTreeMapCurrent = null;
+    }
+
     indexToScrollTo.value = null;
-    stepIn(folder, jumpTo: _latestScrollOffset[folder] ?? 0);
+    stepIn(folderToStepIn, jumpTo: _latestScrollOffset[folderToStepIn] ?? 0, isFromStepOut: true);
+
+    return true;
   }
 
   void onFirstLoad() {
@@ -119,54 +169,52 @@ class Folders<T extends Folder> {
 
   /// Generates missing folders in between
   void onMapChanged<E extends Track>(Map<T, List<E>> map) {
-    final newFolders = <MapEntry<T, List<E>>>[];
-
-    void recursiveIf(bool Function() fn) {
-      if (fn()) recursiveIf(fn);
+    final res = _buildAdvancedPathTree(_pathsTreeMapRoot, map.keys);
+    _pathsTreeMapRoot = res.$1;
+    _pathsTreeMapCurrent ??= _pathsTreeMapRoot;
+    for (final folder in res.$2) {
+      map[folder] ??= <E>[]; // adding missing/new folders
     }
+    _sortMap(map, _pathsTreeMapRoot);
+  }
 
-    for (final k in map.keys) {
-      final f = k.path.split(Platform.pathSeparator);
-      f.removeLast();
-
-      recursiveIf(() {
-        if (f.length > 3) {
-          final newPath = f.join(Platform.pathSeparator);
-          if (kStoragePaths.contains(newPath)) {
-            f.removeLast();
-            return true;
-          }
-          final newFolder = Folder.fromType<T>(newPath);
-          if (map[newFolder] == null) {
-            newFolders.add(MapEntry(newFolder, []));
-            f.removeLast();
-            return true;
-          }
-        }
-        return false;
-      });
-    }
-
-    map.addEntries(newFolders); // dont clear
-
+  void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T> rootNode) {
     final parsedMap = _buildParsedMap(map.keys.map((e) => e.folderName.toLowerCase()));
-    final sorted = map.entries.toList()
-      ..sort(
-        (entryA, entryB) {
-          final a = entryA.key.folderName.toLowerCase();
-          final b = entryB.key.folderName.toLowerCase();
-          final parsedA = parsedMap[a];
-          final parsedB = parsedMap[b];
-          if (parsedA != null && parsedB != null) {
-            final numbersCompare = parsedA.compare(parsedB);
-            if (numbersCompare != null && numbersCompare != 0) return numbersCompare;
-          }
-          return a.compareTo(b);
+
+    int compare(MapEntry<T, dynamic> entryA, MapEntry<T, dynamic> entryB) {
+      final a = entryA.key.folderName.toLowerCase();
+      final b = entryB.key.folderName.toLowerCase();
+      final parsedA = parsedMap[a];
+      final parsedB = parsedMap[b];
+      if (parsedA != null && parsedB != null) {
+        final numbersCompare = parsedA.compare(parsedB);
+        if (numbersCompare != null && numbersCompare != 0) return numbersCompare;
+      }
+      return a.compareTo(b);
+    }
+
+    final sorted = map.entries.toList()..sort(compare);
+    map.assignAllEntries(sorted); // we clear after building new sorted one
+
+    _FolderNode._walkChildrenRescursive(rootNode, (map) => map.sort(compare));
+
+    refreshAfterSorting();
+  }
+
+  (_FolderNode<T>, List<T>) _buildAdvancedPathTree(_FolderNode<T> root, Iterable<T> folders) {
+    final allFolders = <T>[];
+    for (final folder in folders) {
+      var current = root;
+      folder.performInbetweenFoldersBuild(
+        (f) {
+          allFolders.add(f);
+          final newNode = current.children.putIfAbsent(f, () => _FolderNode<T>(current, f));
+          current = newNode;
         },
       );
+    }
 
-    map.assignAllEntries(sorted); // we clear after building new sorted one
-    refreshAfterSorting();
+    return (root, allFolders);
   }
 
   Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {
@@ -275,7 +323,7 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchy,
       onDefaultStartupFolderChanged: () {
         settings.save(
-          defaultFolderStartupLocation: Folders.tracks.currentFolder.value?.path ?? '',
+          defaultFolderStartupLocation: FoldersController.tracks.currentFolder.value?.path ?? '',
         );
       },
     );
@@ -286,9 +334,102 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
       onDefaultStartupFolderChanged: () {
         settings.save(
-          defaultFolderStartupLocationVideos: Folders.videos.currentFolder.value?.path ?? '',
+          defaultFolderStartupLocationVideos: FoldersController.videos.currentFolder.value?.path ?? '',
         );
       },
     );
   }
+}
+
+class _FolderNode<T extends Folder> {
+  final _FolderNode<T>? parentNode;
+  final T? parent;
+  _FolderNode(this.parentNode, this.parent);
+
+  final children = <T, _FolderNode<T>>{};
+
+  late final foldersList = children.keys.toList();
+
+  // Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
+  _FolderNode<T>? lookup(T folder) {
+    _FolderNode<T> current = this;
+    final mainInMap = children[folder];
+    if (mainInMap != null) return current;
+
+    return folder.performInbetweenFoldersBuild(
+          (f) {
+            final newNode = current.children[f];
+            if (newNode == null) return current;
+            current = newNode;
+            return null; // continue recursive
+          },
+        ) ??
+        current;
+  }
+
+  int? getFoldersCountInsideFolder(T folder, {bool recursive = false}) {
+    final parentNode = lookup(folder);
+
+    final node = parentNode?.children[folder];
+
+    if (node != null) {
+      if (recursive) {
+        int totalCount = -1; // bcz recursive counts current
+        _walkKeysRescursive(node, (_) {
+          totalCount++;
+          return null;
+        });
+        return totalCount;
+      } else {
+        return node.children.keys.length;
+      }
+    }
+    return null;
+  }
+
+  List<Track> getTracksCountInsideFolder(T folder, {bool recursive = false}) {
+    if (!recursive) return folder.tracks();
+
+    final parentNode = lookup(folder);
+
+    final node = parentNode?.children[folder];
+
+    if (node == null) return [];
+
+    final allTracks = <Track>[];
+    allTracks.addAll(folder.tracks());
+    _walkKeysRescursive(node, (folder) {
+      allTracks.addAll(folder.tracks());
+      return null;
+    });
+
+    return allTracks;
+  }
+
+  static R? _walkKeysRescursive<R, T extends Folder>(_FolderNode<T> node, R? Function(T item) callback) {
+    for (final subNodeEntry in node.children.entries) {
+      R? res = callback(subNodeEntry.key);
+      res ??= _walkKeysRescursive(subNodeEntry.value, callback);
+      if (res != null) return res;
+    }
+    return null;
+  }
+
+  static R? _walkChildrenRescursive<R, T extends Folder>(_FolderNode<T> node, R? Function(Map<T, _FolderNode<T>> children) callback) {
+    R? resMain = callback(node.children);
+    if (resMain != null) return resMain;
+
+    for (final subNodeEntry in node.children.values) {
+      final res = _walkChildrenRescursive(subNodeEntry, callback);
+      if (res != null) return res;
+    }
+    return null;
+  }
+
+  Map<String, dynamic> toJson() {
+    return children.map((key, value) => MapEntry(key.toString(), value));
+  }
+
+  @override
+  String toString() => '_FolderNode(children: $children)';
 }

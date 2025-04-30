@@ -500,10 +500,10 @@ class NamidaNavigator {
     final route = currentRoute?.route;
     if (route != null) {
       if (route == RouteType.PAGE_folders) {
-        final canIgoBackPls = Folders.tracks.onBackButton();
+        final canIgoBackPls = FoldersController.tracks.onBackButton();
         if (!canIgoBackPls) return;
       } else if (route == RouteType.PAGE_folders_videos) {
-        final canIgoBackPls = Folders.videos.onBackButton();
+        final canIgoBackPls = FoldersController.videos.onBackButton();
         if (!canIgoBackPls) return;
       } else if (route == RouteType.SUBPAGE_playlistTracks) {
         PlaylistController.inst.resetCanReorder();

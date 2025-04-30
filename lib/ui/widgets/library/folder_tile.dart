@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -14,16 +15,20 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FolderTile extends StatelessWidget {
   final Folder folder;
-  final List<Track>? dummyTracks;
+  final FoldersController controller;
+  final List<Track> tracks;
+  final bool isTracksRecursive;
+  final int dirInsideCount;
   final String? subtitle;
-  final String Function(int count) itemsToCountText;
 
   const FolderTile({
     super.key,
     required this.folder,
-    this.dummyTracks,
+    required this.controller,
+    required this.tracks,
+    required this.isTracksRecursive,
+    required this.dirInsideCount,
     this.subtitle,
-    required this.itemsToCountText,
   });
 
   static final _infoMap = <Folder, String>{};
@@ -37,20 +42,89 @@ class FolderTile extends StatelessWidget {
     return '';
   }
 
+  void _showFolderDialog({bool? preferRecursive}) {
+    bool isRecursive = isTracksRecursive;
+    List<Track> tracks = this.tracks;
+    if (preferRecursive == false && isTracksRecursive) {
+      final newDirectTracks = folder.tracks();
+      if (newDirectTracks.isNotEmpty) {
+        isRecursive = false;
+        tracks = newDirectTracks;
+      }
+    } else if (preferRecursive == true && !isTracksRecursive) {
+      final newRecursiveTracks = controller.getNodeTracks(folder, recursive: true);
+      if (newRecursiveTracks.isNotEmpty) {
+        isRecursive = true;
+        tracks = newRecursiveTracks;
+      }
+    }
+    NamidaDialogs.inst.showFolderDialog(
+      folder: folder,
+      controller: controller,
+      tracks: tracks,
+      isTracksRecursive: isRecursive,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dirInside = folder.getDirectoriesInside();
-    final tracks = dummyTracks ?? folder.tracks();
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
     final extraInfo = _infoMap[folder] ??= _getFolderExtraInfo(folder);
+
+    final subtitleTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final subtitleFirstPart = tracks.isEmpty
+        ? null
+        : <Widget>[
+            Icon(
+              Broken.musicnote,
+              size: 12.0,
+            ),
+            SizedBox(width: 4.0),
+            Text(
+              '${tracks.length}',
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: subtitleTextStyle,
+            ),
+          ];
+    final subtitleSecondPart = dirInsideCount <= 0
+        ? null
+        : <Widget>[
+            Icon(
+              Broken.folder,
+              size: 12.0,
+            ),
+            SizedBox(width: 4.0),
+            Text(
+              '$dirInsideCount',
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: subtitleTextStyle,
+            ),
+          ];
+    final subtitleRowChildren = <Widget>[
+      if (subtitleFirstPart != null) ...subtitleFirstPart,
+      if (subtitleFirstPart != null && subtitleSecondPart != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Text(
+            '•',
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            style: subtitleTextStyle,
+          ),
+        ),
+      if (subtitleSecondPart != null) ...subtitleSecondPart,
+    ];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
         onTap: folder.navigate,
-        onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
+        onLongPress: () => _showFolderDialog(),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
           child: Row(
@@ -71,7 +145,7 @@ class FolderTile extends StatelessWidget {
                         Positioned(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: tracks.isEmpty && dirInside.isNotEmpty
+                            child: tracks.isEmpty && dirInsideCount > 0
                                 ? Icon(
                                     Broken.folder_open,
                                     size: thumbSize,
@@ -123,15 +197,14 @@ class FolderTile extends StatelessWidget {
                         maxLines: 1,
                         style: context.textTheme.displaySmall,
                       ),
-                    Text(
-                      [
-                        itemsToCountText(tracks.length),
-                        if (dirInside.isNotEmpty) dirInside.length.displayFolderKeyword,
-                      ].join(' - '),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: context.textTheme.displaySmall,
-                    ),
+                    if (subtitleRowChildren.isNotEmpty) ...[
+                      SizedBox(height: 4.0),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: subtitleRowChildren,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -140,8 +213,8 @@ class FolderTile extends StatelessWidget {
               ),
               MoreIcon(
                 padding: 6.0,
-                onPressed: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: tracks.isEmpty ? true : false),
-                onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: true),
+                onPressed: () => _showFolderDialog(preferRecursive: false),
+                onLongPress: () => _showFolderDialog(),
               ),
               const SizedBox(
                 width: 4.0,

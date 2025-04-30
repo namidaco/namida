@@ -754,8 +754,8 @@ extension RouteUtils on NamidaRoute {
   Iterable<Selectable> tracksInside() {
     return switch (route) {
           RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
-          RouteType.PAGE_folders => Folders.tracks.currentFolder.value?.tracks(),
-          RouteType.PAGE_folders_videos => Folders.videos.currentFolder.value?.tracks(),
+          RouteType.PAGE_folders => FoldersController.tracks.currentFolder.value?.tracks(),
+          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolder.value?.tracks(),
           RouteType.SUBPAGE_albumTracks => name?.getAlbumTracks(),
           RouteType.SUBPAGE_artistTracks => name?.getArtistTracks(),
           RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),

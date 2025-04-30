@@ -6,6 +6,7 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/clipboard_controller.dart';
+import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -368,6 +369,7 @@ class SearchPage extends StatelessWidget {
                                               final tracks = folder.tracks();
                                               return _FolderSmallCard(
                                                 folder: folder,
+                                                controller: FoldersController.tracks,
                                                 tracks: tracks,
                                               );
                                             },
@@ -390,6 +392,7 @@ class SearchPage extends StatelessWidget {
                                               final tracks = folder.tracks();
                                               return _FolderSmallCard(
                                                 folder: folder,
+                                                controller: FoldersController.videos,
                                                 tracks: tracks,
                                               );
                                             },
@@ -500,8 +503,9 @@ class SearchPage extends StatelessWidget {
 
 class _FolderSmallCard extends StatelessWidget {
   final Folder folder;
+  final FoldersController controller;
   final List<Track> tracks;
-  const _FolderSmallCard({required this.folder, required this.tracks});
+  const _FolderSmallCard({required this.folder, required this.controller, required this.tracks});
 
   @override
   Widget build(BuildContext context) {
@@ -509,7 +513,12 @@ class _FolderSmallCard extends StatelessWidget {
       margin: const EdgeInsets.only(left: 6.0),
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder),
-      onLongPress: () => NamidaDialogs.inst.showFolderDialog(folder: folder, recursiveTracks: false),
+      onLongPress: () => NamidaDialogs.inst.showFolderDialog(
+        folder: folder,
+        tracks: folder.tracks(),
+        controller: controller,
+        isTracksRecursive: false,
+      ),
       borderRadius: 8.0,
       bgColor: context.theme.colorScheme.secondary.withValues(alpha: 0.12),
       child: Row(

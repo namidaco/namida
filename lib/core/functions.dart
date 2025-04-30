@@ -153,10 +153,10 @@ class NamidaOnTaps {
   Future<void> onFolderTapNavigate(Folder folder, {Track? trackToScrollTo}) async {
     if (folder is VideoFolder) {
       ScrollSearchController.inst.animatePageController(LibraryTab.foldersVideos);
-      Folders.videos.stepIn(folder, trackToScrollTo: trackToScrollTo);
+      FoldersController.videos.stepIn(folder, trackToScrollTo: trackToScrollTo);
     } else {
       ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-      Folders.tracks.stepIn(folder, trackToScrollTo: trackToScrollTo);
+      FoldersController.tracks.stepIn(folder, trackToScrollTo: trackToScrollTo);
     }
   }
 
