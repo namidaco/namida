@@ -20,7 +20,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.29.0"
+          flutter-version: "3.29.3"
 
       - uses: dart-lang/setup-dart@v1
         with:
