@@ -552,6 +552,23 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                             // ScrollSearchController.inst.unfocusKeyboard(); // the miniplayer should have alr done that.
                             final canOpen = focusedMenuOptions.onOpen(_getcurrentItem);
                             isMenuOpened.value = canOpen;
+                            if (canOpen && focusedMenuOptions.loadQualities != null) {
+                              final currentId = focusedMenuOptions.currentId(currentItem);
+                              // auto load if possible
+                              if (currentId != null &&
+                                  currentId.isNotEmpty &&
+                                  (focusedMenuOptions.streams.value?.videoStreams
+                                          .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs)
+                                          .isEmpty ??
+                                      true)) {
+                                if (!isLoadingMore.value) {
+                                  isLoadingMore.value = true;
+                                  focusedMenuOptions.loadQualities!(currentItem).whenComplete(
+                                    () => isLoadingMore.value = false,
+                                  );
+                                }
+                              }
+                            }
                             return canOpen;
                           },
                           onMenuClose: () => isMenuOpened.value = false,
@@ -588,9 +605,11 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       bgColor: null,
                                       trailing: isLoadingMore.valueR ? const LoadingIndicator() : null,
                                       onTap: () async {
-                                        isLoadingMore.value = true;
-                                        await focusedMenuOptions.loadQualities!(currentItem);
-                                        isLoadingMore.value = false;
+                                        if (!isLoadingMore.value) {
+                                          isLoadingMore.value = true;
+                                          await focusedMenuOptions.loadQualities!(currentItem);
+                                          isLoadingMore.value = false;
+                                        }
                                       },
                                     ),
                                   ...availableVideos.map(
