@@ -87,7 +87,6 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               builder: (context, isHome) => ObxO(
                                 rx: foldersController.currentFolder,
                                 builder: (context, currentFolder) {
-                                  final pathOfDefault = isHome ? '' : currentFolder?.path;
                                   return CustomListTile(
                                     borderR: 16.0,
                                     icon: isHome ? Broken.home_2 : Broken.folder_2,
@@ -102,7 +101,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                           builder: (context, defaultFolderStartupLocation) => NamidaIconButton(
                                             horizontalPadding: 8.0,
                                             tooltip: () => lang.SET_AS_DEFAULT,
-                                            icon: defaultFolderStartupLocation == pathOfDefault ? Broken.archive_tick : Broken.save_2,
+                                            icon: currentFolder?.hasSamePathAs(defaultFolderStartupLocation) == true ? Broken.archive_tick : Broken.save_2,
                                             iconSize: 22.0,
                                             onPressed: () => config.onDefaultStartupFolderChanged(),
                                           ),

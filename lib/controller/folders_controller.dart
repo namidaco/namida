@@ -350,7 +350,7 @@ class _FolderNode<T extends Folder> {
 
   late final foldersList = children.keys.toList();
 
-  // Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
+  /// Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
   _FolderNode<T>? lookup(T folder) {
     _FolderNode<T> current = this;
     final mainInMap = children[folder];
@@ -424,10 +424,6 @@ class _FolderNode<T extends Folder> {
       if (res != null) return res;
     }
     return null;
-  }
-
-  Map<String, dynamic> toJson() {
-    return children.map((key, value) => MapEntry(key.toString(), value));
   }
 
   @override

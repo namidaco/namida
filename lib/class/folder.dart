@@ -113,6 +113,11 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
     return false;
   }
 
+  bool hasSamePathAs(String path) {
+    final f = Folder.explicit(path);
+    return f._key == this._key;
+  }
+
   R? performInbetweenFoldersBuild<R>(R? Function(T folder) callback) {
     final bufferPathSoFar = StringBuffer();
     for (final part in parts) {

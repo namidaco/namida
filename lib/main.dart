@@ -264,7 +264,7 @@ void mainInitialization() async {
 
   SystemChrome.setPreferredOrientations(kDefaultOrientations);
   NamidaNavigator.inst.setDefaultSystemUI();
-  FlutterDisplayMode.setHighRefreshRate().catchError((_) {});
+  FlutterDisplayMode.setHighRefreshRate().ignoreError();
 
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
 
@@ -335,6 +335,7 @@ void _initLifeCycle() {
 
   NamidaChannel.inst.addOnResume(CurrentColor.inst.refreshColorsAfterResumeApp);
   NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
+  NamidaChannel.inst.addOnResume(() async => FlutterDisplayMode.setHighRefreshRate().ignoreError());
 }
 
 void _initializeIntenties() {

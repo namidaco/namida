@@ -2042,7 +2042,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     cacheConfig.onCacheDone = onCacheDone;
     final cacheStream = HttpCacheManager.instance.createStream(
       uriDDL,
-      cacheFile: cacheFile,
+      file: cacheFile,
       config: cacheConfig,
     );
     cacheStream.download();
