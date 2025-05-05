@@ -4,7 +4,10 @@
     {
       "type": "flutter",
       "command": "flutter",
-      "args": ["build", "apk"],
+      "args": [
+        "build",
+        "apk"
+      ],
       "group": {
         "kind": "build",
         "isDefault": false
@@ -30,6 +33,24 @@
       },
       "problemMatcher": [],
       "label": "build flutter apk arm64",
+      "detail": ""
+    },
+    {
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$apk = Get-ChildItem -Path '${workspaceFolder}\\build\\app\\outputs\\apk\\release\\*arm64*.apk' | Select-Object -First 1; if ($apk) { adb -s 5c12eba1 push $apk.FullName /sdcard/ } else { Write-Error 'No matching APK found' }"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "Push arm64 APK to device",
       "detail": ""
     }
   ]

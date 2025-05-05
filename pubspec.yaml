@@ -52,6 +52,7 @@ dependencies:
   calendar_date_picker2: ^1.0.2
   wakelock_plus: ^1.2.10
   screen_brightness: ^2.1.1
+  native_device_orientation: ^2.0.3
   home_widget: ^0.7.0
   flutter_local_notifications: ^19.0.0-dev.6
   flutter_sharing_intent:
