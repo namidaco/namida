@@ -47,6 +47,8 @@ class ArtworkWidget extends StatefulWidget {
   final VoidCallback? onError;
   final bool fallbackToFolderCover;
   final BoxFit fit;
+  final AlignmentGeometry alignment;
+
 
   const ArtworkWidget({
     required super.key,
@@ -76,6 +78,7 @@ class ArtworkWidget extends StatefulWidget {
     this.onError,
     this.fallbackToFolderCover = true,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
   });
 
   static const kDefaultFadeMilliSeconds = 300;
@@ -277,6 +280,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           ),
                           gaplessPlayback: true,
                           fit: widget.fit,
+                          alignment: widget.alignment,
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: realWidthAndHeight,
                           height: realWidthAndHeight,

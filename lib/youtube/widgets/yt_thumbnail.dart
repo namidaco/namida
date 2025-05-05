@@ -56,6 +56,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool forceSquared;
   final bool? fetchMissingIfRequired;
   final BoxFit fit;
+  final AlignmentGeometry alignment;
   final int fadeMilliSeconds;
 
   const YoutubeThumbnail({
@@ -85,6 +86,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.forceSquared = true,
     this.fetchMissingIfRequired,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     this.fadeMilliSeconds = 200,
   });
 
@@ -249,6 +251,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         ],
         displayIcon: _canDisplayFallbackIcon,
         fit: widget.fit,
+        alignment: widget.alignment,
       ),
     );
   }

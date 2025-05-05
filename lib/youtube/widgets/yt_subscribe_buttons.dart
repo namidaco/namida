@@ -438,6 +438,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           enabled: activeModifications[widget.channelID] != true && _currentSubscribed != null,
           durationMS: 300,
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (subscribed && notificationIcon != null)
                 NamidaIconButton(
