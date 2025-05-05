@@ -377,8 +377,6 @@ class NamidaNavigator {
 
     context ??= _rootNav.currentContext!;
 
-    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
-
     return await showModalBottomSheet(
       isScrollControlled: isScrollControlled,
       showDragHandle: showDragHandle,
@@ -386,28 +384,31 @@ class NamidaNavigator {
       isDismissible: isDismissible,
       backgroundColor: backgroundColor,
       useRootNavigator: true,
-      builder: (context) => DecoratedBox(
-        decoration: decoration?.call(context) ?? const BoxDecoration(),
-        child: SizedBox(
-          height: heightPercentage == null ? null : (context.height * heightPercentage) + bottomPadding,
-          width: context.width,
-          child: material.Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxWidth = constraints.maxWidth.withMaximum(context.width);
-                final maxHeight = constraints.maxHeight.withMaximum(context.height);
-                return builder(
-                  context,
-                  bottomPadding,
-                  maxWidth,
-                  maxHeight,
-                );
-              },
+      builder: (context) {
+        final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
+        return DecoratedBox(
+          decoration: decoration?.call(context) ?? const BoxDecoration(),
+          child: SizedBox(
+            height: heightPercentage == null ? null : (context.height * heightPercentage),
+            width: context.width,
+            child: material.Padding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = constraints.maxWidth.withMaximum(context.width);
+                  final maxHeight = constraints.maxHeight.withMaximum(context.height);
+                  return builder(
+                    context,
+                    bottomPadding,
+                    maxWidth,
+                    maxHeight,
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
