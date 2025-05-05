@@ -505,7 +505,7 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
 }
 
 Future<bool> requestManageStoragePermission({bool request = true, bool showError = true}) async {
-  Future<void> createDir() async => await Directory(settings.defaultBackupLocation.value).create(recursive: true);
+  Future<void> createDir() async => await Directory(AppDirs.INTERNAL_STORAGE).create(recursive: true);
   if (!NamidaFeaturesVisibility.shouldRequestManageAllFilesPermission) {
     await createDir();
     return true;

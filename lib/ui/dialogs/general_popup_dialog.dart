@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:share_plus/share_plus.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
@@ -489,7 +490,7 @@ Future<void> showGeneralPopupDialog(
 
     if (!await requestManageStoragePermission()) return;
 
-    final savePath = "${AppDirs.M3UPlaylists}${pl.name}.m3u";
+    final savePath = FileParts.joinPath(AppDirs.M3UPlaylists, "${pl.name}.m3u");
     await PlaylistController.inst.exportPlaylistToM3UFile(pl, savePath);
     snackyy(
       message: "${lang.SAVED_IN}: $savePath",

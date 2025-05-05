@@ -31,7 +31,22 @@ class BackupController {
   final isCreatingBackup = false.obso;
   final isRestoringBackup = false.obso;
 
-  String get _backupDirectoryPath => settings.defaultBackupLocation.value;
+  Future<String?> _getBackupDirectoryPathEnsured(String? operationName) async {
+    final path = settings.defaultBackupLocation.value;
+    Directory? dir;
+    String? error;
+    try {
+      dir = await Directory(path).create();
+    } catch (e) {
+      error = e.toString();
+    }
+    if (dir == null || !dir.existsSync()) {
+      snackyy(title: "${lang.ERROR}: ${operationName ?? lang.BACKUP_AND_RESTORE}", message: '${error ?? lang.DIRECTORY_DOESNT_EXIST}: "$path"');
+      return null;
+    }
+    return path;
+  }
+
   int get _defaultAutoBackupInterval => settings.autoBackupIntervalDays.value;
 
   Future<void> checkForAutoBackup() async {
@@ -40,7 +55,10 @@ class BackupController {
 
     if (!await requestManageStoragePermission(request: false, showError: false)) return;
 
-    final sortedBackupFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
+    final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.AUTOMATIC_BACKUP);
+    if (backupDirectoryPath == null) return;
+
+    final sortedBackupFiles = await _getBackupFilesSorted.thready(backupDirectoryPath);
     final latestBackup = sortedBackupFiles.firstOrNull;
     if (latestBackup != null) {
       final lastModified = await latestBackup.stat().then((value) => value.modified);
@@ -80,7 +98,7 @@ class BackupController {
           AppDirs.YT_HISTORY_PLAYLIST,
         ];
         await createBackupFile(itemsToBackup, fileSuffix: " - auto");
-        _trimExtraBackupFiles.thready(_backupDirectoryPath);
+        _trimExtraBackupFiles.thready(backupDirectoryPath);
       }
     }
   }
@@ -99,7 +117,8 @@ class BackupController {
     final format = DateFormat('yyyy-MM-dd hh.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
-    final backupDirPath = _backupDirectoryPath;
+    final backupDirPath = await _getBackupDirectoryPathEnsured(lang.CREATE_BACKUP);
+    if (backupDirPath == null) return;
 
     // creates directories and file
     final dir = await Directory(backupDirPath).create();
@@ -256,8 +275,11 @@ class BackupController {
 
     File? backupzip;
     if (auto) {
-      final sortedFiles = await _getBackupFilesSorted.thready(_backupDirectoryPath);
-      backupzip = sortedFiles.firstOrNull;
+      final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.RESTORE_BACKUP);
+      if (backupDirectoryPath != null) {
+        final sortedFiles = await _getBackupFilesSorted.thready(backupDirectoryPath);
+        backupzip = sortedFiles.firstOrNull;
+      }
     } else {
       final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: NamidaFileExtensionsWrapper.zip);
       final path = filePicked?.path;
