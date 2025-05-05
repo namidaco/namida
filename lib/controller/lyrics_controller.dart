@@ -106,6 +106,8 @@ class Lyrics {
     if (lrcUtils == null) return;
 
     final embedded = lrcUtils.embeddedLyrics;
+    if (embedded.startsWith('IGNORE')) return;
+
     if (_lyricsPrioritizeEmbedded && embedded != '') {
       final lrc = embedded.parseLRC();
       if (lrc != null && lrc.lyrics.isNotEmpty) {
