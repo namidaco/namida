@@ -199,6 +199,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       MapEntry(lang.RANDOM_PICKS, _randomTracks),
     ]);
 
+    for (final m in _mixes) {
+      if (m.value.isEmpty) {
+        _mixes.sort((a, b) => b.value.isEmpty ? 0 : 1);
+        break;
+      }
+    }
+
     _isLoading = false;
 
     if (mounted) setState(() {});
