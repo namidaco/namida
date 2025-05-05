@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
+import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
@@ -114,7 +115,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final _isEndCardsVisible = true.obs;
 
   void showControlsBriefly() {
-    setControlsVisibily(true);
+    setControlsVisibily(true, maintainStatusBar: false);
     _startTimer();
   }
 
@@ -276,6 +277,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     if (widget.isFullScreen) {
+      FlutterVolumeController.updateShowSystemUI(false);
       Player.inst.onVolumeChangeAddListener(
         _volumeListenerKey,
         (mv) async {
@@ -303,6 +305,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         },
       );
     }
+    if (_deviceOrientationCommunicatorStreamSub == null) _setupDeviceOrientationListener();
   }
 
   void _setScreenBrightness(double value) async {
@@ -330,6 +333,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
       ScreenBrightness.instance.resetApplicationScreenBrightness();
     }
+    _deviceOrientationCommunicatorStreamSub?.cancel();
     super.dispose();
   }
 
@@ -606,8 +610,26 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   final _videoConstraintsKey = GlobalKey();
 
+  StreamSubscription<NativeDeviceOrientation>? _deviceOrientationCommunicatorStreamSub;
+  void _setupDeviceOrientationListener() {
+    _deviceOrientationCommunicatorStreamSub?.cancel();
+    final stream = NativeDeviceOrientationCommunicator().onOrientationChanged();
+    _deviceOrientationCommunicatorStreamSub = stream.listen(
+      (event) {
+        if (mounted) {
+          setState(() => _deviceInsets = EdgeInsets.zero);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final newDeviceInsets = MediaQuery.viewPaddingOf(context);
+    if (_deviceInsets == EdgeInsets.zero || (newDeviceInsets.horizontal > _deviceInsets.horizontal || newDeviceInsets.vertical > _deviceInsets.vertical)) {
+      if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
+    }
+
     final maxWidth = _maxWidth = widget.isFullScreen ? context.width : context.width.withMaximum(Dimensions.inst.miniplayerMaxWidth);
     final maxHeight = _maxHeight = context.height;
 
@@ -641,50 +663,60 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             );
           }
           // -- fallback images
-          return ObxO(
-              rx: Player.inst.currentItem,
-              builder: (context, item) {
-                if (item is YoutubeID) {
-                  final vidId = item.id;
-                  return YoutubeThumbnail(
-                    type: ThumbnailType.video,
-                    key: Key(vidId),
-                    isImportantInCache: true,
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: maxHeight,
+              maxWidth: maxHeight * 16 / 9,
+            ),
+            child: ObxO(
+                rx: Player.inst.currentItem,
+                builder: (context, item) {
+                  if (item is YoutubeID) {
+                    final vidId = item.id;
+                    return YoutubeThumbnail(
+                      type: ThumbnailType.video,
+                      key: Key(vidId),
+                      isImportantInCache: true,
+                      width: fallbackWidth,
+                      height: fallbackHeight,
+                      borderRadius: 0,
+                      blur: 0,
+                      videoId: vidId,
+                      displayFallbackIcon: false,
+                      compressed: widget.isMinimized,
+                      preferLowerRes: false,
+                      fit: BoxFit.cover, // never change this lil bro
+                    );
+                  }
+                  final track = item is Selectable ? item.track : null;
+                  return ArtworkWidget(
+                    key: ValueKey(track?.path),
+                    track: track,
+                    path: track?.pathToImage,
+                    thumbnailSize: fallbackWidth,
                     width: fallbackWidth,
                     height: fallbackHeight,
                     borderRadius: 0,
                     blur: 0,
-                    videoId: vidId,
-                    displayFallbackIcon: false,
                     compressed: widget.isMinimized,
-                    preferLowerRes: false,
-                    fit: BoxFit.contain, // never change this lil bro
+                    fit: BoxFit.cover, // never change this my friend
                   );
-                }
-                final track = item is Selectable ? item.track : null;
-                return ArtworkWidget(
-                  key: ValueKey(track?.path),
-                  track: track,
-                  path: track?.pathToImage,
-                  thumbnailSize: fallbackWidth,
-                  width: fallbackWidth,
-                  height: fallbackHeight,
-                  borderRadius: 0,
-                  blur: 0,
-                  compressed: widget.isMinimized,
-                  fit: BoxFit.contain, // never change this my friend
-                );
-              });
+                }),
+          );
         });
-
-    final newDeviceInsets = MediaQuery.paddingOf(context);
-    if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
 
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
             ? EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // lanscape videos
             : EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0);
+
+    final safeAreaPadding = widget.isFullScreen
+        ? inLandscape
+            ? EdgeInsets.only(left: _deviceInsets.left, right: _deviceInsets.right)
+            : EdgeInsets.zero // bcz we hide status bar and nav bar
+        : EdgeInsets.zero;
+
     final bottomPadding = widget.isFullScreen
         ? inLandscape
             ? 12.0 + _deviceInsets.bottom // lanscape videos
@@ -803,15 +835,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           children: [
             Align(
               alignment: Alignment.center,
-              child: finalVideoWidget,
+              child: Padding(
+                padding: safeAreaPadding,
+                child: finalVideoWidget,
+              ),
             ),
             // ---- Brightness Mask -----
             Positioned.fill(
               child: ObxO(
                 rx: _currentBrigthnessDim,
                 builder: (context, brightness) => brightness < 1.0
-                    ? ColoredBox(
-                        color: Colors.black.withValues(alpha: 1 - brightness),
+                    ? IgnorePointer(
+                        child: ColoredBox(
+                          color: Colors.black.withValues(alpha: 1 - brightness),
+                        ),
                       )
                     : SizedBox.shrink(),
               ),
@@ -823,9 +860,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 builder: (context, endcardsvisible) => AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: endcardsvisible
-                      ? _YTVideoEndcards(
-                          inFullScreen: widget.isFullScreen,
-                          videoConstraintsKey: _videoConstraintsKey,
+                      ? Padding(
+                          padding: safeAreaPadding,
+                          child: _YTVideoEndcards(
+                            inFullScreen: widget.isFullScreen,
+                            videoConstraintsKey: _videoConstraintsKey,
+                          ),
                         )
                       : null,
                 ),
@@ -834,9 +874,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             if (_canShowControls) ...[
               // ---- Mask -----
               Positioned.fill(
-                child: _getBuilder(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.25),
+                child: IgnorePointer(
+                  child: _getBuilder(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.25),
+                    ),
                   ),
                 ),
               ),
@@ -1579,196 +1621,222 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               ),
 
               // ---- Middle Actions ----
-              _getBuilder(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    const SizedBox(),
-                    ObxO(
-                      rx: Player.inst.currentIndex,
-                      builder: (context, currentIndex) {
-                        final shouldShowPrev = currentIndex != 0;
-                        return IgnorePointer(
-                          ignoring: !shouldShowPrev,
-                          child: Opacity(
-                            opacity: shouldShowPrev ? 1.0 : 0.0,
-                            child: ClipOval(
-                              child: NamidaBgBlur(
-                                blur: 2,
-                                child: ColoredBox(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  child: NamidaIconButton(
-                                    icon: null,
-                                    padding: secondaryButtonPadding,
-                                    onPressed: () {
-                                      Player.inst.previous();
-                                      _startTimer();
-                                    },
-                                    child: Icon(
-                                      Broken.previous,
-                                      size: secondaryButtonSize,
-                                      color: itemsColor,
+              Padding(
+                padding: safeAreaPadding,
+                child: _getBuilder(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const SizedBox(),
+                      ObxO(
+                        rx: Player.inst.currentIndex,
+                        builder: (context, currentIndex) {
+                          final shouldShowPrev = currentIndex != 0;
+                          return IgnorePointer(
+                            ignoring: !shouldShowPrev,
+                            child: Opacity(
+                              opacity: shouldShowPrev ? 1.0 : 0.0,
+                              child: ClipOval(
+                                child: NamidaBgBlur(
+                                  blur: 2,
+                                  child: ColoredBox(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    child: NamidaIconButton(
+                                      icon: null,
+                                      padding: secondaryButtonPadding,
+                                      onPressed: () {
+                                        Player.inst.previous();
+                                        _startTimer();
+                                      },
+                                      child: Icon(
+                                        Broken.previous,
+                                        size: secondaryButtonSize,
+                                        color: itemsColor,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    ClipOval(
-                      child: NamidaBgBlur(
-                        blur: 2.5,
-                        child: ColoredBox(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          child: NamidaIconButton(
-                            icon: null,
-                            padding: mainButtonPadding,
-                            onPressed: () {
-                              Player.inst.togglePlayPause();
-                              _startTimer();
-                            },
-                            child: ObxO(
-                              rx: Player.inst.playWhenReady,
-                              builder: (context, playWhenReady) => AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: playWhenReady
-                                    ? Icon(
-                                        Broken.pause,
-                                        size: mainButtonSize,
-                                        color: itemsColor,
-                                        key: const Key('paused'),
-                                      )
-                                    : Icon(
-                                        Broken.play,
-                                        size: mainButtonSize,
-                                        color: itemsColor,
-                                        key: const Key('playing'),
-                                      ),
+                          );
+                        },
+                      ),
+                      ClipOval(
+                        child: NamidaBgBlur(
+                          blur: 2.5,
+                          child: ColoredBox(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            child: NamidaIconButton(
+                              icon: null,
+                              padding: mainButtonPadding,
+                              onPressed: () {
+                                Player.inst.togglePlayPause();
+                                _startTimer();
+                              },
+                              child: ObxO(
+                                rx: Player.inst.playWhenReady,
+                                builder: (context, playWhenReady) => AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: playWhenReady
+                                      ? Icon(
+                                          Broken.pause,
+                                          size: mainButtonSize,
+                                          color: itemsColor,
+                                          key: const Key('paused'),
+                                        )
+                                      : Icon(
+                                          Broken.play,
+                                          size: mainButtonSize,
+                                          color: itemsColor,
+                                          key: const Key('playing'),
+                                        ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    ObxO(
-                      rx: Player.inst.currentIndex,
-                      builder: (context, currentIndex) {
-                        return ObxO(
-                          rx: Player.inst.currentQueue,
-                          builder: (context, ytqueue) {
-                            final shouldShowNext = currentIndex != ytqueue.length - 1;
-                            return IgnorePointer(
-                              ignoring: !shouldShowNext,
-                              child: Opacity(
-                                opacity: shouldShowNext ? 1.0 : 0.0,
-                                child: ClipOval(
-                                  child: NamidaBgBlur(
-                                    blur: 2,
-                                    child: ColoredBox(
-                                      color: Colors.black.withValues(alpha: 0.2),
-                                      child: NamidaIconButton(
-                                        icon: null,
-                                        padding: secondaryButtonPadding,
-                                        onPressed: () {
-                                          Player.inst.next();
-                                          _startTimer();
-                                        },
-                                        child: Icon(
-                                          Broken.next,
-                                          size: secondaryButtonSize,
-                                          color: itemsColor,
+                      ObxO(
+                        rx: Player.inst.currentIndex,
+                        builder: (context, currentIndex) {
+                          return ObxO(
+                            rx: Player.inst.currentQueue,
+                            builder: (context, ytqueue) {
+                              final shouldShowNext = currentIndex != ytqueue.length - 1;
+                              return IgnorePointer(
+                                ignoring: !shouldShowNext,
+                                child: Opacity(
+                                  opacity: shouldShowNext ? 1.0 : 0.0,
+                                  child: ClipOval(
+                                    child: NamidaBgBlur(
+                                      blur: 2,
+                                      child: ColoredBox(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        child: NamidaIconButton(
+                                          icon: null,
+                                          padding: secondaryButtonPadding,
+                                          onPressed: () {
+                                            Player.inst.next();
+                                            _startTimer();
+                                          },
+                                          child: Icon(
+                                            Broken.next,
+                                            size: secondaryButtonSize,
+                                            color: itemsColor,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(),
-                  ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(),
+                    ],
+                  ),
                 ),
               ),
               IgnorePointer(
-                child: Obx(
-                  (context) => Player.inst.shouldShowLoadingIndicatorR
-                      ? ThreeArchedCircle(
-                          color: itemsColor,
-                          size: mainBufferIconSize,
-                        )
-                      : const SizedBox(),
+                child: Padding(
+                  padding: safeAreaPadding,
+                  child: Obx(
+                    (context) => Player.inst.shouldShowLoadingIndicatorR
+                        ? ThreeArchedCircle(
+                            color: itemsColor,
+                            size: mainBufferIconSize,
+                          )
+                        : const SizedBox(),
+                  ),
                 ),
               ),
 
               // ===== Seek Animators ====
 
-              // -- left --
-              _getSeekAnimatedContainer(
-                controller: seekAnimationBackward1,
-                isForward: false,
-                isSecondary: false,
-              ),
-              _getSeekAnimatedContainer(
-                controller: seekAnimationBackward2,
-                isForward: false,
-                isSecondary: true,
-              ),
+              Positioned.fill(
+                child: Padding(
+                  padding: safeAreaPadding,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // -- left --
+                      _getSeekAnimatedContainer(
+                        controller: seekAnimationBackward1,
+                        isForward: false,
+                        isSecondary: false,
+                      ),
+                      _getSeekAnimatedContainer(
+                        controller: seekAnimationBackward2,
+                        isForward: false,
+                        isSecondary: true,
+                      ),
 
-              // -- right --
-              _getSeekAnimatedContainer(
-                controller: seekAnimationForward1,
-                isForward: true,
-                isSecondary: false,
-              ),
-              _getSeekAnimatedContainer(
-                controller: seekAnimationForward2,
-                isForward: true,
-                isSecondary: true,
-              ),
+                      // -- right --
+                      _getSeekAnimatedContainer(
+                        controller: seekAnimationForward1,
+                        isForward: true,
+                        isSecondary: false,
+                      ),
+                      _getSeekAnimatedContainer(
+                        controller: seekAnimationForward2,
+                        isForward: true,
+                        isSecondary: true,
+                      ),
 
-              // ===========
-              getSeekTextWidget(
-                controller: seekAnimationBackward2,
-                isForward: false,
-              ),
-              getSeekTextWidget(
-                controller: seekAnimationForward2,
-                isForward: true,
+                      // ===========
+                      getSeekTextWidget(
+                        controller: seekAnimationBackward2,
+                        isForward: false,
+                      ),
+                      getSeekTextWidget(
+                        controller: seekAnimationForward2,
+                        isForward: true,
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               // ========= Sliders ==========
               if (shouldShowSliders) ...[
-                // ======= Brightness Slider ========
-                Positioned(
-                  left: maxWidth * 0.15,
-                  child: Obx(
-                    (context) {
-                      final bri = _canShowBrightnessSlider.valueR ? _currentBrigthnessDim.valueR : null;
-                      return _getVerticalSliderWidget(
-                        'brightness',
-                        bri,
-                        max: _maxBrightnessValue,
-                        Broken.sun_1,
-                        view,
-                      );
-                    },
-                  ),
-                ),
-                // ======= Volume Slider ========
-                Positioned(
-                  right: maxWidth * 0.15,
-                  child: ObxO(
-                    rx: _currentDeviceVolume,
-                    builder: (context, vol) => _getVerticalSliderWidget(
-                      'volume',
-                      vol,
-                      Broken.volume_high,
-                      view,
+                Positioned.fill(
+                  child: Padding(
+                    padding: safeAreaPadding,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // ======= Brightness Slider ========
+                        Positioned(
+                          left: maxWidth * 0.15,
+                          child: Obx(
+                            (context) {
+                              final bri = _canShowBrightnessSlider.valueR ? _currentBrigthnessDim.valueR : null;
+                              return _getVerticalSliderWidget(
+                                'brightness',
+                                bri,
+                                max: _maxBrightnessValue,
+                                Broken.sun_1,
+                                view,
+                              );
+                            },
+                          ),
+                        ),
+                        // ======= Volume Slider ========
+                        Positioned(
+                          right: maxWidth * 0.15,
+                          child: ObxO(
+                            rx: _currentDeviceVolume,
+                            builder: (context, vol) => _getVerticalSliderWidget(
+                              'volume',
+                              vol,
+                              Broken.volume_high,
+                              view,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1779,9 +1847,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               Positioned(
                 right: 12.0,
                 bottom: 12.0,
-                child: _YTChannelOverlayThumbnail(
-                  channelOverlayUrl: channelOverlayUrl,
-                  ignoreTouches: _isVisible,
+                child: Padding(
+                  padding: safeAreaPadding,
+                  child: _YTChannelOverlayThumbnail(
+                    channelOverlayUrl: channelOverlayUrl,
+                    ignoreTouches: _isVisible,
+                  ),
                 ),
               ),
           ],
