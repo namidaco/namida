@@ -252,6 +252,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         displayIcon: _canDisplayFallbackIcon,
         fit: widget.fit,
         alignment: widget.alignment,
+        isYTThumbnail: true,
       ),
     );
   }
