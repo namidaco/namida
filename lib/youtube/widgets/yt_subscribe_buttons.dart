@@ -431,6 +431,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     final notificationIcon = _notificationsToIcon(_currentNotificationsStatus, iconSize);
 
     return LongPressDetector(
+      enableSecondaryTap: true,
       onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(context, widget.channelID!),
       child: ObxO(
         rx: _YTSubscribeButtonManager._activeModifications,

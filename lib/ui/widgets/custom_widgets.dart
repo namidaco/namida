@@ -1018,7 +1018,18 @@ class MoreIcon extends StatelessWidget {
   final double padding;
   final Color? iconColor;
   final double iconSize;
-  const MoreIcon({super.key, this.onPressed, this.rotated = true, this.padding = 1.0, this.iconColor, this.iconSize = 18.0, this.onLongPress});
+  final bool enableSecondaryTap;
+
+  const MoreIcon({
+    super.key,
+    this.onPressed,
+    this.rotated = true,
+    this.padding = 1.0,
+    this.iconColor,
+    this.iconSize = 18.0,
+    this.onLongPress,
+    this.enableSecondaryTap = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1028,6 +1039,7 @@ class MoreIcon extends StatelessWidget {
         borderRadius: 4.0,
         onTap: onPressed,
         onLongPress: onLongPress,
+        enableSecondaryTap: enableSecondaryTap,
         padding: EdgeInsets.all(padding),
         child: Icon(
           Broken.more,
@@ -2989,6 +3001,7 @@ class NamidaInkWell extends StatelessWidget {
   final Color? bgColor;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final bool enableSecondaryTap;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
   final BoxDecoration decoration;
@@ -3006,6 +3019,7 @@ class NamidaInkWell extends StatelessWidget {
     this.bgColor,
     this.onTap,
     this.onLongPress,
+    this.enableSecondaryTap = false,
     this.borderRadius = 12.0,
     this.padding = EdgeInsets.zero,
     this.decoration = const BoxDecoration(),
@@ -3048,6 +3062,7 @@ class NamidaInkWell extends StatelessWidget {
           highlightColor: highlightColor,
           onTap: onTap,
           onLongPress: onLongPress,
+          onSecondaryTap: enableSecondaryTap ? onLongPress ?? onTap : null,
           child: SizedBox(
             height: height,
             width: width,
@@ -3065,7 +3080,6 @@ class NamidaInkWell extends StatelessWidget {
 class NamidaInkWellButton extends StatelessWidget {
   final Color? bgColor;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
   final double borderRadius;
   final int animationDurationMS;
   final IconData? icon;
@@ -3081,7 +3095,6 @@ class NamidaInkWellButton extends StatelessWidget {
     super.key,
     this.bgColor,
     this.onTap,
-    this.onLongPress,
     this.borderRadius = 10.0,
     this.animationDurationMS = 250,
     required this.icon,
@@ -3109,7 +3122,7 @@ class NamidaInkWellButton extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier, vertical: 6.0 * sizeMultiplier),
           bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
           onTap: onTap,
-          onLongPress: onLongPress,
+          enableSecondaryTap: false,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -3633,6 +3646,7 @@ class NamidaPopupWrapper extends StatelessWidget {
             );
             if (e.onLongPress != null) {
               popupItem = LongPressDetector(
+                enableSecondaryTap: true,
                 onLongPress: e.onLongPress,
                 child: popupItem,
               );
@@ -3680,6 +3694,7 @@ class NamidaPopupWrapper extends StatelessWidget {
         }
       },
       child: LongPressDetector(
+        enableSecondaryTap: true,
         onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
         child: ColoredBox(
           color: Colors.transparent,

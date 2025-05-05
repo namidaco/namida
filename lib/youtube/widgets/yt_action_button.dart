@@ -33,6 +33,7 @@ class SmallYTActionButton extends StatelessWidget {
       child: NamidaInkWell(
         onTap: onPressed,
         onLongPress: onLongPress,
+        enableSecondaryTap: true,
         borderRadius: 12.0,
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
         child: Column(

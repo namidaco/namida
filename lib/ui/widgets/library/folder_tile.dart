@@ -124,7 +124,8 @@ class FolderTile extends StatelessWidget {
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
         onTap: folder.navigate,
-        onLongPress: () => _showFolderDialog(),
+        onLongPress: _showFolderDialog,
+        enableSecondaryTap: true,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
           child: Row(

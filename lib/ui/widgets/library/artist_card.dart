@@ -36,6 +36,7 @@ class ArtistCard extends StatelessWidget {
     return NamidaInkWell(
       onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, artist),
       onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
+      enableSecondaryTap: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final imageSize = constraints.maxWidth - 12.0;

@@ -62,6 +62,7 @@ class QueueTile extends StatelessWidget {
               bgColor: context.theme.cardColor,
               onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
               onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
+              enableSecondaryTap: true,
               borderRadius: 16.0,
               height: Dimensions.queueTileItemExtent,
               padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),

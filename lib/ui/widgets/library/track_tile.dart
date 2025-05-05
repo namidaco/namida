@@ -406,6 +406,7 @@ class TrackTile extends StatelessWidget {
                       ScrollSearchController.inst.unfocusKeyboard();
                       _selectTrack();
                     },
+              onSecondaryTap: _triggerTrackDialog,
               child: ColoredBox(
                 color: backgroundColor,
                 child: SizedBox(
@@ -562,6 +563,7 @@ class TrackTile extends StatelessWidget {
         GestureDetector(
           onTap: onRightAreaTap ?? _triggerTrackDialog,
           onLongPress: _triggerTrackInfoDialog,
+          onSecondaryTap: _triggerTrackInfoDialog,
           child: Container(
             width: 36.0,
             color: Colors.transparent,

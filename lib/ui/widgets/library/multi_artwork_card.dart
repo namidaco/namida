@@ -111,6 +111,7 @@ class MultiArtworkCard extends StatelessWidget {
                 child: NamidaInkWell(
                   onTap: onTap,
                   onLongPress: showMenuFunction,
+                  enableSecondaryTap: true,
                 ),
               ),
               ...widgetsInStack,

@@ -51,6 +51,7 @@ class _FocusedMenuHolderState extends State<FocusedMenuHolder> {
           await openMenu(context);
         }
       },
+      onSecondaryTap: widget.openWithTap ? null : () => openMenu(context),
       onLongPress: widget.openWithTap ? null : () => openMenu(context),
       child: widget.child,
     );

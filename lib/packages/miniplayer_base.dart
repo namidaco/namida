@@ -299,6 +299,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         const RepeatModeIconButton(),
         const EqualizerIconButton(),
         LongPressDetector(
+          enableSecondaryTap: true,
           onLongPress: () {
             showLRCSetDialog(_getcurrentItem, CurrentColor.inst.miniplayerColor);
           },

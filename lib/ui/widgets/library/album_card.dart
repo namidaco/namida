@@ -74,6 +74,7 @@ class AlbumCard extends StatelessWidget {
             return NamidaInkWell(
               onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
               onLongPress: () => dummyCard ? null : NamidaDialogs.inst.showAlbumDialog(identifier),
+              enableSecondaryTap: true,
               child: Column(
                 children: [
                   NamidaHero(

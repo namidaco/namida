@@ -33,6 +33,7 @@ class ArtistTile extends StatelessWidget {
       child: NamidaInkWell(
         onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, tracks),
         onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
+        enableSecondaryTap: true,
         child: SizedBox(
           height: Dimensions.artistTileItemExtent,
           child: Padding(
