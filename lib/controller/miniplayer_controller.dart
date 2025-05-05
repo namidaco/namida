@@ -75,26 +75,29 @@ class MiniPlayerController {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     topInset = view.padding.top;
     bottomInset = view.padding.bottom;
+    rightInset = view.padding.right / 2;
     screenSize = view.physicalSize;
     maxOffset = screenSize.height;
     sMaxOffset = screenSize.width;
   }
 
   void updateScreenValues(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final navBarPadding = MediaQuery.paddingOf(context).bottom;
-    topInset = media.padding.top - navBarPadding;
-    bottomInset = media.padding.bottom;
+    final mediaSize = MediaQuery.sizeOf(context);
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    topInset = viewPadding.top;
+    bottomInset = viewPadding.bottom;
+    rightInset = viewPadding.right / 2;
 
     final miniplayerDetails = _getPlayerDetails(
       context,
-      screenWidth: media.size.width,
-      screenHeight: media.size.height,
+      screenWidth: mediaSize.width,
+      screenHeight: mediaSize.height,
     );
-    final maxWidth = miniplayerDetails.maxWidth;
     final isWidescreen = miniplayerDetails.isWidescreen;
+    double maxWidth = miniplayerDetails.maxWidth;
+    if (isWidescreen) maxWidth += rightInset;
 
-    screenSize = Size(maxWidth, media.size.height - navBarPadding);
+    screenSize = Size(maxWidth, mediaSize.height);
     maxOffset = screenSize.height;
     sMaxOffset = maxWidth;
 
@@ -110,8 +113,8 @@ class MiniPlayerController {
     }
 
     Dimensions.inst.miniplayerMaxWidth = maxWidth;
-    Dimensions.inst.sideInfoMaxWidth = (media.size.width * 0.2).withMaximum(324.0);
-    Dimensions.inst.availableAppContentWidth = media.size.width - (isWidescreen ? maxWidth : 0);
+    Dimensions.inst.sideInfoMaxWidth = (mediaSize.width * 0.2).withMaximum(324.0);
+    Dimensions.inst.availableAppContentWidth = mediaSize.width - (isWidescreen ? maxWidth : 0);
     Dimensions.inst.miniplayerIsWideScreen = miniplayerDetails.isWidescreen;
   }
 
@@ -149,6 +152,7 @@ class MiniPlayerController {
   late Size screenSize;
   late double topInset;
   late double bottomInset;
+  late double rightInset;
   late double maxOffset;
   final _velocity = VelocityTracker.withKind(PointerDeviceKind.touch);
   static const _bouncingCurve = Cubic(0.175, 0.885, 0.32, 1.125);

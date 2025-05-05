@@ -4228,13 +4228,17 @@ class QueueUtilsRow extends StatelessWidget {
 class RepeatModeIconButton extends StatelessWidget {
   final bool compact;
   final Color? color;
+  final double iconSize;
   final VoidCallback? onPressed;
+  final Widget Function(Widget child, String Function() tooltipCallback, void Function() onTap)? builder;
 
   const RepeatModeIconButton({
     super.key,
     this.compact = false,
     this.color,
+    this.iconSize = 20.0,
     this.onPressed,
+    this.builder,
   });
 
   void _switchMode() {
@@ -4265,7 +4269,7 @@ class RepeatModeIconButton extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 20.0,
+              size: iconSize,
               color: iconColor,
             ),
             if (repeatMode == RepeatMode.forNtimes)
@@ -4278,6 +4282,16 @@ class RepeatModeIconButton extends StatelessWidget {
               ),
           ],
         );
+        if (builder != null) {
+          return builder!(
+            child,
+            _buildTooltip,
+            () {
+              onPressed?.call();
+              _switchMode();
+            },
+          );
+        }
 
         return compact
             ? NamidaIconButton(
@@ -4286,7 +4300,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 verticalPadding: 2.0,
                 horizontalPadding: 4.0,
                 padding: EdgeInsets.zero,
-                iconSize: 20.0,
+                iconSize: iconSize,
                 onPressed: () {
                   onPressed?.call();
                   _switchMode();
@@ -4314,17 +4328,25 @@ class RepeatModeIconButton extends StatelessWidget {
 class EqualizerIconButton extends StatelessWidget {
   final bool compact;
   final Color? color;
+  final double iconSize;
   final VoidCallback? onPressed;
+  final Widget Function(Widget child, String Function() tooltipCallback, void Function() onTap)? builder;
 
   const EqualizerIconButton({
     super.key,
     this.compact = false,
     this.color,
+    this.iconSize = 20.0,
     this.onPressed,
+    this.builder,
   });
 
   void _onTap() {
     NamidaOnTaps.inst.openEqualizer();
+  }
+
+  String _buildTooltip() {
+    return lang.EQUALIZER;
   }
 
   @override
@@ -4343,21 +4365,25 @@ class EqualizerIconButton extends StatelessWidget {
                 ? StackedIcon(
                     baseIcon: Broken.sound,
                     secondaryIcon: isSoundModified ? Broken.edit_2 : Broken.tick_circle,
-                    iconSize: 20.0,
-                    secondaryIconSize: 10.0,
+                    iconSize: iconSize,
+                    secondaryIconSize: iconSize * 0.5,
                     baseIconColor: iconColor,
                     secondaryIconColor: iconColor,
                     blurRadius: 12.0,
                   )
                 : Icon(
                     Broken.sound,
-                    size: 20.0,
+                    size: iconSize,
                     color: iconColor,
                   );
           },
         );
       },
     );
+
+    if (builder != null) {
+      return builder!(child, _buildTooltip, _onTap);
+    }
 
     return compact
         ? NamidaIconButton(
@@ -4366,7 +4392,7 @@ class EqualizerIconButton extends StatelessWidget {
             verticalPadding: 2.0,
             horizontalPadding: 4.0,
             padding: EdgeInsets.zero,
-            iconSize: 20.0,
+            iconSize: iconSize,
             onPressed: () {
               onPressed?.call();
               _onTap();
@@ -4459,16 +4485,16 @@ class DoubleTapDetector extends StatelessWidget {
 
 class LongPressDetector extends StatelessWidget {
   final VoidCallback? onLongPress;
-  final void Function(LongPressGestureRecognizer instance)? initializer;
   final Widget? child;
   final HitTestBehavior? behavior;
+  final bool enableSecondaryTap;
 
   const LongPressDetector({
     super.key,
     required this.onLongPress,
-    this.initializer,
     this.child,
     this.behavior,
+    this.enableSecondaryTap = false,
   });
 
   @override
@@ -4476,13 +4502,23 @@ class LongPressDetector extends StatelessWidget {
     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
     gestures[LongPressGestureRecognizer] = GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
       () => LongPressGestureRecognizer(debugOwner: this),
-      initializer ??
-          (LongPressGestureRecognizer instance) {
-            instance
-              ..onLongPress = onLongPress
-              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-          },
+      (LongPressGestureRecognizer instance) {
+        instance
+          ..onLongPress = onLongPress
+          ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+      },
     );
+
+    if (enableSecondaryTap) {
+      gestures[TapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+        () => TapGestureRecognizer(debugOwner: this),
+        (TapGestureRecognizer instance) {
+          instance
+            ..onSecondaryTap = onLongPress
+            ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+        },
+      );
+    }
 
     return RawGestureDetector(
       behavior: behavior,

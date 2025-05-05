@@ -152,11 +152,11 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
         return currentItem is Selectable ? trackConfig.onMenuOpen(currentItem, details) : ytConfig.onMenuOpen(currentItem, details);
       },
       focusedMenuOptions: (item) => item is Selectable ? trackConfig.focusedMenuOptions(item) : ytConfig.focusedMenuOptions(item),
-      imageBuilder: (item, cp) {
-        return item is Selectable ? trackConfig.imageBuilder(item, cp) : ytConfig.imageBuilder(item, cp);
+      imageBuilder: (item, cp, brMultiplier) {
+        return item is Selectable ? trackConfig.imageBuilder(item, cp, brMultiplier) : ytConfig.imageBuilder(item, cp, brMultiplier);
       },
-      currentImageBuilder: (item, bcp) {
-        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp) : ytConfig.currentImageBuilder(item, bcp);
+      currentImageBuilder: (item, bcp, brMultiplier) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp, brMultiplier) : ytConfig.currentImageBuilder(item, bcp, brMultiplier);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -269,19 +269,19 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             color: color,
           ),
         ),
-        builder: (currentItem) {
+        builder: (currentItem, fontSizeMultiplier, sizeMultiplier) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
             if (!settings.enableVideoPlayback.valueR) {
               return Text.rich(
                 TextSpan(
                   text: lang.AUDIO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (settings.displayAudioInfoMiniplayer.valueR)
                       TextSpan(
                         text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
-                        style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 11.0),
+                        style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
                       )
                   ],
                 ),
@@ -311,14 +311,14 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             return Text.rich(
               TextSpan(
                 text: lang.VIDEO,
-                style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
                 children: [
                   if (videoBlockedByIcon != null) ...[
-                    TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: 15.0)),
+                    TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
                     WidgetSpan(
                       child: Icon(
                         videoBlockedByIcon,
-                        size: 14.0,
+                        size: sizeMultiplier(14.0),
                         color: onSecondary,
                       ),
                     ),
@@ -327,15 +327,15 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                       text: " • $qualityText$framerateText",
                       style: TextStyle(
                         color: context.theme.colorScheme.primary,
-                        fontSize: 13.0,
+                        fontSize: fontSizeMultiplier(13.0),
                       ),
                     ),
                   // --
                   if (videoTotalSize > 0) ...[
-                    TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 14.0)),
+                    TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
                     TextSpan(
                       text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
-                      style: TextStyle(color: onSecondary, fontSize: 10.0),
+                      style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
                     ),
                   ],
                 ],
@@ -362,13 +362,15 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           );
         },
       ),
-      imageBuilder: (item, cp) => _TrackImage(
+      imageBuilder: (item, cp, brMultiplier) => _TrackImage(
         track: (item as Selectable).track,
         cp: cp,
+        brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp) => _AnimatingTrackImage(
+      currentImageBuilder: (item, bcp, brMultiplier) => _AnimatingTrackImage(
         track: (item as Selectable).track,
         cp: bcp,
+        brMultiplier: brMultiplier,
       ),
       textBuilder: _textBuilder,
       canShowBuffering: (currentItem) => false,
@@ -513,7 +515,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
             color: color,
           ),
         ),
-        builder: (currentItem) {
+        builder: (currentItem, fontSizeMultiplier, sizeMultiplier) {
           final onSecondary = context.theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
             if (settings.youtube.isAudioOnlyMode.valueR) {
@@ -538,7 +540,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                   textChildren = <TextSpan>[
                     TextSpan(
                       text: " • ${finalText.joinText(separator: ' • ')}",
-                      style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 11.0),
+                      style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
                     ),
                   ];
                 }
@@ -546,7 +548,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               return Text.rich(
                 TextSpan(
                   text: lang.AUDIO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
                   children: textChildren,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -564,14 +566,14 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               return Text.rich(
                 TextSpan(
                   text: lang.VIDEO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: 15.0, color: context.theme.colorScheme.onSecondaryContainer),
+                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (stream == null && cached == null && !ConnectivityController.inst.hasConnectionR) ...[
-                      TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: 15.0)),
+                      TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
                       WidgetSpan(
                         child: Icon(
                           Broken.global_refresh,
-                          size: 14.0,
+                          size: sizeMultiplier(14.0),
                           color: onSecondary,
                         ),
                       ),
@@ -580,15 +582,15 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                         text: " • ${qualityText ?? '?'}",
                         style: TextStyle(
                           color: context.theme.colorScheme.primary,
-                          fontSize: 13.0,
+                          fontSize: fontSizeMultiplier(13.0),
                         ),
                       ),
                     // --
                     if (sizeFinal > 0) ...[
-                      TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: 14.0)),
+                      TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
                       TextSpan(
                         text: sizeFinal.fileSizeFormatted,
-                        style: TextStyle(color: onSecondary, fontSize: 10.0),
+                        style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
                       ),
                     ],
                   ],
@@ -623,13 +625,15 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           );
         },
       ),
-      imageBuilder: (item, cp) => _YoutubeIDImage(
+      imageBuilder: (item, cp, brMultiplier) => _YoutubeIDImage(
         video: item as YoutubeID,
         cp: cp,
+        brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, bcp, brMultiplier) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
         cp: bcp,
+        brMultiplier: brMultiplier,
       ),
       textBuilder: (item) => _textBuilder(context, item),
       canShowBuffering: (currentItem) => true,
@@ -647,20 +651,24 @@ final _lrcAdditionalScale = 0.0.obs;
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
   final double cp;
+  final double Function(double borderRadius) brMultiplier;
 
   const _AnimatingTrackImage({
     required this.track,
     required this.cp,
+    required this.brMultiplier,
   });
 
   @override
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
       cp: cp,
+      brMultiplier: brMultiplier,
       isLocal: true,
       fallback: _TrackImage(
         track: track,
         cp: cp,
+        brMultiplier: brMultiplier,
       ),
     );
   }
@@ -668,11 +676,13 @@ class _AnimatingTrackImage extends StatelessWidget {
 
 class _AnimatingThumnailWidget extends StatelessWidget {
   final double cp;
+  final double Function(double borderRadius) brMultiplier;
   final bool isLocal;
   final Widget fallback;
 
   const _AnimatingThumnailWidget({
     required this.cp,
+    required this.brMultiplier,
     required this.isLocal,
     required this.fallback,
   });
@@ -710,7 +720,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
           builder: (context, videoInfo) {
             final videoOrImage = videoInfo != null && videoInfo.isInitialized
                 ? BorderRadiusClip(
-                    borderRadius: BorderRadius.circular((6.0 + 10.0 * cp).multipliedRadius),
+                    borderRadius: BorderRadius.circular(6.0 + (brMultiplier(10.0.multipliedRadius) * cp)),
                     child: DoubleTapDetector(
                       onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal),
                       child: NamidaAspectRatio(
@@ -760,10 +770,12 @@ class _AnimatingThumnailWidget extends StatelessWidget {
 class _TrackImage extends StatelessWidget {
   final Track track;
   final double cp;
+  final double Function(double borderRadius) brMultiplier;
 
   const _TrackImage({
     required this.track,
     required this.cp,
+    required this.brMultiplier,
   });
 
   @override
@@ -774,7 +786,7 @@ class _TrackImage extends StatelessWidget {
       path: track.pathToImage,
       thumbnailSize: context.width,
       compressed: cp == 0.0,
-      borderRadius: 6.0 + 10.0 * cp,
+      borderRadius: 6.0 + brMultiplier(10.0.multipliedRadius) * cp,
       fadeMilliSeconds: 0,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
       boxShadow: [
@@ -793,10 +805,12 @@ class _TrackImage extends StatelessWidget {
 class _YoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
   final double cp;
+  final double Function(double borderRadius) brMultiplier;
 
   const _YoutubeIDImage({
     required this.video,
     required this.cp,
+    required this.brMultiplier,
   });
 
   @override
@@ -811,7 +825,7 @@ class _YoutubeIDImage extends StatelessWidget {
       isImportantInCache: true,
       compressed: false,
       preferLowerRes: false,
-      borderRadius: 6.0 + 10.0 * cp,
+      borderRadius: 6.0 + brMultiplier(10.0.multipliedRadius) * cp,
       boxShadow: [
         BoxShadow(
           color: context.theme.shadowColor.withAlpha(100),
@@ -827,20 +841,24 @@ class _YoutubeIDImage extends StatelessWidget {
 class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
   final double cp;
+  final double Function(double borderRadius) brMultiplier;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
     required this.cp,
+    required this.brMultiplier,
   });
 
   @override
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
       cp: cp,
+      brMultiplier: brMultiplier,
       isLocal: false,
       fallback: _YoutubeIDImage(
         video: video,
         cp: cp,
+        brMultiplier: brMultiplier,
       ),
     );
   }

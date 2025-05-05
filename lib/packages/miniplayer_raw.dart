@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 
 typedef MiniplayerBuilderCallback = Widget Function(
@@ -13,6 +14,7 @@ typedef MiniplayerBuilderCallback = Widget Function(
   bool bounceDown,
   double topInset,
   double bottomInset,
+  double rightInset,
   Size screenSize,
   AnimationController sAnim,
   double sMaxOffset,
@@ -28,7 +30,8 @@ typedef MiniplayerBuilderCallback = Widget Function(
   double qcp,
   double bp,
   double bcp,
-  BorderRadius borderRadius,
+  double topBorderRadius,
+  double bottomBorderRadius,
   double slowOpacity,
   double opacity,
   double fastOpacity,
@@ -53,7 +56,7 @@ class MiniplayerRaw extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navBarHeight = MediaQuery.paddingOf(context).bottom;
+    double navBarHeight = MediaQuery.viewPaddingOf(context).bottom;
     final child = AnimatedBuilder(
         animation: MiniPlayerController.inst.animation,
         builder: (context, _) {
@@ -62,6 +65,7 @@ class MiniplayerRaw extends StatelessWidget {
           final bounceDown = MiniPlayerController.inst.bounceDown;
           final topInset = MiniPlayerController.inst.topInset;
           final bottomInset = MiniPlayerController.inst.bottomInset;
+          final rightInset = MiniPlayerController.inst.rightInset;
           final screenSize = MiniPlayerController.inst.screenSize;
           final sAnim = MiniPlayerController.inst.sAnim;
           final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
@@ -69,38 +73,32 @@ class MiniplayerRaw extends StatelessWidget {
           final siParallax = MiniPlayerController.inst.siParallax;
 
           final double p = MiniPlayerController.inst.animation.value;
-          final double cp = p.clamp(0.0, 1.0);
+          final double cp = p.clampDouble(0.0, 1.0);
           final double ip = 1 - p;
           final double icp = 1 - cp;
 
           final double rp = inverseAboveOne(p);
-          final double rcp = rp.clamp(0, 1);
+          final double rcp = rp.clampDouble(0, 1);
 
-          final double qp = p.clamp(1.0, 3.0) - 1.0;
-          final double qcp = qp.clamp(0.0, 1.0);
+          final double qp = p.clampDouble(1.0, 3.0) - 1.0;
+          final double qcp = qp.clampDouble(0.0, 1.0);
 
           final double bp = !bounceUp
               ? !bounceDown
                   ? rp
                   : 1 - (p - 1)
               : p;
-          final double bcp = bp.clamp(0.0, 1.0);
+          final double bcp = bp.clampDouble(0.0, 1.0);
 
-          final BorderRadius borderRadius = BorderRadius.only(
-            topLeft: Radius.circular(topBorderRadius.multipliedRadius + 6.0 * p),
-            topRight: Radius.circular(topBorderRadius.multipliedRadius + 6.0 * p),
-            bottomLeft: Radius.circular(bottomBorderRadius.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
-            bottomRight: Radius.circular(bottomBorderRadius.multipliedRadius * (1 - p * 10 + 9).clamp(0, 1)),
-          );
-          final double slowOpacity = (bcp * 4 - 3).clamp(0, 1);
-          final double opacity = (bcp * 5 - 4).clamp(0, 1);
-          final double fastOpacity = (bcp * 10 - 9).clamp(0, 1);
+          final double slowOpacity = (bcp * 4 - 3).clampDouble(0, 1);
+          final double opacity = (bcp * 5 - 4).clampDouble(0, 1);
+          final double fastOpacity = (bcp * 10 - 9).clampDouble(0, 1);
 
-          final miniplayerbottomnavheight = settings.enableBottomNavBar.value ? 60.0 : 0.0;
-          final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clamp(-1, 0) * -200) - (bottomInset * icp);
+          final miniplayerbottomnavheight = settings.enableBottomNavBar.value && !Dimensions.inst.miniplayerIsWideScreen ? 60.0 : 0.0;
+          final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clampDouble(-1, 0) * -200) - (bottomInset * icp);
 
-          return builder(maxOffset - navBarHeight, bounceUp, bounceDown, topInset, bottomInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp, rp, rcp, qp,
-              qcp, bp, bcp, borderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight);
+          return builder(maxOffset - navBarHeight, bounceUp, bounceDown, topInset, bottomInset, rightInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp,
+              rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight);
         });
     return Listener(
       behavior: HitTestBehavior.translucent,
