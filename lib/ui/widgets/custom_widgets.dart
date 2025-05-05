@@ -3310,33 +3310,34 @@ class NamidaHero extends StatelessWidget {
     return enabled
         ? Hero(
             tag: tag,
-            flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
-              return AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  final fromHeroWidget = fromHeroContext.widget as Hero;
-                  final toHeroWidget = toHeroContext.widget as Hero;
-                  final (Hero hero1, Hero hero2) = switch (flightDirection) {
-                    HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
-                    HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
-                  };
-                  // fade is necessary since childs are not always exactly the same
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      FadeTransition(
-                        opacity: ReverseAnimation(animation),
-                        child: hero1.child,
-                      ),
-                      FadeTransition(
-                        opacity: animation,
-                        child: hero2.child,
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
+            // -- quite expensive to animate 2 fade transitions.
+            // flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
+            //   return AnimatedBuilder(
+            //     animation: animation,
+            //     builder: (context, child) {
+            //       final fromHeroWidget = fromHeroContext.widget as Hero;
+            //       final toHeroWidget = toHeroContext.widget as Hero;
+            //       final (Hero hero1, Hero hero2) = switch (flightDirection) {
+            //         HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
+            //         HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
+            //       };
+            //       // fade is necessary since childs are not always exactly the same
+            //       return Stack(
+            //         alignment: Alignment.center,
+            //         children: [
+            //           FadeTransition(
+            //             opacity: ReverseAnimation(animation),
+            //             child: hero1.child,
+            //           ),
+            //           FadeTransition(
+            //             opacity: animation,
+            //             child: hero2.child,
+            //           ),
+            //         ],
+            //       );
+            //     },
+            //   );
+            // },
             child: child,
           )
         : child;
