@@ -235,6 +235,10 @@ class TrackTile extends StatelessWidget {
   Track get _tr => trackOrTwd.track;
   TrackWithDate? get _twd => trackOrTwd.trackWithDate;
   bool get _isFromQueue => properties.configs.queueSource == QueueSource.playerQueue;
+  String get _heroTag {
+    final additionalHero = trackOrTwd.trackWithDate?.dateAdded.toString() ?? '';
+    return '${properties.comingFromQueue}${index}_sussydialogs_${_tr.path}$additionalHero';
+  }
 
   void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
         _tr,
@@ -243,7 +247,7 @@ class TrackTile extends StatelessWidget {
         comingFromQueue: _isFromQueue,
         trackWithDate: trackOrTwd.trackWithDate,
         source: properties.configs.queueSource,
-        additionalHero: additionalHero,
+        heroTag: _heroTag,
       );
 
   void _triggerTrackInfoDialog() => showTrackInfoDialog(
@@ -252,12 +256,10 @@ class TrackTile extends StatelessWidget {
         comingFromQueue: _isFromQueue,
         index: index,
         queueSource: properties.configs.queueSource,
-        additionalHero: additionalHero,
+        heroTag: _heroTag,
       );
 
   void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(trackOrTwd, properties.configs.queueSource, properties.configs.playlistName);
-
-  String? get additionalHero => trackOrTwd.trackWithDate?.dateAdded.toString();
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +267,6 @@ class TrackTile extends StatelessWidget {
     final track = _tr;
     final trackWithDate = _twd;
     final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
-    final additionalHero = this.additionalHero;
 
     final willSleepAfterThis = properties.sleepingIndex == index;
 
@@ -350,7 +351,7 @@ class TrackTile extends StatelessWidget {
     final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
     final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
 
-    final heroTag = '${properties.comingFromQueue}${index}_sussydialogs_${track.path}$additionalHero';
+    final heroTag = this._heroTag;
 
     final topRightWidget = this.topRightWidget;
     final videoIcon = track is Video

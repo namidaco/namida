@@ -35,7 +35,7 @@ Future<void> showTrackInfoDialog(
   int? index,
   Color? colorScheme,
   required QueueSource queueSource,
-  String? additionalHero,
+  String? heroTag,
 }) async {
   final trackExt = track.toTrackExtOrNull();
 
@@ -129,7 +129,7 @@ Future<void> showTrackInfoDialog(
   }
 
   final artwork = NamidaHero(
-    tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero',
+    tag: heroTag,
     child: ArtworkWidget(
       key: Key(track.pathToImage),
       fadeMilliSeconds: 0,
@@ -251,7 +251,7 @@ Future<void> showTrackInfoDialog(
                                         );
                                       },
                                       child: PhotoView(
-                                        heroAttributes: PhotoViewHeroAttributes(tag: '$comingFromQueue${index}_sussydialogs_${track.path}$additionalHero'),
+                                        heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
                                         gaplessPlayback: true,
                                         tightMode: true,
                                         minScale: PhotoViewComputedScale.contained,

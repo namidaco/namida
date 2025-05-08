@@ -3307,7 +3307,7 @@ class ObxShow extends StatelessWidget {
 }
 
 class NamidaHero extends StatelessWidget {
-  final Object tag;
+  final Object? tag;
   final Widget child;
   final bool enabled;
 
@@ -3320,9 +3320,9 @@ class NamidaHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return enabled
+    return enabled && tag != null
         ? Hero(
-            tag: tag,
+            tag: tag!,
             // -- quite expensive to animate 2 fade transitions.
             // flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
             //   return AnimatedBuilder(

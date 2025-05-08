@@ -68,7 +68,6 @@ Future<void> showGeneralPopupDialog(
   String? artistToAddFrom,
   (String, String)? albumToAddFrom,
   String? heroTag,
-  String? additionalHero,
   IconData? trailingIcon,
   bool showRemoveFromPlaylist = true,
   bool showPlayAllReverse = false,
@@ -797,7 +796,7 @@ Future<void> showGeneralPopupDialog(
                               index: index,
                               colorScheme: colorDelightened,
                               queueSource: source,
-                              additionalHero: additionalHero,
+                              heroTag: heroTag,
                             )
                           : null,
                       child: Padding(
@@ -808,7 +807,7 @@ Future<void> showGeneralPopupDialog(
                             const SizedBox(width: 16.0),
                             if (forceSingleArtwork! && artworkFile == null)
                               NamidaHero(
-                                tag: heroTag ?? '$comingFromQueue${index}_sussydialogs_${firstTrack?.path}$additionalHero',
+                                tag: heroTag,
                                 child: ArtworkWidget(
                                   key: Key(tracks.pathToImage),
                                   fadeMilliSeconds: 0,
