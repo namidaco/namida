@@ -87,12 +87,30 @@ class MainScreenStack extends StatefulWidget {
 
 class _MainScreenStackState extends State<MainScreenStack> with TickerProviderStateMixin {
   late AnimationController animation;
+
   @override
   void initState() {
     super.initState();
     animation = MiniPlayerController.inst.initialize(this);
     MiniPlayerController.inst.updateScreenValuesInitial();
     MiniPlayerController.inst.initializeSAnim(this);
+    Player.inst.currentItem.addListener(_currentItemListener);
+  }
+
+  @override
+  void dispose() {
+    Player.inst.currentItem.removeListener(_currentItemListener);
+    super.dispose();
+  }
+
+  // -- to fix black ui when nothing is playing
+  bool? _isCurrentItemNull;
+  void _currentItemListener() {
+    final isItemNull = Player.inst.currentItem.value == null;
+    if (isItemNull != _isCurrentItemNull) {
+      _isCurrentItemNull = isItemNull;
+      if (mounted) setState(() {}); // update mp values
+    }
   }
 
   @override
