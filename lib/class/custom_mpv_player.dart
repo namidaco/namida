@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:flutter/widgets.dart';
+
+import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:just_audio/just_audio.dart';
+
 import 'package:namida/core/extensions.dart';
 
 class CustomMPVPlayer implements AVPlayer {
@@ -22,6 +24,9 @@ class CustomMPVPlayer implements AVPlayer {
       if (resolved != null) _videoControllerListener(width: resolved);
     });
 
+    _playerCompletedStreamSub = _player.stream.completed.listen((event) => _updateProcessingState(completed: event));
+    _playerBufferingStreamSub = _player.stream.buffering.listen((event) => _updateProcessingState(buffering: event));
+
     _videoController.id.addListener(_videoControllerListener);
     _videoController.rect.addListener(_videoControllerListener);
   }
@@ -35,6 +40,10 @@ class CustomMPVPlayer implements AVPlayer {
 
   StreamSubscription? _playerHeightStreamSub;
   StreamSubscription? _playerWidthStreamSub;
+
+  StreamSubscription? _playerCompletedStreamSub;
+  StreamSubscription? _playerBufferingStreamSub;
+  final _playerProcessingStateStreamController = StreamController<ProcessingState>();
 
   final _videoInfoStreamController = StreamController<_VideoDetails>();
   _VideoDetails? _videoInfo;
@@ -81,6 +90,37 @@ class CustomMPVPlayer implements AVPlayer {
     _updateVideoInfo(newInfo);
   }
 
+  void _updateProcessingState({
+    bool? completed,
+    bool? buffering,
+    bool? loading,
+  }) {
+    final newProcessingState = _getProcessingState(
+      completed: completed,
+      buffering: buffering,
+      loading: loading,
+    );
+    _playerProcessingStateStreamController.add(newProcessingState);
+  }
+
+  ProcessingState _getProcessingState({
+    bool? completed,
+    bool? buffering,
+    bool? loading,
+  }) {
+    ProcessingState processingState;
+    if (buffering ?? _player.state.buffering) {
+      processingState = ProcessingState.buffering;
+    } else if (completed ?? _player.state.completed) {
+      processingState = ProcessingState.completed;
+    } else if (loading == true) {
+      processingState = ProcessingState.loading;
+    } else {
+      processingState = ProcessingState.ready;
+    }
+    return processingState;
+  }
+
   @override
   Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
 
@@ -105,7 +145,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Stream<Duration> get bufferedPositionStream => _player.stream.buffer;
   @override
-  Stream<ProcessingState> get processingStateStream => Stream.value(ProcessingState.ready);
+  Stream<ProcessingState> get processingStateStream => _playerProcessingStateStreamController.stream.distinct();
 
   @override
   Stream<Duration> get positionStream => _player.stream.position;
@@ -126,7 +166,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   int? get androidAudioSessionId => null;
   @override
-  ProcessingState get processingState => ProcessingState.ready;
+  ProcessingState get processingState => _getProcessingState();
   @override
   Duration get bufferedPosition => _player.state.buffer;
   @override
@@ -230,7 +270,10 @@ class CustomMPVPlayer implements AVPlayer {
     await [
       _playerHeightStreamSub?.cancel(),
       _playerWidthStreamSub?.cancel(),
+      _playerCompletedStreamSub?.cancel(),
+      _playerBufferingStreamSub?.cancel(),
       _videoInfoStreamController.close(),
+      _playerProcessingStateStreamController.close(),
     ].execute();
 
     _videoController.id.removeListener(_videoControllerListener);
