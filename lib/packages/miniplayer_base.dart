@@ -553,10 +553,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   alignment: Alignment.centerLeft,
                   children: [
                     FocusedMenuHolder(
-                      options: (childOffset, childSize) {
+                      options: (containerKey) {
                         return FocusedMenuDetails(
-                          childOffset: childOffset,
-                          childSize: childSize,
+                          containerKey: containerKey,
                           menuOpenAlignment: Alignment.bottomLeft,
                           bottomOffsetHeight: 12.0,
                           leftOffsetHeight: 4.0,
@@ -587,7 +586,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           blurSize: 2.0,
                           duration: animationDuration,
                           animateMenuItems: false,
-                          menuWidth: Dimensions.inst.miniplayerMaxWidth * 0.5,
+                          menuWidth: (_) => Dimensions.inst.miniplayerMaxWidth * 0.5,
                           menuBoxDecoration: BoxDecoration(
                             color: context.theme.scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
@@ -644,7 +643,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                             ].join(' • '),
                                             trailing: NamidaCheckMark(
                                               active: isCurrent,
-                                              size: 12.0,
+                                              size: 12.0.size,
                                             ),
                                           );
                                         },
@@ -850,30 +849,32 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                     (vOffsetWaveform - 64.0 * waveformYScale).withMaximum(-(maxOffset - bottomInset - topInset) * 0.3), // don't ask why topInset.. it works like that idk
                     bcp,
                   );
-                  double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0.spaceYForce * bcp);
+                  double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0.spaceYForce * bcp) + (6.0.spaceYForce * qp);
 
-                  final imageMaxWidthPre = sMaxOffset - 76.0.spaceX;
-                  double imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 12.0.spaceYForce;
+                  double imageMaxWidthPre = sMaxOffset - 76.0.spaceX;
+                  double imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 24.0.spaceYForce;
 
                   // --special treatment for horizontal videos, there will be space wasted so we account for it ^^
                   final imageHeightMultiplier = _imageHeightMultiplier;
                   final shouldApplyImageHeightMultiplier = imageHeightMultiplier != null && imageHeightMultiplier > 1.0;
                   if (shouldApplyImageHeightMultiplier) {
-                    imageMaxHeightPre *= imageHeightMultiplier * cp;
+                    imageMaxHeightPre *= imageHeightMultiplier * 0.95 * bcp;
+                    imageMaxWidthPre *= 0.95;
                   }
+                  final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre);
 
-                  final imageSize = velpy(a: imageWidth, b: imageMaxWidthPre.withMaximum(imageMaxHeightPre), c: bcp);
+                  final imageSize = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
                   final trackInfoLeftMargin = imageWidth * (1 - bcp);
 
                   if (shouldApplyImageHeightMultiplier) {
                     final height = _imageHeightActual?.toDouble().withMaximum(imageSize) ?? imageSize;
-                    vOffsetImage += (height / 2 / imageHeightMultiplier) * cp;
+                    vOffsetImage += (height / 2 / (imageHeightMultiplier * 1.5)) * bcp;
                   }
 
-                  double spaceLeftAboveImage = imageMaxHeightPre - imageSize;
+                  double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - topInset - topRowHeight;
                   if (spaceLeftAboveImage > 0) {
-                    final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo).withMinimum(-vOffsetTrackInfo); // dont remove too much that it goes above panel
-                    final valueToRemove = (spaceLeftAboveImage.withMaximum(spaceLeftInPanelAboveInfo * 0.5) * 0.5) * bcp;
+                    final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
+                    final valueToRemove = (spaceLeftAboveImage * 0.5).withMaximum(spaceLeftInPanelAboveInfo * 0.5) * bcp;
                     vOffsetImage -= valueToRemove; // re-adjust offset to make the image semi-centered
                   }
 
@@ -1639,16 +1640,19 @@ class _MPQualityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NamidaInkWell(
-      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+      margin: EdgeInsets.symmetric(horizontal: 12.0.spaceX, vertical: 4.0.spaceY),
       padding: EdgeInsets.all(padding),
       onTap: onTap,
-      borderRadius: 8.0,
+      borderRadius: 8.0.br,
       width: context.width,
       bgColor: bgColor,
       child: Row(
         children: [
-          Icon(icon, size: 18.0),
-          const SizedBox(width: 6.0),
+          Icon(
+            icon,
+            size: 18.0.size,
+          ),
+          SizedBox(width: 6.0.spaceX),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1656,23 +1660,23 @@ class _MPQualityButton extends StatelessWidget {
                 Text(
                   title,
                   style: context.textTheme.displayMedium?.copyWith(
-                    fontSize: 13.0,
+                    fontSize: 13.0.fontSize,
                   ),
                 ),
                 if (subtitle != '')
                   Text(
                     subtitle,
                     style: context.textTheme.displaySmall?.copyWith(
-                      fontSize: 13.0,
+                      fontSize: 13.0.fontSize,
                     ),
                   ),
               ],
             ),
           ),
           if (trailing != null) ...[
-            const SizedBox(width: 4.0),
+            SizedBox(width: 4.0.spaceX),
             trailing!,
-            const SizedBox(width: 4.0),
+            SizedBox(width: 4.0.spaceX),
           ],
         ],
       ),

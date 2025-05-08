@@ -8,7 +8,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FocusedMenuHolder extends StatefulWidget {
   final Widget child;
-  final FocusedMenuDetails Function(Offset childOffset, Size? childSize) options;
+  final FocusedMenuDetails Function(GlobalKey containerKey) options;
   final Function? onPressed;
 
   /// Open with tap insted of long press.
@@ -28,18 +28,6 @@ class FocusedMenuHolder extends StatefulWidget {
 
 class _FocusedMenuHolderState extends State<FocusedMenuHolder> {
   final GlobalKey containerKey = GlobalKey();
-  Offset childOffset = const Offset(0, 0);
-  Size? childSize;
-
-  getOffset() {
-    RenderBox renderBox = containerKey.currentContext!.findRenderObject() as RenderBox;
-    Size size = renderBox.size;
-    Offset offset = renderBox.localToGlobal(Offset.zero);
-    setState(() {
-      childOffset = Offset(offset.dx, offset.dy);
-      childSize = size;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +46,7 @@ class _FocusedMenuHolderState extends State<FocusedMenuHolder> {
   }
 
   Future<void> openMenu(BuildContext context) async {
-    getOffset();
-    final options = widget.options(childOffset, childSize);
+    final options = widget.options(containerKey);
     if (options.onMenuOpen?.call() ?? true) {
       await Navigator.push(
         context,
@@ -81,15 +68,14 @@ class _FocusedMenuHolderState extends State<FocusedMenuHolder> {
 }
 
 class FocusedMenuDetails extends StatelessWidget {
+  final GlobalKey containerKey;
   final List<FocusedMenuItem> menuItems;
   final Duration duration;
   final BoxDecoration? menuBoxDecoration;
-  final Offset childOffset;
   final double menuItemExtent;
-  final Size? childSize;
   final bool animateMenuItems;
   final double blurSize;
-  final double? menuWidth;
+  final double Function(BuildContext context)? menuWidth;
   final Color blurBackgroundColor;
   final double backgroundOpacity;
   final double bottomOffsetHeight;
@@ -107,6 +93,7 @@ class FocusedMenuDetails extends StatelessWidget {
 
   const FocusedMenuDetails({
     super.key,
+    required this.containerKey,
     this.menuItems = const <FocusedMenuItem>[],
     this.duration = const Duration(milliseconds: 100),
     this.menuBoxDecoration,
@@ -128,8 +115,6 @@ class FocusedMenuDetails extends StatelessWidget {
     this.enableBackgroundEffects = false,
     this.menuHeight,
     this.menuOpenAlignment = Alignment.center,
-    required this.childOffset,
-    this.childSize,
   });
 
   void _onDismiss(BuildContext context) {
@@ -140,15 +125,19 @@ class FocusedMenuDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
+    RenderBox renderBox = containerKey.currentContext!.findRenderObject() as RenderBox;
+    Offset offset = renderBox.localToGlobal(Offset.zero);
+    final childOffset = Offset(offset.dx, offset.dy);
+    final childSize = renderBox.size;
 
     final maxMenuHeight = this.menuHeight ?? size.height * 0.45;
     final listHeight = menuItems.length * menuItemExtent;
 
-    final maxMenuWidth = menuWidth ?? (size.width * 0.70);
+    final maxMenuWidth = menuWidth?.call(context) ?? (size.width * 0.70);
     final menuHeight = listHeight != 0 && listHeight < maxMenuHeight ? listHeight : maxMenuHeight;
-    final leftOffset = (childOffset.dx + maxMenuWidth) < size.width ? childOffset.dx : (childOffset.dx - maxMenuWidth + childSize!.width);
-    final topOffset = (childOffset.dy + menuHeight + childSize!.height) < size.height - bottomOffsetHeight
-        ? childOffset.dy + childSize!.height + menuOffset!
+    final leftOffset = (childOffset.dx + maxMenuWidth) < size.width ? childOffset.dx : (childOffset.dx - maxMenuWidth + childSize.width);
+    final topOffset = (childOffset.dy + menuHeight + childSize.height) < size.height - bottomOffsetHeight
+        ? childOffset.dy + childSize.height + menuOffset!
         : childOffset.dy - menuHeight - menuOffset!;
     return WillPopScope(
       onWillPop: () async {
@@ -185,7 +174,7 @@ class FocusedMenuDetails extends StatelessWidget {
                 },
                 tween: Tween(begin: 0.0, end: 1.0),
                 child: Container(
-                  width: maxMenuWidth,
+                  constraints: BoxConstraints(maxWidth: maxMenuWidth),
                   height: menuHeight,
                   decoration: menuBoxDecoration ??
                       BoxDecoration(
