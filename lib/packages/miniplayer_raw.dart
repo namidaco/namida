@@ -11,15 +11,6 @@ import 'package:namida/core/extensions.dart';
 typedef MiniplayerBuilderCallback = Widget Function(
   double maxOffset,
   bool bounceUp,
-  bool bounceDown,
-  double topInset,
-  double bottomInset,
-  double rightInset,
-  Size screenSize,
-  AnimationController sAnim,
-  double sMaxOffset,
-  double stParallax,
-  double siParallax,
   double p,
   double cp,
   double ip,
@@ -57,21 +48,14 @@ class MiniplayerRaw extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double navBarHeight = MediaQuery.viewPaddingOf(context).bottom;
+    final maxOffset = MiniPlayerController.inst.maxOffset;
+    final bounceUp = MiniPlayerController.inst.bounceUp;
+    final bounceDown = MiniPlayerController.inst.bounceDown;
+    final bottomInset = MiniPlayerController.inst.bottomInset;
+
     final child = AnimatedBuilder(
         animation: MiniPlayerController.inst.animation,
         builder: (context, _) {
-          final maxOffset = MiniPlayerController.inst.maxOffset;
-          final bounceUp = MiniPlayerController.inst.bounceUp;
-          final bounceDown = MiniPlayerController.inst.bounceDown;
-          final topInset = MiniPlayerController.inst.topInset;
-          final bottomInset = MiniPlayerController.inst.bottomInset;
-          final rightInset = MiniPlayerController.inst.rightInset;
-          final screenSize = MiniPlayerController.inst.screenSize;
-          final sAnim = MiniPlayerController.inst.sAnim;
-          final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
-          final stParallax = MiniPlayerController.inst.stParallax;
-          final siParallax = MiniPlayerController.inst.siParallax;
-
           final double p = MiniPlayerController.inst.animation.value;
           final double cp = p.clampDouble(0.0, 1.0);
           final double ip = 1 - p;
@@ -97,8 +81,8 @@ class MiniplayerRaw extends StatelessWidget {
           final miniplayerbottomnavheight = settings.enableBottomNavBar.value && !Dimensions.inst.miniplayerIsWideScreen ? 60.0 : 0.0;
           final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clampDouble(-1, 0) * -200) - (bottomInset * icp);
 
-          return builder(maxOffset - navBarHeight, bounceUp, bounceDown, topInset, bottomInset, rightInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp,
-              rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight);
+          return builder(maxOffset - navBarHeight, bounceUp, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity,
+              miniplayerbottomnavheight, bottomOffset, navBarHeight);
         });
     return Listener(
       behavior: HitTestBehavior.translucent,

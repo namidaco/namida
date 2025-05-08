@@ -799,9 +799,31 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 ),
               );
 
+              final smolProgressBarDecoratedBox = Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: AnimatedDecoration(
+                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                  decoration: BoxDecoration(
+                    color: CurrentColor.inst.miniplayerColor,
+                    borderRadius: BorderRadius.circular(50),
+                    //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                    //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
+                  ),
+                ),
+              );
+
+              final topInset = MiniPlayerController.inst.topInset;
+              final bottomInset = MiniPlayerController.inst.bottomInset;
+              final rightInset = MiniPlayerController.inst.rightInset;
+              final screenSize = MiniPlayerController.inst.screenSize;
+              final sAnim = MiniPlayerController.inst.sAnim;
+              final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
+              final stParallax = MiniPlayerController.inst.stParallax;
+              final siParallax = MiniPlayerController.inst.siParallax;
+
               return MiniplayerRaw(
-                builder: (maxOffset, bounceUp, _, topInset, bottomInset, rightInset, screenSize, sAnim, sMaxOffset, stParallax, siParallax, p, cp, ip, icp, rp, rcp, qp, qcp, bp,
-                    bcp, double topBorderRadius, double bottomBorderRadius, slowOpacity, opacity, fastOpacity, miniplayerbottomnavheight, bottomOffset, navBarHeight) {
+                builder: (maxOffset, bounceUp, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity,
+                    miniplayerbottomnavheight, bottomOffset, navBarHeight) {
                   final BorderRadius borderRadius = BorderRadius.only(
                     topLeft: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),
                     topRight: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),
@@ -937,19 +959,10 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                             final currentDurationInMS =
                                                 currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
                                             final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
-                                            return Container(
+                                            return SizedBox(
                                               height: 2 * (1 - cp),
-                                              width: w > 0 ? ((Dimensions.inst.miniplayerMaxWidth * w) * 0.9) : 0,
-                                              margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                                              child: AnimatedDecoration(
-                                                duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                                decoration: BoxDecoration(
-                                                  color: CurrentColor.inst.miniplayerColor,
-                                                  borderRadius: BorderRadius.circular(50),
-                                                  //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                                                  //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
-                                                ),
-                                              ),
+                                              width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
+                                              child: smolProgressBarDecoratedBox,
                                             );
                                           },
                                         ),
