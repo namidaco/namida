@@ -115,7 +115,7 @@ class NamidaDialogs {
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
         forceSquared: true,
-        showRemoveFromPlaylist: false,
+        comingFromPlaylistMenu: true,
       );
       return;
     }
@@ -131,7 +131,7 @@ class NamidaDialogs {
         extractColor: false,
         heroTag: 'playlist_$k_PLAYLIST_NAME_MOST_PLAYED',
         forceSquared: true,
-        showRemoveFromPlaylist: false,
+        comingFromPlaylistMenu: true,
       );
       return;
     }
@@ -154,7 +154,7 @@ class NamidaDialogs {
         extractColor: false,
         heroTag: 'playlist_${playlist.name}',
         forceSquared: true,
-        showRemoveFromPlaylist: false,
+        comingFromPlaylistMenu: true,
       );
     }
   }

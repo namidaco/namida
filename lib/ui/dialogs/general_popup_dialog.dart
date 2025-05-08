@@ -69,7 +69,7 @@ Future<void> showGeneralPopupDialog(
   (String, String)? albumToAddFrom,
   String? heroTag,
   IconData? trailingIcon,
-  bool showRemoveFromPlaylist = true,
+  bool comingFromPlaylistMenu = false,
   bool showPlayAllReverse = false,
 }) async {
   final isSingle = tracks.length == 1;
@@ -118,8 +118,8 @@ Future<void> showGeneralPopupDialog(
   final numberOfRepeats = 1.obso;
   final isLoadingFilesToShare = false.obso;
 
-  bool shoulShowPlaylistUtils() => tracksWithDates.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
-  bool shoulShowRemoveFromPlaylist() => showRemoveFromPlaylist && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+  bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && tracks.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
+  bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return NamidaInkWell(
@@ -664,24 +664,26 @@ Future<void> showGeneralPopupDialog(
     NamidaLinkUtils.openLink(link);
   }
 
-  final advancedStuffListTile = ObxO(
-    rx: colorDelightened,
-    builder: (context, colorDelightened) => SmallListTile(
-      color: colorDelightened,
-      compact: false,
-      title: lang.ADVANCED,
-      icon: Broken.code_circle,
-      onTap: () {
-        cancelSkipTimer();
-        showTrackAdvancedDialog(
-          tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
-          colorScheme: colorDelightened,
-          source: source,
-          albumsUniqued: availableAlbums,
+  final advancedStuffListTile = tracksWithDates.isEmpty && tracks.isEmpty
+      ? null
+      : ObxO(
+          rx: colorDelightened,
+          builder: (context, colorDelightened) => SmallListTile(
+            color: colorDelightened,
+            compact: false,
+            title: lang.ADVANCED,
+            icon: Broken.code_circle,
+            onTap: () {
+              cancelSkipTimer();
+              showTrackAdvancedDialog(
+                tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
+                colorScheme: colorDelightened,
+                source: source,
+                albumsUniqued: availableAlbums,
+              );
+            },
+          ),
         );
-      },
-    ),
-  );
 
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? ObxO(
@@ -716,9 +718,14 @@ Future<void> showGeneralPopupDialog(
                   Broken.edit_2,
                   () => lang.REMOVE_DUPLICATES,
                   removePlaylistDuplicates,
-                  iconWidget: const StackedIcon(
-                    baseIcon: Broken.copy,
-                    secondaryIcon: Broken.broom,
+                  iconWidget: ObxO(
+                    rx: iconColor,
+                    builder: (context, iconColor) => StackedIcon(
+                      baseIcon: Broken.copy,
+                      secondaryIcon: Broken.broom,
+                      baseIconColor: iconColor,
+                      secondaryIconColor: iconColor,
+                    ),
                   ),
                 ),
               ),
@@ -1035,7 +1042,7 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   ),
                               ],
-                              advancedStuffListTile,
+                              if (advancedStuffListTile != null) advancedStuffListTile,
                               if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
                               if (playlistUtilsRow != null) playlistUtilsRow,
                               if (removeQueueTile != null) removeQueueTile,
@@ -1291,7 +1298,7 @@ Future<void> showGeneralPopupDialog(
                                     : null,
                               ),
                               // --- Advanced dialog
-                              advancedStuffListTile,
+                              if (advancedStuffListTile != null) advancedStuffListTile,
 
                               if (availableYoutubeIDs.isNotEmpty)
                                 SmallListTile(
