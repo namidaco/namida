@@ -1,6 +1,5 @@
 // ignore_for_file: implementation_imports, depend_on_referenced_packages
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
@@ -28,7 +27,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/ui/widgets/stats.dart';
 
-String? _latestCheckedVersion;
+VersionWrapper? _latestCheckedVersion;
 
 class AboutPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -47,7 +46,7 @@ class _AboutPageState extends State<AboutPage> {
   void initState() {
     super.initState();
     if (_latestCheckedVersion == null && NamidaDeviceInfo.version != null) {
-      _checkNewVersion(NamidaDeviceInfo.version!).then((value) {
+      VersionWrapper.getLatestVersion(NamidaDeviceInfo.version!).then((value) {
         if (value != null) refreshState(() => _latestCheckedVersion = value);
       });
     }
@@ -66,36 +65,14 @@ class _AboutPageState extends State<AboutPage> {
     return "($differenceText)";
   }
 
-  Future<String?> _checkNewVersion(String current) async {
-    try {
-      final isBeta = current.endsWith('beta');
-      final repoName = isBeta ? 'namida-snapshots' : 'namida';
-      final url = 'https://api.github.com/repos/namidaco/$repoName/releases/latest';
-      final response = await Rhttp.get(url);
-      final resMap = jsonDecode(response.body) as Map;
-      String? latestRelease = resMap['name'] as String?;
-      if (latestRelease == null) return null;
-      if (latestRelease.startsWith('v')) latestRelease = latestRelease.substring(1);
-      if (current.startsWith('v')) current = current.substring(1);
-      return latestRelease;
-    } catch (_) {}
-    return null;
-  }
-
-  String? _prettyVersion(String? v) {
-    if (v == null) return null;
-    if (!v.startsWith('v')) v = "v$v";
-    return v;
-  }
-
   @override
   Widget build(BuildContext context) {
     final imageSize = Dimensions.inst.availableAppContentWidth * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
-    final version = _prettyVersion(NamidaDeviceInfo.version) ?? '';
+    final version = NamidaDeviceInfo.version?.prettyVersion ?? '';
     final buildDateDiff = _getDateDifferenceText();
-    final latestVersion = _prettyVersion(_latestCheckedVersion)?.splitFirst('+');
+    final latestVersion = _latestCheckedVersion?.prettyVersion.splitFirst('+');
     final isBeta = version.endsWith('beta');
 
     final fallbackAvatar = SizedBox(
