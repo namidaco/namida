@@ -148,14 +148,16 @@ class NamidaNavigator {
 
   Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
     if (_isInFullScreen) {
-      await exitFullScreen();
+      return await exitFullScreen();
     } else {
-      await enterFullScreen(widget, setOrientations: setOrientations, onWillPop: onWillPop);
+      return await enterFullScreen(widget, setOrientations: setOrientations, onWillPop: onWillPop);
     }
   }
 
-  Future<void> setDefaultSystemUI({List<SystemUiOverlay> overlays = SystemUiOverlay.values}) async {
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge, overlays: overlays);
+  /// Raw access to system UI mode. For more accurate results, use [MiniPlayerController.setImmersiveMode].
+  static Future<void> setSystemUIImmersiveMode(bool immersive, {List<SystemUiOverlay> overlays = SystemUiOverlay.values}) {
+    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
+    return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
 
   void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
@@ -221,7 +223,7 @@ class NamidaNavigator {
     setDefaultSystemUIOverlayStyle(semiTransparent: true);
     await Future.wait([
       if (setOrientations) setDeviceOrientations(true),
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+      setSystemUIImmersiveMode(true),
     ]);
   }
 
@@ -232,7 +234,7 @@ class NamidaNavigator {
     setDefaultSystemUIOverlayStyle();
     await Future.wait([
       if (isInLanscape) setDeviceOrientations(false),
-      setDefaultSystemUI(),
+      MiniPlayerController.inst.setImmersiveMode(null), // let mp decides
     ]);
 
     _isInFullScreen = false;

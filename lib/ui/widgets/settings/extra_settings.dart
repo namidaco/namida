@@ -379,7 +379,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   onChanged: (isTrue) {
                     final newValue = !isTrue;
                     settings.save(hideStatusBarInExpandedMiniplayer: newValue);
-                    MiniPlayerController.inst.onImmersiveModeChange(newValue);
+                    MiniPlayerController.inst.setImmersiveMode(newValue);
                   },
                 ),
               ),

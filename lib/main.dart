@@ -263,7 +263,7 @@ void mainInitialization() async {
   _initializeIntenties();
 
   SystemChrome.setPreferredOrientations(kDefaultOrientations);
-  NamidaNavigator.inst.setDefaultSystemUI();
+  NamidaNavigator.setSystemUIImmersiveMode(false);
   FlutterDisplayMode.setHighRefreshRate().ignoreError();
 
   NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();

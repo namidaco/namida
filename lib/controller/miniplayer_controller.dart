@@ -24,7 +24,7 @@ class MiniPlayerController {
   static final MiniPlayerController _instance = MiniPlayerController._internal();
   MiniPlayerController._internal();
 
-  bool get _maintainStatusBarShowing => settings.hideStatusBarInExpandedMiniplayer.value;
+  bool get _immersiveModeEnabled => settings.hideStatusBarInExpandedMiniplayer.value;
   bool get _defaultShouldDismissMiniplayer => settings.dismissibleMiniplayer.value;
 
   final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
@@ -73,23 +73,22 @@ class MiniPlayerController {
 
   void updateScreenValuesInitial() {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    topInset = view.padding.top;
-    bottomInset = view.padding.bottom;
-    rightInset = view.padding.right / 2;
-    screenSize = view.physicalSize;
-    maxOffset = screenSize.height;
-    sMaxOffset = screenSize.width;
+    final viewPadding = EdgeInsets.fromViewPadding(view.padding, view.devicePixelRatio);
+    return _updateScreenValuesInternal(view.physicalSize, viewPadding);
   }
 
   void updateScreenValues(BuildContext context) {
     final mediaSize = MediaQuery.sizeOf(context);
     final viewPadding = MediaQuery.viewPaddingOf(context);
+    return _updateScreenValuesInternal(mediaSize, viewPadding);
+  }
+
+  void _updateScreenValuesInternal(Size mediaSize, EdgeInsets viewPadding) {
     topInset = viewPadding.top;
     bottomInset = viewPadding.bottom;
     rightInset = viewPadding.right / 2;
 
     final miniplayerDetails = _getPlayerDetails(
-      context,
       screenWidth: mediaSize.width,
       screenHeight: mediaSize.height,
     );
@@ -106,16 +105,18 @@ class MiniPlayerController {
         // -- make sure its not minimized when its widescreen
         this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
         this.snapToExpanded();
-        onImmersiveModeChange(settings.hideStatusBarInExpandedMiniplayer.value, force: true);
       }
+      // -- its widescreen, so immersive mode is always on
+      setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     } else if (!isWidescreen && Dimensions.inst.miniplayerIsWideScreen) {
-      onImmersiveModeChange(settings.hideStatusBarInExpandedMiniplayer.value);
+      // now portrait. do immersive mode if its expanded.
+      setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     }
 
     Dimensions.inst.miniplayerMaxWidth = maxWidth;
     Dimensions.inst.sideInfoMaxWidth = (mediaSize.width * 0.2).withMaximum(324.0);
     Dimensions.inst.availableAppContentWidth = mediaSize.width - (isWidescreen ? maxWidth : 0);
-    Dimensions.inst.miniplayerIsWideScreen = miniplayerDetails.isWidescreen;
+    Dimensions.inst.miniplayerIsWideScreen = isWidescreen;
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {
@@ -130,9 +131,10 @@ class MiniPlayerController {
     if (this.ytMiniplayerKey.currentState == null) verticalSnapping();
   }
 
-  static ({double maxWidth, bool isWidescreen}) _getPlayerDetails(BuildContext context, {double? screenWidth, double? screenHeight}) {
-    screenWidth ??= context.width;
-    screenHeight ??= context.height;
+  static ({double maxWidth, bool isWidescreen}) _getPlayerDetails({required double screenWidth, required double screenHeight}) {
+    if (Player.inst.currentItem.value == null) {
+      return (maxWidth: 0, isWidescreen: false);
+    }
 
     double maxWidth = screenWidth;
     bool isWidescreen = false;
@@ -365,33 +367,40 @@ class MiniPlayerController {
     }
   }
 
-  void snapToExpanded({bool haptic = true}) {
+  void snapToExpanded({bool haptic = true}) async {
     WakelockController.inst.updateMiniplayerStatus(true);
     ScrollSearchController.inst.unfocusKeyboard();
 
     _offset = maxOffset;
     if (_prevOffset < maxOffset) bounceUp = true;
     if (_prevOffset > maxOffset) bounceDown = true;
-    _snap(haptic: haptic, curve: Curves.fastEaseInToSlowEaseOut);
-    if (_maintainStatusBarShowing) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    await _snap(haptic: haptic, curve: Curves.fastEaseInToSlowEaseOut);
+    if (_immersiveModeEnabled) setImmersiveMode(true);
   }
 
-  void snapToMini({bool haptic = true}) {
+  void snapToMini({bool haptic = true}) async {
     if (_miniplayerIsWideScreen) return;
 
     WakelockController.inst.updateMiniplayerStatus(false);
     _offset = 0;
     bounceDown = false;
-    _snap(haptic: haptic, curve: _bouncingCurve);
-    if (_maintainStatusBarShowing) NamidaNavigator.inst.setDefaultSystemUI();
+    await _snap(haptic: haptic, curve: _bouncingCurve);
+    if (_immersiveModeEnabled) setImmersiveMode(false);
   }
 
-  void onImmersiveModeChange(bool enabled, {bool force = false}) {
-    if (enabled && (force || animation.value >= 1)) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  /// set [enabled] to null to refresh based on default values.
+  Future<void> setImmersiveMode(bool? enabled, {bool? isWidescreen}) {
+    if ((enabled ?? _immersiveModeEnabled) && ((isWidescreen ?? Dimensions.inst.miniplayerIsWideScreen) || _isLocalMiniplayerOnlyExpanded())) {
+      return NamidaNavigator.setSystemUIImmersiveMode(true);
     } else {
-      NamidaNavigator.inst.setDefaultSystemUI();
+      return NamidaNavigator.setSystemUIImmersiveMode(false);
     }
+  }
+
+  bool _isLocalMiniplayerOnlyExpanded() {
+    final ytmp = this.ytMiniplayerKey.currentState;
+    if (ytmp != null) return false;
+    return animation.value >= 1;
   }
 
   void _updateIcon() {

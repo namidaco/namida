@@ -95,18 +95,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
   }
 
-  void setControlsVisibily(bool visible, {bool maintainStatusBar = true}) {
+  void setControlsVisibily(bool visible, {bool? maintainStatusBar}) {
     if (visible && NamidaChannel.inst.isInPip.value) return; // dont show if in pip
     if (visible == _isVisible) return;
     if (mounted) setState(() => _isVisible = visible);
 
-    if (maintainStatusBar) {
+    if (mounted && (maintainStatusBar ?? widget.isFullScreen)) {
       if (visible) {
         // -- show status bar
-        NamidaNavigator.inst.setDefaultSystemUI(overlays: widget.isFullScreen ? [SystemUiOverlay.top] : SystemUiOverlay.values);
+        NamidaNavigator.setSystemUIImmersiveMode(false, overlays: [SystemUiOverlay.top]);
       } else {
         // -- hide status bar
-        if (widget.isFullScreen && mounted) SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        NamidaNavigator.setSystemUIImmersiveMode(true);
       }
     }
   }
@@ -305,7 +305,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         },
       );
     }
-    if (_deviceOrientationCommunicatorStreamSub == null) _setupDeviceOrientationListener();
+    if (widget.isFullScreen && _deviceOrientationCommunicatorStreamSub == null) _setupDeviceOrientationListener();
   }
 
   void _setScreenBrightness(double value) async {
@@ -623,10 +623,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
   }
 
+  bool _didDeviceInsetsChange(EdgeInsets newDeviceInsets) {
+    return newDeviceInsets.left > _deviceInsets.left ||
+        newDeviceInsets.right > _deviceInsets.right ||
+        newDeviceInsets.top > _deviceInsets.top ||
+        newDeviceInsets.bottom > _deviceInsets.bottom;
+  }
+
   @override
   Widget build(BuildContext context) {
     final newDeviceInsets = MediaQuery.viewPaddingOf(context);
-    if (_deviceInsets == EdgeInsets.zero || (newDeviceInsets.horizontal > _deviceInsets.horizontal || newDeviceInsets.vertical > _deviceInsets.vertical)) {
+    if (_deviceInsets == EdgeInsets.zero || _didDeviceInsetsChange(newDeviceInsets)) {
       if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
     }
 
