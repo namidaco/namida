@@ -5,7 +5,7 @@ version: 5.1.6-beta+250509210
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
-  flutter: 3.29.3
+  flutter: 3.29.0
 
 dependency_overrides:
   intl: ^0.20.1
