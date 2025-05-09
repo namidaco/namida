@@ -224,3 +224,5 @@ msix_config:
 inno_bundle:
   id: 94dba250-1e0f-11f0-846e-a101934a6b13
   publisher: MSOB7Y
+  installer_icon: windows/runner/resources/app_icon.ico
+  updates_url: https://github.com/namidaco/namida/releases

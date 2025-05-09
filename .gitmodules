@@ -1,3 +1,6 @@
 [submodule "assets/language"]
 	path = assets/language
 	url = https://github.com/namidaco/namida-translations/
+[submodule "ffmpeg_build"]
+	path = ffmpeg_build
+	url = https://github.com/MSOB7YY/ffmpeg_build/
