@@ -389,17 +389,17 @@ class MiniPlayerController {
   }
 
   /// set [enabled] to null to refresh based on default values.
-  Future<void> setImmersiveMode(bool? enabled, {bool? isWidescreen}) {
+  Future<void> setImmersiveMode(bool? enabled, {bool? isWidescreen}) async {
+    if (NamidaNavigator.inst.isInFullScreen) return;
     if ((enabled ?? _immersiveModeEnabled) && ((isWidescreen ?? Dimensions.inst.miniplayerIsWideScreen) || _isLocalMiniplayerOnlyExpanded())) {
-      return NamidaNavigator.setSystemUIImmersiveMode(true);
+      return await NamidaNavigator.setSystemUIImmersiveMode(true);
     } else {
-      return NamidaNavigator.setSystemUIImmersiveMode(false);
+      return await NamidaNavigator.setSystemUIImmersiveMode(false);
     }
   }
 
   bool _isLocalMiniplayerOnlyExpanded() {
-    final ytmp = this.ytMiniplayerKey.currentState;
-    if (ytmp != null) return false;
+    // if (this.ytMiniplayerKey.currentState != null) return false; // -- lets include this guy
     return animation.value >= 1;
   }
 

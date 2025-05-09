@@ -41,7 +41,11 @@ class BackupController {
       error = e.toString();
     }
     if (dir == null || !dir.existsSync()) {
-      snackyy(title: "${lang.ERROR}: ${operationName ?? lang.BACKUP_AND_RESTORE}", message: '${error ?? lang.DIRECTORY_DOESNT_EXIST}: "$path"');
+      snackyy(
+        title: "${lang.ERROR}: ${operationName ?? lang.BACKUP_AND_RESTORE}",
+        message: '${error ?? lang.DIRECTORY_DOESNT_EXIST}: "$path"',
+        isError: true,
+      );
       return null;
     }
     return path;

@@ -160,7 +160,7 @@ class NamidaNavigator {
     return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
 
-  void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
+  static void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
     SystemChrome.setSystemUIOverlayStyle(
       semiTransparent
           ? const SystemUiOverlayStyle(
@@ -172,6 +172,7 @@ class NamidaNavigator {
           : const SystemUiOverlayStyle(
               statusBarColor: Colors.transparent,
               systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
             ),
     );
   }
@@ -201,9 +202,9 @@ class NamidaNavigator {
   bool get isInFullScreen => _isInFullScreen;
   bool _isInFullScreen = false;
   Future<void> enterFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
-    if (_isInFullScreen) return;
-
+    if (_isInFullScreen == true) return;
     _isInFullScreen = true;
+
     WakelockController.inst.updateFullscreenStatus(true);
 
     _rootNav.currentState?.pushPage(
@@ -228,7 +229,9 @@ class NamidaNavigator {
   }
 
   Future<void> exitFullScreen() async {
-    if (!_isInFullScreen) return;
+    if (_isInFullScreen == false) return;
+    _isInFullScreen = false;
+
     popRoot();
 
     setDefaultSystemUIOverlayStyle();
@@ -237,7 +240,6 @@ class NamidaNavigator {
       MiniPlayerController.inst.setImmersiveMode(null), // let mp decides
     ]);
 
-    _isInFullScreen = false;
     WakelockController.inst.updateFullscreenStatus(false);
   }
 

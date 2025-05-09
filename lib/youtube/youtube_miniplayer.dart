@@ -1300,6 +1300,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     onHeightChange: (percentage) {
                                       MiniPlayerController.inst.animateMiniplayer(percentage);
                                     },
+                                    onExpandedStateChange: (isExpanded) {
+                                      MiniPlayerController.inst.setImmersiveMode(null);
+                                    },
                                     onAlternativePercentageExecute: () {
                                       VideoController.inst.toggleFullScreenVideoView(
                                         isLocal: false,

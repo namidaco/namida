@@ -21,6 +21,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
   final Widget Function(double height, double percentage) builder;
   final Color bgColor;
   final void Function(double percentage)? onHeightChange;
+  final void Function(bool isExpanded)? onExpandedStateChange;
   final void Function(double dismissPercentage)? onDismissing;
   final Duration duration;
   final Curve curve;
@@ -36,6 +37,7 @@ class NamidaYTMiniplayer extends StatefulWidget {
     required this.builder,
     required this.bgColor,
     this.onHeightChange,
+    this.onExpandedStateChange,
     this.onDismissing,
     this.bottomMargin = 0.0,
     this.duration = const Duration(milliseconds: 300),
@@ -74,7 +76,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       controller.addListener(_listenerDismissing);
     }
 
-    _dragheight = startExpanded ? _maxHeight : widget.minHeight;
+    WidgetsBinding.instance.addPostFrameCallback((_) => animateToState(startExpanded));
 
     WakelockController.inst.updateMiniplayerStatus(startExpanded);
   }
@@ -151,17 +153,17 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
   double get percentage => (controllerHeight - widget.minHeight) / (maxHeight - widget.minHeight);
   double get dismissPercentage => (controllerHeight / widget.minHeight).clampDouble(0.0, 1.0);
 
-  void _updateHeight(double heightPre, {Duration? duration}) {
+  TickerFuture _updateHeight(double heightPre, {Duration? duration}) {
     final height = _dismissible ? heightPre : heightPre.withMinimum(widget.minHeight);
-    controller.animateTo(
+    _dragheight = height;
+    return controller.animateTo(
       height / maxHeight,
       duration: duration,
       curve: widget.curve,
     );
-    _dragheight = height;
   }
 
-  void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false}) {
+  void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false}) async {
     if (widget.enforceExpanded) {
       toExpanded = true;
       dismiss = false;
@@ -173,12 +175,17 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       return;
     }
 
-    _updateHeight(toExpanded ? maxHeight : widget.minHeight, duration: dur ?? widget.duration);
     _wasExpanded = toExpanded;
     WakelockController.inst.updateMiniplayerStatus(toExpanded);
 
     if (toExpanded) {
       ScrollSearchController.inst.unfocusKeyboard();
+    }
+
+    await _updateHeight(toExpanded ? maxHeight : widget.minHeight, duration: dur ?? widget.duration);
+
+    if (widget.onExpandedStateChange != null) {
+      widget.onExpandedStateChange!(toExpanded);
     }
   }
 

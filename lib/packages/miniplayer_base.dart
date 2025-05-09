@@ -812,18 +812,19 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 ),
               );
 
-              final topInset = MiniPlayerController.inst.topInset;
-              final bottomInset = MiniPlayerController.inst.bottomInset;
-              final rightInset = MiniPlayerController.inst.rightInset;
-              final screenSize = MiniPlayerController.inst.screenSize;
-              final sAnim = MiniPlayerController.inst.sAnim;
-              final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
-              final stParallax = MiniPlayerController.inst.stParallax;
-              final siParallax = MiniPlayerController.inst.siParallax;
-
               return MiniplayerRaw(
                 builder: (maxOffset, bounceUp, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity,
                     miniplayerbottomnavheight, bottomOffset, navBarHeight) {
+                  // -- putting these above builder cause unexpected issues :(
+                  final topInset = MiniPlayerController.inst.topInset;
+                  final bottomInset = MiniPlayerController.inst.bottomInset;
+                  final rightInset = MiniPlayerController.inst.rightInset;
+                  final screenSize = MiniPlayerController.inst.screenSize;
+                  final sAnim = MiniPlayerController.inst.sAnim;
+                  final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
+                  final stParallax = MiniPlayerController.inst.stParallax;
+                  final siParallax = MiniPlayerController.inst.siParallax;
+
                   final BorderRadius borderRadius = BorderRadius.only(
                     topLeft: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),
                     topRight: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),

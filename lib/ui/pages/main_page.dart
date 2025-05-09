@@ -443,6 +443,7 @@ class NamidaSearchBar extends StatelessWidget {
             child: clipboard != '' && (empty || !alreadyPasted)
                 ? NamidaIconButton(
                     horizontalPadding: 2.0,
+                    verticalPadding: 8.0,
                     icon: Broken.clipboard_tick,
                     iconSize: 20.0,
                     onPressed: () {
@@ -459,8 +460,8 @@ class NamidaSearchBar extends StatelessWidget {
         },
       ),
       trailingWidget: NamidaIconButton(
+        padding: const EdgeInsets.all(8.0),
         icon: Broken.close_circle,
-        padding: EdgeInsets.zero,
         iconSize: 22,
         onPressed: ScrollSearchController.inst.resetSearch,
       ),
@@ -772,8 +773,6 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                   ),
                                   child: NamidaIconButton(
                                     tooltip: () => e.toText(),
-                                    horizontalPadding: 0,
-                                    verticalPadding: 0,
                                     padding: EdgeInsets.all(iconPadding),
                                     icon: e.toIcon(),
                                     iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,

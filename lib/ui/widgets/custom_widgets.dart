@@ -3620,7 +3620,17 @@ class NamidaPopupWrapper extends StatelessWidget {
             final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withValues(alpha: 0.4));
             Widget popupItem = Row(
               children: [
-                Icon(e.icon, size: 20.0),
+                Icon(
+                  e.icon,
+                  size: 20.0,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 2.0,
+                      color: Color(0x10202020),
+                    ),
+                  ],
+                  color: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                ),
                 const SizedBox(width: 6.0),
                 Expanded(
                   child: Column(

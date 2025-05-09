@@ -650,6 +650,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 
+    // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
+    if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
+
     startSleepAfterMinCount();
     startCounterToAListen(pi);
     increaseListenTime(LibraryCategory.localTracks);
@@ -680,7 +683,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
     } else if (stream != null) {
       if (!_willPlayWhenReady) await onPauseRaw();
-      final positionToRestore = currentPositionMS.value.milliseconds;
 
       final bool expired = mainStreams?.hasExpired() ?? true;
 
@@ -689,7 +691,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return !(curr is YoutubeID && curr.id == videoId);
       }
 
-      Future<void> setVideoLockCache(VideoStream stream) async {
+      Future<void> setVideoLockCache(VideoStream stream, Duration positionToRestore) async {
         final url = stream.buildUrl();
         if (url == null) throw Exception('null url');
 
@@ -760,9 +762,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
+      final positionToRestore = currentPositionMS.value.milliseconds;
+
       try {
         if (expired) throw Exception('expired streams');
-        await setVideoLockCache(stream);
+        await setVideoLockCache(stream, positionToRestore);
       } catch (e) {
         // ==== if the url got outdated.
         isFetchingInfo.value = true;
@@ -778,7 +782,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (sameStream != null) {
           try {
-            await setVideoLockCache(sameStream);
+            await setVideoLockCache(sameStream, positionToRestore);
           } catch (_) {}
         }
       }
@@ -803,9 +807,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final cachedAudio = stream?.getCachedFile(videoId);
 
-    final positionToRestore = currentPositionMS.value.milliseconds;
-
     if (useCache && cachedAudio != null && cachedAudio.existsSync()) {
+      final positionToRestore = currentPositionMS.value.milliseconds;
       await setSource(
         AudioVideoSource.file(cachedAudio.path),
         item: currentItem.value,
@@ -819,7 +822,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       final bool expired = mainStreams?.hasExpired() ?? true;
 
-      Future<void> setAudioLockCache(AudioStream stream) async {
+      Future<void> setAudioLockCache(AudioStream stream, Duration positionToRestore) async {
         final url = stream.buildUrl();
         if (url == null) throw Exception('null url');
         await setSource(
@@ -843,9 +846,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
+      final positionToRestore = currentPositionMS.value.milliseconds;
+
       try {
         if (expired) throw Exception('expired streams');
-        await setAudioLockCache(stream);
+        await setAudioLockCache(stream, positionToRestore);
       } catch (_) {
         // ==== if the url got outdated.
         isFetchingInfo.value = true;
@@ -858,7 +863,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (sameStream != null) {
           try {
-            await setAudioLockCache(sameStream);
+            await setAudioLockCache(sameStream, positionToRestore);
           } catch (_) {}
         }
       }

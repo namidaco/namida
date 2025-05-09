@@ -230,8 +230,12 @@ void mainInitialization() async {
   /// updates values on startup
   Indexer.inst.calculateAllImageSizesInStorage();
   Indexer.inst.updateColorPalettesSizeInStorage();
-  if (!shouldShowOnBoarding && settings.refreshOnStartup.value) {
-    Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
+  if (!shouldShowOnBoarding) {
+    if (settings.refreshOnStartup.value) {
+      Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
+    } else {
+      Indexer.inst.getAudioFiles(); // main reason is to refresh fallback covers
+    }
   }
   if (!shouldShowOnBoarding) {
     BackupController.inst.checkForAutoBackup();
@@ -266,7 +270,7 @@ void mainInitialization() async {
   NamidaNavigator.setSystemUIImmersiveMode(false);
   FlutterDisplayMode.setHighRefreshRate().ignoreError();
 
-  NamidaNavigator.inst.setDefaultSystemUIOverlayStyle();
+  NamidaNavigator.setDefaultSystemUIOverlayStyle();
 
   ScrollSearchController.inst.initialize();
   NotificationManager.init();
