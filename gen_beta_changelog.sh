@@ -1,3 +1,4 @@
+#!/bin/sh
 
 release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
 # PREVIOUS_RELEASE_DATE=$(echo "$release_info" | jq -r '.published_at')    
