@@ -8,6 +8,11 @@ class _NamidaStorageAndroid extends NamidaStorage {
   late final MethodChannel _channel;
 
   @override
+  String getUserDataDirectory(List<String> appDataDirectories) {
+    return appDataDirectories.firstOrNull ?? '';
+  }
+
+  @override
   Future<List<String>> getStorageDirectories() async {
     final res = await _channel.invokeMethod<List<Object?>?>('getStorageDirs');
     return res?.cast() ?? [];

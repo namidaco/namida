@@ -14,6 +14,8 @@ abstract class NamidaStorage {
 
   final String? defaultFallbackStoragePath;
 
+  String getUserDataDirectory(List<String> appDataDirectories);
+
   Future<List<String>> getStorageDirectories();
 
   Future<List<String>> getStorageDirectoriesAppData();

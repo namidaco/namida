@@ -139,7 +139,7 @@ void mainInitialization() async {
   late final List<String> paths;
   Future<void> fetchAppData() async {
     final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
-    AppDirs.USER_DATA = appDatas.firstOrNull ?? '';
+    AppDirs.USER_DATA = NamidaStorage.inst.getUserDataDirectory(appDatas);
     logger.updateLoggerPath();
     NamidaTaggerController.inst.updateLogsPath();
   }

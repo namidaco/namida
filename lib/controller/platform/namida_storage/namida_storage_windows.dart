@@ -4,6 +4,13 @@ class _NamidaStorageWindows extends NamidaStorage {
   const _NamidaStorageWindows() : super(r'C:\');
 
   @override
+  String getUserDataDirectory(List<String> appDataDirectories) {
+    final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) return FileParts.joinPath(home, '.namida');
+    return appDataDirectories.firstOrNull ?? '';
+  }
+
+  @override
   Future<String?> getRealPath(String? contentUri) async {
     return contentUri;
   }
