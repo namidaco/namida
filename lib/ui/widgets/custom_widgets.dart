@@ -5170,3 +5170,23 @@ class LayoutWidthProvider extends StatelessWidget {
     );
   }
 }
+
+class LayoutWidthHeightProvider extends StatelessWidget {
+  final Widget Function(BuildContext context, double maxWidth, double maxHeight) builder;
+  const LayoutWidthHeightProvider({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth.withMaximum(context.width);
+        final maxHeight = constraints.maxHeight.withMaximum(context.height);
+        return builder(
+          context,
+          maxWidth,
+          maxHeight,
+        );
+      },
+    );
+  }
+}

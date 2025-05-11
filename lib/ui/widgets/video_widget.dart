@@ -646,6 +646,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
     final fallbackWidth = inLandscape ? maxHeight * 16 / 9 : maxWidth;
 
+    final videoBoxMaxConstraints = inLandscape
+        ? BoxConstraints(
+            maxHeight: maxHeight,
+            maxWidth: maxHeight * 16 / 9,
+          )
+        : BoxConstraints(
+            maxHeight: maxWidth * 9 / 16,
+            maxWidth: maxWidth,
+          );
+
     final finalVideoWidget = ObxO(
         key: _videoConstraintsKey,
         rx: Player.inst.videoPlayerInfo,
@@ -671,10 +681,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           }
           // -- fallback images
           return ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: maxHeight,
-              maxWidth: maxHeight * 16 / 9,
-            ),
+            constraints: videoBoxMaxConstraints,
             child: ObxO(
                 rx: Player.inst.currentItem,
                 builder: (context, item) {
@@ -844,7 +851,23 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               alignment: Alignment.center,
               child: Padding(
                 padding: safeAreaPadding,
-                child: finalVideoWidget,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    finalVideoWidget,
+                    if (showEndcards)
+                      ConstrainedBox(
+                        constraints: videoBoxMaxConstraints,
+                        child: ObxO(
+                          rx: _isEndCardsVisible,
+                          builder: (context, endcardsvisible) => _YTVideoEndcards(
+                            visible: endcardsvisible,
+                            inFullScreen: widget.isFullScreen,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
             // ---- Brightness Mask -----
@@ -860,23 +883,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     : SizedBox.shrink(),
               ),
             ),
-
-            if (showEndcards)
-              ObxO(
-                rx: _isEndCardsVisible,
-                builder: (context, endcardsvisible) => AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: endcardsvisible
-                      ? Padding(
-                          padding: safeAreaPadding,
-                          child: _YTVideoEndcards(
-                            inFullScreen: widget.isFullScreen,
-                            videoConstraintsKey: _videoConstraintsKey,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
 
             if (_canShowControls) ...[
               // ---- Mask -----
@@ -2040,9 +2046,9 @@ class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail>
 }
 
 class _YTVideoEndcards extends StatefulWidget {
-  final GlobalKey videoConstraintsKey;
+  final bool visible;
   final bool inFullScreen;
-  const _YTVideoEndcards({required this.videoConstraintsKey, required this.inFullScreen});
+  const _YTVideoEndcards({required this.visible, required this.inFullScreen});
 
   @override
   State<_YTVideoEndcards> createState() => _YTVideoEndcardsState();
@@ -2050,6 +2056,9 @@ class _YTVideoEndcards extends StatefulWidget {
 
 class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
   List<EndScreenItemBase>? _currentEndcards;
+  int? _firstEndCardTimestamp;
+  int? _lastEndCardTimestamp;
+  bool _canShowAnyEndcard = false;
   late final _fetchedPlaylistsCompleters = <String, Completer<void>?>{};
   late final _fetchedPlaylists = <String, YoutiPiePlaylistResultBase?>{};
 
@@ -2059,6 +2068,9 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     if (newEndcards != _currentEndcards) {
       setState(() {
         _currentEndcards = newEndcards;
+
+        _firstEndCardTimestamp = newEndcards?.reduceOrNull((value, element) => element.startMs > value.startMs ? value : element)?.startMs;
+        _lastEndCardTimestamp = newEndcards?.reduceOrNull((value, element) => element.endMs > value.endMs ? element : value)?.endMs;
       });
     }
   }
@@ -2066,14 +2078,33 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
   @override
   void initState() {
     _onEndcardsChanged();
+    _onPlayerPositionChange();
     YoutubeInfoController.current.currentYTStreams.addListener(_onEndcardsChanged);
+    Player.inst.nowPlayingPosition.addListener(_onPlayerPositionChange);
     super.initState();
   }
 
   @override
   void dispose() {
     YoutubeInfoController.current.currentYTStreams.removeListener(_onEndcardsChanged);
+    Player.inst.nowPlayingPosition.removeListener(_onPlayerPositionChange);
     super.dispose();
+  }
+
+  void _onPlayerPositionChange() {
+    bool newCanShowAnyEndcard = false;
+    final firstEndCardTimestamp = _firstEndCardTimestamp;
+    final lastEndCardTimestamp = _lastEndCardTimestamp;
+    if (firstEndCardTimestamp != null && lastEndCardTimestamp != null) {
+      final currPos = Player.inst.nowPlayingPosition.value;
+      newCanShowAnyEndcard = currPos > firstEndCardTimestamp && currPos < lastEndCardTimestamp;
+    }
+
+    if (_canShowAnyEndcard != newCanShowAnyEndcard) {
+      if (mounted) {
+        setState(() => _canShowAnyEndcard = newCanShowAnyEndcard);
+      }
+    }
   }
 
   void _exitFullScreenIfNeeded() {
@@ -2224,48 +2255,36 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     final currentEndcards = _currentEndcards;
     if (currentEndcards == null || currentEndcards.isEmpty) return const SizedBox.shrink();
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final maxWidth = constraints.maxWidth;
-      final maxHeight = constraints.maxHeight;
-      double maxWidthFinal = maxWidth;
-      double maxHeightFinal = maxHeight;
-      final keyContext = widget.videoConstraintsKey.currentContext;
-      if (keyContext != null) {
-        try {
-          final box = keyContext.findRenderObject() as RenderBox;
-          if (box.size.width < maxWidthFinal) maxWidthFinal = box.size.width;
-          if (box.size.height < maxHeightFinal) maxHeightFinal = box.size.height;
-        } catch (_) {
-          // layout error (not laid out yet)
-        }
-      }
-      return Stack(
-        alignment: Alignment.center,
-        children: currentEndcards.map(
-          (e) {
-            double leftPadding = e.display.left * maxWidthFinal;
-            double topPadding = e.display.top * maxHeightFinal;
-            if (widget.inFullScreen) {
-              leftPadding += ((maxWidth - maxWidthFinal) / 2);
-              topPadding += ((maxHeight - maxHeightFinal) / 2);
-            }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: !(_canShowAnyEndcard && widget.visible)
+          ? null
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth;
+                final maxHeight = constraints.maxHeight;
 
-            final isAvatarShaped = e.type == VideoEndScreenItemType.channel;
-            final url = e.thumbnails.pick()?.url;
-            final width = e.display.width * maxWidthFinal;
+                return ObxO(
+                  rx: Player.inst.nowPlayingPosition,
+                  builder: (context, playerPosition) => Stack(
+                    alignment: Alignment.center,
+                    children: currentEndcards.map(
+                      (e) {
+                        if (playerPosition < e.startMs || playerPosition > e.endMs) {
+                          return const SizedBox.shrink();
+                        }
 
-            return Positioned(
-              left: leftPadding,
-              top: topPadding,
-              child: ObxO(
-                rx: Player.inst.nowPlayingPosition,
-                builder: (context, playerPosition) {
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: playerPosition < e.startMs || playerPosition > e.endMs
-                        ? const SizedBox.shrink(key: ValueKey(false))
-                        : NamidaPopupWrapper(
-                            key: const ValueKey(true),
+                        double leftPadding = e.display.left * maxWidth;
+                        double topPadding = e.display.top * maxHeight;
+
+                        final isAvatarShaped = e.type == VideoEndScreenItemType.channel;
+                        final url = e.thumbnails.pick()?.url;
+                        final width = e.display.width * maxWidth;
+
+                        return Positioned(
+                          left: leftPadding,
+                          top: topPadding,
+                          child: NamidaPopupWrapper(
                             openOnTap: true,
                             openOnLongPress: true,
                             children: e is EndScreenItemVideo ? () => _getCustomChildrenVideo(e) : null,
@@ -2300,13 +2319,24 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                                   : null,
                             ),
                           ),
-                  );
-                },
-              ),
-            );
-          },
-        ).toList(),
-      );
-    });
+                        );
+                      },
+                    ).toList(),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+extension _ListExt<E> on List<E> {
+  E? reduceOrNull(E Function(E value, E element) combine) {
+    if (isEmpty) return null;
+    E value = this.first;
+    for (final current in this) {
+      value = combine(value, current);
+    }
+    return value;
   }
 }

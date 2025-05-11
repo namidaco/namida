@@ -397,17 +397,13 @@ class NamidaNavigator {
             width: context.width,
             child: material.Padding(
               padding: EdgeInsets.only(bottom: bottomPadding),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth = constraints.maxWidth.withMaximum(context.width);
-                  final maxHeight = constraints.maxHeight.withMaximum(context.height);
-                  return builder(
-                    context,
-                    bottomPadding,
-                    maxWidth,
-                    maxHeight,
-                  );
-                },
+              child: LayoutWidthHeightProvider(
+                builder: (context, maxWidth, maxHeight) => builder(
+                  context,
+                  bottomPadding,
+                  maxWidth,
+                  maxHeight,
+                ),
               ),
             ),
           ),
