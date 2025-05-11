@@ -986,11 +986,15 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                       if (rcp > 0.0)
                         Material(
                           type: MaterialType.transparency,
-                          child: NamidaOpacity(
-                            opacity: rcp,
-                            child: Transform.translate(
-                              offset: Offset(0, topInset + (1 - bp) * -100),
-                              child: topRowChild,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: topInset),
+                            child: NamidaOpacity(
+                              opacity: rcp,
+                              child: Transform.translate(
+                                transformHitTests: false,
+                                offset: Offset(0, (1 - bp) * -100),
+                                child: topRowChild,
+                              ),
                             ),
                           ),
                         ),
@@ -1157,11 +1161,16 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                         visible: opacity > 0.0,
                         child: NamidaOpacity(
                           opacity: opacity,
-                          child: Transform.translate(
-                            offset: Offset(0, 100 * ip - bottomInset),
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: bottomRowChild,
+                          child: _AnimatedOrPadding(
+                            animated: settings.hideStatusBarInExpandedMiniplayer.value,
+                            duration: Duration(milliseconds: 200),
+                            padding: EdgeInsets.only(bottom: bottomInset),
+                            child: Transform.translate(
+                              offset: Offset(0, 100 * ip),
+                              child: Align(
+                                alignment: Alignment.bottomLeft,
+                                child: bottomRowChild,
+                              ),
                             ),
                           ),
                         ),
@@ -1867,6 +1876,31 @@ class _TopActionButton extends StatelessWidget {
       ),
       iconSize: 22.0.size,
     );
+  }
+}
+
+class _AnimatedOrPadding extends StatelessWidget {
+  final bool animated;
+  final Duration duration;
+  final EdgeInsetsGeometry padding;
+  final Widget child;
+
+  const _AnimatedOrPadding({
+    super.key,
+    required this.animated,
+    required this.duration,
+    required this.padding,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return animated
+        ? AnimatedPadding(padding: padding, duration: duration, child: child)
+        : Padding(
+            padding: padding,
+            child: child,
+          );
   }
 }
 
