@@ -75,6 +75,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   double _maxWidth = 0.0;
   double _maxHeight = 0.0;
   final hideDuration = const Duration(seconds: 3);
+  final hoverHideDuration = const Duration(seconds: 1);
   final volumeHideDuration = const Duration(milliseconds: 500);
   final brightnessHideDuration = const Duration(milliseconds: 500);
   final transitionDuration = const Duration(milliseconds: 300);
@@ -86,10 +87,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _hideTimer = null;
   }
 
-  void _startTimer() {
+  void _startTimer({Duration? duration}) {
     _resetTimer();
     if (_isVisible) {
-      _hideTimer = Timer(hideDuration, () {
+      _hideTimer = Timer(duration ?? hideDuration, () {
         setControlsVisibily(false);
       });
     }
@@ -144,6 +145,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       }
     }
     _startTimer();
+  }
+
+  void _onEdgeHoverEnter() {
+    _currentDeviceVolume.value = null; // hide volume slider
+    _canShowBrightnessSlider.value = false; // hide brightness slider
+
+    if (_canShowControls) {
+      setControlsVisibily(true);
+    }
+
+    _resetTimer();
+  }
+
+  void _onEdgeHoverExit() {
+    _startTimer(duration: hoverHideDuration);
   }
 
   bool _shouldSeekOnTap = false;
@@ -885,6 +901,40 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             ),
 
             if (_canShowControls) ...[
+              if (NamidaFeaturesVisibility.showVideoControlsOnHover)
+                Center(
+                  child: LayoutWidthHeightProvider(
+                    builder: (context, maxWidth, maxHeight) {
+                      // final leftPortion = maxWidth * 0.1;
+                      // final rightPortion = maxWidth * 0.9;
+                      final topPortion = maxHeight * 0.1;
+                      final bottomPortion = maxHeight * 0.8;
+
+                      final allowBottom = widget.isFullScreen;
+
+                      return MouseRegion(
+                        opaque: false,
+                        onHover: (event) {
+                          // final dx = event.position.dx;
+                          final dy = event.position.dy;
+                          final allowVertical = (dy < topPortion || (allowBottom && dy > bottomPortion));
+                          const allowHorizontal = false;
+                          // final allowHorizontal = (dx < leftPortion || dx > rightPortion);
+                          if (allowVertical || allowHorizontal) {
+                            if (_isVisible == false) {
+                              _onEdgeHoverEnter();
+                            }
+                          } else {
+                            if (_isVisible == true && _hideTimer == null) {
+                              _onEdgeHoverExit();
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+
               // ---- Mask -----
               Positioned.fill(
                 child: IgnorePointer(
