@@ -32,7 +32,7 @@ class BackupController {
   final isRestoringBackup = false.obso;
 
   Future<String?> _getBackupDirectoryPathEnsured(String? operationName) async {
-    final path = settings.defaultBackupLocation.value;
+    final path = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
     Directory? dir;
     String? error;
     try {

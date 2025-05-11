@@ -108,7 +108,7 @@ class _SettingsController with SettingsFileWriter {
   final directoriesToExclude = <String>[].obs;
   final preventDuplicatedTracks = false.obs;
   final respectNoMedia = false.obs;
-  final defaultBackupLocation = AppDirs.BACKUPS.obs;
+  final defaultBackupLocation = Rxn<String?>();
   final autoBackupIntervalDays = 2.obs;
   final defaultFolderStartupLocation = kStoragePaths.first.obs;
   final defaultFolderStartupLocationVideos = kStoragePaths.first.obs;
@@ -116,33 +116,18 @@ class _SettingsController with SettingsFileWriter {
   final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
-  final RxList<String> backupItemslist = [
-    AppPaths.TRACKS_OLD,
-    AppPaths.TRACKS_DB_INFO.file.path,
-    AppPaths.TRACKS_STATS_OLD,
-    AppPaths.TRACKS_STATS_DB_INFO.file.path,
-    AppPaths.TOTAL_LISTEN_TIME,
-    AppPaths.VIDEOS_CACHE_OLD,
-    AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
-    AppPaths.VIDEOS_LOCAL_OLD,
-    AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
-    AppPaths.SETTINGS,
-    AppPaths.SETTINGS_EQUALIZER,
-    AppDirs.PALETTES,
-    AppDirs.LYRICS,
-    AppDirs.PLAYLISTS,
-    AppDirs.PLAYLISTS_ARTWORKS,
-    AppDirs.HISTORY_PLAYLIST,
-    AppPaths.FAVOURITES_PLAYLIST,
-    AppDirs.QUEUES,
-    AppPaths.LATEST_QUEUE,
-    AppDirs.YT_PLAYLISTS,
-    AppDirs.YT_PLAYLISTS_ARTWORKS,
-    AppDirs.YT_HISTORY_PLAYLIST,
-    AppPaths.YT_LIKES_PLAYLIST,
-    AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
-    AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
-    AppDirs.YT_DOWNLOAD_TASKS,
+  final RxList<AppPathsBackupEnum> backupItemslist = [
+    ...AppPathsBackupEnumCategories.database,
+    ...AppPathsBackupEnumCategories.database_yt,
+    ...AppPathsBackupEnumCategories.settings,
+    ...AppPathsBackupEnumCategories.history,
+    ...AppPathsBackupEnumCategories.history_yt,
+    ...AppPathsBackupEnumCategories.playlists,
+    ...AppPathsBackupEnumCategories.playlists_yt,
+    ...AppPathsBackupEnumCategories.queues,
+    ...AppPathsBackupEnumCategories.lyrics,
+    ...AppPathsBackupEnumCategories.palette,
+    ...AppPathsBackupEnumCategories.palette_yt,
   ].obs;
   final enableVideoPlayback = true.obs;
   final enableLyrics = false.obs;
@@ -463,7 +448,7 @@ class _SettingsController with SettingsFileWriter {
       if (json['directoriesToExclude'] is List) directoriesToExclude.value = (json['directoriesToExclude'] as List).cast<String>();
       preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
-      defaultBackupLocation.value = json['defaultBackupLocation'] ?? defaultBackupLocation.value;
+      defaultBackupLocation.value = json['defaultBackupLocation_v2'] ?? defaultBackupLocation.value;
       autoBackupIntervalDays.value = json['autoBackupIntervalDays'] ?? autoBackupIntervalDays.value;
       defaultFolderStartupLocation.value = json['defaultFolderStartupLocation'] ?? defaultFolderStartupLocation.value;
       defaultFolderStartupLocationVideos.value = json['defaultFolderStartupLocationVideos'] ?? defaultFolderStartupLocationVideos.value;
@@ -472,7 +457,9 @@ class _SettingsController with SettingsFileWriter {
       enableFoldersHierarchyVideos.value = json['enableFoldersHierarchyVideos'] ?? enableFoldersHierarchyVideos.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
-      if (json['backupItemslist'] is List) backupItemslist.value = (json['backupItemslist'] as List).cast<String>();
+      if (json['backupItemslist_v2'] is List) {
+        backupItemslist.value = (json['backupItemslist_v2'] as List).map((v) => AppPathsBackupEnum.values.getEnum(v)).whereType<AppPathsBackupEnum>().toList();
+      }
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
       lyricsSource.value = LyricsSource.values.getEnum(json['lyricsSource']) ?? lyricsSource.value;
@@ -667,7 +654,7 @@ class _SettingsController with SettingsFileWriter {
         'directoriesToExclude': directoriesToExclude.value,
         'preventDuplicatedTracks': preventDuplicatedTracks.value,
         'respectNoMedia': respectNoMedia.value,
-        'defaultBackupLocation': defaultBackupLocation.value,
+        'defaultBackupLocation_v2': defaultBackupLocation.value,
         'autoBackupIntervalDays': autoBackupIntervalDays.value,
         'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
         'defaultFolderStartupLocationVideos': defaultFolderStartupLocationVideos.value,
@@ -675,7 +662,7 @@ class _SettingsController with SettingsFileWriter {
         'enableFoldersHierarchyVideos': enableFoldersHierarchyVideos.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
-        'backupItemslist': backupItemslist.value,
+        'backupItemslist_v2': backupItemslist.value.map((e) => e.name).toList(),
         'enableVideoPlayback': enableVideoPlayback.value,
         'enableLyrics': enableLyrics.value,
         'lyricsSource': lyricsSource.value.name,
@@ -841,7 +828,7 @@ class _SettingsController with SettingsFileWriter {
     bool? enableFoldersHierarchyVideos,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
-    List<String>? backupItemslist,
+    List<AppPathsBackupEnum>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
     LyricsSource? lyricsSource,
@@ -1171,9 +1158,9 @@ class _SettingsController with SettingsFileWriter {
     AlbumIdentifier? albumIdentifiers1,
     List<AlbumIdentifier>? albumIdentifiersAll,
     String? backupItemslist1,
-    List<String>? backupItemslistAll,
+    List<AppPathsBackupEnum>? backupItemslistAll,
     String? youtubeVideoQualities1,
-    List<String>? youtubeVideoQualitiesAll,
+    List<AppPathsBackupEnum>? youtubeVideoQualitiesAll,
     TagField? tagFieldsToEdit1,
     List<TagField>? tagFieldsToEditAll,
   }) {

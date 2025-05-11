@@ -277,6 +277,209 @@ class NamidaLinkUtils {
   }
 }
 
+enum AppPathsBackupEnum {
+  // ================= User Data =================
+  SETTINGS,
+  SETTINGS_EQUALIZER,
+  SETTINGS_PLAYER,
+  SETTINGS_YOUTUBE,
+  SETTINGS_EXTRA,
+  SETTINGS_TUTORIAL,
+  TRACKS_DB_INFO,
+  TRACKS_STATS_DB_INFO,
+  VIDEOS_LOCAL_DB_INFO,
+  VIDEOS_CACHE_DB_INFO,
+  LATEST_QUEUE,
+
+  // -- obsolete
+  TRACKS_OLD,
+  TRACKS_STATS_OLD,
+  VIDEOS_LOCAL_OLD,
+  VIDEOS_CACHE_OLD,
+  // ---------
+
+  TOTAL_LISTEN_TIME,
+  FAVOURITES_PLAYLIST,
+
+  // ================= Youtube =================
+  YT_LIKES_PLAYLIST,
+  YT_SUBSCRIPTIONS,
+  YT_SUBSCRIPTIONS_GROUPS_ALL,
+  VIDEO_ID_STATS_DB_INFO,
+  CACHE_VIDEOS_PRIORITY,
+
+  // ------======== Directories ========------
+  // ================= User Data =================
+  HISTORY_PLAYLIST(true),
+  PLAYLISTS(true),
+  PLAYLISTS_ARTWORKS(true),
+  QUEUES(true),
+  ARTWORKS(true),
+  PALETTES(true),
+  VIDEOS_CACHE(true),
+  AUDIOS_CACHE(true),
+  THUMBNAILS(true),
+  LYRICS(true),
+  M3UBackup(true),
+  RECENTLY_DELETED(true),
+
+  // ================= Youtube =================
+
+  YOUTIPIE_CACHE(true),
+
+  YT_PLAYLISTS(true),
+  YT_PLAYLISTS_ARTWORKS(true),
+  YT_HISTORY_PLAYLIST(true),
+  YT_THUMBNAILS(true),
+  YT_THUMBNAILS_CHANNELS(true),
+
+  YT_STATS(true),
+  YT_PALETTES(true),
+  YT_DOWNLOAD_TASKS(true),
+  ;
+
+  final bool isDir;
+  const AppPathsBackupEnum([this.isDir = false]);
+
+  String resolve() {
+    return switch (this) {
+      AppPathsBackupEnum.SETTINGS => AppPaths.SETTINGS,
+      AppPathsBackupEnum.SETTINGS_EQUALIZER => AppPaths.SETTINGS_EQUALIZER,
+      AppPathsBackupEnum.SETTINGS_PLAYER => AppPaths.SETTINGS_PLAYER,
+      AppPathsBackupEnum.SETTINGS_YOUTUBE => AppPaths.SETTINGS_YOUTUBE,
+      AppPathsBackupEnum.SETTINGS_EXTRA => AppPaths.SETTINGS_EXTRA,
+      AppPathsBackupEnum.SETTINGS_TUTORIAL => AppPaths.SETTINGS_TUTORIAL,
+      AppPathsBackupEnum.TRACKS_DB_INFO => AppPaths.TRACKS_DB_INFO.file.path,
+      AppPathsBackupEnum.TRACKS_STATS_DB_INFO => AppPaths.TRACKS_STATS_DB_INFO.file.path,
+      AppPathsBackupEnum.VIDEOS_LOCAL_DB_INFO => AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
+      AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO => AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
+      AppPathsBackupEnum.LATEST_QUEUE => AppPaths.LATEST_QUEUE,
+      AppPathsBackupEnum.TRACKS_OLD => AppPaths.TRACKS_OLD,
+      AppPathsBackupEnum.TRACKS_STATS_OLD => AppPaths.TRACKS_STATS_OLD,
+      AppPathsBackupEnum.VIDEOS_LOCAL_OLD => AppPaths.VIDEOS_LOCAL_OLD,
+      AppPathsBackupEnum.VIDEOS_CACHE_OLD => AppPaths.VIDEOS_CACHE_OLD,
+      AppPathsBackupEnum.TOTAL_LISTEN_TIME => AppPaths.TOTAL_LISTEN_TIME,
+      AppPathsBackupEnum.FAVOURITES_PLAYLIST => AppPaths.FAVOURITES_PLAYLIST,
+      AppPathsBackupEnum.YT_LIKES_PLAYLIST => AppPaths.YT_LIKES_PLAYLIST,
+      AppPathsBackupEnum.YT_SUBSCRIPTIONS => AppPaths.YT_SUBSCRIPTIONS,
+      AppPathsBackupEnum.YT_SUBSCRIPTIONS_GROUPS_ALL => AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
+      AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO => AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
+      AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY => AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
+      AppPathsBackupEnum.HISTORY_PLAYLIST => AppDirs.HISTORY_PLAYLIST,
+      AppPathsBackupEnum.PLAYLISTS => AppDirs.PLAYLISTS,
+      AppPathsBackupEnum.PLAYLISTS_ARTWORKS => AppDirs.PLAYLISTS_ARTWORKS,
+      AppPathsBackupEnum.QUEUES => AppDirs.QUEUES,
+      AppPathsBackupEnum.ARTWORKS => AppDirs.ARTWORKS,
+      AppPathsBackupEnum.PALETTES => AppDirs.PALETTES,
+      AppPathsBackupEnum.VIDEOS_CACHE => AppDirs.VIDEOS_CACHE,
+      AppPathsBackupEnum.AUDIOS_CACHE => AppDirs.AUDIOS_CACHE,
+      AppPathsBackupEnum.THUMBNAILS => AppDirs.THUMBNAILS,
+      AppPathsBackupEnum.LYRICS => AppDirs.LYRICS,
+      AppPathsBackupEnum.M3UBackup => AppDirs.M3UBackup,
+      AppPathsBackupEnum.RECENTLY_DELETED => AppDirs.RECENTLY_DELETED,
+      AppPathsBackupEnum.YOUTIPIE_CACHE => AppDirs.YOUTIPIE_CACHE,
+      AppPathsBackupEnum.YT_PLAYLISTS => AppDirs.YT_PLAYLISTS,
+      AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS => AppDirs.YT_PLAYLISTS_ARTWORKS,
+      AppPathsBackupEnum.YT_HISTORY_PLAYLIST => AppDirs.YT_HISTORY_PLAYLIST,
+      AppPathsBackupEnum.YT_THUMBNAILS => AppDirs.YT_THUMBNAILS,
+      AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS => AppDirs.YT_THUMBNAILS_CHANNELS,
+      AppPathsBackupEnum.YT_STATS => AppDirs.YT_STATS,
+      AppPathsBackupEnum.YT_PALETTES => AppDirs.YT_PALETTES,
+      AppPathsBackupEnum.YT_DOWNLOAD_TASKS => AppDirs.YT_DOWNLOAD_TASKS,
+    };
+  }
+}
+
+class AppPathsBackupEnumCategories {
+  const AppPathsBackupEnumCategories._();
+
+  static List<AppPathsBackupEnum> database = [
+    AppPathsBackupEnum.TRACKS_OLD,
+    AppPathsBackupEnum.TRACKS_DB_INFO,
+    AppPathsBackupEnum.TRACKS_STATS_OLD,
+    AppPathsBackupEnum.TRACKS_STATS_DB_INFO,
+    AppPathsBackupEnum.TOTAL_LISTEN_TIME,
+    AppPathsBackupEnum.VIDEOS_CACHE_OLD,
+    AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO,
+    AppPathsBackupEnum.VIDEOS_LOCAL_OLD,
+    AppPathsBackupEnum.VIDEOS_LOCAL_DB_INFO,
+    AppPathsBackupEnum.YT_DOWNLOAD_TASKS,
+    AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO,
+    AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY,
+  ];
+  static List<AppPathsBackupEnum> database_yt = [
+    AppPathsBackupEnum.YT_STATS,
+  ];
+
+  static List<AppPathsBackupEnum> playlists = [
+    AppPathsBackupEnum.PLAYLISTS,
+    AppPathsBackupEnum.PLAYLISTS_ARTWORKS,
+    AppPathsBackupEnum.FAVOURITES_PLAYLIST,
+  ];
+  static List<AppPathsBackupEnum> playlists_yt = [
+    AppPathsBackupEnum.YT_PLAYLISTS,
+    AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS,
+    AppPathsBackupEnum.YT_LIKES_PLAYLIST,
+  ];
+
+  static List<AppPathsBackupEnum> history = [
+    AppPathsBackupEnum.HISTORY_PLAYLIST,
+  ];
+  static List<AppPathsBackupEnum> history_yt = [
+    AppPathsBackupEnum.YT_HISTORY_PLAYLIST,
+  ];
+
+  static List<AppPathsBackupEnum> settings = [
+    AppPathsBackupEnum.SETTINGS,
+    AppPathsBackupEnum.SETTINGS_EQUALIZER,
+    AppPathsBackupEnum.SETTINGS_EXTRA,
+    AppPathsBackupEnum.SETTINGS_PLAYER,
+    AppPathsBackupEnum.SETTINGS_TUTORIAL,
+    AppPathsBackupEnum.SETTINGS_YOUTUBE,
+  ];
+
+  static List<AppPathsBackupEnum> lyrics = [
+    AppPathsBackupEnum.LYRICS,
+  ];
+
+  static List<AppPathsBackupEnum> queues = [
+    AppPathsBackupEnum.QUEUES,
+    AppPathsBackupEnum.LATEST_QUEUE,
+  ];
+
+  static List<AppPathsBackupEnum> palette = [
+    AppPathsBackupEnum.PALETTES,
+  ];
+
+  static List<AppPathsBackupEnum> palette_yt = [
+    AppPathsBackupEnum.YT_PALETTES,
+  ];
+
+  static List<AppPathsBackupEnum> videos_cache = [
+    AppPathsBackupEnum.VIDEOS_CACHE,
+  ];
+
+  static List<AppPathsBackupEnum> audios_cache = [
+    AppPathsBackupEnum.AUDIOS_CACHE,
+  ];
+
+  static List<AppPathsBackupEnum> artworks = [
+    AppPathsBackupEnum.ARTWORKS,
+  ];
+
+  static List<AppPathsBackupEnum> thumbnails = [
+    AppPathsBackupEnum.THUMBNAILS,
+  ];
+  static List<AppPathsBackupEnum> thumbnails_yt = [
+    AppPathsBackupEnum.YT_THUMBNAILS,
+    AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS,
+  ];
+
+  static List<AppPathsBackupEnum> youtipie_cache = [
+    AppPathsBackupEnum.YOUTIPIE_CACHE,
+  ];
+}
+
 /// Files used by Namida
 class AppPaths {
   static String get _USER_DATA => AppDirs.USER_DATA;
