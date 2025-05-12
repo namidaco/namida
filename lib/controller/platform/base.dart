@@ -7,13 +7,15 @@ import 'package:path/path.dart' as p;
 class NamidaPlatformBuilder {
   static T init<T>({
     required T Function() android,
+    required T Function() windows,
+    T Function()? linux,
     T Function()? ios,
     T Function()? macos,
-    required T Function() windows,
   }) {
     return switch (Platform.operatingSystem) {
-      'windows' => windows(),
       'android' => android(),
+      'windows' => windows(),
+      'linux' when linux != null => linux(),
       'ios' when ios != null => ios(),
       'macos' when macos != null => macos(),
       _ => throw UnimplementedError(),

@@ -15,7 +15,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:media_kit/media_kit.dart' as mk;
@@ -23,7 +22,6 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
@@ -44,10 +42,12 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -57,7 +57,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -80,37 +79,8 @@ void mainInitialization() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  final configureWindowManager = Platform.isWindows;
-  final configureHotkeys = Platform.isWindows;
-
-  if (configureWindowManager) {
-    await windowManager.ensureInitialized();
-  }
-
-  if (configureHotkeys) {
-    if (kDebugMode) await hotKeyManager.unregisterAll();
-
-    await [
-      hotKeyManager.register(
-        HotKey(key: PhysicalKeyboardKey.escape, scope: HotKeyScope.inapp),
-        keyDownHandler: (hotKey) {
-          if (NamidaNavigator.inst.isInFullScreen) {
-            NamidaNavigator.inst.exitFullScreen();
-          } else {
-            NamidaNavigator.inst.popPage();
-          }
-        },
-      ),
-      hotKeyManager.register(
-        HotKey(key: PhysicalKeyboardKey.f11, scope: HotKeyScope.inapp),
-        keyDownHandler: (hotKey) async {
-          final isFullscreen = await windowManager.isFullScreen();
-          windowManager.setFullScreen(!isFullscreen);
-        },
-      )
-    ].wait;
-  }
-
+  await WindowController.instance?.init();
+  await ShortcutsController.instance?.init();
   await HomeWidgetController.instance?.init();
 
   // -- x this makes some issues with GestureDetector
@@ -180,32 +150,19 @@ void mainInitialization() async {
   kStoragePaths.addAll(paths);
 
   AppDirs.INTERNAL_STORAGE = FileParts.joinPath(paths[0], 'Namida');
-  final downloadsFolder = FileParts.joinPath(paths[0], 'Download');
-
-  kInitialDirectoriesToScan.addAll([
-    ...paths.mappedUniqued((path) => FileParts.joinPath(path, 'Music')),
-    downloadsFolder,
-    AppDirs.INTERNAL_STORAGE,
-  ]);
 
   settings.prepareAllSettings();
 
-  if (configureWindowManager) {
-    final windowOptions = WindowOptions(
-      size: Size(428, 812),
-      center: true,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
-    );
-    windowManager.addListener(_NamidaWindowListener());
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      final bounds = settings.windowBounds;
-      if (bounds != null) await windowManager.setBounds(settings.windowBounds);
-      await windowManager.show();
-      await windowManager.focus();
-    });
+  if (settings.directoriesToScan.value.isEmpty) {
+    final downloadsFolder = await pp.getDownloadsDirectory().ignoreError().then((value) => value?.path) ?? FileParts.joinPath(paths[0], 'Download');
+    settings.directoriesToScan.value.addAll([
+      ...kStoragePaths.mappedUniqued((path) => FileParts.joinPath(path, 'Music')),
+      downloadsFolder,
+      AppDirs.INTERNAL_STORAGE,
+    ]);
   }
+
+  WindowController.instance?.restorePosition(); // -- requires settings
 
   await Future.wait([
     if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(),
@@ -714,27 +671,5 @@ class ScrollBehaviorModified extends ScrollBehavior {
       case TargetPlatform.windows:
         return const ClampingScrollPhysicsModified();
     }
-  }
-}
-
-class _NamidaWindowListener with WindowListener {
-  Future<void> _saveBounds() async {
-    settings.save(windowBounds: await windowManager.getBounds());
-  }
-
-  @override
-  void onWindowResize() async {
-    ArtworkWidget.isResizingAppWindow = true;
-  }
-
-  @override
-  void onWindowResized() async {
-    ArtworkWidget.isResizingAppWindow = false;
-    await _saveBounds();
-  }
-
-  @override
-  void onWindowMoved() async {
-    await _saveBounds();
   }
 }

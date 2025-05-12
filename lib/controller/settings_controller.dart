@@ -104,7 +104,7 @@ class _SettingsController with SettingsFileWriter {
     TrackSearchFilter.album,
   ].obs;
   final playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
-  final directoriesToScan = kInitialDirectoriesToScan.toList().obs;
+  final directoriesToScan = <String>[].obs;
   final directoriesToExclude = <String>[].obs;
   final preventDuplicatedTracks = false.obs;
   final respectNoMedia = false.obs;
