@@ -25,7 +25,7 @@ class NamidaPlatformBuilder {
   static String getExecutablesPath() {
     var processDir = p.dirname(Platform.resolvedExecutable);
     if (kDebugMode) {
-      var midway = r'..\..\..\..\..\..\ffmpeg_build';
+      var midway = r'../../../../../ffmpeg_build/windows';
       return p.normalize(p.join(processDir, midway));
     } else {
       return p.join(processDir, 'bin');

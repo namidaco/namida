@@ -8,11 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:queue/queue.dart' as qs;
 
 import 'package:namida/class/color_m.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -135,11 +135,13 @@ class CurrentColor {
   }
 
   Future<void> refreshColorsAfterResumeApp() async {
-    final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
-    if (namidaColor != null && settings.autoColor.value && _shouldUpdateFromDeviceWallpaper) {
-      _namidaColor.set(namidaColor);
-      _namidaColor.refresh();
-      _updateCurrentPaletteHalfs(namidaColor);
+    if (settings.autoColor.value && _shouldUpdateFromDeviceWallpaper) {
+      final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
+      if (namidaColor != null) {
+        _namidaColor.set(namidaColor);
+        _namidaColor.refresh();
+        _updateCurrentPaletteHalfs(namidaColor);
+      }
     }
   }
 

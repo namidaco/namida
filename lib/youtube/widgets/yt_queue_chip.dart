@@ -51,6 +51,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   double _screenHeight = 0;
 
   bool get isOpened => _smallBoxAnimation.value == 1 && _bigBoxAnimation.value == 0;
+  void toggleSheet() => isOpened ? dismissSheet() : openSheet();
   void openSheet() => _animateSmallToBig();
   void dismissSheet() => _animateBigToSmall();
 
@@ -511,8 +512,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           builder: (context, child) {
             final p = _bigBoxAnimation.value;
             if (p == 1) return const SizedBox();
+            final slowOpacity = ((1 - p) * 1.5 - 0.5).clampDouble(0.0, 1.0);
             return ColoredBox(
-              color: Colors.black.withValues(alpha: 1 - p),
+              color: Colors.black.withValues(alpha: slowOpacity),
               child: Transform.translate(
                 offset: Offset(0, _bigBoxAnimation.value * maxHeight),
                 child: Container(

@@ -157,6 +157,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   @override
   void initState() {
     super.initState();
+    _videoInfoListener();
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
   }
 
@@ -172,12 +173,10 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     final info = Player.inst.videoPlayerInfo.value;
     final newImageHeightMultiplier = info?.aspectRatio;
     if (newImageHeightMultiplier != _imageHeightMultiplier) {
-      if (mounted) {
-        setState(() {
-          _imageHeightMultiplier = newImageHeightMultiplier;
-          _imageHeightActual = info?.height;
-        });
-      }
+      refreshState(() {
+        _imageHeightMultiplier = newImageHeightMultiplier;
+        _imageHeightActual = info?.height;
+      });
     }
   }
 
@@ -834,8 +833,8 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
 
                   final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;
 
-                  final panelH = (maxOffset + navBarHeight - (100.0 * qp + topInset + 4.0));
-                  final panelExtra = panelH / 2.4 - (100.0 * qp + topInset + 4.0);
+                  final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0) * qp);
+                  final panelExtra = panelH / 2.4 - (100.0 + topInset + 4.0) * qp;
                   // final panelExtra = panelH; // -- use if u want to hide it while expanded, looks cool
                   final panelFinal = panelH - (panelExtra * (1 - qcp));
 
@@ -881,8 +880,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   final imageHeightMultiplier = _imageHeightMultiplier;
                   final shouldApplyImageHeightMultiplier = imageHeightMultiplier != null && imageHeightMultiplier > 1.0;
                   if (shouldApplyImageHeightMultiplier) {
-                    imageMaxHeightPre *= imageHeightMultiplier * 0.95 * bcp;
-                    imageMaxWidthPre *= 0.95;
+                    imageMaxHeightPre *= imageHeightMultiplier * bcp;
                   }
                   final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre);
 
@@ -890,15 +888,18 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   final trackInfoLeftMargin = imageWidth * (1 - bcp);
 
                   if (shouldApplyImageHeightMultiplier) {
-                    final height = _imageHeightActual?.toDouble().withMaximum(imageSize) ?? imageSize;
-                    vOffsetImage += (height / 2 / (imageHeightMultiplier * 1.5)) * bcp;
+                    // -- send it back to exactly above track info
+                    final height = (_imageHeightActual?.toDouble().withMaximum(imageSize) ?? imageSize);
+                    vOffsetImage += (height / imageHeightMultiplier / 8) * bcp;
                   }
 
-                  double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - topInset - topRowHeight;
+                  double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - (topInset / 2) - topRowHeight;
                   if (spaceLeftAboveImage > 0) {
                     final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
-                    final valueToRemove = (spaceLeftAboveImage * 0.5).withMaximum(spaceLeftInPanelAboveInfo * 0.5) * bcp;
+                    final valueToRemove = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
                     vOffsetImage -= valueToRemove; // re-adjust offset to make the image semi-centered
+                  } else {
+                    vOffsetImage += (-spaceLeftAboveImage / 2) * bcp;
                   }
 
                   return Stack(

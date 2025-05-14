@@ -136,7 +136,7 @@ class VersionWrapper {
     try {
       final repoName = current.isBeta ? 'namida-snapshots' : 'namida';
       final url = 'https://api.github.com/repos/namidaco/$repoName/releases/latest';
-      final response = await Rhttp.get(url);
+      final response = await Rhttp.get(url, headers: HttpHeaders.rawMap({'User-Agent': 'namida'}));
       final resMap = jsonDecode(response.body) as Map;
       String? latestRelease = resMap['name'] as String?;
       if (latestRelease == null) return null;
@@ -154,8 +154,7 @@ class VersionWrapper {
   }
 }
 
-final Set<String> kStoragePaths = {};
-final Set<String> kInitialDirectoriesToScan = {};
+final kStoragePaths = <String>[];
 
 /// Main Color
 const Color kMainColorLight = Color(0xFF9c99c1);
@@ -808,4 +807,5 @@ class NamidaFeaturesVisibility {
   static final changeApplicationBrightness = _isAndroid;
 
   static final showDownloadNotifications = _isWindows;
+  static final showVideoControlsOnHover = _isWindows;
 }

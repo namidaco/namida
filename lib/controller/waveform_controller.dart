@@ -54,10 +54,10 @@ class WaveformController {
       // ----- Updating [_currentWaveform]
       const maxWaveformCount = 2000;
       final numberOfScales = duration.inMilliseconds ~/ _positionDividor;
-      final downscaledLists = await _downscaledWaveformLists.thready((
+      final downscaledLists = _downscaledWaveformLists(
         targetSizes: [maxWaveformCount, numberOfScales],
         original: waveformData,
-      ));
+      );
 
       _currentWaveform = downscaledLists[maxWaveformCount] ?? [];
       _currentScaleLookup = downscaledLists[numberOfScales] ?? [];
@@ -70,20 +70,19 @@ class WaveformController {
   void calculateUIWaveform() async {
     if (_currentWaveform.isEmpty) return;
 
-    final userBars = _defaultUserBarsCount;
-    final waveform = await _calculateUIWaveformIsolate.thready((
-      targetSize: userBars,
+    final waveform = _getCalculatedUIWaveform(
+      targetSize: _defaultUserBarsCount,
       original: _currentWaveform,
-    ));
+    );
     currentWaveformUI = waveform;
     _isWaveformUIEnabled.value = true;
   }
 
-  static List<double> _calculateUIWaveformIsolate(({List<double> original, int targetSize}) params) {
+  static List<double> _getCalculatedUIWaveform({required List<double> original, required int targetSize}) {
     const maxClamping = 64.0;
-    final clamping = params.original.isEmpty ? null : maxClamping;
-    final downscaled = params.original.changeListSize(
-      targetSize: params.targetSize,
+    final clamping = original.isEmpty ? null : maxClamping;
+    final downscaled = original.changeListSize(
+      targetSize: targetSize,
       multiplier: 0.9,
       clampToMax: clamping,
       enforceClampToMax: (minValue, maxValue) => false,
@@ -91,11 +90,11 @@ class WaveformController {
     return downscaled;
   }
 
-  static Map<num, List<double>> _downscaledWaveformLists(({List<num> original, List<int> targetSizes}) params) {
+  static Map<num, List<double>> _downscaledWaveformLists({required List<num> original, required List<int> targetSizes}) {
     final newLists = <num, List<double>>{};
     const maxClamping = 64.0;
-    params.targetSizes.loop((targetSize) {
-      newLists[targetSize] = params.original.changeListSize(
+    targetSizes.loop((targetSize) {
+      newLists[targetSize] = original.changeListSize(
         targetSize: targetSize,
         clampToMax: maxClamping,
         enforceClampToMax: (minValue, maxValue) {

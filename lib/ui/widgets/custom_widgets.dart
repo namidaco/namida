@@ -3318,39 +3318,76 @@ class NamidaHero extends StatelessWidget {
     this.enabled = true,
   });
 
+  Widget _defaultHeroFlightShuttleBuilder(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection flightDirection,
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+  ) {
+    final Hero toHero = toHeroContext.widget as Hero;
+
+    final MediaQueryData? toMediaQueryData = MediaQuery.maybeOf(toHeroContext);
+    final MediaQueryData? fromMediaQueryData = MediaQuery.maybeOf(fromHeroContext);
+
+    if (toMediaQueryData == null || fromMediaQueryData == null) {
+      return toHero.child;
+    }
+
+    final EdgeInsets fromHeroPadding = fromMediaQueryData.padding;
+    final EdgeInsets toHeroPadding = toMediaQueryData.padding;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: toMediaQueryData.copyWith(
+            padding: (flightDirection == HeroFlightDirection.push)
+                ? EdgeInsetsTween(
+                    begin: fromHeroPadding,
+                    end: toHeroPadding,
+                  ).evaluate(animation)
+                : EdgeInsetsTween(
+                    begin: toHeroPadding,
+                    end: fromHeroPadding,
+                  ).evaluate(animation),
+          ),
+          child: toHero.child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return enabled && tag != null
         ? Hero(
             tag: tag!,
             // -- quite expensive to animate 2 fade transitions.
-            // flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
-            //   return AnimatedBuilder(
-            //     animation: animation,
-            //     builder: (context, child) {
-            //       final fromHeroWidget = fromHeroContext.widget as Hero;
-            //       final toHeroWidget = toHeroContext.widget as Hero;
-            //       final (Hero hero1, Hero hero2) = switch (flightDirection) {
-            //         HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
-            //         HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
-            //       };
-            //       // fade is necessary since childs are not always exactly the same
-            //       return Stack(
-            //         alignment: Alignment.center,
-            //         children: [
-            //           FadeTransition(
-            //             opacity: ReverseAnimation(animation),
-            //             child: hero1.child,
-            //           ),
-            //           FadeTransition(
-            //             opacity: animation,
-            //             child: hero2.child,
-            //           ),
-            //         ],
-            //       );
-            //     },
-            //   );
-            // },
+            flightShuttleBuilder: settings.performanceMode.value == PerformanceMode.goodLooking
+                ? (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
+                    final fromHeroWidget = fromHeroContext.widget as Hero;
+                    final toHeroWidget = toHeroContext.widget as Hero;
+                    final (Hero hero1, Hero hero2) = switch (flightDirection) {
+                      HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
+                      HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
+                    };
+                    // fade is necessary since childs are not always exactly the same
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        FadeTransition(
+                          opacity: ReverseAnimation(animation),
+                          child: hero1.child,
+                        ),
+                        FadeTransition(
+                          opacity: animation,
+                          child: hero2.child,
+                        ),
+                      ],
+                    );
+                  }
+                : _defaultHeroFlightShuttleBuilder,
             child: child,
           )
         : child;

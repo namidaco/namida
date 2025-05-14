@@ -434,60 +434,70 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
 
   /// This function is for the textFormField of searchbar.
   Widget _textFormField(BuildContext context, double rightPadding) {
-    return Padding(
-      padding: EdgeInsets.only(right: rightPadding),
-      child: TextFormField(
-        controller: widget.textEditingController,
-        inputFormatters: widget.inputFormatters,
-        focusNode: focusNode,
-        cursorWidth: _SBDimensions.d2,
-        textInputAction: TextInputAction.search,
-        onTap: widget.onTap,
-        onTapOutside: widget.onTapOutside,
-        cursorHeight: widget.cursorHeight,
-        cursorRadius: widget.cursorRadius,
-        onFieldSubmitted: (String value) {
-          setState(() {
-            switcher = true;
-          });
-          (widget.onFieldSubmitted != null) ? widget.onFieldSubmitted!(value) : debugPrint('onFieldSubmitted Not Used');
-        },
-        onEditingComplete: () {
-          unFocusKeyboard();
-          setState(() {
-            switcher = false;
-          });
-          (widget.onEditingComplete != null) ? widget.onEditingComplete?.call() : debugPrint('onEditingComplete Not Used');
-        },
-        keyboardType: widget.textInputType,
-        onChanged: (var value) {
-          (widget.onChanged != null) ? widget.onChanged?.call(value) : debugPrint('onChanged Not Used');
-        },
-        onSaved: (var value) {
-          (widget.onSaved != null) ? widget.onSaved?.call(value) : debugPrint('onSaved Not Used');
-        },
-        style: widget.enteredTextStyle ?? const TextStyle(color: _SBColor.black),
-        cursorColor: widget.cursorColour,
-        textAlign: widget.textAlignToRight ? TextAlign.right : TextAlign.left,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.zero,
-          isDense: true,
-          floatingLabelBehavior: FloatingLabelBehavior.never,
-          hintText: widget.hintText,
-          hintStyle: widget.hintTextStyle?.call(kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2) ??
-              const TextStyle(
-                color: _SBColor.grey,
-                fontSize: _SBDimensions.d15,
-                fontWeight: FontWeight.w400,
-                height: kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Padding(
+            padding: EdgeInsets.only(right: rightPadding),
+            child: TextFormField(
+              textAlignVertical: TextAlignVertical.center,
+              maxLength: null,
+              maxLines: null,
+              expands: true,
+              controller: widget.textEditingController,
+              inputFormatters: widget.inputFormatters,
+              focusNode: focusNode,
+              cursorWidth: _SBDimensions.d2,
+              textInputAction: TextInputAction.search,
+              onTap: widget.onTap,
+              onTapOutside: widget.onTapOutside,
+              cursorHeight: widget.cursorHeight,
+              cursorRadius: widget.cursorRadius,
+              onFieldSubmitted: (String value) {
+                setState(() {
+                  switcher = true;
+                });
+                (widget.onFieldSubmitted != null) ? widget.onFieldSubmitted!(value) : debugPrint('onFieldSubmitted Not Used');
+              },
+              onEditingComplete: () {
+                unFocusKeyboard();
+                setState(() {
+                  switcher = false;
+                });
+                (widget.onEditingComplete != null) ? widget.onEditingComplete?.call() : debugPrint('onEditingComplete Not Used');
+              },
+              keyboardType: widget.textInputType,
+              onChanged: (var value) {
+                (widget.onChanged != null) ? widget.onChanged?.call(value) : debugPrint('onChanged Not Used');
+              },
+              onSaved: (var value) {
+                (widget.onSaved != null) ? widget.onSaved?.call(value) : debugPrint('onSaved Not Used');
+              },
+              style: widget.enteredTextStyle ?? const TextStyle(color: _SBColor.black),
+              cursorColor: widget.cursorColour,
+              textAlign: widget.textAlignToRight ? TextAlign.right : TextAlign.left,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                hintText: widget.hintText,
+                hintStyle: widget.hintTextStyle?.call(kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2) ??
+                    const TextStyle(
+                      color: _SBColor.grey,
+                      fontSize: _SBDimensions.d15,
+                      fontWeight: FontWeight.w400,
+                      height: kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2,
+                    ),
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(_SBDimensions.d20),
+                  borderSide: BorderSide.none,
+                ),
               ),
-          alignLabelWithHint: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(_SBDimensions.d20),
-            borderSide: BorderSide.none,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
