@@ -1,0 +1,51 @@
+name: Flutter Setup
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "App version"
+        value: ${{ jobs.setup.outputs.version }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.6.0"
+
+      - name: setup credentials for namidaco
+        run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+
+      - name: setup credentials for MSOB7YY
+        run: git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+
+      - name: Git Submodule Update
+        run: |
+          git clone https://github.com/namidaco/namida-translations/ assets/language
+          git clone https://github.com/MSOB7YY/ffmpeg_build ./ffmpeg_build
+
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+          flutter pub upgrade
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT

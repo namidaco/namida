@@ -1,0 +1,50 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Dart
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    uses: ./.github/workflows/setup.yml
+
+  build_windows:
+    needs: setup
+    runs-on: windows-latest
+
+    steps:
+      - name: Build Windows App
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows
+
+      - name: Build iss script
+        run: dart run inno_bundle:build --no-app --release --no-installer
+
+      - name: Output config into github output
+        id: envs
+        run: echo $(dart run inno_bundle:build --envs --no-hf) | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Build installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: ./build/windows/x64/installer/Release/inno-script.iss
+          
+      - name: Creating windows inno installer
+        run: |
+          mkdir -p build_final
+          mv ./build/windows/x64/installer/Release/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe build_final/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe
+
+      - name: Upload to latest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          response=$(curl -s https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
+          TAG=$(echo "$response" | jq -r .tag_name)
+          gh release upload "$TAG" build_final/* --repo "namidaco/namida-snapshots"
+
+
