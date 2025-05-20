@@ -228,11 +228,9 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                           },
                         ),
                         const Positioned.fill(
-                          child: ClipRect(
-                            child: NamidaBgBlur(
-                              blur: 30.0,
-                              child: ColoredBox(color: Colors.transparent),
-                            ),
+                          child: NamidaBgBlurClipped(
+                            blur: 30.0,
+                            child: ColoredBox(color: Colors.transparent),
                           ),
                         ),
                         Padding(
@@ -634,11 +632,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                           },
                         ),
                         const Positioned.fill(
-                          child: ClipRect(
-                            child: NamidaBgBlur(
-                              blur: 30.0,
-                              child: ColoredBox(color: Colors.transparent),
-                            ),
+                          child: NamidaBgBlurClipped(
+                            blur: 30.0,
+                            child: ColoredBox(color: Colors.transparent),
                           ),
                         ),
                         Padding(

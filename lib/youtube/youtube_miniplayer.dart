@@ -27,6 +27,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -1309,11 +1310,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                         setOrientations: false,
                                       );
                                     },
-                                    builder: (double height, double p) {
+                                    builder: (double height, double p, Animation<double> reverseOpacityAnimation) {
                                       final percentage = (p * 2.8).clampDouble(0.0, 1.0);
                                       final percentageFast = (p * 1.5 - 0.5).clampDouble(0.0, 1.0);
                                       final inversePerc = 1 - percentage;
-                                      final reverseOpacity = (inversePerc * 2.8 - 1.8).clampDouble(0.0, 1.0);
                                       final finalspace1sb = space1sb * inversePerc;
                                       final finalspace3sb = space3sb * inversePerc;
                                       final finalspace4buttons = space4 * inversePerc;
@@ -1351,42 +1351,33 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                       isMinimized: percentage == 0,
                                                     ),
                                                   ),
-                                                  if (reverseOpacity > 0) ...[
-                                                    SizedBox(width: finalspace3sb),
-                                                    SizedBox(
-                                                      width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb)
-                                                          .clampDouble(0, maxWidth),
-                                                      child: NamidaOpacity(
-                                                        key: Key("${currentId}_title_button1"),
-                                                        enabled: true,
-                                                        opacity: reverseOpacity,
-                                                        child: titleChild,
-                                                      ),
+                                                  FadeIgnoreTransition(
+                                                    completelyKillWhenPossible: true,
+                                                    opacity: reverseOpacityAnimation,
+                                                    child: Row(
+                                                      children: [
+                                                        SizedBox(width: finalspace3sb),
+                                                        SizedBox(
+                                                          width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb)
+                                                              .clampDouble(0, maxWidth),
+                                                          child: titleChild,
+                                                        ),
+                                                        SizedBox(
+                                                          key: Key("${currentId}_title_button2_child"),
+                                                          width: finalspace4buttons / 2,
+                                                          height: miniplayerHeight,
+                                                          child: playPauseButtonChild,
+                                                        ),
+                                                        SizedBox(
+                                                          key: Key("${currentId}_title_button3_child"),
+                                                          width: finalspace4buttons / 2,
+                                                          height: miniplayerHeight,
+                                                          child: nextButton,
+                                                        ),
+                                                        SizedBox(width: finalspace5sb),
+                                                      ],
                                                     ),
-                                                    NamidaOpacity(
-                                                      key: Key("${currentId}_title_button2"),
-                                                      enabled: true,
-                                                      opacity: reverseOpacity,
-                                                      child: SizedBox(
-                                                        key: Key("${currentId}_title_button2_child"),
-                                                        width: finalspace4buttons / 2,
-                                                        height: miniplayerHeight,
-                                                        child: playPauseButtonChild,
-                                                      ),
-                                                    ),
-                                                    NamidaOpacity(
-                                                      key: Key("${currentId}_title_button3"),
-                                                      enabled: true,
-                                                      opacity: reverseOpacity,
-                                                      child: SizedBox(
-                                                        key: Key("${currentId}_title_button3_child"),
-                                                        width: finalspace4buttons / 2,
-                                                        height: miniplayerHeight,
-                                                        child: nextButton,
-                                                      ),
-                                                    ),
-                                                    SizedBox(width: finalspace5sb),
-                                                  ]
+                                                  ),
                                                 ],
                                               ),
 

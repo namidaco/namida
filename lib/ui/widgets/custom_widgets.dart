@@ -318,23 +318,107 @@ class CustomListTile extends StatelessWidget {
 class NamidaBgBlur extends StatelessWidget {
   final double blur;
   final bool enabled;
-  final BlendMode blendMode;
   final Widget child;
+
   const NamidaBgBlur({
     super.key,
     required this.blur,
     this.enabled = true,
-    this.blendMode = BlendMode.srcOver,
+    required this.child,
+  });
+
+  static final _groupKey = BackdropKey();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled || blur == 0) return child;
+    return BackdropFilter(
+      backdropGroupKey: _groupKey,
+      filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      child: child,
+    );
+  }
+}
+
+class NamidaBgBlurClipped extends StatelessWidget {
+  final double blur;
+  final bool enabled;
+  final Clip clipBehavior;
+  final BoxDecoration? decoration;
+  final BorderRadiusGeometry? borderRadius;
+  final Widget child;
+
+  const NamidaBgBlurClipped({
+    super.key,
+    required this.blur,
+    this.enabled = true,
+    this.clipBehavior = Clip.antiAlias,
+    this.decoration,
+    this.borderRadius,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled) return child;
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-      blendMode: blendMode,
-      child: child,
+    if (!enabled || blur == 0) return child;
+
+    return ClipPath(
+      clipBehavior: clipBehavior,
+      clipper: DecorationClipper(
+        decoration: decoration ??
+            BoxDecoration(
+              borderRadius: borderRadius,
+            ),
+      ),
+      child: NamidaBgBlur(
+        blur: blur,
+        enabled: enabled,
+        child: child,
+      ),
+    );
+  }
+}
+
+class DropShadow extends StatelessWidget {
+  final Widget child;
+  final Widget? bottomChild;
+  final double blurRadius;
+  final double bgSizePercentage;
+  final double sizePercentage;
+  final Offset offset;
+
+  const DropShadow({
+    required this.child,
+    this.bottomChild,
+    this.blurRadius = 10.0,
+    this.offset = const Offset(0, 4),
+    this.bgSizePercentage = 0.925,
+    this.sizePercentage = 0.95,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Transform.scale(
+          scale: bgSizePercentage,
+          child: Transform.translate(
+            offset: offset,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(
+                sigmaX: blurRadius,
+                sigmaY: blurRadius,
+              ),
+              child: bottomChild ?? child,
+            ),
+          ),
+        ),
+        Transform.scale(
+          scale: sizePercentage,
+          child: child,
+        )
+      ],
     );
   }
 }
@@ -2372,6 +2456,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 
   Widget buildChild(bool draggable, Widget child, double maxWidth) {
+    final fadeAnimation = _animation.drive(Animatable.fromCallback((value) => 1 - value.abs()));
     return HorizontalDragDetector(
       onStart: !draggable
           ? null
@@ -2422,15 +2507,16 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
             },
       child: AnimatedBuilder(
         animation: _animation,
-        builder: (context, _) {
+        child: FadeTransition(
+          opacity: fadeAnimation,
+          child: child,
+        ),
+        builder: (context, child) {
           final p = _animation.value;
-          if (p == 0) return child;
+          if (p == 0) return child!;
           return Transform.translate(
             offset: Offset(p * maxWidth, 0),
-            child: Opacity(
-              opacity: 1 - p.abs(),
-              child: child,
-            ),
+            child: child!,
           );
         },
       ),
@@ -3054,10 +3140,12 @@ class NamidaInkWell extends StatelessWidget {
         border: decoration.border,
         borderRadius: borderR,
       ),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: Clip.none,
       child: Material(
+        clipBehavior: Clip.none,
         type: MaterialType.transparency,
         child: InkWell(
+          borderRadius: borderR,
           hoverColor: highlightColor,
           highlightColor: highlightColor,
           onTap: onTap,
@@ -3318,7 +3406,10 @@ class NamidaHero extends StatelessWidget {
     this.enabled = true,
   });
 
-  Widget _defaultHeroFlightShuttleBuilder(
+  static final fadeAnimation2Convert = Animatable.fromCallback((value) => (value * (1 / 0.2)).clampDouble(0, 1));
+  static final fadeAnimation1Convert = Animatable.fromCallback((value) => 1.0 - (value * 12 - 11).clampDouble(0, 1));
+
+  static Widget _customHeroFlightShuttleBuilder(
     BuildContext flightContext,
     Animation<double> animation,
     HeroFlightDirection flightDirection,
@@ -3326,6 +3417,12 @@ class NamidaHero extends StatelessWidget {
     BuildContext toHeroContext,
   ) {
     final Hero toHero = toHeroContext.widget as Hero;
+    final Hero fromHero = fromHeroContext.widget as Hero;
+
+    final (Hero hero1, Hero hero2) = switch (flightDirection) {
+      HeroFlightDirection.push => (fromHero, toHero),
+      HeroFlightDirection.pop => (toHero, fromHero),
+    };
 
     final MediaQueryData? toMediaQueryData = MediaQuery.maybeOf(toHeroContext);
     final MediaQueryData? fromMediaQueryData = MediaQuery.maybeOf(fromHeroContext);
@@ -3337,9 +3434,27 @@ class NamidaHero extends StatelessWidget {
     final EdgeInsets fromHeroPadding = fromMediaQueryData.padding;
     final EdgeInsets toHeroPadding = toMediaQueryData.padding;
 
+    final fadeAnimation2 = animation.drive(fadeAnimation2Convert);
+    final fadeAnimation1 = animation.drive(fadeAnimation1Convert);
+
+    final stackChild = Stack(
+      alignment: Alignment.center,
+      fit: StackFit.passthrough,
+      children: [
+        FadeTransition(
+          opacity: fadeAnimation2,
+          child: hero2.child,
+        ),
+        FadeTransition(
+          opacity: fadeAnimation1,
+          child: hero1.child,
+        ),
+      ],
+    );
+
     return AnimatedBuilder(
       animation: animation,
-      builder: (BuildContext context, Widget? child) {
+      builder: (context, child) {
         return MediaQuery(
           data: toMediaQueryData.copyWith(
             padding: (flightDirection == HeroFlightDirection.push)
@@ -3352,7 +3467,7 @@ class NamidaHero extends StatelessWidget {
                     end: fromHeroPadding,
                   ).evaluate(animation),
           ),
-          child: toHero.child,
+          child: stackChild,
         );
       },
     );
@@ -3364,30 +3479,7 @@ class NamidaHero extends StatelessWidget {
         ? Hero(
             tag: tag!,
             // -- quite expensive to animate 2 fade transitions.
-            flightShuttleBuilder: settings.performanceMode.value == PerformanceMode.goodLooking
-                ? (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
-                    final fromHeroWidget = fromHeroContext.widget as Hero;
-                    final toHeroWidget = toHeroContext.widget as Hero;
-                    final (Hero hero1, Hero hero2) = switch (flightDirection) {
-                      HeroFlightDirection.push => (fromHeroWidget, toHeroWidget),
-                      HeroFlightDirection.pop => (toHeroWidget, fromHeroWidget),
-                    };
-                    // fade is necessary since childs are not always exactly the same
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        FadeTransition(
-                          opacity: ReverseAnimation(animation),
-                          child: hero1.child,
-                        ),
-                        FadeTransition(
-                          opacity: animation,
-                          child: hero2.child,
-                        ),
-                      ],
-                    );
-                  }
-                : _defaultHeroFlightShuttleBuilder,
+            flightShuttleBuilder: settings.performanceMode.value == PerformanceMode.highPerformance ? null : _customHeroFlightShuttleBuilder,
             child: child,
           )
         : child;

@@ -10,6 +10,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
@@ -166,16 +167,24 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
       );
     }
 
+    final opacityAnimation = animation.drive(Animatable.fromCallback(
+      (animationValue) {
+        final isMini = animationValue <= 1.0;
+        final isInQueue = !isMini;
+        final percentage = isMini ? animationValue : animationValue - 1;
+        return (isInQueue ? percentage : 1 - percentage).clampDouble(0, 1);
+      },
+    ));
     return AnimatedBuilder(
       animation: animation,
       builder: (context, _) {
-        if (animation.value == 1.0) return const SizedBox();
+        final animationValue = animation.value;
+        if (animationValue == 1.0) return const SizedBox();
 
-        final miniHeight = animation.value.clampDouble(0.0, 1.0);
-        final queueHeight = animation.value > 1.0 ? animation.value.clampDouble(1.0, 2.0) : 0.0;
-        final isMini = animation.value <= 1.0;
+        final miniHeight = animationValue.clampDouble(0.0, 1.0);
+        final queueHeight = animationValue > 1.0 ? animationValue.clampDouble(1.0, 2.0) : 0.0;
+        final isMini = animationValue <= 1.0;
         final isInQueue = !isMini;
-        final percentage = isMini ? animation.value : animation.value - 1;
 
         final navHeight = (settings.enableBottomNavBar.value ? kBottomNavigationBarHeight : -4.0) - 10.0;
         final initH = isInQueue ? kQueueBottomRowHeight * 2 : 12.0 + (miniHeight * 24.0);
@@ -183,8 +192,8 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
         return AnimatedPositioned(
           duration: const Duration(milliseconds: 100),
           bottom: sysNavBar + initH + (navHeight * (1 - queueHeight)),
-          child: NamidaOpacity(
-            opacity: (isInQueue ? percentage : 1 - percentage).clampDouble(0, 1),
+          child: FadeIgnoreTransition(
+            opacity: opacityAnimation,
             child: child,
           ),
         );

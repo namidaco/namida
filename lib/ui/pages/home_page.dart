@@ -1071,11 +1071,9 @@ class _MixesCardState extends State<_MixesCard> {
           border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
           borderRadius: BorderRadius.circular(10.0.multipliedRadius),
         ),
-        child: NamidaBgBlur(
+        child: NamidaBgBlurClipped(
           blur: blur,
-          child: Container(
-            color: Colors.transparent,
-          ),
+          child: const SizedBox(),
         ),
       ),
     );
@@ -1089,7 +1087,7 @@ class _MixesCardState extends State<_MixesCard> {
         key: Key(tag),
         track: _track,
         compressed: false,
-        blur: 1.5,
+        blur: 0,
         borderRadius: fullscreen ? 12.0 : 8.0,
         forceSquared: true,
         path: _track?.pathToImage,
@@ -1100,23 +1098,20 @@ class _MixesCardState extends State<_MixesCard> {
             Positioned(
               top: 12.0,
               left: 0.0,
-              child: Container(
-                clipBehavior: Clip.hardEdge,
+              child: NamidaBgBlurClipped(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: context.theme.colorScheme.surface.withAlpha(50),
                 ),
-                child: NamidaBgBlur(
-                  blur: 2.0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: NamidaIconButton(
-                      verticalPadding: 4.0,
-                      horizontalPadding: 12.0,
-                      icon: Broken.arrow_left_2,
-                      iconColor: context.theme.colorScheme.onSurface.withAlpha(160),
-                      onPressed: NamidaNavigator.inst.closeDialog,
-                    ),
+                blur: 2.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: NamidaIconButton(
+                    verticalPadding: 4.0,
+                    horizontalPadding: 12.0,
+                    icon: Broken.arrow_left_2,
+                    iconColor: context.theme.colorScheme.onSurface.withAlpha(160),
+                    onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ),
               ),
@@ -1298,6 +1293,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
       );
     }
     return NamidaInkWell(
+      borderRadius: 10.0,
       onTap: () {
         if (mounted) setState(() => _enabledTrack = (widget.listId, widget.index));
 
@@ -1322,11 +1318,11 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                 width: 1.5,
               )
             : null,
-        borderRadius: BorderRadius.circular(10.0.multipliedRadius),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       animationDurationMS: 400,
-      child: NamidaBgBlur(
+      child: NamidaBgBlurClipped(
+        borderRadius: BorderRadius.circular(10.0.multipliedRadius),
         blur: 20.0,
         enabled: settings.enableBlurEffect.value,
         child: Column(

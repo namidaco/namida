@@ -420,37 +420,32 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       // topLeft
       Shadow(offset: Offset(-strokeWidth, strokeWidth), color: strokeColor, blurRadius: shadowBR),
     ];
+    final ss = _seekSeconds;
     return Positioned(
       right: isForward ? finalOffset : null,
       left: isForward ? null : finalOffset,
       child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: controller,
-          builder: (context, child) {
-            final ss = _seekSeconds;
-            return NamidaOpacity(
-              opacity: controller.value,
-              child: RepaintBoundary(
-                child: Column(
-                  children: [
-                    Icon(
-                      isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
-                      color: color,
-                      shadows: outlineShadow,
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      '$ss ${lang.SECONDS}',
-                      style: context.textTheme.displayMedium?.copyWith(
-                        color: color,
-                        shadows: outlineShadow,
-                      ),
-                    )
-                  ],
+        child: FadeTransition(
+          opacity: controller,
+          child: RepaintBoundary(
+            child: Column(
+              children: [
+                Icon(
+                  isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
+                  color: color,
+                  shadows: outlineShadow,
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 8.0),
+                Text(
+                  '$ss ${lang.SECONDS}',
+                  style: context.textTheme.displayMedium?.copyWith(
+                    color: color,
+                    shadows: outlineShadow,
+                  ),
+                )
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1102,38 +1097,35 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             ],
                             child: Padding(
                               padding: const EdgeInsets.all(4.0),
-                              child: BorderRadiusClip(
-                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                child: NamidaBgBlur(
-                                  blur: 3.0,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                    ),
-                                    child: Obx(
-                                      (context) {
-                                        final speed = Player.inst.currentSpeed.valueR;
-                                        return Row(
-                                          children: [
-                                            Icon(
-                                              Broken.play_cricle,
-                                              size: 16.0,
+                              child: NamidaBgBlurClipped(
+                                blur: 3.0,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                  child: Obx(
+                                    (context) {
+                                      final speed = Player.inst.currentSpeed.valueR;
+                                      return Row(
+                                        children: [
+                                          Icon(
+                                            Broken.play_cricle,
+                                            size: 16.0,
+                                            color: itemsColor,
+                                          ),
+                                          const SizedBox(width: 4.0).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
+                                          Text(
+                                            "${speed}x",
+                                            style: context.textTheme.displaySmall?.copyWith(
                                               color: itemsColor,
+                                              fontSize: 12.0,
                                             ),
-                                            const SizedBox(width: 4.0).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
-                                            Text(
-                                              "${speed}x",
-                                              style: context.textTheme.displaySmall?.copyWith(
-                                                color: itemsColor,
-                                                fontSize: 12.0,
-                                              ),
-                                            ).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
-                                          ],
-                                        );
-                                      },
-                                    ),
+                                          ).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -1200,28 +1192,25 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   ],
                                   child: Padding(
                                     padding: const EdgeInsets.all(4.0),
-                                    child: BorderRadiusClip(
-                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                      child: NamidaBgBlur(
-                                        blur: 3.0,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.2),
-                                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                          ),
-                                          child: Obx(
-                                            (context) {
-                                              final displayName =
-                                                  Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
-                                              return displayName == null || displayName == ''
-                                                  ? const SizedBox()
-                                                  : Text(
-                                                      displayName,
-                                                      style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
-                                                    );
-                                            },
-                                          ),
+                                    child: NamidaBgBlurClipped(
+                                      blur: 3.0,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                        child: Obx(
+                                          (context) {
+                                            final displayName =
+                                                Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
+                                            return displayName == null || displayName == ''
+                                                ? const SizedBox()
+                                                : Text(
+                                                    displayName,
+                                                    style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                  );
+                                          },
                                         ),
                                       ),
                                     ),
@@ -1386,77 +1375,73 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(4.0),
-                              child: BorderRadiusClip(
-                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                child: NamidaBgBlur(
-                                  blur: 3.0,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                    ),
-                                    child: Obx(
-                                      (context) {
-                                        final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR;
+                              child: NamidaBgBlurClipped(
+                                blur: 3.0,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                  child: Obx(
+                                    (context) {
+                                      final isAudio = widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR;
 
-                                        String? qt;
-                                        IconData icon;
-                                        IconData? secondaryIcon;
-                                        if (isAudio) {
-                                          icon = Broken.musicnote;
+                                      String? qt;
+                                      IconData icon;
+                                      IconData? secondaryIcon;
+                                      if (isAudio) {
+                                        icon = Broken.musicnote;
+                                      } else {
+                                        icon = Broken.setting;
+
+                                        if (widget.isLocal) {
+                                          final video = VideoController.inst.currentVideo.valueR;
+                                          qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
                                         } else {
-                                          icon = Broken.setting;
+                                          qt = Player.inst.currentVideoStream.valueR?.qualityLabel;
+                                          if (qt == null) {
+                                            final cached = Player.inst.currentCachedVideo.valueR;
+                                            if (cached != null) qt = "${cached.resolution}p${cached.framerateText()}";
+                                          }
 
-                                          if (widget.isLocal) {
-                                            final video = VideoController.inst.currentVideo.valueR;
-                                            qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
-                                          } else {
-                                            qt = Player.inst.currentVideoStream.valueR?.qualityLabel;
-                                            if (qt == null) {
-                                              final cached = Player.inst.currentCachedVideo.valueR;
-                                              if (cached != null) qt = "${cached.resolution}p${cached.framerateText()}";
-                                            }
-
-                                            final dataSaverMode = ConnectivityController.inst.hasHighConnectionR
-                                                ? settings.youtube.dataSaverMode.valueR
-                                                : settings.youtube.dataSaverModeMobile.valueR;
-                                            if (Player.inst.currentVideoStream.valueR == null &&
-                                                Player.inst.currentCachedVideo.valueR == null &&
-                                                !dataSaverMode.canFetchNetworkVideoStream) {
-                                              secondaryIcon = Broken.magicpen;
-                                            }
+                                          final dataSaverMode =
+                                              ConnectivityController.inst.hasHighConnectionR ? settings.youtube.dataSaverMode.valueR : settings.youtube.dataSaverModeMobile.valueR;
+                                          if (Player.inst.currentVideoStream.valueR == null &&
+                                              Player.inst.currentCachedVideo.valueR == null &&
+                                              !dataSaverMode.canFetchNetworkVideoStream) {
+                                            secondaryIcon = Broken.magicpen;
                                           }
                                         }
+                                      }
 
-                                        return Row(
-                                          children: [
-                                            if (qt != null) ...[
-                                              Text(
-                                                qt,
-                                                style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
-                                              ),
-                                              const SizedBox(width: 4.0),
-                                            ],
-                                            secondaryIcon == null
-                                                ? Icon(
-                                                    icon,
-                                                    color: itemsColor,
-                                                    size: 16.0,
-                                                  )
-                                                : StackedIcon(
-                                                    baseIcon: icon,
-                                                    secondaryIcon: secondaryIcon,
-                                                    iconSize: 16.0,
-                                                    secondaryIconSize: 8.0,
-                                                    baseIconColor: itemsColor,
-                                                    secondaryIconColor: itemsColor,
-                                                    shadowColor: itemsColor.invert(),
-                                                  ),
+                                      return Row(
+                                        children: [
+                                          if (qt != null) ...[
+                                            Text(
+                                              qt,
+                                              style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                            ),
+                                            const SizedBox(width: 4.0),
                                           ],
-                                        );
-                                      },
-                                    ),
+                                          secondaryIcon == null
+                                              ? Icon(
+                                                  icon,
+                                                  color: itemsColor,
+                                                  size: 16.0,
+                                                )
+                                              : StackedIcon(
+                                                  baseIcon: icon,
+                                                  secondaryIcon: secondaryIcon,
+                                                  iconSize: 16.0,
+                                                  secondaryIconSize: 8.0,
+                                                  baseIconColor: itemsColor,
+                                                  secondaryIconColor: itemsColor,
+                                                  shadowColor: itemsColor.invert(),
+                                                ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -1508,53 +1493,50 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               ),
                             Row(
                               children: [
-                                BorderRadiusClip(
-                                  borderRadius: borr8,
-                                  child: NamidaBgBlur(
-                                    blur: 3.0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        borderRadius: borr8,
-                                      ),
-                                      child: TapDetector(
-                                        behavior: HitTestBehavior.translucent,
-                                        onTap: () {
-                                          settings.player.save(displayRemainingDurInsteadOfTotal: !settings.player.displayRemainingDurInsteadOfTotal.value);
-                                        },
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Obx(
-                                              (context) => Text(
-                                                "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
+                                NamidaBgBlurClipped(
+                                  blur: 3.0,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    borderRadius: borr8,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6.0),
+                                    child: TapDetector(
+                                      behavior: HitTestBehavior.translucent,
+                                      onTap: () {
+                                        settings.player.save(displayRemainingDurInsteadOfTotal: !settings.player.displayRemainingDurInsteadOfTotal.value);
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Obx(
+                                            (context) => Text(
+                                              "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
+                                              style: context.textTheme.displayMedium?.copyWith(
+                                                fontSize: 13.5,
+                                                color: itemsColor,
+                                              ),
+                                            ),
+                                          ),
+                                          Obx(
+                                            (context) {
+                                              int totalDurMs = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                                              String prefix = '';
+                                              if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
+                                                totalDurMs = totalDurMs - Player.inst.nowPlayingPositionR;
+                                                prefix = '-';
+                                              }
+
+                                              return Text(
+                                                "$prefix${totalDurMs.milliSecondsLabel}",
                                                 style: context.textTheme.displayMedium?.copyWith(
                                                   fontSize: 13.5,
                                                   color: itemsColor,
                                                 ),
-                                              ),
-                                            ),
-                                            Obx(
-                                              (context) {
-                                                int totalDurMs = Player.inst.getCurrentVideoDurationR.inMilliseconds;
-                                                String prefix = '';
-                                                if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
-                                                  totalDurMs = totalDurMs - Player.inst.nowPlayingPositionR;
-                                                  prefix = '-';
-                                                }
-
-                                                return Text(
-                                                  "$prefix${totalDurMs.milliSecondsLabel}",
-                                                  style: context.textTheme.displayMedium?.copyWith(
-                                                    fontSize: 13.5,
-                                                    color: itemsColor,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -1566,21 +1548,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     (context) {
                                       final queueL = Player.inst.currentQueue.valueR.length;
                                       if (queueL <= 1) return const SizedBox();
-                                      return BorderRadiusClip(
-                                        borderRadius: borr8,
-                                        child: NamidaBgBlur(
-                                          blur: 3.0,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(6.0),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.2),
-                                              borderRadius: borr8,
-                                            ),
-                                            child: Obx(
-                                              (context) => Text(
-                                                "${Player.inst.currentIndex.valueR + 1}/$queueL",
-                                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
-                                              ),
+                                      return NamidaBgBlurClipped(
+                                        blur: 3.0,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          borderRadius: borr8,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(6.0),
+                                          child: Obx(
+                                            (context) => Text(
+                                              "${Player.inst.currentIndex.valueR + 1}/$queueL",
+                                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
                                             ),
                                           ),
                                         ),
@@ -1591,84 +1570,81 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ],
                                 const Spacer(),
                                 const SizedBox(width: 4.0),
-                                BorderRadiusClip(
-                                  borderRadius: borr8,
-                                  child: NamidaBgBlur(
-                                    blur: 3.0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        borderRadius: borr8,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const SizedBox(width: 2.0),
-                                          if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen)
-                                            // -- rotate screen button
-                                            NamidaIconButton(
-                                              verticalPadding: 2.0,
-                                              horizontalPadding: 4.0,
-                                              padding: EdgeInsets.zero,
-                                              iconSize: 20.0,
-                                              icon: Broken.rotate_left_1,
-                                              iconColor: itemsColor,
-                                              onPressed: () {
-                                                _startTimer();
-                                                NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
-                                              },
-                                            ),
-                                          if (widget.isFullScreen) const SizedBox(width: 10.0),
-                                          RepeatModeIconButton(
-                                            compact: true,
-                                            color: itemsColor,
-                                            onPressed: () {
-                                              _startTimer();
-                                            },
-                                          ),
-                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
-                                          EqualizerIconButton(
-                                            compact: true,
-                                            color: itemsColor,
-                                            onPressed: () {
-                                              _startTimer();
-                                            },
-                                          ),
-                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                NamidaBgBlurClipped(
+                                  blur: 3.0,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    borderRadius: borr8,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(width: 2.0),
+                                        if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen)
+                                          // -- rotate screen button
                                           NamidaIconButton(
                                             verticalPadding: 2.0,
                                             horizontalPadding: 4.0,
                                             padding: EdgeInsets.zero,
                                             iconSize: 20.0,
-                                            icon: Broken.copy,
+                                            icon: Broken.rotate_left_1,
                                             iconColor: itemsColor,
                                             onPressed: () {
                                               _startTimer();
-                                              final id = Player.inst.currentVideo?.id;
-                                              if (id != null) const YTUtils().copyCurrentVideoUrl(id, withTimestamp: false);
-                                            },
-                                            onLongPress: () {
-                                              _startTimer();
-                                              final id = Player.inst.currentVideo?.id;
-                                              if (id != null) YTUtils.showCopyItemsDialog(id);
+                                              NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
                                             },
                                           ),
-                                          if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
-                                          NamidaIconButton(
-                                            verticalPadding: 2.0,
-                                            horizontalPadding: 4.0,
-                                            padding: EdgeInsets.zero,
-                                            iconSize: 20.0,
-                                            icon: Broken.maximize_2,
-                                            iconColor: itemsColor,
-                                            onPressed: () {
-                                              _startTimer();
-                                              VideoController.inst.toggleFullScreenVideoView(isLocal: widget.isLocal);
-                                            },
-                                          ),
-                                          const SizedBox(width: 2.0),
-                                        ],
-                                      ),
+                                        if (widget.isFullScreen) const SizedBox(width: 10.0),
+                                        RepeatModeIconButton(
+                                          compact: true,
+                                          color: itemsColor,
+                                          onPressed: () {
+                                            _startTimer();
+                                          },
+                                        ),
+                                        if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                        EqualizerIconButton(
+                                          compact: true,
+                                          color: itemsColor,
+                                          onPressed: () {
+                                            _startTimer();
+                                          },
+                                        ),
+                                        if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                        NamidaIconButton(
+                                          verticalPadding: 2.0,
+                                          horizontalPadding: 4.0,
+                                          padding: EdgeInsets.zero,
+                                          iconSize: 20.0,
+                                          icon: Broken.copy,
+                                          iconColor: itemsColor,
+                                          onPressed: () {
+                                            _startTimer();
+                                            final id = Player.inst.currentVideo?.id;
+                                            if (id != null) const YTUtils().copyCurrentVideoUrl(id, withTimestamp: false);
+                                          },
+                                          onLongPress: () {
+                                            _startTimer();
+                                            final id = Player.inst.currentVideo?.id;
+                                            if (id != null) YTUtils.showCopyItemsDialog(id);
+                                          },
+                                        ),
+                                        if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                        NamidaIconButton(
+                                          verticalPadding: 2.0,
+                                          horizontalPadding: 4.0,
+                                          padding: EdgeInsets.zero,
+                                          iconSize: 20.0,
+                                          icon: Broken.maximize_2,
+                                          iconColor: itemsColor,
+                                          onPressed: () {
+                                            _startTimer();
+                                            VideoController.inst.toggleFullScreenVideoView(isLocal: widget.isLocal);
+                                          },
+                                        ),
+                                        const SizedBox(width: 2.0),
+                                      ],
                                     ),
                                   ),
                                 )
@@ -1699,23 +1675,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             ignoring: !shouldShowPrev,
                             child: Opacity(
                               opacity: shouldShowPrev ? 1.0 : 0.0,
-                              child: ClipOval(
-                                child: NamidaBgBlur(
-                                  blur: 2,
-                                  child: ColoredBox(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    child: NamidaIconButton(
-                                      icon: null,
-                                      padding: secondaryButtonPadding,
-                                      onPressed: () {
-                                        Player.inst.previous();
-                                        _startTimer();
-                                      },
-                                      child: Icon(
-                                        Broken.previous,
-                                        size: secondaryButtonSize,
-                                        color: itemsColor,
-                                      ),
+                              child: NamidaBgBlurClipped(
+                                blur: 2,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: ColoredBox(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  child: NamidaIconButton(
+                                    icon: null,
+                                    padding: secondaryButtonPadding,
+                                    onPressed: () {
+                                      Player.inst.previous();
+                                      _startTimer();
+                                    },
+                                    child: Icon(
+                                      Broken.previous,
+                                      size: secondaryButtonSize,
+                                      color: itemsColor,
                                     ),
                                   ),
                                 ),
@@ -1724,36 +1701,37 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           );
                         },
                       ),
-                      ClipOval(
-                        child: NamidaBgBlur(
-                          blur: 2.5,
-                          child: ColoredBox(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            child: NamidaIconButton(
-                              icon: null,
-                              padding: mainButtonPadding,
-                              onPressed: () {
-                                Player.inst.togglePlayPause();
-                                _startTimer();
-                              },
-                              child: ObxO(
-                                rx: Player.inst.playWhenReady,
-                                builder: (context, playWhenReady) => AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: playWhenReady
-                                      ? Icon(
-                                          Broken.pause,
-                                          size: mainButtonSize,
-                                          color: itemsColor,
-                                          key: const Key('paused'),
-                                        )
-                                      : Icon(
-                                          Broken.play,
-                                          size: mainButtonSize,
-                                          color: itemsColor,
-                                          key: const Key('playing'),
-                                        ),
-                                ),
+                      NamidaBgBlurClipped(
+                        blur: 2.5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                        ),
+                        child: ColoredBox(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          child: NamidaIconButton(
+                            icon: null,
+                            padding: mainButtonPadding,
+                            onPressed: () {
+                              Player.inst.togglePlayPause();
+                              _startTimer();
+                            },
+                            child: ObxO(
+                              rx: Player.inst.playWhenReady,
+                              builder: (context, playWhenReady) => AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: playWhenReady
+                                    ? Icon(
+                                        Broken.pause,
+                                        size: mainButtonSize,
+                                        color: itemsColor,
+                                        key: const Key('paused'),
+                                      )
+                                    : Icon(
+                                        Broken.play,
+                                        size: mainButtonSize,
+                                        color: itemsColor,
+                                        key: const Key('playing'),
+                                      ),
                               ),
                             ),
                           ),
@@ -1770,23 +1748,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ignoring: !shouldShowNext,
                                 child: Opacity(
                                   opacity: shouldShowNext ? 1.0 : 0.0,
-                                  child: ClipOval(
-                                    child: NamidaBgBlur(
-                                      blur: 2,
-                                      child: ColoredBox(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        child: NamidaIconButton(
-                                          icon: null,
-                                          padding: secondaryButtonPadding,
-                                          onPressed: () {
-                                            Player.inst.next();
-                                            _startTimer();
-                                          },
-                                          child: Icon(
-                                            Broken.next,
-                                            size: secondaryButtonSize,
-                                            color: itemsColor,
-                                          ),
+                                  child: NamidaBgBlurClipped(
+                                    blur: 2,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: ColoredBox(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      child: NamidaIconButton(
+                                        icon: null,
+                                        padding: secondaryButtonPadding,
+                                        onPressed: () {
+                                          Player.inst.next();
+                                          _startTimer();
+                                        },
+                                        child: Icon(
+                                          Broken.next,
+                                          size: secondaryButtonSize,
+                                          color: itemsColor,
                                         ),
                                       ),
                                     ),

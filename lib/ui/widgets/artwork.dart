@@ -15,7 +15,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/packages/drop_shadow.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -63,7 +62,7 @@ class ArtworkWidget extends StatefulWidget {
     this.forceSquared = false,
     this.child,
     this.borderRadius = 8.0,
-    this.blur = 1.5,
+    this.blur = 5.0,
     this.width,
     this.height,
     this.cacheHeight,
@@ -262,7 +261,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             child: Align(
               child: _DropShadowWrapper(
                 enabled: widget.enableGlow && (settings.enableGlowEffect.value && widget.blur != 0.0),
-                borderRadius: borderR,
                 blur: widget.blur,
                 child: Container(
                   clipBehavior: Clip.antiAlias,
@@ -351,24 +349,20 @@ class _DropShadowWrapper extends StatelessWidget {
   final Widget child;
   final double blur;
   final Offset offset;
-  final BorderRadius? borderRadius;
 
   const _DropShadowWrapper({
     required this.enabled,
     required this.child,
-    this.offset = const Offset(0, 1),
-    this.borderRadius,
-    this.blur = 4.0,
+    this.offset = const Offset(0.0, 1.25),
+    required this.blur,
   });
 
   @override
   Widget build(BuildContext context) {
     return enabled
         ? DropShadow(
-            borderRadius: borderRadius,
             blurRadius: blur,
-            spread: 0.8,
-            offset: const Offset(0, 1),
+            offset: offset,
             child: child,
           )
         : child;

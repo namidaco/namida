@@ -700,39 +700,38 @@ SnackbarController? snackyy({
     child: Material(
       color: Colors.transparent,
       type: MaterialType.transparency,
-      child: ClipRRect(
-        borderRadius: borderR ?? BorderRadius.zero,
-        child: NamidaBgBlur(
-          blur: 12.0,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: borderR,
-              border: isError
-                  ? Border.all(
-                      color: borderColor ?? Colors.red.withValues(alpha: 0.2),
-                      width: 1.5,
-                    )
-                  : Border.all(
-                      color: borderColor ?? Colors.grey.withValues(alpha: 0.5),
-                      width: 0.5,
-                    ),
-              boxShadow: isError
-                  ? [
-                      BoxShadow(
-                        color: Colors.red.withAlpha(15),
-                        blurRadius: 16.0,
-                      )
-                    ]
-                  : null,
-            ),
-            child: leftBarIndicatorColor != null
-                ? DecoratedBox(
-                    decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
-                    child: content,
+      child: NamidaBgBlurClipped(
+        blur: 12.0,
+        borderRadius: borderR,
+        // -- decoration must be a child here
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: borderR,
+            border: isError
+                ? Border.all(
+                    color: borderColor ?? Colors.red.withValues(alpha: 0.2),
+                    width: 1.5,
                   )
-                : content,
+                : Border.all(
+                    color: borderColor ?? Colors.grey.withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
+            boxShadow: isError
+                ? [
+                    BoxShadow(
+                      color: Colors.red.withAlpha(15),
+                      blurRadius: 16.0,
+                    )
+                  ]
+                : null,
           ),
+          child: leftBarIndicatorColor != null
+              ? DecoratedBox(
+                  decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
+                  child: content,
+                )
+              : content,
         ),
       ),
     ),

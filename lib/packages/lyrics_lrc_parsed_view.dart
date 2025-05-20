@@ -368,15 +368,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         AnimatedOpacity(
           duration: const Duration(milliseconds: _lrcOpacityDurationMS),
           opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
-          child: BorderRadiusClip(
+          child: NamidaBgBlurClipped(
+            blur: fullscreen ? 0.0 : 12.0,
             clipBehavior: Clip.hardEdge, // VIP to eliminate thin border effect
+            decoration: BoxDecoration(
             borderRadius: fullscreen ? BorderRadius.zero : BorderRadius.circular(16.0.multipliedRadius),
-            child: NamidaBgBlur(
-              blur: fullscreen ? 0.0 : 12.0,
+            ),
               enabled: !fullscreen,
-              child: Container(
+            child: ColoredBox(
                 color: context.theme.scaffoldBackgroundColor.withValues(alpha: fullscreen ? 0.8 : 0.6),
-                alignment: Alignment.center,
                 child: Column(
                   children: [
                     Expanded(
@@ -484,7 +484,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                           text,
                                                           style: normalTextStyle.copyWith(
                                                             color: selected
-                                                                ? Colors.white.withValues(alpha: 0.7)
+                                                              ? Colors.white.withValues(alpha: 0.7) //
                                                                 : normalTextStyle.color?.withValues(alpha: 0.5) ?? Colors.transparent,
                                                           ),
                                                           textAlign: TextAlign.center,
@@ -538,7 +538,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     ),
                     ...bottomControlsChildren,
                   ],
-                ),
               ),
             ),
           ),

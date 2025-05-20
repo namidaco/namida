@@ -4,7 +4,6 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
@@ -18,7 +17,7 @@ double _maxHeight = 0;
 class NamidaYTMiniplayer extends StatefulWidget {
   final bool enforceExpanded;
   final double minHeight, maxHeight, bottomMargin;
-  final Widget Function(double height, double percentage) builder;
+  final Widget Function(double height, double percentage, Animation<double> reverseOpacityAnimation) builder;
   final Color bgColor;
   final void Function(double percentage)? onHeightChange;
   final void Function(bool isExpanded)? onExpandedStateChange;
@@ -237,10 +236,27 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _resetValues();
   }
 
+  late final reverseOpacityAnimation = controller.drive(Animatable.fromCallback(
+    (value) {
+      final inversePerc = 1 - percentage;
+      final val = (inversePerc * 8 - 7).clampDouble(0.0, 1.0);
+      if (val > 0.99) return 1.0;
+      if (val < 0.01) return 0.0;
+      return val;
+    },
+  ));
+  late final dismissPercentageAnimation = controller.drive(Animatable.fromCallback(
+    (value) {
+      final controllerHeight = value * maxHeight;
+      return (controllerHeight / widget.minHeight).clampDouble(0.0, 1.0);
+    },
+  ));
+
   @override
   Widget build(BuildContext context) {
     _padding = MediaQuery.paddingOf(context);
     final maxWidth = context.width;
+
     return AnimatedBuilder(
         animation: controller,
         builder: (context, _) {
@@ -272,15 +288,14 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
                       child: Material(
                         clipBehavior: Clip.hardEdge,
                         type: MaterialType.transparency,
-                        child: NamidaOpacity(
-                          enabled: controllerHeight < widget.minHeight,
-                          opacity: dismissPercentage,
+                        child: FadeTransition(
+                          opacity: dismissPercentageAnimation,
                           child: RepaintBoundary(
                             child: SizedBox(
                               height: controllerHeight,
                               child: ColoredBox(
                                 color: widget.bgColor,
-                                child: widget.builder(controllerHeight, percentage),
+                                child: widget.builder(controllerHeight, percentage, reverseOpacityAnimation),
                               ),
                             ),
                           ),

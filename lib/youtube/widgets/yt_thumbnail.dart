@@ -76,7 +76,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.smallBoxIcon,
     this.displayFallbackIcon = true,
     this.extractColor = false,
-    this.blur = 1.5,
+    this.blur = 5.0,
     this.compressed = true,
     required this.isImportantInCache,
     this.preferLowerRes = true,
@@ -270,36 +270,38 @@ class YtThumbnailOverlayBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      margin: const EdgeInsets.all(2.0),
-      padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-        color: Colors.black.withValues(alpha: 0.3),
-      ),
-      child: NamidaBgBlur(
+    return Padding(
+      padding: const EdgeInsets.all(2.0),
+      child: NamidaBgBlurClipped(
         blur: 2.0,
         enabled: settings.enableBlurEffect.value,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null)
-              Icon(
-                icon,
-                size: 15.0,
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
-            if (text != null && icon != null) const SizedBox(width: 2.0),
-            if (text != null)
-              Text(
-                text!,
-                style: context.textTheme.displaySmall?.copyWith(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5.0.multipliedRadius),
+          color: Colors.black.withValues(alpha: 0.3),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null)
+                Icon(
+                  icon,
+                  size: 15.0,
                   color: Colors.white.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w600,
                 ),
-              ),
-          ],
+              if (text != null && icon != null) const SizedBox(width: 2.0),
+              if (text != null)
+                Text(
+                  text!,
+                  style: context.textTheme.displaySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

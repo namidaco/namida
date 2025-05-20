@@ -5,6 +5,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/class/favourite_playlist.dart';
@@ -142,6 +143,59 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
 
   @override
   State<NamidaMiniPlayerBase> createState() => _NamidaMiniPlayerBaseState();
+
+  static Animation<double> _createOpacityAnimation(Animatable<double> animateable) {
+    return MiniPlayerController.inst.animation.drive(animateable);
+  }
+
+  static Animation<double> createClampedAnimation() {
+    return NamidaMiniPlayerBase._createOpacityAnimation(Animatable.fromCallback(
+      (p) {
+        final double cp = p.clampDouble(0.0, 1.0);
+        return cp;
+      },
+    ));
+  }
+
+  static Animation<double> _createOpacityAnimationV1(double Function(double bcp) transform) {
+    return NamidaMiniPlayerBase._createOpacityAnimation(Animatable.fromCallback(
+      (p) {
+        final bounceUp = MiniPlayerController.inst.bounceUp;
+        final bounceDown = MiniPlayerController.inst.bounceDown;
+        final double rp = inverseAboveOne(p);
+        final double bp = !bounceUp
+            ? !bounceDown
+                ? rp
+                : 1 - (p - 1)
+            : p;
+        final double bcp = bp.clampDouble(0.0, 1.0);
+        return transform(bcp);
+      },
+    ));
+  }
+
+  static Animation<double> _createOpacityAnimationV2(double Function(double cp) transform) {
+    return NamidaMiniPlayerBase._createOpacityAnimation(Animatable.fromCallback(
+      (p) {
+        final double cp = p.clampDouble(0.0, 1.0);
+        return transform(cp);
+      },
+    ));
+  }
+
+  static Animation<double> _createOpacityAnimationV3(double Function(double rcp, double qcp) transform) {
+    return NamidaMiniPlayerBase._createOpacityAnimation(Animatable.fromCallback(
+      (p) {
+        final double rp = inverseAboveOne(p);
+        final double rcp = rp.clampDouble(0, 1);
+
+        final double qp = p.clampDouble(1.0, 3.0) - 1.0;
+        final double qcp = qp.clampDouble(0.0, 1.0);
+
+        return transform(rcp, qcp);
+      },
+    ));
+  }
 }
 
 class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
@@ -207,10 +261,62 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     );
   }
 
+  void _playPauseTapInitializer(TapGestureRecognizer instance) {
+    instance.onTap = Player.inst.togglePlayPause;
+    instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
+    instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
+    instance.onTapCancel = () => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+    instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+  }
+
+  static AnimationController get getsAnim => MiniPlayerController.inst.sAnim;
+
+  final leftOpacityAnim = Tween<double>(
+    begin: 0.0,
+    end: -1.0,
+  ).animate(getsAnim);
+
+  final rightOpacityAnim = Tween<double>(
+    begin: 0.0,
+    end: 1.0,
+  ).animate(getsAnim);
+
+  final centerItemFadeAnimation = getsAnim.drive(
+    Animatable.fromCallback((value) => 1 - value.abs()),
+  );
+
+  final slowOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV1(
+    (bcp) => (bcp * 4 - 3).clampDouble(0, 1),
+  );
+  final opacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV1(
+    (bcp) => (bcp * 5 - 4).clampDouble(0, 1),
+  );
+  final fastOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV1(
+    (bcp) => (bcp * 10 - 9).clampDouble(0, 1),
+  );
+
+  final partyContainersOpacityAnimation = NamidaMiniPlayerBase.createClampedAnimation();
+
+  final topRowOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
+    (rcp, _) => rcp,
+  );
+
+  final queueOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
+    (_, qcp) => qcp,
+  );
+  final queueInverseOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
+    (_, qcp) => 1.0 - qcp,
+  );
+
   @override
   Widget build(BuildContext context) {
+    final sAnim = getsAnim;
+
+    final kStParallax = MiniPlayerController.kStParallax;
+    final kSiParallax = MiniPlayerController.kSiParallax;
+
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-    const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
+    const waveformChild = WaveformMiniplayer();
 
     final topBottomMargin = 8.0.spaceY;
 
@@ -814,23 +920,13 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
               );
 
               return MiniplayerRaw(
-                builder: (maxOffset, bounceUp, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp, topBorderRadius, bottomBorderRadius, slowOpacity, opacity, fastOpacity,
+                builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, rightInset, screenSize, sMaxOffset, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
                     miniplayerbottomnavheight, bottomOffset, navBarHeight) {
-                  // -- putting these above builder cause unexpected issues :(
-                  final topInset = MiniPlayerController.inst.topInset;
-                  final bottomInset = MiniPlayerController.inst.bottomInset;
-                  final rightInset = MiniPlayerController.inst.rightInset;
-                  final screenSize = MiniPlayerController.inst.screenSize;
-                  final sAnim = MiniPlayerController.inst.sAnim;
-                  final sMaxOffset = MiniPlayerController.inst.sMaxOffset;
-                  final stParallax = MiniPlayerController.inst.stParallax;
-                  final siParallax = MiniPlayerController.inst.siParallax;
-
                   final BorderRadius borderRadius = BorderRadius.only(
-                    topLeft: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),
-                    topRight: Radius.circular(topBorderRadius.multipliedRadius.br + 6.0.br * p),
-                    bottomLeft: Radius.circular(bottomBorderRadius.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
-                    bottomRight: Radius.circular(bottomBorderRadius.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
+                    topLeft: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
+                    topRight: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
+                    bottomLeft: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
+                    bottomRight: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
                   );
 
                   final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;
@@ -902,6 +998,17 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   } else {
                     vOffsetImage += (-spaceLeftAboveImage / 2) * bcp;
                   }
+
+                  // -- image related
+                  final imagePaddingAll = 12.0.space * (1 - bcp);
+                  final imagePadding = EdgeInsets.fromLTRB(
+                    imagePaddingAll + 42.0.spaceX * bcp,
+                    imagePaddingAll,
+                    imagePaddingAll,
+                    imagePaddingAll,
+                  );
+                  final imageEmptyRightSpace = screenSize.width - imageSize;
+                  final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
 
                   return Stack(
                     children: [
@@ -979,27 +1086,45 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                         ),
                       ),
                       if (settings.enablePartyModeInMiniplayer.value)
-                        NamidaOpacity(
-                          opacity: cp,
+                        FadeIgnoreTransition(
+                          opacity: partyContainersOpacityAnimation,
                           child: partyContainersChild,
                         ),
 
                       /// Top Row
-                      if (rcp > 0.0)
-                        Material(
-                          type: MaterialType.transparency,
-                          child: Padding(
-                            padding: EdgeInsets.only(top: topInset),
-                            child: NamidaOpacity(
-                              opacity: rcp,
-                              child: Transform.translate(
-                                transformHitTests: false,
-                                offset: Offset(0, (1 - bp) * -100),
-                                child: topRowChild,
+                      Material(
+                        type: MaterialType.transparency,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: topInset),
+                          child: FadeIgnoreTransition(
+                            opacity: topRowOpacityAnimation,
+                            child: Transform.translate(
+                              transformHitTests: false,
+                              offset: Offset(0, (1 - bp) * -100),
+                              child: topRowChild,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Waveform
+                      FadeIgnoreTransition(
+                        opacity: slowOpacityAnimation,
+                        child: Transform.translate(
+                          offset: Offset(0, vOffsetWaveform),
+                          child: _ScaleYIfNeeded(
+                            alignment: Alignment.bottomCenter,
+                            scale: waveformYScale,
+                            child: const Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                child: waveformChild,
                               ),
                             ),
                           ),
                         ),
+                      ),
 
                       /// Controls
                       Material(
@@ -1013,22 +1138,21 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               child: Stack(
                                 alignment: Alignment.centerRight,
                                 children: [
-                                  if (fastOpacity > 0.0)
-                                    NamidaOpacity(
-                                      opacity: fastOpacity,
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
-                                        child: positionDurationRowChild,
-                                      ),
+                                  FadeIgnoreTransition(
+                                    opacity: fastOpacityAnimation,
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
+                                      child: positionDurationRowChild,
                                     ),
+                                  ),
                                   Padding(
                                     padding: EdgeInsets.only(right: buttonsRightPadding).add(EdgeInsets.symmetric(vertical: 20.0.spaceY * icp)),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Opacity(
-                                          opacity: nextPrevOpacity,
+                                        FadeIgnoreTransition(
+                                          opacity: queueInverseOpacityAnimation,
                                           child: Padding(
                                             padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
                                             child: NamidaIconButton(
@@ -1052,14 +1176,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                   cursor: SystemMouseCursors.click,
                                                   child: TapDetector(
                                                     onTap: null,
-                                                    initializer: (instance) {
-                                                      instance.onTap = Player.inst.togglePlayPause;
-                                                      instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
-                                                      instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
-                                                      instance.onTapCancel = () => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value =
-                                                          !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
-                                                      instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-                                                    },
+                                                    initializer: _playPauseTapInitializer,
                                                     child: AnimatedScale(
                                                       duration: const Duration(milliseconds: 400),
                                                       scale: isButtonHighlighed ? 0.97 : 1.0,
@@ -1134,8 +1251,8 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                             ),
                                           ),
                                         ),
-                                        Opacity(
-                                          opacity: nextPrevOpacity,
+                                        FadeIgnoreTransition(
+                                          opacity: queueInverseOpacityAnimation,
                                           child: Padding(
                                             padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
                                             child: NamidaIconButton(
@@ -1158,21 +1275,17 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                       ),
 
                       /// Destination selector
-                      Visibility(
-                        maintainState: true,
-                        visible: opacity > 0.0,
-                        child: NamidaOpacity(
-                          opacity: opacity,
-                          child: _AnimatedOrPadding(
-                            animated: settings.hideStatusBarInExpandedMiniplayer.value,
-                            duration: Duration(milliseconds: 200),
-                            padding: EdgeInsets.only(bottom: bottomInset),
-                            child: Transform.translate(
-                              offset: Offset(0, 100 * ip),
-                              child: Align(
-                                alignment: Alignment.bottomLeft,
-                                child: bottomRowChild,
-                              ),
+                      FadeIgnoreTransition(
+                        opacity: opacityAnimation,
+                        child: _AnimatedOrPadding(
+                          animated: settings.hideStatusBarInExpandedMiniplayer.value,
+                          duration: Duration(milliseconds: 200),
+                          padding: EdgeInsets.only(bottom: bottomInset),
+                          child: Transform.translate(
+                            offset: Offset(0, 100 * ip),
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: bottomRowChild,
                             ),
                           ),
                         ),
@@ -1184,79 +1297,80 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           type: MaterialType.transparency,
                           child: Padding(
                             padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                            child: AnimatedBuilder(
-                              animation: sAnim,
-                              builder: (context, child) {
-                                final leftOpacity = -sAnim.value.clampDouble(-1.0, 0.0);
-                                final rightOpacity = sAnim.value.clampDouble(0.0, 1.0);
-                                final verticalOffset = vOffsetTrackInfo;
-                                return Stack(
-                                  children: [
-                                    if (prevText != null && leftOpacity > 0)
-                                      NamidaOpacity(
-                                        opacity: leftOpacity,
-                                        child: Transform.translate(
-                                          offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, verticalOffset),
-                                          child: RepaintBoundary(
-                                            child: _TrackInfo(
-                                              textData: prevText,
-                                              p: bp,
-                                              qp: qp,
-                                              bcp: bcp,
-                                              qcp: qcp,
-                                              boxHeight: trackInfoBoxHeight,
-                                              leftMargin: trackInfoLeftMargin,
-                                              bottomOffset: bottomOffset,
-                                              maxOffset: maxOffset,
-                                              screenSize: screenSize,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    Opacity(
-                                      opacity: 1 - sAnim.value.abs(),
+                            child: Stack(
+                              children: [
+                                if (prevText != null)
+                                  FadeIgnoreTransition(
+                                    opacity: leftOpacityAnim,
+                                    child: MatrixTransition(
+                                      animation: sAnim,
+                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
                                       child: Transform.translate(
-                                        offset: Offset(-sAnim.value * sMaxOffset / stParallax + (12.0 * qp), verticalOffset),
-                                        child: RepaintBoundary(
-                                          child: _TrackInfo(
-                                            textData: currentText,
-                                            p: bp,
-                                            qp: qp,
-                                            bcp: bcp,
-                                            qcp: qcp,
-                                            boxHeight: trackInfoBoxHeight,
-                                            leftMargin: trackInfoLeftMargin,
-                                            bottomOffset: bottomOffset,
-                                            maxOffset: maxOffset,
-                                            screenSize: screenSize,
-                                          ),
+                                        offset: Offset(0.0, vOffsetTrackInfo),
+                                        child: _TrackInfo(
+                                          textData: prevText,
+                                          p: bp,
+                                          qp: qp,
+                                          bcp: bcp,
+                                          qcp: qcp,
+                                          boxHeight: trackInfoBoxHeight,
+                                          leftMargin: trackInfoLeftMargin,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          screenSize: screenSize,
+                                          opacityAnimation: fastOpacityAnimation,
                                         ),
                                       ),
                                     ),
-                                    if (nextText != null && rightOpacity > 0)
-                                      NamidaOpacity(
-                                        opacity: rightOpacity,
-                                        child: Transform.translate(
-                                          offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, verticalOffset),
-                                          child: RepaintBoundary(
-                                            child: _TrackInfo(
-                                              textData: nextText,
-                                              p: bp,
-                                              qp: qp,
-                                              bcp: bcp,
-                                              qcp: qcp,
-                                              boxHeight: trackInfoBoxHeight,
-                                              leftMargin: trackInfoLeftMargin,
-                                              bottomOffset: bottomOffset,
-                                              maxOffset: maxOffset,
-                                              screenSize: screenSize,
-                                            ),
-                                          ),
+                                  ),
+                                FadeIgnoreTransition(
+                                  opacity: centerItemFadeAnimation,
+                                  child: MatrixTransition(
+                                    animation: sAnim,
+                                    onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kStParallax + (12.0 * qp), 0.0, 0.0),
+                                    child: Transform.translate(
+                                      offset: Offset(0.0, vOffsetTrackInfo),
+                                      child: _TrackInfo(
+                                        textData: currentText,
+                                        p: bp,
+                                        qp: qp,
+                                        bcp: bcp,
+                                        qcp: qcp,
+                                        boxHeight: trackInfoBoxHeight,
+                                        leftMargin: trackInfoLeftMargin,
+                                        bottomOffset: bottomOffset,
+                                        maxOffset: maxOffset,
+                                        screenSize: screenSize,
+                                        opacityAnimation: fastOpacityAnimation,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (nextText != null)
+                                  FadeIgnoreTransition(
+                                    opacity: rightOpacityAnim,
+                                    child: MatrixTransition(
+                                      animation: sAnim,
+                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
+                                      child: Transform.translate(
+                                        offset: Offset(0.0, vOffsetTrackInfo),
+                                        child: _TrackInfo(
+                                          textData: nextText,
+                                          p: bp,
+                                          qp: qp,
+                                          bcp: bcp,
+                                          qcp: qcp,
+                                          boxHeight: trackInfoBoxHeight,
+                                          leftMargin: trackInfoLeftMargin,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          screenSize: screenSize,
+                                          opacityAnimation: fastOpacityAnimation,
                                         ),
-                                      )
-                                  ],
-                                );
-                              },
+                                      ),
+                                    ),
+                                  )
+                              ],
                             ),
                           ),
                         ),
@@ -1266,52 +1380,39 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                       ClipRect(
                         child: Padding(
                           padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                          child: AnimatedBuilder(
-                            animation: sAnim,
-                            builder: (context, child) {
-                              final verticalOffset = vOffsetImage;
-
-                              final horizontalOffset = -sAnim.value * sMaxOffset / siParallax;
-
-                              final leftOpacity = -sAnim.value.clampDouble(-1.0, 0.0);
-                              final rightOpacity = sAnim.value.clampDouble(0.0, 1.0);
-
-                              final paddingAll = 12.0.space * (1 - bcp);
-
-                              final padding = EdgeInsets.fromLTRB(
-                                paddingAll + 42.0.spaceX * bcp,
-                                paddingAll,
-                                paddingAll,
-                                paddingAll,
-                              );
-                              final emptyRightSpace = screenSize.width - imageSize;
-
-                              final leftOffset = ((emptyRightSpace / 2) - padding.left - rightInset) * bcp;
-
+                          child: Builder(
+                            builder: (context) {
                               return Stack(
                                 children: [
-                                  if (prevItem != null && leftOpacity > 0)
-                                    NamidaOpacity(
-                                      opacity: leftOpacity,
-                                      child: Transform.translate(
-                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax - sMaxOffset / siParallax, verticalOffset),
-                                        child: RepaintBoundary(
+                                  if (prevItem != null)
+                                    FadeIgnoreTransition(
+                                      opacity: leftOpacityAnim,
+                                      child: MatrixTransition(
+                                        animation: sAnim,
+                                        onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
+                                        child: Transform.translate(
+                                          offset: Offset(0.0, vOffsetImage),
                                           child: _RawImageContainer(
                                             size: imageSize,
-                                            padding: padding,
+                                            padding: imagePadding,
                                             child: widget.imageBuilder(prevItem, cp, (borderRadius) => borderRadius.br),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  Opacity(
-                                    opacity: 1 - sAnim.value.abs(),
-                                    child: Transform.translate(
-                                      offset: Offset(horizontalOffset + leftOffset, verticalOffset),
-                                      child: RepaintBoundary(
+                                  FadeIgnoreTransition(
+                                    opacity: centerItemFadeAnimation,
+                                    child: MatrixTransition(
+                                      animation: sAnim,
+                                      onTransform: (animationValue) {
+                                        final horizontalOffset = -animationValue * sMaxOffset / kSiParallax;
+                                        return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
+                                      },
+                                      child: Transform.translate(
+                                        offset: Offset(0.0, vOffsetImage),
                                         child: _RawImageContainer(
                                           size: imageSize,
-                                          padding: padding,
+                                          padding: imagePadding,
                                           child: Padding(
                                             padding: EdgeInsets.all(12.0 * (1 - bcp)),
                                             child: LongPressDetector(
@@ -1345,15 +1446,17 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       ),
                                     ),
                                   ),
-                                  if (nextItem != null && rightOpacity > 0)
-                                    NamidaOpacity(
-                                      opacity: rightOpacity,
-                                      child: Transform.translate(
-                                        offset: Offset(-sAnim.value * sMaxOffset / siParallax + sMaxOffset / siParallax, verticalOffset),
-                                        child: RepaintBoundary(
+                                  if (nextItem != null)
+                                    FadeIgnoreTransition(
+                                      opacity: rightOpacityAnim,
+                                      child: MatrixTransition(
+                                        animation: sAnim,
+                                        onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
+                                        child: Transform.translate(
+                                          offset: Offset(0.0, vOffsetImage),
                                           child: _RawImageContainer(
                                             size: imageSize,
-                                            padding: padding,
+                                            padding: imagePadding,
                                             child: widget.imageBuilder(nextItem, cp, (borderRadius) => borderRadius.br),
                                           ),
                                         ),
@@ -1366,34 +1469,11 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                         ),
                       ),
 
-                      /// Slider
-                      Visibility(
-                        maintainState: false,
-                        visible: slowOpacity > 0.0,
-                        child: Opacity(
-                          opacity: slowOpacity,
-                          child: Transform.translate(
-                            offset: Offset(0, vOffsetWaveform),
-                            child: _ScaleYIfNeeded(
-                              alignment: Alignment.bottomCenter,
-                              scale: waveformYScale,
-                              child: const Align(
-                                alignment: Alignment.bottomLeft,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                  child: waveformChild,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
                       Visibility(
                         maintainState: true, // cuz rebuilding from scratch almost kills raster
                         visible: qp > 0 && !bounceUp,
-                        child: Opacity(
-                          opacity: qp.clampDouble(0.0, 1.0),
+                        child: FadeIgnoreTransition(
+                          opacity: queueOpacityAnimation,
                           child: Transform.translate(
                             offset: Offset(0, (1 - qp) * maxQueueHeight),
                             child: queueChild,
@@ -1449,6 +1529,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
   final Size screenSize;
   final double bottomOffset;
   final double maxOffset;
+  final Animation<double> opacityAnimation;
 
   const _TrackInfo({
     super.key,
@@ -1462,11 +1543,11 @@ class _TrackInfo<E, S> extends StatelessWidget {
     required this.screenSize,
     required this.bottomOffset,
     required this.maxOffset,
+    required this.opacityAnimation,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double opacity = (inverseAboveOne(p) * 10 - 9).clampDouble(0, 1);
     final ytLikeManager = textData.ytLikeManager;
 
     final paddingAll = 12.0.space * (1 - bcp);
@@ -1531,51 +1612,50 @@ class _TrackInfo<E, S> extends StatelessWidget {
                         ),
                       ),
                     ),
-                    NamidaOpacity(
-                      opacity: opacity,
+                    FadeIgnoreTransition(
+                      completelyKillWhenPossible: true,
+                      opacity: opacityAnimation,
                       child: Transform.translate(
                         offset: Offset(-100 * (1.0 - bcp), 0.0),
-                        child: RepaintBoundary(
-                          child: LongPressDetector(
-                            enableSecondaryTap: true,
-                            onLongPress: textData.onShowAddToPlaylistDialog,
-                            child: ytLikeManager != null
-                                ? ObxO(
-                                    rx: ytLikeManager.currentVideoLikeStatus,
-                                    builder: (context, currentLikeStatus) {
-                                      final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                                      return NamidaLoadingSwitcher(
-                                        size: 32.0.size,
-                                        builder: (loadingController) => NamidaRawLikeButton(
-                                          isLiked: isUserLiked,
-                                          likedIcon: textData.likedIcon,
-                                          normalIcon: textData.normalIcon,
-                                          size: 32.0.size,
-                                          onTap: (isLiked) async {
-                                            return ytLikeManager.onLikeClicked(
-                                              YTVideoLikeParamters(
-                                                isActive: isLiked,
-                                                action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                onStart: loadingController.startLoading,
-                                                onEnd: loadingController.stopLoading,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : ObxOClass(
-                                    rx: textData.favouritePlaylist,
-                                    builder: (context, favouritePlaylist) => NamidaRawLikeButton(
+                        child: LongPressDetector(
+                          enableSecondaryTap: true,
+                          onLongPress: textData.onShowAddToPlaylistDialog,
+                          child: ytLikeManager != null
+                              ? ObxO(
+                                  rx: ytLikeManager.currentVideoLikeStatus,
+                                  builder: (context, currentLikeStatus) {
+                                    final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                                    return NamidaLoadingSwitcher(
                                       size: 32.0.size,
-                                      likedIcon: textData.likedIcon,
-                                      normalIcon: textData.normalIcon,
-                                      isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
-                                      onTap: textData.onLikeTap,
-                                    ),
+                                      builder: (loadingController) => NamidaRawLikeButton(
+                                        isLiked: isUserLiked,
+                                        likedIcon: textData.likedIcon,
+                                        normalIcon: textData.normalIcon,
+                                        size: 32.0.size,
+                                        onTap: (isLiked) async {
+                                          return ytLikeManager.onLikeClicked(
+                                            YTVideoLikeParamters(
+                                              isActive: isLiked,
+                                              action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                              onStart: loadingController.startLoading,
+                                              onEnd: loadingController.stopLoading,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                )
+                              : ObxOClass(
+                                  rx: textData.favouritePlaylist,
+                                  builder: (context, favouritePlaylist) => NamidaRawLikeButton(
+                                    size: 32.0.size,
+                                    likedIcon: textData.likedIcon,
+                                    normalIcon: textData.normalIcon,
+                                    isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+                                    onTap: textData.onLikeTap,
                                   ),
-                          ),
+                                ),
                         ),
                       ),
                     ),
@@ -1925,6 +2005,59 @@ class _ScaleYIfNeeded extends StatelessWidget {
       scaleY: scale,
       alignment: alignment,
       child: child,
+    );
+  }
+}
+
+class FadeIgnoreTransition extends StatefulWidget {
+  /// Wether to completely replace the [child] with a [SizedBox], instead of just using [IgnorePointer].
+  final bool completelyKillWhenPossible;
+  final Animation<double> opacity;
+  final Widget child;
+
+  const FadeIgnoreTransition({
+    super.key,
+    this.completelyKillWhenPossible = false,
+    required this.opacity,
+    required this.child,
+  });
+
+  @override
+  State<FadeIgnoreTransition> createState() => _FadeIgnoreTransitionState();
+}
+
+class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
+  bool _ignoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.opacity.addListener(_checkOpacity);
+    _checkOpacity();
+  }
+
+  @override
+  void dispose() {
+    widget.opacity.removeListener(_checkOpacity);
+    super.dispose();
+  }
+
+  void _checkOpacity() {
+    final shouldIgnore = widget.opacity.value <= 0.1;
+    if (_ignoring != shouldIgnore) {
+      setState(() => _ignoring = shouldIgnore);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.completelyKillWhenPossible && _ignoring) return const SizedBox();
+    return IgnorePointer(
+      ignoring: _ignoring,
+      child: FadeTransition(
+        opacity: widget.opacity,
+        child: widget.child,
+      ),
     );
   }
 }

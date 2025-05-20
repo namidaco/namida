@@ -54,6 +54,8 @@ class MiniPlayerParent extends StatefulWidget {
 }
 
 class _MiniPlayerParentState extends State<MiniPlayerParent> {
+  final _opacityAnimation = NamidaMiniPlayerBase.createClampedAnimation();
+
   @override
   Widget build(BuildContext context) {
     return Obx(
@@ -63,20 +65,12 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> {
           children: [
             // -- MiniPlayer Wallpaper
             Positioned.fill(
-              child: RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: widget.animation,
-                  child: const Wallpaper(gradient: false, particleOpacity: .3),
-                  builder: (context, child) {
-                    if (widget.animation.value > 0.01) {
-                      return Opacity(
-                        opacity: widget.animation.value.clampDouble(0.0, 1.0),
-                        child: child!,
-                      );
-                    } else {
-                      return const SizedBox();
-                    }
-                  },
+              child: FadeIgnoreTransition(
+                completelyKillWhenPossible: true,
+                opacity: _opacityAnimation,
+                child: const Wallpaper(
+                  gradient: false,
+                  particleOpacity: 0.3,
                 ),
               ),
             ),
@@ -697,9 +691,8 @@ class _AnimatingThumnailWidget extends StatelessWidget {
       (context) => AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
-            ? Opacity(
-                // NamidaOpacity causes rebuilds
-                opacity: cp,
+            ? FadeTransition(
+                opacity: NamidaMiniPlayerBase.createClampedAnimation(),
                 child: Transform.scale(
                   scale: 1.05,
                   child: LyricsLRCParsedView(
@@ -884,7 +877,7 @@ class Wallpaper extends StatefulWidget {
   State<Wallpaper> createState() => _WallpaperState();
 }
 
-class _WallpaperState extends State<Wallpaper> with TickerProviderStateMixin {
+class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

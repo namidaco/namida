@@ -163,9 +163,10 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   ),
                 ),
               ),
-              AnimatedBuilder(
-                animation: _controller,
-                child: RepaintBoundary(
+              FadeTransition(
+                opacity: _controller,
+                child: AnimatedBuilder(
+                  animation: _controller,
                   child: Row(
                     children: [
                       const SizedBox(width: 12.0),
@@ -181,16 +182,13 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                       const SizedBox(width: 8.0),
                     ],
                   ),
-                ),
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _controller.value,
-                    child: SizedBox(
+                  builder: (context, child) {
+                    return SizedBox(
                       height: _controller.value * 58.0,
                       child: child!,
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
               if (widget.showSearchBox) const SizedBox(height: 8.0)
             ],

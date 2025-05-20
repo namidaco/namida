@@ -78,6 +78,12 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
         color: context.theme.colorScheme.onSurface.withAlpha(110),
       ),
     );
+    final colors = [
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
+      Colors.transparent,
+      Colors.transparent,
+    ];
     return LayoutWidthProvider(
       builder: (context, maxWidth) {
         return ObxO(
@@ -90,22 +96,25 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                 child: AnimatedBuilder(
                   animation: _animation,
                   builder: (context, _) {
-                    final colors = [
-                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
-                      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
-                      Colors.transparent,
-                      Colors.transparent,
-                    ];
+                    final barBehind = NamidaWaveBars(
+                      heightPercentage: _animation.value,
+                      decorationBox: decorationBoxBehind,
+                      waveList: downscaled,
+                      barWidth: barWidth,
+                      barMinHeight: widget.barsMinHeight,
+                      barMaxHeight: widget.barsMaxHeight,
+                    );
+                    final barInFront = NamidaWaveBars(
+                      heightPercentage: _animation.value,
+                      decorationBox: decorationBoxFront,
+                      waveList: downscaled,
+                      barWidth: barWidth,
+                      barMinHeight: widget.barsMinHeight,
+                      barMaxHeight: widget.barsMaxHeight,
+                    );
                     return Stack(
                       children: [
-                        NamidaWaveBars(
-                          heightPercentage: _animation.value,
-                          decorationBox: decorationBoxBehind,
-                          waveList: downscaled,
-                          barWidth: barWidth,
-                          barMinHeight: widget.barsMinHeight,
-                          barMaxHeight: widget.barsMaxHeight,
-                        ),
+                        barBehind,
                         Obx(
                           (context) {
                             final seekValue = MiniPlayerController.inst.seekValue.valueR;
@@ -121,17 +130,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                                   colors: colors,
                                 ).createShader(bounds);
                               },
-                              child: SizedBox(
-                                width: namida.width - 16.0 / 2,
-                                child: NamidaWaveBars(
-                                  heightPercentage: _animation.value,
-                                  decorationBox: decorationBoxFront,
-                                  waveList: downscaled,
-                                  barWidth: barWidth,
-                                  barMinHeight: widget.barsMinHeight,
-                                  barMaxHeight: widget.barsMaxHeight,
-                                ),
-                              ),
+                              child: barInFront,
                             );
                           },
                         ),

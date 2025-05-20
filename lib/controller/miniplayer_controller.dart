@@ -30,6 +30,7 @@ class MiniPlayerController {
   final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
 
   bool get isInQueue => animation.value > 1.0;
+  bool get isMinimized => animation.value < 1.0;
 
   /// Used to temporarily hold the seek value.
   final seekValue = 0.obs;
@@ -183,8 +184,8 @@ class MiniPlayerController {
   final _sActuationMulti = 1.5;
   double _sOffset = 0.0;
   double _sPrevOffset = 0.0;
-  double stParallax = 1.0;
-  double siParallax = 1.15;
+  static const double kStParallax = 1.0;
+  static const double kSiParallax = 1.15;
 
   bool bounceUp = false;
   bool bounceDown = false;
