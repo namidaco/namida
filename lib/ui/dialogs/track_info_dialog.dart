@@ -35,7 +35,7 @@ Future<void> showTrackInfoDialog(
   int? index,
   Color? colorScheme,
   required QueueSource queueSource,
-  String? heroTag,
+  required String? heroTag,
 }) async {
   final trackExt = track.toTrackExtOrNull();
 

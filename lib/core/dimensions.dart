@@ -32,7 +32,7 @@ class Dimensions {
   bool miniplayerIsWideScreen = false;
 
   double getSettingsHorizontalMargin(BuildContext context) {
-    if (!Dimensions.inst.miniplayerIsWideScreen) return 0.0;
+    if (context.width < 600) return 0.0;
     return 0.12 * calculateDialogHorizontalMargin(context, 0.0);
   }
 

@@ -101,14 +101,25 @@ class MiniPlayerController {
     sMaxOffset = maxWidth;
 
     if (isWidescreen && !Dimensions.inst.miniplayerIsWideScreen) {
-      if (animation.value < 1) {
+      if (animation.value <= 1) {
         // -- make sure its not minimized when its widescreen
         this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
         this.snapToExpanded();
+      } else {
+        this.snapToQueue();
       }
       // -- its widescreen, so immersive mode is always on
       setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     } else if (!isWidescreen && Dimensions.inst.miniplayerIsWideScreen) {
+      // -- to fix various issues (_offset and animation mismatch)
+      if (isMinimized) {
+        this.snapToMini();
+      } else if (isInQueue) {
+        this.snapToQueue();
+      } else {
+        this.snapToExpanded();
+      }
+
       // now portrait. do immersive mode if its expanded.
       setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     }
@@ -421,6 +432,8 @@ class MiniPlayerController {
   }
 
   Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
+    if (isInQueue && _offset >= maxOffset * 2) return;
+
     WakelockController.inst.updateMiniplayerStatus(false);
     _offset = maxOffset * 2;
     bounceUp = false;

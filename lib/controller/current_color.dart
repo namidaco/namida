@@ -77,10 +77,15 @@ class CurrentColor {
   final _colorsMapYTID = <String, NamidaColor>{};
 
   Timer? _colorsSwitchTimer;
-  void switchColorPalettes(bool isPlaying) {
+  void switchColorPalettes({bool? playWhenReady, Playable? item, bool? swapEnabled}) {
     _colorsSwitchTimer?.cancel();
-    _colorsSwitchTimer = null;
-    if (Player.inst.currentItem.value == null) return;
+
+    if ((item ?? Player.inst.currentItem.value) == null || //
+        (swapEnabled ?? settings.enablePartyModeColorSwap.value) == false) {
+      return;
+    }
+
+    final isPlaying = playWhenReady ?? Player.inst.playWhenReady.value;
     final durms = isPlaying ? 150 : 2200;
     _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
       if (settings.enablePartyModeColorSwap.value) {

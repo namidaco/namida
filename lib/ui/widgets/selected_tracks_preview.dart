@@ -209,6 +209,9 @@ class SelectedTracksRow extends StatelessWidget {
           icon: const Icon(Broken.close_circle),
         ),
         SizedBox(
+          width: 6.0,
+        ),
+        SizedBox(
           width: 140,
           child: Obx(
             (context) {
@@ -218,7 +221,7 @@ class SelectedTracksRow extends StatelessWidget {
                 children: [
                   Text(
                     selectedTracks.displayTrackKeyword,
-                    style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 23.0),
+                    style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 21.0),
                   ),
                   if (!SelectedTracksController.inst.isMenuMinimized.valueR)
                     Text(

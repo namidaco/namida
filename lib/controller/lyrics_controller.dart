@@ -156,7 +156,10 @@ class Lyrics {
 
   Future<List<LyricsModel>> searchLRCLyricsFromInternet({required LrcSearchUtils lrcUtils, String? customQuery}) async {
     final searchTries = lrcUtils.searchDetailsQueries();
-    if (searchTries.isEmpty && (customQuery == null || customQuery == '')) return [];
+    if (searchTries.isEmpty) {
+      customQuery ??= lrcUtils.initialSearchTextHint;
+      if (customQuery.isEmpty) return [];
+    }
 
     return await _lrcSearchManager.search(
       queries: searchTries,

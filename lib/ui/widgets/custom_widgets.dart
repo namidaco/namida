@@ -3035,7 +3035,7 @@ class NamidaInkWell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
-    final borderR = BorderRadius.circular(realBorderRadius.multipliedRadius);
+    final borderR = borderRadius == 0 ? null : BorderRadius.circular(realBorderRadius.multipliedRadius);
     final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
     return AnimatedContainer(
       alignment: alignment,

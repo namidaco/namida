@@ -171,7 +171,11 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
 class NamidaMiniPlayerTrack extends StatelessWidget {
   const NamidaMiniPlayerTrack({super.key});
 
-  void _openMenu(Track track) => NamidaDialogs.inst.showTrackDialog(track, source: QueueSource.playerQueue);
+  void _openMenu(TrackWithDate? trackWithDate, Track track) => NamidaDialogs.inst.showTrackDialog(
+        track,
+        source: QueueSource.playerQueue,
+        heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
+      );
 
   MiniplayerInfoData<Track, SortType> _textBuilder(Playable playable) {
     String firstLine = '';
@@ -200,7 +204,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       itemToLike: track,
       onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
-      onMenuOpen: (_) => _openMenu(track),
+      onMenuOpen: (_) => _openMenu(playable.trackWithDate, track),
       likedIcon: Broken.heart_tick,
       normalIcon: Broken.heart,
     );
@@ -243,7 +247,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
       topText: (currentItem) => (currentItem as Selectable).track.album,
       onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumIdentifier),
-      onMenuOpen: (currentItem, _) => _openMenu((currentItem as Selectable).track),
+      onMenuOpen: (currentItem, _) => _openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: (item) {
           showSetYTLinkCommentDialog([(item as Selectable).track], CurrentColor.inst.miniplayerColor, autoOpenSearch: true);

@@ -232,13 +232,15 @@ class TrackTile extends StatelessWidget {
     this.thirdLineText,
   });
 
+  static String obtainHeroTag(TrackWithDate? trackWithDate, Track track, int index, bool isFromPlayerQueue) {
+    final additionalHero = trackWithDate?.dateAdded.toString() ?? '';
+    return '$isFromPlayerQueue${index}_sussydialogs_${track.path}$additionalHero';
+  }
+
   Track get _tr => trackOrTwd.track;
   TrackWithDate? get _twd => trackOrTwd.trackWithDate;
   bool get _isFromQueue => properties.configs.queueSource == QueueSource.playerQueue;
-  String get _heroTag {
-    final additionalHero = trackOrTwd.trackWithDate?.dateAdded.toString() ?? '';
-    return '${properties.comingFromQueue}${index}_sussydialogs_${_tr.path}$additionalHero';
-  }
+  String get _heroTag => obtainHeroTag(_twd, _tr, index, properties.comingFromQueue);
 
   void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
         _tr,

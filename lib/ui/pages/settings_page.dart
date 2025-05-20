@@ -40,8 +40,6 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
-
     return BackgroundWrapper(
       child: Stack(
         children: [
@@ -54,7 +52,7 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
           settings.useSettingCollapsedTiles.value
               ? const CollapsedSettingTiles()
               : ListView(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalMargin),
+                  padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
                   children: [
                     const ThemeSetting(),
                     const IndexerSettings(),

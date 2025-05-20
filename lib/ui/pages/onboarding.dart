@@ -139,143 +139,146 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
           SizedBox(
             height: context.height * 0.7,
             width: context.width,
-            child: SettingsCard(
-              icon: Broken.candle,
-              title: lang.CONFIGURE,
-              subtitle: lang.SETUP_FIRST_STARTUP,
-              trailing: Column(
-                children: [
-                  NamidaIconButton(
-                    tooltip: () => lang.RESTORE_BACKUP,
-                    icon: Broken.back_square,
-                    onPressed: _onRestoreBackupIconTap,
-                  ),
-                  const SizedBox(height: 2.0),
-                  ObxShow(
-                    showIf: BackupController.inst.isRestoringBackup,
-                    child: const LoadingIndicator(),
-                  ),
-                ],
-              ),
-              childRaw: Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          alignment: Alignment.bottomCenter,
-                          children: [
-                            ListView(
-                              controller: c,
-                              padding: EdgeInsets.zero,
-                              children: [
-                                themeTile,
-                                languageTile,
-                                performanceTile,
-                                libraryTabsTile,
-                                if (useMediaStore != null) useMediaStore,
-                                includeVideosWidget,
-                                groupArtworksByAlbum,
-                                foldersToScan,
-                                foldersToExclude,
-                              ],
-                            ),
-                            Obx(
-                              (context) => SizedBox(
-                                height: 12.0,
-                                width: context.width,
-                                child: AnimatedDecoration(
-                                  duration: const Duration(milliseconds: 200),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
+              child: SettingsCard(
+                icon: Broken.candle,
+                title: lang.CONFIGURE,
+                subtitle: lang.SETUP_FIRST_STARTUP,
+                trailing: Column(
+                  children: [
+                    NamidaIconButton(
+                      tooltip: () => lang.RESTORE_BACKUP,
+                      icon: Broken.back_square,
+                      onPressed: _onRestoreBackupIconTap,
+                    ),
+                    const SizedBox(height: 2.0),
+                    ObxShow(
+                      showIf: BackupController.inst.isRestoringBackup,
+                      child: const LoadingIndicator(),
+                    ),
+                  ],
+                ),
+                childRaw: Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            alignment: Alignment.bottomCenter,
+                            children: [
+                              ListView(
+                                controller: c,
+                                padding: EdgeInsets.zero,
+                                children: [
+                                  themeTile,
+                                  languageTile,
+                                  performanceTile,
+                                  libraryTabsTile,
+                                  if (useMediaStore != null) useMediaStore,
+                                  includeVideosWidget,
+                                  groupArtworksByAlbum,
+                                  foldersToScan,
+                                  foldersToExclude,
+                                ],
+                              ),
+                              Obx(
+                                (context) => SizedBox(
+                                  height: 12.0,
+                                  width: context.width,
+                                  child: AnimatedDecoration(
+                                    duration: const Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withValues(alpha: 0.5) : Colors.transparent,
+                                          blurRadius: 12.0,
+                                          spreadRadius: 2.0,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7), context.theme.cardColor),
+                            borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: NamidaInkWell(
+                                  animationDurationMS: 100,
                                   decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withValues(alpha: 0.5) : Colors.transparent,
-                                        blurRadius: 12.0,
-                                        spreadRadius: 2.0,
-                                      )
+                                    border: Border.all(
+                                      width: 1.5,
+                                      color: didGrantStoragePermission
+                                          ? Colors.green.withValues(alpha: 0.3)
+                                          : didDenyStoragePermission
+                                              ? Colors.red.withValues(alpha: 0.3)
+                                              : Colors.transparent,
+                                    ),
+                                  ),
+                                  onTap: _requestPermission,
+                                  borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
+                                  bgColor: context.theme.cardColor,
+                                  margin: const EdgeInsets.all(12.0),
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          lang.GRANT_STORAGE_PERMISSION,
+                                          style: context.textTheme.displayMedium,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                      NamidaCheckMark(
+                                        size: 16.0,
+                                        active: didGrantStoragePermission,
+                                      ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7), context.theme.cardColor),
-                          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: NamidaInkWell(
-                                animationDurationMS: 100,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    width: 1.5,
-                                    color: didGrantStoragePermission
-                                        ? Colors.green.withValues(alpha: 0.3)
-                                        : didDenyStoragePermission
-                                            ? Colors.red.withValues(alpha: 0.3)
-                                            : Colors.transparent,
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 400),
+                                opacity: didGrantStoragePermission ? 1.0 : 0.5,
+                                child: NamidaInkWell(
+                                  width: Dimensions.inst.availableAppContentWidth * 0.2,
+                                  onTap: () async {
+                                    await _requestPermission();
+                                    if (BackupController.inst.isRestoringBackup.value) {
+                                      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                      return;
+                                    }
+                                    _navigateToNamida();
+                                  },
+                                  borderRadius: 8.0,
+                                  bgColor: context.theme.cardColor,
+                                  margin: const EdgeInsets.all(12.0),
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: const Icon(
+                                    Broken.arrow_right,
+                                    size: 24.0,
                                   ),
                                 ),
-                                onTap: _requestPermission,
-                                borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
-                                bgColor: context.theme.cardColor,
-                                margin: const EdgeInsets.all(12.0),
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        lang.GRANT_STORAGE_PERMISSION,
-                                        style: context.textTheme.displayMedium,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12.0),
-                                    NamidaCheckMark(
-                                      size: 16.0,
-                                      active: didGrantStoragePermission,
-                                    ),
-                                  ],
-                                ),
                               ),
-                            ),
-                            AnimatedOpacity(
-                              duration: const Duration(milliseconds: 400),
-                              opacity: didGrantStoragePermission ? 1.0 : 0.5,
-                              child: NamidaInkWell(
-                                width: Dimensions.inst.availableAppContentWidth * 0.2,
-                                onTap: () async {
-                                  await _requestPermission();
-                                  if (BackupController.inst.isRestoringBackup.value) {
-                                    snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
-                                    return;
-                                  }
-                                  _navigateToNamida();
-                                },
-                                borderRadius: 8.0,
-                                bgColor: context.theme.cardColor,
-                                margin: const EdgeInsets.all(12.0),
-                                padding: const EdgeInsets.all(12.0),
-                                child: const Icon(
-                                  Broken.arrow_right,
-                                  size: 24.0,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
+                child: const SizedBox(),
               ),
-              child: const SizedBox(),
             ),
           ),
         ],

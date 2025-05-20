@@ -85,7 +85,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     updateAudioCacheMap();
     playWhenReady.addListener(() {
       final ye = playWhenReady.value;
-      CurrentColor.inst.switchColorPalettes(ye);
+      CurrentColor.inst.switchColorPalettes(playWhenReady: ye);
       WakelockController.inst.updatePlayPauseStatus(ye);
       _refreshHomeWidgetIsPlaying(ye);
     });
@@ -486,6 +486,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem) async {
     _currentItemDuration.value = null;
+    if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
     await _fnLimiter.executeFuture(
       () async {
         return await item._execute(

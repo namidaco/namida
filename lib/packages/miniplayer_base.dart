@@ -158,6 +158,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   void initState() {
     super.initState();
     _videoInfoListener();
+    settings.enableLyrics.addListener(_videoInfoListener);
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
   }
 
@@ -165,13 +166,14 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   void dispose() {
     isMenuOpened.close();
     isLoadingMore.close();
+    settings.enableLyrics.addListener(_videoInfoListener);
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
     super.dispose();
   }
 
   void _videoInfoListener() {
     final info = Player.inst.videoPlayerInfo.value;
-    final newImageHeightMultiplier = info?.aspectRatio;
+    final newImageHeightMultiplier = settings.enableLyrics.value ? null : info?.aspectRatio;
     if (newImageHeightMultiplier != _imageHeightMultiplier) {
       refreshState(() {
         _imageHeightMultiplier = newImageHeightMultiplier;
@@ -845,8 +847,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
 
                   final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
                   final nextPrevIconSize = (21.0 + 11.0 * nextprevmultiplier).size;
-                  final nextPrevIconPadding = (8.0 + 4.0 * cp + 4.0 * nextprevmultiplier).space;
-                  final nextPrevOpacity = (nextprevmultiplier + 1).clampDouble(0.0, 1.0);
+                  final nextPrevIconPadding = (8.0 + 4.0 * cp + 6.0 * nextprevmultiplier).space;
 
                   final totalButtonsSize = (iconSize + iconButtonExtraPadding * 2) + (nextPrevIconSize + nextPrevIconPadding * 2) * 2;
                   final buttonsRightPadding = (cp * rcp * ((screenSize.width - totalButtonsSize) / 2)) - rightInset;
@@ -856,7 +857,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   final imageWidth = velpy(a: 82.0.size, b: 92.0.size, c: qp);
 
                   final vOffsetExtras = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 + 12.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
-                  final vOffsetExtrasAlt = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 - 12.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
+                  final vOffsetExtrasAlt = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 - 8.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
                   final trackInfoBoxHeight = velpy(a: 58.0.spaceY, b: 82.0.spaceY, c: bcp);
                   double vOffsetControls = vOffsetExtrasAlt - bottomRowHeight * bp /* ?? vOffsetExtras + (-bottomRowHeight - 4.0.spaceYForce * bp) * (1 - qp) */;
                   double vOffsetWaveform = vOffsetControls - iconSize - (64.0 * waveformYScale) / 2 - (panelFinal * 0.026);
@@ -893,7 +894,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                     vOffsetImage += (height / imageHeightMultiplier / 8) * bcp;
                   }
 
-                  double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - (topInset / 2) - topRowHeight;
+                  double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - topInset - topRowHeight;
                   if (spaceLeftAboveImage > 0) {
                     final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
                     final valueToRemove = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
@@ -1028,12 +1029,12 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       children: [
                                         Opacity(
                                           opacity: nextPrevOpacity,
-                                          child: IgnorePointer(
-                                            ignoring: nextPrevOpacity == 0.0,
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
                                             child: NamidaIconButton(
                                               icon: Broken.previous,
                                               iconSize: nextPrevIconSize,
-                                              horizontalPadding: nextPrevIconPadding,
+                                              horizontalPadding: nextPrevIconPadding / 2,
                                               verticalPadding: nextPrevIconPadding,
                                               onPressed: MiniPlayerController.inst.snapToPrev,
                                             ),
@@ -1135,12 +1136,12 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                         ),
                                         Opacity(
                                           opacity: nextPrevOpacity,
-                                          child: IgnorePointer(
-                                            ignoring: nextPrevOpacity == 0.0,
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
                                             child: NamidaIconButton(
                                               icon: Broken.next,
                                               iconSize: nextPrevIconSize,
-                                              horizontalPadding: nextPrevIconPadding,
+                                              horizontalPadding: nextPrevIconPadding / 2,
                                               verticalPadding: nextPrevIconPadding,
                                               onPressed: MiniPlayerController.inst.snapToNext,
                                             ),

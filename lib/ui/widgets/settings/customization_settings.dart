@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -861,6 +862,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.EDGE_COLORS_SWITCHING,
                 onChanged: (value) {
                   settings.save(enablePartyModeColorSwap: !value);
+                  CurrentColor.inst.switchColorPalettes(swapEnabled: !value);
                 },
                 value: settings.enablePartyModeColorSwap.valueR,
               ),

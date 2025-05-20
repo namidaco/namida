@@ -290,7 +290,8 @@ class _AboutPageState extends State<AboutPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  InkWell(
+                    Expanded(
+                      child: InkWell(
                     onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_KOFI),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
@@ -307,11 +308,15 @@ class _AboutPageState extends State<AboutPage> {
                             ),
                     ),
                   ),
-                  InkWell(
+                    ),
+                    SizedBox(width: 8.0),
+                    Expanded(
+                      child: InkWell(
                     onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE),
                     child: Image.asset(
                       'assets/logos/donate_bmc.webp',
                       height: 48.0,
+                        ),
                     ),
                   ),
                 ],

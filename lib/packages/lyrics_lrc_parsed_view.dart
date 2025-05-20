@@ -34,18 +34,19 @@ class LyricsLRCParsedView extends StatefulWidget {
 
 class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void enterFullScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          return LyricsLRCParsedView(
+    NamidaNavigator.inst.navigateToRoot(
+      LyricsLRCParsedView(
             key: Lyrics.inst.lrcViewKeyFullscreen,
             initialLrc: currentLRC,
             videoOrImage: const SizedBox(),
             isFullScreenView: true,
-          );
-        },
       ),
+      transition: Transition.native,
     );
+  }
+
+  void exitFullScreen() {
+    NamidaNavigator.inst.popRoot();
   }
 
   late final ItemScrollController controller;
