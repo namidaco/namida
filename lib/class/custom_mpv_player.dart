@@ -31,7 +31,7 @@ class CustomMPVPlayer implements AVPlayer {
     _videoController.rect.addListener(_videoControllerListener);
   }
 
-  final _player = Player();
+  final _player = Player(configuration: PlayerConfiguration(pitch: true));
   late final _videoController = VideoController(_player);
 
   UriSource? _audioSource;
@@ -152,14 +152,11 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Stream<Duration?> get durationStream => _player.stream.duration;
   @override
-  Stream<double> get volumeStream => _player.stream.volume;
-
+  Stream<double> get volumeStream => _player.stream.volume.map((event) => event / 100);
   @override
   Stream<double> get speedStream => _player.stream.rate;
-
   @override
   Stream<double> get pitchStream => _player.stream.pitch;
-
   @override
   Stream<bool> get playingStream => _player.stream.playing;
 
@@ -284,7 +281,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Future<void> setSkipSilenceEnabled(bool enabled) async {
-    // await (_player.platform as dynamic).setProperty();
+    // await (_player.platform as NativePlayer).setProperty();
   }
 
   @override
