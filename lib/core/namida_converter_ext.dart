@@ -34,6 +34,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/version_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -915,6 +916,14 @@ extension RouteUtils on NamidaRoute {
           onPressed: () => JsonToHistoryParser.inst.showMissingEntriesDialog(),
         ),
         shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
+      ),
+
+      ObxO(
+        rx: VersionController.inst.latestVersion,
+        builder: (context, value) => _getAnimatedCrossFade(
+          child: const NamidaUpdateButton(),
+          shouldShow: !showMainMenu && (value?.isUpdate() ?? false),
+        ),
       ),
 
       _getAnimatedCrossFade(

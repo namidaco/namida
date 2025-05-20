@@ -9,9 +9,11 @@ import 'package:flutter/rendering.dart' as fr;
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:like_button/like_button.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
@@ -20,12 +22,14 @@ import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -1715,12 +1719,14 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
 
 class NamidaAppBarIcon extends StatelessWidget {
   final IconData icon;
+  final Widget? child;
   final void Function()? onPressed;
   final String Function()? tooltip;
 
   const NamidaAppBarIcon({
     super.key,
     required this.icon,
+    this.child,
     this.onPressed,
     this.tooltip,
   });
@@ -1733,6 +1739,7 @@ class NamidaAppBarIcon extends StatelessWidget {
       icon: icon,
       onPressed: onPressed,
       tooltip: tooltip,
+      child: child,
     );
   }
 }
@@ -5319,3 +5326,220 @@ class LayoutWidthHeightProvider extends StatelessWidget {
     );
   }
 }
+
+class NamidaUpdateButton extends StatelessWidget {
+  const NamidaUpdateButton({super.key});
+
+  void onTap() {
+    void popSheet(BuildContext context) => Navigator.pop(context);
+    void onUpdateTap(BuildContext context) {
+      popSheet(context);
+      final latestVersion = VersionController.inst.latestVersion.value;
+      final link = (latestVersion?.isBeta ?? false) ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES;
+      NamidaLinkUtils.openLink(link);
+    }
+
+    String versionToDate(VersionWrapper? version) {
+      String buildDateText = '';
+      final buildDate = version?.buildDate;
+      if (buildDate != null) {
+        buildDateText = ' (${Jiffy.parseFromDateTime(buildDate).fromNow(withPrefixAndSuffix: true)})';
+      }
+      return buildDateText;
+    }
+
+    final currentVersion = VersionWrapper.current;
+    final currentVersionDateText = versionToDate(currentVersion);
+
+    NamidaNavigator.inst.showSheet(
+      builder: (context, bottomPadding, maxWidth, maxHeight) => SizedBox(
+        height: maxHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 32.0),
+              ObxO(
+                rx: VersionController.inst.latestVersion,
+                builder: (context, latestVersion) {
+                  final buildDateText = versionToDate(latestVersion);
+
+                  return RichText(
+                    text: TextSpan(
+                      text: latestVersion?.prettyVersion ?? '',
+                      children: buildDateText.isEmpty
+                          ? null
+                          : [
+                              TextSpan(
+                                text: buildDateText,
+                                style: context.textTheme.displayMedium,
+                              ),
+                            ],
+                      style: context.textTheme.displayLarge,
+                    ),
+                  );
+                },
+              ),
+              if (currentVersion != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RotatedBox(
+                      quarterTurns: 2,
+                      child: RichText(
+                        text: TextSpan(
+                          text: '⤵ ',
+                          style: context.textTheme.displaySmall,
+                        ),
+                      ),
+                    ),
+                    RichText(
+                      text: TextSpan(
+                        text: currentVersion.prettyVersion,
+                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                        children: currentVersionDateText.isEmpty
+                            ? null
+                            : [
+                                TextSpan(
+                                  text: currentVersionDateText,
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                ),
+                              ],
+                      ),
+                    ),
+                  ],
+              ),
+              SizedBox(height: 12.0),
+              Expanded(
+                child: _NamidaVersionReleasesInfoList(
+                  maxHeight: maxHeight,
+                ),
+              ),
+              SizedBox(height: 12.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: TextButton(
+                      onPressed: () => popSheet(context),
+                      child: NamidaButtonText(lang.CANCEL),
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    flex: 2,
+                    child: NamidaInkWell(
+                      onTap: () => onUpdateTap(context),
+                      borderRadius: 12.0,
+                      padding: const EdgeInsets.all(12.0),
+                      height: 48.0,
+                      bgColor: CurrentColor.inst.color.withValues(alpha: 0.9),
+                      child: Center(
+                        child: Text(
+                          lang.UPDATE.toUpperCase(),
+                          style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaAppBarIcon(
+      icon: Broken.send_square,
+      onPressed: onTap,
+    );
+  }
+}
+
+class _NamidaVersionReleasesInfoList extends StatefulWidget {
+  final double maxHeight;
+  const _NamidaVersionReleasesInfoList({required this.maxHeight});
+
+  @override
+  State<_NamidaVersionReleasesInfoList> createState() => _NamidaVersionReleasesInfoListState();
+}
+
+class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesInfoList> {
+  @override
+  void initState() {
+    VersionController.inst.fetchReleasesAfterCurrent();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: VersionController.inst.releasesAfterCurrent,
+      builder: (context, releasesAfterCurrent) => releasesAfterCurrent == null
+          ? ShimmerWrapper(
+              shimmerEnabled: true,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  return NamidaInkWell(
+                    animationDurationMS: 200,
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    width: context.width,
+                    height: widget.maxHeight * 0.5,
+                    bgColor: context.theme.cardColor,
+                  );
+                },
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: releasesAfterCurrent.length,
+              itemBuilder: (context, index) {
+                final info = releasesAfterCurrent[index];
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (index > 0)
+                      Text(
+                        info.version.prettyVersion,
+                        style: context.textTheme.displayMedium,
+                      ),
+                    SizedBox(height: 4.0),
+                    NamidaInkWell(
+                      bgColor: context.theme.cardColor,
+                      padding: EdgeInsets.all(8.0),
+                      child: Markdown(
+                        physics: const NeverScrollableScrollPhysics(),
+                        data: info.body.replaceAll(RegExp(r'https:\/\/\S+'), ''),
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        styleSheet: MarkdownStyleSheet(
+                          a: context.textTheme.displayLarge,
+                          h1: context.textTheme.displayLarge,
+                          h2: context.textTheme.displayMedium,
+                          h3: context.textTheme.displayMedium,
+                          h4: context.textTheme.displayMedium,
+                          code: context.textTheme.displaySmall,
+                          p: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                          listBullet: context.textTheme.displayMedium,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.0),
+                  ],
+                );
+              },
+            ),
+    );
+  }
+}
+

@@ -45,6 +45,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/controller/window_controller.dart';
@@ -202,6 +203,7 @@ void mainInitialization() async {
   const StorageCacheManager().trimExtraFiles();
 
   NamidaDeviceInfo.fetchDeviceId();
+  VersionController.inst.ensureInitialized();
 
   YoutubeInfoController.initialize(); // for queue to display properly
   YoutubeAccountController.initialize();

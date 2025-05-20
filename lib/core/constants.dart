@@ -11,13 +11,13 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:rhttp/rhttp.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -37,7 +37,6 @@ class NamidaDeviceInfo {
   static PackageInfo? packageInfo;
 
   static VersionWrapper? version;
-  static DateTime? buildDate;
   static String? buildType;
 
   static bool _fetchedAndroidInfo = false;
@@ -92,65 +91,11 @@ class NamidaDeviceInfo {
     try {
       final res = await PackageInfo.fromPlatform();
       packageInfo = res;
-      version = VersionWrapper(res.version);
-      _parseBuildNumber(res.buildNumber);
+      version = VersionWrapper(res.version, res.buildNumber);
       packageInfoCompleter.complete(res);
     } catch (_) {
       _fetchedPackageInfo = false;
     }
-  }
-
-  static void _parseBuildNumber(String buildNumber) {
-    try {
-      int hours = 0;
-      int minutes = 0;
-      final yyMMddHHP = buildNumber;
-      final year = 2000 + int.parse("${yyMMddHHP[0]}${yyMMddHHP[1]}");
-      final month = int.parse("${yyMMddHHP[2]}${yyMMddHHP[3]}");
-      final day = int.parse("${yyMMddHHP[4]}${yyMMddHHP[5]}");
-      try {
-        hours = int.parse("${yyMMddHHP[6]}${yyMMddHHP[7]}");
-        minutes = (60 * double.parse("0.${yyMMddHHP[8]}")).round(); // 0.5, 0.8, 1.0, etc.
-      } catch (_) {}
-      buildDate = DateTime.utc(year, month, day, hours, minutes);
-    } catch (_) {}
-  }
-}
-
-class VersionWrapper {
-  final String name;
-  final String prettyVersion;
-  final bool isBeta;
-
-  const VersionWrapper._({required this.name, required this.prettyVersion, required this.isBeta});
-
-  factory VersionWrapper(String name) {
-    String prettyVersion = name;
-    if (!prettyVersion.startsWith('v')) prettyVersion = "v$prettyVersion";
-    if (name.startsWith('v')) name = name.substring(1);
-    final isBeta = name.endsWith('beta');
-    return VersionWrapper._(name: name, prettyVersion: prettyVersion, isBeta: isBeta);
-  }
-
-  static Future<VersionWrapper?> getLatestVersion(VersionWrapper current) async {
-    try {
-      final repoName = current.isBeta ? 'namida-snapshots' : 'namida';
-      final url = 'https://api.github.com/repos/namidaco/$repoName/releases/latest';
-      final response = await Rhttp.get(url, headers: HttpHeaders.rawMap({'User-Agent': 'namida'}));
-      final resMap = jsonDecode(response.body) as Map;
-      String? latestRelease = resMap['name'] as String?;
-      if (latestRelease == null) return null;
-      return VersionWrapper(latestRelease);
-    } catch (_) {}
-    return null;
-  }
-
-  @override
-  int get hashCode => name.hashCode ^ isBeta.hashCode;
-
-  @override
-  bool operator ==(Object other) {
-    return other is VersionWrapper && name == other.name && isBeta == other.isBeta;
   }
 }
 

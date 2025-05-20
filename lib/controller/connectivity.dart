@@ -39,6 +39,14 @@ class ConnectivityController {
     });
   }
 
+  void executeOrRegister(void Function() callback) {
+    if (hasConnection) {
+      callback();
+    } else {
+      registerOnConnectionRestored(callback);
+    }
+  }
+
   final _onConnectionRestored = <void Function()>[];
 
   void registerOnConnectionRestored(void Function() fn) {
