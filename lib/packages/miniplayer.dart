@@ -149,8 +149,8 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       imageBuilder: (item, cp, brMultiplier) {
         return item is Selectable ? trackConfig.imageBuilder(item, cp, brMultiplier) : ytConfig.imageBuilder(item, cp, brMultiplier);
       },
-      currentImageBuilder: (item, bcp, brMultiplier) {
-        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp, brMultiplier) : ytConfig.currentImageBuilder(item, bcp, brMultiplier);
+      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp, brMultiplier, maxHeight) : ytConfig.currentImageBuilder(item, bcp, brMultiplier, maxHeight);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -365,10 +365,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         cp: cp,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp, brMultiplier) => _AnimatingTrackImage(
+      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) => _AnimatingTrackImage(
         track: (item as Selectable).track,
         cp: bcp,
         brMultiplier: brMultiplier,
+        maxHeight: maxHeight,
       ),
       textBuilder: _textBuilder,
       canShowBuffering: (currentItem) => false,
@@ -628,10 +629,11 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         cp: cp,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp, brMultiplier) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
         cp: bcp,
         brMultiplier: brMultiplier,
+        maxHeight: maxHeight,
       ),
       textBuilder: (item) => _textBuilder(context, item),
       canShowBuffering: (currentItem) => true,
@@ -650,11 +652,13 @@ class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
   final double cp;
   final double Function(double borderRadius) brMultiplier;
+  final double? maxHeight;
 
   const _AnimatingTrackImage({
     required this.track,
     required this.cp,
     required this.brMultiplier,
+    required this.maxHeight,
   });
 
   @override
@@ -663,6 +667,7 @@ class _AnimatingTrackImage extends StatelessWidget {
       cp: cp,
       brMultiplier: brMultiplier,
       isLocal: true,
+      maxHeight: maxHeight,
       fallback: _TrackImage(
         track: track,
         cp: cp,
@@ -677,37 +682,18 @@ class _AnimatingThumnailWidget extends StatelessWidget {
   final double Function(double borderRadius) brMultiplier;
   final bool isLocal;
   final Widget fallback;
+  final double? maxHeight;
 
   const _AnimatingThumnailWidget({
     required this.cp,
     required this.brMultiplier,
     required this.isLocal,
     required this.fallback,
+    required this.maxHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    final lyricsWidget = Obx(
-      (context) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR != '')
-            ? FadeTransition(
-                opacity: NamidaMiniPlayerBase.createClampedAnimation(),
-                child: Transform.scale(
-                  scale: 1.05,
-                  child: LyricsLRCParsedView(
-                    key: Lyrics.inst.lrcViewKey,
-                    initialLrc: Lyrics.inst.currentLyricsLRC.valueR,
-                    videoOrImage: const SizedBox(),
-                  ),
-                ),
-              )
-            : const IgnorePointer(
-                key: Key('empty_lrc'),
-                child: SizedBox(),
-              ),
-      ),
-    );
     return ObxO(
       rx: settings.animatingThumbnailInversed,
       builder: (context, isInversed) => ObxO(
@@ -727,12 +713,21 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                     ),
                   )
                 : fallback;
-            final animatedScaleChild = Stack(
-              alignment: Alignment.center,
-              children: [
-                videoOrImage,
-                lyricsWidget,
-              ],
+            final animatedScaleChild = ObxO(
+              rx: settings.enableLyrics,
+              builder: (context, shoulShowLyricsView) => AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: shoulShowLyricsView
+                    ? LyricsLRCParsedView(
+                        key: Lyrics.inst.lrcViewKey,
+                        videoOrImage: videoOrImage,
+                        maxHeight: maxHeight, // limit height for when sizes are internally mutated
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('no_lyrics'),
+                        child: videoOrImage,
+                      ),
+              ),
             );
             return ObxO(
               rx: VideoController.inst.videoZoomAdditionalScale,
@@ -839,11 +834,13 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
   final double cp;
   final double Function(double borderRadius) brMultiplier;
+  final double? maxHeight;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
     required this.cp,
     required this.brMultiplier,
+    required this.maxHeight,
   });
 
   @override
@@ -852,6 +849,7 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
       cp: cp,
       brMultiplier: brMultiplier,
       isLocal: false,
+      maxHeight: maxHeight,
       fallback: _YoutubeIDImage(
         video: video,
         cp: cp,

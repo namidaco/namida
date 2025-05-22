@@ -34,7 +34,7 @@ class Lyrics {
 
   final textScrollController = ScrollController(keepScrollOffset: true);
 
-  GlobalKey<LyricsLRCParsedViewState>? lrcViewKey;
+  final lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
   final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();
 
   final currentLyricsText = ''.obs;
@@ -52,7 +52,7 @@ class Lyrics {
 
   void _updateWidgets(Lrc? lrc) {
     WakelockController.inst.updateLRCStatus(lrc != null);
-    lrcViewKey?.currentState?.fillLists(lrc);
+    lrcViewKey.currentState?.fillLists(lrc);
     lrcViewKeyFullscreen.currentState?.fillLists(lrc);
   }
 
@@ -61,7 +61,7 @@ class Lyrics {
     currentLyricsText.value = '';
     currentLyricsLRC.value = null;
     WakelockController.inst.updateLRCStatus(false);
-    lrcViewKey?.currentState?.clearLists();
+    lrcViewKey.currentState?.clearLists();
     lrcViewKeyFullscreen.currentState?.clearLists();
   }
 
@@ -95,7 +95,6 @@ class Lyrics {
     try {
       textScrollController.jumpTo(0);
     } catch (_) {}
-    lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
 
     lyricsCanBeAvailable.value = true;
     if (!_lyricsEnabled) return;

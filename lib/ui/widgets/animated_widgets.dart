@@ -40,6 +40,40 @@ class _AnimatedDecorationState extends AnimatedWidgetBaseState<AnimatedDecoratio
   }
 }
 
+class AnimatedColoredBox extends ImplicitlyAnimatedWidget {
+  final Widget? child;
+  final Color? color;
+
+  const AnimatedColoredBox({
+    super.key,
+    required this.color,
+    this.child,
+    super.curve,
+    required super.duration,
+    super.onEnd,
+  });
+
+  @override
+  AnimatedWidgetBaseState<AnimatedColoredBox> createState() => _AnimatedColoredBoxState();
+}
+
+class _AnimatedColoredBoxState extends AnimatedWidgetBaseState<AnimatedColoredBox> {
+  ColorTween? _color;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _color = visitor(_color, widget.color, (dynamic value) => ColorTween(begin: value as Color)) as ColorTween?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: _color?.evaluate(animation) ?? Colors.transparent,
+      child: widget.child,
+    );
+  }
+}
+
 class AnimatedSizedBox extends ImplicitlyAnimatedWidget {
   final Widget? child;
   final Decoration? decoration;

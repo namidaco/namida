@@ -115,7 +115,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
   final Widget Function(Playable item, double cp, double Function(double borderRadius) brMultiplier) imageBuilder;
-  final Widget Function(Playable item, double bcp, double Function(double borderRadius) brMultiplier) currentImageBuilder;
+  final Widget Function(Playable item, double bcp, double Function(double borderRadius) brMultiplier, double? maxHeight) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
@@ -155,6 +155,10 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
         return cp;
       },
     ));
+  }
+
+  static Animation<double> createClampedAnimation2() {
+    return _createOpacityAnimationV1((bcp) => bcp);
   }
 
   static Animation<double> _createOpacityAnimationV1(double Function(double bcp) transform) {
@@ -204,7 +208,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   static const animationDuration = Duration(milliseconds: 150);
 
   double? _imageHeightMultiplier;
-  int? _imageHeightActual;
+  double? _imageHeightActual;
 
   Playable<Object> get _getcurrentItem => Player.inst.currentQueue.value[Player.inst.currentIndex.value];
 
@@ -212,7 +216,6 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   void initState() {
     super.initState();
     _videoInfoListener();
-    settings.enableLyrics.addListener(_videoInfoListener);
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
   }
 
@@ -220,18 +223,18 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   void dispose() {
     isMenuOpened.close();
     isLoadingMore.close();
-    settings.enableLyrics.addListener(_videoInfoListener);
-    Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
+    Player.inst.videoPlayerInfo.removeListener(_videoInfoListener);
     super.dispose();
   }
 
   void _videoInfoListener() {
     final info = Player.inst.videoPlayerInfo.value;
-    final newImageHeightMultiplier = settings.enableLyrics.value ? null : info?.aspectRatio;
+    final newImageHeightMultiplier = info?.aspectRatio;
     if (newImageHeightMultiplier != _imageHeightMultiplier) {
+      final heightActual = info?.height.toDouble() ?? 0;
       refreshState(() {
         _imageHeightMultiplier = newImageHeightMultiplier;
-        _imageHeightActual = info?.height;
+        _imageHeightActual = heightActual <= 0 ? null : heightActual;
       });
     }
   }
@@ -936,7 +939,6 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   // final panelExtra = panelH; // -- use if u want to hide it while expanded, looks cool
                   final panelFinal = panelH - (panelExtra * (1 - qcp));
 
-                  final currentImage = widget.currentImageBuilder(currentItem, bcp, (borderRadius) => borderRadius.br);
                   final iconSize = ((velpy(a: 60.0.size * 0.5, b: 80.0.size * 0.5, c: rp) - 8) + 8 * cp * rcp);
                   final iconButtonExtraPadding = (iconSize * 0.5).withMaximum(14.0);
                   final iconBoxSize = iconSize + iconButtonExtraPadding * 2;
@@ -986,7 +988,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
 
                   if (shouldApplyImageHeightMultiplier) {
                     // -- send it back to exactly above track info
-                    final height = (_imageHeightActual?.toDouble().withMaximum(imageSize) ?? imageSize);
+                    final height = (_imageHeightActual?.withMaximum(imageSize) ?? imageSize);
                     vOffsetImage += (height / imageHeightMultiplier / 8) * bcp;
                   }
 
@@ -1009,6 +1011,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   );
                   final imageEmptyRightSpace = screenSize.width - imageSize;
                   final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
+
+                  final currentImage =
+                      widget.currentImageBuilder(currentItem, bcp, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
 
                   return Stack(
                     children: [
@@ -1416,7 +1421,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           child: Padding(
                                             padding: EdgeInsets.all(12.0 * (1 - bcp)),
                                             child: LongPressDetector(
-                                              onLongPress: () => Lyrics.inst.lrcViewKey?.currentState?.enterFullScreen(),
+                                              onLongPress: () => Lyrics.inst.lrcViewKey.currentState?.enterFullScreen(),
                                               child: ObxO(
                                                 rx: settings.artworkGestureDoubleTapLRC,
                                                 builder: (context, artworkGestureDoubleTapLRC) {
