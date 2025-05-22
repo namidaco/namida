@@ -121,10 +121,10 @@ android {
             applicationIdSuffix ".debug"
         }
 
-        profile {
-            signingConfig signingConfigs.debug
-            applicationIdSuffix ".profile"
-        }
+        // profile {
+        //     signingConfig signingConfigs.debug
+        //     applicationIdSuffix ".profile"
+        // }
 
         release {
             signingConfig signingConfigs.release

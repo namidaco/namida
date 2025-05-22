@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/setup-java@v1
         with:
-          java-version: "17"
+          java-version: "21"
 
       - name: Create keystore & key.properties
         run: |

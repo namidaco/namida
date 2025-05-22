@@ -5,7 +5,7 @@ version: 5.1.76-beta+250520128
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
-  flutter: 3.29.0
+  flutter: 3.32.0
 
 dependency_overrides:
   intl: ^0.20.1
@@ -13,6 +13,11 @@ dependency_overrides:
   flutter_js:
     git:
       url: https://github.com/MSOB7YY/flutter_js
+
+  rhttp:
+    git: 
+      url: https://github.com/MSOB7YY/rhttp
+      path: rhttp
 
   on_audio_query_platform_interface:
     git:
@@ -142,9 +147,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/flutter_scrollbar_modified
   sticky_headers: ^0.3.0+2
-  flutter_sticky_header:
-    git:
-      url: https://github.com/giangphan11/flutter_sticky_header
+  flutter_sticky_header: ^0.8.0
   focused_menu: ^1.0.5
   paged_vertical_calendar: ^1.1.6
   flex_list: ^1.1.0

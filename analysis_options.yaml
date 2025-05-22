@@ -14,6 +14,10 @@ analyzer:
     unnecessary_this: ignore
     use_string_in_part_of_directives: ignore
 
+formatter:
+  trailing_commas: preserve
+  page_width: 240
+
 custom_lint:
 
 include: package:flutter_lints/flutter.yaml

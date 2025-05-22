@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -26,7 +27,7 @@ class AppThemes {
     int getColorAlpha(int a) => (a * mainColorMultiplier).round();
     Color getMainColorWithAlpha(int a) => color!.withAlpha(getColorAlpha(a));
 
-    final cardTheme = CardTheme(
+    final cardTheme = CardThemeData(
       elevation: 12.0,
       color: Color.alphaBlend(
         getMainColorWithAlpha(45),
@@ -109,7 +110,7 @@ class AppThemes {
         ),
       ),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius)),
         backgroundColor: lighterDialog
