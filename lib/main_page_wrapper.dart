@@ -146,15 +146,17 @@ class _MainScreenStackState extends State<MainScreenStack> with TickerProviderSt
             ),
           ),
         ),
-        Padding(
-          padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableAppContentWidth),
-          child: MediaQuery.removePadding(
-            context: context,
-            removeLeft: miniplayerIsWideScreen,
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: MiniPlayerParent(animation: animation),
+        RepaintBoundary(
+          child: Padding(
+            padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableAppContentWidth),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: miniplayerIsWideScreen,
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: MiniPlayerParent(animation: animation),
+              ),
             ),
           ),
         ),
@@ -260,108 +262,106 @@ class NamidaDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: RepaintBoundary(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  NamidaLogoContainer(
-                    afterTap: NamidaNavigator.inst.toggleDrawer,
-                  ),
-                  const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                  ...LibraryTab.values.map(
-                    (e) => ObxO(
-                      rx: settings.extra.selectedLibraryTab,
-                      builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
-                        enabled: selectedLibraryTab == e,
-                        title: e.toText(),
-                        icon: e.toIcon(),
-                        onTap: () async {
-                          ScrollSearchController.inst.animatePageController(e);
-                          toggleDrawer();
-                        },
-                      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              children: [
+                NamidaLogoContainer(
+                  afterTap: NamidaNavigator.inst.toggleDrawer,
+                ),
+                const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
+                ...LibraryTab.values.map(
+                  (e) => ObxO(
+                    rx: settings.extra.selectedLibraryTab,
+                    builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
+                      enabled: selectedLibraryTab == e,
+                      title: e.toText(),
+                      icon: e.toIcon(),
+                      onTap: () async {
+                        ScrollSearchController.inst.animatePageController(e);
+                        toggleDrawer();
+                      },
                     ),
                   ),
-                  NamidaDrawerListTile(
-                    enabled: false,
-                    title: lang.QUEUES,
-                    icon: Broken.driver,
-                    onTap: () {
-                      const QueuesPage().navigate();
-                      toggleDrawer();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12.0),
-            Material(
-              borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return ToggleThemeModeContainer(
-                    maxWidth: constraints.maxWidth - 12.0,
-                    blurRadius: 3.0,
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            NamidaDrawerListTile(
-              margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
-              enabled: false,
-              title: lang.SLEEP_TIMER,
-              icon: Broken.timer_1,
-              onTap: () {
-                toggleDrawer();
-                openSleepTimerDialog(context);
-              },
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: NamidaDrawerListTile(
-                    margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
-                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                    enabled: false,
-                    isCentered: true,
-                    iconSize: 24.0,
-                    title: '',
-                    icon: Broken.brush_1,
-                    onTap: () {
-                      SettingsSubPage(
-                        title: lang.CUSTOMIZATIONS,
-                        child: const CustomizationSettings(),
-                      ).navigate();
-
-                      toggleDrawer();
-                    },
-                  ),
                 ),
-                const SizedBox(width: 8.0),
-                Expanded(
-                  child: NamidaDrawerListTile(
-                    margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
-                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                    enabled: false,
-                    isCentered: true,
-                    iconSize: 24.0,
-                    title: '',
-                    icon: Broken.setting,
-                    onTap: () {
-                      const SettingsPage().navigate();
-                      toggleDrawer();
-                    },
-                  ),
+                NamidaDrawerListTile(
+                  enabled: false,
+                  title: lang.QUEUES,
+                  icon: Broken.driver,
+                  onTap: () {
+                    const QueuesPage().navigate();
+                    toggleDrawer();
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 8.0),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12.0),
+          Material(
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return ToggleThemeModeContainer(
+                  maxWidth: constraints.maxWidth - 12.0,
+                  blurRadius: 3.0,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          NamidaDrawerListTile(
+            margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
+            enabled: false,
+            title: lang.SLEEP_TIMER,
+            icon: Broken.timer_1,
+            onTap: () {
+              toggleDrawer();
+              openSleepTimerDialog(context);
+            },
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: NamidaDrawerListTile(
+                  margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+                  enabled: false,
+                  isCentered: true,
+                  iconSize: 24.0,
+                  title: '',
+                  icon: Broken.brush_1,
+                  onTap: () {
+                    SettingsSubPage(
+                      title: lang.CUSTOMIZATIONS,
+                      child: const CustomizationSettings(),
+                    ).navigate();
+
+                    toggleDrawer();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: NamidaDrawerListTile(
+                  margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+                  enabled: false,
+                  isCentered: true,
+                  iconSize: 24.0,
+                  title: '',
+                  icon: Broken.setting,
+                  onTap: () {
+                    const SettingsPage().navigate();
+                    toggleDrawer();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8.0),
+        ],
       ),
     );
   }

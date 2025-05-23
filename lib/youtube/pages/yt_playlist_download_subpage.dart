@@ -505,7 +505,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                     Positioned(
                                       right: 0,
                                       child: NamidaBlurryContainer(
-                                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+                                        borderRadius: BorderRadius.only(
+                                          bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                          topRight: Radius.circular(6.0.multipliedRadius),
+                                        ),
                                         padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                         child: Text(
                                           '${originalIndex + 1}',

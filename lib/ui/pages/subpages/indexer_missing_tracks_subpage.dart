@@ -179,7 +179,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       portSublistsLoadingProgressSub.cancel();
     } catch (_) {}
 
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   static void _fetchMissingTracksIsolate((Set<String>, Map<String, bool>, Map<int, _LoadingProgress>, SendPort, SendPort, SendPort) params) {
@@ -439,7 +439,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                         top: 0,
                                         right: 0,
                                         child: NamidaBlurryContainer(
-                                          borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+                                          borderRadius: BorderRadius.only(
+                                            bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                            topRight: Radius.circular(6.0.multipliedRadius),
+                                          ),
                                           padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                           child: Text(
                                             "${index + 1}",

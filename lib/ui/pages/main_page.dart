@@ -209,13 +209,11 @@ class MainPage extends StatelessWidget {
         }
 
         final animatedThemeWidget = Builder(
-          builder: (context) => RepaintBoundary(
-            child: _AnimatedTheme(
-              key: _animatedThemeGlobalKey,
-              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-              data: context.theme,
-              child: mainChild,
-            ),
+          builder: (context) => _AnimatedTheme(
+            key: _animatedThemeGlobalKey,
+            duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+            data: context.theme,
+            child: mainChild,
           ),
         );
         final animatedThemeState = _animatedThemeGlobalKey.currentState;

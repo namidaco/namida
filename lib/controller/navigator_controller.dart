@@ -317,12 +317,12 @@ class NamidaNavigator {
     final res = await _rootNav.currentState?.pushPage<T>(
       WillPopScope(
         onWillPop: onWillPop,
-        child: TapDetector(
-          onTap: onWillPop,
-          child: NamidaBgBlur(
-            blur: 5.0,
-            enabled: _currentDialogNumber == 1,
-            child: material.RepaintBoundary(
+        child: material.RepaintBoundary(
+          child: TapDetector(
+            onTap: onWillPop,
+            child: NamidaBgBlur(
+              blur: 5.0,
+              enabled: _currentDialogNumber == 1,
               child: Container(
                 color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
                 child: Transform.scale(
@@ -607,7 +607,6 @@ SnackbarController? snackyy({
   //   margin = EdgeInsets.zero;
   // }
 
-  final borderR = borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius);
   SnackbarController? snackbarController;
 
   final EdgeInsets paddingInsets;
@@ -702,37 +701,33 @@ SnackbarController? snackyy({
       type: MaterialType.transparency,
       child: NamidaBgBlurClipped(
         blur: 12.0,
-        borderRadius: borderR,
-        // -- decoration must be a child here
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: borderR,
-            border: isError
-                ? Border.all(
-                    color: borderColor ?? Colors.red.withValues(alpha: 0.2),
-                    width: 1.5,
-                  )
-                : Border.all(
-                    color: borderColor ?? Colors.grey.withValues(alpha: 0.5),
-                    width: 0.5,
-                  ),
-            boxShadow: isError
-                ? [
-                    BoxShadow(
-                      color: Colors.red.withAlpha(15),
-                      blurRadius: 16.0,
-                    )
-                  ]
-                : null,
-          ),
-          child: leftBarIndicatorColor != null
-              ? DecoratedBox(
-                  decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
-                  child: content,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius),
+          border: isError
+              ? Border.all(
+                  color: borderColor ?? Colors.red.withValues(alpha: 0.2),
+                  width: 1.5,
                 )
-              : content,
+              : Border.all(
+                  color: borderColor ?? Colors.grey.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
+          boxShadow: isError
+              ? [
+                  BoxShadow(
+                    color: Colors.red.withAlpha(15),
+                    blurRadius: 16.0,
+                  )
+                ]
+              : null,
         ),
+        child: leftBarIndicatorColor != null
+            ? DecoratedBox(
+                decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
+                child: content,
+              )
+            : content,
       ),
     ),
   );

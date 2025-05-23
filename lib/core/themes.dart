@@ -17,7 +17,7 @@ class AppThemes {
 
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
-    light ??= namida.theme.brightness == Brightness.light;
+    light ??= namida.brightness == Brightness.light;
 
     final shouldUseAMOLED = !light && settings.pitchBlack.value;
     final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;

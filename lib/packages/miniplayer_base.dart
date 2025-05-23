@@ -114,8 +114,8 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem) onTopTextTap;
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
-  final Widget Function(Playable item, double cp, double Function(double borderRadius) brMultiplier) imageBuilder;
-  final Widget Function(Playable item, double bcp, double Function(double borderRadius) brMultiplier, double? maxHeight) currentImageBuilder;
+  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier) imageBuilder;
+  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, double? maxHeight) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
@@ -144,11 +144,14 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   @override
   State<NamidaMiniPlayerBase> createState() => _NamidaMiniPlayerBaseState();
 
+  static final clampedAnimationCP = _createClampedAnimation();
+  static final clampedAnimationBCP = _createClampedAnimation2();
+
   static Animation<double> _createOpacityAnimation(Animatable<double> animateable) {
     return MiniPlayerController.inst.animation.drive(animateable);
   }
 
-  static Animation<double> createClampedAnimation() {
+  static Animation<double> _createClampedAnimation() {
     return NamidaMiniPlayerBase._createOpacityAnimation(Animatable.fromCallback(
       (p) {
         final double cp = p.clampDouble(0.0, 1.0);
@@ -157,7 +160,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     ));
   }
 
-  static Animation<double> createClampedAnimation2() {
+  static Animation<double> _createClampedAnimation2() {
     return _createOpacityAnimationV1((bcp) => bcp);
   }
 
@@ -298,7 +301,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     (bcp) => (bcp * 10 - 9).clampDouble(0, 1),
   );
 
-  final partyContainersOpacityAnimation = NamidaMiniPlayerBase.createClampedAnimation();
+  final partyContainersOpacityAnimation = NamidaMiniPlayerBase.clampedAnimationCP;
 
   final topRowOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
     (rcp, _) => rcp,
@@ -319,7 +322,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     final kSiParallax = MiniPlayerController.kSiParallax;
 
     final onSecondary = context.theme.colorScheme.onSecondaryContainer;
-    const waveformChild = WaveformMiniplayer();
+    const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
 
     final topBottomMargin = 8.0.spaceY;
 
@@ -374,29 +377,35 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Obx(
-                (context) {
-                  final seek = MiniPlayerController.inst.seekValue.valueR;
-                  final diffInMs = seek - Player.inst.nowPlayingPositionR;
-                  final plusOrMinus = diffInMs < 0 ? '' : '+';
-                  final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
-                  return Text(
-                    "$plusOrMinus$seekText",
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
-                  ).animateEntrance(
-                    showWhen: seek != 0,
+              ObxO(
+                rx: MiniPlayerController.inst.seekValue,
+                builder: (context, seek) => ObxO(
+                  rx: Player.inst.nowPlayingPosition,
+                  builder: (context, nowPlayingPosition) => NamidaAnimatedSwitcher(
+                    key: const ValueKey('seek_switcher'),
+                    firstChild: Obx(
+                      (context) {
+                        final diffInMs = seek - nowPlayingPosition;
+                        final plusOrMinus = diffInMs < 0 ? '' : '+';
+                        final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
+                        return Text(
+                          "$plusOrMinus$seekText",
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
+                        );
+                      },
+                    ),
+                    secondChild: const SizedBox(),
+                    showFirst: seek != 0,
                     durationMS: 700,
                     allCurves: Curves.easeInOutQuart,
-                  );
-                },
-              ),
-              NamidaHero(
-                tag: 'MINIPLAYER_POSITION',
-                child: Obx(
-                  (context) => Text(
-                    Player.inst.nowPlayingPositionR.milliSecondsLabel,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
                   ),
+                ),
+              ),
+              ObxO(
+                rx: Player.inst.nowPlayingPosition,
+                builder: (context, nowPlayingPosition) => Text(
+                  nowPlayingPosition.milliSecondsLabel,
+                  style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
                 ),
               ),
             ],
@@ -564,14 +573,26 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
             builder: (context, currentIndex) {
               final indminus = refine(currentIndex - 1);
               final indplus = refine(currentIndex + 1);
-              final prevItem = queue.isEmpty ? null : queue[indminus];
               final currentItem = queue[currentIndex];
-              final nextItem = queue.isEmpty ? null : queue[indplus];
               final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;
 
-              final prevText = prevItem == null ? null : widget.textBuilder(prevItem);
+              Widget? previousImageWidget;
+              Widget? nextImageWidget;
+              MiniplayerInfoData? prevText;
+              MiniplayerInfoData? nextText;
+
+              if (queue.isNotEmpty) {
+                final prevItem = queue[indminus];
+                final nextItem = queue[indplus];
+
+                prevText = widget.textBuilder(prevItem);
+                nextText = widget.textBuilder(nextItem);
+
+                previousImageWidget = widget.imageBuilder(prevItem, (borderRadius) => borderRadius.br);
+                nextImageWidget = widget.imageBuilder(nextItem, (borderRadius) => borderRadius.br);
+              }
+
               final currentText = widget.textBuilder(currentItem);
-              final nextText = nextItem == null ? null : widget.textBuilder(nextItem);
 
               final topText = widget.topText(currentItem);
               final focusedMenuOptions = widget.focusedMenuOptions(currentItem);
@@ -1012,8 +1033,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   final imageEmptyRightSpace = screenSize.width - imageSize;
                   final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
 
-                  final currentImage =
-                      widget.currentImageBuilder(currentItem, bcp, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
+                  final currentImage = widget.currentImageBuilder(currentItem, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
 
                   return Stack(
                     children: [
@@ -1389,7 +1409,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                             builder: (context) {
                               return Stack(
                                 children: [
-                                  if (prevItem != null)
+                                  if (previousImageWidget != null)
                                     FadeIgnoreTransition(
                                       opacity: leftOpacityAnim,
                                       child: MatrixTransition(
@@ -1400,7 +1420,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           child: _RawImageContainer(
                                             size: imageSize,
                                             padding: imagePadding,
-                                            child: widget.imageBuilder(prevItem, cp, (borderRadius) => borderRadius.br),
+                                            child: previousImageWidget,
                                           ),
                                         ),
                                       ),
@@ -1451,7 +1471,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       ),
                                     ),
                                   ),
-                                  if (nextItem != null)
+                                  if (nextImageWidget != null)
                                     FadeIgnoreTransition(
                                       opacity: rightOpacityAnim,
                                       child: MatrixTransition(
@@ -1462,7 +1482,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           child: _RawImageContainer(
                                             size: imageSize,
                                             padding: imagePadding,
-                                            child: widget.imageBuilder(nextItem, cp, (borderRadius) => borderRadius.br),
+                                            child: nextImageWidget,
                                           ),
                                         ),
                                       ),

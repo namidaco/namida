@@ -827,7 +827,8 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       thumbnailSize: 56.0,
       path: file.path,
       borderRadius: 8.0,
-      blur: 0,
+      blur: 4.0,
+      disableBlurBgSizeShrink: true,
       fallbackToFolderCover: false,
       icon: _iconsLookup[2] ?? Broken.gallery,
     );
@@ -985,49 +986,46 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       onPressed: () {
                         final dirController = TextEditingController();
-                        final formKey = GlobalKey<FormState>();
                         NamidaNavigator.inst.navigateDialog(
                           onDisposing: () {
                             dirController.dispose();
                           },
-                          dialogBuilder: (theme) => Form(
-                            key: formKey,
-                            child: CustomBlurryDialog(
-                              title: lang.NEW_DIRECTORY,
-                              actions: [
-                                const CancelButton(),
-                                NamidaButton(
-                                  text: lang.CHOOSE,
-                                  onPressed: () {
-                                    if (dirController.text.length > 2) {
-                                      NamidaNavigator.inst.closeDialog();
-                                      _onSelectionComplete([Directory(dirController.text) as T]);
+                          dialogBuilder: (theme) => CustomBlurryDialog(
+                            title: lang.NEW_DIRECTORY,
+                            actions: [
+                              const CancelButton(),
+                              NamidaButton(
+                                text: lang.CHOOSE,
+                                onPressed: () {
+                                  final text = dirController.text;
+                                  if (text.length > 2) {
+                                    NamidaNavigator.inst.closeDialog();
+                                    _onSelectionComplete([Directory(text) as T]);
+                                  }
+                                },
+                              )
+                            ],
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 12.0),
+                                CustomTagTextField(
+                                  controller: dirController,
+                                  hintText: '',
+                                  labelText: lang.NEW_DIRECTORY,
+                                  validatorMode: AutovalidateMode.always,
+                                  validator: (value) {
+                                    value ??= '';
+                                    if (value.isEmpty) {
+                                      return lang.PLEASE_ENTER_A_NAME;
                                     }
+                                    if (!Directory(value).existsSync()) {
+                                      return lang.DIRECTORY_DOESNT_EXIST;
+                                    }
+                                    return null;
                                   },
-                                )
+                                ),
+                                const SizedBox(height: 12.0),
                               ],
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 12.0),
-                                  CustomTagTextField(
-                                    controller: dirController,
-                                    hintText: '',
-                                    labelText: lang.NEW_DIRECTORY,
-                                    validatorMode: AutovalidateMode.always,
-                                    validator: (value) {
-                                      value ??= '';
-                                      if (value.isEmpty) {
-                                        return lang.PLEASE_ENTER_A_NAME;
-                                      }
-                                      if (!Directory(value).existsSync()) {
-                                        return lang.DIRECTORY_DOESNT_EXIST;
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 12.0),
-                                ],
-                              ),
                             ),
                           ),
                         );

@@ -154,8 +154,8 @@ class FolderTile extends StatelessWidget {
                                 : ArtworkWidget(
                                     key: ValueKey(tracks.firstOrNull),
                                     track: tracks.firstOrNull,
-                                    blur: 0,
-                                    borderRadius: 6,
+                                    blur: 3.0,
+                                    borderRadius: 5.0,
                                     thumbnailSize: thumbSize,
                                     path: tracks.firstOrNull?.pathToImage,
                                     forceSquared: true,

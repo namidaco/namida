@@ -360,6 +360,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           isImportantInCache: false,
           customUrl: bannerUrl,
           borderRadius: 0,
+          disableBlurBgSizeShrink: true,
           displayFallbackIcon: false,
           fit: BoxFit.cover, // sadly BoxFit.contain won't look so good when shrinked (either by max height or dynamic height)
           alignment: Alignment.centerLeft,
@@ -367,6 +368,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       ),
     );
 
+    final pfpImageWidth = (maxWidth * 0.18).withMaximum(context.height * 0.3).withMaximum(Dimensions.inst.sideInfoMaxWidth * 0.8);
     final pfpImageWidget = TapDetector(
       onTap: () => _onImageTap(
         context: context,
@@ -379,7 +381,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         child: YoutubeThumbnail(
           type: ThumbnailType.channel,
           key: Key('${channelID}_$pfp'),
-          width: (maxWidth * 0.18).withMaximum(context.height * 0.3),
+          width: pfpImageWidth,
           isImportantInCache: true,
           customUrl: pfp,
           isCircle: true,
@@ -552,7 +554,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: Dimensions.inst.sideInfoMaxWidth,
+                  width: pfpImageWidth * 1.4,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Column(

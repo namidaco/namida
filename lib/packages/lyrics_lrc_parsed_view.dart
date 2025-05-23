@@ -88,7 +88,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     controller = ItemScrollController();
     positionListener = ItemPositionsListener.create();
     final lrc = Lyrics.inst.currentLyricsLRC.value;
-    fillLists(lrc);
+    final txt = Lyrics.inst.currentLyricsText.value;
+    fillLists(lrc, txt);
     Player.inst.currentItemDuration.addListener(_itemDurationUpdater);
     Player.inst.nowPlayingPosition.addListener(_playerPositionListener);
   }
@@ -117,14 +118,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     }
   }
 
-  void fillLists(Lrc? lrc) {
+  void fillLists(Lrc? lrc, String? txt) {
     currentLRC = lrc;
     if (lrc == null) {
       highlightTimestampsMap.clear();
       lyrics.clear();
-      if (_isCurrentLineEmpty && !_checkIfTextEmpty(Lyrics.inst.currentLyricsText.value)) {
-        _updateIsCurrentLineEmpty(false);
-      }
+      final isTextEmpty = txt == null ? true : _checkIfTextEmpty(txt);
+      _updateIsCurrentLineEmpty(isTextEmpty);
       return;
     } else {
       _updateIsCurrentLineEmpty(_updateOpacityForEmptyLines ? _checkIfTextEmpty(lrc.lyrics.firstOrNull?.lyrics ?? '') : false);
@@ -228,10 +228,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             if (_isCurrentLineEmpty || emptyLine) {
               final timeToWaitMS = _isCurrentLineEmpty ? 200 : 1200; // execute faster if current one empty (ie: cuz next most likely not empty)
               bool butIsItWorth = true;
-              try {
-                final diff = lyrics[newIndex].timestamp - lyrics[newIndex - 1].timestamp; // (newIndex - 1) is the empty line
-                if (diff.abs() < const Duration(milliseconds: _lrcOpacityDurationMS * 2 + 200 + 1200)) butIsItWorth = false;
-              } catch (_) {}
+              if (newIndex < lyrics.length - 1) {
+                try {
+                  final diff = lyrics[newIndex + 1].timestamp - lyrics[newIndex].timestamp; // (newIndex) is the empty line
+                  if (diff.abs() < const Duration(milliseconds: _lrcOpacityDurationMS * 2 + 1200)) butIsItWorth = false;
+                } catch (_) {}
+              } else {
+                butIsItWorth = true; // last line has nothing next so its always worth ^^
+              }
+
               if (butIsItWorth) {
                 Timer(Duration(milliseconds: timeToWaitMS), () {
                   if (line == _currentLine && _isCurrentLineEmpty != emptyLine) {
@@ -377,7 +382,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         : null;
 
     final pagePaddingHorizontal = fullscreen ? 0.0 : 24.0;
-    late final mpAnimation = NamidaMiniPlayerBase.createClampedAnimation2();
+    late final mpAnimation = NamidaMiniPlayerBase.clampedAnimationCP;
 
     final videoOrImageChild = fullscreen
         ? Positioned.fill(
@@ -404,11 +409,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       builder: (context, child) {
                         final mpAnimationValue = mpAnimation.value;
                         final blur = 12.0 * mpAnimationValue;
-                        late final maskColor = mpAnimationValue == 0 ? Colors.transparent : context.theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.6) * mpAnimationValue);
+                        late final maskColor =
+                            mpAnimationValue == 0 ? Colors.transparent : context.theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.6) * mpAnimationValue);
                         return Stack(
                           children: [
-                            ImageFiltered(
-                              imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                            NamidaBlur(
+                              blur: blur,
                               child: Stack(
                                 children: [
                                   widget.videoOrImage,
@@ -515,7 +521,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                               final text = lrc.lyrics;
                                               final selected = highlightedTimeStamp == lrc.timestamp;
                                               final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                                              final bgColor = selected ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5) : null;
+                                              final bgColor = selected
+                                                  ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5)
+                                                  : null;
                                               final padding = selected ? 2.0 : 0.0;
 
                                               return Stack(
@@ -546,7 +554,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                           borderRadius: selectedAndEmpty ? 5.0 : 8.0,
                                                           animationDurationMS: 300,
                                                           margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
-                                                          padding: selectedAndEmpty ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0) : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                                                          padding: selectedAndEmpty
+                                                              ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
+                                                              : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                                                           child: Text(
                                                             text,
                                                             style: normalTextStyle.copyWith(

@@ -61,6 +61,7 @@ class AlbumTile extends StatelessWidget {
                       track: album.trackOfImage,
                       thumbnailSize: albumThumbnailSize,
                       path: album.pathToImage,
+                      disableBlurBgSizeShrink: true,
                       forceSquared: settings.forceSquaredAlbumThumbnail.value,
                     ),
                   ),

@@ -138,7 +138,10 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
 
     if (topRightWidget != null) {
       topRightWidget = NamidaBlurryContainer(
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(6.0.multipliedRadius),
+          topRight: Radius.circular(6.0.multipliedRadius),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
         child: topRightWidget,
       );

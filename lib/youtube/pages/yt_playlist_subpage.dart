@@ -206,31 +206,29 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                     alignment: Alignment.topCenter,
                     child: Stack(
                       children: [
-                        YoutubeThumbnail(
-                          type: ThumbnailType.playlist,
-                          key: Key("$firstID"),
-                          width: maxWidth,
-                          height: maxWidth * 9 / 16,
-                          forceSquared: false,
-                          compressed: true,
-                          isImportantInCache: false,
-                          videoId: firstID,
-                          blur: 0.0,
-                          borderRadius: 0.0,
-                          extractColor: true,
-                          onColorReady: (color) async {
-                            if (color != null) {
-                              await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                              refreshState(() {
-                                bgColor = color.color;
-                              });
-                            }
-                          },
-                        ),
-                        const Positioned.fill(
-                          child: NamidaBgBlurClipped(
-                            blur: 30.0,
-                            child: ColoredBox(color: Colors.transparent),
+                        NamidaBlur(
+                          blur: 40.0,
+                          child: YoutubeThumbnail(
+                            type: ThumbnailType.playlist,
+                            key: Key("$firstID"),
+                            width: maxWidth,
+                            height: maxWidth * 9 / 16,
+                            forceSquared: true,
+                            compressed: true,
+                            isImportantInCache: false,
+                            videoId: firstID,
+                            blur: 0.0,
+                            borderRadius: 0.0,
+                            disableBlurBgSizeShrink: true,
+                            extractColor: true,
+                            onColorReady: (color) async {
+                              if (color != null) {
+                                await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
+                                refreshState(() {
+                                  bgColor = color.color;
+                                });
+                              }
+                            },
                           ),
                         ),
                         Padding(
@@ -244,11 +242,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                 key: Key("$firstID"),
                                 width: bigThumbWidth,
                                 height: (bigThumbWidth * 9 / 16),
-                                forceSquared: false,
+                                forceSquared: true,
                                 compressed: false,
                                 isImportantInCache: true,
                                 videoId: firstID,
-                                blur: 4.0,
+                                blur: 0.0,
                               ),
                               const SizedBox(height: 24.0),
                               FlexList(
@@ -608,33 +606,31 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                     alignment: Alignment.topCenter,
                     child: Stack(
                       children: [
-                        YoutubeThumbnail(
-                          type: ThumbnailType.playlist,
-                          key: Key("$firstID"),
-                          width: maxWidth,
-                          height: maxWidth * 9 / 16,
-                          forceSquared: false,
-                          compressed: true,
-                          isImportantInCache: false,
-                          preferLowerRes: true,
-                          // customUrl: thumbnailUrl,
-                          videoId: firstID,
-                          blur: 0.0,
-                          borderRadius: 0.0,
-                          extractColor: true,
-                          onColorReady: (color) async {
-                            if (color != null) {
-                              await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
-                              refreshState(() {
-                                bgColor = color.color;
-                              });
-                            }
-                          },
-                        ),
-                        const Positioned.fill(
-                          child: NamidaBgBlurClipped(
-                            blur: 30.0,
-                            child: ColoredBox(color: Colors.transparent),
+                        NamidaBlur(
+                          blur: 40.0,
+                          child: YoutubeThumbnail(
+                            type: ThumbnailType.playlist,
+                            key: Key("$firstID"),
+                            width: maxWidth,
+                            height: maxWidth * 9 / 16,
+                            forceSquared: true,
+                            compressed: true,
+                            isImportantInCache: false,
+                            preferLowerRes: true,
+                            // customUrl: thumbnailUrl,
+                            videoId: firstID,
+                            blur: 0.0,
+                            borderRadius: 0.0,
+                            disableBlurBgSizeShrink: true,
+                            extractColor: true,
+                            onColorReady: (color) async {
+                              if (color != null) {
+                                await Future.delayed(const Duration(milliseconds: 200)); // navigation delay
+                                refreshState(() {
+                                  bgColor = color.color;
+                                });
+                              }
+                            },
                           ),
                         ),
                         Padding(
@@ -648,13 +644,13 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                 key: Key("$firstID"),
                                 width: bigThumbWidth,
                                 height: (bigThumbWidth * 9 / 16),
-                                forceSquared: false,
+                                forceSquared: true,
                                 compressed: false,
                                 isImportantInCache: true,
                                 preferLowerRes: false,
                                 customUrl: thumbnailUrl,
                                 videoId: firstID,
-                                blur: 4.0,
+                                blur: 0.0,
                               ),
                               const SizedBox(height: 24.0),
                               FlexList(

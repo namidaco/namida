@@ -257,56 +257,55 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _padding = MediaQuery.paddingOf(context);
     final maxWidth = context.width;
 
-    return AnimatedBuilder(
+    return RepaintBoundary(
+      child: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {
           final percentage = this.percentage;
           final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clampDouble(0, widget.bottomMargin);
-          return RepaintBoundary(
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                if (widget.displayBottomBGLayer)
-                  SizedBox(
-                    height: totalBottomPadding,
-                    width: maxWidth,
-                    child: ColoredBox(color: widget.bgColor),
-                  ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: _padding.top,
-                    bottom: totalBottomPadding,
-                  ),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: GestureDetector(
-                      onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
-                      onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
-                      onVerticalDragEnd: (details) {
-                        if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
-                      },
-                      child: Material(
-                        clipBehavior: Clip.hardEdge,
-                        type: MaterialType.transparency,
-                        child: FadeTransition(
-                          opacity: dismissPercentageAnimation,
-                          child: RepaintBoundary(
-                            child: SizedBox(
-                              height: controllerHeight,
-                              child: ColoredBox(
-                                color: widget.bgColor,
-                                child: widget.builder(controllerHeight, percentage, reverseOpacityAnimation),
-                              ),
-                            ),
+          return Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              if (widget.displayBottomBGLayer)
+                SizedBox(
+                  height: totalBottomPadding,
+                  width: maxWidth,
+                  child: ColoredBox(color: widget.bgColor),
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: _padding.top,
+                  bottom: totalBottomPadding,
+                ),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: GestureDetector(
+                    onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
+                    onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
+                    onVerticalDragEnd: (details) {
+                      if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
+                    },
+                    child: Material(
+                      clipBehavior: Clip.hardEdge,
+                      type: MaterialType.transparency,
+                      child: FadeTransition(
+                        opacity: dismissPercentageAnimation,
+                        child: SizedBox(
+                          height: controllerHeight,
+                          child: ColoredBox(
+                            color: widget.bgColor,
+                            child: widget.builder(controllerHeight, percentage, reverseOpacityAnimation),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           );
-        });
+        },
+      ),
+    );
   }
 }

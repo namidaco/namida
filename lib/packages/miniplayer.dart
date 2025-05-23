@@ -54,7 +54,7 @@ class MiniPlayerParent extends StatefulWidget {
 }
 
 class _MiniPlayerParentState extends State<MiniPlayerParent> {
-  final _opacityAnimation = NamidaMiniPlayerBase.createClampedAnimation();
+  final _opacityAnimation = NamidaMiniPlayerBase.clampedAnimationCP;
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +65,14 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> {
           children: [
             // -- MiniPlayer Wallpaper
             Positioned.fill(
-              child: FadeIgnoreTransition(
-                completelyKillWhenPossible: true,
-                opacity: _opacityAnimation,
-                child: const Wallpaper(
-                  gradient: false,
-                  particleOpacity: 0.3,
+              child: RepaintBoundary(
+                child: FadeIgnoreTransition(
+                  completelyKillWhenPossible: true,
+                  opacity: _opacityAnimation,
+                  child: const Wallpaper(
+                    gradient: false,
+                    particleOpacity: 0.3,
+                  ),
                 ),
               ),
             ),
@@ -146,11 +148,11 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
         return currentItem is Selectable ? trackConfig.onMenuOpen(currentItem, details) : ytConfig.onMenuOpen(currentItem, details);
       },
       focusedMenuOptions: (item) => item is Selectable ? trackConfig.focusedMenuOptions(item) : ytConfig.focusedMenuOptions(item),
-      imageBuilder: (item, cp, brMultiplier) {
-        return item is Selectable ? trackConfig.imageBuilder(item, cp, brMultiplier) : ytConfig.imageBuilder(item, cp, brMultiplier);
+      imageBuilder: (item, brMultiplier) {
+        return item is Selectable ? trackConfig.imageBuilder(item, brMultiplier) : ytConfig.imageBuilder(item, brMultiplier);
       },
-      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) {
-        return item is Selectable ? trackConfig.currentImageBuilder(item, bcp, brMultiplier, maxHeight) : ytConfig.currentImageBuilder(item, bcp, brMultiplier, maxHeight);
+      currentImageBuilder: (item, brMultiplier, maxHeight) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, brMultiplier, maxHeight) : ytConfig.currentImageBuilder(item, brMultiplier, maxHeight);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -360,14 +362,12 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           );
         },
       ),
-      imageBuilder: (item, cp, brMultiplier) => _TrackImage(
+      imageBuilder: (item, brMultiplier) => _TrackImage(
         track: (item as Selectable).track,
-        cp: cp,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) => _AnimatingTrackImage(
+      currentImageBuilder: (item, brMultiplier, maxHeight) => _AnimatingTrackImage(
         track: (item as Selectable).track,
-        cp: bcp,
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
       ),
@@ -624,14 +624,12 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           );
         },
       ),
-      imageBuilder: (item, cp, brMultiplier) => _YoutubeIDImage(
+      imageBuilder: (item, brMultiplier) => _YoutubeIDImage(
         video: item as YoutubeID,
-        cp: cp,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, bcp, brMultiplier, maxHeight) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, brMultiplier, maxHeight) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
-        cp: bcp,
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
       ),
@@ -650,13 +648,11 @@ final _lrcAdditionalScale = 0.0.obs;
 
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
-  final double cp;
   final double Function(double borderRadius) brMultiplier;
   final double? maxHeight;
 
   const _AnimatingTrackImage({
     required this.track,
-    required this.cp,
     required this.brMultiplier,
     required this.maxHeight,
   });
@@ -664,13 +660,11 @@ class _AnimatingTrackImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
-      cp: cp,
       brMultiplier: brMultiplier,
       isLocal: true,
       maxHeight: maxHeight,
       fallback: _TrackImage(
         track: track,
-        cp: cp,
         brMultiplier: brMultiplier,
       ),
     );
@@ -678,14 +672,12 @@ class _AnimatingTrackImage extends StatelessWidget {
 }
 
 class _AnimatingThumnailWidget extends StatelessWidget {
-  final double cp;
   final double Function(double borderRadius) brMultiplier;
   final bool isLocal;
   final Widget fallback;
   final double? maxHeight;
 
   const _AnimatingThumnailWidget({
-    required this.cp,
     required this.brMultiplier,
     required this.isLocal,
     required this.fallback,
@@ -702,14 +694,18 @@ class _AnimatingThumnailWidget extends StatelessWidget {
           rx: Player.inst.videoPlayerInfo,
           builder: (context, videoInfo) {
             final videoOrImage = videoInfo != null && videoInfo.isInitialized
-                ? BorderRadiusClip(
-                    borderRadius: BorderRadius.circular(6.0 + (brMultiplier(10.0.multipliedRadius) * cp)),
+                ? AnimatedBuilder(
+                    animation: NamidaMiniPlayerBase.clampedAnimationBCP,
                     child: DoubleTapDetector(
                       onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal),
                       child: NamidaAspectRatio(
                         aspectRatio: videoInfo.aspectRatio,
                         child: Texture(textureId: videoInfo.textureId),
                       ),
+                    ),
+                    builder: (context, child) => BorderRadiusClip(
+                      borderRadius: BorderRadius.circular(6.0 + (brMultiplier(10.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
+                      child: child!,
                     ),
                   )
                 : fallback;
@@ -761,84 +757,84 @@ class _AnimatingThumnailWidget extends StatelessWidget {
 
 class _TrackImage extends StatelessWidget {
   final Track track;
-  final double cp;
   final double Function(double borderRadius) brMultiplier;
 
   const _TrackImage({
     required this.track,
-    required this.cp,
     required this.brMultiplier,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ArtworkWidget(
-      key: Key(track.pathToImage),
-      track: track,
-      path: track.pathToImage,
-      thumbnailSize: context.width,
-      compressed: cp == 0.0,
-      borderRadius: 6.0 + brMultiplier(10.0.multipliedRadius) * cp,
-      fadeMilliSeconds: 0,
-      forceSquared: settings.forceSquaredTrackThumbnail.value,
-      boxShadow: [
-        BoxShadow(
-          color: context.theme.shadowColor.withAlpha(100),
-          blurRadius: 24.0,
-          offset: const Offset(0.0, 8.0),
-        ),
-      ],
-      iconSize: 24.0 + 114 * cp,
-      enableGlow: false,
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) => ArtworkWidget(
+        key: Key(track.pathToImage),
+        track: track,
+        path: track.pathToImage,
+        thumbnailSize: context.width,
+        compressed: false,
+        borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),
+        fadeMilliSeconds: 0,
+        forceSquared: settings.forceSquaredTrackThumbnail.value,
+        boxShadow: [
+          BoxShadow(
+            color: context.theme.shadowColor.withAlpha(100),
+            blurRadius: 24.0,
+            offset: const Offset(0.0, 8.0),
+          ),
+        ],
+        iconSize: maxWidth * 0.5,
+        enableGlow: false,
+      ),
     );
   }
 }
 
 class _YoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
-  final double cp;
   final double Function(double borderRadius) brMultiplier;
 
   const _YoutubeIDImage({
     required this.video,
-    required this.cp,
     required this.brMultiplier,
   });
 
   @override
   Widget build(BuildContext context) {
     final width = context.width;
-    return YoutubeThumbnail(
-      type: ThumbnailType.video,
-      key: Key(video.id),
-      videoId: video.id,
-      width: width,
-      forceSquared: settings.forceSquaredTrackThumbnail.value,
-      isImportantInCache: true,
-      compressed: false,
-      preferLowerRes: false,
-      borderRadius: 6.0 + brMultiplier(10.0.multipliedRadius) * cp,
-      boxShadow: [
-        BoxShadow(
-          color: context.theme.shadowColor.withAlpha(100),
-          blurRadius: 24.0,
-          offset: const Offset(0.0, 8.0),
-        ),
-      ],
-      iconSize: 24.0 + 114 * cp,
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) => YoutubeThumbnail(
+        type: ThumbnailType.video,
+        key: Key(video.id),
+        videoId: video.id,
+        width: width,
+        forceSquared: settings.forceSquaredTrackThumbnail.value,
+        isImportantInCache: true,
+        compressed: false,
+        preferLowerRes: false,
+        fadeMilliSeconds: 0,
+        borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),
+        boxShadow: [
+          BoxShadow(
+            color: context.theme.shadowColor.withAlpha(100),
+            blurRadius: 24.0,
+            offset: const Offset(0.0, 8.0),
+          ),
+        ],
+        iconSize: maxWidth * 0.5,
+        enableGlow: false,
+      ),
     );
   }
 }
 
 class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
-  final double cp;
   final double Function(double borderRadius) brMultiplier;
   final double? maxHeight;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
-    required this.cp,
     required this.brMultiplier,
     required this.maxHeight,
   });
@@ -846,13 +842,11 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
-      cp: cp,
       brMultiplier: brMultiplier,
       isLocal: false,
       maxHeight: maxHeight,
       fallback: _YoutubeIDImage(
         video: video,
-        cp: cp,
         brMultiplier: brMultiplier,
       ),
     );
@@ -883,17 +877,15 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
       body: Stack(
         children: [
           if (widget.gradient)
-            RepaintBoundary(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0.95, -0.95),
-                    radius: 1.0,
-                    colors: [
-                      context.theme.colorScheme.onSecondary.withValues(alpha: .3),
-                      context.theme.colorScheme.onSecondary.withValues(alpha: .2),
-                    ],
-                  ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.95, -0.95),
+                  radius: 1.0,
+                  colors: [
+                    context.theme.colorScheme.onSecondary.withValues(alpha: .3),
+                    context.theme.colorScheme.onSecondary.withValues(alpha: .2),
+                  ],
                 ),
               ),
             ),
@@ -911,23 +903,21 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                     return AnimatedScale(
                       duration: const Duration(milliseconds: 300),
                       scale: 1.0 + scale * 1.5,
-                      child: RepaintBoundary(
-                        child: AnimatedBackground(
-                          vsync: this,
-                          behaviour: RandomParticleBehaviour(
-                            options: ParticleOptions(
-                              baseColor: context.theme.colorScheme.tertiary,
-                              spawnMaxRadius: 4,
-                              spawnMinRadius: 2,
-                              spawnMaxSpeed: 60 + bpm * 2,
-                              spawnMinSpeed: bpm,
-                              maxOpacity: widget.particleOpacity,
-                              minOpacity: 0,
-                              particleCount: 50,
-                            ),
+                      child: AnimatedBackground(
+                        vsync: this,
+                        behaviour: RandomParticleBehaviour(
+                          options: ParticleOptions(
+                            baseColor: context.theme.colorScheme.tertiary,
+                            spawnMaxRadius: 4,
+                            spawnMinRadius: 2,
+                            spawnMaxSpeed: 60 + bpm * 2,
+                            spawnMinSpeed: bpm,
+                            maxOpacity: widget.particleOpacity,
+                            minOpacity: 0,
+                            particleCount: 50,
                           ),
-                          child: const SizedBox(),
                         ),
+                        child: const SizedBox(),
                       ),
                     );
                   },

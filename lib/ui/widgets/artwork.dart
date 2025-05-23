@@ -34,12 +34,13 @@ class ArtworkWidget extends StatefulWidget {
   final double? iconSize;
   final double borderRadius;
   final double blur;
+  final bool disableBlurBgSizeShrink;
   final bool forceDummyArtwork;
   final Color? bgcolor;
   final Widget? child;
   final List<Widget> onTopWidgets;
   final List<BoxShadow>? boxShadow;
-  final bool enableGlow;
+  final bool? enableGlow;
   final bool displayIcon;
   final IconData? icon;
   final bool isCircle;
@@ -63,6 +64,7 @@ class ArtworkWidget extends StatefulWidget {
     this.child,
     this.borderRadius = 8.0,
     this.blur = 5.0,
+    this.disableBlurBgSizeShrink = false,
     this.width,
     this.height,
     this.cacheHeight,
@@ -72,7 +74,7 @@ class ArtworkWidget extends StatefulWidget {
     this.staggered = false,
     this.boxShadow,
     this.onTopWidgets = const <Widget>[],
-    this.enableGlow = true,
+    this.enableGlow,
     this.displayIcon = true,
     this.icon,
     this.isCircle = false,
@@ -260,8 +262,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             height: widget.staggered ? null : boxHeight,
             child: Align(
               child: _DropShadowWrapper(
-                enabled: widget.enableGlow && (settings.enableGlowEffect.value && widget.blur != 0.0),
+                enabled: widget.enableGlow ?? (settings.enableGlowEffect.value && widget.blur != 0.0),
                 blur: widget.blur,
+                sizePercentage: widget.disableBlurBgSizeShrink ? 1.0 : DropShadow.defaultSizePercentage,
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
@@ -348,12 +351,14 @@ class _DropShadowWrapper extends StatelessWidget {
   final bool enabled;
   final Widget child;
   final double blur;
+  final double sizePercentage;
   final Offset offset;
 
   const _DropShadowWrapper({
     required this.enabled,
     required this.child,
     this.offset = const Offset(0.0, 1.25),
+    this.sizePercentage = DropShadow.defaultSizePercentage,
     required this.blur,
   });
 
@@ -363,6 +368,7 @@ class _DropShadowWrapper extends StatelessWidget {
         ? DropShadow(
             blurRadius: blur,
             offset: offset,
+            sizePercentage: sizePercentage,
             child: child,
           )
         : child;

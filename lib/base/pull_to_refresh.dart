@@ -4,6 +4,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef PullToRefreshCallback = Future<void> Function();
 const double _defaultMaxDistance = 128.0;
@@ -78,6 +79,8 @@ class _PullToRefreshState extends State<PullToRefresh> with TickerProviderStateM
 }
 
 mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements TickerProvider {
+  static bool isPulling = false;
+
   bool enablePullToRefresh = true;
 
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
@@ -106,6 +109,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
     if (!enablePullToRefresh) return;
+    if (FadeDismissible.isDismissing) return;
     final dy = event.delta.dy;
     if (_isDraggingVertically == null) {
       final dxabs = event.delta.dx.abs();
@@ -115,12 +119,15 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
         final canDragVertically = dy > 0 && (sc.hasClients && sc.positions.first.pixels <= 0);
         final horizontalAllowance = dxabs < 1.2;
         _isDraggingVertically = canDragVertically && horizontalAllowance;
+        PullToRefreshMixin.isPulling = _isDraggingVertically ?? false;
       } catch (_) {}
     }
     if (_isDraggingVertically == true) _onVerticalDragUpdate(dy);
   }
 
   void onVerticalDragFinish() {
+    PullToRefreshMixin.isPulling = false;
+
     _distanceDragged = 0;
     _isDraggingVertically = null;
     try {

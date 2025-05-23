@@ -219,6 +219,9 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   Widget getQualityChipBase({
+    final double? height,
+    final double? width,
+    final Color? bgColor,
     required final Color? selectedColor,
     final double verticalPadding = 8.0,
     required void Function() onTap,
@@ -232,12 +235,14 @@ Future<void> showDownloadVideoBottomSheet({
               ),
             )
           : const BoxDecoration(),
+      height: height,
+      width: width,
       animationDurationMS: 100,
       margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 4.0),
       padding: EdgeInsets.symmetric(vertical: verticalPadding),
       onTap: onTap,
       borderRadius: 8.0,
-      bgColor: selectedColor != null ? Color.alphaBlend(selectedColor.withAlpha(40), context.theme.cardTheme.color!) : context.theme.cardTheme.color,
+      bgColor: bgColor ?? (selectedColor != null ? Color.alphaBlend(selectedColor.withAlpha(40), context.theme.cardTheme.color!) : context.theme.cardTheme.color),
       child: child,
     );
   }
@@ -247,13 +252,10 @@ Future<void> showDownloadVideoBottomSheet({
       verticalPadding: 0.0,
       selectedColor: null,
       onTap: () {},
-      child: NamidaDummyContainer(
-        width: width,
-        height: 38.0,
-        shimmerEnabled: true,
-        borderRadius: 0.0,
-        child: const SizedBox(),
-      ),
+      width: width,
+      height: 38.0,
+      bgColor: context.theme.colorScheme.surface,
+      child: null,
     );
   }
 

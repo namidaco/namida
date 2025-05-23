@@ -98,45 +98,43 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    child: RepaintBoundary(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: isMenuMinimized
-                                            ? const FittedBox(child: SelectedTracksRow())
-                                            : Column(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                children: [
-                                                  const FittedBox(child: SelectedTracksRow()),
-                                                  const SizedBox(
-                                                    height: 20,
-                                                  ),
-                                                  Expanded(
-                                                    child: Container(
-                                                      clipBehavior: Clip.antiAlias,
-                                                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                                      child: NamidaListView(
-                                                        itemExtent: Dimensions.inst.trackTileItemExtent,
-                                                        itemCount: selectedTracks.length,
-                                                        onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                                        listBottomPadding: 0,
-                                                        itemBuilder: (context, i) {
-                                                          return FadeDismissible(
-                                                            key: ValueKey(selectedTracks[i]),
-                                                            onDismissed: (direction) => stc.removeTrack(i),
-                                                            child: TrackTile(
-                                                              properties: properties,
-                                                              index: i,
-                                                              trackOrTwd: selectedTracks[i],
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: isMenuMinimized
+                                          ? const FittedBox(child: SelectedTracksRow())
+                                          : Column(
+                                              mainAxisSize: MainAxisSize.max,
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                const FittedBox(child: SelectedTracksRow()),
+                                                const SizedBox(
+                                                  height: 20,
+                                                ),
+                                                Expanded(
+                                                  child: Container(
+                                                    clipBehavior: Clip.antiAlias,
+                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                                    child: NamidaListView(
+                                                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                                                      itemCount: selectedTracks.length,
+                                                      onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
+                                                      listBottomPadding: 0,
+                                                      itemBuilder: (context, i) {
+                                                        return FadeDismissible(
+                                                          key: ValueKey(selectedTracks[i]),
+                                                          onDismissed: (direction) => stc.removeTrack(i),
+                                                          child: TrackTile(
+                                                            properties: properties,
+                                                            index: i,
+                                                            trackOrTwd: selectedTracks[i],
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                      ),
+                                                ),
+                                              ],
+                                            ),
                                     ),
                                   );
                                 },

@@ -375,17 +375,21 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                 ],
                                               ),
                                             ),
+                                            SizedBox(width: 4.0),
                                             IconButton.filledTonal(
                                               padding: EdgeInsets.zero,
                                               visualDensity: VisualDensity.compact,
+                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                                               onPressed: () {
                                                 YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
                                               },
                                               icon: const Icon(Broken.play, size: 18.0),
                                             ),
+                                            SizedBox(width: 4.0),
                                             IconButton.filledTonal(
                                               padding: EdgeInsets.zero,
                                               visualDensity: VisualDensity.compact,
+                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                                               onPressed: () {
                                                 YoutubeController.inst.pauseDownloadTask(
                                                   itemsConfig: [],
@@ -395,9 +399,11 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                               },
                                               icon: const Icon(Broken.pause, size: 18.0),
                                             ),
+                                            SizedBox(width: 4.0),
                                             IconButton.filledTonal(
                                               padding: EdgeInsets.zero,
                                               visualDensity: VisualDensity.compact,
+                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                                               onPressed: () async {
                                                 final confirmation = await _confirmCancelDialog(
                                                   context: context,

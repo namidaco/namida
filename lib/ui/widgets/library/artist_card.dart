@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -51,20 +50,19 @@ class ArtistCard extends StatelessWidget {
                 children: [
                   NamidaHero(
                     tag: hero,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
-                      child: ContainerWithBorder(
-                        child: ArtworkWidget(
-                          key: Key(artist.pathToImage),
-                          track: artist.trackOfImage,
-                          thumbnailSize: imageSize,
-                          path: artist.pathToImage,
-                          borderRadius: 10.0,
-                          forceSquared: true,
-                          blur: 0,
-                          iconSize: 32.0,
-                          displayIcon: displayIcon,
-                        ),
+                    child: ContainerWithBorder(
+                      child: ArtworkWidget(
+                        key: Key(artist.pathToImage),
+                        track: artist.trackOfImage,
+                        thumbnailSize: imageSize,
+                        path: artist.pathToImage,
+                        borderRadius: 0.0,
+                        forceSquared: true,
+                        blur: 8.0,
+                        disableBlurBgSizeShrink: true,
+                        isCircle: true,
+                        iconSize: 32.0,
+                        displayIcon: displayIcon,
                       ),
                     ),
                   ),

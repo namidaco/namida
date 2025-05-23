@@ -20,6 +20,7 @@ import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:wheel_slider/wheel_slider.dart';
 
+import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -319,6 +320,30 @@ class CustomListTile extends StatelessWidget {
   }
 }
 
+/// Blurs a child, effective for performance
+class NamidaBlur extends StatelessWidget {
+  final double blur;
+  final bool enabled;
+  final Widget child;
+
+  const NamidaBlur({
+    super.key,
+    required this.blur,
+    this.enabled = true,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      child: child,
+    );
+  }
+}
+
+/// Blurs a background behind a child, demanding/expensive for performance.
 class NamidaBgBlur extends StatelessWidget {
   final double blur;
   final bool enabled;
@@ -344,10 +369,12 @@ class NamidaBgBlur extends StatelessWidget {
   }
 }
 
+/// Same as [NamidaBgBlur] but with more configurations like clipping & decoration
 class NamidaBgBlurClipped extends StatelessWidget {
   final double blur;
   final bool enabled;
   final Clip clipBehavior;
+  final BoxShape shape;
   final BoxDecoration? decoration;
   final BorderRadiusGeometry? borderRadius;
   final Widget child;
@@ -356,6 +383,7 @@ class NamidaBgBlurClipped extends StatelessWidget {
     super.key,
     required this.blur,
     this.enabled = true,
+    this.shape = BoxShape.rectangle,
     this.clipBehavior = Clip.antiAlias,
     this.decoration,
     this.borderRadius,
@@ -364,20 +392,50 @@ class NamidaBgBlurClipped extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled || blur == 0) return child;
+    final decoration = this.decoration;
+
+    if (!enabled || blur == 0) {
+      return decoration != null
+          ? DecoratedBox(
+              decoration: decoration,
+              child: child,
+            )
+          : borderRadius != null && shape != BoxShape.rectangle
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                    shape: decoration?.shape ?? BoxShape.rectangle,
+                  ),
+                )
+              : child;
+    }
 
     return ClipPath(
       clipBehavior: clipBehavior,
       clipper: DecorationClipper(
-        decoration: decoration ??
-            BoxDecoration(
-              borderRadius: borderRadius,
-            ),
+        decoration: BoxDecoration(
+          borderRadius: decoration?.borderRadius ?? borderRadius,
+          shape: decoration?.shape ?? shape,
+        ),
       ),
       child: NamidaBgBlur(
         blur: blur,
         enabled: enabled,
-        child: child,
+        child: decoration != null
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: decoration.borderRadius,
+                  shape: decoration.shape,
+                  backgroundBlendMode: decoration.backgroundBlendMode,
+                  border: decoration.border,
+                  boxShadow: decoration.boxShadow,
+                  color: decoration.color,
+                  gradient: decoration.gradient,
+                  image: decoration.image,
+                ),
+                child: child,
+              )
+            : child,
       ),
     );
   }
@@ -396,10 +454,13 @@ class DropShadow extends StatelessWidget {
     this.bottomChild,
     this.blurRadius = 10.0,
     this.offset = const Offset(0, 4),
-    this.bgSizePercentage = 0.925,
-    this.sizePercentage = 0.95,
+    this.bgSizePercentage = defaultBgSizePercentage,
+    this.sizePercentage = defaultSizePercentage,
     super.key,
   });
+
+  static const defaultBgSizePercentage = 0.925;
+  static const defaultSizePercentage = 0.95;
 
   @override
   Widget build(BuildContext context) {
@@ -418,10 +479,12 @@ class DropShadow extends StatelessWidget {
             ),
           ),
         ),
-        Transform.scale(
-          scale: sizePercentage,
-          child: child,
-        )
+        sizePercentage == 1.0
+            ? child
+            : Transform.scale(
+                scale: sizePercentage,
+                child: child,
+              )
       ],
     );
   }
@@ -1377,11 +1440,10 @@ class ContainerWithBorder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3.0),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: borderColor ?? context.theme.cardColor.withAlpha(160),
         shape: BoxShape.circle,
+        color: borderColor ?? context.theme.cardColor.withAlpha(160),
         boxShadow: [
           BoxShadow(
             color: context.theme.shadowColor.withAlpha(60),
@@ -1390,11 +1452,8 @@ class ContainerWithBorder extends StatelessWidget {
           )
         ],
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-        ),
-        clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: EdgeInsetsGeometry.all(3.0),
         child: child,
       ),
     );
@@ -1866,170 +1925,182 @@ class SubpageInfoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const textHeroEnabled = false;
     const pauseHero = 'kururing';
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
 
-    final imageWidget = LayoutBuilder(
-      builder: (context, constraints) {
-        double maxWidth = constraints.maxWidth;
-        if (!showSubpageInfoAtSide && (maxWidth.isInfinite || maxWidth.isNaN)) {
-          maxWidth = maxWidth.withMaximum(context.width * 0.3);
-        }
-        maxWidth = maxWidth.withMaximum(this.maxWidth);
-        return imageBuilder(maxWidth);
-      },
-    );
+    return Container(
+      alignment: Alignment.topCenter,
+      padding: const EdgeInsets.all(12.0),
+      margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+      height: height,
+      child: LayoutWidthHeightProvider(
+        builder: (context, maxWidth, maxHeight) {
+          maxWidth = maxWidth.withMaximum(this.maxWidth);
 
-    final textAndButtonsWidget = LayoutWidthProvider(
-      maxWidth: maxWidth,
-      builder: (context, maxWidth) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              height: 18.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 14.0),
-              child: NamidaHero(
-                tag: '${pauseHero}line1_$heroTag',
-                child: showSubpageInfoAtSide
-                    ? Text(
-                        title,
-                        style: context.textTheme.displayLarge?.copyWith(fontSize: 14.0),
-                        softWrap: true,
-                      )
-                    : Text(
-                        title,
-                        style: context.textTheme.displayLarge?.copyWith(fontSize: 14.0),
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+          double imageMaxWidth;
+          double infoMaxWidth;
+
+          if (showSubpageInfoAtSide) {
+            imageMaxWidth = maxWidth;
+            infoMaxWidth = maxWidth;
+          } else {
+            imageMaxWidth = (maxWidth * 0.4).withMaximum(maxHeight * 0.3);
+            infoMaxWidth = maxWidth - imageMaxWidth;
+          }
+
+          final imageWidget = imageBuilder(imageMaxWidth);
+
+          double getFontSize(double p, double min, double max) => ((infoMaxWidth * 0.2).withMaximum(maxHeight * 0.1) * p).clampDouble(min, max);
+
+          final textAndButtonsWidget = Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                height: 18.0,
               ),
-            ),
-            const SizedBox(
-              height: 2.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 14.0),
-              child: NamidaHero(
-                tag: '${pauseHero}line2_$heroTag',
-                child: Text(
-                  subtitle,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 14.0),
+                child: NamidaHero(
+                  enabled: textHeroEnabled,
+                  tag: '${pauseHero}line1_$heroTag',
+                  child: showSubpageInfoAtSide
+                      ? Text(
+                          title,
+                          style: context.textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.5, 10.0, 32.0)),
+                          softWrap: true,
+                        )
+                      : Text(
+                          title,
+                          style: context.textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.4, 10.0, 32.0)),
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                 ),
               ),
-            ),
-            if (thirdLineText != '') ...[
               const SizedBox(
                 height: 2.0,
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 14.0),
                 child: NamidaHero(
-                  tag: '${pauseHero}line3_$heroTag',
+                  enabled: textHeroEnabled,
+                  tag: '${pauseHero}line2_$heroTag',
                   child: Text(
-                    thirdLineText,
+                    subtitle,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.3, 10.0, 24.0)),
                   ),
                 ),
               ),
-            ],
-            const SizedBox(
-              height: 18.0,
-            ),
-            FittedBox(
-              alignment: Alignment.topLeft,
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const SizedBox(width: 6.0),
-                  NamidaButton(
-                    icon: Broken.shuffle,
-                    onPressed: () => Player.inst.playOrPause(
-                      0,
-                      tracksFn(),
-                      source,
-                      shuffle: true,
-                    ),
-                  ),
-                  const SizedBox(width: 6.0),
-                  ElevatedButton.icon(
-                    onPressed: () => Player.inst.addToQueue(tracksFn()),
-                    icon: const StackedIcon(
-                      disableColor: true,
-                      baseIcon: Broken.play,
-                      secondaryIcon: Broken.add_circle,
-                      secondaryIconSize: 13.0,
-                    ),
-                    label: Text(
-                      lang.PLAY_LAST,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: (maxWidth * 0.1).clampDouble(10.0, 14.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6.0),
-                ],
-              ),
-            )
-          ],
-        );
-      },
-    );
-    return Container(
-      alignment: Alignment.topCenter,
-      padding: const EdgeInsets.all(12.0),
-      margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      height: height,
-      child: showSubpageInfoAtSide
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    alignment: Alignment.topLeft,
-                    fit: BoxFit.scaleDown,
-                    child: imageWidget,
-                  ),
+              if (thirdLineText != '') ...[
+                const SizedBox(
+                  height: 2.0,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: textAndButtonsWidget,
-                ),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Flexible(
-                  flex: 2,
-                  child: FittedBox(
-                    alignment: Alignment.topLeft,
-                    fit: BoxFit.scaleDown,
-                    child: imageWidget,
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: NamidaHero(
+                    enabled: textHeroEnabled,
+                    tag: '${pauseHero}line3_$heroTag',
+                    child: Text(
+                      thirdLineText,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
+                    ),
                   ),
                 ),
-                Flexible(
-                  flex: 2,
-                  fit: FlexFit.tight,
-                  child: textAndButtonsWidget,
-                ),
               ],
-            ),
+              const SizedBox(
+                height: 18.0,
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: infoMaxWidth * 0.85),
+                child: FittedBox(
+                  alignment: Alignment.topLeft,
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const SizedBox(width: 6.0),
+                      NamidaButton(
+                        icon: Broken.shuffle,
+                        onPressed: () => Player.inst.playOrPause(
+                          0,
+                          tracksFn(),
+                          source,
+                          shuffle: true,
+                        ),
+                      ),
+                      const SizedBox(width: 6.0),
+                      ElevatedButton.icon(
+                        onPressed: () => Player.inst.addToQueue(tracksFn()),
+                        icon: const StackedIcon(
+                          disableColor: true,
+                          baseIcon: Broken.play,
+                          secondaryIcon: Broken.add_circle,
+                          secondaryIconSize: 13.0,
+                        ),
+                        label: Text(
+                          lang.PLAY_LAST,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: getFontSize(0.3, 10.0, 20.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6.0),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          );
+
+          return showSubpageInfoAtSide
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        alignment: Alignment.topLeft,
+                        fit: BoxFit.scaleDown,
+                        child: imageWidget,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: textAndButtonsWidget,
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: imageMaxWidth),
+                      child: FittedBox(
+                        alignment: Alignment.topLeft,
+                        fit: BoxFit.scaleDown,
+                        child: imageWidget,
+                      ),
+                    ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: infoMaxWidth),
+                      child: textAndButtonsWidget,
+                    ),
+                  ],
+                );
+        },
+      ),
     );
   }
 }
@@ -2377,8 +2448,12 @@ class FadeDismissible extends StatefulWidget {
   final Widget? onTopWidget;
   final bool removeOnDismiss;
 
+  /// value multiplied by the animation.
+  /// 0.0 means top friction, 1.0 means normal friction & >1 means more lose friction
+  final double friction;
+
   const FadeDismissible({
-    required Key key,
+    required super.key,
     required this.child,
     required this.onDismissed,
     this.onDismissStart,
@@ -2396,7 +2471,10 @@ class FadeDismissible extends StatefulWidget {
     this.draggableRx,
     this.onTopWidget,
     this.removeOnDismiss = true,
-  }) : super(key: key);
+    this.friction = 1.0,
+  });
+
+  static bool isDismissing = false;
 
   @override
   State<FadeDismissible> createState() => _FadeDismissibleState();
@@ -2463,11 +2541,19 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 
   Widget buildChild(bool draggable, Widget child, double maxWidth) {
-    final fadeAnimation = _animation.drive(Animatable.fromCallback((value) => 1 - value.abs()));
+    final fadeAnimation = _animation.drive(
+      widget.friction == 1.0
+          ? Animatable.fromCallback((value) => 1 - value.abs())
+          : Animatable.fromCallback(
+              (value) => 1 - (value * widget.friction).abs().clampDouble(0, 1),
+            ),
+    );
     return HorizontalDragDetector(
       onStart: !draggable
           ? null
           : (d) {
+              if (PullToRefreshMixin.isPulling) return;
+              FadeDismissible.isDismissing = true;
               if (widget.onDismissStart != null) widget.onDismissStart!(d);
               calculateInDismissRange(d.localPosition.dx, maxWidth);
               if (widget.draggable != null) _draggable = widget.draggable!();
@@ -2477,6 +2563,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
           : (d) {
               if (!_draggable) return;
               if (!_inDismissRange) return;
+              if (PullToRefreshMixin.isPulling) return;
               if (_canSwipeInternal == null) {
                 bool canSwipe = true;
                 if (d.delta.dx.isNegative) {
@@ -2494,6 +2581,8 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
       onEnd: !draggable
           ? null
           : (d) {
+              if (PullToRefreshMixin.isPulling) return;
+              FadeDismissible.isDismissing = false;
               _canSwipeInternal = null;
 
               final velocity = d.velocity.pixelsPerSecond.dx;
@@ -2512,6 +2601,9 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
               }
               _dragged = 0;
             },
+      onCancel: () {
+        FadeDismissible.isDismissing = false;
+      },
       child: AnimatedBuilder(
         animation: _animation,
         child: FadeTransition(
@@ -2522,7 +2614,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
           final p = _animation.value;
           if (p == 0) return child!;
           return Transform.translate(
-            offset: Offset(p * maxWidth, 0),
+            offset: Offset(p * widget.friction * maxWidth, 0),
             child: child!,
           );
         },
@@ -2533,16 +2625,14 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final maxWidth = Dimensions.inst.availableAppContentWidth;
-    final child = RepaintBoundary(
-      child: widget.onTopWidget != null
-          ? Stack(
-              children: [
-                widget.child,
-                widget.onTopWidget!,
-              ],
-            )
-          : widget.child,
-    );
+    final child = widget.onTopWidget != null
+        ? Stack(
+            children: [
+              widget.child,
+              widget.onTopWidget!,
+            ],
+          )
+        : widget.child;
     return widget.draggableRx != null
         ? ObxO(
             rx: widget.draggableRx!,
@@ -3127,15 +3217,16 @@ class NamidaInkWell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final realBorderRadius = transparentHighlight ? 0.0 : borderRadius;
-    final borderR = borderRadius == 0 ? null : BorderRadius.circular(realBorderRadius.multipliedRadius);
+    final borderR =
+        decoration.borderRadius?.resolve(Directionality.of(context)) ?? (transparentHighlight || borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius));
     final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
+    final bgColor = this.bgColor ?? decoration.color ?? Colors.transparent;
     return AnimatedContainer(
       alignment: alignment,
       margin: margin,
       duration: Duration(milliseconds: animationDurationMS),
       decoration: BoxDecoration(
-        color: bgColor ?? decoration.color ?? Colors.transparent,
+        color: bgColor,
         borderRadius: borderR,
         backgroundBlendMode: decoration.backgroundBlendMode,
         boxShadow: decoration.boxShadow,
@@ -5263,6 +5354,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
                   : DismissDirection.none,
       removeOnDismiss: false,
       dismissThreshold: 0.1,
+      friction: 0.58,
       onDismissed: (direction) {
         final swipedLeft = direction == DismissDirection.endToStart;
         final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;

@@ -1367,9 +1367,9 @@ class _YTDownloadManager with PortsProvider<SendPort> {
                 }
               }
               return sendPort.send(MapEntry(filePath, movedException));
-            } catch (e) {
+            } on RhttpCancelException catch (_) {
               // client force closed
-              return sendPort.send(MapEntry(filePath, e));
+              return sendPort.send(MapEntry(filePath, null));
             } finally {
               try {
                 final req = cancelTokensMap.remove(filePath);

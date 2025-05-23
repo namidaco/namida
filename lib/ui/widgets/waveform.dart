@@ -115,24 +115,27 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                     return Stack(
                       children: [
                         barBehind,
-                        Obx(
-                          (context) {
-                            final seekValue = MiniPlayerController.inst.seekValue.valueR;
-                            final position = seekValue != 0.0 ? seekValue : Player.inst.nowPlayingPositionR;
-                            final durInMs = _currentDurationInMSR;
-                            final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
-                            return ShaderMask(
-                              blendMode: BlendMode.srcIn,
-                              shaderCallback: (Rect bounds) {
-                                return LinearGradient(
-                                  tileMode: TileMode.decal,
-                                  stops: [0.0, percentage, percentage + 0.005, 1.0],
-                                  colors: colors,
-                                ).createShader(bounds);
-                              },
-                              child: barInFront,
-                            );
-                          },
+                        ObxO(
+                          rx: MiniPlayerController.inst.seekValue,
+                          builder: (context, seek) => ObxO(
+                            rx: Player.inst.nowPlayingPosition,
+                            builder: (context, nowPlayingPosition) {
+                              final position = seek != 0 ? seek : nowPlayingPosition;
+                              final durInMs = _currentDurationInMSR;
+                              final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
+                              return ShaderMask(
+                                blendMode: BlendMode.srcIn,
+                                shaderCallback: (Rect bounds) {
+                                  return LinearGradient(
+                                    tileMode: TileMode.decal,
+                                    stops: [0.0, percentage, percentage + 0.005, 1.0],
+                                    colors: colors,
+                                  ).createShader(bounds);
+                                },
+                                child: barInFront,
+                              );
+                            },
+                          ),
                         ),
                       ],
                     );

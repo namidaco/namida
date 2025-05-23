@@ -130,67 +130,75 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
         ),
         const SizedBox(height: 10.0),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 8.0),
             Expanded(
-              child: Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                runSpacing: 4.0,
-                children: [
-                  NamidaInkWell(
-                    borderRadius: 6.0,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: context.theme.colorScheme.secondary.withValues(alpha: 0.5)),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+              child: FittedBox(
+                alignment: Alignment.centerLeft,
+                fit: BoxFit.scaleDown,
+                child: NamidaInkWell(
+                  borderRadius: 6.0,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: context.theme.colorScheme.secondary.withValues(alpha: 0.5)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+                  child: Flexible(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Broken.video_square, size: 16.0),
                         const SizedBox(width: 4.0),
-                        Text(
-                          videosCountVSTotalText,
-                          style: context.textTheme.displayMedium,
+                        Flexible(
+                          child: Text(
+                            videosCountVSTotalText,
+                            style: context.textTheme.displayMedium,
+                          ),
                         ),
                         if (peakDatesText != null)
-                          Text(
-                            peakDatesText,
-                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                          Flexible(
+                            child: Text(
+                              peakDatesText,
+                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                            ),
                           ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(width: 4.0),
-            YTVideosActionBar(
-              queueSource: QueueSourceYoutubeID.channelHosted,
-              title: channelInfo?.title ?? widget.localChannel.title,
-              urlBuilder: channelInfo?.buildUrl,
-              barOptions: const YTVideosActionBarOptions(
-                addToPlaylist: false,
-                playLast: false,
-              ),
-              videosCallback: () => streamsList
-                  ?.map((e) => YoutubeID(
-                        id: e.id,
-                        playlistID: null,
-                      ))
-                  .toList(),
-              infoLookupCallback: () {
-                final streamsList = this.streamsList;
-                if (streamsList == null) return null;
-                final m = <String, StreamInfoItem>{};
-                streamsList.loop((e) => m[e.id] = e);
-                return m;
-              },
-              playlistBasicInfo: () => PlaylistBasicInfo(
-                id: channelInfo?.id ?? '',
-                title: channelInfo?.title ?? '',
-                videosCountText: channelInfo?.videosCountText,
-                videosCount: channelInfo?.videosCount,
-                thumbnails: [],
+            Align(
+              alignment: Alignment.centerRight,
+              child: YTVideosActionBar(
+                queueSource: QueueSourceYoutubeID.channelHosted,
+                title: channelInfo?.title ?? widget.localChannel.title,
+                urlBuilder: channelInfo?.buildUrl,
+                barOptions: const YTVideosActionBarOptions(
+                  addToPlaylist: false,
+                  playLast: false,
+                ),
+                videosCallback: () => streamsList
+                    ?.map((e) => YoutubeID(
+                          id: e.id,
+                          playlistID: null,
+                        ))
+                    .toList(),
+                infoLookupCallback: () {
+                  final streamsList = this.streamsList;
+                  if (streamsList == null) return null;
+                  final m = <String, StreamInfoItem>{};
+                  streamsList.loop((e) => m[e.id] = e);
+                  return m;
+                },
+                playlistBasicInfo: () => PlaylistBasicInfo(
+                  id: channelInfo?.id ?? '',
+                  title: channelInfo?.title ?? '',
+                  videosCountText: channelInfo?.videosCountText,
+                  videosCount: channelInfo?.videosCount,
+                  thumbnails: [],
+                ),
               ),
             ),
             const SizedBox(width: 8.0),

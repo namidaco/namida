@@ -88,31 +88,37 @@ class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
       final token = p[2] as int;
 
       if (isFFprobe) {
-        final res = Process.runSync(ffprobeExePath, [
-          "-loglevel",
-          "quiet",
-          "-v",
-          "quiet",
-          ...args,
-        ]);
+        String? output;
+        try {
+          final res = Process.runSync(ffprobeExePath, [
+            "-loglevel",
+            "quiet",
+            "-v",
+            "quiet",
+            ...args,
+          ]);
 
-        if (res.exitCode == 0) {
-          final stdout = res.stdout;
-          final isDummy = stdout == null || stdout is! String || stdout.isEmpty;
-          if (!isDummy) {
-            final output = stdout.toString();
-            sendPort.send([token, output]);
+          if (res.exitCode == 0) {
+            final stdout = res.stdout;
+            final isDummy = stdout == null || stdout is! String || stdout.isEmpty;
+            if (!isDummy) {
+              output = stdout.toString();
+            }
           }
-        }
+        } catch (_) {}
+        sendPort.send([token, output]);
       } else {
-        final res = Process.runSync(ffmpegExePath, [
-          "-hide_banner",
-          "-loglevel",
-          "quiet",
-          ...args,
-        ]);
-        final rc = res.exitCode;
-        final success = rc == 0;
+        bool success = false;
+        try {
+          final res = Process.runSync(ffmpegExePath, [
+            "-hide_banner",
+            "-loglevel",
+            "quiet",
+            ...args,
+          ]);
+          final rc = res.exitCode;
+          success = rc == 0;
+        } catch (_) {}
         sendPort.send([token, success]);
       }
     });

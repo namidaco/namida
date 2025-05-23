@@ -100,7 +100,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void startDimTimer({Brightness? brightness}) {
     _dimTimer?.cancel();
-    if (settings.youtube.enableDimInLightMode == false && (brightness ?? namida.context?.theme.brightness) != Brightness.dark) {
+    if (settings.youtube.enableDimInLightMode == false && (brightness ?? namida.context?.brightness) != Brightness.dark) {
       _canDimMiniplayer.value = false;
       return;
     }

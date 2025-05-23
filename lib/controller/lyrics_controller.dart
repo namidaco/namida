@@ -50,10 +50,10 @@ class Lyrics {
 
   final _lrcSearchManager = _LRCSearchManager();
 
-  void _updateWidgets(Lrc? lrc) {
+  void _updateWidgets(Lrc? lrc, String? txt) {
     WakelockController.inst.updateLRCStatus(lrc != null);
-    lrcViewKey.currentState?.fillLists(lrc);
-    lrcViewKeyFullscreen.currentState?.fillLists(lrc);
+    lrcViewKey.currentState?.fillLists(lrc, txt);
+    lrcViewKeyFullscreen.currentState?.fillLists(lrc, txt);
   }
 
   void resetLyrics() {
@@ -111,10 +111,11 @@ class Lyrics {
       final lrc = embedded.parseLRC();
       if (lrc != null && lrc.lyrics.isNotEmpty) {
         currentLyricsLRC.value = lrc;
-        _updateWidgets(lrc);
+        _updateWidgets(lrc, null);
       } else {
-        currentLyricsText.value = _cleanPlainLyrics(embedded);
-        _updateWidgets(null);
+        final txt = _cleanPlainLyrics(embedded);
+        currentLyricsText.value = txt;
+        _updateWidgets(null, txt);
       }
       return;
     }
@@ -129,11 +130,12 @@ class Lyrics {
 
     if (lrcLyrics.$1 != null) {
       currentLyricsLRC.value = lrcLyrics.$1;
-      _updateWidgets(lrcLyrics.$1);
+      _updateWidgets(lrcLyrics.$1, null);
       return;
     } else if (lrcLyrics.$2 != null) {
-      currentLyricsText.value = _cleanPlainLyrics(lrcLyrics.$2!);
-      _updateWidgets(null);
+      final txt = _cleanPlainLyrics(lrcLyrics.$2!);
+      currentLyricsText.value = txt;
+      _updateWidgets(null, txt);
       return;
     }
 
@@ -147,7 +149,9 @@ class Lyrics {
     if (checkInterrupted()) return;
 
     if (textLyrics != '') {
-      currentLyricsText.value = _cleanPlainLyrics(textLyrics);
+      final txt = _cleanPlainLyrics(textLyrics);
+      currentLyricsText.value = txt;
+      _updateWidgets(null, txt);
     } else {
       lyricsCanBeAvailable.value = false;
     }
@@ -186,6 +190,16 @@ class Lyrics {
           lrcContent = await syncedInCache.readAsString();
         } else if (trackLyrics != '') {
           lrcContent = trackLyrics;
+        }
+      }
+      // -- this should be prioritized before searching network again
+      // -- if txt is in cache, then either the user has chosen a file or lrc wasn't found
+      // -- so it has to be a good reason why this is here
+      // -- turning this off will cost time and network each time trynna fetch lyrics
+      if (lrcContent == null) {
+        final textInCache = lrcUtils.cachedTxtFile;
+        if (await textInCache.existsAndValid()) {
+          lrcContent = await textInCache.readAsString();
         }
       }
     }

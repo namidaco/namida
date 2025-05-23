@@ -128,19 +128,6 @@ Future<void> showTrackInfoDialog(
     );
   }
 
-  final artwork = NamidaHero(
-    tag: heroTag,
-    child: ArtworkWidget(
-      key: Key(track.pathToImage),
-      fadeMilliSeconds: 0,
-      track: track,
-      path: track.pathToImage,
-      thumbnailSize: 120,
-      forceSquared: settings.forceSquaredTrackThumbnail.value,
-      compressed: false,
-    ),
-  );
-
   String releasedFromNow = '';
   final parsed = trackExt == null ? null : DateTime.tryParse(trackExt.year.toString());
   if (parsed != null) {
@@ -208,256 +195,274 @@ Future<void> showTrackInfoDialog(
               ),
             ],
             icon: Broken.info_circle,
-            child: SizedBox(
-              height: namida.height * 0.7,
-              width: namida.width,
-              child: ObxO(
-                rx: settings.showUnknownFieldsInTrackInfoDialog,
-                builder: (context, _) => CustomScrollView(
-                  slivers: [
-                    SliverList(
-                      delegate: SliverChildListDelegate(
-                        [
-                          const SizedBox(height: 12.0),
-                          NamidaInkWell(
-                            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                            onTap: () => showTrackListensDialog(track, datesOfListen: totalListens, colorScheme: color.value),
-                            borderRadius: 12.0,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 2.0),
-                                TapDetector(
-                                  onTap: () => NamidaNavigator.inst.navigateDialog(
-                                    scale: 1.0,
-                                    blackBg: true,
-                                    dialog: LongPressDetector(
-                                      onLongPress: () async {
-                                        final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
-                                        String title = lang.COPIED_ARTWORK;
-                                        String subtitle = '${lang.SAVED_IN} $saveDirPath';
-                                        Color snackColor = color.value;
+            child: LayoutWidthProvider(
+              builder: (context, maxWidth) {
+                final artwork = NamidaHero(
+                  tag: heroTag,
+                  child: ArtworkWidget(
+                    key: Key(track.pathToImage),
+                    fadeMilliSeconds: 0,
+                    track: track,
+                    path: track.pathToImage,
+                    thumbnailSize: maxWidth * 0.5,
+                    forceSquared: settings.forceSquaredTrackThumbnail.value,
+                    compressed: false,
+                  ),
+                );
+                return SizedBox(
+                  height: namida.height * 0.7,
+                  width: maxWidth,
+                  child: ObxO(
+                    rx: settings.showUnknownFieldsInTrackInfoDialog,
+                    builder: (context, _) => CustomScrollView(
+                      slivers: [
+                        SliverList(
+                          delegate: SliverChildListDelegate(
+                            [
+                              const SizedBox(height: 12.0),
+                              NamidaInkWell(
+                                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                                onTap: () => showTrackListensDialog(track, datesOfListen: totalListens, colorScheme: color.value),
+                                borderRadius: 12.0,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(width: 2.0),
+                                    TapDetector(
+                                      onTap: () => NamidaNavigator.inst.navigateDialog(
+                                        scale: 1.0,
+                                        blackBg: true,
+                                        dialog: LongPressDetector(
+                                          onLongPress: () async {
+                                            final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
+                                            String title = lang.COPIED_ARTWORK;
+                                            String subtitle = '${lang.SAVED_IN} $saveDirPath';
+                                            Color snackColor = color.value;
 
-                                        if (saveDirPath == null) {
-                                          title = lang.ERROR;
-                                          subtitle = lang.COULDNT_SAVE_IMAGE;
-                                          snackColor = Colors.red;
-                                        }
-                                        snackyy(
-                                          title: title,
-                                          message: subtitle,
-                                          leftBarIndicatorColor: snackColor,
-                                          altDesign: true,
-                                          top: false,
-                                        );
-                                      },
-                                      child: PhotoView(
-                                        heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
-                                        gaplessPlayback: true,
-                                        tightMode: true,
-                                        minScale: PhotoViewComputedScale.contained,
-                                        loadingBuilder: (context, event) => artwork,
-                                        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                                        filterQuality: FilterQuality.high,
-                                        imageProvider: FileImage(File(track.pathToImage)),
-                                      ),
-                                    ),
-                                  ),
-                                  child: artwork,
-                                ),
-                                const SizedBox(width: 10.0),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Broken.hashtag_1,
-                                            size: 18.0,
+                                            if (saveDirPath == null) {
+                                              title = lang.ERROR;
+                                              subtitle = lang.COULDNT_SAVE_IMAGE;
+                                              snackColor = Colors.red;
+                                            }
+                                            snackyy(
+                                              title: title,
+                                              message: subtitle,
+                                              leftBarIndicatorColor: snackColor,
+                                              altDesign: true,
+                                              top: false,
+                                            );
+                                          },
+                                          child: PhotoView(
+                                            heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
+                                            gaplessPlayback: true,
+                                            tightMode: true,
+                                            minScale: PhotoViewComputedScale.contained,
+                                            loadingBuilder: (context, event) => artwork,
+                                            backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+                                            filterQuality: FilterQuality.high,
+                                            imageProvider: FileImage(File(track.pathToImage)),
                                           ),
-                                          const SizedBox(width: 4.0),
-                                          Wrap(
-                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                        ),
+                                      ),
+                                      child: artwork,
+                                    ),
+                                    const SizedBox(width: 10.0),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Text(
-                                                '${lang.TOTAL_LISTENS}: ',
-                                                style: theme.textTheme.displaySmall,
+                                              const Icon(
+                                                Broken.hashtag_1,
+                                                size: 18.0,
                                               ),
-                                              Text(
-                                                '${totalListens.length}',
-                                                style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                                              const SizedBox(width: 4.0),
+                                              Expanded(
+                                                child: Wrap(
+                                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      '${lang.TOTAL_LISTENS}: ',
+                                                      style: theme.textTheme.displaySmall,
+                                                    ),
+                                                    Text(
+                                                      '${totalListens.length}',
+                                                      style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8.0),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Broken.cake,
+                                                size: 18.0,
+                                              ),
+                                              const SizedBox(width: 4.0),
+                                              Expanded(
+                                                child: Text(
+                                                  firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
+                                                  style: theme.textTheme.displaySmall,
+                                                ),
                                               ),
                                             ],
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8.0),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Broken.cake,
-                                            size: 18.0,
-                                          ),
-                                          const SizedBox(width: 4.0),
-                                          Expanded(
-                                            child: Text(
-                                              firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
-                                              style: theme.textTheme.displaySmall,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                  ],
                                 ),
-                                const SizedBox(width: 12.0),
+                              ),
+                              const SizedBox(height: 12.0),
+                              if (trackExt == null)
+                                ...trackPathDetailTilesSection
+                              else ...<Widget>[
+                                if (shouldShowTheField(trackExt.hasUnknownTitle))
+                                  TrackInfoListTile(
+                                    title: lang.TITLE,
+                                    value: trackExt.title,
+                                    icon: Broken.text,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownArtist))
+                                  TrackInfoListTile(
+                                    title: Indexer.splitArtist(
+                                              title: trackExt.title,
+                                              originalArtist: trackExt.originalArtist,
+                                              config: ArtistsSplitConfig.settings(addFeatArtist: false),
+                                            ).length ==
+                                            1
+                                        ? lang.ARTIST
+                                        : lang.ARTISTS,
+                                    value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
+                                    icon: Broken.microphone,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownAlbum))
+                                  TrackInfoListTile(
+                                    title: lang.ALBUM,
+                                    value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
+                                    icon: Broken.music_dashboard,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
+                                  TrackInfoListTile(
+                                    title: lang.ALBUM_ARTIST,
+                                    value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
+                                    icon: Broken.user,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownGenre))
+                                  TrackInfoListTile(
+                                    title: trackExt.genresList.length == 1 ? lang.GENRE : lang.GENRES,
+                                    value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
+                                    icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownMood))
+                                  TrackInfoListTile(
+                                    title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
+                                    value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
+                                    icon: Broken.happyemoji,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.hasUnknownComposer))
+                                  TrackInfoListTile(
+                                    title: lang.COMPOSER,
+                                    value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
+                                    icon: Broken.profile_2user,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.durationMS == 0))
+                                  TrackInfoListTile(
+                                    title: lang.DURATION,
+                                    value: trackExt.durationMS.milliSecondsLabel,
+                                    icon: Broken.clock,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.year == 0))
+                                  TrackInfoListTile(
+                                    title: lang.YEAR,
+                                    value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
+                                    icon: Broken.calendar,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.dateModified == 0))
+                                  TrackInfoListTile(
+                                    title: lang.DATE_MODIFIED,
+                                    value: trackExt.dateModified.dateAndClockFormattedOriginal,
+                                    icon: Broken.calendar_1,
+                                  ),
+
+                                ///
+                                if (shouldShowTheField(trackExt.discNo == 0))
+                                  TrackInfoListTile(
+                                    title: lang.DISC_NUMBER,
+                                    value: trackExt.discNo.toString(),
+                                    icon: Broken.hashtag,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.trackNo == 0))
+                                  TrackInfoListTile(
+                                    title: lang.TRACK_NUMBER,
+                                    value: trackExt.trackNo.toString(),
+                                    icon: Broken.hashtag,
+                                  ),
+
+                                ...trackPathDetailTilesSection,
+
+                                TrackInfoListTile(
+                                  title: lang.FORMAT,
+                                  value: [
+                                    track.audioInfoFormattedCompact,
+                                    '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
+                                    track.gainDataFormatted,
+                                  ].joinText(separator: '\n'),
+                                  icon: Broken.voice_cricle,
+                                ),
+
+                                if (shouldShowTheField(trackExt.lyrics == ''))
+                                  TrackInfoListTile(
+                                    title: lang.LYRICS,
+                                    value: trackExt.lyrics,
+                                    icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
+                                  ),
+
+                                if (shouldShowTheField(trackExt.comment == ''))
+                                  TrackInfoListTile(
+                                    title: lang.COMMENT,
+                                    value: trackExt.comment,
+                                    icon: Broken.message_text_1,
+                                    isComment: true,
+                                  ),
+                                if (shouldShowTheField(trackExt.description == ''))
+                                  TrackInfoListTile(
+                                    title: lang.DESCRIPTION,
+                                    value: trackExt.description,
+                                    icon: Broken.note_text,
+                                    isComment: true,
+                                  ),
+                                if (shouldShowTheField(trackExt.synopsis == ''))
+                                  TrackInfoListTile(
+                                    title: lang.SYNOPSIS,
+                                    value: trackExt.synopsis,
+                                    icon: Broken.text,
+                                    isComment: true,
+                                  ),
+                                const SizedBox(height: 12.0),
                               ],
-                            ),
+                            ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toList(),
                           ),
-                          const SizedBox(height: 12.0),
-                          if (trackExt == null)
-                            ...trackPathDetailTilesSection
-                          else ...<Widget>[
-                            if (shouldShowTheField(trackExt.hasUnknownTitle))
-                              TrackInfoListTile(
-                                title: lang.TITLE,
-                                value: trackExt.title,
-                                icon: Broken.text,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownArtist))
-                              TrackInfoListTile(
-                                title: Indexer.splitArtist(
-                                          title: trackExt.title,
-                                          originalArtist: trackExt.originalArtist,
-                                          config: ArtistsSplitConfig.settings(addFeatArtist: false),
-                                        ).length ==
-                                        1
-                                    ? lang.ARTIST
-                                    : lang.ARTISTS,
-                                value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
-                                icon: Broken.microphone,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownAlbum))
-                              TrackInfoListTile(
-                                title: lang.ALBUM,
-                                value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
-                                icon: Broken.music_dashboard,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
-                              TrackInfoListTile(
-                                title: lang.ALBUM_ARTIST,
-                                value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
-                                icon: Broken.user,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownGenre))
-                              TrackInfoListTile(
-                                title: trackExt.genresList.length == 1 ? lang.GENRE : lang.GENRES,
-                                value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
-                                icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownMood))
-                              TrackInfoListTile(
-                                title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
-                                value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
-                                icon: Broken.happyemoji,
-                              ),
-
-                            if (shouldShowTheField(trackExt.hasUnknownComposer))
-                              TrackInfoListTile(
-                                title: lang.COMPOSER,
-                                value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
-                                icon: Broken.profile_2user,
-                              ),
-
-                            if (shouldShowTheField(trackExt.durationMS == 0))
-                              TrackInfoListTile(
-                                title: lang.DURATION,
-                                value: trackExt.durationMS.milliSecondsLabel,
-                                icon: Broken.clock,
-                              ),
-
-                            if (shouldShowTheField(trackExt.year == 0))
-                              TrackInfoListTile(
-                                title: lang.YEAR,
-                                value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
-                                icon: Broken.calendar,
-                              ),
-
-                            if (shouldShowTheField(trackExt.dateModified == 0))
-                              TrackInfoListTile(
-                                title: lang.DATE_MODIFIED,
-                                value: trackExt.dateModified.dateAndClockFormattedOriginal,
-                                icon: Broken.calendar_1,
-                              ),
-
-                            ///
-                            if (shouldShowTheField(trackExt.discNo == 0))
-                              TrackInfoListTile(
-                                title: lang.DISC_NUMBER,
-                                value: trackExt.discNo.toString(),
-                                icon: Broken.hashtag,
-                              ),
-
-                            if (shouldShowTheField(trackExt.trackNo == 0))
-                              TrackInfoListTile(
-                                title: lang.TRACK_NUMBER,
-                                value: trackExt.trackNo.toString(),
-                                icon: Broken.hashtag,
-                              ),
-
-                            ...trackPathDetailTilesSection,
-
-                            TrackInfoListTile(
-                              title: lang.FORMAT,
-                              value: [
-                                track.audioInfoFormattedCompact,
-                                '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
-                                track.gainDataFormatted,
-                              ].joinText(separator: '\n'),
-                              icon: Broken.voice_cricle,
-                            ),
-
-                            if (shouldShowTheField(trackExt.lyrics == ''))
-                              TrackInfoListTile(
-                                title: lang.LYRICS,
-                                value: trackExt.lyrics,
-                                icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
-                              ),
-
-                            if (shouldShowTheField(trackExt.comment == ''))
-                              TrackInfoListTile(
-                                title: lang.COMMENT,
-                                value: trackExt.comment,
-                                icon: Broken.message_text_1,
-                                isComment: true,
-                              ),
-                            if (shouldShowTheField(trackExt.description == ''))
-                              TrackInfoListTile(
-                                title: lang.DESCRIPTION,
-                                value: trackExt.description,
-                                icon: Broken.note_text,
-                                isComment: true,
-                              ),
-                            if (shouldShowTheField(trackExt.synopsis == ''))
-                              TrackInfoListTile(
-                                title: lang.SYNOPSIS,
-                                value: trackExt.synopsis,
-                                icon: Broken.text,
-                                isComment: true,
-                              ),
-                            const SizedBox(height: 12.0),
-                          ],
-                        ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toList(),
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         );

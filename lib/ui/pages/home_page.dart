@@ -930,6 +930,8 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   void onMixTap(Widget thumbnailWidget) {
+    const contentColor = Color.fromRGBO(242, 242, 242, 0.7);
+    const contentColorAlt = Color.fromRGBO(42, 42, 42, 0.8);
     NamidaNavigator.inst.navigateDialog(
       colorScheme: _cardColor,
       durationInMs: 250,
@@ -949,19 +951,30 @@ class _MixesCardState extends State<_MixesCard> {
                 ),
                 SliverToBoxAdapter(
                   child: NamidaInkWell(
-                    borderRadius: 12.0,
-                    margin: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12.0.multipliedRadius),
+                      ),
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 32.0).add(const EdgeInsets.only(top: 12.0)),
                     padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                    bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, context.theme.scaffoldBackgroundColor).withValues(alpha: 0.8),
+                    bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, Color.fromRGBO(80, 80, 80, 0.4)).withValues(alpha: 0.9),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Broken.audio_square, size: 26.0),
+                        const Icon(
+                          Broken.audio_square,
+                          size: 26.0,
+                          color: contentColor,
+                        ),
                         const SizedBox(width: 6.0),
                         Expanded(
                           child: Text(
                             widget.title,
-                            style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
+                            style: context.textTheme.displayLarge?.copyWith(
+                              fontSize: 15.0,
+                              color: contentColor,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -977,15 +990,23 @@ class _MixesCardState extends State<_MixesCard> {
                           },
                           borderRadius: 8.0,
                           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                          bgColor: context.theme.cardColor.withValues(alpha: 0.4),
+                          bgColor: contentColor.withValues(alpha: 0.6),
                           child: Row(
                             children: [
-                              const Icon(Broken.play_cricle, size: 20.0),
+                              const Icon(
+                                Broken.play_cricle,
+                                size: 20.0,
+                                color: contentColorAlt,
+                              ),
                               const SizedBox(width: 4.0),
                               Text(
                                 "${widget.tracks.length}",
-                                style: context.textTheme.displayLarge?.copyWith(fontSize: 15.0),
+                                style: context.textTheme.displayLarge?.copyWith(
+                                  fontSize: 15.0,
+                                  color: contentColorAlt,
+                                ),
                               ),
+                              const SizedBox(width: 2.0),
                             ],
                           ),
                         ),
@@ -1062,24 +1083,25 @@ class _MixesCardState extends State<_MixesCard> {
   }) {
     return Padding(
       padding: EdgeInsets.only(top: topPadding),
-      child: AnimatedSizedBox(
-        duration: const Duration(milliseconds: 300),
-        width: widget.width - horizontalPadding,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: _cardColor?.withAlpha(alpha),
-          border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
-          borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-        ),
-        child: NamidaBgBlurClipped(
-          blur: blur,
-          child: const SizedBox(),
+      child: NamidaBlur(
+        blur: blur,
+        child: AnimatedSizedBox(
+          duration: const Duration(milliseconds: 300),
+          width: widget.width - horizontalPadding,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: _cardColor?.withAlpha(alpha),
+            border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
+            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+          ),
         ),
       ),
     );
   }
 
   Widget artworkWidget({required bool displayShimmer, required bool fullscreen}) {
+    const contentColor = Color.fromRGBO(242, 242, 242, 0.1);
+    const contentColorAlt = Color.fromRGBO(242, 242, 242, 0.8);
     final tag = 'mix_thumbnail_${widget.title}${widget.index}';
     return NamidaHero(
       tag: tag,
@@ -1087,7 +1109,8 @@ class _MixesCardState extends State<_MixesCard> {
         key: Key(tag),
         track: _track,
         compressed: false,
-        blur: 0,
+        blur: 10,
+        disableBlurBgSizeShrink: true,
         borderRadius: fullscreen ? 12.0 : 8.0,
         forceSquared: true,
         path: _track?.pathToImage,
@@ -1101,16 +1124,16 @@ class _MixesCardState extends State<_MixesCard> {
               child: NamidaBgBlurClipped(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: context.theme.colorScheme.surface.withAlpha(50),
+                  color: contentColor,
                 ),
-                blur: 2.0,
+                blur: 8.0,
                 child: Padding(
                   padding: const EdgeInsets.all(2.0),
                   child: NamidaIconButton(
                     verticalPadding: 4.0,
                     horizontalPadding: 12.0,
                     icon: Broken.arrow_left_2,
-                    iconColor: context.theme.colorScheme.onSurface.withAlpha(160),
+                    iconColor: contentColorAlt,
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ),
@@ -1171,7 +1194,7 @@ class _MixesCardState extends State<_MixesCard> {
           topPadding: 6.0,
           horizontalPadding: 0.0,
           alpha: 180,
-          blur: 0.4,
+          blur: 2.0,
         ),
         Padding(
           padding: const EdgeInsets.only(top: 6.0).add(const EdgeInsets.all(1.0)),
@@ -1309,8 +1332,6 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
         source: widget.queueSource,
         index: widget.index,
       ),
-      width: widget.width,
-      bgColor: color,
       decoration: BoxDecoration(
         border: _enabledTrack == (widget.listId, widget.index)
             ? Border.all(
@@ -1319,86 +1340,104 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
               )
             : null,
       ),
+      width: widget.width,
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       animationDurationMS: 400,
-      child: NamidaBgBlurClipped(
-        borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-        blur: 20.0,
-        enabled: settings.enableBlurEffect.value,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ArtworkWidget(
-              key: Key(track.path),
-              track: track,
-              blur: 0.0,
-              forceSquared: true,
-              path: track.pathToImage,
-              thumbnailSize: widget.width,
-              onTopWidgets: [
-                if (widget.topRightText != null)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0.multipliedRadius)),
-                        color: context.theme.scaffoldBackgroundColor,
-                      ),
-                      child: Text(
-                        widget.topRightText!,
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: BorderRadiusClip(
+              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+              child: NamidaBlur(
+                blur: 20.0,
+                enabled: settings.enableBlurEffect.value,
+                child: AnimatedDecoration(
+                  duration: Duration(milliseconds: 400),
+                  decoration: BoxDecoration(
+                    color: color,
                   ),
-                if (widget.listens != null)
-                  Positioned(
-                      bottom: 2.0,
-                      right: 2.0,
-                      child: CircleAvatar(
-                        radius: 10.0,
-                        backgroundColor: context.theme.cardColor,
-                        child: FittedBox(
-                          child: Text(
-                            widget.listens!.length.formatDecimal(),
-                            style: context.textTheme.displaySmall,
-                          ),
-                        ),
-                      ))
-              ],
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    track.title,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    track.originalArtist,
-                    style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                ),
               ),
             ),
-            const Spacer(),
-          ],
-        ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ArtworkWidget(
+                key: Key(track.path),
+                track: track,
+                blur: 3.0,
+                forceSquared: true,
+                path: track.pathToImage,
+                thumbnailSize: widget.width,
+                onTopWidgets: [
+                  if (widget.topRightText != null)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(6.0.multipliedRadius),
+                            topRight: Radius.circular(6.0.multipliedRadius),
+                          ),
+                          color: context.theme.scaffoldBackgroundColor,
+                        ),
+                        child: Text(
+                          widget.topRightText!,
+                          style: context.textTheme.displaySmall?.copyWith(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  if (widget.listens != null)
+                    Positioned(
+                        bottom: 2.0,
+                        right: 2.0,
+                        child: CircleAvatar(
+                          radius: 10.0,
+                          backgroundColor: context.theme.cardColor,
+                          child: FittedBox(
+                            child: Text(
+                              widget.listens!.length.formatDecimal(),
+                              style: context.textTheme.displaySmall,
+                            ),
+                          ),
+                        ))
+                ],
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      track.title,
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      track.originalArtist,
+                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ],
       ),
     );
   }

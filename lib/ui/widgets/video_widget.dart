@@ -427,24 +427,22 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       child: IgnorePointer(
         child: FadeTransition(
           opacity: controller,
-          child: RepaintBoundary(
-            child: Column(
-              children: [
-                Icon(
-                  isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
+          child: Column(
+            children: [
+              Icon(
+                isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
+                color: color,
+                shadows: outlineShadow,
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                '$ss ${lang.SECONDS}',
+                style: context.textTheme.displayMedium?.copyWith(
                   color: color,
                   shadows: outlineShadow,
                 ),
-                const SizedBox(height: 8.0),
-                Text(
-                  '$ss ${lang.SECONDS}',
-                  style: context.textTheme.displayMedium?.copyWith(
-                    color: color,
-                    shadows: outlineShadow,
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
         ),
       ),
@@ -705,7 +703,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       width: fallbackWidth,
                       height: fallbackHeight,
                       borderRadius: 0,
-                      blur: 0,
+                      blur: 60,
+                      disableBlurBgSizeShrink: true,
                       videoId: vidId,
                       displayFallbackIcon: false,
                       compressed: widget.isMinimized,
@@ -722,7 +721,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     width: fallbackWidth,
                     height: fallbackHeight,
                     borderRadius: 0,
-                    blur: 0,
+                    blur: 60,
+                    disableBlurBgSizeShrink: true,
                     compressed: widget.isMinimized,
                     fit: BoxFit.cover, // never change this my friend
                   );
@@ -1677,9 +1677,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               opacity: shouldShowPrev ? 1.0 : 0.0,
                               child: NamidaBgBlurClipped(
                                 blur: 2,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                ),
+                                shape: BoxShape.circle,
                                 child: ColoredBox(
                                   color: Colors.black.withValues(alpha: 0.2),
                                   child: NamidaIconButton(
@@ -1703,9 +1701,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       ),
                       NamidaBgBlurClipped(
                         blur: 2.5,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
+                        shape: BoxShape.circle,
                         child: ColoredBox(
                           color: Colors.black.withValues(alpha: 0.3),
                           child: NamidaIconButton(
@@ -1750,9 +1746,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   opacity: shouldShowNext ? 1.0 : 0.0,
                                   child: NamidaBgBlurClipped(
                                     blur: 2,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                    ),
+                                    shape: BoxShape.circle,
                                     child: ColoredBox(
                                       color: Colors.black.withValues(alpha: 0.2),
                                       child: NamidaIconButton(

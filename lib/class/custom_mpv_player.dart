@@ -244,14 +244,15 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> seek(Duration? position) {
+  Future<void> seek(Duration? position) async {
+    if (_videoOptions?.loop == true) return;
     return _player.seek(position ?? Duration.zero);
   }
 
   @override
   Future<void> stop() async {
     if (_disposed) return;
-    return _player.stop();
+    return _player.pause(); // _player.stop too powerful
   }
 
   @override
