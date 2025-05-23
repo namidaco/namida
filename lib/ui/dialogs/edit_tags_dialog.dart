@@ -642,7 +642,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
 Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
   if (!await requestManageStoragePermission()) return;
 
-  final RxList<Track> tracks = List<Track>.from(tracksPre).obs;
+  final tracksGoingToBeEditedRx = <Track, bool>{for (final t in tracksPre) t: true}.obs;
 
   final toBeEditedTracksColumn = Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -663,26 +663,29 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
           configs: const TrackTilePropertiesConfigs(
             queueSource: QueueSource.others,
           ),
-          builder: (properties) => ListView.builder(
-            itemCount: tracks.length,
+          builder: (properties) => ObxO(
+            rx: tracksGoingToBeEditedRx,
+            builder: (context, tracksGoingToBeEdited) {
+              final list = tracksGoingToBeEdited.keys.toList();
+
+              return ListView.builder(
+                itemCount: list.length,
             itemBuilder: (context, index) {
-              final tr = tracks.value[index];
-              return ObxO(
-                rx: tracks,
-                builder: (context, tracksRaw) => TrackTile(
+                  final tr = list[index];
+                  final isSelected = tracksGoingToBeEdited[tr] == true;
+                  return TrackTile(
                   properties: properties,
                   index: index,
                   trackOrTwd: tr,
-                  onTap: () {
-                    if (!tracksRaw.contains(tr)) tracks.add(tr);
-                  },
-                  bgColor: tracksRaw.contains(tr) ? null : Colors.black.withAlpha(0),
+                    onTap: () => tracksGoingToBeEditedRx[tr] = !isSelected,
+                    bgColor: isSelected ? null : Colors.black.withAlpha(0),
                   trailingWidget: IconButton(
                     icon: const Icon(Broken.close_circle),
                     visualDensity: VisualDensity.compact,
-                    onPressed: () => tracks.remove(tr),
-                  ),
+                      onPressed: () => tracksGoingToBeEditedRx[tr] = false,
                 ),
+                  );
+                },
               );
             },
           ),
@@ -746,7 +749,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
 
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
-      tracks.close();
+      tracksGoingToBeEditedRx.close();
       trimWhiteSpaces.close();
       canEditTags.close();
       currentImagePath.close();
@@ -770,7 +773,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
         actions: [
           Obx(
             (context) {
-              final isEditing = tracks.valueR.any((track) => _editingInProgress[track.path] == true);
+              final isEditing = tracksGoingToBeEditedRx.valueR.keys.any((track) => _editingInProgress[track.path] == true);
               return NamidaButton(
                 enabled: canEditTags.valueR && !isEditing,
                 icon: Broken.pen_add,
@@ -791,7 +794,9 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                 onPressed: () {
                   if (formKey.currentState!.validate() == false) return;
 
-                  tracks.loop((track) => _editingInProgress[track.path] = true);
+                  for (final k in tracksGoingToBeEditedRx.value.keys) {
+                    _editingInProgress[k.path] = true;
+                  }
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
                       title: lang.NOTE,
@@ -917,7 +922,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                             String? errorMsg;
                             await NamidaTaggerController.inst
                                 .updateTracksMetadata(
-                                  tracks: tracks.value,
+                                  tracks: tracksGoingToBeEditedRx.value.keys.toList(),
                                   editedTags: editedTags,
                                   trimWhiteSpaces: trimWhiteSpaces.value,
                                   imagePath: currentImagePath.value,
@@ -945,7 +950,10 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                             updatingLibrary.value = '✓';
                             finishedEditing.value = true;
                             canEditTags.value = false;
-                            tracks.loop((track) => _editingInProgress[track.path] = false);
+
+                            for (final k in tracksGoingToBeEditedRx.value.keys) {
+                              _editingInProgress[k.path] = false;
+                            }
                           },
                         ),
                       ],
@@ -987,10 +995,13 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
             ],
           ),
         ),
-        child: Obx(
-          (context) => tracks.isEmpty
-              ? SizedBox(
-                  width: namida.width * 0.6,
+        child: ObxO(
+          rx: tracksGoingToBeEditedRx,
+          builder: (context, tracksGoingToBeEditedAll) {
+            final tracksGoingToBeEdited = tracksGoingToBeEditedAll.entries.where((element) => element.value).map((e) => e.key).toList();
+            return tracksGoingToBeEdited.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: NamidaButton(
                     onPressed: () {
                       NamidaNavigator.inst.navigateDialog(
@@ -1003,8 +1014,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                         ),
                       );
                     },
-                    textWidget: Obx(
-                      (context) => Text(tracks.valueR.displayTrackKeyword),
+                      textWidget: Text(
+                        tracksGoingToBeEdited.length.displayTrackKeyword,
                     ),
                   ),
                 )
@@ -1035,9 +1046,9 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                             heroTag: 'edittags_artwork',
                                             fadeMilliSeconds: 0,
                                             size: namida.width / 3,
-                                            tracks: tracks.valueR.toImageTracks(),
+                                                tracks: tracksGoingToBeEdited.toImageTracks(),
                                             fallbackToFolderCover: false,
-                                            onTopWidget: tracks.length > 3
+                                                onTopWidget: tracksGoingToBeEdited.length > 3
                                                 ? Positioned(
                                                     right: 0,
                                                     bottom: 0,
@@ -1047,7 +1058,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                                       borderRadius: BorderRadius.zero,
                                                       child: Center(
                                                         child: Text(
-                                                          "+${tracks.length - 3}",
+                                                              "+${tracksGoingToBeEdited.length - 3}",
                                                           style: namida.textTheme.displayLarge,
                                                         ),
                                                       ),
@@ -1088,8 +1099,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                             ),
                                           );
                                         },
-                                        textWidget: Obx(
-                                          (context) => Text(tracks.valueR.displayTrackKeyword),
+                                            textWidget: Text(
+                                              tracksGoingToBeEdited.length.displayTrackKeyword,
                                         ),
                                       ),
                                     ),
@@ -1136,18 +1147,13 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                     const SizedBox(
                       height: 12.0,
                     ),
-                    Obx(
-                      (context) {
-                        final trs = tracks.valueR;
-                        return Text(
+                      Text(
                           [
-                            trs.displayTrackKeyword,
-                            trs.totalSizeFormatted,
-                            trs.totalDurationFormatted,
+                          tracksGoingToBeEdited.displayTrackKeyword,
+                          tracksGoingToBeEdited.totalSizeFormatted,
+                          tracksGoingToBeEdited.totalDurationFormatted,
                           ].join(' • '),
                           style: namida.textTheme.displaySmall,
-                        );
-                      },
                     ),
                     const SizedBox(
                       height: 8.0,
@@ -1168,7 +1174,8 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                           : const SizedBox(),
                     ),
                   ],
-                ),
+                  );
+          },
         ),
       ),
     ),
