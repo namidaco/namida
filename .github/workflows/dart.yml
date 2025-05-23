@@ -9,14 +9,45 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
 
   build_android:
-    needs: setup
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.6.0"
+
+      - name: setup credentials 
+        run: |
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+
+      - name: Git Submodule Update
+        run: |
+          git clone https://github.com/namidaco/namida-translations/ assets/language
+
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+          flutter pub upgrade
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
+          echo ::set-output name=version::"$VERSION"
+
       - uses: actions/setup-java@v1
         with:
           java-version: "21"
@@ -31,9 +62,9 @@ jobs:
         run: |
           mkdir -p build_final
           flutter build apk --target-platform android-arm64 --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ needs.setup.outputs.version }}-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version }}-arm64-v8a.apk
           flutter build apk --target-platform android-arm --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ needs.setup.outputs.version }}-armeabi-v7a.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version }}-armeabi-v7a.apk
 
       - name: Creating clone repo & apks
         continue-on-error: true
@@ -44,15 +75,14 @@ jobs:
           flutter pub get
           flutter pub upgrade
           git clone https://github.com/namidaco/namida-translations/ assets/language
-          git clone https://github.com/MSOB7YY/ffmpeg_build ./ffmpeg_build
           find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
           echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
           echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
           mkdir -p ../build_final
           flutter build apk --target-platform android-arm64 --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ needs.setup.outputs.version }}-clone-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version }}-clone-arm64-v8a.apk
           flutter build apk --target-platform android-arm --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ needs.setup.outputs.version }}-clone-armeabi-v7a.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version }}-clone-armeabi-v7a.apk
           cd ../
 
       - name: Get the previous release date
@@ -74,7 +104,7 @@ jobs:
           repository: namidaco/namida-snapshots
           make_latest: true
           draft: false
-          tag_name: ${{ needs.setup.outputs.version}}
+          tag_name: ${{ steps.extract_version.outputs.version}}
           body_path: ./beta_changelog.md
           files: |
             build_final/*

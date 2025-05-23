@@ -14,7 +14,7 @@ jobs:
       version: ${{ steps.extract_version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
@@ -27,16 +27,14 @@ jobs:
         with:
           sdk: "3.6.0"
 
-      - name: setup credentials for namidaco
-        run: git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-
-      - name: setup credentials for MSOB7YY
-        run: git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+      - name: setup credentials 
+        run: |
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
       - name: Git Submodule Update
         run: |
           git clone https://github.com/namidaco/namida-translations/ assets/language
-          git clone https://github.com/MSOB7YY/ffmpeg_build ./ffmpeg_build
 
       - name: Setup dependencies
         run: |
@@ -48,4 +46,4 @@ jobs:
         id: extract_version
         run: |
           VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo ::set-output name=version::"$VERSION"

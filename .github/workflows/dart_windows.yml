@@ -3,20 +3,51 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Dart
+name: Dart Windows
 
 on:
   workflow_dispatch:
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
 
   build_windows:
-    needs: setup
     runs-on: windows-latest
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.6.0"
+
+      - name: setup credentials 
+        run: |
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+
+      - name: Git Submodule Update
+        run: |
+          git clone https://github.com/namidaco/namida-translations/ assets/language
+
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+          flutter pub upgrade
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          $VERSION=(Select-String 'version:' pubspec.yaml | ForEach-Object { ($_ -split ' ')[1] })
+          echo ::set-output name=version::"$VERSION"
+
       - name: Build Windows App
         run: |
           flutter config --enable-windows-desktop
@@ -35,9 +66,10 @@ jobs:
           path: ./build/windows/x64/installer/Release/inno-script.iss
           
       - name: Creating windows inno installer
+        shell: pwsh
         run: |
-          mkdir -p build_final
-          mv ./build/windows/x64/installer/Release/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe build_final/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe
+          New-Item -ItemType Directory -Force -Path build_final
+          Move-Item -Force "./build/windows/x64/installer/Release/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe" "build_final/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe"
 
       - name: Upload to latest release
         env:

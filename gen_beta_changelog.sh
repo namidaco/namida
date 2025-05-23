@@ -18,9 +18,9 @@ done <<< "$COMMITS"
 CHANGELOG=$(echo "$CHANGELOG" | sed '$d')
 
 # Encode special characters
-CHANGELOG="${CHANGELOG//'%'/'%25'}"
-CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+# CHANGELOG="${CHANGELOG//'%'/'%25'}"
+# CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+# CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
 
 echo -e "$CHANGELOG" > beta_changelog.md
 
