@@ -273,6 +273,7 @@ abstract class LanguageKeys {
   String get FORCE_SQUARED_TRACK_THUMBNAIL => _getKey('FORCE_SQUARED_TRACK_THUMBNAIL');
   String get FORCE_STOP_COLOR_PALETTE_GENERATION => _getKey('FORCE_STOP_COLOR_PALETTE_GENERATION');
   String get FORMAT => _getKey('FORMAT');
+  String get FULLSCREEN => _getKey('FULLSCREEN');
   String get GENERATE_FROM_DATES_SUBTITLE => _getKey('GENERATE_FROM_DATES_SUBTITLE');
   String get GENERATE_FROM_DATES => _getKey('GENERATE_FROM_DATES');
   String get GENERATE => _getKey('GENERATE');
@@ -510,6 +511,7 @@ abstract class LanguageKeys {
   String get PREVENT_DUPLICATED_TRACKS_SUBTITLE => _getKey('PREVENT_DUPLICATED_TRACKS_SUBTITLE');
   String get PREVENT_DUPLICATED_TRACKS => _getKey('PREVENT_DUPLICATED_TRACKS');
   String get PREVIEW => _getKey('PREVIEW');
+  String get PREVIOUS => _getKey('PREVIOUS');
   String get PREVIOUS_BUTTON_REPLAYS => _getKey('PREVIOUS_BUTTON_REPLAYS');
   String get PREVIOUS_BUTTON_REPLAYS_SUBTITLE => _getKey('PREVIOUS_BUTTON_REPLAYS_SUBTITLE');
   String get PRIORITIZE_EMBEDDED_LYRICS => _getKey('PRIORITIZE_EMBEDDED_LYRICS');
@@ -553,6 +555,7 @@ abstract class LanguageKeys {
   String get RENAME_PLAYLIST => _getKey('RENAME_PLAYLIST');
   String get REORDERABLE => _getKey('REORDERABLE');
   String get REPEAT_FOR_N_TIMES => _getKey('REPEAT_FOR_N_TIMES');
+  String get REPEAT_MODE => _getKey('REPEAT_MODE');
   String get REPEAT_MODE_ALL => _getKey('REPEAT_MODE_ALL');
   String get REPEAT_MODE_NONE => _getKey('REPEAT_MODE_NONE');
   String get REPEAT_MODE_ONE => _getKey('REPEAT_MODE_ONE');
@@ -602,6 +605,7 @@ abstract class LanguageKeys {
   String get SET_YOUTUBE_LINK => _getKey('SET_YOUTUBE_LINK');
   String get SETTINGS => _getKey('SETTINGS');
   String get SHARE => _getKey('SHARE');
+  String get SHORTCUTS => _getKey('SHORTCUTS');
   String get SHOULD_DUCK => _getKey('SHOULD_DUCK');
   String get SHOULD_DUCK_NOTE => _getKey('SHOULD_DUCK_NOTE');
   String get SHOULD_PAUSE => _getKey('SHOULD_PAUSE');

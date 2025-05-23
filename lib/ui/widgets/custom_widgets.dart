@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableListView, ReorderCallback, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
 import 'package:flutter/rendering.dart' as fr;
+import 'package:flutter/services.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
@@ -27,6 +28,7 @@ import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -5501,7 +5503,7 @@ class NamidaUpdateButton extends StatelessWidget {
                       ),
                     ),
                   ],
-              ),
+                ),
               SizedBox(height: 12.0),
               Expanded(
                 child: _NamidaVersionReleasesInfoList(
@@ -5635,3 +5637,88 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
   }
 }
 
+class ShortcutsInfoWidget extends StatefulWidget {
+  final ShortcutsManager manager;
+  const ShortcutsInfoWidget({super.key, required this.manager});
+
+  @override
+  State<ShortcutsInfoWidget> createState() => _ShortcutsInfoWidgetState();
+}
+
+class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
+  final organizedMap = <String, List<ShortcutKeyData>>{};
+
+  @override
+  void initState() {
+    for (final k in widget.manager.bindings.keys) {
+      organizedMap.addForce(k.title, k);
+    }
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      shrinkWrap: true,
+      children: organizedMap.entries
+          .map(
+            (e) {
+              var shortcutsTexts = <String>[];
+              String title = e.key;
+              if (title == lang.LIBRARY_TABS) {
+                shortcutsTexts = ['Ctrl + 1..9'];
+              } else {
+                shortcutsTexts = e.value.map((e) {
+                  String label = e.key.keyLabel;
+                  if (label == LogicalKeyboardKey.space.keyLabel) {
+                    label = 'Space';
+                  }
+                  if (e.shift) {
+                    label = 'Shift + $label';
+                  }
+                  if (e.control) {
+                    label = 'Ctrl + $label';
+                  }
+                  return label;
+                }).toList();
+              }
+              return Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ...shortcutsTexts.map(
+                    (shortcut) => NamidaInkWell(
+                      borderRadius: 4.0,
+                      margin: EdgeInsets.only(right: 3.0),
+                      padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                      bgColor: context.theme.cardColor,
+                      child: RichText(
+                        text: TextSpan(
+                          text: shortcut,
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4.0),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        text: title,
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          )
+          .addSeparators(
+            separator: const NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(vertical: 2.0),
+            ),
+          )
+          .toList(),
+    );
+  }
+}

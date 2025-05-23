@@ -15,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -329,6 +330,29 @@ class _AboutPageState extends State<AboutPage> {
               subtitle: null,
               child: Column(
                 children: [
+                  if (ShortcutsController.instance != null)
+                    NamidaAboutListTile(
+                      icon: Broken.flash_1,
+                      title: lang.SHORTCUTS,
+                      onTap: () {
+                        NamidaNavigator.inst.navigateDialog(
+                          dialog: CustomBlurryDialog(
+                            icon: Broken.flash_1,
+                            title: lang.SHORTCUTS,
+                            normalTitleStyle: true,
+                            actions: [
+                              const DoneButton(),
+                            ],
+                            child: SizedBox(
+                              height: context.height * 0.6,
+                              child: ShortcutsInfoWidget(
+                                manager: ShortcutsController.instance!,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   NamidaAboutListTile(
                     icon: Broken.archive_book,
                     title: 'License',

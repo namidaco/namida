@@ -1,13 +1,24 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/language.dart';
+import 'package:namida/packages/mp.dart';
+import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 part 'shortcuts_manager_base.dart';
 part 'shortcuts_manager_desktop.dart';

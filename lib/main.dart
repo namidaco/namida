@@ -81,8 +81,8 @@ void mainInitialization() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   await WindowController.instance?.init();
-  await ShortcutsController.instance?.init();
   await HomeWidgetController.instance?.init();
+  ShortcutsController.instance?.init();
 
   // -- x this makes some issues with GestureDetector
   // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
