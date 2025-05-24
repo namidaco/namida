@@ -150,7 +150,7 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
     _isRefreshing = true;
     try {
-      _animation2.repeat();
+      if (mounted) _animation2.repeat();
       await execute();
       if (mounted) await _animation2.fling();
       if (mounted) _animation2.stop();
@@ -180,34 +180,31 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
     return Positioned(
       left: 0,
       right: 0,
-      child: _StatusListenableBuilder(
-        controller: _animation2,
-        builder: (status2) {
-          final isAnimating2 = (status2 == AnimationStatus.forward || status2 == AnimationStatus.reverse);
-          return AnimatedBuilder(
-            animation: animation,
-            builder: (context, _) {
-              final p = animation.value;
-              if (!isAnimating2 && p == 0) return const SizedBox();
-              const multiplier = 4.5;
-              const minus = multiplier / 3;
-              return Padding(
-                padding: EdgeInsets.only(top: 12.0 + p * maxDistance),
-                child: Transform.rotate(
-                  angle: (p * multiplier) - minus,
-                  child: FadeTransition(
-                    opacity: fadeAnimation,
-                    child: RotationTransition(
-                      key: const Key('rotatie'),
-                      turns: turnsTween.animate(_animation2),
-                      child: circleAvatar,
-                    ),
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, _) => AnimatedBuilder(
+          animation: _animation2, // manual status listener sucked with markNeedsBuild()
+          builder: (context, _) {
+            final p = animation.value;
+            if (!_animation2.isAnimating && p == 0) return const SizedBox();
+            const multiplier = 4.5;
+            const minus = multiplier / 3;
+            return Padding(
+              padding: EdgeInsets.only(top: 12.0 + p * maxDistance),
+              child: Transform.rotate(
+                angle: (p * multiplier) - minus,
+                child: FadeTransition(
+                  opacity: fadeAnimation,
+                  child: RotationTransition(
+                    key: const Key('rotatie'),
+                    turns: turnsTween.animate(_animation2),
+                    child: circleAvatar,
                   ),
                 ),
-              );
-            },
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -228,40 +225,5 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
     animation.dispose();
     _animation2Backup?.dispose();
     super.dispose();
-  }
-}
-
-class _StatusListenableBuilder extends StatefulWidget {
-  final AnimationController controller;
-  final Widget Function(AnimationStatus status) builder;
-  const _StatusListenableBuilder({required this.controller, required this.builder});
-
-  @override
-  State<_StatusListenableBuilder> createState() => _StatusListenableBuilderState();
-}
-
-class _StatusListenableBuilderState extends State<_StatusListenableBuilder> {
-  late AnimationStatus _status = widget.controller.status;
-
-  @override
-  void initState() {
-    widget.controller.addStatusListener(_statusListener);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeStatusListener(_statusListener);
-    super.dispose();
-  }
-
-  void _statusListener(AnimationStatus status) {
-    _status = status;
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.builder(_status);
   }
 }

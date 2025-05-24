@@ -143,27 +143,25 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                     border: Border.all(color: context.theme.colorScheme.secondary.withValues(alpha: 0.5)),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
-                  child: Flexible(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Broken.video_square, size: 16.0),
-                        const SizedBox(width: 4.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Broken.video_square, size: 16.0),
+                      const SizedBox(width: 4.0),
+                      Flexible(
+                        child: Text(
+                          videosCountVSTotalText,
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
+                      if (peakDatesText != null)
                         Flexible(
                           child: Text(
-                            videosCountVSTotalText,
-                            style: context.textTheme.displayMedium,
+                            peakDatesText,
+                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                           ),
                         ),
-                        if (peakDatesText != null)
-                          Flexible(
-                            child: Text(
-                              peakDatesText,
-                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
