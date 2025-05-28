@@ -27,7 +27,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';

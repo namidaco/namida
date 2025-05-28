@@ -1616,7 +1616,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                   Text(
                                     textData.firstLine,
                                     maxLines: textData.secondLine == '' ? 2 : 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    overflow: TextOverflow.fade,
+                                    softWrap: textData.secondLine.isEmpty,
                                     style: context.textTheme.displayMedium?.copyWith(
                                       fontSize: velpy(a: 14.5.fontSize, b: 20.0.fontSize, c: p),
                                     ),
@@ -1625,8 +1626,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                 if (textData.secondLineGood)
                                   Text(
                                     textData.secondLine,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    overflow: TextOverflow.fade,
                                     style: context.textTheme.displayMedium?.copyWith(
                                       fontSize: velpy(a: 12.5.fontSize, b: 15.0.fontSize, c: p),
                                     ),
@@ -2030,59 +2031,6 @@ class _ScaleYIfNeeded extends StatelessWidget {
       scaleY: scale,
       alignment: alignment,
       child: child,
-    );
-  }
-}
-
-class FadeIgnoreTransition extends StatefulWidget {
-  /// Wether to completely replace the [child] with a [SizedBox], instead of just using [IgnorePointer].
-  final bool completelyKillWhenPossible;
-  final Animation<double> opacity;
-  final Widget child;
-
-  const FadeIgnoreTransition({
-    super.key,
-    this.completelyKillWhenPossible = false,
-    required this.opacity,
-    required this.child,
-  });
-
-  @override
-  State<FadeIgnoreTransition> createState() => _FadeIgnoreTransitionState();
-}
-
-class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
-  bool _ignoring = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.opacity.addListener(_checkOpacity);
-    _checkOpacity();
-  }
-
-  @override
-  void dispose() {
-    widget.opacity.removeListener(_checkOpacity);
-    super.dispose();
-  }
-
-  void _checkOpacity() {
-    final shouldIgnore = widget.opacity.value <= 0.1;
-    if (_ignoring != shouldIgnore) {
-      setState(() => _ignoring = shouldIgnore);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.completelyKillWhenPossible && _ignoring) return const SizedBox();
-    return IgnorePointer(
-      ignoring: _ignoring,
-      child: FadeTransition(
-        opacity: widget.opacity,
-        child: widget.child,
-      ),
     );
   }
 }

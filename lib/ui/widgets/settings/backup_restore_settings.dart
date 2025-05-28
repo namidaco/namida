@@ -172,16 +172,6 @@ class BackupAndRestore extends SettingSubpageProvider {
               onTap: () {
                 if (!_canCreateRestoreBackup()) return;
 
-                bool isActive(List<AppPathsBackupEnum> items) => items.every((element) => settings.backupItemslist.value.contains(element));
-
-                void onItemTap(List<AppPathsBackupEnum> items) {
-                  if (isActive(items)) {
-                    settings.removeFromList(backupItemslistAll: items);
-                  } else {
-                    settings.save(backupItemslist: items);
-                  }
-                }
-
                 final sizesMap = <AppPathsBackupEnum, int>{}.obs;
 
                 void fillAllItemsSize() async {
@@ -225,8 +215,19 @@ class BackupAndRestore extends SettingSubpageProvider {
                       final ytSize = ytRes.$1;
                       final localUnknown = localRes.$2;
                       final ytUnknown = ytRes.$2;
-                      return Obx(
-                        (context) {
+                      return ObxO(
+                        rx: settings.backupItemslist,
+                        builder: (context, backupItemslist) {
+                          bool isActive(List<AppPathsBackupEnum> items) => items.every((element) => backupItemslist.contains(element));
+
+                          void onItemTap(List<AppPathsBackupEnum> items) {
+                            if (isActive(items)) {
+                              settings.removeFromList(backupItemslistAll: items);
+                            } else {
+                              settings.save(backupItemslist: items);
+                            }
+                          }
+
                           final isLocalIconChecked = isActive(items);
                           final isYoutubeIconChecked = youtubeForceFollowItems
                               ? isActive(items)

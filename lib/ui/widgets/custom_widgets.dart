@@ -2644,6 +2644,59 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 }
 
+class FadeIgnoreTransition extends StatefulWidget {
+  /// Wether to completely replace the [child] with a [SizedBox], instead of just using [IgnorePointer].
+  final bool completelyKillWhenPossible;
+  final Animation<double> opacity;
+  final Widget child;
+
+  const FadeIgnoreTransition({
+    super.key,
+    this.completelyKillWhenPossible = false,
+    required this.opacity,
+    required this.child,
+  });
+
+  @override
+  State<FadeIgnoreTransition> createState() => _FadeIgnoreTransitionState();
+}
+
+class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
+  bool _ignoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.opacity.addListener(_checkOpacity);
+    _checkOpacity();
+  }
+
+  @override
+  void dispose() {
+    widget.opacity.removeListener(_checkOpacity);
+    super.dispose();
+  }
+
+  void _checkOpacity() {
+    final shouldIgnore = widget.opacity.value <= 0.1;
+    if (_ignoring != shouldIgnore) {
+      setState(() => _ignoring = shouldIgnore);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.completelyKillWhenPossible && _ignoring) return const SizedBox();
+    return IgnorePointer(
+      ignoring: _ignoring,
+      child: FadeTransition(
+        opacity: widget.opacity,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class NamidaSelectableAutoLinkText extends StatelessWidget {
   final String text;
   final double fontScale;

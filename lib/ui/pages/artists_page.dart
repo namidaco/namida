@@ -114,7 +114,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       showSearchBox: LibraryTab.artists.isSearchBoxVisible.valueR,
                       leftText: customType != null ? artistLeftText : '',
                       leftWidgets: customType != null
-                          ? []
+                          ? null
                           : [
                               NamidaPopupWrapper(
                                 childrenDefault: _getTypeChooserChildren,

@@ -704,7 +704,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                       ),
                     ),
                     builder: (context, child) => BorderRadiusClip(
-                      borderRadius: BorderRadius.circular(6.0 + (brMultiplier(10.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
+                      borderRadius: BorderRadius.circular(6.0.multipliedRadius + (brMultiplier(10.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
                       child: child!,
                     ),
                   )

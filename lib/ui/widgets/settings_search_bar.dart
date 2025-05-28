@@ -80,7 +80,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           ),
           trailingWidget: NamidaIconButton(
             icon: Broken.close_circle,
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.all(8.0),
             iconSize: 22,
             onPressed: () {
               controller.clear();

@@ -193,7 +193,8 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
               padding: EdgeInsets.only(top: 12.0 + p * maxDistance),
               child: Transform.rotate(
                 angle: (p * multiplier) - minus,
-                child: FadeTransition(
+                child: FadeIgnoreTransition(
+                  completelyKillWhenPossible: true,
                   opacity: fadeAnimation,
                   child: RotationTransition(
                     key: const Key('rotatie'),

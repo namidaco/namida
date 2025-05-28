@@ -57,6 +57,16 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
   }
 
   @override
+  void didUpdateWidget(covariant ExpandableBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.showSearchBox != _latestShowSearchBox) {
+      _latestShowSearchBox = widget.showSearchBox;
+      _controller.animateTo(widget.showSearchBox ? 1.0 : 0.0);
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -64,21 +74,14 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final textfieldWidget = widget.textField();
-    if (widget.showSearchBox != _latestShowSearchBox) {
-      _latestShowSearchBox = widget.showSearchBox;
-      _controller.animateTo(widget.showSearchBox ? 1.0 : 0.0);
-    }
-
+    final leftWidgets = widget.leftWidgets;
     return NamidaHero(
       enabled: widget.enableHero,
       tag: 'ExpandableBox',
       child: LayoutWidthProvider(
         builder: (context, maxWidth) {
-          final displayLeftWidgets = widget.leftWidgets != null;
-          final partWidth1 = displayLeftWidgets ? maxWidth * 0.2 : 0.0;
-          final partWidth2 = maxWidth * 0.4 - (partWidth1 / 2);
-          final partWidth3 = maxWidth * 0.6 - (partWidth1 / 2);
+          final partWidthLeftTextOrWidgets = maxWidth * 0.4;
+          final partWidthRightActions = maxWidth - partWidthLeftTextOrWidgets;
           return Column(
             children: [
               AnimatedOpacity(
@@ -96,22 +99,9 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(width: 18.0),
-                        if (displayLeftWidgets)
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: partWidth1),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: widget.leftWidgets!,
-                              ),
-                            ),
-                          ),
                         Expanded(
                           child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: partWidth2),
+                            constraints: BoxConstraints(maxWidth: partWidthLeftTextOrWidgets),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
@@ -119,12 +109,14 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    widget.leftText,
-                                    style: context.textTheme.displayMedium,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  ...?leftWidgets,
+                                  if (widget.leftText.isNotEmpty)
+                                    Text(
+                                      widget.leftText,
+                                      style: context.textTheme.displayMedium,
+                                      softWrap: false,
+                                      overflow: TextOverflow.fade,
+                                    ),
                                   if (widget.displayloadingIndicator) ...[
                                     const SizedBox(width: 8.0),
                                     const LoadingIndicator(),
@@ -135,7 +127,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                           ),
                         ),
                         ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: partWidth3),
+                          constraints: BoxConstraints(maxWidth: partWidthRightActions),
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerRight,
@@ -163,14 +155,17 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   ),
                 ),
               ),
-              FadeTransition(
+              FadeIgnoreTransition(
+                completelyKillWhenPossible: true,
                 opacity: _controller,
                 child: AnimatedBuilder(
                   animation: _controller,
                   child: Row(
                     children: [
                       const SizedBox(width: 12.0),
-                      Expanded(child: textfieldWidget),
+                      Expanded(
+                        child: widget.textField(),
+                      ),
                       const SizedBox(width: 12.0),
                       NamidaIconButton(
                         onPressed: () {

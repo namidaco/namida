@@ -185,6 +185,15 @@ extension IterablieListieUtils<E> on List<E> {
   }
 }
 
+extension IterablieUtils<E> on Iterable<E> {
+  Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
+    int index = 0;
+    for (final item in this) {
+      yield toElement(item, index);
+    }
+  }
+}
+
 extension DisplayKeywords on int {
   String get displayTrackKeyword => displayKeyword(lang.TRACK, lang.TRACKS);
   String get displayDayKeyword => displayKeyword(lang.DAY, lang.DAYS);

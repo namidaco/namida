@@ -337,7 +337,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                     icon: Broken.edit_2,
                     onPressed: () async {
                       final subList = List<TagField>.from(TagField.values).obs;
-                      subList.removeWhere((element) => settings.tagFieldsToEdit.contains(element));
+                      subList.removeWhere((element) => settings.tagFieldsToEdit.value.contains(element));
 
                       await NamidaNavigator.inst.navigateDialog(
                         scale: 1.0,
@@ -356,43 +356,41 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                 Text('${lang.ACTIVE} (${lang.REORDERABLE})', style: namida.textTheme.displayMedium),
                                 const SizedBox(height: 6.0),
                                 Expanded(
-                                  child: Obx(
-                                    (context) {
-                                      final tagFields = settings.tagFieldsToEdit;
-                                      return NamidaListView(
-                                        itemExtent: null,
-                                        listBottomPadding: 24.0,
-                                        itemCount: settings.tagFieldsToEdit.length,
-                                        onReorder: (oldIndex, newIndex) {
-                                          if (newIndex > oldIndex) {
-                                            newIndex -= 1;
-                                          }
-                                          final tfOld = tagFields[oldIndex];
-                                          settings.removeFromList(tagFieldsToEdit1: tfOld);
-                                          settings.insertInList(newIndex, tagFieldsToEdit1: tfOld);
-                                        },
-                                        itemBuilder: (context, i) {
-                                          final tf = tagFields[i];
-                                          return Padding(
-                                            key: ValueKey(i),
-                                            padding: const EdgeInsets.only(top: 8.0),
-                                            child: ListTileWithCheckMark(
-                                              active: true,
-                                              title: tf.toText(),
-                                              icon: tf.toIcon(),
-                                              onTap: () {
-                                                if (settings.tagFieldsToEdit.length <= 3) {
-                                                  showMinimumItemsSnack(3);
-                                                  return;
-                                                }
-                                                settings.removeFromList(tagFieldsToEdit1: tf);
-                                                subList.add(tf);
-                                              },
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
+                                  child: ObxO(
+                                    rx: settings.tagFieldsToEdit,
+                                    builder: (context, tagFieldsToEdit) => NamidaListView(
+                                      itemExtent: null,
+                                      listBottomPadding: 24.0,
+                                      itemCount: tagFieldsToEdit.length,
+                                      onReorder: (oldIndex, newIndex) {
+                                        if (newIndex > oldIndex) {
+                                          newIndex -= 1;
+                                        }
+                                        final tfOld = tagFieldsToEdit[oldIndex];
+                                        settings.removeFromList(tagFieldsToEdit1: tfOld);
+                                        settings.insertInList(newIndex, tagFieldsToEdit1: tfOld);
+                                      },
+                                      itemBuilder: (context, i) {
+                                        final tf = tagFieldsToEdit[i];
+                                        return Padding(
+                                          key: ValueKey(i),
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: ListTileWithCheckMark(
+                                            active: true,
+                                            title: tf.toText(),
+                                            icon: tf.toIcon(),
+                                            onTap: () {
+                                              if (tagFieldsToEdit.length <= 3) {
+                                                showMinimumItemsSnack(3);
+                                                return;
+                                              }
+                                              settings.removeFromList(tagFieldsToEdit1: tf);
+                                              subList.add(tf);
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12.0),
@@ -501,127 +499,128 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                     ),
                   )
                 ],
-                child: Obx(
-                  (context) {
-                    settings.tagFieldsToEdit;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LayoutWidthProvider(
-                          builder: (context, maxWidth) => SizedBox(
-                            height: namida.height * 0.61,
-                            width: maxWidth,
-                            child: ListView(
-                              padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom * 0.6),
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Stack(
-                                      alignment: Alignment.bottomRight,
-                                      children: [
-                                        Obx(
-                                          (context) => ArtworkWidget(
-                                            key: Key(currentImagePath.valueR),
-                                            fadeMilliSeconds: 0,
-                                            icon: track is Video ? Broken.video : Broken.musicnote,
-                                            thumbnailSize: maxWidth * 0.36,
-                                            bytes: currentImagePath.valueR != '' ? null : artwork?.bytes,
-                                            path: currentImagePath.valueR != '' ? currentImagePath.valueR : null,
-                                            onTopWidgets: [
-                                              Positioned(
-                                                bottom: 0,
-                                                right: 0,
-                                                child: NamidaBlurryContainer(
-                                                  onTap: () async {
-                                                    final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
-                                                    final path = pickedFile?.path ?? '';
-                                                    if (pickedFile != null && path != '') {
-                                                      currentImagePath.value = path;
-                                                      canEditTags.value = true;
-                                                    }
-                                                  },
-                                                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
-                                                  child: const Icon(Broken.edit_2),
-                                                ),
+                child: ObxO(
+                  rx: settings.tagFieldsToEdit,
+                  builder: (context, tagFieldsToEdit) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LayoutWidthProvider(
+                        builder: (context, maxWidth) => SizedBox(
+                          height: namida.height * 0.61,
+                          width: maxWidth,
+                          child: ListView(
+                            padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom * 0.6),
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      Obx(
+                                        (context) => ArtworkWidget(
+                                          key: Key(currentImagePath.valueR),
+                                          fadeMilliSeconds: 0,
+                                          icon: track is Video ? Broken.video : Broken.musicnote,
+                                          thumbnailSize: maxWidth * 0.36,
+                                          bytes: currentImagePath.valueR != '' ? null : artwork?.bytes,
+                                          path: currentImagePath.valueR != '' ? currentImagePath.valueR : null,
+                                          onTopWidgets: [
+                                            Positioned(
+                                              bottom: 0,
+                                              right: 0,
+                                              child: NamidaBlurryContainer(
+                                                onTap: () async {
+                                                  final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
+                                                  final path = pickedFile?.path ?? '';
+                                                  if (pickedFile != null && path != '') {
+                                                    currentImagePath.value = path;
+                                                    canEditTags.value = true;
+                                                  }
+                                                },
+                                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
+                                                child: const Icon(Broken.edit_2),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    width: 12.0,
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ...tagFieldsToEdit.take(2).map(
+                                              (e) => Padding(
+                                                padding: const EdgeInsets.only(top: 10.0),
+                                                child: getTagTextField(e),
+                                              ),
+                                            ),
                                       ],
                                     ),
-                                    const SizedBox(
-                                      width: 12.0,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8.0),
+                              ...tagFieldsToEdit.sublist(2).map(
+                                    (e) => Padding(
+                                      padding: const EdgeInsets.only(top: 12.0),
+                                      child: getTagTextField(e),
                                     ),
-                                    Expanded(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          ...settings.tagFieldsToEdit.valueR.take(2).map(
-                                                (e) => Padding(
-                                                  padding: const EdgeInsets.only(top: 10.0),
-                                                  child: getTagTextField(e),
-                                                ),
-                                              ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8.0),
-                                ...settings.tagFieldsToEdit.valueR.sublist(2).map(
-                                      (e) => Padding(
-                                        padding: const EdgeInsets.only(top: 12.0),
-                                        child: getTagTextField(e),
-                                      ),
-                                    ),
-                                const SizedBox(
-                                  height: 12.0,
-                                ),
-                              ],
-                            ),
+                                  ),
+                              const SizedBox(
+                                height: 12.0,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(
-                          height: 12.0,
-                        ),
-                        Text(
-                          track.path,
-                          style: namida.textTheme.displaySmall,
-                        ),
-                        const SizedBox(
-                          height: 4.0,
-                        ),
-                        Text(
-                          audioInfoFormatted,
-                          style: namida.textTheme.displaySmall,
-                        ),
-                        const SizedBox(height: 4.0),
-                        NamidaInkWell(
-                          borderRadius: 2.0,
-                          onTap: () {
-                            final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
-                            final title = titleAndArtist.$1;
-                            final artist = titleAndArtist.$2;
+                      ),
+                      const SizedBox(
+                        height: 12.0,
+                      ),
+                      Text(
+                        track.path,
+                        style: namida.textTheme.displaySmall,
+                      ),
+                      const SizedBox(
+                        height: 4.0,
+                      ),
+                      Text(
+                        audioInfoFormatted,
+                        style: namida.textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 4.0),
+                      NamidaInkWell(
+                        borderRadius: 2.0,
+                        onTap: () {
+                          final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
+                          final title = titleAndArtist.$1;
+                          final artist = titleAndArtist.$2;
 
-                            if (tagsControllers[TagField.title]!.text != title || tagsControllers[TagField.artist]!.text != artist) {
-                              tagsControllers[TagField.title]!.text = title;
-                              tagsControllers[TagField.artist]!.text = artist;
+                          if (tagsControllers[TagField.title]!.text != title || tagsControllers[TagField.artist]!.text != artist) {
+                            tagsControllers[TagField.title]!.text = title;
+                            tagsControllers[TagField.artist]!.text = artist;
 
-                              editedTags[TagField.title] = title;
-                              editedTags[TagField.artist] = artist;
+                            editedTags[TagField.title] = title;
+                            editedTags[TagField.artist] = artist;
 
-                              canEditTags.value = true;
-                            }
-                            didAutoExtractFromFilename.value = true;
-                          },
-                          child: Row(
+                            canEditTags.value = true;
+                          }
+                          didAutoExtractFromFilename.value = true;
+                        },
+                        child: ObxO(
+                          rx: didAutoExtractFromFilename,
+                          builder: (context, didAutoExtractFromFilenameValue) => Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Broken.magicpen, size: 14.0),
                               const SizedBox(width: 4.0),
                               Text(
-                                "${lang.AUTO_EXTRACT_TAGS_FROM_FILENAME} ${didAutoExtractFromFilename.valueR ? '✓' : ''}",
+                                "${lang.AUTO_EXTRACT_TAGS_FROM_FILENAME} ${didAutoExtractFromFilenameValue ? '✓' : ''}",
                                 style: namida.textTheme.displaySmall?.copyWith(
                                   decoration: TextDecoration.underline,
                                   decorationStyle: TextDecorationStyle.dashed,
@@ -630,9 +629,9 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                             ],
                           ),
                         ),
-                      ],
-                    );
-                  },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
