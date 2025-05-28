@@ -234,9 +234,11 @@ Animating Thumbnail        |  Recommends & Listens
 
 # Installation
 
+- Namida is available for 
+  - **Android** (stable/beta) 
+  - **Windows** (beta) <sub>`new`</sub> 
 - Stable downloads: [stable-releases](https://github.com/namidaco/namida/releases)
 - Beta downloads: [beta-releases](https://github.com/namidaco/namida-snapshots/releases)
-- Available variants are `arm` & `arm64`
 
 ### Permission Note:
 
@@ -286,6 +288,8 @@ Animating Thumbnail        |  Recommends & Listens
   - [Telegram (Updates)](https://t.me/namida_official)
   - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
   - [Discord](https://discord.gg/WeY7DTVChT)
+- ⚠️ there are no websites for namidaco/namida other than github & telegram, we are not resposible for downloading from other sources.
+
 # LICENSE
 
 Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LICENSE) License.
