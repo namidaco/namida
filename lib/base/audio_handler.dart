@@ -31,6 +31,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
@@ -87,7 +88,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final ye = playWhenReady.value;
       CurrentColor.inst.switchColorPalettes(playWhenReady: ye);
       WakelockController.inst.updatePlayPauseStatus(ye);
-      _refreshHomeWidgetIsPlaying(ye);
+      _refreshPlatformStatusDependersIsPlaying(ye);
     });
   }
 
@@ -235,7 +236,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
 
-    _refreshHomeWidget(media, playWhenReady.value, isItemFavourite);
+    _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
 
   void _notificationUpdateItemYoutubeID({
@@ -252,14 +253,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final media = youtubeIdMediaItem(index, ql);
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
-    _refreshHomeWidget(media, playWhenReady.value, isItemFavourite);
+    _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
 
-  void _refreshHomeWidgetIsPlaying(bool isPlaying) {
+  void _refreshPlatformStatusDependersIsPlaying(bool isPlaying) {
+    SMTCController.instance?.onPlayPause(isPlaying);
     HomeWidgetController.instance?.updateIsPlaying(isPlaying);
   }
 
-  void _refreshHomeWidget(MediaItem media, bool isPlaying, bool isFavourite) {
+  void _refreshPlatformStatusDependers(MediaItem media, bool isPlaying, bool isFavourite) {
+    SMTCController.instance?.updateMetadata(media);
     HomeWidgetController.instance?.updateAll(
       media.displayTitle ?? media.title,
       media.displaySubtitle ?? media.artist ?? media.album,
@@ -1925,6 +1928,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       super.onDispose(),
       if (Platform.isAndroid) AudioService.forceStop(),
     ].execute();
+    SMTCController.instance?.onStop();
   }
 
   Timer? _headsetButtonClickTimer;

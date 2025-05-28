@@ -161,57 +161,6 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         title: lang.LIBRARY_TABS,
       ),
 
-    // ------------------- media buttons -------------------
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaPlay,
-      callback: Player.inst.play,
-      title: lang.PLAY,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaPause,
-      callback: Player.inst.pause,
-      title: lang.PAUSE,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaPlayPause,
-      callback: Player.inst.togglePlayPause,
-      title: "${lang.PLAY}/${lang.PAUSE}",
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaStop,
-      callback: Player.inst.pause,
-      title: lang.PAUSE,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaFastForward,
-      callback: Player.inst.seekSecondsForward,
-      title: "${lang.SEEK_DURATION} ->",
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaRewind,
-      callback: Player.inst.seekSecondsBackward,
-      title: "<- ${lang.SEEK_DURATION}",
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaTrackNext,
-      callback: Player.inst.next,
-      title: lang.NEXT,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.mediaTrackPrevious,
-      callback: Player.inst.previous,
-      title: lang.PREVIOUS,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey(0x000000b0),
-      callback: Player.inst.next,
-      title: lang.NEXT,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey(0x000000b1),
-      callback: Player.inst.previous,
-      title: lang.PREVIOUS,
-    ),
     // ================
     ShortcutKeyData(
       key: LogicalKeyboardKey.f11,
