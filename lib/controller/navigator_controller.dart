@@ -36,6 +36,8 @@ class NamidaNavigator {
 
   GlobalKey<NavigatorState> get _rootNav => namida.rootNavigatorKey;
 
+  bool get _shouldUpdateSubpagesColors => settings.autoColor.value;
+
   final navKey = GlobalKey<NavigatorState>();
 
   final ytLocalSearchNavigatorKey = GlobalKey<NavigatorState>();
@@ -252,7 +254,7 @@ class NamidaNavigator {
     if (currentRoute != null && page.isSameRouteAs(currentRoute!)) return;
     currentWidgetStack.add(page);
 
-    page.updateColorScheme();
+    if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
     await navKey.currentState?.pushPage(
       page,
@@ -429,7 +431,7 @@ class NamidaNavigator {
 
     _hideEverything();
 
-    page.updateColorScheme();
+    if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
     await navKey.currentState?.pushPageReplacement(
       page,
@@ -447,7 +449,7 @@ class NamidaNavigator {
     currentWidgetStack.value = [page];
     _hideEverything();
 
-    page.updateColorScheme();
+    if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
     navKey.currentState?.popUntil((r) => r.isFirst);
 
@@ -521,7 +523,7 @@ class NamidaNavigator {
       await _doubleTapToExit();
     }
     if (waitForAnimation) await Future.delayed(const Duration(milliseconds: _defaultRouteAnimationDurMS));
-    currentRoute?.updateColorScheme();
+    if (_shouldUpdateSubpagesColors) currentRoute?.updateColorScheme();
     _hideSearchMenusAndUnfocus();
   }
 

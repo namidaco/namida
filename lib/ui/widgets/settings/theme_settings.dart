@@ -97,6 +97,7 @@ class ThemeSetting extends SettingSubpageProvider {
             );
             if (isTrue) {
               CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
+              CurrentColor.inst.updateCurrentColorSchemeOfSubPages(playerStaticColor);
             } else {
               _refreshColorCurrentPlayingItem();
             }
