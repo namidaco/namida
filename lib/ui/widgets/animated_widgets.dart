@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/ui/widgets/custom_widgets.dart';
+
 class AnimatedDecoration extends ImplicitlyAnimatedWidget {
   final Widget? child;
   final Decoration? decoration;
@@ -160,6 +162,44 @@ class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: _colorTween?.evaluate(animation) ?? Colors.transparent,
+      child: widget.child,
+    );
+  }
+}
+
+class AnimatedBlur extends ImplicitlyAnimatedWidget {
+  final double? blur;
+  final bool enabled;
+  final Widget child;
+
+  const AnimatedBlur({
+    super.key,
+    this.blur,
+    this.enabled = true,
+    required this.child,
+    super.curve,
+    required super.duration,
+    super.onEnd,
+  });
+
+  @override
+  AnimatedWidgetBaseState<AnimatedBlur> createState() => __AnimatedBlurState();
+}
+
+class __AnimatedBlurState extends AnimatedWidgetBaseState<AnimatedBlur> {
+  DoubleTween? _blurTween;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _blurTween = visitor(_blurTween, widget.blur, (value) => DoubleTween(begin: value as double)) as DoubleTween?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final blurValue = _blurTween?.evaluate(animation) ?? 0.0;
+    return NamidaBlur(
+      enabled: widget.enabled,
+      blur: blurValue,
       child: widget.child,
     );
   }

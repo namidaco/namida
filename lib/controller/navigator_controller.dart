@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,8 +54,9 @@ class NamidaNavigator {
   NamidaRoute? get currentRoute => currentWidgetStack.value.lastOrNull;
   // ignore: avoid_rx_value_getter_outside_obx
   NamidaRoute? get currentRouteR => currentWidgetStack.valueR.lastOrNull;
-  int _currentDialogNumber = 0;
-  int _currentMenusNumber = 0;
+
+  RxBaseCore<double> get appBlurValue => _openedNumbersManager._appBlurValue;
+  final _openedNumbersManager = _OpenedNumbersManager();
 
   final innerDrawerKey = GlobalKey<NamidaInnerDrawerState>();
   final ytQueueSheetKey = GlobalKey<YTMiniplayerQueueChipState>();
@@ -64,6 +66,7 @@ class NamidaNavigator {
   bool get isInLanscape => _isInLanscape;
 
   static const _defaultRouteAnimationDurMS = 400;
+  static const kAppBlurDuration = Duration(milliseconds: 300);
 
   Future<T?> showMenu<T>({
     required BuildContext context,
@@ -71,8 +74,8 @@ class NamidaNavigator {
     required List<PopupMenuEntry<T>> items,
   }) async {
     ScrollSearchController.inst.unfocusKeyboard();
-    _currentMenusNumber++;
-    _printMenus();
+    _openedNumbersManager.incrementMenus();
+
     return material.showMenu(
       useRootNavigator: true,
       popUpAnimationStyle: material.AnimationStyle(
@@ -88,20 +91,18 @@ class NamidaNavigator {
   }
 
   void popMenu({bool handleClosing = true}) {
-    if (_currentMenusNumber > 0) {
-      _currentMenusNumber--;
+    if (_openedNumbersManager._currentMenusNumber > 0) {
+      _openedNumbersManager.decrementMenus();
       if (handleClosing) {
         popRoot();
       }
     }
-    _printMenus();
   }
 
   void popAllMenus() {
-    if (_currentMenusNumber == 0) return;
+    if (_openedNumbersManager._currentMenusNumber == 0) return;
     _rootNav.currentState?.popUntil((r) => r.isFirst);
-    _currentMenusNumber = 0;
-    _printMenus();
+    _openedNumbersManager.resetMenus();
   }
 
   void toggleDrawer() {
@@ -300,12 +301,12 @@ class NamidaNavigator {
     final void Function()? onDisposing,
   }) async {
     ScrollSearchController.inst.unfocusKeyboard();
-    _currentDialogNumber++;
+    _openedNumbersManager.incrementDialogs();
 
     Future<bool> onWillPop() async {
       if (tapToDismiss != null && tapToDismiss() == false) return false;
 
-      if (_currentDialogNumber > 0) {
+      if (_openedNumbersManager._currentDialogNumber > 0) {
         closeDialog();
         if (onDismissing != null) await onDismissing(); // this can open new dialog, so we closeDialog() first.
         return false;
@@ -322,17 +323,13 @@ class NamidaNavigator {
         child: material.RepaintBoundary(
           child: TapDetector(
             onTap: onWillPop,
-            child: NamidaBgBlur(
-              blur: 5.0,
-              enabled: _currentDialogNumber == 1,
-              child: Container(
-                color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
-                child: Transform.scale(
-                  scale: scale,
-                  child: Theme(
-                    data: theme,
-                    child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
-                  ),
+            child: Container(
+              color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
+              child: Transform.scale(
+                scale: scale,
+                child: Theme(
+                  data: theme,
+                  child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
                 ),
               ),
             ),
@@ -348,25 +345,23 @@ class NamidaNavigator {
     if (onDisposing != null) {
       onDisposing.executeAfterDelay(durationMS: durationInMs * 2);
     }
-    _printDialogs();
+
     return res;
   }
 
   Future<void> closeDialog([int count = 1]) async {
-    if (_currentDialogNumber == 0) return;
-    int closeCount = count.withMaximum(_currentDialogNumber);
+    if (_openedNumbersManager._currentDialogNumber == 0) return;
+    int closeCount = count.withMaximum(_openedNumbersManager._currentDialogNumber);
     while (closeCount > 0) {
-      _currentDialogNumber--;
+      _openedNumbersManager.decrementDialogs();
       popRoot();
       closeCount--;
     }
-    _printDialogs();
   }
 
   Future<void> closeAllDialogs() async {
-    if (_currentDialogNumber == 0) return;
-    closeDialog(_currentDialogNumber);
-    _printDialogs();
+    if (_openedNumbersManager._currentDialogNumber == 0) return;
+    closeDialog(_openedNumbersManager._currentDialogNumber);
   }
 
   Future<T?> showSheet<T>({
@@ -382,6 +377,7 @@ class NamidaNavigator {
     await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
 
     context ??= _rootNav.currentContext!;
+    _openedNumbersManager.incrementSheets();
 
     return await showModalBottomSheet(
       isScrollControlled: isScrollControlled,
@@ -411,11 +407,8 @@ class NamidaNavigator {
           ),
         );
       },
-    );
+    ).whenComplete(_openedNumbersManager.decrementSheets);
   }
-
-  void _printDialogs() => printy("Current Dialogs: $_currentDialogNumber");
-  void _printMenus() => printy("Current Menus: $_currentMenusNumber");
 
   Future<void> navigateOff<W extends NamidaRouteWidget>(
     W page, {
@@ -737,4 +730,67 @@ SnackbarController? snackyy({
   snackbarController = SnackbarController(snackbar);
   snackbarController.show();
   return snackbarController;
+}
+
+class _OpenedNumbersManager {
+  final _appBlurValue = 0.0.obs;
+
+  int _currentDialogNumber = 0;
+  int _currentSheetNumber = 0;
+  int _currentMenusNumber = 0;
+
+  void incrementDialogs() {
+    _currentDialogNumber++;
+    _reEvaluate();
+    if (kDebugMode) _printDialogs();
+  }
+
+  void decrementDialogs() {
+    _currentDialogNumber--;
+    _reEvaluate();
+    if (kDebugMode) _printDialogs();
+  }
+
+  void incrementSheets() {
+    _currentSheetNumber++;
+    _reEvaluate();
+    if (kDebugMode) _printSheets();
+  }
+
+  void decrementSheets() {
+    _currentSheetNumber--;
+    _reEvaluate();
+    if (kDebugMode) _printSheets();
+  }
+
+  void incrementMenus() {
+    _currentMenusNumber++;
+    // _reEvaluate();
+    if (kDebugMode) _printMenus();
+  }
+
+  void decrementMenus() {
+    _currentMenusNumber--;
+    // _reEvaluate();
+    if (kDebugMode) _printMenus();
+  }
+
+  void resetMenus() {
+    _currentMenusNumber = 0;
+    // _reEvaluate();
+    if (kDebugMode) _printMenus();
+  }
+
+  void _reEvaluate() {
+    final blur = _currentDialogNumber > 0
+        ? 6.0
+        : _currentSheetNumber > 0
+            ? 4.0
+            : 0.0;
+    _appBlurValue.value = blur;
+  }
+
+  void _printDialogs() => printy("|> Current Dialogs: $_currentDialogNumber");
+  void _printSheets() => printy("|> Current Sheets: $_currentSheetNumber");
+  void _printMenus() => printy("|> Current Menus: $_currentMenusNumber");
 }

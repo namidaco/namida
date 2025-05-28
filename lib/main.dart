@@ -542,6 +542,13 @@ class Namida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
+    final mainPageWrapper = MainPageWrapper(
+      shouldShowOnBoarding: widget.shouldShowOnBoarding,
+      onContextAvailable: (ctx) {
+        _initialContext = ctx;
+        _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
+      },
+    );
     return ObxO(
       rx: NamidaChannel.inst.isInPip,
       builder: (context, showPipOnly) => Container(
@@ -584,12 +591,13 @@ class Namida extends StatelessWidget {
                         ],
                       );
                     },
-                    home: MainPageWrapper(
-                      shouldShowOnBoarding: shouldShowOnBoarding,
-                      onContextAvailable: (ctx) {
-                        _initialContext = ctx;
-                        _waitForFirstBuildContext.isCompleted ? null : _waitForFirstBuildContext.complete(true);
-                      },
+                    home: ObxO(
+                      rx: NamidaNavigator.inst.appBlurValue,
+                      builder: (context, appBlurValue) => AnimatedBlur(
+                        duration: NamidaNavigator.kAppBlurDuration,
+                        blur: appBlurValue,
+                        child: mainPageWrapper,
+                      ),
                     ),
                   ),
                 ),

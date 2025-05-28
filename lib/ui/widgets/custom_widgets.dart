@@ -337,8 +337,8 @@ class NamidaBlur extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled) return child;
     return ImageFiltered(
+      enabled: enabled && blur > 0,
       imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
       child: child,
     );
