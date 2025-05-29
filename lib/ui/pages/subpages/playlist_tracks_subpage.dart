@@ -222,7 +222,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                               itemCount: tracks.length,
                               itemBuilder: (context, i) {
                                 final tr = tracks[i];
-                                final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle);
+                                final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle, enableTopRightRadius: false);
                                 return TrackTile(
                                   properties: properties,
                                   trackOrTwd: tr,

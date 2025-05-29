@@ -3276,11 +3276,7 @@ class NamidaInkWell extends StatelessWidget {
         decoration.borderRadius?.resolve(Directionality.of(context)) ?? (transparentHighlight || borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius));
     final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
     final bgColor = this.bgColor ?? decoration.color ?? Colors.transparent;
-    return AnimatedContainer(
-      alignment: alignment,
-      margin: margin,
-      duration: Duration(milliseconds: animationDurationMS),
-      decoration: BoxDecoration(
+    final decorationFinal = BoxDecoration(
         color: bgColor,
         borderRadius: borderR,
         backgroundBlendMode: decoration.backgroundBlendMode,
@@ -3288,13 +3284,13 @@ class NamidaInkWell extends StatelessWidget {
         gradient: decoration.gradient,
         shape: decoration.shape,
         image: decoration.image,
-      ),
-      foregroundDecoration: BoxDecoration(
+    );
+
+    final foregroundDecorationFinal = BoxDecoration(
         border: decoration.border,
         borderRadius: borderR,
-      ),
-      clipBehavior: Clip.none,
-      child: Material(
+    );
+    final childFinal = Material(
         clipBehavior: Clip.none,
         type: MaterialType.transparency,
         child: InkWell(
@@ -3310,10 +3306,27 @@ class NamidaInkWell extends StatelessWidget {
             child: Padding(
               padding: padding,
               child: child,
-            ),
           ),
         ),
       ),
+    );
+    return animationDurationMS > 0
+        ? AnimatedContainer(
+            alignment: alignment,
+            margin: margin,
+            duration: Duration(milliseconds: animationDurationMS),
+            decoration: decorationFinal,
+            foregroundDecoration: foregroundDecorationFinal,
+            clipBehavior: Clip.none,
+            child: childFinal,
+          )
+        : Container(
+            alignment: alignment,
+            margin: margin,
+            decoration: decorationFinal,
+            foregroundDecoration: foregroundDecorationFinal,
+            clipBehavior: Clip.none,
+            child: childFinal,
     );
   }
 }

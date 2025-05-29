@@ -45,16 +45,9 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class MiniPlayerParent extends StatefulWidget {
+class MiniPlayerParent extends StatelessWidget {
   final AnimationController animation;
   const MiniPlayerParent({super.key, required this.animation});
-
-  @override
-  State<MiniPlayerParent> createState() => _MiniPlayerParentState();
-}
-
-class _MiniPlayerParentState extends State<MiniPlayerParent> {
-  final _opacityAnimation = NamidaMiniPlayerBase.clampedAnimationCP;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +61,7 @@ class _MiniPlayerParentState extends State<MiniPlayerParent> {
               child: RepaintBoundary(
                 child: FadeIgnoreTransition(
                   completelyKillWhenPossible: true,
-                  opacity: _opacityAnimation,
+                  opacity: NamidaMiniPlayerBase.clampedAnimationCP,
                   child: const Wallpaper(
                     gradient: false,
                     particleOpacity: 0.3,

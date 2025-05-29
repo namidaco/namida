@@ -382,7 +382,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         : null;
 
     final pagePaddingHorizontal = fullscreen ? 0.0 : 24.0;
-    late final mpAnimation = NamidaMiniPlayerBase.clampedAnimationCP;
+    late final mpAnimation = NamidaMiniPlayerBase.clampedAnimationBCP;
 
     final videoOrImageChild = fullscreen
         ? Positioned.fill(
@@ -410,7 +410,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         final mpAnimationValue = mpAnimation.value;
                         final blur = 12.0 * mpAnimationValue;
                         late final maskColor =
-                            mpAnimationValue == 0 ? Colors.transparent : context.theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.6) * mpAnimationValue);
+                            mpAnimationValue == 0 ? Colors.transparent : context.theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
                         return Stack(
                           children: [
                             NamidaBlur(
@@ -448,7 +448,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: _lrcOpacityDurationMS),
             opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
-            child: FadeTransition(
+            child: FadeIgnoreTransition(
               opacity: mpAnimation,
               child: OverflowBox(
                 maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp

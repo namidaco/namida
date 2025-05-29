@@ -946,11 +946,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
               return MiniplayerRaw(
                 builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, rightInset, screenSize, sMaxOffset, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
                     miniplayerbottomnavheight, bottomOffset, navBarHeight) {
-                  final BorderRadius borderRadius = BorderRadius.only(
-                    topLeft: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
-                    topRight: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
-                    bottomLeft: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
-                    bottomRight: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
+                  final BorderRadius borderRadius = BorderRadius.vertical(
+                    top: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
+                    bottom: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
                   );
 
                   final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;

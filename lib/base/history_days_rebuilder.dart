@@ -113,7 +113,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     );
   }
 
-  Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle) {
+  Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle, {required bool enableTopRightRadius}) {
     final listens = historyManager.topTracksMapListens[subitem];
     Widget? topRightWidget;
     if (listens != null) {
@@ -140,7 +140,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
       topRightWidget = NamidaBlurryContainer(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(6.0.multipliedRadius),
-          topRight: Radius.circular(6.0.multipliedRadius),
+          topRight: enableTopRightRadius ? Radius.circular(6.0.multipliedRadius) : Radius.zero,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
         child: topRightWidget,

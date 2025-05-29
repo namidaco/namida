@@ -118,7 +118,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                               itemCount: videos.length,
                               itemBuilder: (context, i) {
                                 final watch = videos[i];
-                                final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle);
+                                final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle, enableTopRightRadius: true);
                                 return YTHistoryVideoCard(
                                   properties: properties,
                                   videos: videos,
